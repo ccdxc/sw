@@ -91,7 +91,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           node.vm.synced_folder "../../../../../", File.join("/import", "src"), rsync: true
           node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
       else
-          node.vm.synced_folder "../", "/import/src/github.com/pensando/tools", rsync: true
+          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw/tools", rsync: true
       end
 
       # populate /etc/hosts entries
