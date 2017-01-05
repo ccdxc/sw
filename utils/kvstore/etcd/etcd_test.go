@@ -28,7 +28,9 @@ type TestObjList struct {
 
 func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) {
 	cluster := integration.NewClusterV3(t)
-	store, _ := newEtcdStore(cluster.Client(), runtime.NewJSONCodec())
+	s := runtime.NewScheme()
+	s.AddKnownTypes(&TestObj{}, &TestObjList{})
+	store, _ := newEtcdStore(cluster.Client(), runtime.NewJSONCodec(s))
 	return cluster, store
 }
 

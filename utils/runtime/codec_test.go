@@ -12,11 +12,17 @@ type TestObj struct {
 	Bar string
 }
 
+func newCodec() *JSONCodec {
+	s := NewScheme()
+	s.AddKnownTypes(&TestObj{})
+	return NewJSONCodec(s)
+}
+
 func TestEncode(t *testing.T) {
 	test := TestObj{foo: "abc", Bar: "def"}
 	expectedOut := "{\"Bar\":\"def\"}"
 
-	codec := NewJSONCodec()
+	codec := newCodec()
 
 	out, err := codec.Encode(&test)
 	if err != nil || string(out) != expectedOut {
@@ -29,9 +35,9 @@ func TestDecode(t *testing.T) {
 	var obj TestObj
 	input := "{\"Bar\":\"def\"}"
 
-	codec := NewJSONCodec()
+	codec := newCodec()
 
-	if err := codec.Decode([]byte(input), &obj); err != nil || obj != expectedObj {
+	if _, err := codec.Decode([]byte(input), &obj); err != nil || obj != expectedObj {
 		t.Fatalf("Decode test failed, err %v, obj %v", err, obj)
 	}
 }

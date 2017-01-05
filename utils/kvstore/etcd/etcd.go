@@ -44,11 +44,6 @@ func NewEtcdStore(servers []string, codec runtime.Codec) (kvstore.Interface, err
 }
 
 func newEtcdStore(client *clientv3.Client, codec runtime.Codec) (kvstore.Interface, error) {
-
-	if codec == nil {
-		codec = runtime.NewJSONCodec()
-	}
-
 	return &etcdStore{
 		client:        client,
 		codec:         codec,
@@ -80,7 +75,7 @@ func (e *etcdStore) decode(value []byte, into runtime.Object, version int64) err
 		}
 	} else {
 		// Use the store decoder.
-		if err := e.codec.Decode(value, into); err != nil {
+		if _, err := e.codec.Decode(value, into); err != nil {
 			return err
 		}
 	}
@@ -341,4 +336,20 @@ func (e *etcdStore) List(prefix string, into runtime.Object) error {
 	}
 
 	return e.listVersioner.SetVersion(into, uint64(resp.Header.Revision))
+}
+
+// Watch the object corresponding to a key. fromVersion is the version to start
+// the watch from. If fromVersion is 0, it will return the existing object and
+// watch for changes from the returned version.
+func (e *etcdStore) Watch(key string, fromVersion string) (kvstore.Watcher, error) {
+	return e.newWatcher(key, fromVersion)
+}
+
+// PrefixWatch watches changes on all objects corresponding to a prefix key.
+// fromVersion is the version to start the watch from. If fromVersion is 0, it
+// will return the existing objects and watch for changes from the returned
+// version.
+// TODO: Filter objects
+func (e *etcdStore) PrefixWatch(prefix string, fromVersion string) (kvstore.Watcher, error) {
+	return e.newPrefixWatcher(prefix, fromVersion)
 }

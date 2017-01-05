@@ -1,0 +1,194 @@
+package etcd
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/coreos/etcd/clientv3"
+	etcdrpc "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/utils/kvstore"
+)
+
+const (
+	outCount = 128
+)
+
+// watcher implements kvstore.Watcher interface.
+type watcher struct {
+	watchCtx    *etcdStore
+	keyOrPrefix string
+	fromVersion int64
+	recursive   bool
+	outCh       chan *kvstore.Event
+	ctx         context.Context
+	cancel      context.CancelFunc
+}
+
+// newWatcher creates a new watcher interface for key based watches.
+func (e *etcdStore) newWatcher(key string, fromVersion string) (*watcher, error) {
+	if strings.HasSuffix(key, "/") {
+		return nil, fmt.Errorf("Watch called on a prefix")
+	}
+	return e.watch(key, fromVersion, false)
+}
+
+// newPrefixWatcher creates a new watcher interface for prefix based watches.
+func (e *etcdStore) newPrefixWatcher(prefix string, fromVersion string) (*watcher, error) {
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	return e.watch(prefix, fromVersion, true)
+}
+
+// watch sets up the watcher context and starts the watch.
+func (e *etcdStore) watch(keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	if fromVersion == "" {
+		fromVersion = "0"
+	}
+	version, err := strconv.ParseInt(fromVersion, 10, 64)
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	w := &watcher{
+		watchCtx:    e,
+		keyOrPrefix: keyOrPrefix,
+		fromVersion: version,
+		recursive:   recursive,
+		outCh:       make(chan *kvstore.Event, outCount),
+		ctx:         ctx,
+		cancel:      cancel,
+	}
+	go w.startWatching()
+	return w, nil
+}
+
+// startWatching starts the watch.
+func (w *watcher) startWatching() {
+	opts := []clientv3.OpOption{}
+	if w.recursive {
+		opts = append(opts, clientv3.WithPrefix())
+	}
+	watchVer := w.fromVersion
+	// If starting from 0, send current object(s) on the channel.
+	if w.fromVersion == 0 {
+		resp, err := w.watchCtx.client.Get(w.ctx, w.keyOrPrefix, opts...)
+		if err != nil {
+			log.Errorf("Failed to get %v with error: %v", w.keyOrPrefix, err)
+			w.sendError(err)
+			return
+		}
+		for _, kv := range resp.Kvs {
+			evType := kvstore.Updated
+
+			if kv.CreateRevision == kv.ModRevision {
+				evType = kvstore.Created
+			}
+
+			w.sendEvent(evType, kv.Value, kv.ModRevision)
+		}
+		watchVer = resp.Header.Revision
+	}
+
+	opts = append(opts, clientv3.WithRev(watchVer+1), clientv3.WithPrevKV())
+	wc := w.watchCtx.client.Watch(w.ctx, w.keyOrPrefix, opts...)
+	for wr := range wc {
+		if wr.Err() != nil {
+			log.Errorf("Failed watch on %v with error: %v", w.keyOrPrefix, wr.Err())
+			w.sendError(wr.Err())
+			return
+		}
+		for _, e := range wr.Events {
+			evType := kvstore.Updated
+			value := e.Kv.Value
+
+			if e.IsCreate() {
+				evType = kvstore.Created
+			} else if e.Type == clientv3.EventTypeDelete {
+				evType = kvstore.Deleted
+				value = []byte{}
+				if e.PrevKv != nil {
+					value = e.PrevKv.Value
+				}
+			}
+
+			w.sendEvent(evType, value, e.Kv.ModRevision)
+		}
+	}
+	// Stop() was called.
+}
+
+// sendEvent sends out the event unless the watch is stopped.
+func (w *watcher) sendEvent(evType kvstore.EventType, value []byte, version int64) {
+	obj, err := w.watchCtx.codec.Decode(value, nil)
+	if err != nil {
+		log.Errorf("Failed to decode %v with error %v", string(value), err)
+		w.sendError(err)
+		return
+	}
+
+	err = w.watchCtx.objVersioner.SetVersion(obj, uint64(version))
+	if err != nil {
+		log.Errorf("Failed to set version %v with error: %v", version, err)
+		w.sendError(err)
+		return
+	}
+
+	e := &kvstore.Event{
+		Type:   evType,
+		Object: obj,
+	}
+
+	if len(w.outCh) == outCount {
+		log.Warningf("Number of buffered events hit max count of %v", outCount)
+	}
+
+	select {
+	case w.outCh <- e:
+	case <-w.ctx.Done():
+	}
+}
+
+// sendError sends out the status object for the given error.
+func (w *watcher) sendError(err error) {
+	var status *api.Status
+	switch {
+	case err == etcdrpc.ErrCompacted:
+		status = &api.Status{
+			Result:  api.StatusResultExpired,
+			Message: err.Error(),
+			Code:    http.StatusGone,
+		}
+	default:
+		status = &api.Status{
+			Result:  api.StatusResultInternalError,
+			Message: err.Error(),
+			Code:    http.StatusInternalServerError,
+		}
+	}
+	event := &kvstore.Event{
+		Type:   kvstore.Error,
+		Object: status,
+	}
+	select {
+	case w.outCh <- event:
+	case <-w.ctx.Done():
+	}
+}
+
+// EventChan returns the channel to watch for events.
+func (w *watcher) EventChan() <-chan *kvstore.Event {
+	return w.outCh
+}
+
+// Stop stops the watcher.
+func (w *watcher) Stop() {
+	w.cancel()
+}

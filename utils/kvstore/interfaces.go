@@ -63,4 +63,54 @@ type Interface interface {
 	// a List object and should have an "Items" slice for individual
 	// objects.
 	List(prefix string, into runtime.Object) error
+
+	// Watch the object corresponding to a key. fromVersion is the version
+	// to start the watch from. If fromVersion is 0, it will return the
+	// existing object and watch for changes from the returned version.
+	Watch(key string, fromVersion string) (Watcher, error)
+
+	// PrefixWatch watches changes on all objects corresponding to a prefix
+	// key. fromVersion is the version to start the watch from. If
+	// fromVersion is 0, it will return the existing objects and watch for
+	// changes from the returned version.
+	// TODO: Filter objects
+	PrefixWatch(prefix string, fromVersion string) (Watcher, error)
+}
+
+// EventType defines possible types of events for a watch.
+type EventType string
+
+const (
+	// Created is an event to indicate an object is created
+	Created EventType = "Created"
+	// Updated is an event to indicate an object is updated.
+	Updated EventType = "Updated"
+	// Deleted is an event to indicate an object is deleted.
+	Deleted EventType = "Deleted"
+	// Error is an event to indicate an error with watch. Watch must be
+	// re-established when this happens.
+	Error EventType = "Error"
+)
+
+// Event contains information about a single event on watched object(s)
+type Event struct {
+	Type EventType
+
+	// For a Deleted event, this is previous version of the object. For an
+	// Error event, it is undefined. For all other events, it is the latest
+	// version of the object.
+	Object runtime.Object
+}
+
+// Watcher is an interface that can be implemented to keep track of changes to
+// objects in a key value store. Any watcher that implements this interface must
+// start the watch when the watcher is created.
+type Watcher interface {
+	// EventChan returns the channel to receive events on. If there is an
+	// error with the watch or when Stop is called, this channel will be
+	// closed.
+	EventChan() <-chan *Event
+
+	// Stop stops the watch and closes the channel returned by EventChan().
+	Stop()
 }

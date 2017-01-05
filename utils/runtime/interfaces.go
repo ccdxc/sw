@@ -28,8 +28,9 @@ type Codec interface {
 	// Encode serializes the object.
 	Encode(obj Object) ([]byte, error)
 
-	// Decode deserializes into an object.
-	Decode(data []byte, into Object) error
+	// Decode deserializes into the provided object. If no object is provided,
+	// a new Object is created.
+	Decode(data []byte, into Object) (Object, error)
 }
 
 // Versioner allows the kvstore to set and retrieve resource versions in the object.
@@ -41,4 +42,9 @@ type Versioner interface {
 	// GetVersion returns the resource version in the object if its an API
 	// object, error otherwise.
 	GetVersion(obj Object) (uint64, error)
+}
+
+// ObjectCreater defines the interface for creating an Object, given a kind.
+type ObjectCreater interface {
+	New(kind string) (Object, error)
 }
