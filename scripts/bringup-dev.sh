@@ -30,7 +30,13 @@ if ! cp tools/vagrant-files/Vagrantfile.dev Vagrantfile; then
 fi
 
 if ! vagrant up --no-provision; then
-  die "failed to bring up vagrant vms"
+  die 3 "failed to bring up vagrant vms"
+fi
+
+if [ ! -d bin ]; then
+  if ! mkdir bin; then
+    die 4 "unable to create 'bin' directory"
+  fi
 fi
 
 # do parallel provisioning of vagrant boxes
