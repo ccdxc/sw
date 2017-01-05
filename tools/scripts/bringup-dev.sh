@@ -15,7 +15,7 @@ if [ ! -d vagrant-files ]; then
   die "must be in tools root directory to start the tests"
 fi
 
-regex="(.*)/src/github.com/sw/pensando/(.*)"
+regex="(.*)/src/github.com/pensando/sw/(.*)"
 if [[ `pwd` =~ $regex ]]; then
   export GOPATH=${BASH_REMATCH[1]}
   echo "Using GOPATH: $GOPATH"
