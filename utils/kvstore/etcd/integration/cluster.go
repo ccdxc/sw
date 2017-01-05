@@ -154,6 +154,19 @@ func (c *ClusterV3) Client() *clientv3.Client {
 	return c.client
 }
 
+// NewClient returns a new client object.
+func (c *ClusterV3) NewClient(t *testing.T) *clientv3.Client {
+	// Create a client.
+	clientURL := "http://" + host + ":" + strconv.Itoa(clientPort)
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{clientURL},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create client with error: %v", err)
+	}
+	return client
+}
+
 // Terminate cleans up the state created by the test.
 func (c *ClusterV3) Terminate(t *testing.T) {
 	if c.grpcServer != nil {
