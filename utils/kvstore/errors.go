@@ -1,0 +1,88 @@
+package kvstore
+
+import (
+	"fmt"
+)
+
+// Error codes
+const (
+	ErrCodeKeyExists int = iota + 1
+	ErrCodeKeyNotFound
+	ErrCodeVersionConflict
+)
+
+var errCodeToMessage = map[int]string{
+	ErrCodeKeyExists:       "Key already exists",
+	ErrCodeKeyNotFound:     "Key not found",
+	ErrCodeVersionConflict: "Version conflict",
+}
+
+// KVError describes errors associated with kv store.
+type KVError struct {
+	Code            int
+	Message         string
+	Key             string
+	ResourceVersion int64
+}
+
+// Error implements the error interface.
+func (k *KVError) Error() string {
+	return fmt.Sprintf("KVError: %v, key: %v, version: %d", k.Message, k.Key, k.ResourceVersion)
+}
+
+func isErrorCode(err error, code int) bool {
+	if err == nil {
+		return false
+	}
+	if e, ok := err.(*KVError); ok {
+		if e.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+// NewKeyExistsError returns a key exists error
+func NewKeyExistsError(key string, version int64) *KVError {
+	return &KVError{
+		Code:            ErrCodeKeyExists,
+		Message:         errCodeToMessage[ErrCodeKeyExists],
+		Key:             key,
+		ResourceVersion: version,
+	}
+}
+
+// IsKeyExistsError checks if it is key exists error
+func IsKeyExistsError(err error) bool {
+	return isErrorCode(err, ErrCodeKeyExists)
+}
+
+// NewKeyNotFoundError returns a key not found error
+func NewKeyNotFoundError(key string, version int64) *KVError {
+	return &KVError{
+		Code:            ErrCodeKeyNotFound,
+		Message:         errCodeToMessage[ErrCodeKeyNotFound],
+		Key:             key,
+		ResourceVersion: version,
+	}
+}
+
+// IsKeyNotFoundError checks if the error is 'key not found'
+func IsKeyNotFoundError(err error) bool {
+	return isErrorCode(err, ErrCodeKeyNotFound)
+}
+
+// NewVersionConflictError returns a version conflict error.
+func NewVersionConflictError(key string, version int64) *KVError {
+	return &KVError{
+		Code:            ErrCodeVersionConflict,
+		Message:         errCodeToMessage[ErrCodeVersionConflict],
+		Key:             key,
+		ResourceVersion: version,
+	}
+}
+
+// IsVersionConflictError checks if the error is a version conflict error.
+func IsVersionConflictError(err error) bool {
+	return isErrorCode(err, ErrCodeVersionConflict)
+}

@@ -1,0 +1,21 @@
+// Example RPC definitions
+
+syntax = "proto3";
+
+package main;
+
+// Example RPC definitions
+service Example {
+	// example rpc call
+	rpc ExampleRPC (ExampleReq) returns (ExampleResp) {};
+}
+
+// RPC request
+message ExampleReq {
+	string reqMsg = 1;
+}
+
+// RPC response
+message ExampleResp {
+	string respMsg = 1;
+}

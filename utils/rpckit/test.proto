@@ -1,0 +1,28 @@
+// Test RPC definitions
+
+syntax = "proto3";
+
+package rpckit;
+
+// Test RPC definitions
+service Test {
+	// test rpc call
+	rpc TestRPC (TestReq) returns (TestResp) {};
+	rpc TestRPCErr (TestReq) returns (TestResp) {};
+}
+
+// RPC request
+message TestReq {
+	string reqMsg = 1;
+}
+
+// RPC response
+message TestResp {
+	string respMsg = 1;
+}
+
+// Second RPC handler definition
+service Test2 {
+	// test rpc call
+	rpc TestRPC (TestReq) returns (TestResp) {};
+}
