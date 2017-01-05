@@ -87,11 +87,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       # mount the host directories
-      if File.dirname(__FILE__).include? "src/github.com/pensando/sw/tools"
-          node.vm.synced_folder "../../../../../", File.join("/import", "src"), rsync: true
+      if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
+          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
           node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
       else
-          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw/tools", rsync: true
+          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
       end
 
       # populate /etc/hosts entries

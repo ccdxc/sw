@@ -5,3 +5,6 @@ tools/packer-templates/output-*/
 tools/packer-templates/packer_cache/
 tools/testdev
 tools/dev
+Vagrantfile
+.vagrant
+bin/*

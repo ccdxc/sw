@@ -39,3 +39,10 @@ test:
 cover:
 	$(info +++ go test -cover $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
+
+# Dev environment targets
+dev:
+	scripts/bringup-dev.sh
+
+dev-clean:
+	scripts/cleanup-dev.sh

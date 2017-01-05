@@ -11,7 +11,9 @@ experimenting with the changes.
 
 ##### 1. Clone/Create repository
 ```
-$ mkdir -p src/github.com/pensando/sw; cd $_
+# Pick a directory where you'd like to check things out and clone the repo
+$ mkdir ~/test; cd $_
+$ mkdir -p src/github.com/pensando; cd $_
 $ git clone https://github.com/pensando/sw
 
 $ git clone https://github.com/<your-github-id>/<forked-repo>
@@ -19,12 +21,13 @@ $ git clone https://github.com/<your-github-id>/<forked-repo>
 
 ##### 2. Start Development Environment
 ```
-$ cd sw/tools; make dev
+$ make dev
 ```
 
 ##### 3. SSH into the nodes, make changes, run tests
 ```
-$ make dev-ssh
+$ vagrant ssh node1
+$ vagrant ssh node2
 
 < inside the VM >
 
