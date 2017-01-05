@@ -1,0 +1,67 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Creates 2 VMs. One is a nfs server and other is a nfs client.
+# Can pass a base box as command line option:
+# e.g.  vagrant --box ubuntu1404 up
+
+require 'getoptlong'
+
+opts = GetoptLong.new(
+  [ '--box', GetoptLong::OPTIONAL_ARGUMENT ]
+)
+
+BOX='ubuntu/trusty64'
+
+opts.each do |opt, arg|
+  case opt
+    when '--box'
+      BOX=arg
+  end
+end
+
+base_ip = "192.168.5."
+if ENV['NVMT_IP_PREFIX'] && ENV['NVMT_IP_PREFIX'] != "" then
+    base_ip = ENV['NVMT_IP_PREFIX']
+end
+server_ip = base_ip + "5"
+client_ip = base_ip + "6"
+
+setup_nfs_server = <<SCRIPT
+sudo apt-get install -y nfs-kernel-server nfs-common
+sudo mkdir -p /var/nfs
+sudo touch /var/nfs/testfile
+sudo chmod 777 /var/nfs
+# $1 is my IP and $2 is other guy's IP
+sudo echo "/var/nfs ${2}(rw,sync,no_subtree_check)" >> /etc/exports
+sudo exportfs -a
+sudo service nfs-kernel-server start
+SCRIPT
+
+setup_nfs_client = <<SCRIPT
+sudo apt-get install -y nfs-common
+# Instead of mounting, create a script (server maybe down).
+# $1 is my IP and $2 is other guy's IP
+echo "sudo mount ${2}:/var/nfs /mnt" >/var/mountme.sh
+chmod +x /var/mountme.sh
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "#{BOX}"
+
+  config.vm.define "server" do |server|
+    server.vm.network "private_network", ip: server_ip
+    server.vm.provision "shell" do |s|
+          s.inline = setup_nfs_server
+          s.args = [server_ip, client_ip]
+    end
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.network "private_network", ip: client_ip
+    client.vm.provision "shell" do |s|
+          s.inline = setup_nfs_client
+          s.args = [client_ip, server_ip]
+    end
+  end
+end

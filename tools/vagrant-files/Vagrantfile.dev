@@ -1,0 +1,128 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+cluster_ip_nodes = ""
+
+basic = <<BASIC_SCRIPT
+## setup basic environment for the VM
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+chown -R vagrant /import
+
+## Populate environment vars
+echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
+source /etc/profile.d/env.sh
+
+# Install necessary packages
+yum install -y g++ libtool curl unzip
+
+# stop firewall service and disable selinux
+systemctl stop firewalld
+setenforce 0
+
+# Start docker and kubelet services
+systemctl enable docker && systemctl start docker
+systemctl enable kubelet && systemctl start kubelet
+
+BASIC_SCRIPT
+
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "jainvipin/centos72"
+  config.vm.box_version = "0.1"
+
+  num_nodes = 3
+  if ENV['NVMT_NODES'] && ENV['NVMT_NODES'] != "" then
+      num_nodes = ENV['NVMT_NODES'].to_i
+  end
+  base_ip = "192.168.30."
+  if ENV['NVMT_IP_PREFIX'] && ENV['NVMT_IP_PREFIX'] != "" then
+      base_ip = ENV['NVMT_IP_PREFIX']
+  end
+  node_ips = num_nodes.times.collect { |n| base_ip + "#{n+11}" }
+  cluster_ip_nodes = node_ips.join(",")
+
+  config.ssh.insert_key = false
+  node_names = num_nodes.times.collect { |n| "node#{n+1}" }
+
+  num_nodes.times do |n|
+    node_name = node_names[n]
+    node_addr = node_ips[n]
+
+    config.vm.define node_name do |node|
+      # Control Interface
+      node.vm.network :private_network, ip: node_addr, virtualbox__intnet: "control_net"
+      # Data Interface
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
+
+      node.vm.provider "virtualbox" do |v|
+          v.cpus = 2
+          v.memory = 4096
+          v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+          
+          # this makes provisioning faster for yum-install type of stuff with caching
+          if Vagrant.has_plugin?("vagrant-cachier")
+              # ... vagrant-cachier configs ... makes provisioning faster by caching packages
+              config.cache.scope = :machine
+          end
+
+
+          # enable 'virtio' on control nics to take benefit of builtin vlan tag
+          # use intel e1000 nics on data NIC so that we can run DPDK on it
+          v.customize ['modifyvm', :id, '--nictype1', 'virtio']
+          v.customize ['modifyvm', :id, '--nictype2', 'virtio']
+          v.customize ['modifyvm', :id, '--nictype3', '82543GC']
+
+          v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+          v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+          v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+      end
+
+      node.vm.provision "shell" do |s|
+          s.inline = basic
+          s.args = [node_name, node_addr, cluster_ip_nodes]
+      end
+
+      # mount the host directories
+      if File.dirname(__FILE__).include? "src/github.com/pensando/tools"
+          node.vm.synced_folder "../../../../", File.join("/import", "src"), rsync: true
+          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+      else
+          node.vm.synced_folder "../", "/import/src/github.com/pensando/tools", rsync: true
+      end
+
+      # populate /etc/hosts entries
+      num_nodes.times do |node_id|
+        node.vm.provision "shell" do |s|
+          s.inline = "echo '#{node_ips[node_id]} #{node_names[node_id]}' >> /etc/hosts"
+        end
+      end
+
+      # port mappings
+      if n == 0 then
+          node.vm.network "forwarded_port", guest: 80, host: 9980, auto_correct: true
+      end
+
+      # Init kubernetes cluster
+      if n == 0 then
+          node.vm.provision "shell", inline: <<-SHELL
+              kubeadm init --api-advertise-addresses=#{base_ip}11 --token f0c861.753c505740ecde4c --skip-preflight-checks=true
+
+              # workaround for https://github.com/kubernetes/kubernetes/issues/34101
+              wget -q https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64
+              kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | ./jq-linux64 '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
+
+              # Add weave networking
+              kubectl create -f https://git.io/weave-kube
+          SHELL
+      else
+          node.vm.provision "shell", inline: <<-SHELL
+              kubeadm join --token f0c861.753c505740ecde4c --skip-preflight-checks=true #{base_ip}11
+          SHELL
+      end
+    end
+  end
+end

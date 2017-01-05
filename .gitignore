@@ -1,0 +1,7 @@
+tools/packer-templates/*.box
+tools/packer-templates/.bundle/
+tools/packer-templates/.vagrant/
+tools/packer-templates/output-*/
+tools/packer-templates/packer_cache/
+tools/testdev
+tools/dev
