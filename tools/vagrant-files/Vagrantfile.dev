@@ -35,12 +35,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box_version = "0.1"
 
   num_nodes = 3
-  if ENV['NVMT_NODES'] && ENV['NVMT_NODES'] != "" then
-      num_nodes = ENV['NVMT_NODES'].to_i
+  if ENV['PENS_NODES'] && ENV['PENS_NODES'] != "" then
+      num_nodes = ENV['PENS_NODES'].to_i
   end
   base_ip = "192.168.30."
-  if ENV['NVMT_IP_PREFIX'] && ENV['NVMT_IP_PREFIX'] != "" then
-      base_ip = ENV['NVMT_IP_PREFIX']
+  if ENV['PENS_IP_PREFIX'] && ENV['PENS_IP_PREFIX'] != "" then
+      base_ip = ENV['PENS_IP_PREFIX']
   end
   node_ips = num_nodes.times.collect { |n| base_ip + "#{n+11}" }
   cluster_ip_nodes = node_ips.join(",")
