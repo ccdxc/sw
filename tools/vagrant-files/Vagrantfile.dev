@@ -17,7 +17,7 @@ echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
 source /etc/profile.d/env.sh
 
 # Install necessary packages
-yum install -y g++ libtool curl unzip
+yum install -y g++ libtool curl unzip openssl numactl-devel
 
 # stop firewall service and disable selinux
 systemctl stop firewalld
@@ -74,7 +74,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           # use intel e1000 nics on data NIC so that we can run DPDK on it
           v.customize ['modifyvm', :id, '--nictype1', 'virtio']
           v.customize ['modifyvm', :id, '--nictype2', 'virtio']
-          v.customize ['modifyvm', :id, '--nictype3', '82543GC']
+          v.customize ['modifyvm', :id, '--nictype3', '82545EM']
 
           v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
           v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']

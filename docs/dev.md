@@ -30,8 +30,11 @@ $ vagrant ssh node1
 $ vagrant ssh node2
 
 < inside the VM >
+[vagrant@node1]$ cd /import/src/github.com/pensando/sw
+[vagrant@node1]$ make build
+[vagrant@node1]$ make unit-test
 
-node1 $ exit
+[vagrant@node1]$ exit
 ```
 
 ##### 4. Clean up
@@ -40,3 +43,9 @@ $ make dev-clean
 ```
 Note: cleaning up would destroy the VMs, but it would *not* destroy the
 code/binaries that were altered from within the VM
+
+#### Requirements for code submission.
+
+1. All new code needs to have its own unit test. We enforce 75% code coverage for unit tests.
+2. Please run `make build`, `make unit-test` and `make cover` inside vagrant VMs before submitting any pull requests.
+3. You can run `make ci-test` outside the vagrant VM to run full CI tests on your private repo.

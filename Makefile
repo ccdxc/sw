@@ -8,7 +8,7 @@ GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
 
-default: build test cover
+default: build unit-test cover
 
 deps:
 	go get github.com/tools/godep
@@ -32,13 +32,21 @@ build: deps checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
-test:
+unit-test:
 	$(info +++ go test $(TO_BUILD))
 	go test $(TO_BUILD)
 
 cover:
 	$(info +++ go test -cover $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
+
+ci-testrun:
+	tools/scripts/CI.sh
+
+ci-test:
+	make dev
+	make ci-testrun
+	make dev-clean
 
 # Dev environment targets
 dev:

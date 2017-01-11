@@ -35,11 +35,8 @@ if [ ! -d bin ]; then
   fi
 fi
 
-if ! vagrant up --no-provision; then
-  die 3 "failed to bring up vagrant vms"
+if ! vagrant up; then
+  die "failed to bring up vagrant vms"
 fi
-
-# do parallel provisioning of vagrant boxes
-vagrant status | grep node | awk '{print $1}' | xargs -P6 -I"BOXNAME"  sh -c 'vagrant provision BOXNAME'
 
 exit 0

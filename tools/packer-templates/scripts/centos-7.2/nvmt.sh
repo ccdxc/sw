@@ -18,7 +18,7 @@ sudo tar -C /usr/local -xzf go1.7.3.linux-amd64.tar.gz
 rm go1.7.3.linux-amd64.tar.gz
 
 # Install necessary packages for DPDK
-sudo yum install -y gcc gcc-c++ CUnit-devel libaio-devel openssl-devel vim pciutils libtool curl unzip
+sudo yum install -y gcc gcc-c++ CUnit-devel libaio-devel openssl-devel vim pciutils libtool curl unzip openssl numactl-devel
 sudo yum install -y libibverbs-devel librdmacm-devel
 sudo yum install -y kernel-devel glibc.i686 libgcc.i686 libstdc++.i686 glibc-devel.i686
 
