@@ -23,7 +23,7 @@ var (
 
 type expectedObj struct {
 	testObj TestObj
-	evType  kvstore.EventType
+	evType  kvstore.WatchEventType
 }
 
 // TestWatch tests the watch for Created, Updated and Deleted events on an object.
@@ -248,7 +248,7 @@ func TestWatchVersion(t *testing.T) {
 	t.Logf("Got expected version from watch")
 }
 
-func expectEvent(t *testing.T, ch <-chan *kvstore.Event, evType kvstore.EventType, obj runtime.Object) {
+func expectEvent(t *testing.T, ch <-chan *kvstore.WatchEvent, evType kvstore.WatchEventType, obj runtime.Object) {
 	select {
 	case ev := <-ch:
 		if ev.Type != evType {

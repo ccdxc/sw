@@ -84,19 +84,19 @@ func (e *etcdStore) decode(value []byte, into runtime.Object, version int64) err
 }
 
 // ttlOpts creates a client option for setting a lease/ttl against a key.
-func (e *etcdStore) ttlOpts(ttl int64) ([]clientv3.OpOption, error) {
+func (e *etcdStore) ttlOpts(ctx context.Context, ttl int64) (clientv3.LeaseID, []clientv3.OpOption, error) {
 	if ttl == 0 {
-		return nil, nil
+		return 0, nil, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	lcr, err := e.client.Lease.Grant(ctx, ttl)
+	ctxT, cancel := context.WithTimeout(ctx, timeout)
+	lcr, err := e.client.Lease.Grant(ctxT, ttl)
 	cancel()
 
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	return []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
+	return lcr.ID, []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
 }
 
 // putHelper updates a key in etcd with the provided object, ttl and comparators.
@@ -106,7 +106,7 @@ func (e *etcdStore) putHelper(key string, obj runtime.Object, ttl int64, cs ...c
 		return nil, nil, err
 	}
 
-	opts, err := e.ttlOpts(ttl)
+	_, opts, err := e.ttlOpts(context.Background(), ttl)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -352,4 +352,13 @@ func (e *etcdStore) Watch(key string, fromVersion string) (kvstore.Watcher, erro
 // TODO: Filter objects
 func (e *etcdStore) PrefixWatch(prefix string, fromVersion string) (kvstore.Watcher, error) {
 	return e.newPrefixWatcher(prefix, fromVersion)
+}
+
+// Contest creates a new contender in an election. name is the name of the
+// election. id is the identifier of the contender. When a leader is elected,
+// the leader's lease is automatically refreshed. ttl is the timeout for lease
+// refresh. If the leader does not update the lease for ttl duration, a new
+// election is performed.
+func (e *etcdStore) Contest(name string, id string, ttl uint64) (kvstore.Election, error) {
+	return e.newElection(name, id, ttl)
 }

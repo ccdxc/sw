@@ -21,11 +21,11 @@ const (
 
 // watcher implements kvstore.Watcher interface.
 type watcher struct {
-	watchCtx    *etcdStore
-	keyOrPrefix string
-	fromVersion int64
-	recursive   bool
-	outCh       chan *kvstore.Event
+	watchCtx    *etcdStore               // kv store
+	keyOrPrefix string                   // what is being watched
+	fromVersion int64                    // version to watch from
+	recursive   bool                     // set to true for prefix based watches
+	outCh       chan *kvstore.WatchEvent // channel for watch events
 	ctx         context.Context
 	cancel      context.CancelFunc
 }
@@ -62,7 +62,7 @@ func (e *etcdStore) watch(keyOrPrefix string, fromVersion string, recursive bool
 		keyOrPrefix: keyOrPrefix,
 		fromVersion: version,
 		recursive:   recursive,
-		outCh:       make(chan *kvstore.Event, outCount),
+		outCh:       make(chan *kvstore.WatchEvent, outCount),
 		ctx:         ctx,
 		cancel:      cancel,
 	}
@@ -126,7 +126,7 @@ func (w *watcher) startWatching() {
 }
 
 // sendEvent sends out the event unless the watch is stopped.
-func (w *watcher) sendEvent(evType kvstore.EventType, value []byte, version int64) {
+func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version int64) {
 	obj, err := w.watchCtx.codec.Decode(value, nil)
 	if err != nil {
 		log.Errorf("Failed to decode %v with error %v", string(value), err)
@@ -141,13 +141,13 @@ func (w *watcher) sendEvent(evType kvstore.EventType, value []byte, version int6
 		return
 	}
 
-	e := &kvstore.Event{
+	e := &kvstore.WatchEvent{
 		Type:   evType,
 		Object: obj,
 	}
 
 	if len(w.outCh) == outCount {
-		log.Warningf("Number of buffered events hit max count of %v", outCount)
+		log.Warningf("Number of buffered watch events hit max count of %v", outCount)
 	}
 
 	select {
@@ -173,8 +173,8 @@ func (w *watcher) sendError(err error) {
 			Code:    http.StatusInternalServerError,
 		}
 	}
-	event := &kvstore.Event{
-		Type:   kvstore.Error,
+	event := &kvstore.WatchEvent{
+		Type:   kvstore.WatcherError,
 		Object: status,
 	}
 	select {
@@ -183,8 +183,8 @@ func (w *watcher) sendError(err error) {
 	}
 }
 
-// EventChan returns the channel to watch for events.
-func (w *watcher) EventChan() <-chan *kvstore.Event {
+// EventChan returns the channel for watch events.
+func (w *watcher) EventChan() <-chan *kvstore.WatchEvent {
 	return w.outCh
 }
 

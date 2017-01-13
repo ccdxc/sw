@@ -59,6 +59,7 @@ type Interface interface {
 	Get(key string, into runtime.Object) error
 
 	// List the objects corresponding to a prefix. It is assumed that all
+
 	// the keys under this prefix are homogenous. "into" should point to
 	// a List object and should have an "Items" slice for individual
 	// objects.
@@ -75,26 +76,34 @@ type Interface interface {
 	// changes from the returned version.
 	// TODO: Filter objects
 	PrefixWatch(prefix string, fromVersion string) (Watcher, error)
+
+	// Contest creates a new contender in an election. name is the name of
+	// the election. id is the identifier of the contender. When a leader is
+	// elected, the leader's lease is automatically refreshed. ttl is the
+	// timeout for lease refresh. If the leader does not update the lease
+	// for ttl duration, a new election is performed.
+	Contest(name string, id string, ttl uint64) (Election, error)
 }
 
-// EventType defines possible types of events for a watch.
-type EventType string
+// WatchEventType defines possible types of events for a watch.
+type WatchEventType string
 
 const (
 	// Created is an event to indicate an object is created
-	Created EventType = "Created"
+	Created WatchEventType = "Created"
 	// Updated is an event to indicate an object is updated.
-	Updated EventType = "Updated"
+	Updated WatchEventType = "Updated"
 	// Deleted is an event to indicate an object is deleted.
-	Deleted EventType = "Deleted"
-	// Error is an event to indicate an error with watch. Watch must be
-	// re-established when this happens.
-	Error EventType = "Error"
+	Deleted WatchEventType = "Deleted"
+	// WatcherError is an event to indicate an error with watch. Watch must
+	// be re-established when this happens.
+	WatcherError WatchEventType = "Error"
 )
 
-// Event contains information about a single event on watched object(s)
-type Event struct {
-	Type EventType
+// WatchEvent contains information about a single event on watched object(s)
+type WatchEvent struct {
+	// Type of the watch event.
+	Type WatchEventType
 
 	// For a Deleted event, this is previous version of the object. For an
 	// Error event, it is undefined. For all other events, it is the latest
@@ -109,8 +118,58 @@ type Watcher interface {
 	// EventChan returns the channel to receive events on. If there is an
 	// error with the watch or when Stop is called, this channel will be
 	// closed.
-	EventChan() <-chan *Event
+	EventChan() <-chan *WatchEvent
 
 	// Stop stops the watch and closes the channel returned by EventChan().
 	Stop()
+}
+
+// ElectionEventType defines possible types of events for an election.
+type ElectionEventType string
+
+const (
+	// Elected is an event to indicate this node won the election.
+	Elected ElectionEventType = "Elected"
+	// Lost is an event to indicate this node lost the election after
+	// having won it.
+	Lost ElectionEventType = "Lost"
+	// Changed is an event to indicate the leader has changed..
+	Changed ElectionEventType = "Changed"
+	// ElectionError is an event to indicate there is an error with the leader
+	// election.
+	ElectionError ElectionEventType = "Error"
+)
+
+// ElectionEvent contains information about a single event with leader election.
+type ElectionEvent struct {
+	// Type of the election event.
+	Type ElectionEventType
+
+	// Leader is populated with the current leader, if there is one.
+	Leader string
+}
+
+// Election is an interface that can be implemented to elect a leader using the
+// key value store. A contender becomes a leader by successful atomic creation
+// of a key.
+//
+// Any implementation of this interface must do the following:
+// - Start contending when the object is created.
+// - Renew the lease for the leader automatically.
+type Election interface {
+	// EventChan returns results of leader election.
+	EventChan() <-chan *ElectionEvent
+
+	// Stop participating in leader election.
+	Stop()
+
+	// Id returns the identifier of the contender.
+	Id() string
+
+	// Leader returns the id of the leader.
+	Leader() string
+
+	// IsLeader returns true if the current node is the leader, false
+	// otherwise.
+	IsLeader() bool
 }
