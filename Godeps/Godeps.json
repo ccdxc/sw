@@ -21,6 +21,10 @@
 			"Rev": "315c65d4cf4f5278c73477a35fb1f9b08365d340"
 		},
 		{
+			"ImportPath": "github.com/c9s/goprocinfo/linux",
+			"Rev": "19cb9f127a9c8d2034cf59ccb683cdb94b9deb6c"
+		},
+		{
 			"ImportPath": "github.com/coreos/etcd/alarm",
 			"Comment": "v3.1.0-rc.0-266-gd073512",
 			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
@@ -107,11 +111,6 @@
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/etcdserver/stats",
-			"Comment": "v3.1.0-rc.0-266-gd073512",
-			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
-		},
-		{
-			"ImportPath": "github.com/coreos/etcd/integration",
 			"Comment": "v3.1.0-rc.0-266-gd073512",
 			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
 		},
@@ -236,16 +235,6 @@
 			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
 		},
 		{
-			"ImportPath": "github.com/coreos/etcd/proxy/grpcproxy",
-			"Comment": "v3.1.0-rc.0-266-gd073512",
-			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
-		},
-		{
-			"ImportPath": "github.com/coreos/etcd/proxy/grpcproxy/cache",
-			"Comment": "v3.1.0-rc.0-266-gd073512",
-			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
-		},
-		{
 			"ImportPath": "github.com/coreos/etcd/raft",
 			"Comment": "v3.1.0-rc.0-266-gd073512",
 			"Rev": "d073512def18784d68ddfdf20ab4d0aa68f17a3c"
@@ -313,10 +302,6 @@
 			"ImportPath": "github.com/gogo/protobuf/proto",
 			"Comment": "v0.3-127-g8d70fb3",
 			"Rev": "8d70fb3182befc465c4a1eac8ad4d38ff49778e2"
-		},
-		{
-			"ImportPath": "github.com/golang/groupcache/lru",
-			"Rev": "a6b377e3400b08991b80d6805d627f347f983866"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/jsonpb",
@@ -433,10 +418,6 @@
 		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "b699b7032584f0953262cb2788a0ca19bb494703"
-		},
-		{
-			"ImportPath": "golang.org/x/time/rate",
-			"Rev": "f51c12702a4d776e4c1fa9b0fabab841babae631"
 		},
 		{
 			"ImportPath": "google.golang.org/grpc",

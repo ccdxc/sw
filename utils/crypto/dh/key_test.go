@@ -34,3 +34,11 @@ func TestDHSecretForAllGroups(t *testing.T) {
 		t.Logf("Secret matched for group %v", group)
 	}
 }
+
+func TestInvalidKey(t *testing.T) {
+	var k Key
+	_, err := k.ComputeSecret(k.LocalExponent())
+	if err == nil {
+		t.Fatalf("Didnt get error to ComputeSecret for invalid key.")
+	}
+}

@@ -1,7 +1,6 @@
 package dh
 
 import (
-	"fmt"
 	"math/big"
 )
 
