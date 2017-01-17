@@ -45,16 +45,16 @@ func checkEvents(t *testing.T, contenders []kvstore.Election, expLeader bool) {
 	for _, contender := range contenders {
 		select {
 		case <-time.After(time.Second):
-			t.Fatalf("Timed out waiting for event on leader %v", contender.Id())
+			t.Fatalf("Timed out waiting for event on leader %v", contender.ID())
 		case e := <-contender.EventChan():
-			t.Logf("Got event %+v for contender %v", e, contender.Id())
-			if e.Leader == contender.Id() {
+			t.Logf("Got event %+v for contender %v", e, contender.ID())
+			if e.Leader == contender.ID() {
 				if e.Type != kvstore.Elected {
-					t.Fatalf("Leader %v with non elected event %v", contender.Id(), e.Type)
+					t.Fatalf("Leader %v with non elected event %v", contender.ID(), e.Type)
 				}
 				leaderCount++
 			} else if e.Type != kvstore.Changed {
-				t.Fatalf("Contender %v with non changed event %v", contender.Id(), e.Type)
+				t.Fatalf("Contender %v with non changed event %v", contender.ID(), e.Type)
 			}
 		}
 	}
@@ -72,11 +72,11 @@ func TestElection(t *testing.T) {
 
 	checkEvents(t, contenders, true)
 
-	newId := ""
+	newID := ""
 	for ii, contender := range contenders {
 		if contender.IsLeader() {
-			newId = contender.Id()
-			t.Logf("Stopping contender %v", newId)
+			newID = contender.ID()
+			t.Logf("Stopping contender %v", newID)
 			contender.Stop()
 			contenders = append(contenders[:ii], contenders[ii+1:]...)
 			// Changed events first
@@ -88,14 +88,14 @@ func TestElection(t *testing.T) {
 	}
 
 	leader := contenders[0].Leader()
-	t.Logf("Adding contender %v with existing leader %v", newId, leader)
+	t.Logf("Adding contender %v with existing leader %v", newID, leader)
 	s := runtime.NewScheme()
 	store, err := newEtcdStore(cluster.NewClient(t), runtime.NewJSONCodec(s))
 	if err != nil {
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	contenders = append(contenders, newContest(t, store, newId, minTTL))
+	contenders = append(contenders, newContest(t, store, newID, minTTL))
 
 	if leader != contenders[0].Leader() {
 		t.Fatalf("Leader changed to %v, expecting %v", contenders[0].Leader(), leader)

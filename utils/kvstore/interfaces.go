@@ -163,8 +163,8 @@ type Election interface {
 	// Stop participating in leader election.
 	Stop()
 
-	// Id returns the identifier of the contender.
-	Id() string
+	// ID returns the identifier of the contender.
+	ID() string
 
 	// Leader returns the id of the leader.
 	Leader() string

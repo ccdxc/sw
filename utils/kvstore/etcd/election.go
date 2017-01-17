@@ -30,7 +30,7 @@ type election struct {
 	name        string                      // name of the election
 	id          string                      // identifier of the contender
 	leader      string                      // winner of the election
-	leaseId     clientv3.LeaseID            // lease id, if leader
+	leaseID     clientv3.LeaseID            // lease id, if leader
 	ttl         uint64                      // ttl for lease
 	modRevision int64                       // modified version (only for debugging)
 	outCh       chan *kvstore.ElectionEvent // channel for election results
@@ -96,10 +96,10 @@ func (el *election) attempt(key string, version int64) error {
 	if len(getResp.Kvs) != 0 {
 		// Check if this contender is the leader.
 		if string(getResp.Kvs[0].Value) == el.id {
-			el.leaseId = clientv3.LeaseID(getResp.Kvs[0].Lease)
-			log.Infof("Election(%v:%v): had won with lease id %v, restarting keepalive", el.id, el.name, el.leaseId)
+			el.leaseID = clientv3.LeaseID(getResp.Kvs[0].Lease)
+			log.Infof("Election(%v:%v): had won with lease id %v, restarting keepalive", el.id, el.name, el.leaseID)
 			// Restart the keepalive.
-			el.store.client.Lease.KeepAlive(el.ctx, el.leaseId)
+			el.store.client.Lease.KeepAlive(el.ctx, el.leaseID)
 			// Success event generation is handled by watcher in start().
 			// Failure can be ignored, will result in an event on watcher
 			// when lease expires.
@@ -107,7 +107,7 @@ func (el *election) attempt(key string, version int64) error {
 		return nil
 	}
 
-	leaseId, opts, err := el.store.ttlOpts(el.ctx, int64(el.ttl))
+	leaseID, opts, err := el.store.ttlOpts(el.ctx, int64(el.ttl))
 	if err != nil {
 		return err
 	}
@@ -119,16 +119,16 @@ func (el *election) attempt(key string, version int64) error {
 	).Commit()
 
 	if txnResp.Succeeded {
-		log.Infof("Election(%v:%v): won with lease id %v", el.id, el.name, leaseId)
-		el.leaseId = leaseId
+		log.Infof("Election(%v:%v): won with lease id %v", el.id, el.name, leaseID)
+		el.leaseID = leaseID
 		// Start the keepalive.
-		el.store.client.Lease.KeepAlive(el.ctx, leaseId)
+		el.store.client.Lease.KeepAlive(el.ctx, leaseID)
 		// Success event generation is handled by watcher in start().
 		// Failure can be ignored, will result in an event on watcher
 		// when lease expires.
 	} else {
 		// Revoke the lease if not successful in winning the election.
-		el.store.client.Lease.Revoke(el.ctx, leaseId)
+		el.store.client.Lease.Revoke(el.ctx, leaseID)
 	}
 
 	return err
@@ -144,7 +144,7 @@ func (el *election) reset() {
 		el.ctx, el.cancel = context.WithCancel(context.Background())
 		el.leader = ""
 		el.modRevision = 0
-		el.leaseId = clientv3.LeaseID(0)
+		el.leaseID = clientv3.LeaseID(0)
 	}
 }
 
@@ -186,10 +186,10 @@ func (el *election) start() error {
 			} else if e.Type == clientv3.EventTypeDelete {
 				if e.PrevKv != nil && string(e.PrevKv.Value) == el.id {
 					// Unexpected loss of leadership.
-					log.Infof("Election(%v:%v): lost leadership, revoking lease %v", el.id, el.name, el.leaseId)
+					log.Infof("Election(%v:%v): lost leadership, revoking lease %v", el.id, el.name, el.leaseID)
 					el.reset()
 					el.sendEvent(kvstore.Lost, "")
-					el.store.client.Lease.Revoke(el.ctx, el.leaseId)
+					el.store.client.Lease.Revoke(el.ctx, el.leaseID)
 				} else {
 					el.sendEvent(kvstore.Changed, "")
 				}
@@ -213,10 +213,10 @@ func (el *election) start() error {
 		// the old one is cancelled.
 		newCtx, cancel := context.WithTimeout(context.Background(), time.Second)
 
-		log.Infof("Election(%v:%v): revoking lease %v", el.id, el.name, el.leaseId)
-		_, err := el.store.client.Lease.Revoke(newCtx, el.leaseId)
+		log.Infof("Election(%v:%v): revoking lease %v", el.id, el.name, el.leaseID)
+		_, err := el.store.client.Lease.Revoke(newCtx, el.leaseID)
 		if err != nil {
-			log.Errorf("Election(%v:%v): failed to revoke lease %v with error: %v", el.id, el.name, el.leaseId, err)
+			log.Errorf("Election(%v:%v): failed to revoke lease %v with error: %v", el.id, el.name, el.leaseID, err)
 		}
 		cancel()
 	}
@@ -259,8 +259,8 @@ func (el *election) Stop() {
 	el.enabled = false
 }
 
-// Id returns the id of this contender.
-func (el *election) Id() string {
+// ID returns the id of this contender.
+func (el *election) ID() string {
 	return el.id
 }
 
