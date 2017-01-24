@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	. "github.com/pensando/sw/utils/rpckit/testutils"
+	. "github.com/pensando/sw/utils/testutils"
 )
 
 // testRPCHandler is the grpc handler

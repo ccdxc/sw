@@ -14,10 +14,11 @@ chown -R vagrant /import
 ## Populate environment vars
 echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
 echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
+echo 'export PEN_NODES=$3' >> /etc/profile.d/env.sh
 source /etc/profile.d/env.sh
 
 # Install necessary packages
-yum install -y g++ libtool curl unzip openssl numactl-devel
+yum install -y g++ libtool curl unzip openssl numactl-devel python-paramiko
 
 # stop firewall service and disable selinux
 systemctl stop firewalld
@@ -60,9 +61,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       node.vm.provider "virtualbox" do |v|
           v.cpus = 2
-          v.memory = 4096
+          v.memory = 3072
           v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
-          
+
           # this makes provisioning faster for yum-install type of stuff with caching
           if Vagrant.has_plugin?("vagrant-cachier")
               # ... vagrant-cachier configs ... makes provisioning faster by caching packages
