@@ -101,3 +101,40 @@ func TestElection(t *testing.T) {
 		t.Fatalf("Leader changed to %v, expecting %v", contenders[0].Leader(), leader)
 	}
 }
+
+// TestRestart checks the following.
+// 1) One contender wins an election (among 3).
+// 2) Stop the winner.
+// 3) Start another contender with the same ID, immediately.
+// 4) Check that the same ID wins the election.
+func TestRestart(t *testing.T) {
+	cluster, contenders := setupContest(t, 3)
+	defer cluster.Terminate(t)
+
+	checkEvents(t, contenders, true)
+
+	var leader kvstore.Election
+	for _, contender := range contenders {
+		if contender.IsLeader() {
+			leader = contender
+			break
+		}
+	}
+
+	t.Logf("Stopping leader %v", leader.ID())
+	leader.Stop()
+
+	t.Logf("Adding another contender with same id %v", leader.ID())
+	s := runtime.NewScheme()
+	store, err := newEtcdStore(cluster.NewClient(t), runtime.NewJSONCodec(s))
+	if err != nil {
+		t.Fatalf("Failed to create store with error: %v", err)
+	}
+
+	contender := newContest(t, store, leader.ID(), minTTL)
+
+	time.Sleep(time.Second)
+	if leader.ID() != contender.Leader() {
+		t.Fatalf("Leader changed to %v, expecting %v", contender.Leader(), leader.ID())
+	}
+}

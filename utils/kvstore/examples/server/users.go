@@ -17,11 +17,13 @@ import (
 	"github.com/pensando/sw/utils/runtime"
 )
 
+// User represents a user.
 type User struct {
 	api.TypeMeta   `json:",inline"`
 	api.ObjectMeta `json:"meta"`
 }
 
+// UserList is a list of users.
 type UserList struct {
 	api.TypeMeta `json:",inline"`
 	api.ListMeta `json:"meta"`
@@ -33,7 +35,7 @@ var (
 )
 
 const (
-	UsersURL = "/users"
+	usersURL = "/users"
 )
 
 func main() {
@@ -57,22 +59,22 @@ func main() {
 
 	kvStore = kv
 
-	mux := NewHttpServer()
+	mux := NewHTTPServer()
 	port := ":9001"
 
 	log.Infof("Starting http server at %v", port)
 	mux.RunOnAddr(port)
 }
 
-// NewHttpServer creates a http server for user API endpoints.
-func NewHttpServer() *martini.ClassicMartini {
+// NewHTTPServer creates a http server for user API endpoints.
+func NewHTTPServer() *martini.ClassicMartini {
 	m := martini.Classic()
 
-	m.Post(UsersURL, UserCreateHandler)
-	m.Delete(UsersURL+"/:name", UserDeleteHandler)
-	m.Get(UsersURL+"/:name", UserGetHandler)
-	m.Get(UsersURL, UserListHandler)
-	m.Get("/watch"+UsersURL, UsersWatchHandler)
+	m.Post(usersURL, UserCreateHandler)
+	m.Delete(usersURL+"/:name", UserDeleteHandler)
+	m.Get(usersURL+"/:name", UserGetHandler)
+	m.Get(usersURL, UserListHandler)
+	m.Get("/watch"+usersURL, UsersWatchHandler)
 
 	return m
 }
@@ -87,7 +89,7 @@ func UserCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
 	}
 
-	key := path.Join(UsersURL, user.Name)
+	key := path.Join(usersURL, user.Name)
 
 	if err := kvStore.Create(key, &user, 0, &user); err != nil {
 		if kvstore.IsKeyExistsError(err) {
@@ -103,7 +105,7 @@ func UserCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 func UserDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
 	name := params["name"]
 
-	key := path.Join(UsersURL, name)
+	key := path.Join(usersURL, name)
 
 	if err := kvStore.Delete(key, nil); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("User %q deletion failed: %v\n", name, err)
@@ -115,7 +117,7 @@ func UserDeleteHandler(w http.ResponseWriter, params martini.Params) (int, strin
 func UserGetHandler(w http.ResponseWriter, params martini.Params) (int, string) {
 	name := params["name"]
 
-	key := path.Join(UsersURL, name)
+	key := path.Join(usersURL, name)
 	user := User{}
 
 	if err := kvStore.Get(key, &user); err != nil {
@@ -125,29 +127,29 @@ func UserGetHandler(w http.ResponseWriter, params martini.Params) (int, string) 
 		return http.StatusInternalServerError, fmt.Sprintf("User %q get failed with error: %v\n", name, err)
 	}
 
-	if out, err := json.Marshal(&user); err != nil {
+	out, err := json.Marshal(&user)
+	if err != nil {
 		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
-	} else {
-		return http.StatusOK, string(out)
 	}
+	return http.StatusOK, string(out)
 }
 
 // UserListHandler lists all users.
 func UserListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
 	users := UserList{}
 
-	if err := kvStore.List(UsersURL, &users); err != nil {
+	if err := kvStore.List(usersURL, &users); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 			return http.StatusNotFound, fmt.Sprintf("Users not found\n")
 		}
 		return http.StatusInternalServerError, fmt.Sprintf("Users list failed with error: %v\n", err)
 	}
 
-	if out, err := json.Marshal(&users); err != nil {
+	out, err := json.Marshal(&users)
+	if err != nil {
 		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
-	} else {
-		return http.StatusOK, string(out)
 	}
+	return http.StatusOK, string(out)
 }
 
 // UsersWatchHandler establishes a watch on users hierarchy.
@@ -161,7 +163,7 @@ func UsersWatchHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	encoder := json.NewEncoder(w)
-	watcher, err := kvStore.PrefixWatch(UsersURL, "0")
+	watcher, err := kvStore.PrefixWatch(usersURL, "0")
 	if err != nil {
 		return
 	}

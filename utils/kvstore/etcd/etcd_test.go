@@ -232,6 +232,20 @@ func TestUpdate(t *testing.T) {
 	t.Logf("Update of a key succeeded")
 }
 
+func TestNonExistentUpdate(t *testing.T) {
+	cluster, store := setupTestCluster(t)
+	defer cluster.Terminate(t)
+
+	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+
+	err := store.Update(testKey, obj, 0, obj)
+	if err == nil || !kvstore.IsKeyNotFoundError(err) {
+		t.Fatalf("Update failed with error: %v", err)
+	}
+
+	t.Logf("Update of a non existent object failed as expected")
+}
+
 func TestAtomicUpdate(t *testing.T) {
 	cluster, store := setupTestCluster(t)
 	defer cluster.Terminate(t)
