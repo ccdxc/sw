@@ -50,7 +50,10 @@ ci-test:
 
 # Dev environment targets
 dev:
-	scripts/bringup-dev.sh
+	scripts/bringup-dev.sh Vagrantfile.dev
+
+arm64dev:
+	scripts/bringup-dev.sh Vagrantfile.arm64dev
 
 dev-clean:
 	scripts/cleanup-dev.sh

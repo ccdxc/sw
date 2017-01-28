@@ -1,0 +1,11 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "jainvipin/centos72"
+  config.vm.provision "shell", inline: <<-SHELL
+    yum install -y ncurses-devel bc perl-ExtUtils-MakeMaker
+    curl -O https://buildroot.org/downloads/buildroot-2016.11.tar.gz
+    ln -s /vagrant/Makefile
+  SHELL
+end

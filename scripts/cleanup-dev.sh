@@ -12,7 +12,7 @@ die () {
 }
 
 if [ ! -d tools/vagrant-files ]; then
-  die "can't find tools/vagrant-files, must not be in root directory... exiting"
+  die 1 "Must be in root directory to clean dev environment."
 fi
 
 regex="(.*)/src/github.com/pensando/sw(.*)"
@@ -25,11 +25,13 @@ fi
 
 # sanity checks and warnings before destroy
 if [ ! -f Vagrantfile ]; then
-  die 2 "unable to find 'Vagrantfile'; not sure if bringup was ever done; pls check 'vagrant global-status' "
+  die 1 "unable to find 'Vagrantfile'; not sure if bringup was ever done; pls check 'vagrant global-status' "
 fi
 
 if ! vagrant destroy -f; then
-  die "failed to clean up vagrant vms"
+  die 2 "failed to clean up vagrant vms"
 fi
+
+rm -f Vagrantfile
 
 exit 0
