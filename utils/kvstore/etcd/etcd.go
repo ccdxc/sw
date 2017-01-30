@@ -360,5 +360,5 @@ func (e *etcdStore) PrefixWatch(prefix string, fromVersion string) (kvstore.Watc
 // refresh. If the leader does not update the lease for ttl duration, a new
 // election is performed.
 func (e *etcdStore) Contest(name string, id string, ttl uint64) (kvstore.Election, error) {
-	return e.newElection(name, id, ttl)
+	return e.newElection(name, id, int(ttl))
 }

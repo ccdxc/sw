@@ -3,12 +3,12 @@ package etcd
 import (
 	"context"
 	"fmt"
-	"path"
 	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/concurrency"
 
 	"github.com/pensando/sw/utils/kvstore"
 )
@@ -25,26 +25,60 @@ var (
 // election contains the context for running a leader election.
 type election struct {
 	sync.Mutex
-	enabled     bool                        // Is the election enabled?
-	store       *etcdStore                  // kv store
-	name        string                      // name of the election
-	id          string                      // identifier of the contender
-	leader      string                      // winner of the election
-	leaseID     clientv3.LeaseID            // lease id, if leader
-	ttl         uint64                      // ttl for lease
-	modRevision int64                       // modified version (only for debugging)
-	outCh       chan *kvstore.ElectionEvent // channel for election results
-	ctx         context.Context
-	cancel      context.CancelFunc
+	enabled  bool                        // Is the election enabled?
+	store    *etcdStore                  // kv store
+	name     string                      // name of the election
+	id       string                      // identifier of the contender
+	leader   string                      // winner of the election
+	leaseID  clientv3.LeaseID            // lease id, if leader
+	ttl      int                         // ttl for lease
+	outCh    chan *kvstore.ElectionEvent // channel for election results
+	session  *concurrency.Session        // Session corresponds to lease
+	election *concurrency.Election       // Election structure
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
-// newElection creates a new election interface for running an election.
-func (e *etcdStore) newElection(name string, id string, ttl uint64) (*election, error) {
+// newElection creates a new contender in an election.
+func (e *etcdStore) newElection(name string, id string, ttl int) (*election, error) {
 	if ttl < minTTL {
 		return nil, fmt.Errorf("Invalid input: min ttl %v", ttl)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// FIXME: Accept context from caller.
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	// Check if there is an existing lease.
+	resp, err := e.client.KV.Get(ctx, electionsPrefix, clientv3.WithPrefix())
+	cancel()
+	if err != nil {
+		return nil, err
+	}
+
+	leaseID := clientv3.NoLease
+	for _, kv := range resp.Kvs {
+		if string(kv.Value) == id {
+			leaseID = clientv3.LeaseID(kv.Lease)
+			log.Infof("Election(%v:%v): found existing lease %v", id, name, leaseID)
+			break
+		}
+	}
+
+	// Check if there is enough TTL left (minTTL/2). If we reclaim when TTL is
+	// small, may lose the election soon after winning it, which will result
+	// in an unnecessary flap.
+	if leaseID != clientv3.NoLease {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		resp, err := e.client.TimeToLive(ctx, leaseID)
+		cancel()
+		if err != nil {
+			return nil, err
+		}
+		if resp.TTL < minTTL/2 {
+			leaseID = clientv3.NoLease
+		}
+	}
+
 	el := &election{
 		enabled: true,
 		store:   e,
@@ -52,182 +86,135 @@ func (e *etcdStore) newElection(name string, id string, ttl uint64) (*election, 
 		id:      id,
 		ttl:     ttl,
 		outCh:   make(chan *kvstore.ElectionEvent, outCount),
-		ctx:     ctx,
-		cancel:  cancel,
 	}
 
-	log.Infof("Election(%v:%v): starting election", id, name)
-
-	go func() {
-		for {
-			el.Lock()
-			if !el.enabled {
-				el.Unlock()
-				return
-			}
-			el.Unlock()
-
-			// If start returns error, need to restart. When Stop is
-			// called, start returns with no error and this routine
-			// can exit.
-			err := el.start()
-			if err == nil {
-				break
-			}
-			log.Errorf("Election(%v:%v): failed with error %v, retrying in %v", id, name, err, retryDelay)
-			time.Sleep(retryDelay)
-		}
-	}()
+	go el.run(leaseID)
 
 	return el, nil
 }
 
-// attempt to become leader by atomically creating the key. On success, the
-// lease is kept alive forever.
-func (el *election) attempt(key string, version int64) error {
-
-	// Check if this contender is the leader, this code handles process
-	// restart when holding leadership.
-	getResp, err := el.store.client.KV.Get(el.ctx, key)
-	if err != nil {
-		return err
-	}
-
-	if len(getResp.Kvs) != 0 {
-		// Check if this contender is the leader.
-		if string(getResp.Kvs[0].Value) == el.id {
-			el.leaseID = clientv3.LeaseID(getResp.Kvs[0].Lease)
-			log.Infof("Election(%v:%v): had won with lease id %v, restarting keepalive", el.id, el.name, el.leaseID)
-			// Restart the keepalive.
-			el.store.client.Lease.KeepAlive(el.ctx, el.leaseID)
-			// Success event generation is handled by watcher in start().
-			// Failure can be ignored, will result in an event on watcher
-			// when lease expires.
+// run starts the election and handles failures and restarts.
+func (el *election) run(leaseID clientv3.LeaseID) {
+	for {
+		el.Lock()
+		if !el.enabled {
+			el.Unlock()
+			return
 		}
-		return nil
-	}
 
-	leaseID, opts, err := el.store.ttlOpts(el.ctx, int64(el.ttl))
-	if err != nil {
-		return err
-	}
-
-	txnResp, err := el.store.client.KV.Txn(el.ctx).If(
-		clientv3.Compare(clientv3.ModRevision(key), "=", version),
-	).Then(
-		clientv3.OpPut(key, el.id, opts...),
-	).Commit()
-
-	if txnResp.Succeeded {
-		log.Infof("Election(%v:%v): won with lease id %v", el.id, el.name, leaseID)
-		el.leaseID = leaseID
-		// Start the keepalive.
-		el.store.client.Lease.KeepAlive(el.ctx, leaseID)
-		// Success event generation is handled by watcher in start().
-		// Failure can be ignored, will result in an event on watcher
-		// when lease expires.
-	} else {
-		// Revoke the lease if not successful in winning the election.
-		el.store.client.Lease.Revoke(el.ctx, leaseID)
-	}
-
-	return err
-}
-
-// reset clears all state and stops the watch, refresh routines.
-func (el *election) reset() {
-	el.Lock()
-	defer el.Unlock()
-	if el.enabled {
-		// Stop watch and refresh routines.
-		el.cancel()
 		el.ctx, el.cancel = context.WithCancel(context.Background())
-		el.leader = ""
-		el.modRevision = 0
-		el.leaseID = clientv3.LeaseID(0)
-	}
-}
 
-// start begins the leader election.
-func (el *election) start() error {
-	defer el.reset()
-
-	key := path.Join(electionsPrefix, el.name)
-
-	wc := el.store.client.Watch(el.ctx, key, clientv3.WithRev(0))
-
-	// Start an attempt after setting up watch, and after every delete event.
-	if err := el.attempt(key, 0); err != nil {
-		return err
-	}
-
-	for wr := range wc {
-		if wr.Err() != nil {
-			return wr.Err()
+		opts := []concurrency.SessionOption{
+			concurrency.WithTTL(el.ttl),
+			concurrency.WithContext(el.ctx),
 		}
-		for _, e := range wr.Events {
-			if e.IsModify() && string(e.Kv.Value) == el.leader {
-				// This is a ttl refresh of leader, ignore.
-				// TODO: Is this event possible?
-				continue
-			}
-			evType := kvstore.Changed
-			value := string(e.Kv.Value)
-			el.modRevision = e.Kv.ModRevision
 
-			if e.IsModify() {
-				el.sendEvent(evType, value)
-			} else if e.IsCreate() {
-				if value == el.id {
-					// Won the election.
-					evType = kvstore.Elected
+		if leaseID != clientv3.NoLease {
+			opts = append(opts, concurrency.WithExistingLease(leaseID))
+		}
+
+		var err error
+		el.session, err = concurrency.NewSession(el.store.client, opts...)
+		if err != nil {
+			log.Errorf("Election(%v:%v): failed to create session with error (retrying in 100ms): %v", el.id, el.name, err)
+			el.cancel()
+			el.Unlock()
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+
+		el.leaseID = el.session.Lease()
+		el.election = concurrency.NewElection(el.session, electionsPrefix)
+
+		el.Unlock()
+
+		log.Infof("Election(%v:%v): starting campaign with lease %v", el.id, el.name, el.leaseID)
+
+		errCh := make(chan struct{})
+		doneCh := el.session.Done()
+		obsCh := el.election.Observe(el.ctx)
+
+		foundErr := false
+
+		go el.attempt(errCh)
+
+		for {
+			select {
+			case <-errCh:
+				// Campaign returned an error.
+				foundErr = true
+			case <-doneCh:
+				// Session failed or was stopped.
+				log.Errorf("Election(%v:%v): session done or failed", el.id, el.name)
+				foundErr = true
+			case resp, ok := <-obsCh:
+				if !ok {
+					log.Errorf("Election(%v:%v): observe with lease %v failed with error (restarting)", el.id, el.name, el.leaseID)
+					foundErr = true
+					break
 				}
-				el.sendEvent(evType, value)
-			} else if e.Type == clientv3.EventTypeDelete {
-				if e.PrevKv != nil && string(e.PrevKv.Value) == el.id {
-					// Unexpected loss of leadership.
-					log.Infof("Election(%v:%v): lost leadership, revoking lease %v", el.id, el.name, el.leaseID)
-					el.reset()
+
+				leader := string(resp.Kvs[0].Value)
+				// If election is won with old lease, ignore it
+				if leader == el.id && el.leaseID != clientv3.LeaseID(resp.Kvs[0].Lease) {
+					log.Infof("Election(%v:%v): ignoring won election with old lease %v, current lease %v", el.id, el.name, resp.Kvs[0].Lease, el.leaseID)
+					continue
+				}
+
+				wasLeader := el.leader == el.id
+				el.leader = leader
+
+				// If previously leader but lost election (unexpectedly), send a Lost event and start a new Campaign.
+				if wasLeader && el.leader != el.id {
 					el.sendEvent(kvstore.Lost, "")
-					el.store.client.Lease.Revoke(el.ctx, el.leaseID)
+					go el.attempt(errCh)
+				}
+
+				if el.leader != el.id {
+					el.sendEvent(kvstore.Changed, el.leader)
+				} else {
+					el.sendEvent(kvstore.Elected, el.leader)
+				}
+			}
+			if foundErr {
+				el.Lock()
+				el.session.Close()
+				el.cancel()
+				el.Unlock()
+				wasLeader := el.leader == el.id
+				el.leader = ""
+				if wasLeader {
+					el.sendEvent(kvstore.Lost, "")
 				} else {
 					el.sendEvent(kvstore.Changed, "")
 				}
-				// attempt to become leader. If there is a subsequent
-				// Create event in wr.Events, this attempt will fail.
-				// Dont need to optimize for that.
-				if err := el.attempt(key, 0); err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("Unexpected type %v", e.Type)
+				break
 			}
-
 		}
+		leaseID = clientv3.NoLease
 	}
+}
 
-	// Stop was called.
-	if el.leader == el.id {
-		// Revoke the lease. This will delete the key and give someone else a
-		// chance to win the election right away. Need to use a new context as
-		// the old one is cancelled.
-		newCtx, cancel := context.WithTimeout(context.Background(), time.Second)
-
-		log.Infof("Election(%v:%v): revoking lease %v", el.id, el.name, el.leaseID)
-		_, err := el.store.client.Lease.Revoke(newCtx, el.leaseID)
-		if err != nil {
-			log.Errorf("Election(%v:%v): failed to revoke lease %v with error: %v", el.id, el.name, el.leaseID, err)
-		}
-		cancel()
+// attempt to become leader. Campaign returns on winning the election or on error.
+func (el *election) attempt(errCh chan struct{}) {
+	leaseID := el.leaseID
+	err := el.election.Campaign(el.ctx, el.id)
+	el.Lock()
+	if !el.enabled {
+		el.Unlock()
+		return
 	}
-	return nil
+	el.Unlock()
+	if err == nil {
+		log.Infof("Election(%v:%v): won election with lease %v", el.id, el.name, leaseID)
+	} else {
+		log.Errorf("Election(%v:%v): campaign with lease %v failed with error: %v", el.id, el.name, leaseID, err)
+		errCh <- struct{}{}
+	}
 }
 
 // sendEvent sends out the event unless the election is stopped.
 func (el *election) sendEvent(evType kvstore.ElectionEventType, leader string) {
-	log.Infof("Election(%v:%v): setting leader to %v", el.id, el.name, leader)
-	el.leader = leader
-
 	e := &kvstore.ElectionEvent{
 		Type:   evType,
 		Leader: leader,
@@ -255,6 +242,7 @@ func (el *election) Stop() {
 	el.Lock()
 	defer el.Unlock()
 	log.Infof("Election(%v:%v): stop called", el.id, el.name)
+	el.session.Close()
 	el.cancel()
 	el.enabled = false
 }

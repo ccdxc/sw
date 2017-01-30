@@ -76,11 +76,9 @@ func TestElection(t *testing.T) {
 	for ii, contender := range contenders {
 		if contender.IsLeader() {
 			newID = contender.ID()
-			t.Logf("Stopping contender %v", newID)
+			t.Logf("Stopping leader %v", newID)
 			contender.Stop()
 			contenders = append(contenders[:ii], contenders[ii+1:]...)
-			// Changed events first
-			checkEvents(t, contenders, false)
 			// Leader event and changed event
 			checkEvents(t, contenders, true)
 			break
@@ -100,41 +98,41 @@ func TestElection(t *testing.T) {
 	if leader != contenders[0].Leader() {
 		t.Fatalf("Leader changed to %v, expecting %v", contenders[0].Leader(), leader)
 	}
+
+	// Clean up
+	for _, contender := range contenders {
+		contender.Stop()
+	}
 }
 
 // TestRestart checks the following.
 // 1) One contender wins an election (among 3).
-// 2) Stop the winner.
-// 3) Start another contender with the same ID, immediately.
-// 4) Check that the same ID wins the election.
+// 2) Start another contender with the same ID.
+// 3) Check that the same ID wins the election.
 func TestRestart(t *testing.T) {
 	cluster, contenders := setupContest(t, 3)
 	defer cluster.Terminate(t)
 
 	checkEvents(t, contenders, true)
 
-	var leader kvstore.Election
-	for _, contender := range contenders {
-		if contender.IsLeader() {
-			leader = contender
-			break
-		}
-	}
+	t.Logf("Adding another contender with same id %v", contenders[0].Leader())
 
-	t.Logf("Stopping leader %v", leader.ID())
-	leader.Stop()
-
-	t.Logf("Adding another contender with same id %v", leader.ID())
 	s := runtime.NewScheme()
 	store, err := newEtcdStore(cluster.NewClient(t), runtime.NewJSONCodec(s))
 	if err != nil {
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	contender := newContest(t, store, leader.ID(), minTTL)
+	contender := newContest(t, store, contenders[0].Leader(), minTTL)
 
 	time.Sleep(time.Second)
-	if leader.ID() != contender.Leader() {
-		t.Fatalf("Leader changed to %v, expecting %v", contender.Leader(), leader.ID())
+	if contenders[0].Leader() != contender.Leader() {
+		t.Fatalf("Leader changed to %v, expecting %v", contender.Leader(), contenders[0].Leader())
+	}
+
+	// Clean up
+	contender.Stop()
+	for _, contender := range contenders {
+		contender.Stop()
 	}
 }
