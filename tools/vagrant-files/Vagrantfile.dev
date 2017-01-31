@@ -11,6 +11,9 @@ echo -n "$1" > /etc/hostname
 hostname -F /etc/hostname
 chown -R vagrant /import
 
+rm -f /etc/machine-id
+systemd-machine-id-setup
+
 ## Populate environment vars
 echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
 echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
