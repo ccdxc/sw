@@ -58,7 +58,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.define node_name do |node|
       # Control Interface
-      node.vm.network :private_network, ip: node_addr, virtualbox__intnet: "control_net"
+      node.vm.network :private_network, ip: node_addr
       # Data Interface
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
 
