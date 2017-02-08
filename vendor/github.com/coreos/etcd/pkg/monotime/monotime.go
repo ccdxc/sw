@@ -12,22 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !linux
-
-package netutil
+package monotime
 
 import (
-	"fmt"
-	"runtime"
+	"time"
 )
 
-// GetDefaultHost fetches the a resolvable name that corresponds
-// to the machine's default routable interface
-func GetDefaultHost() (string, error) {
-	return "", fmt.Errorf("default host not supported on %s_%s", runtime.GOOS, runtime.GOARCH)
-}
+// Time represents a point in monotonic time
+type Time uint64
 
-// GetDefaultInterfaces fetches the device name of default routable interface.
-func GetDefaultInterfaces() (map[string]uint8, error) {
-	return nil, fmt.Errorf("default host not supported on %s_%s", runtime.GOOS, runtime.GOARCH)
+func (t Time) Add(d time.Duration) Time {
+	return Time(uint64(t) + uint64(d.Nanoseconds()))
 }

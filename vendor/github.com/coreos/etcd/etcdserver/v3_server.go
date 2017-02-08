@@ -17,9 +17,6 @@ package etcdserver
 import (
 	"bytes"
 	"encoding/binary"
-	"io"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/coreos/etcd/auth"
@@ -27,13 +24,11 @@ import (
 	"github.com/coreos/etcd/etcdserver/membership"
 	"github.com/coreos/etcd/lease"
 	"github.com/coreos/etcd/lease/leasehttp"
-	"github.com/coreos/etcd/lease/leasepb"
 	"github.com/coreos/etcd/mvcc"
 	"github.com/coreos/etcd/raft"
 
 	"github.com/coreos/go-semver/semver"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -70,7 +65,7 @@ type Lessor interface {
 
 	// LeaseRenew renews the lease with given ID. The renewed TTL is returned. Or an error
 	// is returned.
-	LeaseRenew(id lease.LeaseID) (int64, error)
+	LeaseRenew(ctx context.Context, id lease.LeaseID) (int64, error)
 
 	// LeaseTimeToLive retrieves lease information.
 	LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveRequest) (*pb.LeaseTimeToLiveResponse, error)
@@ -306,7 +301,7 @@ func (s *EtcdServer) LeaseRevoke(ctx context.Context, r *pb.LeaseRevokeRequest) 
 	return result.resp.(*pb.LeaseRevokeResponse), nil
 }
 
-func (s *EtcdServer) LeaseRenew(id lease.LeaseID) (int64, error) {
+func (s *EtcdServer) LeaseRenew(ctx context.Context, id lease.LeaseID) (int64, error) {
 	ttl, err := s.lessor.Renew(id)
 	if err == nil { // already requested to primary lessor(leader)
 		return ttl, nil
@@ -315,21 +310,24 @@ func (s *EtcdServer) LeaseRenew(id lease.LeaseID) (int64, error) {
 		return -1, err
 	}
 
-	// renewals don't go through raft; forward to leader manually
-	leader, err := s.waitLeader()
-	if err != nil {
-		return -1, err
-	}
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())
+	defer cancel()
 
-	for _, url := range leader.PeerURLs {
-		lurl := url + leasehttp.LeasePrefix
-		ttl, err = leasehttp.RenewHTTP(id, lurl, s.peerRt, s.Cfg.peerDialTimeout())
-		if err == nil {
-			break
+	// renewals don't go through raft; forward to leader manually
+	for cctx.Err() == nil && err != nil {
+		leader, lerr := s.waitLeader(cctx)
+		if lerr != nil {
+			return -1, lerr
 		}
-		err = convertEOFToNoLeader(err)
+		for _, url := range leader.PeerURLs {
+			lurl := url + leasehttp.LeasePrefix
+			ttl, err = leasehttp.RenewHTTP(cctx, id, lurl, s.peerRt)
+			if err == nil || err == lease.ErrLeaseNotFound {
+				return ttl, err
+			}
+		}
 	}
-	return ttl, err
+	return -1, ErrTimeout
 }
 
 func (s *EtcdServer) LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveRequest) (*pb.LeaseTimeToLiveResponse, error) {
@@ -352,39 +350,32 @@ func (s *EtcdServer) LeaseTimeToLive(ctx context.Context, r *pb.LeaseTimeToLiveR
 		return resp, nil
 	}
 
-	// manually request to leader
-	leader, err := s.waitLeader()
-	if err != nil {
-		return nil, err
-	}
+	cctx, cancel := context.WithTimeout(ctx, s.Cfg.ReqTimeout())
+	defer cancel()
 
-	for _, url := range leader.PeerURLs {
-		lurl := url + leasehttp.LeaseInternalPrefix
-		var iresp *leasepb.LeaseInternalResponse
-		iresp, err = leasehttp.TimeToLiveHTTP(ctx, lease.LeaseID(r.ID), r.Keys, lurl, s.peerRt)
-		if err == nil {
-			return iresp.LeaseTimeToLiveResponse, nil
+	// forward to leader
+	for cctx.Err() == nil {
+		leader, err := s.waitLeader(cctx)
+		if err != nil {
+			return nil, err
 		}
-		err = convertEOFToNoLeader(err)
+		for _, url := range leader.PeerURLs {
+			lurl := url + leasehttp.LeaseInternalPrefix
+			resp, err := leasehttp.TimeToLiveHTTP(cctx, lease.LeaseID(r.ID), r.Keys, lurl, s.peerRt)
+			if err == nil {
+				return resp.LeaseTimeToLiveResponse, nil
+			}
+			if err == lease.ErrLeaseNotFound {
+				return nil, err
+			}
+		}
 	}
-	return nil, err
+	return nil, ErrTimeout
 }
 
-// convertEOFToNoLeader converts EOF erros to ErrNoLeader because
-// lease renew, timetolive requests to followers are forwarded to leader,
-// and follower might not be able to reach leader from transient network
-// errors (often EOF errors). By returning ErrNoLeader, signal clients
-// to retry its requests.
-func convertEOFToNoLeader(err error) error {
-	if err == io.EOF || err == io.ErrUnexpectedEOF {
-		return ErrNoLeader
-	}
-	return err
-}
-
-func (s *EtcdServer) waitLeader() (*membership.Member, error) {
+func (s *EtcdServer) waitLeader(ctx context.Context) (*membership.Member, error) {
 	leader := s.cluster.Member(s.Leader())
-	for i := 0; i < 5 && leader == nil; i++ {
+	for leader == nil {
 		// wait an election
 		dur := time.Duration(s.Cfg.ElectionTicks) * time.Duration(s.Cfg.TickMs) * time.Millisecond
 		select {
@@ -392,6 +383,8 @@ func (s *EtcdServer) waitLeader() (*membership.Member, error) {
 			leader = s.cluster.Member(s.Leader())
 		case <-s.stopping:
 			return nil, ErrStopped
+		case <-ctx.Done():
+			return nil, ErrNoLeader
 		}
 	}
 	if leader == nil || len(leader.PeerURLs) == 0 {
@@ -621,52 +614,10 @@ func (s *EtcdServer) RoleDelete(ctx context.Context, r *pb.AuthRoleDeleteRequest
 	return result.resp.(*pb.AuthRoleDeleteResponse), nil
 }
 
-func (s *EtcdServer) isValidSimpleToken(token string) bool {
-	splitted := strings.Split(token, ".")
-	if len(splitted) != 2 {
-		return false
-	}
-	index, err := strconv.Atoi(splitted[1])
-	if err != nil {
-		return false
-	}
-
-	select {
-	case <-s.applyWait.Wait(uint64(index)):
-		return true
-	case <-s.stop:
-		return true
-	}
-}
-
-func (s *EtcdServer) authInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return nil, nil
-	}
-
-	ts, tok := md["token"]
-	if !tok {
-		return nil, nil
-	}
-
-	token := ts[0]
-	if !s.isValidSimpleToken(token) {
-		return nil, ErrInvalidAuthToken
-	}
-
-	authInfo, uok := s.AuthStore().AuthInfoFromToken(token)
-	if !uok {
-		plog.Warningf("invalid auth token: %s", token)
-		return nil, ErrInvalidAuthToken
-	}
-	return authInfo, nil
-}
-
 // doSerialize handles the auth logic, with permissions checked by "chk", for a serialized request "get". Returns a non-nil error on authentication failure.
 func (s *EtcdServer) doSerialize(ctx context.Context, chk func(*auth.AuthInfo) error, get func()) error {
 	for {
-		ai, err := s.authInfoFromCtx(ctx)
+		ai, err := s.AuthInfoFromCtx(ctx)
 		if err != nil {
 			return err
 		}
@@ -701,7 +652,7 @@ func (s *EtcdServer) processInternalRaftRequestOnce(ctx context.Context, r pb.In
 		ID: s.reqIDGen.Next(),
 	}
 
-	authInfo, err := s.authInfoFromCtx(ctx)
+	authInfo, err := s.AuthInfoFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +714,6 @@ func (s *EtcdServer) Watchable() mvcc.WatchableKV { return s.KV() }
 
 func (s *EtcdServer) linearizableReadLoop() {
 	var rs raft.ReadState
-	internalTimeout := time.Second
 
 	for {
 		ctx := make([]byte, 8)
@@ -782,7 +732,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 		s.readNotifier = nextnr
 		s.readMu.Unlock()
 
-		cctx, cancel := context.WithTimeout(context.Background(), internalTimeout)
+		cctx, cancel := context.WithTimeout(context.Background(), s.Cfg.ReqTimeout())
 		if err := s.r.ReadIndex(cctx, ctx); err != nil {
 			cancel()
 			if err == raft.ErrStopped {
@@ -807,7 +757,7 @@ func (s *EtcdServer) linearizableReadLoop() {
 					// continue waiting for the response of the current requests.
 					plog.Warningf("ignored out-of-date read index response (want %v, got %v)", rs.RequestCtx, ctx)
 				}
-			case <-time.After(internalTimeout):
+			case <-time.After(s.Cfg.ReqTimeout()):
 				plog.Warningf("timed out waiting for read index response")
 				nr.notify(ErrTimeout)
 				timeout = true
@@ -851,4 +801,15 @@ func (s *EtcdServer) linearizableReadNotify(ctx context.Context) error {
 	case <-s.done:
 		return ErrStopped
 	}
+}
+
+func (s *EtcdServer) AuthInfoFromCtx(ctx context.Context) (*auth.AuthInfo, error) {
+	if s.Cfg.ClientCertAuthEnabled {
+		authInfo := s.AuthStore().AuthInfoFromTLS(ctx)
+		if authInfo != nil {
+			return authInfo, nil
+		}
+	}
+
+	return s.AuthStore().AuthInfoFromCtx(ctx)
 }

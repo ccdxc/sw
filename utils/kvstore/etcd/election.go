@@ -110,7 +110,7 @@ func (el *election) run(leaseID clientv3.LeaseID) {
 		}
 
 		if leaseID != clientv3.NoLease {
-			opts = append(opts, concurrency.WithExistingLease(leaseID))
+			opts = append(opts, concurrency.WithLease(leaseID))
 		}
 
 		var err error

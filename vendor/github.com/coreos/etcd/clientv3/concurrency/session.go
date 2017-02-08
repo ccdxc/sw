@@ -42,7 +42,7 @@ func NewSession(client *v3.Client, opts ...SessionOption) (*Session, error) {
 	}
 
 	id := ops.leaseID
-	if id == v3.LeaseID(0) {
+	if id == v3.NoLease {
 		resp, err := client.Grant(ops.ctx, int64(ops.ttl))
 		if err != nil {
 			return nil, err
@@ -119,14 +119,12 @@ func WithTTL(ttl int) SessionOption {
 	}
 }
 
-// WithExistingLease specifies the existing lease ID to be used for the
-// session. This is useful in process restart scenario, for example to
-// reclaim leadership from an election prior to restart.
-func WithExistingLease(leaseID v3.LeaseID) SessionOption {
+// WithLease specifies the existing leaseID to be used for the session.
+// This is useful in process restart scenario, for example, to reclaim
+// leadership from an election prior to restart.
+func WithLease(leaseID v3.LeaseID) SessionOption {
 	return func(so *sessionOptions) {
-		if leaseID != v3.LeaseID(0) {
-			so.leaseID = leaseID
-		}
+		so.leaseID = leaseID
 	}
 }
 
