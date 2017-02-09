@@ -4,7 +4,7 @@ kvstore provides a key value(KV) store abstraction for working with various KV s
 
 
 ## Creating a new kvstore client
-```
+```go
 import (
         "flag"
         "strings"
@@ -55,7 +55,7 @@ func main() {
 kvStore in the above snippet implements Interface which supports the following methods to work with the KV store. The interface is documented in interfaces.go
 
 ### Create an object
-```
+```go
 	if err := kvStore.Create(key, &user, 0, &user); err != nil {
 		if kvstore.IsKeyExistsError(err) {
 		   ...
@@ -65,7 +65,7 @@ kvStore in the above snippet implements Interface which supports the following m
 ```
 
 ### Get an object
-```
+```go
 	if err := kvStore.Get(key, &user); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 		   ...
@@ -75,7 +75,7 @@ kvStore in the above snippet implements Interface which supports the following m
 ```
 
 ### List all objects under a hierarchy
-```
+```go
 	users := UserList{}
 
 	if err := kvStore.List(usersURL, &users); err != nil {
@@ -87,14 +87,14 @@ kvStore in the above snippet implements Interface which supports the following m
 ```
 
 ### Delete an object
-```
+```go
 	if err := kvStore.Delete(key, nil); err != nil {
 	   ...
 	}
 ```
 
 ### Watch a hierarchy
-```
+```go
 	watcher, err := kvStore.PrefixWatch(usersURL, "0")
 	if err != nil {
 		return
@@ -112,7 +112,7 @@ kvStore in the above snippet implements Interface which supports the following m
 ```
 
 ### Contest in an election
-```
+```go
 	election, err := kvStore.Contest(electionName, id, ttl)
 	if err != nil {
 		log.Fatalf("Failed to start the leader election with error: %v", err)
