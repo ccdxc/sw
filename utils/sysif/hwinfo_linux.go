@@ -1,3 +1,4 @@
+//{C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 package sysif
 
 import (
@@ -27,22 +28,32 @@ func getNetIntfs() []NetIntf {
 	var allIntfs []NetIntf
 	intfs, _ := net.Interfaces()
 	for _, intf := range intfs {
-		var oneIntf NetIntf
-		oneIntf.HardwareAddr = intf.HardwareAddr
-		if oneIntf.HardwareAddr != nil {
-			oneIntf.Flags = intf.Flags
-			oneIntf.Name = intf.Name
-			addrs, err := intf.Addrs()
-			if err == nil {
-				oneIntf.Addrs = make([]net.Addr, len(addrs))
-				copy(oneIntf.Addrs, addrs)
-			}
-			s, err := getIntfSpeed(oneIntf.Name)
-			if err == nil {
-				oneIntf.Speed = s
-			}
-			allIntfs = append(allIntfs, oneIntf)
+		oneIntf := NetIntf{HardwareAddr: intf.HardwareAddr, Flags: intf.Flags, Name: intf.Name}
+		if oneIntf.HardwareAddr == nil {
+			continue
 		}
+		if (intf.Flags & net.FlagUp) == 0 {
+			continue
+		}
+		// TODO: move this a common location and use a separate helper routine for filtering this
+		if !strings.HasPrefix(intf.Name, "eth") && !strings.HasPrefix(intf.Name, "en") {
+			continue
+		}
+		addrs, err := intf.Addrs()
+		if err == nil {
+			//oneIntf.Addrs = make([]net.IPNet, 0, len(addrs))
+			for _, r := range addrs {
+				switch v := r.(type) {
+				case *net.IPNet:
+					oneIntf.Addrs = append(oneIntf.Addrs, *v)
+				}
+			}
+		}
+		s, err := getIntfSpeed(oneIntf.Name)
+		if err == nil {
+			oneIntf.Speed = s
+		}
+		allIntfs = append(allIntfs, oneIntf)
 	}
 	return allIntfs
 }

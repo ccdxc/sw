@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/pensando/sw",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v75",
+	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
 	],
@@ -52,6 +52,11 @@
 		{
 			"ImportPath": "github.com/c9s/goprocinfo/linux",
 			"Rev": "19cb9f127a9c8d2034cf59ccb683cdb94b9deb6c"
+		},
+		{
+			"ImportPath": "github.com/cenkalti/backoff",
+			"Comment": "v1.0.0-15-gb02f2bb",
+			"Rev": "b02f2bbce11d7ea6b97f282ef1771b0fe2f65ef3"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/inject",
@@ -473,6 +478,10 @@
 			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
 		},
 		{
+			"ImportPath": "github.com/grandcat/zeroconf",
+			"Rev": "9dc1c0cf91c712b6807acd35373881a495433736"
+		},
+		{
 			"ImportPath": "github.com/grpc-ecosystem/go-grpc-prometheus",
 			"Comment": "v1.1",
 			"Rev": "6b7015e65d366bf3f19b2b2a000a831940f0f7e0"
@@ -525,6 +534,10 @@
 			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/pbutil",
 			"Comment": "v1.0.0-2-gc12348c",
 			"Rev": "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+		},
+		{
+			"ImportPath": "github.com/miekg/dns",
+			"Rev": "ca336a1f95a6b89be9c250df26c7a41742eb4a6f"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",
@@ -597,6 +610,10 @@
 			"Rev": "1f22c0103821b9390939b6776727195525381532"
 		},
 		{
+			"ImportPath": "golang.org/x/net/bpf",
+			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
 		},
@@ -617,7 +634,19 @@
 			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
 		},
 		{
+			"ImportPath": "golang.org/x/net/internal/iana",
+			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
+		},
+		{
 			"ImportPath": "golang.org/x/net/internal/timeseries",
+			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
+		},
+		{
+			"ImportPath": "golang.org/x/net/ipv4",
+			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
+		},
+		{
+			"ImportPath": "golang.org/x/net/ipv6",
 			"Rev": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
 		},
 		{

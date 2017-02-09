@@ -1,3 +1,4 @@
+//{C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 package mdns
 
 import "github.com/pensando/sw/api"
@@ -28,7 +29,7 @@ const (
 	Deleted DiscoveredNodeEventType = "Deleted"
 )
 
-// DiscoveredNodeEvent contains information about a single event on Peer DiscoveredNode
+// DiscoveredNodeEvent contains information about a single event on DiscoveredNode
 type DiscoveredNodeEvent struct {
 	// Type of the watch event.
 	Type DiscoveredNodeEventType
