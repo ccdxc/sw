@@ -22,7 +22,7 @@ const (
 )
 
 func main() {
-	var id, name, dataDir, cfgFile, peerPort, clientPort, members, memberIPs, op string
+	var id, name, dataDir, cfgFile, peerPort, clientPort, members, memberIPs string
 	var existing bool
 	flag.StringVar(&id, "id", "testCluster", "identifier for the cluster/member")
 	flag.StringVar(&name, "name", "", "name of this member")
@@ -32,7 +32,6 @@ func main() {
 	flag.StringVar(&clientPort, "client-port", "5002", "client port")
 	flag.StringVar(&members, "members", "", "comma separated list of member names")
 	flag.StringVar(&memberIPs, "member-ips", "", "comma separated list of member ips")
-	flag.StringVar(&op, "operation", "create", "one of <create, add, remove>")
 	flag.BoolVar(&existing, "existing", false, "existing or new cluster")
 	flag.Parse()
 
