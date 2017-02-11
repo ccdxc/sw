@@ -1,0 +1,25 @@
+[Unit]
+Description=etcd key-value store
+Documentation=https://github.com/coreos/etcd
+After=network.target
+
+[Service]
+User=root
+Type=notify
+EnvironmentFile=-/etc/etcd.conf
+ExecStart=/import/src/github.com/coreos/etcd/bin/etcd \
+			$NAME \
+			$ADV_PEER_URLS \
+			$LIS_PEER_URLS \
+			$ADV_CLIENT_URLS \
+			$LIS_CLIENT_URLS \
+			$INIT_CLUSTER_TOKEN \
+			$INIT_CLUSTER \
+			$INIT_CLUSTER_STATE \
+			$DATA_DIR
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+
+[Install]
+WantedBy=multi-user.target
