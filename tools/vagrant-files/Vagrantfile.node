@@ -1,0 +1,645 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+# Defaults
+$num_nodes = 1
+$base_ip = "192.168.40."
+$node_to_ccpu_ip = "192.168.50."
+$ccpu_to_nic_ip = "192.168.60."
+$num_vfs_per_nic = 4
+$num_nifs_per_nic = 1
+$num_dcpus_per_nic = 1
+$num_ccpus_per_nic = 1
+
+# Default boxes
+$node_box = "jainvipin/centos72"
+$node_box_ver = "0.1"
+#$dcpu_box = "maier/alpine-3.4-x86_64"
+$dcpu_box = "jainvipin/centos72"
+$ccpu_box = "ubuntu/trusty64"
+#$ccpu_box = "ubuntu/xenial64"
+#$ccpu_box = "jainvipin/centos72"
+$nic_box = "ubuntu/trusty64"
+#$nic_box = "ubuntu/xenial64"
+#$nic_box = "jainvipin/centos72"
+
+# global variable
+$cluster_ip_nodes = ""
+$node_ips = []
+$node_names = []
+
+$p4_ubuntu_tools_file = "pensando-ubuntu-p4tools.tgz"
+$p4_centos_tools_file = "pensando-centos-p4tools.tgz"
+$p4_tools_compile_done = 0
+
+$node_init = <<NODE_INIT_SCRIPT
+## setup basic environment for the VM
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+chown -R vagrant /import
+
+rm -f /etc/machine-id
+systemd-machine-id-setup
+
+## Populate environment vars
+echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
+echo 'export PEN_NODES=$3' >> /etc/profile.d/env.sh
+source /etc/profile.d/env.sh
+
+# Install necessary packages
+yum install -y g++ libtool curl unzip openssl numactl-devel python-paramiko python-setuptools python-devel
+curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+python get-pip.py
+pip install crc16
+
+# stop firewall service and disable selinux
+systemctl stop firewalld
+setenforce 0
+
+# Start docker and kubelet services
+systemctl enable docker && systemctl start docker
+systemctl enable kubelet && systemctl start kubelet
+
+NODE_INIT_SCRIPT
+
+$nic_init = <<NIC_INIT_SCRIPT
+## setup basic environment for the VM
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+chown -R vagrant /import
+
+## Populate environment vars
+echo 'export PATH=$PATH:/usr/local/bin:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib' >> /etc/profile.d/env.sh
+echo 'export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/site-packages:/usr/lib/python2.7/dist-packages' >> /etc/profile.d/env.sh
+source /etc/profile.d/env.sh
+
+# Install necessary packages
+apt-get install -y \
+    git \
+    automake \
+    cmake \
+    libjudy-dev \
+    libgmp-dev \
+    libpcap-dev \
+    libboost-dev \
+    libboost-test-dev \
+    libboost-program-options-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libboost-thread-dev \
+    libevent-dev \
+    libtool \
+    flex \
+    bison \
+    pkg-config \
+    g++ \
+    libssl-dev \
+    mktemp \
+    libffi-dev \
+    python-dev \
+    python-pip \
+    python-setuptools
+
+pip install crc16
+
+NIC_INIT_SCRIPT
+
+$dcpu_init = <<DCPU_INIT_SCRIPT
+## setup basic environment for the VM
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+DCPU_INIT_SCRIPT
+
+# vfs_create <parent-if-name, num_vfs> 
+$vfs_create = <<VFS_CREATE_SCRIPT
+  ip link set dev $1 promisc on
+  ip link set dev $1 up
+  i=0
+  while [ $i -lt $2 ]; do
+    let tag=i+100
+    if_name=$1.$tag
+    echo $if_name
+    if [ $3 -ne 0 ]; then
+      # use different mac address for node side vfs
+      # mac addr: 00:0a:0b:0c:<node-id>:<vf-id>
+      ip link add link $1 name $if_name address 00:0a:0b:0c:$3:$i type vlan id $tag
+    else
+      ip link add link $1 name $if_name type vlan id $tag
+    fi
+    ip link set dev $if_name up
+    let i=i+1
+  done
+
+VFS_CREATE_SCRIPT
+
+def parse_env()
+  if ENV['PENS_NODES'] && ENV['PENS_NODES'] != "" then
+      $num_nodes = ENV['PENS_NODES'].to_i
+  end
+  if ENV['PENS_IP_PREFIX'] && ENV['PENS_IP_PREFIX'] != "" then
+      $base_ip = ENV['PENS_IP_PREFIX']
+  end
+  if ENV['PENS_NODE_TO_CCPU_IP_PREFIX'] && ENV['PENS_NODE_TO_CCPU_IP_PREFIX'] != "" then
+      $node_to_ccpu_ip = ENV['PENS_NODE_TO_CCPU_IP_PREFIX']
+  end
+  if ENV['PENS_CCPU_TO_NIC_IP_PREFIX'] && ENV['PENS_CCPU_TO_NIC_IP_PREFIX'] != "" then
+      $ccpu_to_nic_ip = ENV['PENS_CCPU_TO_NIC_IP_PREFIX']
+  end
+  if ENV['PENS_VFS_PER_NIC'] && ENV['PENS_VFS_PER_NIC'] != "" then
+      $num_vfs_per_nic = ENV['PENS_VFS_PER_NIC'].to_i
+  end
+  if ENV['PENS_NIFS_PER_NIC'] && ENV['PENS_NIFS_PER_NIC'] != "" then
+      $num_nifs_per_nic = ENV['PENS_NIFS_PER_NIC'].to_i
+  end
+  if ENV['PENS_DCPUS_PER_NIC'] && ENV['PENS_DCPUS_PER_NIC'] != "" then
+      $num_dcpus_per_nic = ENV['PENS_DCPUS_PER_NIC'].to_i
+  end
+  if ENV['PENS_CCPUS_PER_NIC'] && ENV['PENS_CCPUS_PER_NIC'] != "" then
+      $num_ccpus_per_nic = ENV['PENS_CCPUS_PER_NIC'].to_i
+  end
+
+  #print " num_nodes: ", $num_nodes, \
+  #      " base_ip: ", $base_ip, \
+  #      " node_to_ccpu_ip: ", $node_to_ccpu_ip, \
+  #      " ccpu_to_nic_ip: ", $ccpu_to_nic_ip, \
+  #      " num_vfs_per_nic: ", $num_vfs_per_nic, \
+  #      " num_nifs_per_nic: ", $num_nifs_per_nic, \
+  #      " num_dcpus_per_nic: ", $num_dcpus_per_nic, \
+  #      " num_ccpus_per_nic: ", $num_ccpus_per_nic, "\n"
+end
+
+def mount_dirs(node)
+  # mount the host directories
+  if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
+    node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
+    node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+  else
+    node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+  end
+end
+
+$install_p4 = <<INSTALL_P4_SCRIPT
+  tools_file=$1
+  cd /import/src/github.com/pensando
+  if [ -f $tools_file ]; then
+    echo "installing $tools_file .."
+    tar zxvf $tools_file -C /
+  fi
+
+  cd /import/src/github.com/pensando/switch
+  if [ $2 -eq 0 ]; then
+    git submodule update --init --recursive && ./autogen.sh && ./configure --with-bmv2 --with-switchapi && make
+  else
+    echo "skipping switch compilation.."
+  fi
+
+  ldconfig
+INSTALL_P4_SCRIPT
+
+def install_p4_tools(n, tools_file)
+  n.vm.provision "shell" do |s|
+    s.inline = $install_p4
+    s.args = [tools_file, $p4_tools_compile_done]
+  end
+  
+  $p4_tools_compile_done = 1
+end
+
+$install_node_p4 = <<INSTALL_NODE_P4_SCRIPT
+  tools_file=$1
+  cd /import/src/github.com/pensando
+  if [ -f $tools_file ]; then
+    echo "installing $tools_file .."
+    tar zxvf $tools_file -C /
+  fi
+
+  ldconfig
+INSTALL_NODE_P4_SCRIPT
+
+def install_node_p4_tools(n, tools_file)
+  n.vm.provision "shell" do |s|
+    s.inline = $install_node_p4
+    s.args = [tools_file]
+  end
+end
+
+def configure_dcpu(config, did, node_name, nic_name, dcpu_name, dcpu_net_name)
+  config.vm.define dcpu_name do |dcpu|
+    dcpu.vm.box = $dcpu_box
+    dcpu.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: dcpu_net_name
+
+    dcpu.vm.provider "virtualbox" do |v|
+      v.name = dcpu_name
+      v.cpus = 1
+      v.memory = 512
+      v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+  
+      # enable 'virtio' on control nics to take benefit of builtin vlan tag
+      # use intel e1000 nics on data NIC so that we can run DPDK on it
+      n = 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+  
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+      v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+  
+      v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+    end
+
+    dcpu.vm.provision "shell" do |s|
+      s.inline = $dcpu_init
+      s.args = [dcpu_name]
+    end
+  
+  end
+end 
+
+def configure_ccpu(config, cid, node_name, nic_name, ccpu_name, ccpu_net_name)
+  config.vm.define ccpu_name do |ccpu|
+    ccpu.vm.box = $ccpu_box
+
+    # Vagrant Interface (eth0)
+
+    # CCPU-to-NIC Control Interface (eth1)
+    ccpu.vm.network :private_network, ip: $ccpu_to_nic_ip+"#{12+cid}", virtualbox__intnet: node_name+"_ccpu_to_nic_net"
+
+    # Node-to-CCPU Interface (eth2)
+    ccpu.vm.network :private_network, ip: $node_to_ccpu_ip+"#{12+cid}", virtualbox__intnet: node_name+"_node_to_ccpu_net"
+
+    # CCPU-to-NIC Data Interface (eth3)
+    ccpu.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: ccpu_net_name
+
+    ccpu.vm.provider "virtualbox" do |v|
+      v.name = ccpu_name
+      v.cpus = 2
+      v.memory = 3072
+      v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+  
+      # enable 'virtio' on control nics to take benefit of builtin vlan tag
+      # use intel e1000 nics on data NIC so that we can run DPDK on it
+
+      # Vagrant Interface
+      n = 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+
+      #CCPU-to-NIC Control Interface
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+
+      # Node-to-CCPU Interface
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+  
+      #CCPU-to-NIC Data Interface
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+      v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+  
+      v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+    end
+
+    ccpu.vm.provision "shell" do |s|
+      s.inline = $nic_init
+      s.args = [ccpu_name]
+    end
+  
+    mount_dirs(ccpu)
+    install_p4_tools(ccpu, $p4_ubuntu_tools_file)
+
+    # populate /etc/hosts entries
+    ccpu.vm.provision "shell" do |s|
+        s.inline = "echo '#{$ccpu_to_nic_ip}11 #{nic_name}' >> /etc/hosts"
+    end
+  end
+end
+
+$start_bmv2_script = <<START_BMV2_SCRIPT
+  echo "starting bmv2 if_str: $1 json: $2 .."
+  # do not enable --log-console and --pcap actions for now
+  nohup /usr/local/bin/simple_switch $1 --thrift-port 10001 $2 0<&- &>/dev/null &
+START_BMV2_SCRIPT
+
+#def start_bmv2(config, nic_name, data_if_name, cpu_if_name)
+def start_bmv2(config, nic_name, port_num)
+  json_str = "/import/src/github.com/pensando/switch/p4-build/bmpd/switch.json"
+  if_str = ""
+  n = 0
+  p = port_num
+
+  # Data Interfaces
+  $num_vfs_per_nic.times do |vid|
+    if_str = if_str + "-i #{n}@eth#{p}.#{100+vid} "
+    n += 1
+  end
+  p += 1
+  
+  # Network Interfaces
+  $num_nifs_per_nic.times do |pid|
+    if_str = if_str + "-i #{n}@eth#{p} "
+    n += 1
+    p += 1
+  end
+      
+  # DCPU Interfaces
+  $num_dcpus_per_nic.times do |did|
+    if_str = if_str + "-i #{n}@eth#{p} "
+    n += 1
+    p += 1
+  end
+  
+  n = 64
+  # CCPU Interfaces
+  # 64 port is hardcoded as cpu port as bmv2 expects it like that
+  $num_ccpus_per_nic.times do |cid|
+    if_str = if_str + "-i #{n}@eth#{p} "
+    n -= 1
+    p += 1
+  end
+      
+  config.vm.define nic_name do |nic|
+    nic.vm.provision "shell" do |s|
+      s.inline = $start_bmv2_script
+      s.args = [if_str, json_str]
+    end
+  end
+end
+
+$start_drivers_script = <<START_DRIVERS_SCRIPT
+  echo "starting driver with bmv2_server: $1 cpu_ifname: $2 .."
+  nohup /import/src/github.com/pensando/switch/bmv2/bmswitchp4_drivers --bmv2-server $1 --cpu-ifname $2 0<&- &>/dev/null &
+START_DRIVERS_SCRIPT
+
+def start_drivers(config, nic_name, ccpu_name)
+  config.vm.define ccpu_name do |ccpu|
+    ccpu.vm.provision "shell" do |s|
+      #TODO: eth3 is hardcoded here (CCPU-NIC Data Interface)
+      s.inline = $start_drivers_script
+      s.args = [nic_name, "eth3"]
+    end
+  end
+end
+
+def configure_nic(config, node_name, nic_name)
+  dcpu_names = $num_dcpus_per_nic.times.collect { |n| nic_name+"-dcpu#{n+1}"}
+  dcpu_net_names = $num_dcpus_per_nic.times.collect { |n| nic_name+"_dcpu_net#{n+1}"}
+  ccpu_names = $num_ccpus_per_nic.times.collect { |n| nic_name+"-ccpu#{n+1}"}
+  ccpu_net_names = $num_ccpus_per_nic.times.collect { |n| nic_name+"_ccpu_net#{n+1}"}
+
+  
+  config.vm.define nic_name do |nic|
+    nic.vm.box = $nic_box
+  
+    # Vagrant Interface (eth0)
+
+    # CCPU-to-NIC Control Interface (eth1)
+    nic.vm.network :private_network, ip: $ccpu_to_nic_ip+"11", virtualbox__intnet: node_name+"_ccpu_to_nic_net"
+
+    # Data Interface (eth2)
+    # create one data interface vnic. each VF is simulated as a vlan interface on top of this vnic.
+    # vlan number would be used to identify the VF.
+    # this vnic joins <node_name>_data_net network
+    nic.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: node_name+"_data_net", auto_config: false
+
+    # Network Interfaces
+    # NIFs from every NIC is connected to common tor switch
+    $num_nifs_per_nic.times do |pid|
+      nic.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "tor"
+    end
+      
+    # DCPU Interfaces
+    $num_dcpus_per_nic.times do |did|
+      dcpu_net_name = dcpu_net_names[did]
+      nic.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: dcpu_net_name
+    end
+
+    # CCPU Interfaces
+    $num_ccpus_per_nic.times do |cid|
+      ccpu_net_name = ccpu_net_names[cid]
+      nic.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: ccpu_net_name
+    end
+
+    nic.vm.provider "virtualbox" do |v|
+      v.name = nic_name
+      v.cpus = 2
+      v.memory = 3072
+      v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+  
+      # enable 'virtio' on control nics to take benefit of builtin vlan tag
+      # use intel e1000 nics on data NIC so that we can run DPDK on it
+
+      # Vagrant Interface
+      n = 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+  
+      #CCPU-to-NIC Control Interface
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", 'virtio']
+
+      # Data Interface
+      n += 1
+      v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+      v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+  
+      # Network Interfaces
+      $num_nifs_per_nic.times do |pid|
+        n += 1
+        v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+        v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+      end
+      
+      # DCPU Interfaces
+      $num_dcpus_per_nic.times do |did|
+        dcpu_net_name = dcpu_net_names[did]
+        n += 1
+        v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+        v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+      end
+  
+      # CCPU Interfaces
+      $num_ccpus_per_nic.times do |cid|
+        ccpu_net_name = ccpu_net_names[cid]
+        n += 1
+        v.customize ['modifyvm', :id, "--nictype#{n}", '82545EM']
+        v.customize ['modifyvm', :id, "--nicpromisc#{n}", 'allow-all']
+      end
+
+      v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+    end
+
+    nic.vm.provision "shell" do |s|
+      s.inline = $nic_init
+      s.args = [nic_name]
+    end
+  
+    # create vlan ifs for simulating VFs 
+    nic.vm.provision "shell" do |s|
+      s.inline = $vfs_create
+      s.args = ["eth2", $num_vfs_per_nic, 0]
+    end
+
+    mount_dirs(nic)
+    install_p4_tools(nic, $p4_ubuntu_tools_file)
+
+  end
+
+  $num_ccpus_per_nic.times do |cid|
+    configure_ccpu(config, cid, node_name, nic_name, ccpu_names[cid], ccpu_net_names[cid])
+  end
+
+  $num_dcpus_per_nic.times do |did|
+    configure_dcpu(config, did, node_name, nic_name, dcpu_names[did], dcpu_net_names[did])
+  end
+
+  # start bmv2 on nic and run driver on ccpu
+  #start_bmv2(config, nic_name, "eth2", "eth5")
+  # 2 is used as starting port number prefixed with eth
+  start_bmv2(config, nic_name, 2)
+
+  $num_ccpus_per_nic.times do |cid|
+    start_drivers(config, nic_name, ccpu_names[cid])
+  end
+
+end
+
+def configure_k8s(node)
+  # port mappings
+  node.vm.network "forwarded_port", guest: 80, host: 9980, auto_correct: true
+
+  node.vm.provision "shell", inline: <<-SHELL
+    kubeadm init --api-advertise-addresses=#{$base_ip}11 --token f0c861.753c505740ecde4c --skip-preflight-checks=true
+
+    # workaround for https://github.com/kubernetes/kubernetes/issues/34101
+    wget -q https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64
+    kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | ./jq-linux64 '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
+
+    # Add weave networking
+    kubectl create -f https://git.io/weave-kube
+  SHELL
+end
+
+def join_k8s(node)
+  node.vm.provision "shell", inline: <<-SHELL
+    kubeadm join --token f0c861.753c505740ecde4c --skip-preflight-checks=true #{$base_ip}11
+  SHELL
+end
+
+def configure_node(config, nid, node_name, node_addr)
+  config.vm.define node_name do |node|
+    node.vm.box = $node_box
+    node.vm.box_version = $node_box_ver
+  
+    # Vagrant Interface (eth0)
+
+    # Control Interface (eth1)
+    node.vm.network :private_network, ip: node_addr
+  
+    # Node-to-CCPU Interface (eth2)
+    # for now create a separate private network between node and its nic-ccpu. 
+    # TODO: need to remove this later and replace with a dedicated control VF, 
+    #       which goes thru P4 datapath and gets forwarded to CCPU
+    node.vm.network :private_network, ip: $node_to_ccpu_ip+"11", virtualbox__intnet: node_name+"_node_to_ccpu_net"
+  
+    # Data Interface (eth3)
+    # create one data interface vnic. each VF is simulated as a vlan interface on top of this vnic
+    # vlan number would be used to identify the VF.
+    # this vnic joins <node_name>_data_net network
+    node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: node_name+"_data_net", auto_config: false
+  
+    node.vm.provider "virtualbox" do |v|
+      v.name = node_name
+      v.cpus = 2
+      v.memory = 3072
+      v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+  
+      # enable 'virtio' on control nics to take benefit of builtin vlan tag
+      # use intel e1000 nics on data NIC so that we can run DPDK on it
+
+      # Vagrant Interface
+      v.customize ['modifyvm', :id, '--nictype1', 'virtio']
+
+      # Control Interface
+      v.customize ['modifyvm', :id, '--nictype2', 'virtio']
+      v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+
+      # Node-to-CCPU Interface
+      v.customize ['modifyvm', :id, '--nictype3', 'virtio']
+      v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+  
+      # Data Interface
+      v.customize ['modifyvm', :id, "--nictype4", '82545EM']
+      v.customize ['modifyvm', :id, "--nicpromisc4", 'allow-all']
+
+      v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+    end
+  
+    node.vm.provision "shell" do |s|
+      s.inline = $node_init
+      s.args = [node_name, node_addr, $cluster_ip_nodes]
+    end
+  
+    # create vlan ifs for simulating VFs 
+    node.vm.provision "shell" do |s|
+      s.inline = $vfs_create
+      s.args = ["eth3", $num_vfs_per_nic, nid+1]
+    end
+ 
+    mount_dirs(node)
+    install_node_p4_tools(node, $p4_centos_tools_file)
+
+    # populate /etc/hosts entries
+    $num_nodes.times do |node_id|
+      node.vm.provision "shell" do |s|
+        s.inline = "echo '#{$node_ips[node_id]} #{$node_names[node_id]}' >> /etc/hosts"
+      end
+    end
+    
+    $num_ccpus_per_nic.times do |cid|
+      node.vm.provision "shell" do |s|
+        s.inline = "echo '#{$node_to_ccpu_ip}#{12+cid} #{node_name}'-nic-ccpu#{cid+1} >> /etc/hosts"
+      end
+    end
+
+    # Init kubernetes cluster
+    if nid == 0 then
+      configure_k8s(node)
+    else
+      join_k8s(node)
+    end
+
+  end
+  
+  nic_name = node_name+"-nic"
+  configure_nic(config, node_name, nic_name)
+
+end
+
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  parse_env()
+
+  # global settings
+  config.ssh.insert_key = false
+  
+  # this makes provisioning faster for yum-install type of stuff with caching
+  if Vagrant.has_plugin?("vagrant-cachier")
+      # ... vagrant-cachier configs ... makes provisioning faster by caching packages
+      config.cache.scope = :machine
+  end
+
+  $node_ips = $num_nodes.times.collect { |n| $base_ip + "#{n+11}" }
+  $cluster_ip_nodes = $node_ips.join(",")
+
+  $node_names = $num_nodes.times.collect { |n| "node#{n+1}" }
+
+  $num_nodes.times do |n|
+    node_name = $node_names[n]
+    node_addr = $node_ips[n]
+
+    configure_node(config, n, node_name, node_addr)
+  end
+end

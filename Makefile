@@ -55,5 +55,8 @@ dev:
 arm64dev:
 	scripts/bringup-dev.sh Vagrantfile.arm64dev
 
+node:
+	scripts/bringup-dev.sh Vagrantfile.node
+
 dev-clean:
 	scripts/cleanup-dev.sh
