@@ -1,0 +1,10 @@
+[Unit]
+Description=desc_service1
+StopWhenUnneeded=yes
+DefaultDependencies=no
+
+[Install]
+WantedBy=pensando.target
+
+[Service]
+ExecStart=/bin/sleep 400
