@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/runtime"
+	"github.com/pensando/sw/utils/kvstore/helper"
 )
 
 const (
@@ -64,7 +65,7 @@ func (e *etcdStore) encode(obj runtime.Object) ([]byte, error) {
 
 // decode implements the de-serialization of an object stored in etcd.
 func (e *etcdStore) decode(value []byte, into runtime.Object, version int64) error {
-	if err := validObjForDecode(into); err != nil {
+	if err := helper.ValidObjForDecode(into); err != nil {
 		return err
 	}
 
@@ -311,7 +312,7 @@ func (e *etcdStore) Get(key string, into runtime.Object) error {
 // prefix are homogenous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
 func (e *etcdStore) List(prefix string, into runtime.Object) error {
-	v, err := validListObjForDecode(into)
+	v, err := helper.ValidListObjForDecode(into)
 	if err != nil {
 		return err
 	}

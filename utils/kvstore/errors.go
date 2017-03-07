@@ -9,12 +9,14 @@ const (
 	ErrCodeKeyExists int = iota + 1
 	ErrCodeKeyNotFound
 	ErrCodeVersionConflict
+	ErrCodeInvalidTTL
 )
 
 var errCodeToMessage = map[int]string{
 	ErrCodeKeyExists:       "Key already exists",
 	ErrCodeKeyNotFound:     "Key not found",
 	ErrCodeVersionConflict: "Version conflict",
+	ErrCodeInvalidTTL:      "Invalid TTL",
 }
 
 // KVError describes errors associated with kv store.
@@ -85,4 +87,19 @@ func NewVersionConflictError(key string, version int64) *KVError {
 // IsVersionConflictError checks if the error is a version conflict error.
 func IsVersionConflictError(err error) bool {
 	return isErrorCode(err, ErrCodeVersionConflict)
+}
+
+// NewInvalidTTL returns an invalid ttl error
+func NewInvalidTTLError(ttl int64) *KVError {
+	return &KVError{
+		Code:            ErrCodeInvalidTTL,
+		Message:         errCodeToMessage[ErrCodeInvalidTTL],
+		Key:             "",
+		ResourceVersion: ttl,
+	}
+}
+
+// IsKeyExistsError checks if it is key exists error
+func IsInvalidTTLError(err error) bool {
+	return isErrorCode(err, ErrCodeKeyExists)
 }

@@ -1,12 +1,12 @@
-package etcd
+package helper
 
 import (
 	"fmt"
 	"reflect"
 )
 
-// validObjForDecode checks if an object is valid for decoding in to.
-func validObjForDecode(v interface{}) error {
+// ValidObjForDecode checks if an object is valid for decoding in to.
+func ValidObjForDecode(v interface{}) error {
 	if v == nil {
 		return fmt.Errorf("Decode error: nil")
 	}
@@ -24,7 +24,7 @@ func validObjForDecode(v interface{}) error {
 	return nil
 }
 
-// validListObjForDecode checks if an object is valid list object for decoding in to.
+// ValidListObjForDecode checks if an object is valid list object for decoding in to.
 // It looks for a pointer object that has an "Items" field which is a slice.
 //
 // Valid example 1:
@@ -47,9 +47,9 @@ func validObjForDecode(v interface{}) error {
 //      api.ListMeta
 //      Items *[]Foo
 // }
-func validListObjForDecode(l interface{}) (reflect.Value, error) {
+func ValidListObjForDecode(l interface{}) (reflect.Value, error) {
 	// It should be a valid Object first (non-nil ptr Object).
-	if err := validObjForDecode(l); err != nil {
+	if err := ValidObjForDecode(l); err != nil {
 		return reflect.Value{}, err
 	}
 
