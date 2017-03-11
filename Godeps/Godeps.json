@@ -214,6 +214,11 @@
 			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
 		},
 		{
+			"ImportPath": "github.com/coreos/etcd/pkg/cpuutil",
+			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
+			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
+		},
+		{
 			"ImportPath": "github.com/coreos/etcd/pkg/crc",
 			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
 			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
@@ -240,6 +245,11 @@
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/pkg/logutil",
+			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
+			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/monotime",
 			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
 			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
 		},
@@ -364,6 +374,11 @@
 			"Rev": "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
 		},
 		{
+			"ImportPath": "github.com/coreos/go-systemd/dbus",
+			"Comment": "v14",
+			"Rev": "48702e0da86bd25e76cfef347e2adeb434a0d0a6"
+		},
+		{
 			"ImportPath": "github.com/coreos/go-systemd/journal",
 			"Comment": "v14",
 			"Rev": "48702e0da86bd25e76cfef347e2adeb434a0d0a6"
@@ -441,6 +456,11 @@
 		{
 			"ImportPath": "github.com/go-openapi/swag",
 			"Rev": "1d0bd113de87027671077d3c71eb3ac5d7dbba72"
+		},
+		{
+			"ImportPath": "github.com/godbus/dbus",
+			"Comment": "v4.0.0-20-g4b24ebe",
+			"Rev": "4b24ebee04561bf8a3bcc09aead82062edc56778"
 		},
 		{
 			"ImportPath": "github.com/gogo/protobuf/proto",
@@ -542,6 +562,11 @@
 		{
 			"ImportPath": "github.com/pborman/uuid",
 			"Rev": "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
+		},
+		{
+			"ImportPath": "github.com/pkg/errors",
+			"Comment": "v0.8.0-2-g248dadf",
+			"Rev": "248dadf4e9068a0b3e79f02ed0a610d935de5302"
 		},
 		{
 			"ImportPath": "github.com/prometheus/client_golang/prometheus",
@@ -1383,16 +1408,6 @@
 			"ImportPath": "k8s.io/client-go/transport",
 			"Comment": "v2.0.0-alpha.0-23-g24a02a6",
 			"Rev": "24a02a6d7d2c9a21b12a3eb35c71c784e63825f4"
-		},
-		{
-			"ImportPath": "github.com/coreos/etcd/pkg/monotime",
-			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
-			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
-		},
-		{
-			"ImportPath": "github.com/coreos/etcd/pkg/cpuutil",
-			"Comment": "v3.1.0-rc.1-462-g9b72c8b",
-			"Rev": "9b72c8ba1ba484802e155c9f6f0ddc21e9c256ce"
 		}
 	]
 }
