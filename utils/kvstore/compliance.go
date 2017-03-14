@@ -15,13 +15,13 @@ import (
 // kvstore compliance
 // A compliant kvstore must pass all the tests in this file in order to be used in
 // rest of the code. The test cases are meant to test semantic nature of the APIs
-// 
+//
 
 const (
-	testKey = "/nbv"
-	testDir = "/registry"
+	testKey     = "/nbv"
+	testDir     = "/registry"
 	contestName = "master"
-	minTTL = 5
+	minTTL      = 5
 )
 
 var (
@@ -49,7 +49,7 @@ type TestObjList struct {
 type TestCluster interface{}
 
 // ClusterSetupFunc sets up a cluster i.e. initializes it
-type ClusterSetupFunc func(t *testing.T) (TestCluster)
+type ClusterSetupFunc func(t *testing.T) TestCluster
 
 // StoreSetupFunc crates a state store client within the specified cluster
 type StoreSetupFunc func(t *testing.T, cluster TestCluster) (Interface, error)
@@ -58,7 +58,7 @@ type StoreSetupFunc func(t *testing.T, cluster TestCluster) (Interface, error)
 type ClusterCleanupFunc func(t *testing.T, cluster TestCluster)
 
 func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	fns := []func(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+	fns := []func(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc){
 		TestCreate,
 		TestCreateWithTTL,
 		TestCreateWithInvalidTTL,
@@ -400,7 +400,6 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-
 	keys := []string{"testObj1", "testObj2"}
 	for ii := range keys {
 		obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: keys[ii]}}
@@ -665,7 +664,7 @@ func TestWatchVersion(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	if err != nil {
 		t.Fatalf("Get of the key failed with error: %v", err)
 	}
-	
+
 	if err := store.Delete(testKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
@@ -677,7 +676,7 @@ func TestWatchVersion(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	}
 
 	// res := <-etcdWatcher
-	// 
+	//
 	// if res.Events[0].Kv.ModRevision != int64(watchVer) {
 	//	t.Fatalf("Version mismatch, expected %v, got %v", res.Events[0].Kv.ModRevision, int64(watchVer))
 	//}

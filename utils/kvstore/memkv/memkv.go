@@ -4,7 +4,7 @@ package memkv
 // The goal is allow a emulate kvstore without starting an external process (e.g. etcd)
 // to help with unit testing any function that depends on state store to validate its functionality
 // The package can be used in multi-threaded binary, but not useful for cross nodes kv store
-// 
+//
 
 import (
 	"encoding/json"
@@ -15,16 +15,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/utils/kvstore/helper"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/kvstore/helper"
 	"github.com/pensando/sw/utils/runtime"
 )
 
 type memKvRec struct {
-	value		string
-	ttl		int64
-	revision	int64
-	watchers	[]*watcher
+	value    string
+	ttl      int64
+	revision int64
+	watchers []*watcher
 }
 
 // memKv is state store interface to a memkv client
@@ -59,7 +59,7 @@ func NewMemKv(cluster interface{}, codec runtime.Codec) (kvstore.Interface, erro
 // ttlDecrement would sleep for a second and decrement ttl for a key in kvstore
 // FIXME: this background task must be stopped, perhaps by having kvstore use the context
 func ttlDecrement(f *memKv) {
-	for ;; {
+	for {
 		time.Sleep(time.Second)
 		f.Lock()
 		if f.deleted {
@@ -82,13 +82,13 @@ func ttlDecrement(f *memKv) {
 func (f *memKv) deleteAll() {
 	f.Lock()
 	// delete all kv pairs
-	for key, _ := range f.kvs {
-		delete (f.kvs, key)
+	for key := range f.kvs {
+		delete(f.kvs, key)
 	}
 
 	// delete all watchers
-	for key, _ := range f.watchers {
-		delete (f.watchers, key)
+	for key := range f.watchers {
+		delete(f.watchers, key)
 	}
 	f.Unlock()
 }
@@ -144,7 +144,7 @@ func (f *memKv) Create(key string, obj runtime.Object, ttl int64, into runtime.O
 		return err
 	}
 
-	v := &memKvRec{ value: string(value), ttl: ttl, revision: 1 }
+	v := &memKvRec{value: string(value), ttl: ttl, revision: 1}
 	f.kvs[key] = v
 	f.setupWatchers(key, v)
 
@@ -171,7 +171,7 @@ func (f *memKv) Delete(key string, into runtime.Object) error {
 	if into != nil {
 		return f.decode([]byte(v.value), into, v.revision)
 	}
-	
+
 	return nil
 }
 
@@ -250,7 +250,6 @@ func (f *memKv) Update(key string, obj runtime.Object, ttl int64, into runtime.O
 	if into != nil {
 		return f.decode(value, into, v.revision)
 	}
-
 
 	return nil
 }
@@ -349,7 +348,6 @@ func (f *memKv) ConsistentUpdate(key string, ttl int64, into runtime.Object, upd
 		}
 		f.Unlock()
 	}
-	return nil
 }
 
 // Get the object corresponding to a single key

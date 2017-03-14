@@ -234,9 +234,9 @@ func TestCNIServerErrors(t *testing.T) {
 	transport := &http.Transport{Dial: unixDial}
 	client := &http.Client{Transport: transport}
 	r, err := client.Post("http://localhost"+AddPodURL, "application/json", new(bytes.Buffer))
-	defer r.Body.Close()
 	AssertOk(t, err, "Failed to make http call")
 	Assert(t, (r.StatusCode != 200), "add pod call with bad args suceeded")
+	defer r.Body.Close()
 
 	// build bad pod args
 	stdinBytes, _ = json.Marshal(types.NetConf{Name: "pensando", Type: "pensando-net"})

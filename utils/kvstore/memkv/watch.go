@@ -60,7 +60,7 @@ func (f *memKv) watch(keyOrPrefix string, fromVersion string, recursive bool) (*
 		return nil, err
 	}
 	w := &watcher{
-                f:           f,
+		f:           f,
 		keyOrPrefix: keyOrPrefix,
 		fromVersion: version,
 		recursive:   recursive,
@@ -183,8 +183,8 @@ func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version
 	}
 
 	select {
-		case w.outCh <- e:
-		case <-w.ctx.Done():
+	case w.outCh <- e:
+	case <-w.ctx.Done():
 	}
 }
 
@@ -207,7 +207,7 @@ func (w *watcher) sendError(err error) {
 }
 
 func (f *memKv) deleteWatchers(w *watcher) {
-	var deleteWatcher = func (v *memKvRec, w *watcher) {
+	var deleteWatcher = func(v *memKvRec, w *watcher) {
 		for idx, value := range v.watchers {
 			if value == w {
 				v.watchers = append(v.watchers[:idx], v.watchers[idx+1:]...)

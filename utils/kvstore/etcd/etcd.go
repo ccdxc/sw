@@ -13,8 +13,8 @@ import (
 	"github.com/coreos/etcd/clientv3"
 
 	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/runtime"
 	"github.com/pensando/sw/utils/kvstore/helper"
+	"github.com/pensando/sw/utils/runtime"
 )
 
 const (

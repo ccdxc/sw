@@ -312,9 +312,9 @@ func TestWatcherStartTarget(t *testing.T) {
 	}
 
 	var expectedEvents = map[UnitEvent]struct{}{
-		{target, Active, "desc_target", "loaded", "active", "active"}:  struct{}{},
-		{srv1, Active, "desc_service1", "loaded", "active", "running"}: struct{}{},
-		{srv2, Active, "desc_service2", "loaded", "active", "running"}: struct{}{},
+		{target, Active, "desc_target", "loaded", "active", "active"}:  {},
+		{srv1, Active, "desc_service1", "loaded", "active", "running"}: {},
+		{srv2, Active, "desc_service2", "loaded", "active", "running"}: {},
 	}
 
 	checkExpectedEvents(t, &expectedEvents, evChan, errChan)
@@ -336,12 +336,12 @@ func TestWatcherReStartTargetAfterStart(t *testing.T) {
 
 	// Since the units are not running, Restart will only give the start events
 	var expectedEvents = map[UnitEvent]struct{}{
-		{target, Active, "desc_target", "loaded", "active", "active"}:  struct{}{},
-		{srv1, Active, "desc_service1", "loaded", "active", "running"}: struct{}{},
-		{srv2, Active, "desc_service2", "loaded", "active", "running"}: struct{}{},
-		{target, Dead, "", "", "", ""}:                                 struct{}{},
-		{srv1, Dead, "", "", "", ""}:                                   struct{}{},
-		{srv2, Dead, "", "", "", ""}:                                   struct{}{},
+		{target, Active, "desc_target", "loaded", "active", "active"}:  {},
+		{srv1, Active, "desc_service1", "loaded", "active", "running"}: {},
+		{srv2, Active, "desc_service2", "loaded", "active", "running"}: {},
+		{target, Dead, "", "", "", ""}:                                 {},
+		{srv1, Dead, "", "", "", ""}:                                   {},
+		{srv2, Dead, "", "", "", ""}:                                   {},
 	}
 
 	err := RestartTarget(target)
@@ -366,9 +366,9 @@ func TestWatcherReStartTargetAfterStop(t *testing.T) {
 
 	// Since the units are not running, Restart will only give the start events
 	var expectedEvents = map[UnitEvent]struct{}{
-		{target, Active, "desc_target", "loaded", "active", "active"}:  struct{}{},
-		{srv1, Active, "desc_service1", "loaded", "active", "running"}: struct{}{},
-		{srv2, Active, "desc_service2", "loaded", "active", "running"}: struct{}{},
+		{target, Active, "desc_target", "loaded", "active", "active"}:  {},
+		{srv1, Active, "desc_service1", "loaded", "active", "running"}: {},
+		{srv2, Active, "desc_service2", "loaded", "active", "running"}: {},
 	}
 
 	err := RestartTarget(target)
@@ -399,9 +399,9 @@ func TestWatcherStopTarget(t *testing.T) {
 	}
 
 	var expectedEvents = map[UnitEvent]struct{}{
-		{target, Dead, "", "", "", ""}: struct{}{},
-		{srv1, Dead, "", "", "", ""}:   struct{}{},
-		{srv2, Dead, "", "", "", ""}:   struct{}{},
+		{target, Dead, "", "", "", ""}: {},
+		{srv1, Dead, "", "", "", ""}:   {},
+		{srv2, Dead, "", "", "", ""}:   {},
 	}
 
 	checkExpectedEvents(t, &expectedEvents, evChan, errChan)

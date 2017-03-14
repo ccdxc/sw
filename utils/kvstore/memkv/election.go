@@ -13,20 +13,33 @@ import (
 
 const (
 	electionsPrefix = "/elections"
-	minTTL = 5
+	minTTL          = 5
 )
 
 // election contains the context for running a leader election.
 type election struct {
 	sync.Mutex
-	enabled  bool                        // Is the election enabled?
-	f        *memKv                      // kv store
-	name     string                      // name of the election
-	id       string                      // identifier of the contender
-	leader   string                      // winner of the election
-	termId   int			     // termId for current election
-	ttl      int                         // ttl for lease
-	outCh    chan *kvstore.ElectionEvent // channel for election results
+	enabled bool                        // Is the election enabled?
+	f       *memKv                      // kv store
+	name    string                      // name of the election
+	id      string                      // identifier of the contender
+	leader  string                      // winner of the election
+	termId  int                         // termId for current election
+	ttl     int                         // ttl for lease
+	outCh   chan *kvstore.ElectionEvent // channel for election results
+}
+
+type memkvElection struct {
+	leader     string
+	termId     int
+	contenders []*election
+}
+
+type memkvCluster struct {
+	sync.Mutex
+	elections map[string]*memkvElection // current elections
+	clientId  int                       // current id of the store
+	stores    map[string]*memKv         // all client stores
 }
 
 // newElection creates a new contender in an election.
@@ -57,7 +70,7 @@ func (f *memKv) newElection(name string, id string, ttl int) (*election, error) 
 		f.Unlock()
 		return nil, errors.New("invalid cluster")
 	}
-	
+
 	c.Lock()
 	if elec, ok := c.elections[name]; ok {
 		elec.contenders = append(elec.contenders, el)
@@ -101,9 +114,9 @@ func (el *election) run() {
 			el.Unlock()
 			return
 		}
-	
+
 		c.Lock()
-		elec := c.elections[el.name]	
+		elec := c.elections[el.name]
 
 		// pick a leader, upon leader going away or first time
 		if elec.leader == "" {
@@ -113,7 +126,7 @@ func (el *election) run() {
 
 			// notify all contenders
 			for _, contender := range elec.contenders {
-				if contender.id ==  elec.leader {
+				if contender.id == elec.leader {
 					contender.sendEvent(kvstore.Elected, elec.leader)
 				} else if elec.termId != contender.termId {
 					contender.sendEvent(kvstore.Changed, elec.leader)
@@ -125,14 +138,14 @@ func (el *election) run() {
 
 		el.leader = elec.leader
 		el.termId = elec.termId
-	
+
 		// TBD: no need to adjust ttl and auto-renew the lease for memkv
 
 		f.Unlock()
 		c.Unlock()
 		el.Unlock()
 
-		time.Sleep(10*time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -171,11 +184,11 @@ func (el *election) Stop() {
 		log.Fatalf("invalid cluster")
 		return
 	}
-	
+
 	c.Lock()
 	defer c.Unlock()
 
-	elec := c.elections[el.name]	
+	elec := c.elections[el.name]
 
 	// if you are the leader, mark leader to be undecided
 	if elec.leader == el.id {
@@ -184,7 +197,7 @@ func (el *election) Stop() {
 
 	// remove election from contenders list
 	for idx, contender := range elec.contenders {
-		if contender ==  el {
+		if contender == el {
 			elec.contenders = append(elec.contenders[:idx], elec.contenders[idx+1:]...)
 			break
 		}
