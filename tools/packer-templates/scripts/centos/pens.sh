@@ -10,8 +10,19 @@ fi
 sudo yum install -y net-tools
 sudo yum install -y tcpdump
 sudo yum install -y wget
-sudo yum group install -y "Development Tools"
 
+# set following variable to install docker distro
+DOCKER_ENV=0
+if [ "$DOCKER_ENV" != "" ]; then
+    sudo yum install -y yum-utils
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum-config-manager --enable docker-ce-edge
+    sudo yum makecache fast
+    sudo yum install -y docker-ce
+    exit 0
+fi
+
+sudo yum group install -y "Development Tools"
 cd /tmp
 wget https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.7.3.linux-amd64.tar.gz
@@ -43,3 +54,5 @@ sudo cp /tmp/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
 # Install docker and kubernetes
 sudo setenforce 0
 sudo yum install -y docker kubelet kubeadm kubectl kubernetes-cni
+
+exit 0

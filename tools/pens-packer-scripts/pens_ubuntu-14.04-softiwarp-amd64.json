@@ -1,54 +1,65 @@
 {
   "builders": [{
     "type": "virtualbox-iso",
-    "guest_os_type": "Fedora_64",
-    "iso_url": "{{user `mirror`}}/releases/23/Server/x86_64/iso/Fedora-Server-netinst-x86_64-23.iso",
+    "guest_os_type": "Ubuntu_64",
+    "iso_url": "{{user `mirror`}}/14.04/ubuntu-14.04.4-server-amd64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-fedora-23-x86_64-{{build_type}}",
-    "vm_name": "packer-fedora-23-x86_64",
+    "output_directory": "output-ubuntu-14.04-amd64-{{build_type}}",
+    "vm_name": "packer-ubuntu-14.04-amd64",
     "disk_size": "{{user `disk_size`}}",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
     "boot_command": [
-      "<tab> ",
-      "inst.ks=http://{{.HTTPIP}}:{{.HTTPPort}}/fedora-23/anaconda-ks.cfg ",
+      "<esc><wait>",
+      "<esc><wait>",
+      "<enter><wait>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
       "biosdevname=0 ",
-      "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-14.04/preseed.cfg ",
       "<enter>"
     ],
     "ssh_timeout": "{{user `ssh_timeout`}}",
     "ssh_username": "vagrant",
     "ssh_password": "vagrant",
-    "shutdown_command": "sudo systemctl poweroff",
+    "shutdown_command": "sudo poweroff",
     "vboxmanage": [
       ["modifyvm", "{{.Name}}", "--memory", "{{user `memory`}}"],
       ["modifyvm", "{{.Name}}", "--cpus", "{{user `cpus`}}"]
     ]
   }, {
     "type": "vmware-iso",
-    "guest_os_type": "fedora-64",
-    "iso_url": "{{user `mirror`}}/releases/23/Server/x86_64/iso/Fedora-Server-netinst-x86_64-23.iso",
+    "guest_os_type": "ubuntu-64",
+    "iso_url": "{{user `mirror`}}/14.04/ubuntu-14.04.4-server-amd64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-fedora-23-x86_64-{{build_type}}",
-    "vm_name": "packer-fedora-23-x86_64",
+    "output_directory": "output-ubuntu-14.04-amd64-{{build_type}}",
+    "vm_name": "packer-ubuntu-14.04-amd64",
     "disk_size": "{{user `disk_size`}}",
     "headless": "{{user `headless`}}",
     "http_directory": "http",
     "boot_wait": "5s",
     "boot_command": [
-      "<tab> ",
-      "inst.ks=http://{{.HTTPIP}}:{{.HTTPPort}}/fedora-23/anaconda-ks.cfg ",
+      "<esc><wait>",
+      "<esc><wait>",
+      "<enter><wait>",
+      "/install/vmlinuz ",
+      "initrd=/install/initrd.gz ",
       "biosdevname=0 ",
-      "net.ifnames=0 ",
+      "auto-install/enable=true ",
+      "debconf/priority=critical ",
+      "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/ubuntu-14.04/preseed.cfg ",
       "<enter>"
     ],
     "ssh_timeout": "{{user `ssh_timeout`}}",
     "ssh_username": "vagrant",
     "ssh_password": "vagrant",
-    "shutdown_command": "sudo systemctl poweroff",
+    "tools_upload_flavor": "linux",
+    "shutdown_command": "sudo poweroff",
     "vmx_data": {
       "memsize": "{{user `memory`}}",
       "numvcpus": "{{user `cpus`}}"
@@ -57,29 +68,31 @@
   "provisioners": [{
     "type": "shell",
     "scripts": [
-      "scripts/fedora/virtualbox.sh",
-      "scripts/fedora/vmware.sh",
+      "scripts/ubuntu/apt.sh",
+      "scripts/ubuntu/virtualbox.sh",
+      "scripts/ubuntu-14.04/vmware.sh",
+      "scripts/ubuntu/init.sh",
       "scripts/common/vagrant.sh",
       "scripts/common/sshd.sh",
-      "scripts/fedora/locale.sh",
-      "scripts/fedora/cleanup.sh",
-      "scripts/common/minimize.sh"
+      "scripts/ubuntu/cleanup.sh",
+      "scripts/common/minimize.sh",
+      "scripts/ubuntu-14.04/pens_softiwarp.sh"
     ]
   }],
   "post-processors": [{
     "type": "vagrant",
     "compression_level": "{{user `compression_level`}}",
-    "output": "fedora-23-x86_64-{{.Provider}}.box"
+    "output": "ubuntu-14.04-amd64-{{.Provider}}.box"
   }],
   "variables": {
     "compression_level": "6",
     "cpus": "1",
     "disk_size": "40000",
     "headless": "false",
-    "iso_checksum": "32e0a15a1c71d0e2fd36a0af5b67a3b3af82976d2dfca0aefcb90d42f2ae6844",
+    "iso_checksum": "07e4bb5569814eab41fafac882ba127893e3ff0bdb7ec931c9b2d040e3e94e7a",
     "iso_checksum_type": "sha256",
     "memory": "512",
-    "mirror": "http://download.fedoraproject.org/pub/fedora/linux",
+    "mirror": "http://releases.ubuntu.com",
     "ssh_timeout": "60m"
   }
 }
