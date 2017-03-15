@@ -2,7 +2,7 @@
 
 EXCLUDE_DIRS := bin docs Godeps vendor scripts
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
-TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/...
+TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/...
 GOLINT_CMD := golint -set_exit_status
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
@@ -31,6 +31,10 @@ checks: gofmt-src golint-src govet-src
 build: deps checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
+
+install: 
+	@cp bin/cmd tools/docker-files/target/usr/bin/pen-cmd
+	@tools/scripts/create-container.sh
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))

@@ -1,0 +1,17 @@
+[Unit]
+Description=Pensando Cluster Manager Daemon
+Documentation=http://pensando.io/
+StopWhenUnneeded=yes
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/pensando/pencmd.conf
+ExecStart=/usr/bin/pen-cmd $MYCMD -start
+
+Type=simple
+Restart=always
+RestartSec=10s
+KillMode=process
+
+[Install]
+WantedBy=pensando.target
