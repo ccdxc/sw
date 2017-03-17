@@ -1,0 +1,7 @@
+# on quorum master nodes, these are used
+server 0.centos.pool.ntp.org iburst
+server 1.centos.pool.ntp.org iburst
+server 2.centos.pool.ntp.org iburst
+server 3.centos.pool.ntp.org iburst
+
+# on cluster nodes (or non-master quorum nodes), CMD or some such process is expected to rewrite this file with entries to quorum master NTP server
