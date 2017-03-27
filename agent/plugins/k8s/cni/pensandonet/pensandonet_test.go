@@ -12,7 +12,7 @@ import (
 	"github.com/appc/cni/pkg/types"
 	cni "github.com/containernetworking/cni/pkg/skel"
 	"github.com/gorilla/mux"
-	"github.com/pensando/sw/agent/netagent/netutils"
+	"github.com/pensando/sw/agent/netagent/netutils/httputils"
 	cniServer "github.com/pensando/sw/agent/plugins/k8s/cni"
 	. "github.com/pensando/sw/utils/testutils"
 )
@@ -39,8 +39,8 @@ func startFakeCniServer() (*fakeCniServer, error) {
 	// register handlers for cni
 	router := mux.NewRouter()
 	t := router.Headers("Content-Type", "application/json").Methods("POST").Subrouter()
-	t.HandleFunc(cniServer.AddPodURL, netutils.MakeHTTPHandler(fakeServer.AddPod))
-	t.HandleFunc(cniServer.DelPodURL, netutils.MakeHTTPHandler(fakeServer.DelPod))
+	t.HandleFunc(cniServer.AddPodURL, httputils.MakeHTTPHandler(fakeServer.AddPod))
+	t.HandleFunc(cniServer.DelPodURL, httputils.MakeHTTPHandler(fakeServer.DelPod))
 
 	// create a listener
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: fakeCniServerURL, Net: "unix"})

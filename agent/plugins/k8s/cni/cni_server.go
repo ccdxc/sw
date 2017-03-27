@@ -13,6 +13,7 @@ import (
 	cniapi "github.com/containernetworking/cni/pkg/skel"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/netutils"
+	"github.com/pensando/sw/agent/netagent/netutils/httputils"
 
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"
@@ -55,7 +56,7 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 // parsePodArgs parses pod args from http req body
 func parsePodArgs(r *http.Request, args *cniapi.CmdArgs, netconf *types.NetConf, podArgs *PodArgs) error {
 	// parse request args
-	if err := netutils.ReadJSON(r, args); err != nil {
+	if err := httputils.ReadJSON(r, args); err != nil {
 		return fmt.Errorf("failed to parse http req: %v", err)
 	}
 
@@ -85,8 +86,8 @@ func NewCniServer(listenURL string, nagent netagent.NetAgentAPI) (*CniServer, er
 	// register handlers for cni
 	router := mux.NewRouter()
 	t := router.Headers("Content-Type", "application/json").Methods("POST").Subrouter()
-	t.HandleFunc(AddPodURL, netutils.MakeHTTPHandler(cniServer.AddPod))
-	t.HandleFunc(DelPodURL, netutils.MakeHTTPHandler(cniServer.DelPod))
+	t.HandleFunc(AddPodURL, httputils.MakeHTTPHandler(cniServer.AddPod))
+	t.HandleFunc(DelPodURL, httputils.MakeHTTPHandler(cniServer.DelPod))
 	t.HandleFunc("/Pensando/{*}", unknownAction)
 
 	// create a k8s api server client.
@@ -147,7 +148,7 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 		TenantName:    string(podArgs.K8S_POD_NAMESPACE),
 	}
 
-	// Ask network agent to create and endpoint
+	// Ask network agent to create an endpoint
 	ep, intfInfo, err := c.agent.CreateEndpoint(&epinfo)
 	if err != nil {
 		log.Errorf("Error creating the endpoint: {%+v}. Err: %v", epinfo, err)
@@ -190,7 +191,7 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 	return &result, nil
 }
 
-// DelPod handles the delete pod clal from cni plugin
+// DelPod handles the delete pod call from cni plugin
 func (c *CniServer) DelPod(r *http.Request) (interface{}, error) {
 	// parse request args and net conf
 	args := cniapi.CmdArgs{}

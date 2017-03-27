@@ -16,15 +16,28 @@ import (
  *                Kubelet     Docker     Kubelet     Docker
  *                   |          |            |         |
  *                   V          V            V         V
- *   			+---------+------------+---------+------------+
- *   			| K8s Net | Docker Net | K8s Vol | Docker Vol |
- *   			| Plugin  | Plugin     | Plugin  | Plugin     |
- *   			+---------+------------+---------+------------+
+ *               +---------+------------+---------+------------+
+ *               | K8s Net | Docker Net | K8s Vol | Docker Vol |
+ *               | Plugin  | Plugin     | Plugin  | Plugin     |
+ *               +---------+------------+---------+------------+
+ *                        |                      |
+ *                   NetAgentAPI             VolAgentAPI
+ *                        |                      |
+ *                        V                      V
+ *               +----------------------+----------------------+
+ *              |                      |                      |
  *  Network <-->+      NetAgent        |      VolAgent        +<--> Volume
- * Controller	+---------+------------+---------+------------+     Controller
- *   			| Network  | Service   | Security | Volume    |
- *   			| Datapath | Datapath  | Datapath | Datapath  |
- *   			+---------+------------+---------+------------+
+ *  Controller  |                      |                      |     Controller
+ *                 +---------+------------+---------+------------+
+ *                   |           |     \              |
+ *               NetData    SvcData     SecData    VolData
+ *               pathAPI    pathAPI     pathAPI    pathAPI
+ *                   |           |          |         |
+ *                   V           V          V         V
+ *               +----------+-----------+----------+-----------+
+ *               | Network  | Service   | Security | Volume    |
+ *               | Datapath | Datapath  | Datapath | Datapath  |
+ *               +---------+------------+---------+------------+
  *
  */
 // Main function

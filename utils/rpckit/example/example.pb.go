@@ -44,6 +44,13 @@ func (m *ExampleReq) String() string            { return proto.CompactTextString
 func (*ExampleReq) ProtoMessage()               {}
 func (*ExampleReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+func (m *ExampleReq) GetReqMsg() string {
+	if m != nil {
+		return m.ReqMsg
+	}
+	return ""
+}
+
 // RPC response
 type ExampleResp struct {
 	RespMsg string `protobuf:"bytes,1,opt,name=respMsg" json:"respMsg,omitempty"`
@@ -53,6 +60,13 @@ func (m *ExampleResp) Reset()                    { *m = ExampleResp{} }
 func (m *ExampleResp) String() string            { return proto.CompactTextString(m) }
 func (*ExampleResp) ProtoMessage()               {}
 func (*ExampleResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *ExampleResp) GetRespMsg() string {
+	if m != nil {
+		return m.RespMsg
+	}
+	return ""
+}
 
 func init() {
 	proto.RegisterType((*ExampleReq)(nil), "main.ExampleReq")
@@ -70,7 +84,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Example service
 
 type ExampleClient interface {
-	// example message
+	// example rpc call
 	ExampleRPC(ctx context.Context, in *ExampleReq, opts ...grpc.CallOption) (*ExampleResp, error)
 }
 
@@ -94,7 +108,7 @@ func (c *exampleClient) ExampleRPC(ctx context.Context, in *ExampleReq, opts ...
 // Server API for Example service
 
 type ExampleServer interface {
-	// example message
+	// example rpc call
 	ExampleRPC(context.Context, *ExampleReq) (*ExampleResp, error)
 }
 

@@ -9,7 +9,7 @@ type EndpointInfo struct {
 	EndpointUUID    string   // unique identifier for the endpoint
 	ContainerUUID   string   // unique identifier for the container
 	ContainerName   string   // Name of the pod/container if known
-	NetworkName     string   // Name of the network this container belogs to
+	NetworkName     string   // Name of the network this container belongs to
 	TenantName      string   // Name of the tenant this container belongs to
 	ContainerLabels []string // Labels associated with the container
 }

@@ -2,6 +2,7 @@ package rpckit
 
 import (
 	"fmt"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -98,6 +99,7 @@ func (l *logMiddleware) RespInterceptor(ctx context.Context, role string, method
 
 // Stats middleware
 type statsMiddleware struct {
+	lock     sync.Mutex       // RW lock for stats object
 	rpcStats map[string]int64 // stats for each RPC call
 }
 
@@ -110,11 +112,21 @@ func newStatsMiddleware() *statsMiddleware {
 
 // ReqInterceptor implements request interception
 func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) {
+	// lock the object
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// increment stats
 	s.rpcStats[fmt.Sprintf("%s-%s:Req", role, method)]++
 }
 
 // RespInterceptor handles responses
 func (s *statsMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) {
+	// lock the object
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// increment response stats
 	s.rpcStats[fmt.Sprintf("%s-%s:Resp", role, method)]++
 
 	// count RPC error responses

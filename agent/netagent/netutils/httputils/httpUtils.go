@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package netutils
+package httputils
 
 import (
 	"encoding/json"

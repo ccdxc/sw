@@ -1,4 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+//+build !test
 
 package netutils
 
@@ -106,7 +107,13 @@ func SetupIntfInNamespace(intfName, nsIntfName, nsPath string, ipv4AddrMask, ipv
 	defer newNs.Close()
 
 	// Save the current network namespace
-	origns, _ := netns.Get()
+	origns, err := netns.Get()
+	if err != nil {
+		log.Errorf("Error getting current namespace. Err: %v", err)
+		return err
+	}
+
+	// go back to original namespace on return
 	defer func() {
 		netns.Set(origns)
 		origns.Close()
@@ -116,6 +123,7 @@ func SetupIntfInNamespace(intfName, nsIntfName, nsPath string, ipv4AddrMask, ipv
 	err = netns.Set(newNs)
 	if err != nil {
 		log.Errorf("Error changing to namespace: %s. Err: %v", nsPath, err)
+		return err
 	}
 
 	// Find the network interface

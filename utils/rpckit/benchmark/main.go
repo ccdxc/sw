@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -21,14 +22,14 @@ import (
 
 // ExampleRPCHandler is the grpc handler
 type ExampleRPCHandler struct {
-	srvMsg string
+	srvMsg string // dummy variable
 }
 
 // ExampleRPC is example rpc call handler
 func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*ExampleResp, error) {
 	log.Infof("Example server got request: %+v", req)
 	exampleResp := &ExampleResp{
-		RespMsg: es.srvMsg,
+		RespMsg: req.ReqMsg,
 	}
 
 	return exampleResp, nil
@@ -38,7 +39,7 @@ func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	// create an rpc handler object
 	exampleHandler := &ExampleRPCHandler{
-		srvMsg: "Example Server Response",
+		srvMsg: "Example Server",
 	}
 
 	// create an RPC server
@@ -55,12 +56,26 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	<-stopChannel
 }
 
+func randString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 // runClient runs the client
-func runClient(url, certFile, keyFile, caFile string, count, concurrency int) {
+func runClient(url, certFile, keyFile, caFile string, length, count, concurrency int) {
 	endChannel := make(chan bool, concurrency)
 
 	// record starting time
 	startTime := time.Now()
+
+	// create a request message of required length
+	req := ExampleReq{
+		ReqMsg: randString(length),
+	}
 
 	// run concurrent goroutines
 	for c := 0; c < concurrency; c++ {
@@ -78,7 +93,7 @@ func runClient(url, certFile, keyFile, caFile string, count, concurrency int) {
 			// make calls `count` times
 			for i := 0; i < count; i++ {
 				// make a call
-				resp, err := exampleClient.ExampleRPC(context.Background(), &ExampleReq{"example request"})
+				resp, err := exampleClient.ExampleRPC(context.Background(), &req)
 				if err != nil {
 					log.Errorf("Got RPC error: %v", err)
 				} else {
@@ -116,6 +131,7 @@ func main() {
 	var certFile, keyFile, caFile string
 	var count int
 	var cpus int
+	var length int
 	var concurrency int
 	var cpuprofile string
 
@@ -127,6 +143,7 @@ func main() {
 	flag.StringVar(&keyFile, "key", "", "Key file")
 	flag.StringVar(&caFile, "ca", "", "Root CA file")
 	flag.IntVar(&cpus, "cpu", 1, "Number of CPUs to use")
+	flag.IntVar(&length, "len", 100, "Size of RPC request message")
 	flag.IntVar(&count, "count", 1, "Number of times to make rpc call")
 	flag.IntVar(&concurrency, "concurrency", 1, "Number of concurrent connections")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to file")
@@ -162,6 +179,6 @@ func main() {
 	if serverFlag {
 		runServer(url, certFile, keyFile, caFile, make(chan bool))
 	} else {
-		runClient(url, certFile, keyFile, caFile, count, concurrency)
+		runClient(url, certFile, keyFile, caFile, length, count, concurrency)
 	}
 }
