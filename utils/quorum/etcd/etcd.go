@@ -22,10 +22,10 @@ type etcdQuorum struct {
 
 const (
 	// Defaults
-	defaultCfgFile = "/etc/etcd.conf"
-	defaultDataDir = "/var/lib/etcd"
-	etcdUnit       = "etcd.service"
-	timeout        = time.Second * 5
+	defaultCfgFile  = "/etc/etcd.conf"
+	defaultDataDir  = "/var/lib/etcd"
+	defaultUnitFile = "etcd.service"
+	timeout         = time.Second * 5
 
 	// Environment variables
 	nameVar          = "NAME"
@@ -71,6 +71,9 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	// Configure defaults.
 	if c.CfgFile == "" {
 		c.CfgFile = defaultCfgFile
+	}
+	if c.UnitFile == "" {
+		c.UnitFile = defaultUnitFile
 	}
 	if c.DataDir == "" {
 		c.DataDir = defaultDataDir
@@ -125,7 +128,7 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 		return nil, err
 	}
 
-	pid, err := conn.StartUnit(etcdUnit, "replace", nil)
+	pid, err := conn.StartUnit(c.UnitFile, "replace", nil)
 	if err != nil {
 		return nil, err
 	}

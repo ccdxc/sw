@@ -10,6 +10,8 @@ type Config struct {
 	DataDir string
 	// CfgFile is the path for configuration file.
 	CfgFile string
+	// UnitFile is the path for systemd unit file.
+	UnitFile string
 	// MemberName is the name of this member.
 	MemberName string
 	// Existing indicates whether the cluster already exists.
