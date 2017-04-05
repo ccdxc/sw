@@ -39,7 +39,7 @@ type memKv struct {
 	watchers      map[string]*watcher
 }
 
-// NewFakeStore creates a new in memory kv store
+// NewMemKv creates a new in memory kv store
 func NewMemKv(cluster interface{}, codec runtime.Codec) (kvstore.Interface, error) {
 	kvs := make(map[string]*memKvRec)
 	watchers := make(map[string]*watcher)

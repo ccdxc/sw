@@ -8,3 +8,6 @@ tools/dev
 Vagrantfile
 .vagrant
 bin/*
+*~
+*#
+.#*

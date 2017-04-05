@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package grpc;
+
+service Cluster {
+	rpc PreJoin (ClusterPreJoinReq)  returns (ClusterPreJoinResp) {};
+	rpc Join (ClusterJoinReq)  returns (ClusterJoinResp) {};
+}
+
+// Cluster PreJoin request
+message ClusterPreJoinReq {
+	string name = 1;
+	string uuid = 2;
+	string virtual_ip = 3;
+}
+
+// Cluster PreJoin response
+message ClusterPreJoinResp {
+	string sw_version = 1;
+}
+
+// Quorum member
+message QuorumMember {
+	uint64 id = 1;
+	string name = 2;
+	repeated string peer_urls = 3;
+	repeated string client_urls = 4;
+}
+
+// Quorum configuration
+message QuorumConfig {
+	string id = 1;
+	repeated QuorumMember quorum_members = 2;
+}
+
+// Cluster Join request
+message ClusterJoinReq {
+	string name = 1;
+	string uuid = 2;
+	string virtual_ip = 3;
+	QuorumConfig quorum_config = 4;
+}
+
+// Cluster Join response
+message ClusterJoinResp {
+
+}
