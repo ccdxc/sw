@@ -3,6 +3,7 @@
 package sysif
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -30,4 +31,16 @@ func TestGetInfo(t *testing.T) {
 		t.Fatal("GetNodeInfo - Invalid CPU MHz", info.CPUMHz)
 	}
 	t.Logf("%+v\n", info)
+}
+
+func TestMarshall(t *testing.T) {
+	info, err := GetNodeInfo()
+	if err != nil {
+		t.Fatalf("GetNodeInfo call failed, err %v", err)
+	}
+	m := MarshallToStringMap(info)
+	info2 := UnmarshallFromStringMap(m)
+	if !reflect.DeepEqual(*info, info2) {
+		t.Fatalf("marshall/unmarshall changed data. before:%v after:%v", info, info2)
+	}
 }

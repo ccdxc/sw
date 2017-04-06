@@ -68,6 +68,10 @@ func TestSaveAndReadCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SaveCertificate fail. err: %s", err.Error())
 	}
+	err = SaveCertificate("/tmp", cert)
+	if err == nil {
+		t.Fatalf("SaveCertificate succeeded writing to invalid filename.")
+	}
 
 	readCert, err := ReadCertificates(tmpfileName)
 	if err != nil {

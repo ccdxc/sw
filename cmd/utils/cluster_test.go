@@ -34,3 +34,29 @@ func TestClusterConfigFile(t *testing.T) {
 		t.Fatalf("Got %v, expected nil", *newCluster)
 	}
 }
+func TestClusterConfigFileErrorCases(t *testing.T) {
+	env.Options = options.NewServerRunOptions()
+
+	// invalid file name
+	env.Options.ConfigDir = "/"
+	env.Options.ClusterConfigFile = "tmp"
+
+	cluster := Cluster{
+		Name:      "testCluster",
+		UUID:      "AAAA-BBBB-CCCC-DDDD",
+		VirtualIP: "192.168.30.10",
+	}
+	if err := SaveCluster(&cluster); err == nil {
+		t.Fatalf("Saving cluster succeeded writing to invalid config file")
+	}
+	if _, err := GetCluster(); err == nil {
+		t.Fatalf("Getting cluster succeeded with invalid config file")
+	}
+
+	// file with invalid contents
+	env.Options.ConfigDir = "/dev"
+	env.Options.ClusterConfigFile = "null"
+	if _, err := GetCluster(); err == nil {
+		t.Fatalf("Getting cluster succeeded with invalid config file")
+	}
+}
