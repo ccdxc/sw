@@ -63,12 +63,12 @@ func TestCreateWithTTL(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 1, obj)
+	err := store.Create(testKey, obj, 2, obj)
 	if err != nil {
 		t.Fatalf("Create with TTL failed with error: %v", err)
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	err = store.Get(testKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {

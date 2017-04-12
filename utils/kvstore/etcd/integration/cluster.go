@@ -32,6 +32,7 @@ const (
 	dataDir          = "/tmp/etcd"
 	requestTimeout   = 5 * time.Second
 	electionTicks    = 10
+	tickMs           = 100
 	bootstrapTimeout = 10 * time.Millisecond
 	ticker           = 500 * time.Millisecond
 )
@@ -73,7 +74,7 @@ func newEtcdServer(t *testing.T) *etcdserver.EtcdServer {
 		InitialClusterToken: clusterToken,
 		ElectionTicks:       electionTicks,
 		BootstrapTimeout:    bootstrapTimeout,
-		TickMs:              electionTicks,
+		TickMs:              tickMs,
 	}
 
 	server, err := etcdserver.NewServer(serverConfig)
