@@ -328,12 +328,23 @@ func (e *etcdStore) List(prefix string, into runtime.Object) error {
 		return err
 	}
 
+	ptr := false
+	elem := v.Type().Elem()
+	if elem.Kind() == reflect.Ptr {
+		ptr = true
+		elem = elem.Elem()
+	}
+
 	for _, kv := range resp.Kvs {
-		obj := reflect.New(v.Type().Elem()).Interface().(runtime.Object)
+		obj := reflect.New(elem).Interface().(runtime.Object)
 		if err := e.decode(kv.Value, obj, kv.ModRevision); err != nil {
 			return err
 		}
-		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
+		if ptr {
+			v.Set(reflect.Append(v, reflect.ValueOf(obj)))
+		} else {
+			v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
+		}
 	}
 
 	return e.listVersioner.SetVersion(into, uint64(resp.Header.Revision))
