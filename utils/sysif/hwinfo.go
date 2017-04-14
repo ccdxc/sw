@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -76,6 +77,8 @@ func MarshallToStringMap(ni *NodeInfo) (data map[string]string) {
 // UnmarshallFromStringMap - get Nodeinfo from map of strings
 func UnmarshallFromStringMap(data map[string]string) NodeInfo {
 	var err error
+	var diskNames []string
+	var netifNames []string
 
 	nbd := NodeInfo{}
 	for k, v := range data {
@@ -98,23 +101,35 @@ func UnmarshallFromStringMap(data map[string]string) NodeInfo {
 			nbd.CPUModelName = v
 		}
 		if strings.HasPrefix(k, "Disks_") {
-			var n DiskInfo
-			err = json.Unmarshal([]byte(v), &n)
-			if err != nil {
-				log.Println(err, v)
-			} else {
-				nbd.Disks = append(nbd.Disks, n)
-			}
+			diskNames = append(diskNames, k)
 		}
 		if strings.HasPrefix(k, "NetIfs_") {
-			var n NetIntf
-			n.Addrs = make([]net.IPNet, 0, 4)
-			err = json.Unmarshal([]byte(v), &n)
-			if err != nil {
-				log.Println(err, v)
-			} else {
-				nbd.NetIntfs = append(nbd.NetIntfs, n)
-			}
+			netifNames = append(netifNames, k)
+		}
+	}
+	// keep the names in the same order as marshalling
+	sort.Strings(diskNames)
+	sort.Strings(netifNames)
+
+	for _, k := range diskNames {
+		var n DiskInfo
+		v := data[k]
+		err = json.Unmarshal([]byte(v), &n)
+		if err != nil {
+			log.Println(err, v)
+		} else {
+			nbd.Disks = append(nbd.Disks, n)
+		}
+	}
+	for _, k := range netifNames {
+		var n NetIntf
+		v := data[k]
+		n.Addrs = make([]net.IPNet, 0, 4)
+		err = json.Unmarshal([]byte(v), &n)
+		if err != nil {
+			log.Println(err, v)
+		} else {
+			nbd.NetIntfs = append(nbd.NetIntfs, n)
 		}
 	}
 	return nbd
