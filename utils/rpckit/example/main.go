@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -42,7 +43,7 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	}
 
 	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer(url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("exampleServer", url, certFile, keyFile, caFile)
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}
@@ -58,7 +59,7 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 // runClient runs the client
 func runClient(url, certFile, keyFile, caFile string, count int) {
 	// create an RPC client
-	rpcClient, err := rpckit.NewRPCClient(url, certFile, keyFile, caFile)
+	rpcClient, err := rpckit.NewRPCClient("exampleClient", url, certFile, keyFile, caFile)
 	if err != nil {
 		log.Errorf("Error connecting to server. Err: %v", err)
 		return
@@ -83,6 +84,7 @@ func runClient(url, certFile, keyFile, caFile string, count int) {
 
 	// close client connection and stop the server
 	rpcClient.Close()
+	time.Sleep(time.Second)
 }
 
 // main function

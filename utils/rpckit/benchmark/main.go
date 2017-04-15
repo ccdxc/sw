@@ -43,7 +43,7 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	}
 
 	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer(url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("benchmarkServer", url, certFile, keyFile, caFile)
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}
@@ -81,7 +81,7 @@ func runClient(url, certFile, keyFile, caFile string, length, count, concurrency
 	for c := 0; c < concurrency; c++ {
 		go func(endChannel chan bool) {
 			// create an RPC client
-			rpcClient, err := rpckit.NewRPCClient(url, certFile, keyFile, caFile)
+			rpcClient, err := rpckit.NewRPCClient("benchmarkClient", url, certFile, keyFile, caFile)
 			if err != nil {
 				log.Errorf("Error connecting to server. Err: %v", err)
 				endChannel <- true

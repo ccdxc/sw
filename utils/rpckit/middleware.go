@@ -9,6 +9,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+// middleware callback roles
+const (
+	RoleClient = "Client"
+	RoleServer = "Server"
+)
+
 // rpcServerUnaryInterceptor returns an intercept handler for unary rpc calls
 func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
@@ -16,7 +22,7 @@ func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor
 
 		// call all the request middlewares
 		for _, m := range rpcServer.middlewares {
-			m.ReqInterceptor(ctx, "Server", info.FullMethod, req)
+			ctx = m.ReqInterceptor(ctx, RoleServer, info.FullMethod, req)
 		}
 
 		// finally call the handler
@@ -24,7 +30,7 @@ func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor
 
 		// call all response middlewares
 		for _, m := range rpcServer.middlewares {
-			m.RespInterceptor(ctx, "Server", info.FullMethod, req, resp, err)
+			ctx = m.RespInterceptor(ctx, RoleServer, info.FullMethod, req, resp, err)
 		}
 
 		return resp, err
@@ -44,7 +50,7 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// call all the request middlewares
 		for _, m := range rpcClient.middlewares {
-			m.ReqInterceptor(ctx, "Client", method, req)
+			ctx = m.ReqInterceptor(ctx, RoleClient, method, req)
 		}
 
 		// finally, call the invoker
@@ -52,7 +58,7 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 
 		// call all the response middlewares
 		for _, m := range rpcClient.middlewares {
-			m.RespInterceptor(ctx, "Client", method, req, reply, err)
+			ctx = m.RespInterceptor(ctx, RoleClient, method, req, reply, err)
 		}
 
 		return err
@@ -78,23 +84,27 @@ func newLogMiddleware() *logMiddleware {
 }
 
 // ReqInterceptor implements request interception
-func (l *logMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) {
+func (l *logMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
 	switch role {
-	case "Client":
+	case RoleClient:
 		log.Infof("Client Making RPC request: %s() Req: {%+v}", method, req)
-	case "Server":
+	case RoleServer:
 		log.Infof("Server received RPC: %s() Req: {%+v}", method, req)
 	}
+
+	return ctx
 }
 
 // RespInterceptor implements response interception
-func (l *logMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) {
+func (l *logMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
 	switch role {
-	case "Client":
+	case RoleClient:
 		log.Infof("Client received RPC response: %s() Resp: {%+v}, error: %v", method, reply, err)
-	case "Server":
+	case RoleServer:
 		log.Infof("Server returning RPC response: %s() Resp: {%+v}, error: %v", method, reply, err)
 	}
+
+	return ctx
 }
 
 // Stats middleware
@@ -111,17 +121,19 @@ func newStatsMiddleware() *statsMiddleware {
 }
 
 // ReqInterceptor implements request interception
-func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) {
+func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
 	// lock the object
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	// increment stats
 	s.rpcStats[fmt.Sprintf("%s-%s:Req", role, method)]++
+
+	return ctx
 }
 
 // RespInterceptor handles responses
-func (s *statsMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) {
+func (s *statsMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
 	// lock the object
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -133,4 +145,6 @@ func (s *statsMiddleware) RespInterceptor(ctx context.Context, role string, meth
 	if err != nil {
 		s.rpcStats[fmt.Sprintf("%s-%s:Resp:Error", role, method)]++
 	}
+
+	return ctx
 }

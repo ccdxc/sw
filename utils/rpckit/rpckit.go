@@ -18,38 +18,40 @@ import (
 
 // Middleware is RPC middleware interface
 type Middleware interface {
-	ReqInterceptor(ctx context.Context, role string, method string, req interface{})
-	RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error)
+	ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context
+	RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context
 }
 
 // RPCServer contains RPC server state
 type RPCServer struct {
-	GrpcServer  *grpc.Server     // gRPC server.
-	listenURL   string           // URL where this server is listening
-	certFile    string           // certificate filename
-	keyFile     string           // private key file name
-	caFile      string           // Root CA file
-	listener    net.Listener     // listener
-	stats       *statsMiddleware // Stats middleware for the server instance
-	middlewares []Middleware     // list of middlewares
+	GrpcServer  *grpc.Server      // gRPC server.
+	listenURL   string            // URL where this server is listening
+	certFile    string            // certificate filename
+	keyFile     string            // private key file name
+	caFile      string            // Root CA file
+	listener    net.Listener      // listener
+	stats       *statsMiddleware  // Stats middleware for the server instance
+	tracer      *tracerMiddleware // Tracer middleware for the server
+	middlewares []Middleware      // list of middlewares
 }
 
 // RPCClient contains RPC client definitions
 type RPCClient struct {
-	ClientConn  *grpc.ClientConn // gRPC connection
-	remoteURL   string           // URL we are connecting to
-	certFile    string           // certificate file name
-	keyFile     string           // private key file name
-	caFile      string           // Root CA file
-	stats       *statsMiddleware // Stats middleware for the client instance
-	middlewares []Middleware     // list of middlewares
+	ClientConn  *grpc.ClientConn  // gRPC connection
+	remoteURL   string            // URL we are connecting to
+	certFile    string            // certificate file name
+	keyFile     string            // private key file name
+	caFile      string            // Root CA file
+	stats       *statsMiddleware  // Stats middleware for the client instance
+	tracer      *tracerMiddleware // Tracer middleware for the client
+	middlewares []Middleware      // list of middlewares
 }
 
 // global middlewares that will intercept all client/server calls
 var globalMiddlewares []Middleware
 
 // NewRPCServer returns a gRPC server listening on a local port
-func NewRPCServer(listenURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCServer, error) {
+func NewRPCServer(srvName, listenURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCServer, error) {
 	var server *grpc.Server
 
 	// some error checking
@@ -78,10 +80,12 @@ func NewRPCServer(listenURL, certFile, keyFile, caFile string, middlewares ...Mi
 		keyFile:     keyFile,
 		caFile:      caFile,
 		stats:       newStatsMiddleware(),
+		tracer:      newTracerMiddleware(srvName),
 		middlewares: append(globalMiddlewares, middlewares...),
 	}
 	// add the stats middleware
 	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats)
+	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer)
 
 	// start new grpc server
 	if certFile != "" && keyFile != "" && caFile != "" {
@@ -144,7 +148,7 @@ func (srv *RPCServer) Stop() error {
 }
 
 // NewRPCClient returns an RPC client to a remote server
-func NewRPCClient(remoteURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCClient, error) {
+func NewRPCClient(srvName, remoteURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCClient, error) {
 	var opts grpc.DialOption
 
 	// create RPC client instance
@@ -154,10 +158,12 @@ func NewRPCClient(remoteURL, certFile, keyFile, caFile string, middlewares ...Mi
 		keyFile:     keyFile,
 		caFile:      caFile,
 		stats:       newStatsMiddleware(),
+		tracer:      newTracerMiddleware(srvName),
 		middlewares: append(globalMiddlewares, middlewares...),
 	}
-	// add stats middleware
+	// add stats & tracer middleware
 	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)
+	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer)
 
 	// Get credentials
 	if certFile != "" {
