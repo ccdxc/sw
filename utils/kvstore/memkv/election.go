@@ -128,8 +128,6 @@ func (el *election) run() {
 			for _, contender := range elec.contenders {
 				if contender.id == elec.leader {
 					contender.sendEvent(kvstore.Elected, elec.leader)
-				} else if elec.termId != contender.termId {
-					contender.sendEvent(kvstore.Changed, elec.leader)
 				}
 			}
 		} else if elec.termId != el.termId {
