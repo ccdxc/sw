@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -40,7 +41,7 @@ func TestCreate(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
@@ -49,7 +50,7 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("Create returned with resource version 0")
 	}
 
-	err = store.Get(testKey, obj)
+	err = store.Get(context.Background(), testKey, obj)
 	if err != nil {
 		t.Fatalf("Failed Get after Create with error: %v", err)
 	}
@@ -63,14 +64,14 @@ func TestCreateWithTTL(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 2, obj)
+	err := store.Create(context.Background(), testKey, obj, 2, obj)
 	if err != nil {
 		t.Fatalf("Create with TTL failed with error: %v", err)
 	}
 
 	time.Sleep(time.Second * 3)
 
-	err = store.Get(testKey, obj)
+	err = store.Get(context.Background(), testKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("TTL key failed to expire")
 	}
@@ -84,12 +85,12 @@ func TestDuplicateCreate(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	err = store.Create(testKey, obj, 0, obj)
+	err = store.Create(context.Background(), testKey, obj, 0, obj)
 	if err == nil || !kvstore.IsKeyExistsError(err) {
 		t.Fatalf("Failed to detect duplicate create: %v", err)
 	}
@@ -103,14 +104,14 @@ func TestDelete(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.Delete(testKey, obj)
+	err = store.Delete(context.Background(), testKey, obj)
 	if err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
@@ -119,7 +120,7 @@ func TestDelete(t *testing.T) {
 		t.Fatalf("Delete failed, expected version %v, got %v", prevVersion, obj.ResourceVersion)
 	}
 
-	err = store.Get(testKey, obj)
+	err = store.Get(context.Background(), testKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("After Delete, key is possibly present, error: %v", err)
 	}
@@ -133,7 +134,7 @@ func TestNonExistentDelete(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Delete(testKey, obj)
+	err := store.Delete(context.Background(), testKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
@@ -147,18 +148,18 @@ func TestAtomicDelete(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	if err := store.AtomicDelete(testKey, "0", nil); err == nil {
+	if err := store.AtomicDelete(context.Background(), testKey, "0", nil); err == nil {
 		t.Fatalf("AtomicDelete failed with incorrect previous version")
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.AtomicDelete(testKey, prevVersion, obj)
+	err = store.AtomicDelete(context.Background(), testKey, prevVersion, obj)
 	if err != nil {
 		t.Fatalf("AtomicDelete failed with error: %v", err)
 	}
@@ -179,25 +180,25 @@ func TestPrefixDelete(t *testing.T) {
 	testKeys := []string{"/abc/123", "/abc/456", "/abcd"}
 	expDelKeys := []string{"/abc/123", "/abc/456"}
 	for _, key := range testKeys {
-		err := store.Create(key, obj, 0, nil)
+		err := store.Create(context.Background(), key, obj, 0, nil)
 		if err != nil {
 			t.Fatalf("Create failed with error: %v", err)
 		}
 	}
 
-	if err := store.PrefixDelete("/abc"); err != nil {
+	if err := store.PrefixDelete(context.Background(), "/abc"); err != nil {
 		t.Fatalf("PrefixDelete failed with error: %v", err)
 	}
 
 	// Check that keys that need to be deleted are deleted.
 	for _, key := range expDelKeys {
-		if err := store.Get(key, nil); err == nil || !kvstore.IsKeyNotFoundError(err) {
+		if err := store.Get(context.Background(), key, nil); err == nil || !kvstore.IsKeyNotFoundError(err) {
 			t.Fatalf("PrefixDelete failed to delete key: %v", err)
 		}
 	}
 
 	// Check that the remaining key is not deleted.
-	if err := store.Get("/abcd", obj); err != nil {
+	if err := store.Get(context.Background(), "/abcd", obj); err != nil {
 		t.Fatalf("PrefixDelete failed with error: %v", err)
 	}
 
@@ -210,18 +211,18 @@ func TestUpdate(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	if err := store.Update(testKey, obj, 0, obj); err == nil {
+	if err := store.Update(context.Background(), testKey, obj, 0, obj); err == nil {
 		t.Fatalf("Update of a non existent key passed")
 	}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.Update(testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update of a key failed")
 	}
 
@@ -238,7 +239,7 @@ func TestNonExistentUpdate(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Update(testKey, obj, 0, obj)
+	err := store.Update(context.Background(), testKey, obj, 0, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("Update failed with error: %v", err)
 	}
@@ -252,18 +253,18 @@ func TestAtomicUpdate(t *testing.T) {
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.AtomicUpdate(testKey, obj, "0", 0, obj); err == nil {
+	if err := store.AtomicUpdate(context.Background(), testKey, obj, "0", 0, obj); err == nil {
 		t.Fatalf("AtomicUpdate passed with incorrect previous version")
 	}
 
-	if err := store.AtomicUpdate(testKey, obj, prevVersion, 0, obj); err != nil {
+	if err := store.AtomicUpdate(context.Background(), testKey, obj, prevVersion, 0, obj); err != nil {
 		t.Fatalf("AtomicUpdate of a key failed")
 	}
 
@@ -280,11 +281,11 @@ func TestConsistentUpdate(t *testing.T) {
 		return obj, nil
 	}
 
-	if err := store.ConsistentUpdate(testKey, 0, nil, updateFunc); err == nil {
+	if err := store.ConsistentUpdate(context.Background(), testKey, 0, nil, updateFunc); err == nil {
 		t.Fatalf("ConsistentUpdate passed when key doesn't exist")
 	}
 
-	err := store.Create(testKey, obj, 0, obj)
+	err := store.Create(context.Background(), testKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
@@ -293,7 +294,7 @@ func TestConsistentUpdate(t *testing.T) {
 	ch := make(chan bool, numUpdates)
 	for ii := 0; ii < numUpdates; ii++ {
 		go func() {
-			if err := store.ConsistentUpdate(testKey, 0, &TestObj{}, updateFunc); err != nil {
+			if err := store.ConsistentUpdate(context.Background(), testKey, 0, &TestObj{}, updateFunc); err != nil {
 				t.Fatalf("ConsistentUpdate of a key failed with error: %v", err)
 			}
 			ch <- true
@@ -306,7 +307,7 @@ func TestConsistentUpdate(t *testing.T) {
 		}
 	}
 
-	err = store.Get(testKey, obj)
+	err = store.Get(context.Background(), testKey, obj)
 	if err != nil {
 		t.Fatalf("Get of the key failed with error: %v", err)
 	}
@@ -325,7 +326,7 @@ func TestList(t *testing.T) {
 	keys := []string{"testObj1", "testObj2"}
 	for ii := range keys {
 		obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: keys[ii]}}
-		err := store.Create(testKey+"/"+keys[ii], obj, 0, obj)
+		err := store.Create(context.Background(), testKey+"/"+keys[ii], obj, 0, obj)
 		if err != nil {
 			t.Fatalf("Create failed with error: %v", err)
 		}
@@ -333,13 +334,13 @@ func TestList(t *testing.T) {
 
 	// This object should not be returned with List.
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "abc"}}
-	err := store.Create(testKey+"abc", obj, 0, obj)
+	err := store.Create(context.Background(), testKey+"abc", obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	var listObj1 TestObjList
-	err = store.List(testKey, &listObj1)
+	err = store.List(context.Background(), testKey, &listObj1)
 	if err != nil {
 		t.Fatalf("List failed with error: %v", err)
 	}
@@ -359,14 +360,14 @@ func TestList(t *testing.T) {
 	}
 
 	for ii := range keys {
-		err := store.Delete(testKey+"/"+keys[ii], nil)
+		err := store.Delete(context.Background(), testKey+"/"+keys[ii], nil)
 		if err != nil {
 			t.Fatalf("Failed to delete key %v, err %v", keys[ii], err)
 		}
 	}
 
 	var listObj2 TestObjList
-	err = store.List(testKey, &listObj2)
+	err = store.List(context.Background(), testKey, &listObj2)
 	if err != nil {
 		t.Fatalf("List failed with error: %v", err)
 	}

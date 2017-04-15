@@ -31,24 +31,24 @@ type watcher struct {
 }
 
 // newWatcher creates a new watcher interface for key based watches.
-func (e *etcdStore) newWatcher(key string, fromVersion string) (*watcher, error) {
+func (e *etcdStore) newWatcher(ctx context.Context, key string, fromVersion string) (*watcher, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("Watch called on a prefix")
 	}
-	return e.watch(key, fromVersion, false)
+	return e.watch(ctx, key, fromVersion, false)
 }
 
 // newPrefixWatcher creates a new watcher interface for prefix based watches.
-func (e *etcdStore) newPrefixWatcher(prefix string, fromVersion string) (*watcher, error) {
+func (e *etcdStore) newPrefixWatcher(ctx context.Context, prefix string, fromVersion string) (*watcher, error) {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
-	return e.watch(prefix, fromVersion, true)
+	return e.watch(ctx, prefix, fromVersion, true)
 }
 
 // watch sets up the watcher context and starts the watch.
-func (e *etcdStore) watch(keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func (e *etcdStore) watch(ctx context.Context, keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
+	ctx, cancel := context.WithCancel(ctx)
 	if fromVersion == "" {
 		fromVersion = "0"
 	}
@@ -83,6 +83,7 @@ func (w *watcher) startWatching() {
 		if err != nil {
 			log.Errorf("Failed to get %v with error: %v", w.keyOrPrefix, err)
 			w.sendError(err)
+			close(w.outCh)
 			return
 		}
 		for _, kv := range resp.Kvs {
@@ -123,6 +124,7 @@ func (w *watcher) startWatching() {
 		}
 	}
 	// Stop() was called.
+	close(w.outCh)
 }
 
 // sendEvent sends out the event unless the watch is stopped.

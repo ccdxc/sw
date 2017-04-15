@@ -7,6 +7,7 @@ package memkv
 //
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -128,7 +129,7 @@ func (f *memKv) decode(value []byte, into runtime.Object, version int64) error {
 
 // Create creates a key in memkv with the provided object and ttl. If ttl is 0, it means the key
 // does not expire. If "into" is not nil, it is set to the value returned by the kv store.
-func (f *memKv) Create(key string, obj runtime.Object, ttl int64, into runtime.Object) error {
+func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -157,7 +158,7 @@ func (f *memKv) Create(key string, obj runtime.Object, ttl int64, into runtime.O
 
 // Delete removes a single key in memKv. If "into" is not nil, it is set to the previous value
 // of the key in kv store.
-func (f *memKv) Delete(key string, into runtime.Object) error {
+func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -177,7 +178,7 @@ func (f *memKv) Delete(key string, into runtime.Object) error {
 
 // AtomicDelete removes a key, only if it exists with the specified version. If "into" is not
 // nil, it is set to the last known value in the kv store.
-func (f *memKv) AtomicDelete(key string, prevVersion string, into runtime.Object) error {
+func (f *memKv) AtomicDelete(ctx context.Context, key string, prevVersion string, into runtime.Object) error {
 	version, err := strconv.ParseInt(prevVersion, 10, 64)
 	if err != nil {
 		return err
@@ -208,7 +209,7 @@ func (f *memKv) AtomicDelete(key string, prevVersion string, into runtime.Object
 // for deleting prefixes only, a "/" is added at the end of the prefix if it doesn't
 // exist. For example, a delete with "/abc" prefix would only delete "/abc/123" and
 // "/abc/456", but not "/abcd".
-func (f *memKv) PrefixDelete(prefix string) error {
+func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
@@ -228,7 +229,7 @@ func (f *memKv) PrefixDelete(prefix string) error {
 
 // Update modifies an existing object. If the key does not exist, update returns an error. This
 // should only be used if a single writer owns the key.
-func (f *memKv) Update(key string, obj runtime.Object, ttl int64, into runtime.Object) error {
+func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -257,7 +258,7 @@ func (f *memKv) Update(key string, obj runtime.Object, ttl int64, into runtime.O
 // AtomicUpdate modifies an existing object, only if the provided previous version matches the
 // existing version of the key. This is useful for implementing elections using a single ttl key. The
 // winner refreshes TTL on the key only if it hasn't been taken over by another node.
-func (f *memKv) AtomicUpdate(key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
+func (f *memKv) AtomicUpdate(ctx context.Context, key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
 	version, err := strconv.ParseInt(prevVersion, 10, 64)
 	if err != nil {
 		return err
@@ -300,13 +301,13 @@ func (f *memKv) AtomicUpdate(key string, obj runtime.Object, prevVersion string,
 // Writer1 updates field f1 to v1.
 // Writer2 updates field f2 to v2 at the same time.
 // ConsistentUpdate guarantees that the object lands in a consistent state where f1=v1 and f2=v2.
-func (f *memKv) ConsistentUpdate(key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+func (f *memKv) ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
 	for {
 		// Get the object.
-		if err := f.Get(key, into); err != nil {
+		if err := f.Get(ctx, key, into); err != nil {
 			return err
 		}
 
@@ -351,7 +352,7 @@ func (f *memKv) ConsistentUpdate(key string, ttl int64, into runtime.Object, upd
 }
 
 // Get the object corresponding to a single key
-func (f *memKv) Get(key string, into runtime.Object) error {
+func (f *memKv) Get(ctx context.Context, key string, into runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -369,7 +370,7 @@ func (f *memKv) Get(key string, into runtime.Object) error {
 // List the objects corresponding to a prefix. It is assumed that all the keys under this
 // prefix are homogenous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
-func (f *memKv) List(prefix string, into runtime.Object) error {
+func (f *memKv) List(ctx context.Context, prefix string, into runtime.Object) error {
 	target, err := helper.ValidListObjForDecode(into)
 	if err != nil {
 		return err
@@ -398,8 +399,8 @@ func (f *memKv) List(prefix string, into runtime.Object) error {
 // Watch the object corresponding to a key. fromVersion is the version to start
 // the watch from. If fromVersion is 0, it will return the existing object and
 // watch for changes from the returned version.
-func (f *memKv) Watch(key string, fromVersion string) (kvstore.Watcher, error) {
-	return f.newWatcher(key, fromVersion)
+func (f *memKv) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
+	return f.newWatcher(ctx, key, fromVersion)
 }
 
 // PrefixWatch watches changes on all objects corresponding to a prefix key.
@@ -407,8 +408,8 @@ func (f *memKv) Watch(key string, fromVersion string) (kvstore.Watcher, error) {
 // will return the existing objects and watch for changes from the returned
 // version.
 // TODO: Filter objects
-func (f *memKv) PrefixWatch(prefix string, fromVersion string) (kvstore.Watcher, error) {
-	return f.newPrefixWatcher(prefix, fromVersion)
+func (f *memKv) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
+	return f.newPrefixWatcher(ctx, prefix, fromVersion)
 }
 
 // Contest creates a new contender in an election. name is the name of the
@@ -416,6 +417,6 @@ func (f *memKv) PrefixWatch(prefix string, fromVersion string) (kvstore.Watcher,
 // the leader's lease is automatically refreshed. ttl is the timeout for lease
 // refresh. If the leader does not update the lease for ttl duration, a new
 // election is performed.
-func (f *memKv) Contest(name string, id string, ttl uint64) (kvstore.Election, error) {
-	return f.newElection(name, id, int(ttl))
+func (f *memKv) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
+	return f.newElection(ctx, name, id, int(ttl))
 }

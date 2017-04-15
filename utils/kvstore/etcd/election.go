@@ -40,16 +40,15 @@ type election struct {
 }
 
 // newElection creates a new contender in an election.
-func (e *etcdStore) newElection(name string, id string, ttl int) (*election, error) {
+func (e *etcdStore) newElection(ctx context.Context, name string, id string, ttl int) (*election, error) {
 	if ttl < minTTL {
 		return nil, fmt.Errorf("Invalid input: min ttl %v", ttl)
 	}
 
-	// FIXME: Accept context from caller.
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
 
 	// Check if there is an existing lease.
-	resp, err := e.client.KV.Get(ctx, electionsPrefix, clientv3.WithPrefix())
+	resp, err := e.client.KV.Get(newCtx, electionsPrefix, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		return nil, err
@@ -68,7 +67,7 @@ func (e *etcdStore) newElection(name string, id string, ttl int) (*election, err
 	// small, may lose the election soon after winning it, which will result
 	// in an unnecessary flap.
 	if leaseID != clientv3.NoLease {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		resp, err := e.client.TimeToLive(ctx, leaseID)
 		cancel()
 		if err != nil {
@@ -88,20 +87,29 @@ func (e *etcdStore) newElection(name string, id string, ttl int) (*election, err
 		outCh:   make(chan *kvstore.ElectionEvent, outCount),
 	}
 
-	go el.run(leaseID)
+	go el.run(ctx, leaseID)
 
 	return el, nil
 }
 
 // run starts the election and handles failures and restarts.
-func (el *election) run(leaseID clientv3.LeaseID) {
+func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 	for {
 		el.Lock()
 		if !el.enabled {
 			el.Unlock()
 			return
 		}
+		// This code handles ctx.cancel() before creation of session.
+		select {
+		case <-ctx.Done():
+			log.Infof("Election(%v:%v): canceled", el.id, el.name)
+			return
+		default:
+		}
 
+		// Session code does not revoke the Lease on cancel(). Using a new context so that
+		// we can call session.Close() on ctx.cancel().
 		el.ctx, el.cancel = context.WithCancel(context.Background())
 
 		opts := []concurrency.SessionOption{
@@ -135,11 +143,17 @@ func (el *election) run(leaseID clientv3.LeaseID) {
 		obsCh := el.election.Observe(el.ctx)
 
 		foundErr := false
+		stopped := false
 
 		go el.attempt(errCh)
 
 		for {
 			select {
+			case <-ctx.Done():
+				// User called ctx.cancel().
+				log.Infof("Election(%v:%v): canceled", el.id, el.name)
+				el.Stop()
+				stopped = true
 			case <-errCh:
 				// Campaign returned an error.
 				foundErr = true
@@ -188,6 +202,9 @@ func (el *election) run(leaseID clientv3.LeaseID) {
 				} else {
 					el.sendEvent(kvstore.Changed, "")
 				}
+				break
+			}
+			if stopped {
 				break
 			}
 		}

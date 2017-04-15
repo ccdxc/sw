@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -91,7 +92,7 @@ func UserCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 
 	key := path.Join(usersURL, user.Name)
 
-	if err := kvStore.Create(key, &user, 0, &user); err != nil {
+	if err := kvStore.Create(context.Background(), key, &user, 0, &user); err != nil {
 		if kvstore.IsKeyExistsError(err) {
 			return http.StatusConflict, fmt.Sprintf("User %q already exists\n", user.Name)
 		}
@@ -107,7 +108,7 @@ func UserDeleteHandler(w http.ResponseWriter, params martini.Params) (int, strin
 
 	key := path.Join(usersURL, name)
 
-	if err := kvStore.Delete(key, nil); err != nil {
+	if err := kvStore.Delete(context.Background(), key, nil); err != nil {
 		return http.StatusNotFound, fmt.Sprintf("User %q deletion failed: %v\n", name, err)
 	}
 	return http.StatusOK, fmt.Sprintf("User %q deleted\n", name)
@@ -120,7 +121,7 @@ func UserGetHandler(w http.ResponseWriter, params martini.Params) (int, string) 
 	key := path.Join(usersURL, name)
 	user := User{}
 
-	if err := kvStore.Get(key, &user); err != nil {
+	if err := kvStore.Get(context.Background(), key, &user); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 			return http.StatusNotFound, fmt.Sprintf("User %q not found\n", name)
 		}
@@ -138,7 +139,7 @@ func UserGetHandler(w http.ResponseWriter, params martini.Params) (int, string) 
 func UserListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
 	users := UserList{}
 
-	if err := kvStore.List(usersURL, &users); err != nil {
+	if err := kvStore.List(context.Background(), usersURL, &users); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 			return http.StatusNotFound, fmt.Sprintf("Users not found\n")
 		}
@@ -163,7 +164,7 @@ func UsersWatchHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	encoder := json.NewEncoder(w)
-	watcher, err := kvStore.PrefixWatch(usersURL, "0")
+	watcher, err := kvStore.PrefixWatch(context.Background(), usersURL, "0")
 	if err != nil {
 		return
 	}

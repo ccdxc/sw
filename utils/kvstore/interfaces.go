@@ -1,6 +1,8 @@
 package kvstore
 
 import (
+	"context"
+
 	"github.com/pensando/sw/utils/runtime"
 )
 
@@ -14,35 +16,35 @@ type Interface interface {
 	// already exist. ttl is the time-to-live in seconds, ttl of 0 means the
 	// key doesn't expire. If "into" is not nil, it is set to the value
 	// returned by the kv store.
-	Create(key string, obj runtime.Object, ttl int64, into runtime.Object) error
+	Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error
 
 	// Delete removes a key, if it exists. If "into" is not nil, it is set
 	// to the last known value in the kv store.
-	Delete(key string, into runtime.Object) error
+	Delete(ctx context.Context, key string, into runtime.Object) error
 
 	// AtomicDelete removes a key, only if it exists with the specified
 	// version. If "into" is not nil, it is set to the last known value in
 	// the kv store.
-	AtomicDelete(key string, prevVersion string, into runtime.Object) error
+	AtomicDelete(ctx context.Context, key string, prevVersion string, into runtime.Object) error
 
 	// PrefixDelete removes all keys with the matching prefix. Since it is
 	// meant to be used for deleting prefixes only, a "/" is added at the
 	// end of the prefix if it doesn't exist. For example, a delete with
 	// "/abc" prefix would only delete "/abc/123" and "/abc/456", but not
 	// "/abcd".
-	PrefixDelete(prefix string) error
+	PrefixDelete(ctx context.Context, prefix string) error
 
 	// Update modifies an existing object. If the key does not exist, update
 	// returns an error. This should only be used if a single writer owns
 	// the key.
-	Update(key string, obj runtime.Object, ttl int64, into runtime.Object) error
+	Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error
 
 	// AtomicUpdate modifies an existing object, only if the provided
 	// previous version matches the existing version of the key. This is
 	// useful for implementing elections using a single ttl key. The winner
 	// refreshes TTL on the key only if it hasn't been taken over by another
 	// node.
-	AtomicUpdate(key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error
+	AtomicUpdate(ctx context.Context, key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error
 
 	// ConsistentUpdate modifies an existing object by invoking the provided
 	// update function. This should be used when there are multiple writers
@@ -53,36 +55,36 @@ type Interface interface {
 	// Writer2 updates field f2 to v2 at the same time.
 	// ConsistentUpdate guarantees that the object lands in a consistent
 	// state where f1=v1 and f2=v2.
-	ConsistentUpdate(key string, ttl int64, into runtime.Object, updateFunc UpdateFunc) error
+	ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc UpdateFunc) error
 
 	// Get the object corresponding to the provided key, if it exists.
-	Get(key string, into runtime.Object) error
+	Get(ctx context.Context, key string, into runtime.Object) error
 
 	// List the objects corresponding to a prefix. It is assumed that all
 
 	// the keys under this prefix are homogenous. "into" should point to
 	// a List object and should have an "Items" slice for individual
 	// objects.
-	List(prefix string, into runtime.Object) error
+	List(ctx context.Context, prefix string, into runtime.Object) error
 
 	// Watch the object corresponding to a key. fromVersion is the version
 	// to start the watch from. If fromVersion is 0, it will return the
 	// existing object and watch for changes from the returned version.
-	Watch(key string, fromVersion string) (Watcher, error)
+	Watch(ctx context.Context, key string, fromVersion string) (Watcher, error)
 
 	// PrefixWatch watches changes on all objects corresponding to a prefix
 	// key. fromVersion is the version to start the watch from. If
 	// fromVersion is 0, it will return the existing objects and watch for
 	// changes from the returned version.
 	// TODO: Filter objects
-	PrefixWatch(prefix string, fromVersion string) (Watcher, error)
+	PrefixWatch(ctx context.Context, prefix string, fromVersion string) (Watcher, error)
 
 	// Contest creates a new contender in an election. name is the name of
 	// the election. id is the identifier of the contender. When a leader is
 	// elected, the leader's lease is automatically refreshed. ttl is the
 	// timeout for lease refresh. If the leader does not update the lease
 	// for ttl duration, a new election is performed.
-	Contest(name string, id string, ttl uint64) (Election, error)
+	Contest(ctx context.Context, name string, id string, ttl uint64) (Election, error)
 }
 
 // WatchEventType defines possible types of events for a watch.

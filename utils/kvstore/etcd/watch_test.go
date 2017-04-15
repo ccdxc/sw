@@ -33,26 +33,26 @@ func TestWatch(t *testing.T) {
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	w, err := store.Watch(testKey, "0")
+	w, err := store.Watch(context.Background(), testKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 	evCh := w.EventChan()
 
-	if err = store.Create(testKey, obj, 0, obj); err != nil {
+	if err = store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	expectEvent(t, evCh, kvstore.Created, obj)
 
 	obj.Counter = 1
-	if err := store.Update(testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
 	expectEvent(t, evCh, kvstore.Updated, obj)
 
-	if err := store.Delete(testKey, obj); err != nil {
+	if err := store.Delete(context.Background(), testKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 
@@ -67,7 +67,7 @@ func TestPrefixWatch(t *testing.T) {
 	cluster, store := setupTestCluster(t)
 	defer cluster.Terminate(t)
 
-	w, err := store.PrefixWatch(testDir, "0")
+	w, err := store.PrefixWatch(context.Background(), testDir, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -77,20 +77,20 @@ func TestPrefixWatch(t *testing.T) {
 	for ii, key := range keys {
 		obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("testObj%d", ii)}, Counter: 0}
 
-		if err = store.Create(testDir+key, obj, 0, obj); err != nil {
+		if err = store.Create(context.Background(), testDir+key, obj, 0, obj); err != nil {
 			t.Fatalf("Create failed with error: %v", err)
 		}
 
 		expectEvent(t, evCh, kvstore.Created, obj)
 
 		obj.Counter = 1
-		if err := store.Update(testDir+key, obj, 0, obj); err != nil {
+		if err := store.Update(context.Background(), testDir+key, obj, 0, obj); err != nil {
 			t.Fatalf("Update failed with error: %v", err)
 		}
 
 		expectEvent(t, evCh, kvstore.Updated, obj)
 
-		if err := store.Delete(testDir+key, obj); err != nil {
+		if err := store.Delete(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Delete failed with error: %v", err)
 		}
 
@@ -110,11 +110,11 @@ func TestWatchExisting(t *testing.T) {
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
 	// Case 1 - created but not updated.
-	if err := store.Create(testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	w, err := store.Watch(testKey, "0")
+	w, err := store.Watch(context.Background(), testKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -124,11 +124,11 @@ func TestWatchExisting(t *testing.T) {
 
 	// Case 2 - created and updated.
 	obj.Counter = 1
-	if err := store.Update(testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
-	w, err = store.Watch(testKey, "0")
+	w, err = store.Watch(context.Background(), testKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -147,17 +147,17 @@ func TestWatchFromVersion(t *testing.T) {
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	fromVersion := obj.ResourceVersion
 	obj.Counter = 1
-	if err := store.Update(testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
-	w, err := store.Watch(testKey, fromVersion)
+	w, err := store.Watch(context.Background(), testKey, fromVersion)
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestBufferedWatch(t *testing.T) {
 	cluster, store := setupTestCluster(t)
 	defer cluster.Terminate(t)
 
-	w, err := store.PrefixWatch(testDir, "0")
+	w, err := store.PrefixWatch(context.Background(), testDir, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -183,20 +183,20 @@ func TestBufferedWatch(t *testing.T) {
 		obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("testObj%d", ii)}, Counter: 0}
 		key := fmt.Sprintf("/key%d", ii)
 
-		if err = store.Create(testDir+key, obj, 0, obj); err != nil {
+		if err = store.Create(context.Background(), testDir+key, obj, 0, obj); err != nil {
 			t.Fatalf("Create failed with error: %v", err)
 		}
 
 		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: kvstore.Created})
 
 		obj.Counter = 1
-		if err := store.Update(testDir+key, obj, 0, obj); err != nil {
+		if err := store.Update(context.Background(), testDir+key, obj, 0, obj); err != nil {
 			t.Fatalf("Update failed with error: %v", err)
 		}
 
 		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: kvstore.Updated})
 
-		if err := store.Delete(testDir+key, obj); err != nil {
+		if err := store.Delete(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Delete failed with error: %v", err)
 		}
 
@@ -217,20 +217,20 @@ func TestWatchVersion(t *testing.T) {
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	fromVersion := obj.ResourceVersion
 
-	w, err := store.Watch(testKey, fromVersion)
+	w, err := store.Watch(context.Background(), testKey, fromVersion)
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
 	etcdWatcher := cluster.NewClient(t).Watch(context.Background(), testKey)
 
-	if err := store.Delete(testKey, obj); err != nil {
+	if err := store.Delete(context.Background(), testKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 
@@ -246,6 +246,36 @@ func TestWatchVersion(t *testing.T) {
 		t.Fatalf("Version mismatch, expected %v, got %v", res.Events[0].Kv.ModRevision, int64(watchVer))
 	}
 	t.Logf("Got expected version from watch")
+}
+
+// TestCancelWatch tests that watch stops on cancelling the provided context.
+func TestCancelWatch(t *testing.T) {
+	cluster, store := setupTestCluster(t)
+	defer cluster.Terminate(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	w, err := store.Watch(ctx, testKey, "0")
+	if err != nil {
+		t.Fatalf("Watch failed with error: %v", err)
+	}
+	evCh := w.EventChan()
+
+	// If cancelled immediately, watch goroutine will send an error event.
+	time.Sleep(time.Millisecond * 10)
+
+	cancel()
+
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
+
+	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
+		t.Fatalf("Create failed with error: %v", err)
+	}
+
+	if _, ok := <-evCh; ok {
+		t.Fatalf("Received event on cancelled watch\n")
+	}
+	t.Logf("Cancel watch succeeded")
 }
 
 func expectEvent(t *testing.T, ch <-chan *kvstore.WatchEvent, evType kvstore.WatchEventType, obj runtime.Object) {

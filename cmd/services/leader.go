@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -40,7 +41,7 @@ func NewLeaderService(id string) LeaderService {
 func (l *leaderService) Start() error {
 	log.Infof("Starting leader election with id: %v", l.id)
 
-	election, err := env.KVStore.Contest(leaderKey, l.id, ttl)
+	election, err := env.KVStore.Contest(context.Background(), leaderKey, l.id, ttl)
 	if err != nil {
 		log.Errorf("Failed to start leader election with error: %v", err)
 		return err

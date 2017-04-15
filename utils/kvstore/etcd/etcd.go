@@ -90,8 +90,8 @@ func (e *etcdStore) ttlOpts(ctx context.Context, ttl int64) (clientv3.LeaseID, [
 		return 0, nil, nil
 	}
 
-	ctxT, cancel := context.WithTimeout(ctx, timeout)
-	lcr, err := e.client.Lease.Grant(ctxT, ttl)
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	lcr, err := e.client.Lease.Grant(newCtx, ttl)
 	cancel()
 
 	if err != nil {
@@ -101,19 +101,19 @@ func (e *etcdStore) ttlOpts(ctx context.Context, ttl int64) (clientv3.LeaseID, [
 }
 
 // putHelper updates a key in etcd with the provided object, ttl and comparators.
-func (e *etcdStore) putHelper(key string, obj runtime.Object, ttl int64, cs ...clientv3.Cmp) ([]byte, *clientv3.TxnResponse, error) {
+func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Object, ttl int64, cs ...clientv3.Cmp) ([]byte, *clientv3.TxnResponse, error) {
 	value, err := e.encode(obj)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, opts, err := e.ttlOpts(context.Background(), ttl)
+	_, opts, err := e.ttlOpts(ctx, ttl)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	resp, err := e.client.KV.Txn(ctx).If(
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	resp, err := e.client.KV.Txn(newCtx).If(
 		cs...,
 	).Then(
 		clientv3.OpPut(key, string(value), opts...),
@@ -125,8 +125,8 @@ func (e *etcdStore) putHelper(key string, obj runtime.Object, ttl int64, cs ...c
 
 // Create creates a key in etcd with the provided object and ttl. If ttl is 0, it means the key
 // does not expire. If "into" is not nil, it is set to the value returned by the kv store.
-func (e *etcdStore) Create(key string, obj runtime.Object, ttl int64, into runtime.Object) error {
-	value, resp, err := e.putHelper(key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
+func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
+	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	if err != nil {
 		return err
 	}
@@ -142,9 +142,9 @@ func (e *etcdStore) Create(key string, obj runtime.Object, ttl int64, into runti
 }
 
 // delete removes a single key in etcd, if the comparisons match.
-func (e *etcdStore) delete(key string, into runtime.Object, cs ...clientv3.Cmp) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	resp, err := e.client.KV.Txn(ctx).If(cs...).Then(
+func (e *etcdStore) delete(ctx context.Context, key string, into runtime.Object, cs ...clientv3.Cmp) error {
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	resp, err := e.client.KV.Txn(newCtx).If(cs...).Then(
 		clientv3.OpGet(key),
 		clientv3.OpDelete(key),
 	).Commit()
@@ -172,30 +172,30 @@ func (e *etcdStore) delete(key string, into runtime.Object, cs ...clientv3.Cmp) 
 
 // Delete removes a single key in etcd. If "into" is not nil, it is set to the previous value
 // of the key in kv store.
-func (e *etcdStore) Delete(key string, into runtime.Object) error {
-	return e.delete(key, into)
+func (e *etcdStore) Delete(ctx context.Context, key string, into runtime.Object) error {
+	return e.delete(ctx, key, into)
 }
 
 // AtomicDelete removes a key, only if it exists with the specified version. If "into" is not
 // nil, it is set to the last known value in the kv store.
-func (e *etcdStore) AtomicDelete(key string, prevVersion string, into runtime.Object) error {
+func (e *etcdStore) AtomicDelete(ctx context.Context, key string, prevVersion string, into runtime.Object) error {
 	version, err := strconv.ParseInt(prevVersion, 10, 64)
 	if err != nil {
 		return err
 	}
-	return e.delete(key, into, clientv3.Compare(clientv3.ModRevision(key), "=", version))
+	return e.delete(ctx, key, into, clientv3.Compare(clientv3.ModRevision(key), "=", version))
 }
 
 // PrefixDelete removes all keys with the matching prefix. Since it is meant to be used
 // for deleting prefixes only, a "/" is added at the end of the prefix if it doesn't
 // exist. For example, a delete with "/abc" prefix would only delete "/abc/123" and
 // "/abc/456", but not "/abcd".
-func (e *etcdStore) PrefixDelete(prefix string) error {
+func (e *etcdStore) PrefixDelete(ctx context.Context, prefix string) error {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	_, err := e.client.KV.Txn(ctx).If().Then(
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	_, err := e.client.KV.Txn(newCtx).If().Then(
 		clientv3.OpDelete(prefix, clientv3.WithPrefix()),
 	).Commit()
 	cancel()
@@ -204,8 +204,8 @@ func (e *etcdStore) PrefixDelete(prefix string) error {
 
 // Update modifies an existing object. If the key does not exist, update returns an error. This
 // should only be used if a single writer owns the key.
-func (e *etcdStore) Update(key string, obj runtime.Object, ttl int64, into runtime.Object) error {
-	value, resp, err := e.putHelper(key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), ">", 0))
+func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
+	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), ">", 0))
 	if err != nil {
 		return err
 	}
@@ -223,13 +223,13 @@ func (e *etcdStore) Update(key string, obj runtime.Object, ttl int64, into runti
 // AtomicUpdate modifies an existing object, only if the provided previous version matches the
 // existing version of the key. This is useful for implementing elections using a single ttl key. The
 // winner refreshes TTL on the key only if it hasn't been taken over by another node.
-func (e *etcdStore) AtomicUpdate(key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
+func (e *etcdStore) AtomicUpdate(ctx context.Context, key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
 	version, err := strconv.ParseInt(prevVersion, 10, 64)
 	if err != nil {
 		return err
 	}
 
-	value, resp, err := e.putHelper(key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
+	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
 	if err != nil {
 		return err
 	}
@@ -251,13 +251,13 @@ func (e *etcdStore) AtomicUpdate(key string, obj runtime.Object, prevVersion str
 // Writer1 updates field f1 to v1.
 // Writer2 updates field f2 to v2 at the same time.
 // ConsistentUpdate guarantees that the object lands in a consistent state where f1=v1 and f2=v2.
-func (e *etcdStore) ConsistentUpdate(key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
 	for {
 		// Get the object.
-		if err := e.Get(key, into); err != nil {
+		if err := e.Get(ctx, key, into); err != nil {
 			return err
 		}
 
@@ -275,7 +275,7 @@ func (e *etcdStore) ConsistentUpdate(key string, ttl int64, into runtime.Object,
 		}
 
 		// CAS with the read version. Return if there is no error.
-		value, resp, err := e.putHelper(key, newObj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
+		value, resp, err := e.putHelper(ctx, key, newObj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
 		if err != nil {
 			return err
 		}
@@ -290,9 +290,9 @@ func (e *etcdStore) ConsistentUpdate(key string, ttl int64, into runtime.Object,
 }
 
 // Get the object corresponding to a single key in etcd.
-func (e *etcdStore) Get(key string, into runtime.Object) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	resp, err := e.client.KV.Get(ctx, key)
+func (e *etcdStore) Get(ctx context.Context, key string, into runtime.Object) error {
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	resp, err := e.client.KV.Get(newCtx, key)
 	cancel()
 	if err != nil {
 		return err
@@ -311,7 +311,7 @@ func (e *etcdStore) Get(key string, into runtime.Object) error {
 // List the objects corresponding to a prefix. It is assumed that all the keys under this
 // prefix are homogenous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
-func (e *etcdStore) List(prefix string, into runtime.Object) error {
+func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object) error {
 	v, err := helper.ValidListObjForDecode(into)
 	if err != nil {
 		return err
@@ -321,8 +321,8 @@ func (e *etcdStore) List(prefix string, into runtime.Object) error {
 		prefix += "/"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	resp, err := e.client.KV.Get(ctx, prefix, clientv3.WithPrefix())
+	newCtx, cancel := context.WithTimeout(ctx, timeout)
+	resp, err := e.client.KV.Get(newCtx, prefix, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		return err
@@ -353,8 +353,8 @@ func (e *etcdStore) List(prefix string, into runtime.Object) error {
 // Watch the object corresponding to a key. fromVersion is the version to start
 // the watch from. If fromVersion is 0, it will return the existing object and
 // watch for changes from the returned version.
-func (e *etcdStore) Watch(key string, fromVersion string) (kvstore.Watcher, error) {
-	return e.newWatcher(key, fromVersion)
+func (e *etcdStore) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
+	return e.newWatcher(ctx, key, fromVersion)
 }
 
 // PrefixWatch watches changes on all objects corresponding to a prefix key.
@@ -362,8 +362,8 @@ func (e *etcdStore) Watch(key string, fromVersion string) (kvstore.Watcher, erro
 // will return the existing objects and watch for changes from the returned
 // version.
 // TODO: Filter objects
-func (e *etcdStore) PrefixWatch(prefix string, fromVersion string) (kvstore.Watcher, error) {
-	return e.newPrefixWatcher(prefix, fromVersion)
+func (e *etcdStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
+	return e.newPrefixWatcher(ctx, prefix, fromVersion)
 }
 
 // Contest creates a new contender in an election. name is the name of the
@@ -371,6 +371,6 @@ func (e *etcdStore) PrefixWatch(prefix string, fromVersion string) (kvstore.Watc
 // the leader's lease is automatically refreshed. ttl is the timeout for lease
 // refresh. If the leader does not update the lease for ttl duration, a new
 // election is performed.
-func (e *etcdStore) Contest(name string, id string, ttl uint64) (kvstore.Election, error) {
-	return e.newElection(name, id, int(ttl))
+func (e *etcdStore) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
+	return e.newElection(ctx, name, id, int(ttl))
 }

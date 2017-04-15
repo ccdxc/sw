@@ -31,26 +31,26 @@ type watcher struct {
 
 // newWatcher creates a new watcher interface for key based watches.
 // TBD: this function is common among all kv stores
-func (f *memKv) newWatcher(key string, fromVersion string) (*watcher, error) {
+func (f *memKv) newWatcher(ctx context.Context, key string, fromVersion string) (*watcher, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("Watch called on a prefix")
 	}
-	return f.watch(key, fromVersion, false)
+	return f.watch(ctx, key, fromVersion, false)
 }
 
 // newPrefixWatcher creates a new watcher interface for prefix based watches.
 // TBD: this function is common among all kv stores
-func (f *memKv) newPrefixWatcher(prefix string, fromVersion string) (*watcher, error) {
+func (f *memKv) newPrefixWatcher(ctx context.Context, prefix string, fromVersion string) (*watcher, error) {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
-	return f.watch(prefix, fromVersion, true)
+	return f.watch(ctx, prefix, fromVersion, true)
 }
 
 // watch sets up the watcher context and starts the watch.
 // TBD: this function is common among all kv stores
-func (f *memKv) watch(keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func (f *memKv) watch(ctx context.Context, keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
+	newCtx, cancel := context.WithCancel(ctx)
 	if fromVersion == "" {
 		fromVersion = "0"
 	}
@@ -66,10 +66,11 @@ func (f *memKv) watch(keyOrPrefix string, fromVersion string, recursive bool) (*
 		recursive:   recursive,
 		keys:        []string{},
 		outCh:       make(chan *kvstore.WatchEvent, outCount),
-		ctx:         ctx,
+		ctx:         newCtx,
 		cancel:      cancel,
 	}
 	w.startWatching()
+	go w.waitForCancel()
 	return w, nil
 }
 
@@ -208,6 +209,9 @@ func (w *watcher) sendError(err error) {
 
 func (f *memKv) deleteWatchers(w *watcher) {
 	var deleteWatcher = func(v *memKvRec, w *watcher) {
+		if v == nil {
+			return
+		}
 		for idx, value := range v.watchers {
 			if value == w {
 				v.watchers = append(v.watchers[:idx], v.watchers[idx+1:]...)
@@ -235,4 +239,12 @@ func (w *watcher) EventChan() <-chan *kvstore.WatchEvent {
 func (w *watcher) Stop() {
 	w.f.deleteWatchers(w)
 	w.cancel()
+}
+
+// waitForCancel waits for cancel and stops the watcher.
+func (w *watcher) waitForCancel() {
+	select {
+	case <-w.ctx.Done():
+		w.Stop()
+	}
 }

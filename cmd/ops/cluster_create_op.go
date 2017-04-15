@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"context"
 	"fmt"
 	"path"
 
@@ -95,7 +96,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 
 	// Store Cluster and Node objects in kv store.
 	// FIXME: Do this in a transaction when kv store supports transactions.
-	err = env.KVStore.Create(globals.ClusterKey, o.cluster, 0, o.cluster)
+	err = env.KVStore.Create(context.Background(), globals.ClusterKey, o.cluster, 0, o.cluster)
 	if err != nil {
 		log.Errorf("Failed to add cluster to kvstore, error: %v", err)
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
@@ -105,7 +106,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	for ii := range o.cluster.Spec.QuorumNodes {
 		name := o.cluster.Spec.QuorumNodes[ii]
 		node := makeNode(name)
-		err = env.KVStore.Create(path.Join(globals.NodesKey, name), node, 0, node)
+		err = env.KVStore.Create(context.Background(), path.Join(globals.NodesKey, name), node, 0, node)
 		if err != nil {
 			// FIXME: With txn, error handling will be merged with above block.
 			log.Errorf("Failed to add node %v to kvstore, error: %v", name, err)

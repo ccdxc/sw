@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"strings"
 
@@ -36,7 +37,7 @@ func main() {
 		log.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	election, err := kv.Contest(electionName, id, ttl)
+	election, err := kv.Contest(context.Background(), electionName, id, ttl)
 	if err != nil {
 		log.Fatalf("Failed to start the leader election with error: %v", err)
 	}

@@ -1,6 +1,7 @@
 package memkv
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -47,7 +48,7 @@ type memkvCluster struct {
 // multiple nodes, therefore:
 // - there are no leases obtained and delays involved
 // - some randomness is introduced when selecting a leader to mimic the nature
-func (f *memKv) newElection(name string, id string, ttl int) (*election, error) {
+func (f *memKv) newElection(ctx context.Context, name string, id string, ttl int) (*election, error) {
 	if ttl < minTTL {
 		return nil, fmt.Errorf("Invalid input: min ttl %v", ttl)
 	}
@@ -82,7 +83,7 @@ func (f *memKv) newElection(name string, id string, ttl int) (*election, error) 
 	f.Unlock()
 
 	// run election, select leader
-	go el.run()
+	go el.run(ctx)
 
 	return el, nil
 }
@@ -90,7 +91,7 @@ func (f *memKv) newElection(name string, id string, ttl int) (*election, error) 
 // run starts the election and handles failures and restarts
 // this routine is run by multiple clients simultaneously to know about
 // election win, lose or changes
-func (el *election) run() {
+func (el *election) run(ctx context.Context) {
 	// sleep for random period to let arbitrary selection of winner before entering election
 	time.Sleep((time.Duration)(rand.Intn(minTTL)) * time.Millisecond)
 
@@ -102,6 +103,16 @@ func (el *election) run() {
 		if !el.enabled {
 			el.Unlock()
 			return
+		}
+
+		// handle ctx.cancel()
+		select {
+		case <-ctx.Done():
+			log.Infof("Election(%v:%v): canceled", el.id, el.name)
+			el.stop()
+			el.Unlock()
+			return
+		default:
 		}
 
 		f := el.f
@@ -170,7 +181,11 @@ func (el *election) EventChan() <-chan *kvstore.ElectionEvent {
 func (el *election) Stop() {
 	el.Lock()
 	defer el.Unlock()
+	el.stop()
+}
 
+// Helper to stop the election, called under lock.
+func (el *election) stop() {
 	el.enabled = false
 
 	f := el.f

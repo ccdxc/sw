@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -63,7 +64,7 @@ func ClusterGetHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := env.KVStore.Get(globals.ClusterKey, &cluster); err != nil {
+	if err := env.KVStore.Get(context.Background(), globals.ClusterKey, &cluster); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 			errors.SendNotFound(w, "Cluster", "")
 			return
@@ -90,7 +91,7 @@ func NodeListHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := env.KVStore.List(globals.NodesKey, &nodes); err != nil {
+	if err := env.KVStore.List(context.Background(), globals.NodesKey, &nodes); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
 			errors.SendNotFound(w, "NodeList", "")
 			return
