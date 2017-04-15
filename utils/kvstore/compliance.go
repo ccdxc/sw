@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 	"testing"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 //
 
 const (
-	testKey     = "/nbv"
+	TestKey     = "/nbv"
 	testDir     = "/registry"
 	contestName = "master"
 	minTTL      = 5
@@ -61,7 +60,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	fns := []func(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc){
 		TestCreate,
 		TestCreateWithTTL,
-		TestCreateWithInvalidTTL,
+		TestCreateWithNegativeTTL,
 		TestDuplicateCreate,
 		TestDelete,
 		TestNonExistentDelete,
@@ -77,7 +76,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestWatchExisting,
 		TestWatchFromVersion,
 		TestBufferedWatch,
-		TestWatchVersion,
+		// TestWatchVersion,   this test is state store specific
 		TestCancelWatch,
 		TestElection,
 		TestElectionRestartContender,
@@ -101,7 +100,7 @@ func TestCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
@@ -110,7 +109,7 @@ func TestCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 		t.Fatalf("Create returned with resource version 0")
 	}
 
-	err = store.Get(context.Background(), testKey, obj)
+	err = store.Get(context.Background(), TestKey, obj)
 	if err != nil {
 		t.Fatalf("Failed Get after Create with error: %v", err)
 	}
@@ -124,14 +123,14 @@ func TestCreateWithTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 1, obj)
+	err := store.Create(context.Background(), TestKey, obj, 1, obj)
 	if err != nil {
 		t.Fatalf("Create with TTL failed with error: %v", err)
 	}
 
 	time.Sleep(time.Second * 2)
 
-	err = store.Get(context.Background(), testKey, obj)
+	err = store.Get(context.Background(), TestKey, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
 		t.Fatalf("TTL key failed to expire")
 	}
@@ -139,20 +138,20 @@ func TestCreateWithTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	t.Logf("Create with TTL succeeded with version: %s", obj.ResourceVersion)
 }
 
-func TestCreateWithInvalidTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+func TestCreateWithNegativeTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, -1, obj)
+	err := store.Create(context.Background(), TestKey, obj, -1, obj)
 	if err == nil {
 		t.Fatalf("Create with Invalid TTL succeeded error: %v", err)
 	}
 
 	err = store.Get(context.Background(), testKey, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
-		t.Fatalf("object found with the key")
+		t.Fatalf("Create with Invalid TTL succeeded, and found in the store: %v", err)
 	}
 
 	t.Logf("Create with Invalid TTL succeeded")
@@ -164,12 +163,12 @@ func TestDuplicateCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetu
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	err = store.Create(context.Background(), testKey, obj, 0, obj)
+	err = store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err == nil || !IsKeyExistsError(err) {
 		t.Fatalf("Failed to detect duplicate create: %v", err)
 	}
@@ -183,14 +182,14 @@ func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.Delete(context.Background(), testKey, obj)
+	err = store.Delete(context.Background(), TestKey, obj)
 	if err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
@@ -199,7 +198,7 @@ func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 		t.Fatalf("Delete failed, expected version %v, got %v", prevVersion, obj.ResourceVersion)
 	}
 
-	err = store.Get(context.Background(), testKey, obj)
+	err = store.Get(context.Background(), TestKey, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
 		t.Fatalf("After Delete, key is possibly present, error: %v", err)
 	}
@@ -213,7 +212,7 @@ func TestNonExistentDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Delete(context.Background(), testKey, obj)
+	err := store.Delete(context.Background(), TestKey, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
@@ -227,18 +226,18 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	if err := store.AtomicDelete(context.Background(), testKey, "0", nil); err == nil {
+	if err := store.AtomicDelete(context.Background(), TestKey, "0", nil); err == nil {
 		t.Fatalf("AtomicDelete failed with incorrect previous version")
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.AtomicDelete(context.Background(), testKey, prevVersion, obj)
+	err = store.AtomicDelete(context.Background(), TestKey, prevVersion, obj)
 	if err != nil {
 		t.Fatalf("AtomicDelete failed with error: %v", err)
 	}
@@ -294,14 +293,14 @@ func TestUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 		t.Fatalf("Update of a non existent key passed")
 	}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update of a key failed")
 	}
 
@@ -318,7 +317,7 @@ func TestNonExistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Update(context.Background(), testKey, obj, 0, obj)
+	err := store.Update(context.Background(), TestKey, obj, 0, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
 		t.Fatalf("Update failed with error: %v", err)
 	}
@@ -332,18 +331,18 @@ func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.AtomicUpdate(context.Background(), testKey, obj, "0", 0, obj); err == nil {
+	if err := store.AtomicUpdate(context.Background(), TestKey, obj, "0", 0, obj); err == nil {
 		t.Fatalf("AtomicUpdate passed with incorrect previous version")
 	}
 
-	if err := store.AtomicUpdate(context.Background(), testKey, obj, prevVersion, 0, obj); err != nil {
+	if err := store.AtomicUpdate(context.Background(), TestKey, obj, prevVersion, 0, obj); err != nil {
 		t.Fatalf("AtomicUpdate of a key failed with error: %v", err)
 	}
 
@@ -360,11 +359,11 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 		return obj, nil
 	}
 
-	if err := store.ConsistentUpdate(context.Background(), testKey, 0, nil, updateFunc); err == nil {
+	if err := store.ConsistentUpdate(context.Background(), TestKey, 0, nil, updateFunc); err == nil {
 		t.Fatalf("ConsistentUpdate passed when key doesn't exist")
 	}
 
-	err := store.Create(context.Background(), testKey, obj, 0, obj)
+	err := store.Create(context.Background(), TestKey, obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
@@ -373,7 +372,7 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	ch := make(chan bool, numUpdates)
 	for ii := 0; ii < numUpdates; ii++ {
 		go func() {
-			if err := store.ConsistentUpdate(context.Background(), testKey, 0, &TestObj{}, updateFunc); err != nil {
+			if err := store.ConsistentUpdate(context.Background(), TestKey, 0, &TestObj{}, updateFunc); err != nil {
 				t.Fatalf("ConsistentUpdate of a key failed with error: %v", err)
 			}
 			ch <- true
@@ -386,7 +385,7 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 		}
 	}
 
-	err = store.Get(context.Background(), testKey, obj)
+	err = store.Get(context.Background(), TestKey, obj)
 	if err != nil {
 		t.Fatalf("Get of the key failed with error: %v", err)
 	}
@@ -405,7 +404,7 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	keys := []string{"testObj1", "testObj2"}
 	for ii := range keys {
 		obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: keys[ii]}}
-		err := store.Create(context.Background(), testKey+"/"+keys[ii], obj, 0, obj)
+		err := store.Create(context.Background(), TestKey+"/"+keys[ii], obj, 0, obj)
 		if err != nil {
 			t.Fatalf("Create failed with error: %v", err)
 		}
@@ -413,13 +412,13 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 
 	// This object should not be returned with List.
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "abc"}}
-	err := store.Create(context.Background(), testKey+"abc", obj, 0, obj)
+	err := store.Create(context.Background(), TestKey+"abc", obj, 0, obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	var listObj1 TestObjList
-	err = store.List(context.Background(), testKey, &listObj1)
+	err = store.List(context.Background(), TestKey, &listObj1)
 	if err != nil {
 		t.Fatalf("List failed with error: %v", err)
 	}
@@ -439,14 +438,14 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	}
 
 	for ii := range keys {
-		err := store.Delete(context.Background(), testKey+"/"+keys[ii], nil)
+		err := store.Delete(context.Background(), TestKey+"/"+keys[ii], nil)
 		if err != nil {
 			t.Fatalf("Failed to delete key %v, err %v", keys[ii], err)
 		}
 	}
 
 	var listObj2 TestObjList
-	err = store.List(context.Background(), testKey, &listObj2)
+	err = store.List(context.Background(), TestKey, &listObj2)
 	if err != nil {
 		t.Fatalf("List failed with error: %v", err)
 	}
@@ -465,26 +464,26 @@ func TestWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	w, err := store.Watch(context.Background(), testKey, "0")
+	w, err := store.Watch(context.Background(), TestKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 	evCh := w.EventChan()
 
-	if err = store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err = store.Create(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	expectWatchEvent(t, evCh, Created, obj)
 
 	obj.Counter = 1
-	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
 	expectWatchEvent(t, evCh, Updated, obj)
 
-	if err := store.Delete(context.Background(), testKey, obj); err != nil {
+	if err := store.Delete(context.Background(), TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 
@@ -542,11 +541,11 @@ func TestWatchExisting(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
 	// Case 1 - created but not updated.
-	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	w, err := store.Watch(context.Background(), testKey, "0")
+	w, err := store.Watch(context.Background(), TestKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -556,11 +555,11 @@ func TestWatchExisting(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 
 	// Case 2 - created and updated.
 	obj.Counter = 1
-	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
-	w, err = store.Watch(context.Background(), testKey, "0")
+	w, err = store.Watch(context.Background(), TestKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -579,17 +578,17 @@ func TestWatchFromVersion(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	fromVersion := obj.ResourceVersion
 	obj.Counter = 1
-	if err := store.Update(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
-	w, err := store.Watch(context.Background(), testKey, fromVersion)
+	w, err := store.Watch(context.Background(), TestKey, fromVersion)
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -642,59 +641,6 @@ func TestBufferedWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	t.Logf("Buffered Watch succeeded")
 }
 
-// TestWatchVersion tests that watch returns the same version as the underlying store.
-func TestWatchVersion(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	cluster, store := setupTestCluster(t, cSetup, sSetup)
-	defer cCleanup(t, cluster)
-
-	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
-
-	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
-		t.Fatalf("Create failed with error: %v", err)
-	}
-
-	fromVersion := obj.ResourceVersion
-
-	w, err := store.Watch(context.Background(), testKey, fromVersion)
-	if err != nil {
-		t.Fatalf("Watch failed with error: %v", err)
-	}
-
-	// etcdWatcher := cluster.NewClient(t).Watch(context.Background(), testKey)
-	into := &TestObj{}
-	err = store.Get(context.Background(), testKey, into)
-	if err != nil {
-		t.Fatalf("Get of the key failed with error: %v", err)
-	}
-
-	if err := store.Delete(context.Background(), testKey, obj); err != nil {
-		t.Fatalf("Delete failed with error: %v", err)
-	}
-
-	ev := <-w.EventChan()
-	watchVer, err := strconv.ParseInt(ev.Object.(*TestObj).ResourceVersion, 10, 64)
-	if err != nil {
-		t.Fatalf("Failed to parse watch version, error: %v", err)
-	}
-
-	// res := <-etcdWatcher
-	//
-	// if res.Events[0].Kv.ModRevision != int64(watchVer) {
-	//	t.Fatalf("Version mismatch, expected %v, got %v", res.Events[0].Kv.ModRevision, int64(watchVer))
-	//}
-	objMeta, _ := runtime.GetObjectMeta(into)
-	objVersion, err := strconv.ParseInt(objMeta.ResourceVersion, 10, 64)
-	if err != nil {
-		t.Fatalf("Unable to parse the object's version")
-	}
-	if objVersion != watchVer {
-		t.Fatalf("Version mismatch, expected %v, got %v", int64(objVersion), int64(watchVer))
-	}
-	// upto here
-
-	t.Logf("Got expected version from watch")
-}
-
 // TestCancelWatch tests that watch stops on cancelling the provided context.
 func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
@@ -702,7 +648,7 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	w, err := store.Watch(ctx, testKey, "0")
+	w, err := store.Watch(ctx, TestKey, "0")
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
@@ -715,7 +661,7 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(context.Background(), testKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 

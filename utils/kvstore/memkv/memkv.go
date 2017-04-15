@@ -21,6 +21,10 @@ import (
 	"github.com/pensando/sw/utils/runtime"
 )
 
+const (
+	defaultMinTTL = 2
+)
+
 type memKvRec struct {
 	value    string
 	ttl      int64
@@ -137,7 +141,7 @@ func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl 
 		return kvstore.NewKeyExistsError(key, 0)
 	}
 	if ttl < 0 {
-		return kvstore.NewInvalidTTLError(ttl)
+		ttl = defaultMinTTL
 	}
 
 	value, err := f.encode(obj)
