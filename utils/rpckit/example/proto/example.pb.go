@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package main is a generated protocol buffer package.
+Package proto is a generated protocol buffer package.
 
 It is generated from these files:
 	example.proto
@@ -12,9 +12,9 @@ It has these top-level messages:
 	ExampleReq
 	ExampleResp
 */
-package main
+package proto
 
-import proto "github.com/golang/protobuf/proto"
+import proto1 "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
@@ -24,7 +24,7 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto.Marshal
+var _ = proto1.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
@@ -32,7 +32,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // RPC request
 type ExampleReq struct {
@@ -40,7 +40,7 @@ type ExampleReq struct {
 }
 
 func (m *ExampleReq) Reset()                    { *m = ExampleReq{} }
-func (m *ExampleReq) String() string            { return proto.CompactTextString(m) }
+func (m *ExampleReq) String() string            { return proto1.CompactTextString(m) }
 func (*ExampleReq) ProtoMessage()               {}
 func (*ExampleReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
@@ -57,7 +57,7 @@ type ExampleResp struct {
 }
 
 func (m *ExampleResp) Reset()                    { *m = ExampleResp{} }
-func (m *ExampleResp) String() string            { return proto.CompactTextString(m) }
+func (m *ExampleResp) String() string            { return proto1.CompactTextString(m) }
 func (*ExampleResp) ProtoMessage()               {}
 func (*ExampleResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
@@ -69,8 +69,8 @@ func (m *ExampleResp) GetRespMsg() string {
 }
 
 func init() {
-	proto.RegisterType((*ExampleReq)(nil), "main.ExampleReq")
-	proto.RegisterType((*ExampleResp)(nil), "main.ExampleResp")
+	proto1.RegisterType((*ExampleReq)(nil), "proto.ExampleReq")
+	proto1.RegisterType((*ExampleResp)(nil), "proto.ExampleResp")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -98,7 +98,7 @@ func NewExampleClient(cc *grpc.ClientConn) ExampleClient {
 
 func (c *exampleClient) ExampleRPC(ctx context.Context, in *ExampleReq, opts ...grpc.CallOption) (*ExampleResp, error) {
 	out := new(ExampleResp)
-	err := grpc.Invoke(ctx, "/main.Example/ExampleRPC", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/proto.Example/ExampleRPC", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func _Example_ExampleRPC_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.Example/ExampleRPC",
+		FullMethod: "/proto.Example/ExampleRPC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ExampleServer).ExampleRPC(ctx, req.(*ExampleReq))
@@ -135,7 +135,7 @@ func _Example_ExampleRPC_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 var _Example_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "main.Example",
+	ServiceName: "proto.Example",
 	HandlerType: (*ExampleServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -147,16 +147,16 @@ var _Example_serviceDesc = grpc.ServiceDesc{
 	Metadata: "example.proto",
 }
 
-func init() { proto.RegisterFile("example.proto", fileDescriptor0) }
+func init() { proto1.RegisterFile("example.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 127 bytes of a gzipped FileDescriptorProto
+	// 123 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0xad, 0x48, 0xcc,
-	0x2d, 0xc8, 0x49, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xc9, 0x4d, 0xcc, 0xcc, 0x53,
-	0x52, 0xe1, 0xe2, 0x72, 0x85, 0x08, 0x07, 0xa5, 0x16, 0x0a, 0x89, 0x71, 0xb1, 0x15, 0xa5, 0x16,
-	0xfa, 0x16, 0xa7, 0x4b, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x41, 0x79, 0x4a, 0xea, 0x5c, 0xdc,
-	0x70, 0x55, 0xc5, 0x05, 0x42, 0x12, 0x5c, 0xec, 0x45, 0xa9, 0xc5, 0x05, 0x08, 0x75, 0x30, 0xae,
-	0x91, 0x1d, 0x17, 0x3b, 0x54, 0xa1, 0x90, 0x31, 0xc2, 0xe4, 0x00, 0x67, 0x21, 0x01, 0x3d, 0x90,
-	0x75, 0x7a, 0x08, 0xbb, 0xa4, 0x04, 0xd1, 0x44, 0x8a, 0x0b, 0x94, 0x18, 0x92, 0xd8, 0xc0, 0x6e,
-	0x33, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x0a, 0xa1, 0x57, 0xf4, 0xac, 0x00, 0x00, 0x00,
+	0x2d, 0xc8, 0x49, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0x2a, 0x5c,
+	0x5c, 0xae, 0x10, 0xf1, 0xa0, 0xd4, 0x42, 0x21, 0x31, 0x2e, 0xb6, 0xa2, 0xd4, 0x42, 0xdf, 0xe2,
+	0x74, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xce, 0x20, 0x28, 0x4f, 0x49, 0x9d, 0x8b, 0x1b, 0xae, 0xaa,
+	0xb8, 0x40, 0x48, 0x82, 0x8b, 0xbd, 0x28, 0xb5, 0xb8, 0x00, 0xa1, 0x0e, 0xc6, 0x35, 0x72, 0xe0,
+	0x62, 0x87, 0x2a, 0x14, 0x32, 0x45, 0x98, 0x1c, 0xe0, 0x2c, 0x24, 0x08, 0xb1, 0x56, 0x0f, 0x61,
+	0x99, 0x94, 0x10, 0xba, 0x50, 0x71, 0x81, 0x12, 0x43, 0x12, 0x1b, 0x58, 0xd0, 0x18, 0x10, 0x00,
+	0x00, 0xff, 0xff, 0x93, 0x19, 0x72, 0x52, 0xaf, 0x00, 0x00, 0x00,
 }

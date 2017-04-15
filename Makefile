@@ -32,7 +32,7 @@ build: deps checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
-install: 
+install:
 	@cp bin/cmd tools/docker-files/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh
 
@@ -41,7 +41,7 @@ unit-test:
 	go test $(TO_BUILD)
 
 cover:
-	$(info +++ go test -cover $(TO_BUILD))
+	$(info +++ go test -cover -tags test $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
 
 ci-testrun:

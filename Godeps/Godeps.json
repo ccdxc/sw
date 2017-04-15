@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/pensando/sw",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v79",
+	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
 	],
@@ -475,6 +475,10 @@
 		{
 			"ImportPath": "github.com/golang/glog",
 			"Rev": "44145f04b68cf362d9c4df2182967c2275eaefed"
+		},
+		{
+			"ImportPath": "github.com/golang/mock/gomock",
+			"Rev": "bd3c8e81be01eef76d4b503f5e687d2d1354d2d9"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/jsonpb",

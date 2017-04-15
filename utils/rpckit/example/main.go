@@ -1,3 +1,5 @@
+//+build !test
+
 package main
 
 import (
@@ -9,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/utils/rpckit"
+	exproto "github.com/pensando/sw/utils/rpckit/example/proto"
 )
 
 // Usage:
@@ -22,9 +25,9 @@ type ExampleRPCHandler struct {
 }
 
 // ExampleRPC is example rpc call handler
-func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*ExampleResp, error) {
+func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *exproto.ExampleReq) (*exproto.ExampleResp, error) {
 	log.Infof("Example server got request: %+v", req)
-	exampleResp := &ExampleResp{
+	exampleResp := &exproto.ExampleResp{
 		RespMsg: es.srvMsg,
 	}
 
@@ -45,7 +48,7 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	}
 
 	// register the RPC handler
-	RegisterExampleServer(rpcServer.GrpcServer, exampleHandler)
+	exproto.RegisterExampleServer(rpcServer.GrpcServer, exampleHandler)
 	defer func() { rpcServer.Stop() }()
 
 	// wait forever
@@ -61,12 +64,13 @@ func runClient(url, certFile, keyFile, caFile string, count int) {
 		return
 	}
 
-	exampleClient := NewExampleClient(rpcClient.ClientConn)
+	exampleClient := exproto.NewExampleClient(rpcClient.ClientConn)
+	req := exproto.ExampleReq{ReqMsg: "example request"}
 
 	// make calls `count` times
 	for i := 0; i < count; i++ {
 		// make a call
-		resp, err := exampleClient.ExampleRPC(context.Background(), &ExampleReq{"example request"})
+		resp, err := exampleClient.ExampleRPC(context.Background(), &req)
 		if err != nil {
 			log.Errorf("Got RPC error: %v", err)
 			return

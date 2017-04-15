@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 
-package main;
+package proto;
 
 // Example RPC definitions
 service Example {
