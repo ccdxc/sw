@@ -1,6 +1,7 @@
 package memkv
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -73,24 +74,24 @@ func TestWatchVersion(t *testing.T) {
 
 	obj := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(kvstore.TestKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), kvstore.TestKey, obj, 0, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
 	fromVersion := obj.ResourceVersion
 
-	w, err := store.Watch(kvstore.TestKey, fromVersion)
+	w, err := store.Watch(context.Background(), kvstore.TestKey, fromVersion)
 	if err != nil {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
 	into := &kvstore.TestObj{}
-	err = store.Get(kvstore.TestKey, into)
+	err = store.Get(context.Background(), kvstore.TestKey, into)
 	if err != nil {
 		t.Fatalf("Get of the key failed with error: %v", err)
 	}
 
-	if err := store.Delete(kvstore.TestKey, obj); err != nil {
+	if err := store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 

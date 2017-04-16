@@ -123,12 +123,12 @@ func TestCreateWithTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	err := store.Create(context.Background(), TestKey, obj, 1, obj)
+	err := store.Create(context.Background(), TestKey, obj, 2, obj)
 	if err != nil {
 		t.Fatalf("Create with TTL failed with error: %v", err)
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	err = store.Get(context.Background(), TestKey, obj)
 	if err == nil || !IsKeyNotFoundError(err) {
@@ -146,12 +146,11 @@ func TestCreateWithNegativeTTL(t *testing.T, cSetup ClusterSetupFunc, sSetup Sto
 
 	err := store.Create(context.Background(), TestKey, obj, -1, obj)
 	if err == nil {
-		t.Fatalf("Create with Invalid TTL succeeded error: %v", err)
-	}
-
-	err = store.Get(context.Background(), testKey, obj)
-	if err == nil || !IsKeyNotFoundError(err) {
-		t.Fatalf("Create with Invalid TTL succeeded, and found in the store: %v", err)
+		time.Sleep(time.Second * minTTL)
+		err = store.Get(context.Background(), TestKey, obj)
+		if err == nil || !IsKeyNotFoundError(err) {
+			t.Fatalf("Create with Invalid TTL succeeded, and found in the store: %v", err)
+		}
 	}
 
 	t.Logf("Create with Invalid TTL succeeded")
@@ -289,7 +288,7 @@ func TestUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
-	if err := store.Update(context.Background(), testKey, obj, 0, obj); err == nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj); err == nil {
 		t.Fatalf("Update of a non existent key passed")
 	}
 
@@ -654,10 +653,10 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 	}
 	evCh := w.EventChan()
 
-	cancel()
+	// If cancelled immediately, watch goroutine will send an error event.
+	time.Sleep(time.Millisecond * 10)
 
-	// Let the goroutine handle cancel.
-	time.Sleep(time.Millisecond * 100)
+	cancel()
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
@@ -840,7 +839,7 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 	}
 
 	cancel()
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 500)
 
 	// Check that one of the new candidates is leader.
 	found := false
