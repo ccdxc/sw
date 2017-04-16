@@ -31,7 +31,7 @@ func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	h := &clusterRPCHandler{}
 
 	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer(url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("cmd", url, certFile, keyFile, caFile)
 	if err != nil {
 		log.Fatalf("Error creating grpc server: %v", err)
 	}
