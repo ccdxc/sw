@@ -654,9 +654,11 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 	evCh := w.EventChan()
 
 	// If cancelled immediately, watch goroutine will send an error event.
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 100)
 
 	cancel()
+
+	time.Sleep(time.Millisecond * 100)
 
 	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 

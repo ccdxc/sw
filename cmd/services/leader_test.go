@@ -1,7 +1,6 @@
 package services
 
 import (
-	"strconv"
 	"testing"
 	"time"
 
@@ -15,10 +14,9 @@ import (
 func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) {
 	cluster := integration.NewClusterV3(t)
 	s := runtime.NewScheme()
-	clientURL := "http://" + integration.Host + ":" + strconv.Itoa(integration.ClientPort)
 	store, err := store.New(store.Config{
 		Type:    store.KVStoreTypeEtcd,
-		Servers: []string{clientURL},
+		Servers: []string{cluster.ClientURL()},
 		Codec:   runtime.NewJSONCodec(s),
 	})
 	if err != nil {

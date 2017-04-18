@@ -26,9 +26,8 @@ import (
 const (
 	name             = "etcdServer"
 	clusterToken     = "etcd"
-	Host             = "localhost"
-	serverPort       = 21001
-	ClientPort       = 21002
+	host             = "localhost"
+	basePortMax      = 21100
 	dataDir          = "/tmp/etcd"
 	requestTimeout   = 5 * time.Second
 	electionTicks    = 10
@@ -37,29 +36,35 @@ const (
 	ticker           = 500 * time.Millisecond
 )
 
+var (
+	basePort = 21000
+)
+
 // ClusterV3 contains server and client pointers for etcd.
 type ClusterV3 struct {
 	server     *etcdserver.EtcdServer
 	client     *clientv3.Client
 	httpServer *httptest.Server
 	grpcServer *grpc.Server
+	clientPort int
+	serverPort int
 }
 
 // newEtcdServer creates a etcd server instance.
-func newEtcdServer(t *testing.T) *etcdserver.EtcdServer {
-	clientURL := "http://" + Host + ":" + strconv.Itoa(ClientPort)
+func newEtcdServer(t *testing.T, clientPort, serverPort int) *etcdserver.EtcdServer {
+	clientURL := "http://" + host + ":" + strconv.Itoa(clientPort)
 	clientURLs, err := types.NewURLs([]string{clientURL})
 	if err != nil {
 		t.Fatalf("Failed to create client URLs with error: %v", err)
 	}
 
-	peerURL := "http://" + Host + ":" + strconv.Itoa(serverPort)
+	peerURL := "http://" + host + ":" + strconv.Itoa(serverPort)
 	peerURLs, err := types.NewURLs([]string{peerURL})
 	if err != nil {
 		t.Fatalf("Failed to create peer URLs with error: %v", err)
 	}
 
-	peerURLsMap, err := types.NewURLsMap(name + "=http://" + Host + ":" + strconv.Itoa(serverPort))
+	peerURLsMap, err := types.NewURLsMap(name + "=http://" + host + ":" + strconv.Itoa(serverPort))
 	if err != nil {
 		t.Fatalf("Failed to create peer URLs map with error: %v", err)
 	}
@@ -104,17 +109,49 @@ func waitForServer(t *testing.T, client *clientv3.Client) {
 
 // NewClusterV3 creates and starts a new etcd server and client.
 func NewClusterV3(t *testing.T) *ClusterV3 {
-	if err := os.RemoveAll(dataDir); err != nil {
+	var err error
+	clientPort := 0
+	serverPort := 0
+
+	if err = os.RemoveAll(dataDir); err != nil {
 		t.Fatalf("Failed to remove data dir, error %v", err)
 	}
 
-	server := newEtcdServer(t)
+	// Start the client and peer listeners.
+	var clientListener, serverListener net.Listener
+	for {
+		basePort++
+		if basePort > basePortMax {
+			t.Fatalf("Failed to find free client port")
+		}
+		clientListener, err = net.Listen("tcp", host+":"+strconv.Itoa(basePort))
+		if err != nil {
+			t.Logf("Failed to listen on client port %v, error %v", clientPort, err)
+			continue
+		} else {
+			clientPort = basePort
+			break
+		}
+	}
+
+	for {
+		basePort++
+		if basePort > basePortMax {
+			t.Fatalf("Failed to find free peer port")
+		}
+		serverListener, err = net.Listen("tcp", host+":"+strconv.Itoa(basePort))
+		if err != nil {
+			t.Logf("Failed to listen on server port %v, error %v", serverPort, err)
+			continue
+		} else {
+			serverPort = basePort
+			break
+		}
+	}
 
 	// Start the peer server.
-	serverListener, err := net.Listen("tcp", Host+":"+strconv.Itoa(serverPort))
-	if err != nil {
-		t.Fatalf("Failed to listen on server port %v, error %v", serverPort, err)
-	}
+	server := newEtcdServer(t, clientPort, serverPort)
+
 	raftHandler := &testutil.PauseableHandler{Next: v2http.NewPeerHandler(server)}
 	httpServer := &httptest.Server{
 		Listener: serverListener,
@@ -123,15 +160,11 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 	httpServer.Start()
 
 	// Start the client server (grpc).
-	clientListener, err := net.Listen("tcp", Host+":"+strconv.Itoa(ClientPort))
-	if err != nil {
-		t.Fatalf("Failed to listen on client port %v, error %v", ClientPort, err)
-	}
 	grpcServer := v3rpc.Server(server, nil)
 	go grpcServer.Serve(clientListener)
 
 	// Create a client.
-	clientURL := "http://" + Host + ":" + strconv.Itoa(ClientPort)
+	clientURL := "http://" + host + ":" + strconv.Itoa(clientPort)
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints: []string{clientURL},
 	})
@@ -147,6 +180,8 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 		client:     client,
 		httpServer: httpServer,
 		grpcServer: grpcServer,
+		clientPort: clientPort,
+		serverPort: serverPort,
 	}
 }
 
@@ -155,10 +190,15 @@ func (c *ClusterV3) Client() *clientv3.Client {
 	return c.client
 }
 
+// ClientURL returns the client URL.
+func (c *ClusterV3) ClientURL() string {
+	return "http://" + host + ":" + strconv.Itoa(c.clientPort)
+}
+
 // NewClient returns a new client object.
 func (c *ClusterV3) NewClient(t *testing.T) *clientv3.Client {
 	// Create a client.
-	clientURL := "http://" + Host + ":" + strconv.Itoa(ClientPort)
+	clientURL := "http://" + host + ":" + strconv.Itoa(c.clientPort)
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints: []string{clientURL},
 	})
