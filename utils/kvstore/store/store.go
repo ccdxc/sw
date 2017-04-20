@@ -5,12 +5,14 @@ import (
 
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/etcd"
+	"github.com/pensando/sw/utils/kvstore/memkv"
 	"github.com/pensando/sw/utils/runtime"
 )
 
 // exported constants
 const (
-	KVStoreTypeEtcd = "etcd"
+	KVStoreTypeEtcd  = "etcd"
+	KVStoreTypeMemkv = "memkv"
 )
 
 // Config contains configuration to create a KV storage client.
@@ -28,6 +30,8 @@ func New(c Config) (kvstore.Interface, error) {
 	switch c.Type {
 	case KVStoreTypeEtcd:
 		return etcd.NewEtcdStore(c.Servers, c.Codec)
+	case KVStoreTypeMemkv:
+		return memkv.NewMemKv(nil, c.Codec)
 	}
 	return nil, fmt.Errorf("Unknown kv store type: %v", c.Type)
 }
