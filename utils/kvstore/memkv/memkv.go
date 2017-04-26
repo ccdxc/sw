@@ -161,8 +161,15 @@ func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl 
 }
 
 // Delete removes a single key in memKv. If "into" is not nil, it is set to the previous value
-// of the key in kv store.
-func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object) error {
+// of the key in kv store. "cs" are comparators to allow for conditional deletes.
+func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
+	version := int64(-1)
+	for _, c := range cs {
+		if c.Target == kvstore.Version {
+			version = c.Version
+		}
+	}
+
 	f.Lock()
 	defer f.Unlock()
 
@@ -170,6 +177,12 @@ func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object) err
 	if !ok {
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
+
+	// TODO: c.Target == kvstore.Value
+	if version != -1 && v.revision != version {
+		return kvstore.NewVersionConflictError(key, version)
+	}
+
 	defer delete(f.kvs, key)
 	f.sendWatchEvents(key, v, true)
 
@@ -177,35 +190,6 @@ func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object) err
 		return f.decode([]byte(v.value), into, v.revision)
 	}
 
-	return nil
-}
-
-// AtomicDelete removes a key, only if it exists with the specified version. If "into" is not
-// nil, it is set to the last known value in the kv store.
-func (f *memKv) AtomicDelete(ctx context.Context, key string, prevVersion string, into runtime.Object) error {
-	version, err := strconv.ParseInt(prevVersion, 10, 64)
-	if err != nil {
-		return err
-	}
-
-	f.Lock()
-	defer f.Unlock()
-
-	v, ok := f.kvs[key]
-	if !ok {
-		return kvstore.NewKeyNotFoundError(key, 0)
-	}
-
-	if into != nil {
-		return f.decode([]byte(v.value), into, v.revision)
-	}
-	if v.revision != version {
-		return kvstore.NewVersionConflictError(key, version)
-	}
-
-	f.sendWatchEvents(key, v, true)
-
-	delete(f.kvs, key)
 	return nil
 }
 
@@ -232,40 +216,14 @@ func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
 }
 
 // Update modifies an existing object. If the key does not exist, update returns an error. This
-// should only be used if a single writer owns the key.
-func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
-	f.Lock()
-	defer f.Unlock()
-
-	v, ok := f.kvs[key]
-	if !ok {
-		return kvstore.NewKeyNotFoundError(key, 0)
-	}
-	value, err := f.encode(obj)
-	if err != nil {
-		return err
-	}
-
-	v.value = string(value)
-	v.ttl = ttl
-	v.revision += 1
-
-	f.sendWatchEvents(key, v, false)
-
-	if into != nil {
-		return f.decode(value, into, v.revision)
-	}
-
-	return nil
-}
-
-// AtomicUpdate modifies an existing object, only if the provided previous version matches the
-// existing version of the key. This is useful for implementing elections using a single ttl key. The
-// winner refreshes TTL on the key only if it hasn't been taken over by another node.
-func (f *memKv) AtomicUpdate(ctx context.Context, key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
-	version, err := strconv.ParseInt(prevVersion, 10, 64)
-	if err != nil {
-		return err
+// can be used without comparators if a single writer owns the key. "cs" are comparators to allow
+// for conditional updates, including parallel updates.
+func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...kvstore.Cmp) error {
+	version := int64(-1)
+	for _, c := range cs {
+		if c.Target == kvstore.Version {
+			version = c.Version
+		}
 	}
 
 	f.Lock()
@@ -276,7 +234,8 @@ func (f *memKv) AtomicUpdate(ctx context.Context, key string, obj runtime.Object
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
 
-	if v.revision != version {
+	// TODO: c.Target == kvstore.Value
+	if version != -1 && v.revision != version {
 		return kvstore.NewVersionConflictError(key, version)
 	}
 
@@ -423,4 +382,9 @@ func (f *memKv) PrefixWatch(ctx context.Context, prefix string, fromVersion stri
 // election is performed.
 func (f *memKv) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
 	return f.newElection(ctx, name, id, int(ttl))
+}
+
+// NewTxn creates a new transaction object.
+func (f *memKv) NewTxn() kvstore.Txn {
+	return f.newTxn()
 }

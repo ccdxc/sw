@@ -141,10 +141,11 @@ func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object, 
 	return nil
 }
 
-// delete removes a single key in etcd, if the comparisons match.
-func (e *etcdStore) delete(ctx context.Context, key string, into runtime.Object, cs ...clientv3.Cmp) error {
+// Delete removes a single key in etcd. If "into" is not nil, it is set to the previous value
+// of the key in kv store. "cs" are comparators to allow for conditional deletes.
+func (e *etcdStore) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
 	newCtx, cancel := context.WithTimeout(ctx, timeout)
-	resp, err := e.client.KV.Txn(newCtx).If(cs...).Then(
+	resp, err := e.client.KV.Txn(newCtx).If(translateCmps(cs...)...).Then(
 		clientv3.OpGet(key),
 		clientv3.OpDelete(key),
 	).Commit()
@@ -170,22 +171,6 @@ func (e *etcdStore) delete(ctx context.Context, key string, into runtime.Object,
 	return nil
 }
 
-// Delete removes a single key in etcd. If "into" is not nil, it is set to the previous value
-// of the key in kv store.
-func (e *etcdStore) Delete(ctx context.Context, key string, into runtime.Object) error {
-	return e.delete(ctx, key, into)
-}
-
-// AtomicDelete removes a key, only if it exists with the specified version. If "into" is not
-// nil, it is set to the last known value in the kv store.
-func (e *etcdStore) AtomicDelete(ctx context.Context, key string, prevVersion string, into runtime.Object) error {
-	version, err := strconv.ParseInt(prevVersion, 10, 64)
-	if err != nil {
-		return err
-	}
-	return e.delete(ctx, key, into, clientv3.Compare(clientv3.ModRevision(key), "=", version))
-}
-
 // PrefixDelete removes all keys with the matching prefix. Since it is meant to be used
 // for deleting prefixes only, a "/" is added at the end of the prefix if it doesn't
 // exist. For example, a delete with "/abc" prefix would only delete "/abc/123" and
@@ -203,39 +188,33 @@ func (e *etcdStore) PrefixDelete(ctx context.Context, prefix string) error {
 }
 
 // Update modifies an existing object. If the key does not exist, update returns an error. This
-// should only be used if a single writer owns the key.
-func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
-	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), ">", 0))
+// can be used without comparators if a single writer owns the key. "cs" are comparators to allow
+// for conditional updates, including parallel updates.
+func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...kvstore.Cmp) error {
+	version := int64(-1)
+	for _, c := range cs {
+		if c.Target == kvstore.Version {
+			version = c.Version
+		}
+	}
+
+	cmps := []clientv3.Cmp{}
+	if len(cs) == 0 {
+		cmps = append(cmps, clientv3.Compare(clientv3.ModRevision(key), ">", 0))
+	} else {
+		cmps = append(cmps, translateCmps(cs...)...)
+	}
+
+	value, resp, err := e.putHelper(ctx, key, obj, ttl, cmps...)
 	if err != nil {
 		return err
 	}
 
 	if !resp.Succeeded {
+		if version != -1 {
+			return kvstore.NewVersionConflictError(key, version)
+		}
 		return kvstore.NewKeyNotFoundError(key, 0)
-	}
-
-	if into != nil {
-		return e.decode(value, into, resp.Responses[0].GetResponsePut().Header.Revision)
-	}
-	return nil
-}
-
-// AtomicUpdate modifies an existing object, only if the provided previous version matches the
-// existing version of the key. This is useful for implementing elections using a single ttl key. The
-// winner refreshes TTL on the key only if it hasn't been taken over by another node.
-func (e *etcdStore) AtomicUpdate(ctx context.Context, key string, obj runtime.Object, prevVersion string, ttl int64, into runtime.Object) error {
-	version, err := strconv.ParseInt(prevVersion, 10, 64)
-	if err != nil {
-		return err
-	}
-
-	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
-	if err != nil {
-		return err
-	}
-
-	if !resp.Succeeded {
-		return kvstore.NewVersionConflictError(key, version)
 	}
 
 	if into != nil {
@@ -373,4 +352,9 @@ func (e *etcdStore) PrefixWatch(ctx context.Context, prefix string, fromVersion 
 // election is performed.
 func (e *etcdStore) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
 	return e.newElection(ctx, name, id, int(ttl))
+}
+
+// NewTxn creates a new transaction object.
+func (e *etcdStore) NewTxn() kvstore.Txn {
+	return e.newTxn()
 }

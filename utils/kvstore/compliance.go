@@ -81,6 +81,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestElection,
 		TestElectionRestartContender,
 		TestCancelElection,
+		// TestTxn, this needs to be promoted to compliance.go
 	}
 
 	for _, fn := range fns {
@@ -230,13 +231,13 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	if err := store.AtomicDelete(context.Background(), TestKey, "0", nil); err == nil {
+	if err := store.Delete(context.Background(), TestKey, nil, Compare(WithVersion(TestKey), "=", 0)); err == nil {
 		t.Fatalf("AtomicDelete failed with incorrect previous version")
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.AtomicDelete(context.Background(), TestKey, prevVersion, obj)
+	err = store.Delete(context.Background(), TestKey, obj, Compare(WithVersion(TestKey), "=", prevVersion))
 	if err != nil {
 		t.Fatalf("AtomicDelete failed with error: %v", err)
 	}
@@ -337,11 +338,11 @@ func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.AtomicUpdate(context.Background(), TestKey, obj, "0", 0, obj); err == nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj, Compare(WithVersion(TestKey), "=", 0)); err == nil {
 		t.Fatalf("AtomicUpdate passed with incorrect previous version")
 	}
 
-	if err := store.AtomicUpdate(context.Background(), TestKey, obj, prevVersion, 0, obj); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, 0, obj, Compare(WithVersion(TestKey), "=", prevVersion)); err != nil {
 		t.Fatalf("AtomicUpdate of a key failed with error: %v", err)
 	}
 

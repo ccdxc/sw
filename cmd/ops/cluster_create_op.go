@@ -95,10 +95,10 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	}
 
 	// Store Cluster and Node objects in kv store.
-	// FIXME: Do this in a transaction when kv store supports transactions.
-	err = env.KVStore.Create(context.Background(), globals.ClusterKey, o.cluster, 0, o.cluster)
+	txn := env.KVStore.NewTxn()
+	err = txn.Create(globals.ClusterKey, o.cluster)
 	if err != nil {
-		log.Errorf("Failed to add cluster to kvstore, error: %v", err)
+		log.Errorf("Failed to add cluster to txn, error: %v", err)
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 		return nil, errors.NewInternalError(err)
 	}
@@ -106,12 +106,18 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	for ii := range o.cluster.Spec.QuorumNodes {
 		name := o.cluster.Spec.QuorumNodes[ii]
 		node := makeNode(name)
-		err = env.KVStore.Create(context.Background(), path.Join(globals.NodesKey, name), node, 0, node)
+		err = txn.Create(path.Join(globals.NodesKey, name), node)
 		if err != nil {
-			// FIXME: With txn, error handling will be merged with above block.
-			log.Errorf("Failed to add node %v to kvstore, error: %v", name, err)
+			log.Errorf("Failed to add node %v to txn, error: %v", name, err)
+			sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 			return nil, errors.NewInternalError(err)
 		}
+	}
+
+	if err := txn.Commit(context.Background()); err != nil {
+		log.Errorf("Failed to commit cluster create txn to kvstore, error: %v", err)
+		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
+		return nil, errors.NewInternalError(err)
 	}
 
 	return o.cluster, nil

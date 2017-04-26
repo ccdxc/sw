@@ -10,6 +10,7 @@ const (
 	ErrCodeKeyNotFound
 	ErrCodeVersionConflict
 	ErrCodeInvalidTTL
+	ErrCodeTxnFailed
 )
 
 var errCodeToMessage = map[int]string{
@@ -17,6 +18,7 @@ var errCodeToMessage = map[int]string{
 	ErrCodeKeyNotFound:     "Key not found",
 	ErrCodeVersionConflict: "Version conflict",
 	ErrCodeInvalidTTL:      "Invalid TTL",
+	ErrCodeTxnFailed:       "Txn failed",
 }
 
 // KVError describes errors associated with kv store.
@@ -25,6 +27,7 @@ type KVError struct {
 	Message         string
 	Key             string
 	ResourceVersion int64
+	TTL             int64
 }
 
 // Error implements the error interface.
@@ -89,17 +92,30 @@ func IsVersionConflictError(err error) bool {
 	return isErrorCode(err, ErrCodeVersionConflict)
 }
 
-// NewInvalidTTL returns an invalid ttl error
+// NewInvalidTTLError returns an invalid ttl error
 func NewInvalidTTLError(ttl int64) *KVError {
 	return &KVError{
-		Code:            ErrCodeInvalidTTL,
-		Message:         errCodeToMessage[ErrCodeInvalidTTL],
-		Key:             "",
-		ResourceVersion: ttl,
+		Code:    ErrCodeInvalidTTL,
+		Message: errCodeToMessage[ErrCodeInvalidTTL],
+		Key:     "",
+		TTL:     ttl,
 	}
 }
 
 // IsKeyExistsError checks if it is key exists error
 func IsInvalidTTLError(err error) bool {
 	return isErrorCode(err, ErrCodeKeyExists)
+}
+
+// NewTxnFailedError returns a txn failed error
+func NewTxnFailedError() *KVError {
+	return &KVError{
+		Code:    ErrCodeTxnFailed,
+		Message: errCodeToMessage[ErrCodeTxnFailed],
+	}
+}
+
+// IsTxnFailedError checks if it is txn failed error
+func IsTxnFailedError(err error) bool {
+	return isErrorCode(err, ErrCodeTxnFailed)
 }
