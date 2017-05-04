@@ -1,3 +1,4 @@
+
 {
   "builders": [{
     "type": "qemu",
@@ -83,9 +84,11 @@
     "scripts": [
       "scripts/centos-7.3/repo.sh",
       "scripts/centos/virtualbox.sh",
-      "scripts/centos/pens.sh",
       "scripts/centos/vmware.sh",
       "scripts/common/vagrant.sh",
+      "scripts/centos/pens.sh",
+      "scripts/centos/pens-containers.sh",
+      "scripts/centos/pens-gotools.sh",
       "scripts/common/sshd.sh",
       "scripts/centos-7.3/locale.sh",
       "scripts/centos-7.3/cleanup.sh",
