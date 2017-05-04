@@ -120,7 +120,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               export KUBECONFIG=$HOME/admin.conf
 
               # workaround for https://github.com/kubernetes/kubernetes/issues/34101
-              wget -q https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64 && sudo mv jq-linux64 /usr/local/bin
               kubectl -n kube-system get ds -l 'k8s-app=kube-proxy' -o json | /usr/local/bin/jq-linux64 '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'k8s-app=kube-proxy'
 
               # Add weave networking
