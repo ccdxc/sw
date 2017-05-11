@@ -36,6 +36,12 @@ install:
 	@cp bin/cmd tools/docker-files/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh
 
+build-container:
+	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld .
+
+container-compile:
+	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld
+
 unit-test:
 	$(info +++ go test $(TO_BUILD))
 	go test $(TO_BUILD)
