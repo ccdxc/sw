@@ -81,7 +81,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestElection,
 		TestElectionRestartContender,
 		TestCancelElection,
-		// TestTxn, this needs to be promoted to compliance.go
+		TestTxn,
 	}
 
 	for _, fn := range fns {
@@ -863,4 +863,72 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 	}
 
 	t.Logf("Cancel of election succeeded")
+}
+
+// TestTxn tests creation/deletion/updation of keys in a transanction.
+func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+
+	c, store := setupTestCluster(t, cSetup, sSetup)
+	defer cCleanup(t, c)
+
+	obj1 := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	obj2 := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj2"}}
+
+	txn1 := store.NewTxn()
+	if err := txn1.Create(obj1.Name, obj1); err != nil {
+		t.Fatalf("Failed to create obj1 in txn with error: %v", err)
+	}
+	if err := txn1.Create(obj2.Name, obj2); err != nil {
+		t.Fatalf("Failed to create obj1 in with error: %v", err)
+	}
+	if err := txn1.Commit(context.Background()); err != nil {
+		t.Fatalf("Failed to commit txn with multiple Creates with error: %v", err)
+	}
+	if err := store.Get(context.Background(), obj1.Name, obj1); err != nil {
+		t.Fatalf("Failed to get obj1 created in with error: %v", err)
+	}
+	if err := store.Get(context.Background(), obj2.Name, obj2); err != nil {
+		t.Fatalf("Failed to get obj2 created in with error: %v", err)
+	}
+
+	txn2 := store.NewTxn()
+	oldVersion := obj1.ResourceVersion
+	obj1.Counter++
+	if err := txn2.Update(obj1.Name, obj1, Compare(WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
+		t.Fatalf("Failed to update obj1 in with error: %v", err)
+	}
+	if err := txn2.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
+		t.Fatalf("Failed to update obj2 in with error: %v", err)
+	}
+	if err := txn2.Commit(context.Background()); err != nil {
+		t.Fatalf("Failed to commit txn with multiple Updates with error: %v", err)
+	} else if obj1.ResourceVersion == oldVersion {
+		t.Fatalf("Failed to update version in txn")
+	}
+
+	txn3 := store.NewTxn()
+	if err := store.Get(context.Background(), obj2.Name, obj2); err != nil {
+		t.Fatalf("Failed to get obj2 created in with error: %v", err)
+	}
+	oldVersion = obj2.ResourceVersion
+	if err := txn3.Delete(obj1.Name, Compare(WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
+		t.Fatalf("Failed to delete obj1 in with error: %v", err)
+	}
+	if err := txn3.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
+		t.Fatalf("Failed to update obj2 in with error: %v", err)
+	}
+	if err := txn3.Commit(context.Background()); err != nil {
+		t.Fatalf("Failed to commit txn with Update+Delete with error: %v", err)
+	}
+	if err := store.Get(context.Background(), obj1.Name, obj1); err == nil {
+		t.Fatalf("Found obj1 deleted in txn, %+v", obj1)
+	}
+	if err := store.Get(context.Background(), obj2.Name, obj2); err != nil {
+		t.Fatalf("Failed to get obj2 updated in txn with error: %v", err)
+	}
+	if oldVersion == obj2.ResourceVersion {
+		t.Fatalf("Failed to update version in txn")
+	}
+
+	t.Logf("TestTxn succeeded")
 }

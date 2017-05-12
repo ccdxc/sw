@@ -75,7 +75,7 @@ func ttlDecrement(f *memKv) {
 			if v.ttl == 0 {
 				continue
 			}
-			v.ttl -= 1
+			v.ttl--
 			if v.ttl == 0 {
 				delete(f.kvs, key)
 			}
@@ -160,16 +160,42 @@ func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl 
 	return nil
 }
 
+// MUST be called with the Lock HELD
+func compCheck(f *memKv, cs ...kvstore.Cmp) error {
+	for _, cmp := range cs {
+		v, ok := f.kvs[cmp.Key]
+		if !ok {
+			return kvstore.NewKeyNotFoundError(cmp.Key, 0)
+		}
+
+		switch cmp.Target {
+		case kvstore.Version:
+			switch cmp.Operator {
+			case "=":
+				if v.revision != cmp.Version {
+					return kvstore.NewVersionConflictError(cmp.Key, cmp.Version)
+				}
+			case "!=":
+				if v.revision == cmp.Version {
+					return kvstore.NewVersionConflictError(cmp.Key, cmp.Version)
+				}
+			case "<":
+				if v.revision >= cmp.Version {
+					return kvstore.NewVersionConflictError(cmp.Key, cmp.Version)
+				}
+			case ">":
+				if v.revision <= cmp.Version {
+					return kvstore.NewVersionConflictError(cmp.Key, cmp.Version)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // Delete removes a single key in memKv. If "into" is not nil, it is set to the previous value
 // of the key in kv store. "cs" are comparators to allow for conditional deletes.
 func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
-	version := int64(-1)
-	for _, c := range cs {
-		if c.Target == kvstore.Version {
-			version = c.Version
-		}
-	}
-
 	f.Lock()
 	defer f.Unlock()
 
@@ -177,10 +203,9 @@ func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object, cs 
 	if !ok {
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
-
-	// TODO: c.Target == kvstore.Value
-	if version != -1 && v.revision != version {
-		return kvstore.NewVersionConflictError(key, version)
+	err := compCheck(f, cs...)
+	if err != nil {
+		return err
 	}
 
 	defer delete(f.kvs, key)
@@ -219,13 +244,6 @@ func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
 // can be used without comparators if a single writer owns the key. "cs" are comparators to allow
 // for conditional updates, including parallel updates.
 func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...kvstore.Cmp) error {
-	version := int64(-1)
-	for _, c := range cs {
-		if c.Target == kvstore.Version {
-			version = c.Version
-		}
-	}
-
 	f.Lock()
 	defer f.Unlock()
 
@@ -234,9 +252,9 @@ func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl 
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
 
-	// TODO: c.Target == kvstore.Value
-	if version != -1 && v.revision != version {
-		return kvstore.NewVersionConflictError(key, version)
+	err := compCheck(f, cs...)
+	if err != nil {
+		return err
 	}
 
 	value, err := f.encode(obj)
@@ -246,7 +264,7 @@ func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl 
 
 	v.value = string(value)
 	v.ttl = ttl
-	v.revision += 1
+	v.revision++
 
 	f.sendWatchEvents(key, v, false)
 
@@ -302,7 +320,7 @@ func (f *memKv) ConsistentUpdate(ctx context.Context, key string, ttl int64, int
 
 			v.value = string(value)
 			v.ttl = ttl
-			v.revision += 1
+			v.revision++
 			f.sendWatchEvents(key, v, false)
 
 			if into != nil {
@@ -387,4 +405,57 @@ func (f *memKv) Contest(ctx context.Context, name string, id string, ttl uint64)
 // NewTxn creates a new transaction object.
 func (f *memKv) NewTxn() kvstore.Txn {
 	return f.newTxn()
+}
+
+func (f *memKv) commitTxn(t *txn) error {
+	f.Lock()
+	defer f.Unlock()
+
+	err := compCheck(f, t.cmps...)
+	if err != nil {
+		return err
+	}
+
+	// other checks based on the ops
+	for _, o := range t.ops {
+		switch o.t {
+		case tCreate:
+			if _, ok := f.kvs[o.key]; ok {
+				return kvstore.NewKeyExistsError(o.key, 0)
+			}
+		case tUpdate:
+			_, ok := f.kvs[o.key]
+			if !ok {
+				return kvstore.NewKeyNotFoundError(o.key, 0)
+			}
+		case tDelete:
+			_, ok := f.kvs[o.key]
+			if !ok {
+				return kvstore.NewKeyNotFoundError(o.key, 0)
+			}
+		}
+	}
+
+	// actual operations - Point of no return
+	for _, o := range t.ops {
+		switch o.t {
+		case tCreate:
+			v := &memKvRec{value: o.val, revision: 1}
+			f.kvs[o.key] = v
+			f.setupWatchers(o.key, v)
+
+			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
+		case tUpdate:
+			v := f.kvs[o.key]
+			v.value = o.val
+			v.revision++
+			f.sendWatchEvents(o.key, v, false)
+			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
+		case tDelete:
+			v, _ := f.kvs[o.key]
+			defer delete(f.kvs, o.key)
+			f.sendWatchEvents(o.key, v, true)
+		}
+	}
+	return nil
 }
