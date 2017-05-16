@@ -5,6 +5,7 @@ package integration
 
 import (
 	"context"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -48,10 +49,11 @@ type ClusterV3 struct {
 	grpcServer *grpc.Server
 	clientPort int
 	serverPort int
+	walDir     string
 }
 
 // newEtcdServer creates a etcd server instance.
-func newEtcdServer(t *testing.T, clientPort, serverPort int) *etcdserver.EtcdServer {
+func newEtcdServer(t *testing.T, clientPort, serverPort int, walDir string) *etcdserver.EtcdServer {
 	clientURL := "http://" + host + ":" + strconv.Itoa(clientPort)
 	clientURLs, err := types.NewURLs([]string{clientURL})
 	if err != nil {
@@ -80,6 +82,8 @@ func newEtcdServer(t *testing.T, clientPort, serverPort int) *etcdserver.EtcdSer
 		ElectionTicks:       electionTicks,
 		BootstrapTimeout:    bootstrapTimeout,
 		TickMs:              tickMs,
+		DedicatedWALDir:     walDir,
+		MaxWALFiles:         1,
 	}
 
 	server, err := etcdserver.NewServer(serverConfig)
@@ -113,7 +117,7 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 	clientPort := 0
 	serverPort := 0
 
-	if err = os.RemoveAll(dataDir); err != nil {
+	if err = os.RemoveAll(dataDir); err != nil && os.IsNotExist(err) {
 		t.Fatalf("Failed to remove data dir, error %v", err)
 	}
 
@@ -149,8 +153,13 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 		}
 	}
 
+	walDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatalf("Creating temporary WAL dir: %v", err)
+	}
+
 	// Start the peer server.
-	server := newEtcdServer(t, clientPort, serverPort)
+	server := newEtcdServer(t, clientPort, serverPort, walDir)
 
 	raftHandler := &testutil.PauseableHandler{Next: v2http.NewPeerHandler(server)}
 	httpServer := &httptest.Server{
@@ -220,5 +229,8 @@ func (c *ClusterV3) Terminate(t *testing.T) {
 	c.server.HardStop()
 	if err := os.RemoveAll(dataDir); err != nil {
 		t.Fatalf("Failed to remove data dir, error %v", err)
+	}
+	if err := os.RemoveAll(c.walDir); err != nil {
+		t.Fatalf("Failed to remove WAL dir, error %v", err)
 	}
 }

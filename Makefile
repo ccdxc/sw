@@ -46,6 +46,10 @@ unit-test:
 	$(info +++ go test $(TO_BUILD))
 	go test $(TO_BUILD)
 
+unit-test-verbose:
+	$(info +++ go test $(TO_BUILD))
+	go test -v $(TO_BUILD)
+
 cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
