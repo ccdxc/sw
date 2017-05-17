@@ -1,0 +1,336 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/books/{Spec.ISBNId}": {
+      "get": {
+        "summary": "--- Book resource -- //\nThis resource is partially exposed on the API gateway (Get) and some actions are\nonly internal (Create Update Delete)",
+        "operationId": "GetBook",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreBook"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Spec.ISBNId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "--- Order Resource--- //\nThis resource is exposed to the user for all CRUD operations",
+        "operationId": "OrderOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/orders/{O.Name}": {
+      "get": {
+        "summary": "--- Order Resource--- //\nThis resource is exposed to the user for all CRUD operations",
+        "operationId": "OrderOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "delete": {
+        "summary": "--- Order Resource--- //\nThis resource is exposed to the user for all CRUD operations",
+        "operationId": "OrderOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "put": {
+        "summary": "--- Order Resource--- //\nThis resource is exposed to the user for all CRUD operations",
+        "operationId": "OrderOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "format": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Namespace": {
+          "type": "string",
+          "format": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "format": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "format": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "format": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "format": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "bookstoreBook": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreBookSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreBookStatus"
+        }
+      }
+    },
+    "bookstoreBookSpec": {
+      "type": "object",
+      "properties": {
+        "ISBNId": {
+          "type": "string",
+          "format": "string"
+        },
+        "Author": {
+          "type": "string",
+          "format": "string"
+        },
+        "IdProvider": {
+          "type": "string",
+          "format": "string",
+          "description": "Added in  version 2 of the API."
+        }
+      }
+    },
+    "bookstoreBookStatus": {
+      "type": "object",
+      "properties": {
+        "Inventory": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "bookstoreOrder": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreOrderSpec",
+          "description": "Spec is not allowed to be Null hence disabling nullable."
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreOrderStatus"
+        }
+      }
+    },
+    "bookstoreOrderItem": {
+      "type": "object",
+      "properties": {
+        "ISBNId": {
+          "type": "string",
+          "format": "string"
+        },
+        "Quantity": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "bookstoreOrderSpec": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "string"
+        },
+        "Order": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrderItem"
+          }
+        }
+      }
+    },
+    "bookstoreOrderStatus": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Status": {
+          "type": "string",
+          "format": "string"
+        },
+        "Filled": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrderSpec"
+          }
+        }
+      }
+    },
+    "bookstorePublisher": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstorePublisherSpec"
+        }
+      }
+    },
+    "bookstorePublisherSpec": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "string"
+        },
+        "Address": {
+          "type": "string",
+          "format": "string"
+        }
+      }
+    }
+  }
+}

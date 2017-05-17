@@ -1,0 +1,59 @@
+syntax = "proto3";
+package api;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// TypeMeta contains the metadata about kind and version for all API objects.
+message TypeMeta {
+  // Kind represents the type of the API object.
+  string Kind=1;
+  // APIVersion defines the version of the API object.
+  string APIVersion=2;
+}
+
+// ListMeta contains the metadata for list of objects.
+message ListMeta {
+  // Resource version of object store at the time of list generation.
+  string ResourceVersion=1;
+}
+
+// ObjectMeta contains metadata that all objects stored in kvstore must have.
+message ObjectMeta {
+  // Name of the object, unique within a Namespace for scoped objects.
+  string Name = 1;
+  // Namespace of the object, for scoped objects.
+  string Namespace = 2;
+  // Resource version in the object store. This can only be set by the server.
+  string ResourceVersion = 3;
+  // UUID is the unique identifier for the object. This can only be set by the server.
+  string UUID = 4;
+  // TODO: Add timestamps, labels etc.
+}
+
+// ObjectRef contains identifying information about an object.
+message ObjectRef {
+  // Kind represents the type of the API object.
+  string Kind = 1;
+  // Namespace of the object, for scoped objects.
+  string NameSpace = 2;
+  // Name of the object, unique within a Namespace for scoped objects.
+  string Name = 3;
+}
+
+// StatusResult contains possible statuses for a NIC.
+message StatusResult {
+  string Str = 1;
+}
+
+// Status is returned for calls that dont return objects.
+message Status {
+  TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
+  // Result contains the status of the operation, success or failure.
+  StatusResult Result = 2;
+  // Message contains human readable form of the error.
+  string Message = 3;
+  // Code is the HTTP status code.
+  int32 Code = 4;
+  // Reference to the object (optional) for which this status is being sent.
+  ObjectRef Ref = 5;
+}

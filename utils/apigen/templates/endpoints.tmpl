@@ -1,0 +1,103 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+
+package {{.GoPkg.Name}}
+
+import (
+	"net/url"
+	"strings"
+
+	"context"
+	"time"
+
+	"github.com/go-kit/kit/endpoint"
+	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/pensando/sw/utils/log"
+)
+
+{{range .Services}}{{$svcname := .Name}}
+type Middleware{{$svcname}} func(Service{{$svcname}}) Service{{$svcname}}
+type Endpoints_{{$svcname}} struct {
+	{{range .Methods}}
+	{{.Name}}Endpoint endpoint.Endpoint{{end}}
+}
+
+{{range .Methods}}
+func (e Endpoints_{{$svcname}}) {{.Name}}(ctx context.Context, in {{.RequestType.Name}}) ({{.ResponseType.Name}}, error) {
+	resp, err := e.{{.Name}}Endpoint(ctx, in)
+	if err != nil {
+		return {{.ResponseType.Name}}{}, err
+	}
+	return *resp.(*{{.ResponseType.Name}}), nil
+}
+
+type resp{{$svcname}}{{.Name}} struct {
+	V   {{.ResponseType.Name}}
+	Err error
+}
+
+func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*{{.RequestType.Name}})
+		v, err := s.{{.Name}}(ctx, *req)
+		return resp{{$svcname}}{{.Name}} {
+			V:   v,
+			Err: err,
+		}, nil
+	}
+}{{end}}
+
+func Make{{$svcname}}ServerEndpoints(s Service{{$svcname}}) Endpoints_{{$svcname}} {
+	return Endpoints_{{$svcname}}{
+		{{range .Methods}}{{.Name}}Endpoint: Make{{$svcname}}{{.Name}}Endpoint(s),
+		{{end}}
+	}
+}
+
+func Logging{{$svcname}}Middleware(logger log.Logger) Middleware{{$svcname}} {
+	return func(next Service{{$svcname}}) Service{{$svcname}} {
+		return logging{{$svcname}}Middleware{
+			logger: logger,
+			next: next,
+		}
+	}
+}
+
+type logging{{$svcname}}Middleware struct {
+	logger log.Logger
+	next   Service{{$svcname}}
+}
+{{range .Methods}}
+func (m logging{{$svcname}}Middleware) {{.Name}}(ctx context.Context, in {{.RequestType.Name}}) (resp {{.ResponseType.Name}}, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.{{.Name}}(ctx, in)
+	return
+}
+{{end}}
+func Make{{$svcname}}RestClientEndpoints(instance string) (Endpoints_{{$svcname}}, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+	tgt, err := url.Parse(instance)
+	if err != nil {
+		return Endpoints_{{$svcname}}{}, err
+	}
+	tgt.Path = ""
+	options := []httptransport.ClientOption{}
+
+	return Endpoints_{{$svcname}}{ {{range .Methods}}
+		{{.Name}}Endpoint: httptransport.NewClient("POST", tgt, encodeHttp{{.RequestType.Name}}, decodeHttpresp{{$svcname}}{{.Name}}, options...).Endpoint(),{{end}}
+	}, nil
+}
+
+{{end}}

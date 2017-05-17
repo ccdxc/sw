@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package venice;
+
+import "google/protobuf/descriptor.proto";
+
+// Venice Option extensions applicable at the file level.
+extend google.protobuf.FileOptions {
+  // GRPC destination. This is typically a service discovery key. 
+  string fileGrpcDest = 51235;
+};
+
+// Venice Option extensions applicable at the Service level.
+extend google.protobuf.ServiceOptions {
+  // API version.
+  string apiVersion = 51250;
+  // Prefix is used in how the URI is constructed. For example if the prefix option
+  // is specified as storage then the URI would be "/<version>/venice/storage/<URI path specifed for endpoint>
+  string apiPrefix= 51251;
+};
+
+// Venice Option extensions applicable to rpc Methods.
+extend google.protobuf.MethodOptions {
+  // Valid only for Pure gRPC methods. Specifies the type of KV store operation the method results in.
+  string methodOper = 51270;
+};
+
+// Venice Option extensions applicable to messages
+extend google.protobuf.MessageOptions {
+  // Path prefix specification for the KV Store for this message. Needs to be specified for all objects that
+  // the api server is to persist in the KV store.
+  string objectPrefix = 51290;
+};

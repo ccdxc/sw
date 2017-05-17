@@ -1,0 +1,118 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+package {{.GoPkg.Name}}GwService
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/GeertJohan/go.rice"
+	gogocodec "github.com/gogo/protobuf/codec"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pensando/sw/apigw/pkg"
+	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated"
+	"{{.GoPkg.RelPath}}/generated/grpc/client"
+	"github.com/pensando/sw/utils/log"
+	"github.com/pkg/errors"
+	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc"
+)
+
+const codecSize = 1024 * 1024
+
+{{$grpcdest := "localhost:8081"}} {{$swaggerfile := getSwaggerFileName .Name}}
+{{$cgrpcdest := (getExtension "venice.fileGrpcDest" .)}}
+{{$pkgname := .GoPkg.Name}}{{range $index, $v := .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}
+type s_{{.Name}}GwService struct {
+	logger log.Logger
+}
+
+type adapter{{.Name}} struct {
+	service {{$pkgname}}.Service{{$svcname}}
+}
+{{range .Methods}}
+func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{$pkgname}}.{{.RequestType.Name}}, options ...grpc.CallOption) (*{{$pkgname}}.{{.ResponseType.Name}}, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	r, e := a.service.{{.Name}}(ctx, *t)
+	return &r, e
+}
+{{end}}
+
+func (e *s_{{.Name}}GwService) CompleteRegistration(ctx context.Context,
+	logger log.Logger,
+	grpcserver *grpc.Server,
+	m *http.ServeMux) error {
+	// IP:port destination or service discovery key.
+	{{if strEq $cgrpcdest "" }}grpcaddr := "{{$grpcdest}}"{{else}}
+	grpcaddr := "{{$cgrpcdest}}"{{end}}
+	e.logger = logger
+	codec := gogocodec.New(codecSize)
+	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	if cl == nil || err != nil {
+		err = errors.Wrap(err, "could not create client")
+		return err
+	}
+	marshaller := runtime.JSONBuiltin{}
+	opts := runtime.WithMarshalerOption("*", &marshaller)
+	mux := runtime.NewServeMux(opts)
+	err = {{$pkgname}}.Register{{.Name}}HandlerWithClient(ctx, mux, cl)
+	if err != nil {
+		err = errors.Wrap(err, "service registration failed")
+		return err
+	}
+	logger.InfoLog("msg", "registered service {{$pkgname}}.{{.Name}}")
+	m.Handle("/{{$svcparams.Version}}/{{$svcparams.Prefix}}/", http.StripPrefix("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", mux))
+	{{if eq ($index) 0}}err = registerSwaggerDef(m, logger){{end}}
+	return err
+}
+
+func (e *s_{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) ({{$pkgname}}.{{.Name}}Client, error) {
+	conn, err := grpc.Dial(grpcAddr, opts...)
+	if err != nil {
+		err = errors.Wrap(err, "dial failed")
+		if cerr := conn.Close(); cerr != nil {
+			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
+		}
+		return nil, err
+	}
+	e.logger.Infof("Connected to GRPC Server", grpcAddr)
+	defer func() {
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+			}
+		}()
+	}()
+
+	cl := adapter{{$svcname}}{grpcclient.New{{.Name}}Backend(conn, e.logger)}
+	return cl, nil
+}{{end}}
+
+func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
+	box, err := rice.FindBox("../../../../{{getCWD2}}/generated/swagger")
+	if err != nil {
+		err = errors.Wrap(err, "error opening rice.Box")
+		return err
+	}
+	content, err := box.Bytes("{{$swaggerfile}}")
+	if err != nil {
+		err = errors.Wrap(err, "error opening rice.File")
+		return err
+	}
+	m.HandleFunc("/swagger/{{$pkgname}}/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(content)
+	})
+	return nil
+}
+
+func init() {
+	apigw := apigwpkg.MustGetApiGateway()
+	{{range .Services}}{{$svcparams := (getSvcParams .)}}
+	svc{{.Name}} := s_{{.Name}}GwService {}
+	apigw.Register("{{$pkgname}}.{{.Name}}", "{{$svcparams.Prefix}}/", &svc{{.Name}}){{end}}
+}

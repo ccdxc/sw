@@ -1,0 +1,178 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+package {{.GoPkg.Name}}
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+
+	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
+
+	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/pensando/sw/utils/log"
+)
+
+var (
+	ErrInconsistentIDs = errors.New("inconsistent IDs")
+	ErrAlreadyExists   = errors.New("already exists")
+	ErrNotFound        = errors.New("not found")
+)
+
+// FIXME: add HTTP handler here.
+func recoverVersion(ctx context.Context, md metadata.MD) context.Context {
+	var pairs []string
+	xmd := md
+	v, ok := xmd["req-version"]
+	if ok {
+		pairs = append(pairs, "req-version", v[0])
+	}
+	if v, ok = xmd["req-uri"]; ok {
+		pairs = append(pairs, "req-uri", v[0])
+	}
+	if v, ok = xmd["req-method"]; ok {
+		pairs = append(pairs, "req-method", v[0])
+	}
+	nmd := metadata.Pairs(pairs...)
+	ctx = metadata.NewContext(ctx, nmd)
+	return ctx
+}
+
+{{range .Services}}{{$svcname := .Name}}
+type grpcServer{{$svcname}} struct {
+	{{range .Methods}}
+	{{.Name}}Hdlr grpctransport.Handler{{end}}
+}
+
+func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints_{{.Name}}, logger log.Logger) {{.Name}}Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServer{{$svcname}}{
+		{{range .Methods}}
+		{{.Name}}Hdlr: grpctransport.NewServer(
+			endpoints.{{.Name}}Endpoint,
+			DecodeGrpcReq{{.RequestType.Name}},
+			EncodeGrpcResp{{.ResponseType.Name}},
+			options...,
+		),
+		{{end}}
+	}
+}
+{{range .Methods}}
+func (s *grpcServer{{$svcname}}) {{.Name}}(ctx oldcontext.Context, req *{{.RequestType.Name}}) (*{{.ResponseType.Name}}, error) {
+	_, resp, err := s.{{.Name}}Hdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(resp{{$svcname}}{{.Name}}).V
+	return &r, resp.(resp{{$svcname}}{{.Name}}).Err
+}
+
+func decodeHttpresp{{$svcname}}{{.Name}}(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp resp{{$svcname}}{{.Name}}
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return resp, err
+}
+
+{{end}}{{end}}{{range .Messages}}
+func encodeHttp{{.Name}}(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHttpRequest(ctx, req, request)
+}
+
+func decodeHttp{{.Name}}(_ context.Context, r *http.Request) (interface{}, error) {
+	var req {{.Name}}
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+func EndcodeGrpcReq{{.Name}}(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.({{.Name}})
+	return &req, nil
+}
+
+func DecodeGrpcReq{{.Name}}(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*{{.Name}})
+	return req, nil
+}
+
+func EncodeGrpcResp{{.Name}}(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func DecodeGrpcResp{{.Name}}(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+{{end}}
+
+func encodeHttpResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	if e, ok := response.(errorer); ok && e.error() != nil {
+		// Not a Go kit transport error, but a business-logic error.
+		// Provide those as HTTP errors.
+		encodeError(ctx, e.error(), w)
+		return nil
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	return json.NewEncoder(w).Encode(response)
+}
+
+func encodeHttpRequest(_ context.Context, req *http.Request, request interface{}) error {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(request)
+	if err != nil {
+		return err
+	}
+	req.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+type errorer interface {
+	error() error
+}
+
+func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	if err == nil {
+		panic("encodeError with nil error")
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(codeFrom(err))
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": err.Error(),
+	})
+}
+
+func errorDecoder(r *http.Response) error {
+	var w errorWrapper
+	if err := json.NewDecoder(r.Body).Decode(&w); err != nil {
+		return err
+	}
+	return errors.New(w.Error)
+}
+
+type errorWrapper struct {
+	Error string `json:"error"`
+}
+
+func codeFrom(err error) int {
+	switch err {
+	case ErrNotFound:
+		return http.StatusNotFound
+	case ErrAlreadyExists, ErrInconsistentIDs:
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
+}
+

@@ -1,0 +1,139 @@
+syntax = "proto3";
+// Service name
+package bookstore;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// This should usually be a ServiceDiscovery key like (sd:/apiservers/bookstore). A IP address for now
+option(venice.fileGrpcDest) = "localhost:8082";
+
+message Publisher {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+
+  // Option to define writing to KV store and the prefix for the object. The option could also be
+  // specified with dynamic parameters in {..} (for example tenant, namespace etc.) as needed.
+  option (venice.objectPrefix) = "publishers";
+
+  PublisherSpec Spec = 3;
+}
+
+message PublisherSpec {
+    string Id  = 2;
+    string Address = 3;
+}
+
+message Book {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+
+  option (venice.objectPrefix) = "books";
+
+  BookSpec Spec = 3;
+  BookStatus Status = 4;
+}
+
+message BookSpec {
+    string ISBNId = 2;
+    string Author = 3;
+    // Added in  version 2 of the API.
+    string IdProvider = 4;
+}
+
+message BookStatus {
+    int32 Inventory = 1;
+}
+
+message Order {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+
+  option (venice.objectPrefix) = "orders";
+
+  // Spec is not allowed to be Null hence disabling nullable.
+  OrderSpec Spec = 3 [(gogoproto.nullable) = false];
+  OrderStatus Status = 4;
+}
+
+message OrderSpec {
+  string Id = 1;
+  repeated OrderItem Order = 2;
+}
+
+message OrderItem {
+  string ISBNId = 1;
+  uint32 Quantity = 2;
+}
+
+message OrderStatus {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+  string Status = 3;
+  repeated OrderSpec Filled = 4;
+}
+
+service BookstoreV1 {
+  // ---- Service level parameters ----//    
+  // Prefix for all resources served by this service.
+  option (venice.apiPrefix) = "bookstore";
+  // API Version.
+  option (venice.apiVersion) = "v1";
+
+  // --- Publisher resources --- //
+  // This is not exposed to the end user and hence there are only gRPC endpoints.
+  rpc AddPublisher(Publisher) returns(Publisher) {
+    // This option is specified to define the flavor of the KV operation needed.  
+    option (venice.methodOper) = "create";
+  }
+  rpc UpdatePublisher(Publisher) returns(Publisher) {
+    // This option is specified to define the flavor of the KV operation needed.  
+    option (venice.methodOper) = "update";
+  }
+  rpc DeletePublisher(Publisher) returns(Publisher) {
+    // This option is specified to define the flavor of the KV operation needed.  
+    option (venice.methodOper) = "delete";
+  }
+  rpc GetPublisher(Publisher) returns(Publisher) {
+    // This option is specified to define the flavor of the KV operation needed.  
+    option (venice.methodOper) = "get";
+  }
+
+  // --- Book resource -- //
+  // This resource is partially exposed on the API gateway (Get) and some actions are
+  // only internal (Create Update Delete)
+  rpc GetBook(Book) returns(Book) {
+    option (google.api.http) = {
+      get: "/books/{Spec.ISBNId}"
+    };
+  }
+  rpc AddBook(Book) returns(Book) {
+      option (venice.methodOper) = "create";
+  }
+  rpc UpdateBook(Book) returns(Book) {
+      option (venice.methodOper) = "update";
+  }
+  rpc DeleteBook(Book) returns(Book) {
+      option (venice.methodOper) = "delete";
+  }
+
+  // --- Order Resource--- //
+  // This resource is exposed to the user for all CRUD operations
+  rpc OrderOper(Order) returns(Order) {
+      option (google.api.http) = {
+      post: "/orders"
+      body: "*"
+      additional_bindings: {
+        put: "/orders/{O.Name}"
+        body: "*"
+      }
+      additional_bindings: {
+        delete: "/orders/{O.Name}"
+      }
+      additional_bindings: {
+        get: "/orders/{O.Name}"
+      }
+    };
+  }
+}

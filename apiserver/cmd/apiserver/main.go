@@ -1,0 +1,48 @@
+package main
+
+import (
+	"flag"
+	"strings"
+
+	"google.golang.org/grpc/grpclog"
+
+	apisrv "github.com/pensando/sw/apiserver"
+	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
+	"github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/runtime"
+)
+
+func main() {
+	var (
+		grpcaddr  = flag.String("grpc-server-port", ":8082", "GRPC Port to listen on")
+		kvstore   = flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
+		debugflag = flag.Bool("debug", false, "Enable debug mode")
+		version   = flag.String("version", "v1", "Version string for native version")
+	)
+
+	flag.Parse()
+
+	var pl log.Logger
+	{
+		pl = log.GetNewLogger(*debugflag)
+		pl = pl.WithContext("module", "ApiServer")
+	}
+	var config apisrv.Config
+	{
+		config.GrpcServerPort = *grpcaddr
+		config.DebugMode = *debugflag
+		config.Logger = pl
+		config.Version = *version
+		config.Scheme = runtime.NewScheme()
+		config.Kvstore = store.Config{
+			Type:    store.KVStoreTypeEtcd,
+			Servers: strings.Split(*kvstore, ","),
+			Codec:   runtime.NewJSONCodec(config.Scheme),
+		}
+	}
+	grpclog.SetLogger(pl)
+	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
+	srv := apisrvpkg.MustGetApiServer()
+	srv.Run(config)
+}

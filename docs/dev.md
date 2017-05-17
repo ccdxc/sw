@@ -3,10 +3,10 @@
 The goal is to create an environment that is consistent and predictable for building binaries, running tests,
 experimenting with the changes.
 
-#### Prerequisits
+#### Prerequisites
 - Git
-- [Virtualbox 5.1.4] (https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
-- [Vagrant 1.8.6] (https://www.vagrantup.com/downloads.html)
+- [Virtualbox 5.1.4](https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
+- [Vagrant 1.8.6](https://www.vagrantup.com/downloads.html)
 
 
 ##### 1. Clone/Create repository
@@ -24,7 +24,12 @@ $ git clone https://github.com/<your-github-id>/<forked-repo>
 $ make dev
 ```
 
-##### 3. SSH into the nodes, make changes, run tests
+##### 3. Vendoring external packages
+We use govendor for external package management. Please see links below.
+[ Readme ](https://github.com/kardianos/govendor/blob/master/README.md)
+[ Cheat Sheet ](https://github.com/kardianos/govendor/wiki/Govendor-CheatSheet)
+
+##### 4. SSH into the nodes, make changes, run tests
 ```
 $ vagrant ssh node1
 $ vagrant ssh node2
@@ -37,7 +42,7 @@ $ vagrant ssh node2
 [vagrant@node1]$ exit
 ```
 
-##### 4. Clean up
+##### 5. Clean up
 ```
 $ make dev-clean
 ```

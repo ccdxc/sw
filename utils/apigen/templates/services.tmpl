@@ -1,0 +1,15 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+package {{.GoPkg.Name}}
+
+import (
+	"context"
+)
+{{range .Services}}
+type Service{{.Name}} interface {
+	{{range .Methods}}
+	{{.Name}}(ctx context.Context, t {{.RequestType.Name}}) ({{.ResponseType.Name}}, error) {{end}}
+}
+{{end}}

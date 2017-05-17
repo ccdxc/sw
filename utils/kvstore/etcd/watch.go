@@ -164,13 +164,13 @@ func (w *watcher) sendError(err error) {
 	switch {
 	case err == etcdrpc.ErrCompacted:
 		status = &api.Status{
-			Result:  api.StatusResultExpired,
+			Result:  &api.StatusResultExpired,
 			Message: err.Error(),
 			Code:    http.StatusGone,
 		}
 	default:
 		status = &api.Status{
-			Result:  api.StatusResultInternalError,
+			Result:  &api.StatusResultInternalError,
 			Message: err.Error(),
 			Code:    http.StatusInternalServerError,
 		}

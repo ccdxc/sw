@@ -1,0 +1,121 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+package {{.GoPkg.Name}}ApiServer
+
+import (
+	"context"
+
+	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/apiserver/pkg"
+
+	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated"
+	"{{.GoPkg.RelPath}}/impl"
+	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/runtime"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+)
+{{$pkgname := .GoPkg.Name}}
+var apisrv apiserver.Server
+
+type s_{{$pkgname}}Backend struct {
+	Services  map[string]apiserver.Service
+	Messages  map[string]apiserver.Message
+	{{range .Services}}
+	endpoints_{{.Name}} *e_{{.Name}}Endpoints{{end}}
+
+	Hooks     []apiserver.ServiceHooks
+}
+{{range .Services}}
+type e_{{.Name}}Endpoints struct {
+	Svc           s_{{$pkgname}}Backend
+	{{range .Methods}}
+	fn_{{.Name}} func(ctx context.Context, t interface{}) (interface{}, error){{end}}
+}{{end}}
+
+func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
+	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	s.Messages = map[string]apiserver.Message{
+		{{range .Messages}}
+		"{{$pkgname}}.{{.Name}}":     apisrvpkg.NewMessage("{{$pkgname}}.{{.Name}}"){{if (len (getDbKey .)) ne 0}}.WithKeyGenerator(func(i interface{}, prefix string) string {
+			r := i.({{$pkgname}}.{{.Name}})
+			return r.MakeKey(prefix)
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.({{$pkgname}}.{{.Name}})
+			ret := {{$pkgname}}.{{.Name}}{}
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r, 0, &ret)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				err = kvs.Update(ctx, key, &r, 0, &ret)
+				err = errors.Wrap(err, "KV update failed")
+			}
+			return ret, err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := {{$pkgname}}.{{.Name}}{}
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := {{$pkgname}}.{{.Name}}{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}),{{else}},{{end}}{{end}}
+	}
+	
+	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
+		&{{$pkgname}}.{{.Name}}{},{{end}}{{end}}
+	)
+	
+	apisrv.RegisterMessages("{{$pkgname}}", s.Messages)
+	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
+	{
+		srv := apisrvpkg.NewService("{{.Name}}")
+		{{range .Methods}}{{$methparams := (getMethodParams .)}}
+		s.endpoints_{{$svcname}}.fn_{{.Name}} = srv.AddMethod("{{.Name}}", 
+			apisrvpkg.NewMethod(s.Messages["{{$pkgname}}.{{.RequestType.Name}}"], s.Messages["{{$pkgname}}.{{.ResponseType.Name}}"], "{{$svcprefix}}", "{{.Name}}")) {{if $methparams.GrpcOnly}}.WithOper("{{$methparams.Oper}}"){{end}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
+			return i, false
+		}){{end}}.WithVersion("{{$svcver}}").HandleInvocation
+		{{end}}		
+		s.Services = map[string]apiserver.Service{
+			"{{$pkgname}}.{{.Name}}": srv,
+		}
+		apisrv.RegisterService("{{$pkgname}}.{{.Name}}", srv)
+		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints_{{$svcname}})
+		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
+		{{$pkgname}}.Register{{.Name}}Server(grpcserver, server)
+		for _, h := range s.Hooks {
+			h.RegisterHooks(logger, srv)
+		}
+	}{{end}}
+	return nil
+}
+
+{{range .Services}}{{$svcname := .Name}}{{range .Methods}}
+func (e *e_{{$svcname}}Endpoints) {{.Name}}(ctx context.Context, t {{$pkgname}}.{{.RequestType.Name}}) ( {{$pkgname}}.{{.ResponseType.Name}}, error) {
+	r, err := e.fn_{{.Name}}(ctx, t)
+	if err == nil {
+		return r.( {{$pkgname}}.{{.ResponseType.Name}}), err
+	} else {
+		return {{$pkgname}}.{{.ResponseType.Name}}{}, err
+	}
+}{{end}}{{end}}
+
+func init() {
+	apisrv = apisrvpkg.MustGetApiServer()
+
+	svc := s_{{$pkgname}}Backend{}
+
+	{{range .Services}}
+	{
+		e := e_{{.Name}}Endpoints{Svc: svc}
+		svc.endpoints_{{.Name}} = &e
+		svc.Hooks = append(svc.Hooks, impl.New{{.Name}}Hooks())
+	}{{end}}
+	apisrv.Register("{{$pkgname}}.{{.Name}}", &svc)
+}

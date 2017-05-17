@@ -1,0 +1,12 @@
+/*
+Package {{.GoPkg.Name}} is a auto generated package.
+Input file: {{.Name}}
+*/
+
+package {{.GoPkg.Name}}
+
+import fmt "fmt"
+{{range .Messages}}{{if (len (getDbKey .)) ne 0}}{{$sep := ", "}}
+func (m *{{.Name}}) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", {{range $index, $value := (getDbKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}m.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
+}{{end}}{{end}}

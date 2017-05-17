@@ -2,7 +2,8 @@
 
 EXCLUDE_DIRS := bin docs Godeps vendor scripts
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
-TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif
+TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif \
+  ./apiserver/... ./apigw/... ./utils/log/...
 GOLINT_CMD := golint -set_exit_status
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
@@ -28,7 +29,7 @@ govet-src: $(PKG_DIRS)
 
 checks: gofmt-src golint-src govet-src
 
-build: deps checks
+build: deps ws-tools checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
@@ -41,6 +42,21 @@ build-container:
 
 container-compile:
 	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld
+
+ws-tools:
+	$(info +++ building WS tools)
+	@go get -u github.com/kardianos/govendor
+	@go get -u github.com/golang/protobuf/protoc-gen-go
+	@go get -u github.com/gogo/protobuf/protoc-gen-gofast
+	@go get -u github.com/GeertJohan/go.rice/rice
+	@ if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem ]; then \
+	mkdir -p $(GOPATH)/src/github.com/grpc-ecosystem && cd $(GOPATH)/src/github.com/grpc-ecosystem && \
+	git clone https://github.com/pensando/grpc-gateway && \
+	ln -s $(GOPATH)/src/github.com/pensando/sw/utils/apigen/ $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando; \
+	fi && \
+	cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway && \
+	cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/ && \
+	go get && go install
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))
