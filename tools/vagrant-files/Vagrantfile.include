@@ -1,0 +1,58 @@
+# vim: ft=ruby
+#
+def build_etc_hosts(nodeprops, node)
+  # populate /etc/hosts entries
+  nodeprops[:num_nodes].times do |node_id|
+    node.vm.provision "shell" do |s|
+      s.inline = "echo '#{nodeprops[:node_ips][node_id]} #{nodeprops[:node_names][node_id]}' >> /etc/hosts"
+    end
+  end
+end
+
+def build_nodes(num_nodes, base_ip)
+  if ENV['PENS_NODES'] && ENV['PENS_NODES'] != "" then
+      num_nodes = ENV['PENS_NODES'].to_i
+  end
+
+  if ENV['PENS_IP_PREFIX'] && ENV['PENS_IP_PREFIX'] != "" then
+      base_ip = ENV['PENS_IP_PREFIX']
+  end
+
+  node_ips = num_nodes.times.collect { |n| base_ip + "#{n+11}" }
+
+  return {
+    num_nodes:        num_nodes,
+    node_names:       num_nodes.times.collect { |n| "node#{n+1}" },
+    cluster_ip_nodes: node_ips.join(","),
+    base_ip:          base_ip,
+    node_ips:         node_ips,
+  }
+end
+
+def preamble_script(postamble)
+  return <<-BASIC_SCRIPT
+    set -e
+
+    ## setup basic environment for the VM
+    echo -n "$1" > /etc/hostname
+    hostname -F /etc/hostname
+    chown -R vagrant /import
+
+    rm -f /etc/machine-id
+    systemd-machine-id-setup
+
+    ## Populate environment vars
+    echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+    echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
+    echo "export PENS_NODES=$3" >> /etc/profile.d/env.sh
+    echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
+    source /etc/profile.d/env.sh
+
+    # stop firewall service and disable selinux
+    systemctl stop firewalld
+    setenforce 0
+    gpasswd -a vagrant root
+    curl -sSL box-builder.sh | bash
+    #{postamble}
+  BASIC_SCRIPT
+end

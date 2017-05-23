@@ -2,56 +2,20 @@
 # vi: set ft=ruby :
 
 require 'fileutils'
-
-cluster_ip_nodes = ""
-
-basic = <<BASIC_SCRIPT
-## setup basic environment for the VM
-echo -n "$1" > /etc/hostname
-hostname -F /etc/hostname
-chown -R vagrant /import
-
-rm -f /etc/machine-id
-systemd-machine-id-setup
-
-## Populate environment vars
-echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
-echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
-echo 'export PEN_NODES=$3' >> /etc/profile.d/env.sh
-source /etc/profile.d/env.sh
-
-# stop firewall service and disable selinux
-systemctl stop firewalld
-setenforce 0
-
-# Start docker and swarm
-systemctl enable docker && systemctl start docker
-sudo chmod a+rw /var/run/docker.sock
-
-BASIC_SCRIPT
+load 'tools/vagrant-files/Vagrantfile.include'
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "jainvipin/docker-centos73"
   # config.vm.box_version = "0.1"
-
-  num_nodes = 1
-  if ENV['PENS_NODES'] && ENV['PENS_NODES'] != "" then
-      num_nodes = ENV['PENS_NODES'].to_i
-  end
-  base_ip = "192.168.50."
-  if ENV['PENS_IP_PREFIX'] && ENV['PENS_IP_PREFIX'] != "" then
-      base_ip = ENV['PENS_IP_PREFIX']
-  end
-  node_ips = num_nodes.times.collect { |n| base_ip + "#{n+11}" }
-  cluster_ip_nodes = node_ips.join(",")
+  
+  nodeprops = build_nodes(1, "192.168.50.")
 
   config.ssh.insert_key = false
-  node_names = num_nodes.times.collect { |n| "node#{n+1}" }
 
-  num_nodes.times do |n|
-    node_name = node_names[n]
-    node_addr = node_ips[n]
+  nodeprops[:num_nodes].times do |n|
+    node_name = nodeprops[:node_names][n]
+    node_addr = nodeprops[:node_ips][n]
 
     config.vm.define node_name do |node|
       # Control Interface
@@ -83,19 +47,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       node.vm.provision "shell" do |s|
-          s.inline = basic
-          s.args = [node_name, node_addr, cluster_ip_nodes]
+          s.inline = preamble_script <<-EOF
+            # Start docker and swarm
+            systemctl enable docker && systemctl start docker
+            sudo chmod a+rw /var/run/docker.sock
+          EOF
+          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes]]
       end
 
       # mount the host directories
       node.vm.synced_folder "./", "/import", rsync: true
 
-      # populate /etc/hosts entries
-      num_nodes.times do |node_id|
-        node.vm.provision "shell" do |s|
-          s.inline = "echo '#{node_ips[node_id]} #{node_names[node_id]}' >> /etc/hosts"
-        end
-      end
+      build_etc_hosts(nodeprops, node)
 
       # port mappings
       if n == 0 then
