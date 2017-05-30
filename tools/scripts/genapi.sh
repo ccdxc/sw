@@ -31,7 +31,7 @@ protoc -I/usr/local/include -I. \
     -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
     -I${GOPATH}/src/github.com/pensando/sw/vendor \
     --grpc-gateway_out=logtostderr=false,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=./tmp:./generated/ \
-    service.proto || { echo "grpc-gateway generation failed" ; exit -1; }
+    ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 protoc -I/usr/local/include -I. \
     -I${GOPATH}/src \
     -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \

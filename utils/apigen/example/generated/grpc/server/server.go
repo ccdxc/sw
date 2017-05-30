@@ -1,6 +1,6 @@
 /*
 Package bookstore is a auto generated package.
-Input file: service.proto
+Input file: example.proto
 */
 package bookstoreApiServer
 
@@ -269,5 +269,5 @@ func init() {
 		svc.endpoints_BookstoreV1 = &e
 		svc.Hooks = append(svc.Hooks, impl.NewBookstoreV1Hooks())
 	}
-	apisrv.Register("bookstore.service.proto", &svc)
+	apisrv.Register("bookstore.example.proto", &svc)
 }

@@ -1,6 +1,6 @@
 /*
 Package bookstore is a auto generated package.
-Input file: service.proto
+Input file: example.proto
 */
 package bookstoreGwService
 
@@ -151,7 +151,7 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err
 	}
-	content, err := box.Bytes("service.swagger.json")
+	content, err := box.Bytes("example.swagger.json")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.File")
 		return err

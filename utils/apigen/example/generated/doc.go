@@ -1,7 +1,7 @@
 /*
 Package bookstore is a auto generated package.
 
-Input file: service.proto
+Input file: example.proto
 
 The following Messages are defined.
 
