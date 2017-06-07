@@ -13,10 +13,9 @@ type UpdateFunc func(oldObj runtime.Object) (newObj runtime.Object, err error)
 // Interface for a key value store.
 type Interface interface {
 	// Create instantiates an object with the provided key, if it doesn't
-	// already exist. ttl is the time-to-live in seconds, ttl of 0 means the
-	// key doesn't expire. If "into" is not nil, it is set to the value
-	// returned by the kv store.
-	Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error
+	// already exist. ResourceVersion in obj is set to the value returned
+	// by the kv store.
+	Create(ctx context.Context, key string, obj runtime.Object) error
 
 	// Delete removes a key, if it exists. If "into" is not nil, it is set
 	// to the last known value in the kv store. "cs" are comparators to
@@ -34,7 +33,7 @@ type Interface interface {
 	// returns an error. This can be used without comparators if a single
 	// writer owns the key. "cs" are comparators to allow for conditional
 	// updates, including parallel updates.
-	Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...Cmp) error
+	Update(ctx context.Context, key string, obj runtime.Object, cs ...Cmp) error
 
 	// ConsistentUpdate modifies an existing object by invoking the provided
 	// update function. This should be used when there are multiple writers
@@ -45,13 +44,12 @@ type Interface interface {
 	// Writer2 updates field f2 to v2 at the same time.
 	// ConsistentUpdate guarantees that the object lands in a consistent
 	// state where f1=v1 and f2=v2.
-	ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc UpdateFunc) error
+	ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc UpdateFunc) error
 
 	// Get the object corresponding to the provided key, if it exists.
 	Get(ctx context.Context, key string, into runtime.Object) error
 
 	// List the objects corresponding to a prefix. It is assumed that all
-
 	// the keys under this prefix are homogenous. "into" should point to
 	// a List object and should have an "Items" slice for individual
 	// objects.

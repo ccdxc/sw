@@ -92,7 +92,7 @@ func UserCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 
 	key := path.Join(usersURL, user.Name)
 
-	if err := kvStore.Create(context.Background(), key, &user, 0, &user); err != nil {
+	if err := kvStore.Create(context.Background(), key, &user); err != nil {
 		if kvstore.IsKeyExistsError(err) {
 			return http.StatusConflict, fmt.Sprintf("User %q already exists\n", user.Name)
 		}

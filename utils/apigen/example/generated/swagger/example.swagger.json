@@ -32,8 +32,69 @@
             "name": "Spec.ISBNId",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "string"
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Author",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IdProvider",
+            "description": "Added in  version 2 of the API.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Inventory",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -85,8 +146,89 @@
             "name": "O.Name",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "string"
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Status",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -109,8 +251,7 @@
             "name": "O.Name",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "string"
+            "type": "string"
           }
         ],
         "tags": [
@@ -133,8 +274,7 @@
             "name": "O.Name",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "string"
+            "type": "string"
           },
           {
             "name": "body",
@@ -157,22 +297,18 @@
       "properties": {
         "Name": {
           "type": "string",
-          "format": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
         },
         "Namespace": {
           "type": "string",
-          "format": "string",
           "description": "Namespace of the object, for scoped objects."
         },
         "ResourceVersion": {
           "type": "string",
-          "format": "string",
           "description": "Resource version in the object store. This can only be set by the server."
         },
         "UUID": {
           "type": "string",
-          "format": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
         }
       },
@@ -183,12 +319,10 @@
       "properties": {
         "Kind": {
           "type": "string",
-          "format": "string",
           "description": "Kind represents the type of the API object."
         },
         "APIVersion": {
           "type": "string",
-          "format": "string",
           "description": "APIVersion defines the version of the API object."
         }
       },
@@ -215,16 +349,13 @@
       "type": "object",
       "properties": {
         "ISBNId": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "Author": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "IdProvider": {
           "type": "string",
-          "format": "string",
           "description": "Added in  version 2 of the API."
         }
       }
@@ -260,8 +391,7 @@
       "type": "object",
       "properties": {
         "ISBNId": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "Quantity": {
           "type": "integer",
@@ -273,8 +403,7 @@
       "type": "object",
       "properties": {
         "Id": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "Order": {
           "type": "array",
@@ -294,8 +423,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Status": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "Filled": {
           "type": "array",
@@ -323,12 +451,10 @@
       "type": "object",
       "properties": {
         "Id": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         },
         "Address": {
-          "type": "string",
-          "format": "string"
+          "type": "string"
         }
       }
     }

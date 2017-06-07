@@ -49,10 +49,10 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				err = kvs.Create(ctx, key, &r, 0, &ret)
+				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				err = kvs.Update(ctx, key, &r, 0, &ret)
+				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return ret, err

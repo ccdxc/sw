@@ -84,30 +84,9 @@ func (e *etcdStore) decode(value []byte, into runtime.Object, version int64) err
 	return e.objVersioner.SetVersion(into, uint64(version))
 }
 
-// ttlOpts creates a client option for setting a lease/ttl against a key.
-func (e *etcdStore) ttlOpts(ctx context.Context, ttl int64) (clientv3.LeaseID, []clientv3.OpOption, error) {
-	if ttl == 0 {
-		return 0, nil, nil
-	}
-
-	newCtx, cancel := context.WithTimeout(ctx, timeout)
-	lcr, err := e.client.Lease.Grant(newCtx, ttl)
-	cancel()
-
-	if err != nil {
-		return 0, nil, err
-	}
-	return lcr.ID, []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
-}
-
-// putHelper updates a key in etcd with the provided object, ttl and comparators.
-func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Object, ttl int64, cs ...clientv3.Cmp) ([]byte, *clientv3.TxnResponse, error) {
+// putHelper updates a key in etcd with the provided object and comparators.
+func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Object, cs ...clientv3.Cmp) ([]byte, *clientv3.TxnResponse, error) {
 	value, err := e.encode(obj)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	_, opts, err := e.ttlOpts(ctx, ttl)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -116,17 +95,16 @@ func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Objec
 	resp, err := e.client.KV.Txn(newCtx).If(
 		cs...,
 	).Then(
-		clientv3.OpPut(key, string(value), opts...),
+		clientv3.OpPut(key, string(value)),
 	).Commit()
 	cancel()
 
 	return value, resp, err
 }
 
-// Create creates a key in etcd with the provided object and ttl. If ttl is 0, it means the key
-// does not expire. If "into" is not nil, it is set to the value returned by the kv store.
-func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
-	value, resp, err := e.putHelper(ctx, key, obj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
+// Create creates a key in etcd with the provided object.
+func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object) error {
+	_, resp, err := e.putHelper(ctx, key, obj, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	if err != nil {
 		return err
 	}
@@ -135,10 +113,7 @@ func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object, 
 		return kvstore.NewKeyExistsError(key, 0)
 	}
 
-	if into != nil {
-		return e.decode(value, into, resp.Responses[0].GetResponsePut().Header.Revision)
-	}
-	return nil
+	return e.objVersioner.SetVersion(obj, uint64(resp.Responses[0].GetResponsePut().Header.Revision))
 }
 
 // Delete removes a single key in etcd. If "into" is not nil, it is set to the previous value
@@ -190,7 +165,7 @@ func (e *etcdStore) PrefixDelete(ctx context.Context, prefix string) error {
 // Update modifies an existing object. If the key does not exist, update returns an error. This
 // can be used without comparators if a single writer owns the key. "cs" are comparators to allow
 // for conditional updates, including parallel updates.
-func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...kvstore.Cmp) error {
+func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	version := int64(-1)
 	for _, c := range cs {
 		if c.Target == kvstore.Version {
@@ -205,7 +180,7 @@ func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, 
 		cmps = append(cmps, translateCmps(cs...)...)
 	}
 
-	value, resp, err := e.putHelper(ctx, key, obj, ttl, cmps...)
+	_, resp, err := e.putHelper(ctx, key, obj, cmps...)
 	if err != nil {
 		return err
 	}
@@ -217,10 +192,7 @@ func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, 
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
 
-	if into != nil {
-		return e.decode(value, into, resp.Responses[0].GetResponsePut().Header.Revision)
-	}
-	return nil
+	return e.objVersioner.SetVersion(obj, uint64(resp.Responses[0].GetResponsePut().Header.Revision))
 }
 
 // ConsistentUpdate modifies an existing object by invoking the provided update function. This should
@@ -230,7 +202,7 @@ func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, 
 // Writer1 updates field f1 to v1.
 // Writer2 updates field f2 to v2 at the same time.
 // ConsistentUpdate guarantees that the object lands in a consistent state where f1=v1 and f2=v2.
-func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
@@ -254,7 +226,7 @@ func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, ttl int64,
 		}
 
 		// CAS with the read version. Return if there is no error.
-		value, resp, err := e.putHelper(ctx, key, newObj, ttl, clientv3.Compare(clientv3.ModRevision(key), "=", version))
+		value, resp, err := e.putHelper(ctx, key, newObj, clientv3.Compare(clientv3.ModRevision(key), "=", version))
 		if err != nil {
 			return err
 		}

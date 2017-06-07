@@ -131,17 +131,13 @@ func (f *memKv) decode(value []byte, into runtime.Object, version int64) error {
 	return f.objVersioner.SetVersion(into, uint64(version))
 }
 
-// Create creates a key in memkv with the provided object and ttl. If ttl is 0, it means the key
-// does not expire. If "into" is not nil, it is set to the value returned by the kv store.
-func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object) error {
+// Create creates a key in memkv with the provided object.
+func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
 
 	if _, ok := f.kvs[key]; ok {
 		return kvstore.NewKeyExistsError(key, 0)
-	}
-	if ttl < 0 {
-		ttl = defaultMinTTL
 	}
 
 	value, err := f.encode(obj)
@@ -149,15 +145,11 @@ func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object, ttl 
 		return err
 	}
 
-	v := &memKvRec{value: string(value), ttl: ttl, revision: 1}
+	v := &memKvRec{value: string(value), ttl: 0, revision: 1}
 	f.kvs[key] = v
 	f.setupWatchers(key, v)
 
-	if into != nil {
-		return f.decode(value, into, v.revision)
-	}
-
-	return nil
+	return f.objVersioner.SetVersion(obj, uint64(v.revision))
 }
 
 // MUST be called with the Lock HELD
@@ -243,7 +235,7 @@ func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
 // Update modifies an existing object. If the key does not exist, update returns an error. This
 // can be used without comparators if a single writer owns the key. "cs" are comparators to allow
 // for conditional updates, including parallel updates.
-func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl int64, into runtime.Object, cs ...kvstore.Cmp) error {
+func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	f.Lock()
 	defer f.Unlock()
 
@@ -263,16 +255,12 @@ func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl 
 	}
 
 	v.value = string(value)
-	v.ttl = ttl
+	v.ttl = 0
 	v.revision++
 
 	f.sendWatchEvents(key, v, false)
 
-	if into != nil {
-		return f.decode(value, into, v.revision)
-	}
-
-	return nil
+	return f.objVersioner.SetVersion(obj, uint64(v.revision))
 }
 
 // ConsistentUpdate modifies an existing object by invoking the provided update function. This should
@@ -282,7 +270,7 @@ func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, ttl 
 // Writer1 updates field f1 to v1.
 // Writer2 updates field f2 to v2 at the same time.
 // ConsistentUpdate guarantees that the object lands in a consistent state where f1=v1 and f2=v2.
-func (f *memKv) ConsistentUpdate(ctx context.Context, key string, ttl int64, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+func (f *memKv) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
@@ -319,7 +307,7 @@ func (f *memKv) ConsistentUpdate(ctx context.Context, key string, ttl int64, int
 			}
 
 			v.value = string(value)
-			v.ttl = ttl
+			v.ttl = 0
 			v.revision++
 			f.sendWatchEvents(key, v, false)
 

@@ -57,10 +57,10 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				err = kvs.Create(ctx, key, &r, 0, &ret)
+				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				err = kvs.Update(ctx, key, &r, 0, &ret)
+				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return ret, err
@@ -84,10 +84,10 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				err = kvs.Create(ctx, key, &r, 0, &ret)
+				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				err = kvs.Update(ctx, key, &r, 0, &ret)
+				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return ret, err
@@ -112,10 +112,10 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				err = kvs.Create(ctx, key, &r, 0, &ret)
+				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				err = kvs.Update(ctx, key, &r, 0, &ret)
+				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return ret, err

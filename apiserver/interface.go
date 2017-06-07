@@ -80,8 +80,8 @@ type PreCommitFunc func(ctx context.Context, oper string, i interface{}) (interf
 // functions could be registered and all registered functions are called.
 type PostCommitFunc func(ctx context.Context, oper string, i interface{})
 
-// ResponseWriterFunc is a functions that is registered to provide a custom response to a API call.
-//  The resppnseWriter func can return a completely different type than the passed in message.
+// ResponseWriterFunc is a function that is registered to provide a custom response to a API call.
+// The ResponseWriterFunc can return a completely different type than the passed in message.
 // In case of delete the "old" parameter contains the deleted object.
 type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, old interface{}, oper string) (interface{}, error)
 

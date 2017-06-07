@@ -40,7 +40,7 @@ func main() {
 
 	key := "/users/joe"
 	user := User{}
-	if err := kv.Create(context.Background(), key, &user, 0, &user); err != nil {
+	if err := kv.Create(context.Background(), key, &user); err != nil {
 		log.Errorf("error storing key in the key-value store")
 	}
 	if err := kv.Get(context.Background(), key, &user); err != nil {

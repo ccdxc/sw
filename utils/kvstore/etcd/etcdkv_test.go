@@ -53,7 +53,7 @@ func TestWatchVersion(t *testing.T) {
 
 	obj := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 
-	if err := store.Create(context.Background(), kvstore.TestKey, obj, 0, obj); err != nil {
+	if err := store.Create(context.Background(), kvstore.TestKey, obj); err != nil {
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
