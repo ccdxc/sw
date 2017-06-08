@@ -49,14 +49,15 @@ ws-tools:
 	@go get -u github.com/golang/protobuf/protoc-gen-go
 	@go get -u github.com/gogo/protobuf/protoc-gen-gofast
 	@go get -u github.com/GeertJohan/go.rice/rice
-	@ if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem ]; then \
+	@ if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway ]; then \
 	mkdir -p $(GOPATH)/src/github.com/grpc-ecosystem && cd $(GOPATH)/src/github.com/grpc-ecosystem && \
-	git clone https://github.com/pensando/grpc-gateway && \
-	ln -s $(GOPATH)/src/github.com/pensando/sw/utils/apigen/ $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando; \
-	fi && \
-	cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway && \
-	cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/ && \
-	go get && go install
+	git clone https://github.com/pensando/grpc-gateway  ; \
+	fi  && \
+	if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando ]; then \
+	        ln -fs $(GOPATH)/src/github.com/pensando/sw/utils/apigen/ $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando; \
+	fi  && \
+	( cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/ && go get && go install ) && \
+	( cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/ && go get && go install )
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))
