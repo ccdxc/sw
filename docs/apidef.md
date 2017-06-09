@@ -16,12 +16,11 @@ The write up below walks through the definitions of the API endpoints and code g
 KV store objects and API endpoints are defined in a protobuf definition file. This document will walk through defining API endpoints, request and response structures and any objects that are to be saved to KV store.  
 
 ## Workflow steps
-1. Create the directory where the service will reside, and copy the Makefile (from sw/utils/apigen/example/) to the directory
-2. Create a service.proto as explained below.
-3. Execute make, which generates a directory structure and needed code for the API gateway and the API server.
-4. Optionally add any hooks needed in the impl/ directory. ServiceHooks object definition is explained later.
-5. Include the service in the sw/apiserver/cmd/services.go and sw/apigw/cmd/backends.go
-6. Celebrate!
+1. create a protobuf definition file in pensando/sw/api/protos directory.
+2. Execute make in the pensando/sw/api directory.
+    (__Fun Fact__: Make will generate all needed code and plug it into the API Gateway and API Server. The code is generated in pensando/sw/api/generated/{pkgname} directory where {pkgname} is the package name specified in the .proto file).
+3. (Optional) Add any hooks needed in the pensando/sw/api/hooks directory. Registering of hooks is explained later.
+4. Celebrate!
 
 ## Protobuf specification
 A protobuf specification is made up of
@@ -29,10 +28,10 @@ A protobuf specification is made up of
 2. Service definitions
 3. Method definitions under the Service  
   
-For a functional example protobuf example please look at sw/utils/apigen/example/service.proto. The example specifies a API for a hypothetical bookstore. That is used as an example in the following sections.
+For a functional example protobuf example please look at sw/api/protos/example.proto. The example specifies an API definition for a hypothetical bookstore. That is used as an example in the following sections.
 
 ### Message definition
-Messages define the object structure. Define a message to define the structure of every unique request or response or an object that needs to be written to the KV store. The messages can be annotated with some predefined options. A later section lists the supported options. Protobuf supports nested structures. The snippet below shows a message definition. 
+Messages define the object structure. A message defines the structure of every unique request or response or an object that needs to be written to the KV store. Messages can be annotated with some predefined options. A later section lists the supported options. Protobuf supports nested structures. The snippet below shows a message definition. 
 
 
     message Publisher {
@@ -54,14 +53,14 @@ Messages define the object structure. Define a message to define the structure o
 
 In the above definition the TypeMeta and ObjectMeta are embedded messages that are mandatory for top level objects. No customization is needed and one could just copy paste these 2 definitions.
 
-The option specified on the next line (venice.objectPrefix) is a custom pensando option. This option controls the path for the object when it is written to KV store. In this case the path would be /<version>/venice/<service prefix>/publishers/<Name from the Object Meta>. Version and "service prefix" are defined in the Service definition covered next.
+The option specified on the next line (venice.objectPrefix) is a custom pensando option. This option controls the path for the object when it is written to KV store. In this case the path would be /<version>/venice/<service prefix>/publishers/<Name from the Object Meta>. Version and "service prefix" used above are defined in the service definition covered next.
 
-The objectPrefix definition can be more complicated for example it could have been something like "tenant-{Tenant}/publishers" in which case the key might have been "/v1/venice/bookstore/tenant-Amazon/publishers/Oriely" for example. Here the tenant would have been from the ObjectMeta. Anything specified within "{..}" is parsed as a field from the object and it is filled in at runtime. The field could be in ObjectMeta or in message itself. 
+The objectPrefix definition can be more complicated for example it could have been something like "tenant-{Tenant}/publishers" in which case the key might have been "/v1/venice/bookstore/tenant-Amazon/publishers/Oriely" for example. Here the tenant would have been from the ObjectMeta. Anything specified within "{..}" is parsed as a field from the object and it is filled in at runtime. The field could be in ObjectMeta or in the message itself. 
 
 All objects that need to be written to KV store need a "venice.objectPrefix" definition.
 
 ### Service definition
-A Service is a collection of a group of API endpoints of same version. Multiple Services could exist when there are different versions of the API in use. Each service contains one or more methods which corresponds to the API endpoints of the service. Below is a snippet of a Service definition along with relevant message definitions for context.
+A Service is a collection of a group of API endpoints of the same version. Multiple Services could exist in the same proto file for example when there are different versions of the API in use. Each service contains one or more methods which corresponds to the API endpoints of the service. Below is a snippet of a Service definition along with relevant message definitions for context.
 
 
     message Order {
@@ -101,7 +100,7 @@ A Service is a collection of a group of API endpoints of same version. Multiple 
         // This is not exposed to the end user and hence there are only gRPC endpoints.
         rpc AddPublisher(Publisher) returns(Publisher) {
             // This option is specified to define the flavor of the KV operation needed.
-	    // grpc only methods can specifiy one method_oper per method. oper include (create, update, delete, get)
+            // grpc only methods can specify one method_oper per method. oper includes (create, update, delete, get)
             option (venice.methodOper) = "create";
         }
 
@@ -146,56 +145,50 @@ This is the unaltered protobuf code generation. This generates all the go struct
 ### Gateway and API server Plugins
 This code generation step, generates plugins that plug into the API Gateway and the API Server. The directory structure is shown below.
 
-	├── Makefile
-	├── generated
-	│   ├── doc.go
-	│   ├── endpoint.go
-	│   ├── gateway // Code related to the API Gateway
-	│   │   ├── gateway.go
-	│   │   └── rice-box.go
-	│   ├── grpc 
-	│   │   ├── client // Instrumented gRPC client code.
-	│   │   │   └── client.go
-	│   │   └── server // Code that plugs in to the API server.
-	│   │       └── server.go
-	│   ├── service.pb.ext.go
-	│   ├── service.pb.go
-	│   ├── service.pb.gw.go
-	│   ├── services.go
-	│   ├── swagger // Swagger Spec
-	│   │   └── service.swagger.json
-	│   └── transport.go
-	├── impl // All handwritten code for hooks go here.
-	└── service.proto.
+
+        ├── generated
+        │   ├── bookstore // --- One directory per package defined. --//
+        │   │   ├── example.pb.ext.go
+        │   │   ├── example.pb.go
+        │   │   ├── example.pb.gw.go
+        │   │   ├── example_doc.go
+        │   │   ├── example_endpoints.go
+        │   │   ├── example_services.go
+        │   │   ├── example_transport.go
+        │   │   ├── gateway //-- Gets plugged into the the API Gateway --//
+        │   │   │   ├── example_gateway.go
+        │   │   │   └── rice-box.go
+        │   │   ├── grpc
+        │   │   │   ├── client //-- gRPC client bindings that can be used by clients --//
+        │   │   │   │   └── example_client.go
+        │   │   │   └── server //--- Gets plugged into the API server --//
+        │   │   │       └── example_server.go
+        │   │   └── swagger //-- Swagger definition exported into the API Gateway and served from the API Gateway --//
+        │   │       └── example.swagger.json
+        │   ├── exports //-- imports to facilitate API Server and API Gateway importing generated code. --//
+        │   │   ├── apigw
+        │   │   │   └── services.go
+        │   │   └── apiserver
+        │   │       └── backends.go
+        │   ├── manifest
+        ├── hooks //-- All handwritten Hooks go in this directory --//
+        │   └── bookstore.go
+        ├── protos //-- Protobuf definitions go in this directory --//
+
 
 All generated code is in the generated/ directory.
 
-All hand edited code goes in the impl/ directory. The below code is the bare skeleton needed in a .go file in this directory. If any hooks are to be registered, then the hook code and registration goes here.
-    package impl
-
-    import (
-        "context"
-        "github.com/pensando/sw/apiserver"
-        "github.com/pensando/sw/utils/log"
-    )
-
-    func NewBookstoreV1Hooks() apiserver.ServiceHooks {
-        return &bookstoreHooks{}
-    }
-
-    type bookstoreHooks struct {}
-
-    func (r *bookstoreHooks) RegisterHooks(logger log.Logger, svc apiserver.Service) {}
+All hand edited code goes in the hooks/ directory. This is an optional step. When the service needs to influence the API server handling of specific APIs via plugins, the service owner can handwrite hooks and register them with the API server. 
 
 ## Controlling API server handling of requests with Hooks
-The API server allows the registering of the following hooks. All hooks are registered via hand written code placed in the impl/ directory. Please look at at sw/utils/apigen/example/impl/ for a reference implementation.
+The API server allows the registering of the following hooks. All hooks are registered via hand written code placed in the hooks/ directory. Please look at sw/api/hooks/bookstore.go for a reference implementation.
 
 ### Message hooks
 #### Version Transform
-Messages can be transformed from the request version to the native version of the API server and vice-versa by registered TransformFuncs. Transformation functions are registered by specifying the from and to versions. Each registration is unidirectional. For example if a service creates a new version of the APi "v2" due to an incompatible change ("v1" being the original version), the service registers a transform function for ("v1" -> "v2") and a transform function for ("v2" -> "v1").
+Messages can be transformed from the request version to the native version of the API server and vice-versa by registered TransformFuncs. Transformation functions are registered by specifying the from and to versions. Each registration is unidirectional. For example if a service creates a new version of the API, "v2" due to an incompatible change ("v1" being the original version), the service registers a transform function for ("v1" -> "v2") and a transform function for ("v2" -> "v1").
 
 #### Defaulting 
-If non stanadard defaults are to be applied then the a Defaulter function registered can mutate the object as desired.
+If non-standard defaults are to be applied then a Defaulter function registered can mutate the object as desired.
 
 #### Validation Function
 If semantic validations are desired then a validation hook can be registered. The Validate function returns nil when validation passes and an error when validation fails. If message validation fails the API request fails.
@@ -210,7 +203,7 @@ This is invoked by the API server after the KV store operation is performed.
 #### Response writer
 Hook to modify the returned response. The hook can return a completely new type in the response if needed.
 
-The snippet below shows an example of registering a post commit hook to a method (please see the impl/server.go for the functional example)
+The snippet below shows an example of registering a post commit hook to a method (please see the hooks/bookstore.go for a reference example)
 
 
     func (r *bookstoreHooks) RegisterHooks(logger log.Logger, svc apiserver.Service) {
@@ -218,17 +211,5 @@ The snippet below shows an example of registering a post commit hook to a method
         svc.GetMethod("DeleteBook").WithPostCommitHook(r.processDelBook)
     }
 
-## Add the service to the API server and API Gateway
-The generated code plugs into the API server and API gateway. To facilitate this the service needs to be added to the API server and API gateway imports. For the API Gateway this happens in the apigw/cmd/services.go.
-
-    import (
-        _ "github.com/pensando/sw/utils/apigen/example/grpc/server"
-    )
-
-For the API Server this happens vie the apiserver/cmd/backends.go
-
-    import (
-        _ "github.com/pensando/sw/utils/apigen/example/gateway"
-    )
 
 With this the APIs defined in the protobuf should be functional and API call should should be able to perform CRUD operations on the KV store objects. Service controllers would typically watch the config objects in the KV store and take business logic actions.

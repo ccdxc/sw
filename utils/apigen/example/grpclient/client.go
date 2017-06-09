@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"time"
 
-	bookstore "github.com/pensando/sw/utils/apigen/example/generated"
-	grpcclient "github.com/pensando/sw/utils/apigen/example/generated/grpc/client"
+	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	grpcclient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"google.golang.org/grpc"
 )
 

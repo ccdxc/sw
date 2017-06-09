@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	bookstore "github.com/pensando/sw/utils/apigen/example/generated"
+	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/utils/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

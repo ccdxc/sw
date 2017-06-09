@@ -1,7 +1,9 @@
 package plugin
 
 import (
+	"bytes"
 	"errors"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -182,6 +184,7 @@ func getMethodParams(m *descriptor.Method) (MethodParams, error) {
 }
 
 func getSwaggerFileName(file string) (string, error) {
+	file = filepath.Base(file)
 	if strings.HasSuffix(file, ".proto") {
 		f := strings.TrimSuffix(file, ".proto")
 		return f + ".swagger.json", nil
@@ -195,8 +198,43 @@ func getCWD2() string {
 	if err != nil {
 		return ""
 	}
-
 	return filepath.Base(filepath.Dir(cwd)) + "/" + filepath.Base(cwd)
+}
+
+// createDir creates a directory at the base given.
+func createDir(base string, dirs ...string) error {
+	name := base
+	for _, d := range dirs {
+		name = name + "/" + d
+	}
+	os.MkdirAll(name, 0744)
+	return nil
+}
+
+// genManifest generates the current manifest of protos being processed.
+func genManifest(path, pkg, file string) (map[string]string, error) {
+	manifest := make(map[string]string)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+	} else {
+		glog.V(1).Infof("manifest exists, reading from manifest")
+		raw, err := ioutil.ReadFile(path)
+
+		if err != nil {
+			glog.V(1).Infof("Reading Manifest failed (%s)", err)
+			return nil, err
+		}
+		lines := bytes.Split(raw, []byte("\n"))
+		for _, line := range lines {
+			fields := bytes.Fields(line)
+			if len(fields) == 2 {
+				manifest[string(fields[0])] = string(fields[1])
+			}
+		}
+	}
+	file = filepath.Base(file)
+	manifest[file] = pkg
+	return manifest, nil
 }
 
 func init() {
@@ -216,4 +254,6 @@ func init() {
 	reg.RegisterFunc("getMethodParams", getMethodParams)
 	reg.RegisterFunc("getCWD2", getCWD2)
 	reg.RegisterFunc("getSwaggerFileName", getSwaggerFileName)
+	reg.RegisterFunc("createDir", createDir)
+	reg.RegisterFunc("genManifest", genManifest)
 }

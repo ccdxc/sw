@@ -1,0 +1,8 @@
+/*
+This is a auto generated package.
+*/
+package apisrv_backends
+{{$relpath := .GoPkg.RelPath}}{{$pkg := .GoPkg.Name}}{{$x := (genManifest "./generated/manifest" .GoPkg.Name .Name)}}{{if ne (len $x) 0 }}
+import ( {{range $key, $value := $x}}
+    _ "{{$relpath}}/generated/{{$value}}/grpc/server"{{end}}
+    ){{end}}

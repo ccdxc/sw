@@ -2,46 +2,80 @@
 
 if [ "$#" -ne 1 ]; then
     echo "Invalid number of arguments"
-    echo " $0 <protobuf file>"
+    echo " $0 <protobuf file directory>"
     exit -1
 fi
-protofile=$1
+protopath=$1
 
-if [ ! -e ${protofile} ]; then
-    echo "File ${protofile} not found"
+if [ ! -e ${protopath} ]; then
+    echo "File ${protopath} not found"
     exit -1
 fi
 
-# create needed directories
-DIRS=( generated/grpc/client generated/grpc/server generated/gateway generated/swagger impl )
-for d in "${DIRS[@]}"; do
-    mkdir -p "${d}"
+curdir=$(pwd)
+mkdir -p ${curdir}/generated
+
+# Delete the manifest file if already exists.
+if [ -e ${curdir}/generated/manifest ]; then
+    rm -f ${curdir}/generated/manifest
+fi
+
+echo "++ generating manifest"
+for protofile in ${protopath}/*.proto
+do
+    protoc -I/usr/local/include -I. \
+        -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor \
+        --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
+        ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 done
 
-protoc -I/usr/local/include -I. \
-    -I${GOPATH}/src \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
-    -I${GOPATH}/src/github.com/pensando/sw/vendor \
-    --gofast_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,plugins=grpc:./generated/ \
-    ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
-protoc -I/usr/local/include -I. \
-    -I${GOPATH}/src \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
-    -I${GOPATH}/src/github.com/pensando/sw/vendor \
-    --grpc-gateway_out=logtostderr=false,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=./tmp:./generated/ \
-    ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
-protoc -I/usr/local/include -I. \
-    -I${GOPATH}/src \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-    -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
-    -I${GOPATH}/src/github.com/pensando/sw/vendor \
-    --swagger_out=logtostderr=true:./generated/swagger \
-    ${protofile} || { echo "swagger generation failed" ; exit -1; }
+cd ${curdir}
+while read -r line || [[ -n "$line" ]];
+do
+    protofile=$(echo $line | awk '{ print $1 }')
+    pkg=$(echo $line | awk '{ print $2 }')
+    [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
+    echo "++ parsing ${protofile} for pkg ${pkg}"
+    protoc -I/usr/local/include -I. \
+        -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor \
+        --grpc-gateway_out=logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
+        ${protopath}/${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
+done < ${curdir}/generated/manifest
 
-go generate ./generated/
-cd ./generated/gateway  && rice embed-go && cd ../../
+cd ${curdir}
+cd $protopath && while read -r line || [[ -n "$line" ]];
+do
+    protofile=$(echo $line | awk '{ print $1 }')
+    pkg=$(echo $line | awk '{ print $2 }')
+    [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
+    echo "++ parsing ${protofile} for pkg ${pkg}"
 
+    protoc -I/usr/local/include -I. \
+        -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor \
+        --swagger_out=logtostderr=true:../generated/${pkg}/swagger \
+        ${protofile} || { echo "swagger generation failed" ; exit -1; }
+    protoc -I/usr/local/include -I. \
+        -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor \
+        --gofast_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,plugins=grpc:${curdir}/generated/${pkg} \
+        ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
+
+        echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
+        tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .
+        cd $tempdir
+done < ${curdir}/generated/manifest
+cd ${curdir}
+echo "++ running go fmt"
 # Go format code
-gofmt -l -w generated
+gofmt -w generated

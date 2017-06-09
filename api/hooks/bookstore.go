@@ -4,14 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/apiserver"
-	"github.com/pensando/sw/utils/apigen/example/generated"
+	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/log"
 )
-
-func NewBookstoreV1Hooks() apiserver.ServiceHooks {
-	return &bookstoreHooks{}
-}
 
 type bookstoreHooks struct {
 	orderId int64
@@ -58,9 +55,16 @@ func (s *bookstoreHooks) validateOrder(i interface{}) error {
 	return nil
 }
 
-func (r *bookstoreHooks) RegisterHooks(logger log.Logger, svc apiserver.Service) {
+func registerBookstoreHooks(svc apiserver.Service, logger log.Logger) {
+	r := bookstoreHooks{}
 	r.logger = logger.WithContext("Service", "Bookstore")
 	logger.Log("msg", "registering Hooks")
 	svc.GetMethod("OrderOper").WithPreCommitHook(r.createNewOrderId).GetRequestType().WithValidate(r.validateOrder)
 	svc.GetMethod("DeleteBook").WithPostCommitHook(r.processDelBook)
+}
+
+func init() {
+	fmt.Printf("registered Hooks")
+	apisrv := apisrvpkg.MustGetApiServer()
+	apisrv.RegisterHooksCb("bookstore.BookstoreV1", registerBookstoreHooks)
 }

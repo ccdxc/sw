@@ -10,8 +10,7 @@ import (
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated"
-	"{{.GoPkg.RelPath}}/impl"
+	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
@@ -26,8 +25,6 @@ type s_{{$pkgname}}Backend struct {
 	Messages  map[string]apiserver.Message
 	{{range .Services}}
 	endpoints_{{.Name}} *e_{{.Name}}Endpoints{{end}}
-
-	Hooks     []apiserver.ServiceHooks
 }
 {{range .Services}}
 type e_{{.Name}}Endpoints struct {
@@ -89,9 +86,6 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints_{{$svcname}})
 		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
 		{{$pkgname}}.Register{{.Name}}Server(grpcserver, server)
-		for _, h := range s.Hooks {
-			h.RegisterHooks(logger, srv)
-		}
 	}{{end}}
 	return nil
 }
@@ -115,7 +109,6 @@ func init() {
 	{
 		e := e_{{.Name}}Endpoints{Svc: svc}
 		svc.endpoints_{{.Name}} = &e
-		svc.Hooks = append(svc.Hooks, impl.New{{.Name}}Hooks())
 	}{{end}}
 	apisrv.Register("{{$pkgname}}.{{.Name}}", &svc)
 }

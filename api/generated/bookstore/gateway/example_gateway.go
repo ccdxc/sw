@@ -1,6 +1,6 @@
 /*
 Package bookstore is a auto generated package.
-Input file: example.proto
+Input file: protos/example.proto
 */
 package bookstoreGwService
 
@@ -12,9 +12,9 @@ import (
 	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"
-	bookstore "github.com/pensando/sw/utils/apigen/example/generated"
-	"github.com/pensando/sw/utils/apigen/example/generated/grpc/client"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -146,7 +146,7 @@ func (e *s_BookstoreV1GwService) newClient(ctx context.Context, grpcAddr string,
 }
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../apigen/example/generated/swagger")
+	box, err := rice.FindBox("../../../../../sw/api/generated/bookstore/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err

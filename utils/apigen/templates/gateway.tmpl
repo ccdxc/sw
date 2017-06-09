@@ -13,8 +13,8 @@ import (
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pensando/sw/apigw/pkg"
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated"
-	"{{.GoPkg.RelPath}}/generated/grpc/client"
+	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
+	"{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}/grpc/client"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -94,7 +94,7 @@ func (e *s_{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, o
 }{{end}}
 
 func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../{{getCWD2}}/generated/swagger")
+	box, err := rice.FindBox("../../../../../{{getCWD2}}/generated/{{$pkgname}}/swagger")
 	if err != nil {
 		err = errors.Wrap(err, "error opening rice.Box")
 		return err

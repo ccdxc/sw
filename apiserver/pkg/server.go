@@ -22,6 +22,8 @@ type apiSrv struct {
 	services map[string]apiserver.Service
 	// messages is the set of messages serviced by the API server.
 	messages map[string]apiserver.Message
+	// hookregs is a collection of hooks registration callbacks.
+	hookregs map[string]apiserver.ServiceHookCb
 	// version is the native version of the API server. Can be changed
 	//  on the command line when starting the API server.
 	version string
@@ -44,6 +46,7 @@ func initApiServer() {
 	singletonApiSrv.svcmap = make(map[string]apiserver.ServiceBackend)
 	singletonApiSrv.services = make(map[string]apiserver.Service)
 	singletonApiSrv.messages = make(map[string]apiserver.Message)
+	singletonApiSrv.hookregs = make(map[string]apiserver.ServiceHookCb)
 	singletonApiSrv.doneCh = make(chan error)
 
 }
@@ -79,6 +82,12 @@ func (a *apiSrv) RegisterMessages(svc string, msgs map[string]apiserver.Message)
 //  registration is driven by auto-generated code.
 func (a *apiSrv) RegisterService(name string, svc apiserver.Service) {
 	a.services[name] = svc
+}
+
+// RegisterHookCb registers a callback to register hooks for a service. One callback can be registered per
+//  service.
+func (a *apiSrv) RegisterHooksCb(name string, fn apiserver.ServiceHookCb) {
+	a.hookregs[name] = fn
 }
 
 // GetService returns the registered service object give the name of the service.
@@ -121,6 +130,16 @@ func (a *apiSrv) Run(config apiserver.Config) {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}
 		a.Logger.Log("msg", "Registration complete", "backend", name)
+	}
+
+	// Callback all registration hooks that have been registered.
+	for name, fn := range a.hookregs {
+		if s, ok := a.services[name]; ok {
+			a.Logger.Log("service", name, "msg", "calling hooks registration function")
+			fn(s, a.Logger)
+		} else {
+			a.Logger.ErrorLog("Service", name, "msg", "service not known")
+		}
 	}
 
 	// Connect to the KV Store

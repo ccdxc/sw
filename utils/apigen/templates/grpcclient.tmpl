@@ -5,7 +5,7 @@ import (
 	
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated"
+	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/utils/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

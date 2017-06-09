@@ -2,7 +2,7 @@ FIX_PROTO = sed -i.bak_ 's/github.com\/golang\/protobuf\/proto/github.com\/gogo\
 FIX_VER = sed -i.bak_ 's/proto.ProtoPackageIsVersion/proto.GoGoProtoPackageIsVersion/'
 DEL_BAK = rm *.bak_
 
-all: bld_proto fix
+all: bld_proto fix genapi
 
 fix:
 	@${FIX_VER} *pb.go
@@ -13,3 +13,7 @@ bld_proto:
 	protoc -I/usr/local/include -I. -I../vendor \
 		-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
 		--gofast_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. meta.proto
+
+genapi:
+	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos	
+

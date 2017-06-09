@@ -1,0 +1,4 @@
+basepath: "github.com/pensando/sw/utils/apigen/templates"
+templates:
+  - template: "createmanifest.tmpl"
+    outputpath: "manifest"

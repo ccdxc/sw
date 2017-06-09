@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	"github.com/pensando/sw/apigw"
 	apigwpkg "github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/utils/log"

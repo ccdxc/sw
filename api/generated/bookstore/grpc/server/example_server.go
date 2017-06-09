@@ -1,6 +1,6 @@
 /*
 Package bookstore is a auto generated package.
-Input file: example.proto
+Input file: protos/example.proto
 */
 package bookstoreApiServer
 
@@ -10,8 +10,7 @@ import (
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 
-	bookstore "github.com/pensando/sw/utils/apigen/example/generated"
-	"github.com/pensando/sw/utils/apigen/example/impl"
+	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
@@ -26,8 +25,6 @@ type s_bookstoreBackend struct {
 	Messages map[string]apiserver.Message
 
 	endpoints_BookstoreV1 *e_BookstoreV1Endpoints
-
-	Hooks []apiserver.ServiceHooks
 }
 
 type e_BookstoreV1Endpoints struct {
@@ -179,9 +176,6 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 		endpoints := bookstore.MakeBookstoreV1ServerEndpoints(s.endpoints_BookstoreV1)
 		server := bookstore.MakeGRPCServerBookstoreV1(ctx, endpoints, logger)
 		bookstore.RegisterBookstoreV1Server(grpcserver, server)
-		for _, h := range s.Hooks {
-			h.RegisterHooks(logger, srv)
-		}
 	}
 	return nil
 }
@@ -267,7 +261,6 @@ func init() {
 	{
 		e := e_BookstoreV1Endpoints{Svc: svc}
 		svc.endpoints_BookstoreV1 = &e
-		svc.Hooks = append(svc.Hooks, impl.NewBookstoreV1Hooks())
 	}
-	apisrv.Register("bookstore.example.proto", &svc)
+	apisrv.Register("bookstore.protos/example.proto", &svc)
 }

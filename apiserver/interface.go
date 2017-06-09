@@ -19,12 +19,8 @@ type ServiceBackend interface {
 	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, scheme *runtime.Scheme) error
 }
 
-// ServiceHooks interface is satisfied by services registered to the API server and is used to
-//  register all hooks
-type ServiceHooks interface {
-	// RegisterHooks is invoked by the API server to allow the backend to register hooks.
-	RegisterHooks(logger log.Logger, service Service)
-}
+// ServiceHooksCb is a callback registered with the ApiServer for the purpose of registering Hooks for services.
+type ServiceHookCb func(srv Service, logger log.Logger)
 
 // Server interface is implemented by the API server and used by the backends to register themselves
 //  to the API server.
@@ -35,6 +31,8 @@ type Server interface {
 	RegisterMessages(svc string, msgs map[string]Message)
 	// RegisterService registers a service with name in "name"
 	RegisterService(name string, svc Service)
+	// RegisterHooksCb registers a callback to register hooks for the service svcName
+	RegisterHooksCb(svcName string, fn ServiceHookCb)
 	// GetService returns a registered service given the name.
 	GetService(name string) Service
 	// Run starts the "eventloop" for the API server.

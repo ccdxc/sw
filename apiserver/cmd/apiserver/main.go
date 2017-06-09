@@ -6,6 +6,8 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/hooks"
 	apisrv "github.com/pensando/sw/apiserver"
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/kvstore/store"

@@ -1,6 +1,6 @@
 /*
 Package bookstore is a auto generated package.
-Input file: example.proto
+Input file: protos/example.proto
 */
 
 package bookstore
