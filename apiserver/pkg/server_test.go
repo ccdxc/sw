@@ -27,6 +27,11 @@ func (t *testApiSrvBackend) CompleteRegistration(ctx context.Context,
 }
 
 type testApiSrvService struct {
+	hookcbCalled int
+}
+
+func (t *testApiSrvService) hooksCb(srv apisrv.Service, logger log.Logger) {
+	t.hookcbCalled++
 }
 
 func (t *testApiSrvService) Enable()                                           {}
@@ -131,11 +136,24 @@ func TestRunApiSrv(t *testing.T) {
 
 	_ = MustGetApiServer()
 	a := singletonApiSrv
+	s1 := testApiSrvService{}
+	a.RegisterService("test-service1", &s1)
+	a.RegisterService("test-service2", &s1)
+	a.RegisterHooksCb("test-service1", s1.hooksCb)
+	a.RegisterHooksCb("test-service2", s1.hooksCb)
+	// Add a dummy service hook without the service.
+	a.RegisterHooksCb("dumm-service2", s1.hooksCb)
+	if len(a.hookregs) != 3 {
+		t.Errorf("Was expecting [2] hooks found [%d]", len(a.hookregs))
+	}
 	go a.Run(config)
 	err := errors.New("Testing Exit for Api Server")
 	a.doneCh <- err
 	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "Testing Exit for Api Server") {
 		t.Errorf("APIServer Run did not close on error")
+	}
+	if s1.hookcbCalled != 2 {
+		t.Errorf("Was expecting [2] hooks invocation found [%d]", s1.hookcbCalled)
 	}
 }
