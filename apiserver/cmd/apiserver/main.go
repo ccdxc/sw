@@ -13,7 +13,10 @@ import (
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
+	trace "github.com/pensando/sw/utils/trace"
 )
+
+const srvName = "ApiServer"
 
 func main() {
 	var (
@@ -30,6 +33,7 @@ func main() {
 		pl = log.GetNewLogger(*debugflag)
 		pl = pl.WithContext("module", "ApiServer")
 	}
+
 	var config apisrv.Config
 	{
 		config.GrpcServerPort = *grpcaddr
@@ -43,6 +47,7 @@ func main() {
 			Codec:   runtime.NewJSONCodec(config.Scheme),
 		}
 	}
+	trace.Init("ApiServer")
 	grpclog.SetLogger(pl)
 	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
 	srv := apisrvpkg.MustGetApiServer()

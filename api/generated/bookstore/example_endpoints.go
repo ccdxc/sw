@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/tracing/opentracing"
 	httptransport "github.com/go-kit/kit/transport/http"
+	stdopentracing "github.com/opentracing/opentracing-go"
 	"github.com/pensando/sw/utils/log"
 )
 
@@ -43,8 +45,8 @@ type respBookstoreV1AddPublisher struct {
 	Err error
 }
 
-func MakeBookstoreV1AddPublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1AddPublisherEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Publisher)
 		v, err := s.AddPublisher(ctx, *req)
 		return respBookstoreV1AddPublisher{
@@ -52,6 +54,7 @@ func MakeBookstoreV1AddPublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AddPublisher")(f)
 }
 func (e Endpoints_BookstoreV1) UpdatePublisher(ctx context.Context, in Publisher) (Publisher, error) {
 	resp, err := e.UpdatePublisherEndpoint(ctx, in)
@@ -66,8 +69,8 @@ type respBookstoreV1UpdatePublisher struct {
 	Err error
 }
 
-func MakeBookstoreV1UpdatePublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1UpdatePublisherEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Publisher)
 		v, err := s.UpdatePublisher(ctx, *req)
 		return respBookstoreV1UpdatePublisher{
@@ -75,6 +78,7 @@ func MakeBookstoreV1UpdatePublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpo
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:UpdatePublisher")(f)
 }
 func (e Endpoints_BookstoreV1) DeletePublisher(ctx context.Context, in Publisher) (Publisher, error) {
 	resp, err := e.DeletePublisherEndpoint(ctx, in)
@@ -89,8 +93,8 @@ type respBookstoreV1DeletePublisher struct {
 	Err error
 }
 
-func MakeBookstoreV1DeletePublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1DeletePublisherEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Publisher)
 		v, err := s.DeletePublisher(ctx, *req)
 		return respBookstoreV1DeletePublisher{
@@ -98,6 +102,7 @@ func MakeBookstoreV1DeletePublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpo
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:DeletePublisher")(f)
 }
 func (e Endpoints_BookstoreV1) GetPublisher(ctx context.Context, in Publisher) (Publisher, error) {
 	resp, err := e.GetPublisherEndpoint(ctx, in)
@@ -112,8 +117,8 @@ type respBookstoreV1GetPublisher struct {
 	Err error
 }
 
-func MakeBookstoreV1GetPublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1GetPublisherEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Publisher)
 		v, err := s.GetPublisher(ctx, *req)
 		return respBookstoreV1GetPublisher{
@@ -121,6 +126,7 @@ func MakeBookstoreV1GetPublisherEndpoint(s ServiceBookstoreV1) endpoint.Endpoint
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:GetPublisher")(f)
 }
 func (e Endpoints_BookstoreV1) GetBook(ctx context.Context, in Book) (Book, error) {
 	resp, err := e.GetBookEndpoint(ctx, in)
@@ -135,8 +141,8 @@ type respBookstoreV1GetBook struct {
 	Err error
 }
 
-func MakeBookstoreV1GetBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1GetBookEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Book)
 		v, err := s.GetBook(ctx, *req)
 		return respBookstoreV1GetBook{
@@ -144,6 +150,7 @@ func MakeBookstoreV1GetBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:GetBook")(f)
 }
 func (e Endpoints_BookstoreV1) AddBook(ctx context.Context, in Book) (Book, error) {
 	resp, err := e.AddBookEndpoint(ctx, in)
@@ -158,8 +165,8 @@ type respBookstoreV1AddBook struct {
 	Err error
 }
 
-func MakeBookstoreV1AddBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1AddBookEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Book)
 		v, err := s.AddBook(ctx, *req)
 		return respBookstoreV1AddBook{
@@ -167,6 +174,7 @@ func MakeBookstoreV1AddBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AddBook")(f)
 }
 func (e Endpoints_BookstoreV1) UpdateBook(ctx context.Context, in Book) (Book, error) {
 	resp, err := e.UpdateBookEndpoint(ctx, in)
@@ -181,8 +189,8 @@ type respBookstoreV1UpdateBook struct {
 	Err error
 }
 
-func MakeBookstoreV1UpdateBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1UpdateBookEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Book)
 		v, err := s.UpdateBook(ctx, *req)
 		return respBookstoreV1UpdateBook{
@@ -190,6 +198,7 @@ func MakeBookstoreV1UpdateBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:UpdateBook")(f)
 }
 func (e Endpoints_BookstoreV1) DeleteBook(ctx context.Context, in Book) (Book, error) {
 	resp, err := e.DeleteBookEndpoint(ctx, in)
@@ -204,8 +213,8 @@ type respBookstoreV1DeleteBook struct {
 	Err error
 }
 
-func MakeBookstoreV1DeleteBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1DeleteBookEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Book)
 		v, err := s.DeleteBook(ctx, *req)
 		return respBookstoreV1DeleteBook{
@@ -213,6 +222,7 @@ func MakeBookstoreV1DeleteBookEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:DeleteBook")(f)
 }
 func (e Endpoints_BookstoreV1) OrderOper(ctx context.Context, in Order) (Order, error) {
 	resp, err := e.OrderOperEndpoint(ctx, in)
@@ -227,8 +237,8 @@ type respBookstoreV1OrderOper struct {
 	Err error
 }
 
-func MakeBookstoreV1OrderOperEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func MakeBookstoreV1OrderOperEndpoint(s ServiceBookstoreV1, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Order)
 		v, err := s.OrderOper(ctx, *req)
 		return respBookstoreV1OrderOper{
@@ -236,19 +246,20 @@ func MakeBookstoreV1OrderOperEndpoint(s ServiceBookstoreV1) endpoint.Endpoint {
 			Err: err,
 		}, nil
 	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:OrderOper")(f)
 }
 
-func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1) Endpoints_BookstoreV1 {
+func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1, logger log.Logger) Endpoints_BookstoreV1 {
 	return Endpoints_BookstoreV1{
-		AddPublisherEndpoint:    MakeBookstoreV1AddPublisherEndpoint(s),
-		UpdatePublisherEndpoint: MakeBookstoreV1UpdatePublisherEndpoint(s),
-		DeletePublisherEndpoint: MakeBookstoreV1DeletePublisherEndpoint(s),
-		GetPublisherEndpoint:    MakeBookstoreV1GetPublisherEndpoint(s),
-		GetBookEndpoint:         MakeBookstoreV1GetBookEndpoint(s),
-		AddBookEndpoint:         MakeBookstoreV1AddBookEndpoint(s),
-		UpdateBookEndpoint:      MakeBookstoreV1UpdateBookEndpoint(s),
-		DeleteBookEndpoint:      MakeBookstoreV1DeleteBookEndpoint(s),
-		OrderOperEndpoint:       MakeBookstoreV1OrderOperEndpoint(s),
+		AddPublisherEndpoint:    MakeBookstoreV1AddPublisherEndpoint(s, logger),
+		UpdatePublisherEndpoint: MakeBookstoreV1UpdatePublisherEndpoint(s, logger),
+		DeletePublisherEndpoint: MakeBookstoreV1DeletePublisherEndpoint(s, logger),
+		GetPublisherEndpoint:    MakeBookstoreV1GetPublisherEndpoint(s, logger),
+		GetBookEndpoint:         MakeBookstoreV1GetBookEndpoint(s, logger),
+		AddBookEndpoint:         MakeBookstoreV1AddBookEndpoint(s, logger),
+		UpdateBookEndpoint:      MakeBookstoreV1UpdateBookEndpoint(s, logger),
+		DeleteBookEndpoint:      MakeBookstoreV1DeleteBookEndpoint(s, logger),
+		OrderOperEndpoint:       MakeBookstoreV1OrderOperEndpoint(s, logger),
 	}
 }
 

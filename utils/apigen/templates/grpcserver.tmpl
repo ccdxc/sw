@@ -42,7 +42,6 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 			return r.MakeKey(prefix)
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
 			r := i.({{$pkgname}}.{{.Name}})
-			ret := {{$pkgname}}.{{.Name}}{}
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -52,7 +51,7 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
-			return ret, err
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)
@@ -83,7 +82,7 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 			"{{$pkgname}}.{{.Name}}": srv,
 		}
 		apisrv.RegisterService("{{$pkgname}}.{{.Name}}", srv)
-		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints_{{$svcname}})
+		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints_{{$svcname}}, logger)
 		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
 		{{$pkgname}}.Register{{.Name}}Server(grpcserver, server)
 	}{{end}}

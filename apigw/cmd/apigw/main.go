@@ -12,7 +12,10 @@ import (
 	"github.com/pensando/sw/apigw"
 	apigwpkg "github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/utils/log"
+	trace "github.com/pensando/sw/utils/trace"
 )
+
+const srvName = "ApiGw"
 
 func main() {
 	var (
@@ -50,6 +53,7 @@ func main() {
 		config.DebugMode = *debugflag
 		config.Logger = pl
 	}
+	trace.Init("ApiGateway")
 	pl.Log("msg", "Starting Run")
 	gw := apigwpkg.MustGetApiGateway()
 	grpclog.SetLogger(pl)

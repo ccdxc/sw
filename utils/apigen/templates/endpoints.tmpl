@@ -12,6 +12,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-kit/kit/tracing/opentracing"
+    stdopentracing "github.com/opentracing/opentracing-go"
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/pensando/sw/utils/log"
@@ -38,8 +40,8 @@ type resp{{$svcname}}{{.Name}} struct {
 	Err error
 }
 
-func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}, logger log.Logger ) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*{{.RequestType.Name}})
 		v, err := s.{{.Name}}(ctx, *req)
 		return resp{{$svcname}}{{.Name}} {
@@ -47,11 +49,12 @@ func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}) endpoint.Endpoint 
 			Err: err,
 		}, nil
 	}
+    return opentracing.TraceServer(stdopentracing.GlobalTracer(), "{{$svcname}}:{{.Name}}")(f) 
 }{{end}}
 
-func Make{{$svcname}}ServerEndpoints(s Service{{$svcname}}) Endpoints_{{$svcname}} {
+func Make{{$svcname}}ServerEndpoints(s Service{{$svcname}}, logger log.Logger) Endpoints_{{$svcname}} {
 	return Endpoints_{{$svcname}}{
-		{{range .Methods}}{{.Name}}Endpoint: Make{{$svcname}}{{.Name}}Endpoint(s),
+		{{range .Methods}}{{.Name}}Endpoint: Make{{$svcname}}{{.Name}}Endpoint(s, logger),
 		{{end}}
 	}
 }

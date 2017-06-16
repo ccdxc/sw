@@ -8,7 +8,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
 
-	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/ops"
 	"github.com/pensando/sw/globals"
@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	URLPrefix  = "/api/v1"
-	ClusterURL = "/cluster"
-	NodesURL   = "/nodes"
+	uRLPrefix  = "/api/v1"
+	clusterURL = "/cluster"
+	nodesURL   = "/nodes"
 )
 
 // NewRESTServer creates REST server endpoints for cluster create/get. These ops
@@ -28,10 +28,10 @@ const (
 func NewRESTServer() *martini.ClassicMartini {
 	m := martini.Classic()
 
-	m.Post(URLPrefix+ClusterURL, ClusterCreateHandler)
-	m.Get(URLPrefix+ClusterURL, ClusterGetHandler)
+	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
+	m.Get(uRLPrefix+clusterURL, ClusterGetHandler)
 
-	m.Get(URLPrefix+NodesURL, NodeListHandler)
+	m.Get(uRLPrefix+nodesURL, NodeListHandler)
 
 	return m
 }
@@ -44,7 +44,7 @@ func ClusterCreateHandler(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	defer req.Body.Close()
 
-	cluster := api.Cluster{}
+	cluster := cmd.Cluster{}
 	if err := decoder.Decode(&cluster); err != nil {
 		errors.SendBadRequest(w, err.Error())
 		return
@@ -57,7 +57,7 @@ func ClusterCreateHandler(w http.ResponseWriter, req *http.Request) {
 
 // ClusterGetHandler returns the cluster information.
 func ClusterGetHandler(w http.ResponseWriter, req *http.Request) {
-	cluster := api.Cluster{}
+	cluster := cmd.Cluster{}
 
 	if env.KVStore == nil {
 		errors.SendNotFound(w, "Cluster", "")
@@ -84,7 +84,7 @@ func ClusterGetHandler(w http.ResponseWriter, req *http.Request) {
 
 // NodeListHandler returns the nodes belonging to the cluster.
 func NodeListHandler(w http.ResponseWriter, req *http.Request) {
-	nodes := api.NodeList{}
+	nodes := cmd.NodeList{}
 
 	if env.KVStore == nil {
 		errors.SendNotFound(w, "NodeList", "")

@@ -8,6 +8,7 @@ import (
 	"github.com/pborman/uuid"
 
 	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/grpc"
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/errors"
@@ -16,8 +17,8 @@ import (
 )
 
 // makeNode creates a new Node object.
-func makeNode(name string) *api.Node {
-	return &api.Node{
+func makeNode(name string) *cmd.Node {
+	return &cmd.Node{
 		TypeMeta: api.TypeMeta{
 			Kind: "Node",
 		},

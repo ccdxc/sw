@@ -2,11 +2,13 @@ package validation
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cmd"
 )
 
 // ValidateObjectMeta validates the ObjectMeta.
@@ -43,15 +45,22 @@ func ValidateClusterSpecQuorumNodes(nodes []string, fldPath *field.Path) field.E
 }
 
 // ValidateClusterSpec validates the cluster specification.
-func ValidateClusterSpec(spec *api.ClusterSpec, fldPath *field.Path) field.ErrorList {
+func ValidateClusterSpec(spec *cmd.ClusterSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if spec == nil {
 		return allErrs
 	}
 
 	// Virtual IP is specified.
-	if spec.VirtualIP == nil {
+	if spec.VirtualIP == "" {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("virtualIP"), spec.VirtualIP, "virtual IP is mandatory"))
+	} else {
+		ipaddr := net.ParseIP(spec.VirtualIP)
+		if ipaddr == nil {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("virtualIP"), spec.VirtualIP, "virtual IP is invalid"))
+		} else if !ipaddr.IsGlobalUnicast() {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("virtualIP"), spec.VirtualIP, "virtual IP is not global unicast address"))
+		}
 	}
 
 	// Validate specified quorum nodes.
@@ -61,10 +70,10 @@ func ValidateClusterSpec(spec *api.ClusterSpec, fldPath *field.Path) field.Error
 }
 
 // ValidateCluster validates the cluster object.
-func ValidateCluster(cluster *api.Cluster) field.ErrorList {
+func ValidateCluster(cluster *cmd.Cluster) field.ErrorList {
 	allErrs := ValidateObjectMeta(&cluster.ObjectMeta, field.NewPath("metadata"))
 	allErrs = append(allErrs, ValidateClusterSpec(&cluster.Spec, field.NewPath("spec"))...)
-	if !reflect.DeepEqual(cluster.Status, api.ClusterStatus{}) {
+	if !reflect.DeepEqual(cluster.Status, cmd.ClusterStatus{}) {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("status"), cluster.Status, "cluster status must be empty"))
 	}
 	return allErrs

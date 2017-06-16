@@ -40,6 +40,7 @@ func TestHTTPUtils(t *testing.T) {
 	// create a listener
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: listenURL, Net: "unix"})
 	AssertOk(t, err, "Listening to unix socket")
+	defer os.Remove(listenURL)
 
 	// start serving HTTP requests
 	// http.Serve is a blocking call. so, do this in a seperate go routine..

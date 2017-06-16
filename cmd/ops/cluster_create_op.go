@@ -8,7 +8,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
 
-	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/grpc"
 	"github.com/pensando/sw/cmd/utils"
@@ -23,11 +23,11 @@ const (
 
 // clusterCreateOp contains state for creating a cluster.
 type clusterCreateOp struct {
-	cluster *api.Cluster
+	cluster *cmd.Cluster
 }
 
 // NewClusterCreateOp creates an op for creating a cluster.
-func NewClusterCreateOp(cluster *api.Cluster) Op {
+func NewClusterCreateOp(cluster *cmd.Cluster) Op {
 	return &clusterCreateOp{
 		cluster: cluster,
 	}
@@ -73,7 +73,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	preJoinReq := &grpc.ClusterPreJoinReq{
 		Name:      o.cluster.Name,
 		Uuid:      o.cluster.UUID,
-		VirtualIp: o.cluster.Spec.VirtualIP.String(),
+		VirtualIp: o.cluster.Spec.VirtualIP,
 	}
 
 	err = sendPreJoins(nil, preJoinReq, o.cluster.Spec.QuorumNodes)
@@ -85,7 +85,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	joinReq := &grpc.ClusterJoinReq{
 		Name:         o.cluster.Name,
 		Uuid:         o.cluster.UUID,
-		VirtualIp:    o.cluster.Spec.VirtualIP.String(),
+		VirtualIp:    o.cluster.Spec.VirtualIP,
 		QuorumConfig: quorumConfig,
 	}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -167,6 +169,15 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errVersionTransform
 		}
 	}
+	var span opentracing.Span
+	span = opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.SetTag("version", ver)
+		span.SetTag("operation", oper)
+		if v, ok := md["req-method"]; ok {
+			span.SetTag("req-method", v[0])
+		}
+	}
 
 	// Apply any defaults to the request message
 	i = m.requestType.Default(i)
@@ -177,6 +188,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		l.ErrorLog("msg", "request validation failed", "error", err)
 		return nil, errRequestValidation
 	}
+	if span != nil {
+		span.LogFields(log.String("event", "calling precommit hooks"))
+	}
 
 	// Invoke registered precommit hooks
 	kvwrite := true
@@ -184,6 +198,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		kvold := kvwrite
 		i, kvwrite = v(ctx, oper, i)
 		kvwrite = kvwrite && kvold
+	}
+	if span != nil {
+		span.LogFields(log.String("event", "precommit hooks done"))
 	}
 
 	// Update the KV if desired.
@@ -227,11 +244,17 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		l.DebugLog("msg", "KV operation over-ridden")
 	}
 
+	if span != nil {
+		span.LogFields(log.String("event", "calling postcommit hooks"))
+	}
 	// Invoke registered postcommit hooks
 	for _, v := range m.postcommitFunc {
 		v(ctx, oper, i)
 	}
 
+	if span != nil {
+		span.LogFields(log.String("event", "postcommit hooks done"))
+	}
 	//Generate response
 	if m.responseWriter != nil {
 		l.DebugLog("msg", "response overide is enabled")

@@ -50,7 +50,6 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			return r.MakeKey(prefix)
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
 			r := i.(bookstore.Publisher)
-			ret := bookstore.Publisher{}
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -60,7 +59,7 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
-			return ret, err
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
 			err := kvs.Get(ctx, key, &r)
@@ -77,7 +76,6 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			return r.MakeKey(prefix)
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
 			r := i.(bookstore.Book)
-			ret := bookstore.Book{}
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -87,7 +85,7 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
-			return ret, err
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Book{}
 			err := kvs.Get(ctx, key, &r)
@@ -105,7 +103,6 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			return r.MakeKey(prefix)
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
 			r := i.(bookstore.Order)
-			ret := bookstore.Order{}
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -115,7 +112,7 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = kvs.Update(ctx, key, &r)
 				err = errors.Wrap(err, "KV update failed")
 			}
-			return ret, err
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Order{}
 			err := kvs.Get(ctx, key, &r)
@@ -173,7 +170,7 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			"bookstore.BookstoreV1": srv,
 		}
 		apisrv.RegisterService("bookstore.BookstoreV1", srv)
-		endpoints := bookstore.MakeBookstoreV1ServerEndpoints(s.endpoints_BookstoreV1)
+		endpoints := bookstore.MakeBookstoreV1ServerEndpoints(s.endpoints_BookstoreV1, logger)
 		server := bookstore.MakeGRPCServerBookstoreV1(ctx, endpoints, logger)
 		bookstore.RegisterBookstoreV1Server(grpcserver, server)
 	}

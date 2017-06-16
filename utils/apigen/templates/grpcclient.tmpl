@@ -9,6 +9,8 @@ import (
 	"github.com/pensando/sw/utils/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	"github.com/go-kit/kit/tracing/opentracing"
 )
 
 func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
@@ -21,7 +23,7 @@ func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
 }
 
 {{$pkgname := .GoPkg.Name}}{{range .Services}}{{$srvname := .Name}}
-func New{{$srvname}}(conn *grpc.ClientConn) {{$pkgname}}.Service{{$srvname}} {
+func New{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$pkgname}}.Service{{$srvname}} {
  {{range .Methods}}
 	var l_{{.Name}}Endpoint endpoint.Endpoint
 	{
@@ -32,8 +34,10 @@ func New{{$srvname}}(conn *grpc.ClientConn) {{$pkgname}}.Service{{$srvname}} {
 			{{$pkgname}}.EndcodeGrpcReq{{.RequestType.Name}},
 			{{$pkgname}}.DecodeGrpcResp{{.ResponseType.Name}},
 			{{$pkgname}}.{{.ResponseType.Name}}{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
+        l_{{.Name}}Endpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "{{$srvname}}:{{.Name}}")(l_{{.Name}}Endpoint)
 	} {{end}}
 	return {{$pkgname}}.Endpoints_{{$srvname}}{
 	{{range .Methods}}
@@ -42,7 +46,7 @@ func New{{$srvname}}(conn *grpc.ClientConn) {{$pkgname}}.Service{{$srvname}} {
 }
 
 func New{{$srvname}}Backend(conn *grpc.ClientConn, logger log.Logger) {{$pkgname}}.Service{{$srvname}} {
-	cl := New{{$srvname}}(conn)
+	cl := New{{$srvname}}(conn, logger)
 	cl = {{$pkgname}}.Logging{{$srvname}}Middleware(logger)(cl)
 	return cl
 }

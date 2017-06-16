@@ -17,6 +17,8 @@ import (
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/pensando/sw/utils/log"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	"github.com/go-kit/kit/tracing/opentracing"
 )
 
 var (
@@ -40,7 +42,8 @@ func recoverVersion(ctx context.Context, md metadata.MD) context.Context {
 		pairs = append(pairs, "req-method", v[0])
 	}
 	nmd := metadata.Pairs(pairs...)
-	ctx = metadata.NewContext(ctx, nmd)
+    nmd = metadata.Join(nmd, md)
+    ctx = metadata.NewContext(ctx, nmd)
 	return ctx
 }
 
@@ -61,7 +64,7 @@ func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints_{{.Name}},
 			endpoints.{{.Name}}Endpoint,
 			DecodeGrpcReq{{.RequestType.Name}},
 			EncodeGrpcResp{{.ResponseType.Name}},
-			options...,
+            append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "{{.Name}}", logger)))...,
 		),
 		{{end}}
 	}

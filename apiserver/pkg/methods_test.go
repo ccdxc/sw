@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	apisrv "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
 	"google.golang.org/grpc/metadata"
@@ -142,6 +143,15 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
 
+	// Now delete the object and check
+	md2 := metadata.Pairs("req-version", singletonApiSrv.version,
+		"req-method", "DELETE")
+	ctx2 := metadata.NewContext(context.Background(), md2)
+	span := opentracing.StartSpan("delete")
+	ctx3 := opentracing.ContextWithSpan(ctx2, span)
+	if _, err := m.HandleInvocation(ctx3, reqmsg); err != nil {
+		t.Errorf("Expecting success but failed %v", err)
+	}
 }
 
 func TestMapOper(t *testing.T) {

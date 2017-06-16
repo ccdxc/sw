@@ -1,0 +1,127 @@
+syntax = "proto3";
+// Service name
+package cmd;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// NodeSpec contains the configuration of the node.
+message NodeSpec {
+  string Name = 1; // TODO
+}
+
+// NodeStatus contains the current state of the node.
+message NodeStatus {
+  string Name = 1; // TODO
+}
+
+// Node is representation of a single node in the cluster.
+message Node {
+    option (venice.objectPrefix) = "nodes";
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+
+    // Spec contains the configuration of the node.
+    NodeSpec Spec = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+
+	// Status contains the current state of the node.
+    NodeStatus Status = 4 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NodeList is representation of all nodes in the cluster.
+message NodeList {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+
+    // Items is the list of nodes in the cluster.
+    repeated Node Items = 3;
+}
+
+// ClusterSpec contains the configuration of the cluster.
+message ClusterSpec {
+	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
+	// nodes in the cluster.
+    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorumNodes,omitempty"];
+
+	// VirtualIP is the IP address for managing the cluster. It will be hosted by
+	// the winner of election between quorum nodes.
+    string VirtualIP = 2 [(gogoproto.jsontag) = "virtualIP,omitempty"];
+
+	// NTPServers contains the list of NTP servers for the cluster.
+    repeated string NTPServers = 3 [(gogoproto.jsontag) = "ntpServers,omitempty"];
+
+	// DNSSubDomain is the DNS subdomain for the default tenant.
+    string DNSSubDomain = 4 [(gogoproto.jsontag) = "dnsSubDomain,omitempty"];
+}
+
+// ClusterStatus contains the current state of the Cluster.
+message ClusterStatus {
+	// Leader contains the node name of the cluster leader.
+	string Leader = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+}
+
+// Cluster represents a full cluster
+message Cluster {
+    option (venice.objectPrefix) = "cluster";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+
+    // Spec contains the configuration of the cluster.
+    ClusterSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+	// Status contains the current state of the cluster.
+    ClusterStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// This should usually be a ServiceDiscovery key like (sd:/apiservers/bookstore). A IP address for now
+option(venice.fileGrpcDest) = "localhost:8082";
+
+service CmdV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "cmd";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    rpc GetNodeList(NodeList) returns(NodeList) {
+        option (google.api.http) = {
+            get: "/nodes"
+        };
+    }
+
+    rpc NodeOper(Node) returns(Node) {
+        option (google.api.http) = {
+            post: "/nodes"
+            body: "*"
+            additional_bindings: {
+                put: "/nodes/{O.Name}"
+                body: "*"
+            }
+            additional_bindings: {
+                get: "/nodes/{O.Name}"
+            }
+            additional_bindings: {
+                delete : "/nodes/{O.Name}"
+            }
+        };
+    }
+
+
+    rpc ClusterOper(Cluster) returns(Cluster) {
+        option (google.api.http) = {
+            post: "/cluster"
+            body: "*"
+            additional_bindings: {
+                put: "/cluster/{O.Name}"
+                body: "*"
+            }
+            additional_bindings: {
+                get: "/cluster/{O.Name}"
+             }
+            additional_bindings: {
+                delete : "/cluster/{O.Name}"
+             }
+        };
+    }
+}

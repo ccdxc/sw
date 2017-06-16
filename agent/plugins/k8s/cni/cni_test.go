@@ -122,6 +122,7 @@ func TestCNIServer(t *testing.T) {
 
 	// create a new CNI server
 	cniServer, err := NewCniServer(fakeCniServerURL, &dummyAgent)
+	defer os.Remove(fakeCniServerURL)
 	AssertOk(t, err, "creating cni server")
 	Assert(t, (cniServer != nil), "error creating cni server")
 
@@ -177,6 +178,7 @@ func TestCNIServerErrors(t *testing.T) {
 	cniServer, err := NewCniServer(fakeCniServerURL, &dummyAgent)
 	AssertOk(t, err, "creating cni server")
 	Assert(t, (cniServer != nil), "error creating cni server")
+	defer os.Remove(fakeCniServerURL)
 
 	// build bad pod args
 	stdinBytes, _ := json.Marshal(types.NetConf{Name: "pensando", Type: "pensando-net"})

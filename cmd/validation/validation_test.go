@@ -1,14 +1,14 @@
 package validation
 
 import (
-	"net"
 	"testing"
 
 	"github.com/pensando/sw/api"
+	cmd "github.com/pensando/sw/api/generated/cmd"
 )
 
-func testCluster(name string, spec *api.ClusterSpec, status *api.ClusterStatus) *api.Cluster {
-	return &api.Cluster{
+func testCluster(name string, spec *cmd.ClusterSpec, status *cmd.ClusterStatus) *cmd.Cluster {
+	return &cmd.Cluster{
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
@@ -20,45 +20,45 @@ func testCluster(name string, spec *api.ClusterSpec, status *api.ClusterStatus) 
 func TestValidateCluster(t *testing.T) {
 	scenarios := map[string]struct {
 		isExpectedFailure bool
-		cluster           *api.Cluster
+		cluster           *cmd.Cluster
 	}{
 		"bad-cluster-no-nodes": {
 			isExpectedFailure: true,
 			cluster: testCluster("foo",
-				&api.ClusterSpec{
+				&cmd.ClusterSpec{
 					QuorumNodes: []string{},
-					VirtualIP:   net.ParseIP("192.168.30.10"),
+					VirtualIP:   "192.168.30.10",
 				},
-				&api.ClusterStatus{},
+				&cmd.ClusterStatus{},
 			),
 		},
 		"good-cluster": {
 			isExpectedFailure: false,
 			cluster: testCluster("foo",
-				&api.ClusterSpec{
+				&cmd.ClusterSpec{
 					QuorumNodes: []string{"node1", "node2", "node3"},
-					VirtualIP:   net.ParseIP("192.168.30.10"),
+					VirtualIP:   "192.168.30.10",
 				},
-				&api.ClusterStatus{},
+				&cmd.ClusterStatus{},
 			),
 		},
 		"bad-cluster-wo-virtual-ip": {
 			isExpectedFailure: true,
 			cluster: testCluster("foo",
-				&api.ClusterSpec{
+				&cmd.ClusterSpec{
 					QuorumNodes: []string{"node1", "node2", "node3"},
 				},
-				&api.ClusterStatus{},
+				&cmd.ClusterStatus{},
 			),
 		},
 		"bad-cluster-with-status": {
 			isExpectedFailure: true,
 			cluster: testCluster("foo",
-				&api.ClusterSpec{
+				&cmd.ClusterSpec{
 					QuorumNodes: []string{"node1", "node2", "node3"},
-					VirtualIP:   net.ParseIP("192.168.30.10"),
+					VirtualIP:   "192.168.30.10",
 				},
-				&api.ClusterStatus{
+				&cmd.ClusterStatus{
 					Leader: "node1",
 				},
 			),

@@ -15,6 +15,9 @@ import (
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/helper"
 	"github.com/pensando/sw/utils/runtime"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	otext "github.com/opentracing/opentracing-go/ext"
 )
 
 const (
@@ -84,8 +87,23 @@ func (e *etcdStore) decode(value []byte, into runtime.Object, version int64) err
 	return e.objVersioner.SetVersion(into, uint64(version))
 }
 
+func traceOper(ctx context.Context, operationName string, key string) (context.Context, opentracing.Span) {
+	var clientSpan opentracing.Span
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		clientSpan = opentracing.StartSpan(operationName, opentracing.ChildOf(parentSpan.Context()))
+	} else {
+		clientSpan = opentracing.StartSpan(operationName)
+	}
+	otext.SpanKindRPCClient.Set(clientSpan)
+	clientSpan.SetTag("kvkey", key)
+	return opentracing.ContextWithSpan(ctx, clientSpan), clientSpan
+}
+
 // putHelper updates a key in etcd with the provided object and comparators.
 func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Object, cs ...clientv3.Cmp) ([]byte, *clientv3.TxnResponse, error) {
+	ctx, span := traceOper(ctx, "kvstore put", key)
+	defer span.Finish()
+
 	value, err := e.encode(obj)
 	if err != nil {
 		return nil, nil, err
@@ -119,6 +137,9 @@ func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object) 
 // Delete removes a single key in etcd. If "into" is not nil, it is set to the previous value
 // of the key in kv store. "cs" are comparators to allow for conditional deletes.
 func (e *etcdStore) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
+	ctx, span := traceOper(ctx, "kvstore delete", key)
+	defer span.Finish()
+
 	newCtx, cancel := context.WithTimeout(ctx, timeout)
 	resp, err := e.client.KV.Txn(newCtx).If(translateCmps(cs...)...).Then(
 		clientv3.OpGet(key),
@@ -151,6 +172,9 @@ func (e *etcdStore) Delete(ctx context.Context, key string, into runtime.Object,
 // exist. For example, a delete with "/abc" prefix would only delete "/abc/123" and
 // "/abc/456", but not "/abcd".
 func (e *etcdStore) PrefixDelete(ctx context.Context, prefix string) error {
+	ctx, span := traceOper(ctx, "kvstore prefixdelete", prefix)
+	defer span.Finish()
+
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
@@ -206,6 +230,10 @@ func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, into runti
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
+
+	ctx, span := traceOper(ctx, "kvstore consUpdate", key)
+	defer span.Finish()
+
 	for {
 		// Get the object.
 		if err := e.Get(ctx, key, into); err != nil {
@@ -242,6 +270,9 @@ func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, into runti
 
 // Get the object corresponding to a single key in etcd.
 func (e *etcdStore) Get(ctx context.Context, key string, into runtime.Object) error {
+	ctx, span := traceOper(ctx, "kvstore get", key)
+	defer span.Finish()
+
 	newCtx, cancel := context.WithTimeout(ctx, timeout)
 	resp, err := e.client.KV.Get(newCtx, key)
 	cancel()
@@ -271,6 +302,9 @@ func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
+
+	ctx, span := traceOper(ctx, "kvstore list", prefix)
+	defer span.Finish()
 
 	newCtx, cancel := context.WithTimeout(ctx, timeout)
 	resp, err := e.client.KV.Get(newCtx, prefix, clientv3.WithPrefix())

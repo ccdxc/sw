@@ -44,7 +44,7 @@ do
         -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --grpc-gateway_out=logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
+        --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
         ${protopath}/${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 done < ${curdir}/generated/manifest
 
@@ -70,7 +70,6 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --gofast_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,plugins=grpc:${curdir}/generated/${pkg} \
         ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
-
         echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .
         cd $tempdir

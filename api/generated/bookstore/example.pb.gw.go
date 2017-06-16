@@ -213,7 +213,7 @@ func RegisterBookstoreV1Handler(ctx context.Context, mux *runtime.ServeMux, conn
 func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client BookstoreV1Client) error {
 
 	mux.Handle("GET", pattern_BookstoreV1_GetBook_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
 			go func(done <-chan struct{}, closed <-chan bool) {
@@ -241,7 +241,7 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 	})
 
 	mux.Handle("POST", pattern_BookstoreV1_OrderOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
 			go func(done <-chan struct{}, closed <-chan bool) {
@@ -269,7 +269,7 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 	})
 
 	mux.Handle("PUT", pattern_BookstoreV1_OrderOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
 			go func(done <-chan struct{}, closed <-chan bool) {
@@ -297,7 +297,7 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 	})
 
 	mux.Handle("DELETE", pattern_BookstoreV1_OrderOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
 			go func(done <-chan struct{}, closed <-chan bool) {
@@ -325,7 +325,7 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 	})
 
 	mux.Handle("GET", pattern_BookstoreV1_OrderOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
 			go func(done <-chan struct{}, closed <-chan bool) {

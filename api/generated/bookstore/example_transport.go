@@ -15,7 +15,9 @@ import (
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	stdopentracing "github.com/opentracing/opentracing-go"
 	"github.com/pensando/sw/utils/log"
 )
 
@@ -40,6 +42,7 @@ func recoverVersion(ctx context.Context, md metadata.MD) context.Context {
 		pairs = append(pairs, "req-method", v[0])
 	}
 	nmd := metadata.Pairs(pairs...)
+	nmd = metadata.Join(nmd, md)
 	ctx = metadata.NewContext(ctx, nmd)
 	return ctx
 }
@@ -67,63 +70,63 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints Endpoints_Bookstor
 			endpoints.AddPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AddPublisher", logger)))...,
 		),
 
 		UpdatePublisherHdlr: grpctransport.NewServer(
 			endpoints.UpdatePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "UpdatePublisher", logger)))...,
 		),
 
 		DeletePublisherHdlr: grpctransport.NewServer(
 			endpoints.DeletePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "DeletePublisher", logger)))...,
 		),
 
 		GetPublisherHdlr: grpctransport.NewServer(
 			endpoints.GetPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "GetPublisher", logger)))...,
 		),
 
 		GetBookHdlr: grpctransport.NewServer(
 			endpoints.GetBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "GetBook", logger)))...,
 		),
 
 		AddBookHdlr: grpctransport.NewServer(
 			endpoints.AddBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AddBook", logger)))...,
 		),
 
 		UpdateBookHdlr: grpctransport.NewServer(
 			endpoints.UpdateBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "UpdateBook", logger)))...,
 		),
 
 		DeleteBookHdlr: grpctransport.NewServer(
 			endpoints.DeleteBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "DeleteBook", logger)))...,
 		),
 
 		OrderOperHdlr: grpctransport.NewServer(
 			endpoints.OrderOperEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			options...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "OrderOper", logger)))...,
 		),
 	}
 }

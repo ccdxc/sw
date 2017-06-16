@@ -5,4 +5,5 @@ package apisrv_backends
 
 import (
 	_ "github.com/pensando/sw/api/generated/bookstore/gateway"
+	_ "github.com/pensando/sw/api/generated/cmd/gateway"
 )

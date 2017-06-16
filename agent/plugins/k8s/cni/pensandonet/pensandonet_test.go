@@ -17,7 +17,7 @@ import (
 	. "github.com/pensando/sw/utils/testutils"
 )
 
-const fakeCniServerURL = "/tmp/fake-cni.sock"
+const fakeCniServerURL = "/tmp/penfake-cni.sock"
 
 type fakeCniServer struct {
 	addPodCount int
@@ -69,6 +69,7 @@ func TestCNIPlugin(t *testing.T) {
 
 	// create a CNI plugin
 	n := NewCNIPlugin(fakeCniServerURL)
+	defer os.Remove(fakeCniServerURL)
 
 	// fake add command args
 	addArgs := cni.CmdArgs{

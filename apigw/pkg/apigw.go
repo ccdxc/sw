@@ -10,6 +10,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	opentracing "github.com/opentracing/opentracing-go"
+	otext "github.com/opentracing/opentracing-go/ext"
 	"github.com/pensando/sw/apigw"
 	"github.com/pensando/sw/utils/log"
 )
@@ -92,6 +94,22 @@ func (a *apiGw) preflightHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (a *apiGw) tracerMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		operationName := "http"
+
+		span := opentracing.StartSpan(operationName)
+		otext.HTTPMethod.Set(span, r.Method)
+		otext.HTTPUrl.Set(span, r.URL.String())
+		ctx := opentracing.ContextWithSpan(r.Context(), span)
+		req := r.WithContext(ctx)
+
+		h.ServeHTTP(w, req)
+		span.Finish()
+		return
+	})
+}
+
 // allowCORS enables CORS and returns other preflight check headers.
 func (a *apiGw) allowCORS(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +170,7 @@ func (a *apiGw) Run(config apigw.Config) {
 
 	go func() {
 		a.logger.InfoLog("msg", "Http Listen Start", "address", config.HttpAddr)
-		a.doneCh <- http.ListenAndServe(config.HttpAddr, a.extractHdrInfo(a.allowCORS(m)))
+		a.doneCh <- http.ListenAndServe(config.HttpAddr, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
 	}()
 
 	a.logger.Infof("exit", <-a.doneCh)

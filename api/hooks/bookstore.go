@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/apiserver"
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
@@ -13,6 +14,7 @@ import (
 type bookstoreHooks struct {
 	orderId int64
 	logger  log.Logger
+	tracer  opentracing.Tracer
 }
 
 // ServiceHooks
