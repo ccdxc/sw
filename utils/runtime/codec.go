@@ -40,10 +40,15 @@ func (j *JSONCodec) Decode(data []byte, into Object) (Object, error) {
 // findKind finds the kind from a serialized version of an API object.
 func (j *JSONCodec) findKind(data []byte) (string, error) {
 	kind := struct {
-		Kind string `json:"kind,omitempty"`
+		Kind       string `json:"kind,omitempty"`
+		ObjectKind string `json:"ObjectKind,omitempty"`
 	}{}
 	if err := json.Unmarshal(data, &kind); err != nil {
 		return "", err
 	}
-	return kind.Kind, nil
+
+	if kind.Kind != "" {
+		return kind.Kind, nil
+	}
+	return kind.ObjectKind, nil
 }

@@ -19,7 +19,7 @@ const (
 
 // watcher implements kvstore.Watcher interface.
 type watcher struct {
-	f           *memKv                   // kvstore pointer
+	f           *MemKv                   // kvstore pointer
 	keyOrPrefix string                   // what is being watched
 	fromVersion int64                    // version to watch from
 	recursive   bool                     // set to true for prefix based watches
@@ -31,7 +31,7 @@ type watcher struct {
 
 // newWatcher creates a new watcher interface for key based watches.
 // TBD: this function is common among all kv stores
-func (f *memKv) newWatcher(ctx context.Context, key string, fromVersion string) (*watcher, error) {
+func (f *MemKv) newWatcher(ctx context.Context, key string, fromVersion string) (*watcher, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("Watch called on a prefix")
 	}
@@ -40,7 +40,7 @@ func (f *memKv) newWatcher(ctx context.Context, key string, fromVersion string) 
 
 // newPrefixWatcher creates a new watcher interface for prefix based watches.
 // TBD: this function is common among all kv stores
-func (f *memKv) newPrefixWatcher(ctx context.Context, prefix string, fromVersion string) (*watcher, error) {
+func (f *MemKv) newPrefixWatcher(ctx context.Context, prefix string, fromVersion string) (*watcher, error) {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
@@ -49,7 +49,7 @@ func (f *memKv) newPrefixWatcher(ctx context.Context, prefix string, fromVersion
 
 // watch sets up the watcher context and starts the watch.
 // TBD: this function is common among all kv stores
-func (f *memKv) watch(ctx context.Context, keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
+func (f *MemKv) watch(ctx context.Context, keyOrPrefix string, fromVersion string, recursive bool) (*watcher, error) {
 	newCtx, cancel := context.WithCancel(ctx)
 	if fromVersion == "" {
 		fromVersion = "0"
@@ -87,7 +87,7 @@ func sendEvent(w *watcher, v *memKvRec, deleted bool) {
 // setupWatchers looks for all watchers and find the ones that
 // have been watching the newly added key. It sends notifications in case
 // there was a watcher and send them events
-func (f *memKv) setupWatchers(key string, v *memKvRec) {
+func (f *MemKv) setupWatchers(key string, v *memKvRec) {
 	for watchKey, w := range f.watchers {
 		if w.recursive {
 			if strings.HasPrefix(key, watchKey) {
@@ -103,7 +103,7 @@ func (f *memKv) setupWatchers(key string, v *memKvRec) {
 
 // sendWatchEvents sends watch events on updates or deletes, it doesn't
 // scan for all watchers to see which ones matches a given key
-func (f *memKv) sendWatchEvents(key string, v *memKvRec, deleted bool) {
+func (f *MemKv) sendWatchEvents(key string, v *memKvRec, deleted bool) {
 	var deleteRecKey = func(w *watcher, key string) {
 		for idx, value := range w.keys {
 			if value == key {
@@ -207,7 +207,7 @@ func (w *watcher) sendError(err error) {
 	}
 }
 
-func (f *memKv) deleteWatchers(w *watcher) {
+func (f *MemKv) deleteWatchers(w *watcher) {
 	var deleteWatcher = func(v *memKvRec, w *watcher) {
 		if v == nil {
 			return

@@ -9,6 +9,7 @@ package memkv
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -32,8 +33,8 @@ type memKvRec struct {
 	watchers []*watcher
 }
 
-// memKv is state store interface to a memkv client
-type memKv struct {
+// MemKv is state store interface to a memkv client
+type MemKv struct {
 	sync.Mutex
 	cluster       interface{}
 	deleted       bool
@@ -42,13 +43,14 @@ type memKv struct {
 	listVersioner runtime.Versioner
 	kvs           map[string]*memKvRec
 	watchers      map[string]*watcher
+	returnErr     bool // when set, all interface methods will return an error
 }
 
 // NewMemKv creates a new in memory kv store
 func NewMemKv(cluster interface{}, codec runtime.Codec) (kvstore.Interface, error) {
 	kvs := make(map[string]*memKvRec)
 	watchers := make(map[string]*watcher)
-	fkv := &memKv{
+	fkv := &MemKv{
 		cluster:       cluster,
 		deleted:       false,
 		codec:         codec,
@@ -63,7 +65,7 @@ func NewMemKv(cluster interface{}, codec runtime.Codec) (kvstore.Interface, erro
 
 // ttlDecrement would sleep for a second and decrement ttl for a key in kvstore
 // FIXME: this background task must be stopped, perhaps by having kvstore use the context
-func ttlDecrement(f *memKv) {
+func ttlDecrement(f *MemKv) {
 	for {
 		time.Sleep(time.Second)
 		f.Lock()
@@ -84,7 +86,7 @@ func ttlDecrement(f *memKv) {
 	}
 }
 
-func (f *memKv) deleteAll() {
+func (f *MemKv) deleteAll() {
 	f.Lock()
 	// delete all kv pairs
 	for key := range f.kvs {
@@ -100,7 +102,7 @@ func (f *memKv) deleteAll() {
 
 // encode implements the serialization of an object to be stored in memkv.
 // TBD: this function is common among all state stores
-func (f *memKv) encode(obj runtime.Object) ([]byte, error) {
+func (f *MemKv) encode(obj runtime.Object) ([]byte, error) {
 	// If the object implements the json.Marshaler interface, use it.
 	if m, ok := interface{}(obj).(json.Marshaler); ok {
 		return m.MarshalJSON()
@@ -111,7 +113,7 @@ func (f *memKv) encode(obj runtime.Object) ([]byte, error) {
 
 // decode implements the de-serialization of an object stored in memkv.
 // TBD: this function is common among all state stores
-func (f *memKv) decode(value []byte, into runtime.Object, version int64) error {
+func (f *MemKv) decode(value []byte, into runtime.Object, version int64) error {
 	if err := helper.ValidObjForDecode(into); err != nil {
 		return err
 	}
@@ -132,9 +134,13 @@ func (f *memKv) decode(value []byte, into runtime.Object, version int64) error {
 }
 
 // Create creates a key in memkv with the provided object.
-func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object) error {
+func (f *MemKv) Create(ctx context.Context, key string, obj runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
+
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 
 	if _, ok := f.kvs[key]; ok {
 		return kvstore.NewKeyExistsError(key, 0)
@@ -153,7 +159,7 @@ func (f *memKv) Create(ctx context.Context, key string, obj runtime.Object) erro
 }
 
 // MUST be called with the Lock HELD
-func compCheck(f *memKv, cs ...kvstore.Cmp) error {
+func compCheck(f *MemKv, cs ...kvstore.Cmp) error {
 	for _, cmp := range cs {
 		v, ok := f.kvs[cmp.Key]
 		if !ok {
@@ -185,11 +191,14 @@ func compCheck(f *memKv, cs ...kvstore.Cmp) error {
 	return nil
 }
 
-// Delete removes a single key in memKv. If "into" is not nil, it is set to the previous value
+// Delete removes a single key in MemKv. If "into" is not nil, it is set to the previous value
 // of the key in kv store. "cs" are comparators to allow for conditional deletes.
-func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
+func (f *MemKv) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
 	f.Lock()
 	defer f.Unlock()
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 
 	v, ok := f.kvs[key]
 	if !ok {
@@ -214,13 +223,16 @@ func (f *memKv) Delete(ctx context.Context, key string, into runtime.Object, cs 
 // for deleting prefixes only, a "/" is added at the end of the prefix if it doesn't
 // exist. For example, a delete with "/abc" prefix would only delete "/abc/123" and
 // "/abc/456", but not "/abcd".
-func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
+func (f *MemKv) PrefixDelete(ctx context.Context, prefix string) error {
 	if !strings.HasSuffix(prefix, "/") {
 		prefix += "/"
 	}
 
 	f.Lock()
 	defer f.Unlock()
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 
 	for key, v := range f.kvs {
 		if strings.HasPrefix(key, prefix) {
@@ -235,9 +247,12 @@ func (f *memKv) PrefixDelete(ctx context.Context, prefix string) error {
 // Update modifies an existing object. If the key does not exist, update returns an error. This
 // can be used without comparators if a single writer owns the key. "cs" are comparators to allow
 // for conditional updates, including parallel updates.
-func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
+func (f *MemKv) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	f.Lock()
 	defer f.Unlock()
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 
 	v, ok := f.kvs[key]
 	if !ok {
@@ -270,10 +285,15 @@ func (f *memKv) Update(ctx context.Context, key string, obj runtime.Object, cs .
 // Writer1 updates field f1 to v1.
 // Writer2 updates field f2 to v2 at the same time.
 // ConsistentUpdate guarantees that the object lands in a consistent state where f1=v1 and f2=v2.
-func (f *memKv) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+func (f *MemKv) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
 	if into == nil {
 		return fmt.Errorf("into parameter is mandatory")
 	}
+
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
+
 	for {
 		// Get the object.
 		if err := f.Get(ctx, key, into); err != nil {
@@ -321,9 +341,13 @@ func (f *memKv) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 }
 
 // Get the object corresponding to a single key
-func (f *memKv) Get(ctx context.Context, key string, into runtime.Object) error {
+func (f *MemKv) Get(ctx context.Context, key string, into runtime.Object) error {
 	f.Lock()
 	defer f.Unlock()
+
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 
 	v, ok := f.kvs[key]
 	if !ok {
@@ -339,7 +363,12 @@ func (f *memKv) Get(ctx context.Context, key string, into runtime.Object) error 
 // List the objects corresponding to a prefix. It is assumed that all the keys under this
 // prefix are homogenous. "into" should point to a List object and should have an "Items"
 // slice for individual objects.
-func (f *memKv) List(ctx context.Context, prefix string, into runtime.Object) error {
+func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) error {
+
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
+
 	target, err := helper.ValidListObjForDecode(into)
 	if err != nil {
 		return err
@@ -368,7 +397,11 @@ func (f *memKv) List(ctx context.Context, prefix string, into runtime.Object) er
 // Watch the object corresponding to a key. fromVersion is the version to start
 // the watch from. If fromVersion is 0, it will return the existing object and
 // watch for changes from the returned version.
-func (f *memKv) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
+func (f *MemKv) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
+	if f.returnErr {
+		return nil, errors.New("returnErr set")
+	}
+
 	return f.newWatcher(ctx, key, fromVersion)
 }
 
@@ -377,7 +410,11 @@ func (f *memKv) Watch(ctx context.Context, key string, fromVersion string) (kvst
 // will return the existing objects and watch for changes from the returned
 // version.
 // TODO: Filter objects
-func (f *memKv) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
+func (f *MemKv) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
+	if f.returnErr {
+		return nil, errors.New("returnErr set")
+	}
+
 	return f.newPrefixWatcher(ctx, prefix, fromVersion)
 }
 
@@ -386,19 +423,26 @@ func (f *memKv) PrefixWatch(ctx context.Context, prefix string, fromVersion stri
 // the leader's lease is automatically refreshed. ttl is the timeout for lease
 // refresh. If the leader does not update the lease for ttl duration, a new
 // election is performed.
-func (f *memKv) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
+func (f *MemKv) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
+	if f.returnErr {
+		return nil, errors.New("returnErr set")
+	}
+
 	return f.newElection(ctx, name, id, int(ttl))
 }
 
 // NewTxn creates a new transaction object.
-func (f *memKv) NewTxn() kvstore.Txn {
+func (f *MemKv) NewTxn() kvstore.Txn {
 	return f.newTxn()
 }
 
-func (f *memKv) commitTxn(t *txn) error {
+func (f *MemKv) commitTxn(t *txn) error {
 	f.Lock()
 	defer f.Unlock()
 
+	if f.returnErr {
+		return errors.New("returnErr set")
+	}
 	err := compCheck(f, t.cmps...)
 	if err != nil {
 		return err
@@ -446,4 +490,43 @@ func (f *memKv) commitTxn(t *txn) error {
 		}
 	}
 	return nil
+}
+
+// InjectWatchEvent injects the given event to the watcher of the specified prefix
+// Useful for testing
+func (f *MemKv) InjectWatchEvent(prefix string, e *kvstore.WatchEvent, timeOutSec int) error {
+	w := f.watchers[prefix]
+	if w == nil {
+		return errors.New("No watcher on the prefix")
+	}
+
+	select {
+	case w.outCh <- e:
+		return nil
+	case <-time.After(time.Duration(timeOutSec) * time.Second):
+		return errors.New("Time out")
+	}
+
+}
+
+// IsWatchActive tests the presence of a watcher on a given prefix
+// Useful for testing
+func (f *MemKv) IsWatchActive(prefix string) bool {
+	w := f.watchers[prefix]
+	return w != nil
+}
+
+// CloseWatch closes the watch channel on a given prefix
+// Useful for testing
+func (f *MemKv) CloseWatch(prefix string) {
+	w := f.watchers[prefix]
+	if w != nil {
+		close(w.outCh)
+		w.f.deleteWatchers(w)
+	}
+}
+
+// SetErrorState sets the returnErr flag
+func (f *MemKv) SetErrorState(state bool) {
+	f.returnErr = state
 }

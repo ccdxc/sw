@@ -7,6 +7,7 @@ const (
 	// Ports
 	CMDRESTPort       = "9001"
 	CMDGRPCPort       = "9002"
+	VCHubAPIPort      = "9003"
 	KVStorePeerPort   = "5001"
 	KVStoreClientPort = "5002"
 

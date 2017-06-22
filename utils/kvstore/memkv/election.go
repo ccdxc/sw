@@ -21,7 +21,7 @@ const (
 type election struct {
 	sync.Mutex
 	enabled bool                        // Is the election enabled?
-	f       *memKv                      // kv store
+	f       *MemKv                      // kv store
 	name    string                      // name of the election
 	id      string                      // identifier of the contender
 	leader  string                      // winner of the election
@@ -40,7 +40,7 @@ type memkvCluster struct {
 	sync.Mutex
 	elections map[string]*memkvElection // current elections
 	clientId  int                       // current id of the store
-	stores    map[string]*memKv         // all client stores
+	stores    map[string]*MemKv         // all client stores
 }
 
 // newElection creates a new contender in an election.
@@ -48,7 +48,7 @@ type memkvCluster struct {
 // multiple nodes, therefore:
 // - there are no leases obtained and delays involved
 // - some randomness is introduced when selecting a leader to mimic the nature
-func (f *memKv) newElection(ctx context.Context, name string, id string, ttl int) (*election, error) {
+func (f *MemKv) newElection(ctx context.Context, name string, id string, ttl int) (*election, error) {
 	if ttl < minTTL {
 		return nil, fmt.Errorf("Invalid input: min ttl %v", ttl)
 	}

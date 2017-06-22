@@ -3,7 +3,7 @@
 EXCLUDE_DIRS := bin docs Godeps vendor scripts
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif \
-  ./apiserver/... ./apigw/... ./utils/log/...
+  ./apiserver/... ./apigw/... ./utils/log/... ./orch/...
 GOLINT_CMD := golint -set_exit_status
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet

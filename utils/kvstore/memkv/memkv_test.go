@@ -18,7 +18,7 @@ func clusterSetup(t *testing.T) kvstore.TestCluster {
 	return &memkvCluster{
 		elections: make(map[string]*memkvElection),
 		clientId:  0,
-		stores:    make(map[string]*memKv),
+		stores:    make(map[string]*MemKv),
 	}
 }
 
@@ -53,7 +53,7 @@ func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, e
 	s := runtime.NewScheme()
 	s.AddKnownTypes(&kvstore.TestObj{}, &kvstore.TestObjList{})
 	store, _ := NewMemKv(c, runtime.NewJSONCodec(s))
-	cs, ok := store.(*memKv)
+	cs, ok := store.(*MemKv)
 	if !ok {
 		t.Fatalf("invalid store")
 	}

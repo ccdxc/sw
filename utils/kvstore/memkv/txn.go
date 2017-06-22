@@ -40,13 +40,13 @@ func opUpdate(key, val string, obj runtime.Object) op {
 type txn struct {
 	sync.Mutex
 
-	store *memKv // kv store
+	store *MemKv // kv store
 	cmps  []kvstore.Cmp
 	ops   []op
 }
 
 // newTxn creates a new transaction.
-func (f *memKv) newTxn() kvstore.Txn {
+func (f *MemKv) newTxn() kvstore.Txn {
 	return &txn{
 		store: f,
 		cmps:  make([]kvstore.Cmp, 0),

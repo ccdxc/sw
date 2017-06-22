@@ -1,0 +1,150 @@
+// Copyright 2017, Pensando Systems
+// All rights reserved.
+//
+
+syntax = "proto3";
+
+package api; 
+import "github.com/pensando/sw/api/meta.proto";
+
+// The VC Hub API service definition.
+service VCHubApi {
+  // List all SmartNIC objects that match the filter spec
+  rpc ListSmartNICs (Filter) returns (SmartNICList) {}
+
+  // Watch all Smart NIC objects from the reference version with matching filter spec
+  rpc WatchSmartNICs (WatchSpec) returns (stream SmartNICEvent) {}
+
+  // List all NwIF objects that match the filter spec
+  rpc ListNwIFs (Filter) returns (NwIFList) {}
+
+  // Watch all NwIF objects from the reference version with matching filter spec
+  rpc WatchNwIFs (WatchSpec) returns (stream NwIFEvent) {}
+
+  // Watch migration events of network interfaces. Reference version does not apply
+  // here as the events are not replayable.
+  rpc WatchNwIFMigration (Filter) returns (stream NwIFMigrationStart) {}
+
+  // Get server statistics
+  rpc Inspect (Empty) returns (Stats) {}
+}
+
+// Elements of a filter spec
+// TODO: migrate to common definition
+message Spec {
+  string key = 1;
+  string operator = 2;
+  repeated string values = 3;
+}
+
+// The filter selecting a subset of objects to list
+message Filter {
+  repeated Spec specs = 1;
+}
+
+// Specification for a watch
+message WatchSpec {
+  string refversion = 1;
+  repeated Spec specs = 2;
+}
+
+// Response event types for watch
+// If the specified resource version is outside the incremental sync window,
+// watch will respond with a list.
+message WatchEvent {
+  enum EventType {
+    List = 0;
+    Create = 1;
+    Update = 2;
+    Delete = 3;
+  }
+  EventType event = 1;
+}
+
+// A HW NIC aka PNIC, VMNIC in vSphere terminology
+message SmartNIC {
+  // Kind represents the type of the API object.
+  string ObjectKind = 1;
+  // APIVersion defines the version of the API object.
+  string ObjectAPIVersion = 2;
+  api.ObjectMeta ObjectMeta = 3;
+  
+  message Status {
+    string hostIP = 1;
+    string macAddress = 2;
+    string switch = 3;
+  }
+  Status status = 4;
+}
+
+// List of SmartNICs
+message SmartNICList {
+  // Kind represents the type of the API object.
+  string ObjectKind = 1;
+  // APIVersion defines the version of the API object.
+  string ObjectAPIVersion = 2;
+  api.ListMeta ListMeta = 3;
+  repeated SmartNIC items = 4;
+}
+
+// Response to SmartNIC watch
+message SmartNICEvent {
+  WatchEvent e = 1;
+  repeated SmartNIC smartnics = 2;
+}
+
+// A network interface (aka virtual NIC)
+message NwIF {
+  // Kind represents the type of the API object.
+  string ObjectKind = 1;
+  // APIVersion defines the version of the API object.
+  string ObjectAPIVersion = 2;
+  api.ObjectMeta ObjectMeta = 3;
+  message Config {
+    int32 localVLAN = 1;
+  }
+  Config config = 4;
+  message Status {
+    string macAddress = 1;
+    string portGroup = 2;
+    string switch = 3;
+    string smartNIC_ID = 4;
+  }
+  Status status = 5;
+  map<string, string> attributes = 6;
+}
+
+// List of NwIFs
+message NwIFList {
+  // Kind represents the type of the API object.
+  string ObjectKind = 1;
+  // APIVersion defines the version of the API object.
+  string ObjectAPIVersion = 2;
+  api.ListMeta ListMeta = 3;
+  repeated NwIF items = 4;
+}
+
+// Response to NwIF watch
+message NwIFEvent {
+  WatchEvent e = 1;
+  repeated NwIF nwifs = 2;
+}
+
+// Migration start for network interfaces belonging to a VM
+message NwIFMigrationStart {
+  repeated NwIF nwifs = 1;
+  SmartNIC source = 2;
+  SmartNIC dest = 3;
+}
+
+message Empty {
+}
+
+message Stats {
+  int64 storeWatchFailCount = 1;
+  int64 storeWatchErrCount = 2;
+  int64 storeWatchBadEventCount = 3;
+  int64 storeWatchBadObjCount = 4;
+  int64 watchCloseCount = 5;
+  int64 grpcSendErrCount = 6;
+}
