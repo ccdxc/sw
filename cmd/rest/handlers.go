@@ -73,7 +73,7 @@ func ClusterGetHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cluster.Status.Leader = env.Leader
+	cluster.Status.Leader = env.LeaderService.Leader()
 
 	encoder := json.NewEncoder(w)
 

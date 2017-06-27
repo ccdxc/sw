@@ -191,7 +191,7 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string) er
 	errMsg := ""
 	for _, resp := range resps {
 		if resp.err != nil {
-			errMsg += fmt.Sprintf("%v: %v ", resp.host, err.Error())
+			errMsg += fmt.Sprintf("%v: %v ", resp.host, resp.err.Error())
 		}
 		succeededNodes = append(succeededNodes, resp.host)
 	}

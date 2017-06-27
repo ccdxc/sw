@@ -152,7 +152,6 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 			case <-ctx.Done():
 				// User called ctx.cancel().
 				log.Infof("Election(%v:%v): canceled", el.id, el.name)
-				el.Stop()
 				stopped = true
 			case <-errCh:
 				// Campaign returned an error.
@@ -190,21 +189,17 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 					el.sendEvent(kvstore.Elected, el.leader)
 				}
 			}
-			if foundErr {
+			if foundErr || stopped {
+				el.Stop()
 				el.Lock()
-				el.session.Close()
-				el.cancel()
-				el.Unlock()
 				wasLeader := el.leader == el.id
 				el.leader = ""
+				el.Unlock()
 				if wasLeader {
 					el.sendEvent(kvstore.Lost, "")
 				} else {
 					el.sendEvent(kvstore.Changed, "")
 				}
-				break
-			}
-			if stopped {
 				break
 			}
 		}
@@ -259,8 +254,14 @@ func (el *election) Stop() {
 	el.Lock()
 	defer el.Unlock()
 	log.Infof("Election(%v:%v): stop called", el.id, el.name)
-	el.session.Close()
-	el.cancel()
+	if el.session != nil {
+		el.session.Close()
+	}
+	if el.cancel != nil {
+		el.cancel()
+	}
+	el.session = nil
+	el.cancel = nil
 	el.enabled = false
 }
 

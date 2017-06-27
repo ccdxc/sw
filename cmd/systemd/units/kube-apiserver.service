@@ -1,0 +1,19 @@
+[Unit]
+Description=Kubernetes API Server
+
+[Service]
+User=root
+Type=simple
+EnvironmentFile=-/etc/pensando/kube-apiserver.conf
+ExecStart=/import/src/k8s.io/kubernetes/_output/local/bin/linux/amd64/kube-apiserver \
+			$INSECURE_ALLOW \
+			$INSECURE_ADDR \
+			$INSECURE_PORT \
+			$ETCD_SERVERS \
+			$SERVICE_CLUSTER \
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+
+[Install]
+WantedBy=multi-user.target

@@ -7,7 +7,7 @@ After=network.target
 User=root
 Type=notify
 EnvironmentFile=-/etc/etcd.conf
-ExecStart=/import/src/github.com/coreos/etcd/bin/etcd \
+ExecStart=/import/src/github.com/coreos/etcd/bin/etcd-x86 \
 			$NAME \
 			$ADV_PEER_URLS \
 			$LIS_PEER_URLS \

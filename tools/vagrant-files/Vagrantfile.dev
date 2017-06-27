@@ -69,30 +69,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if n == 0 then
           node.vm.network "forwarded_port", guest: 80, host: 9980, auto_correct: true
       end
-
-      # Init kubernetes cluster
-      if n == 0 then
-          node.vm.provision "shell", inline: <<-SHELL
-              kubeadm init --apiserver-advertise-address #{nodeprops[:base_ip]}11 --token f0c861.753c505740ecde4c --skip-preflight-checks=true
-          SHELL
-
-          node.vm.provision "shell", privileged: false, inline: <<-SHELL
-              sudo cp /etc/kubernetes/admin.conf $HOME/
-              sudo chown $(id -u):$(id -g) $HOME/admin.conf
-              export KUBECONFIG=$HOME/admin.conf
-
-              # workaround for https://github.com/kubernetes/kubernetes/issues/34101
-              kubectl -n kube-system get ds -l 'k8s-app=kube-proxy' -o json | /usr/local/bin/jq-linux64 '.items[0].spec.template.spec.containers[0].command |= .+ ["--proxy-mode=userspace"]' |   kubectl apply -f - && kubectl -n kube-system delete pods -l 'k8s-app=kube-proxy'
-
-              # Add weave networking
-              kubectl apply -f https://git.io/weave-kube-1.6
-
-          SHELL
-      else
-          node.vm.provision "shell", inline: <<-SHELL
-              kubeadm join --token f0c861.753c505740ecde4c --skip-preflight-checks=true #{nodeprops[:base_ip]}11:6443
-          SHELL
-      end
     end
   end
 end

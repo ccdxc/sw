@@ -9,9 +9,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/go-systemd/dbus"
 
 	"github.com/pensando/sw/utils/quorum"
+	"github.com/pensando/sw/utils/systemd"
 )
 
 // etcdQuorum implements a Quorum using etcd.
@@ -122,18 +122,10 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	cfgFile.Sync()
 
 	// Start etcd using systemd.
-	// FIXME: Change this to use our own shim on top of dbus library.
-	conn, err := dbus.New()
+	err = systemd.StartTarget("etcd.service")
 	if err != nil {
 		return nil, err
 	}
-
-	pid, err := conn.StartUnit(c.UnitFile, "replace", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Infof("Started etcd with pid %v", pid)
 
 	// Open a client.
 	v3Config := clientv3.Config{

@@ -5,12 +5,14 @@ import (
 	context "golang.org/x/net/context"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/services"
+	"github.com/pensando/sw/cmd/systemd"
 	"github.com/pensando/sw/cmd/utils"
 	kvstore "github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/quorum"
@@ -69,8 +71,20 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
 
+	// Record cluster membership on local FS.
+	if err := utils.SaveCluster(&utils.Cluster{
+		Name:      req.Name,
+		UUID:      req.Uuid,
+		VirtualIP: req.VirtualIp,
+	}); err != nil {
+		return nil, err
+	}
+
+	systemdSvc := systemd.NewSystemdService()
+
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
+		kvServers := make([]string, 0)
 		hostname, _ := os.Hostname()
 		members := make([]quorum.Member, 0)
 		found := false
@@ -83,6 +97,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 				PeerURLs:   member.PeerUrls,
 				ClientURLs: member.ClientUrls,
 			})
+			kvServers = append(kvServers, strings.Join(member.ClientUrls, ","))
 		}
 		if !found {
 			return nil, fmt.Errorf("%v received Join without itself in it", hostname)
@@ -105,6 +120,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		}
 
 		env.Quorum = quorumIntf
+		env.KVServers = kvServers
 
 		ii := 0
 		for ; ii < maxIters; ii++ {
@@ -138,16 +154,13 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		env.KVStore = kv
 
 		// Start leader election on quorum nodes.
-		go services.NewLeaderService(hostname).Start()
+		env.LeaderService = services.NewLeaderService(kv, services.NewIPService(), systemdSvc, hostname, req.VirtualIp)
+		env.LeaderService.Start()
 	}
 
-	// Record cluster membership on local FS.
-	if err := utils.SaveCluster(&utils.Cluster{
-		Name:      req.Name,
-		UUID:      req.Uuid,
-		VirtualIP: req.VirtualIp,
-	}); err != nil {
-		return nil, err
+	// Start node services.
+	if err := systemdSvc.StartNodeServices(req.VirtualIp); err != nil {
+		log.Errorf("Failed to start node services with error: %v", err)
 	}
 
 	return &ClusterJoinResp{}, nil

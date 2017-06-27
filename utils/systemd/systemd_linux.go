@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	targetStateChangeWaitTime = 2 * time.Second
-	restartServiceWaitTime    = 2 * time.Second
+	targetStateChangeWaitTime = 10 * time.Second
+	restartServiceWaitTime    = 10 * time.Second
 	watcherPollInterval       = time.Second
 )
 
@@ -23,7 +23,7 @@ func StartTarget(name string) (err error) {
 	defer conn.Close()
 
 	reschan := make(chan string)
-	_, err = conn.StartUnit(name, "replace", reschan)
+	pid, err := conn.StartUnit(name, "replace", reschan)
 	if err != nil {
 		return errors.Wrapf(err, "unable to start target")
 	}
@@ -32,6 +32,7 @@ func StartTarget(name string) (err error) {
 		if status != "done" {
 			return errors.New(status)
 		}
+		log.Infof("Started %v with pid %v", name, pid)
 		return nil
 	case <-time.After(targetStateChangeWaitTime):
 		return errors.New("timedout when starting target")

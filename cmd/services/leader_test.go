@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/cmd/env"
+	"github.com/pensando/sw/cmd/systemd"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/utils/kvstore/store"
@@ -29,10 +29,13 @@ func TestLeaderService(t *testing.T) {
 	cluster, store := setupTestCluster(t)
 	defer cluster.Terminate(t)
 
-	env.KVStore = store
 	id := "foo"
 
-	l := NewLeaderService(id)
+	ipSvc := NewMockIPService()
+	systemdSvc := systemd.NewMockSystemdService()
+	ip := "192.168.30.10"
+
+	l := NewLeaderService(store, ipSvc, systemdSvc, id, ip)
 	go l.Start()
 
 	for ii := 0; ii < 5; ii++ {
@@ -44,6 +47,12 @@ func TestLeaderService(t *testing.T) {
 	if l.Leader() != id {
 		t.Fatalf("Failed to become leader")
 	}
+	if yes, _ := ipSvc.HasIP(ip); !yes {
+		t.Fatalf("Failed to program Virtual IP")
+	}
+	if !systemdSvc.AreLeaderServicesRunning() {
+		t.Fatalf("Failed to start leader services")
+	}
 
 	l.Stop()
 	for ii := 0; ii < 5; ii++ {
@@ -54,5 +63,12 @@ func TestLeaderService(t *testing.T) {
 	}
 	if leader := l.Leader(); leader != "" {
 		t.Fatalf("Found leader %v when not expected", leader)
+	}
+	time.Sleep(100 * time.Millisecond)
+	if yes, _ := ipSvc.HasIP(ip); yes {
+		t.Fatalf("Failed to remove Virtual IP")
+	}
+	if systemdSvc.AreLeaderServicesRunning() {
+		t.Fatalf("Failed to stop leader services")
 	}
 }
