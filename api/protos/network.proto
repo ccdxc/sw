@@ -1,0 +1,550 @@
+syntax = "proto3";
+// Service name
+package network;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// This should usually be a ServiceDiscovery key. A IP address for now
+option(venice.fileGrpcDest) = "localhost:8082";
+
+// ----------------------------- Tenant Object -----------------------------
+
+// spec part of tenant object
+message TenantSpec {
+    // Tenant admin user
+    string AdminUser = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "admin-user,omitempty"];
+}
+
+// status part of tenant object
+message TenantStatus {
+    // list of all users in this tenant
+    repeated string Users    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "users,omitempty"];
+    // list of all networks in this tenant
+    repeated string Networks = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "networks,omitempty"];
+    // list of all security groups in this tenant
+    repeated string SGs      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sgs,omitempty"];
+    // list of all service(LB) objects in this tenant
+    repeated string Services = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "services,omitempty"];
+}
+
+// Tenant represents an org or a tenant
+message Tenant {
+     option (venice.objectPrefix) = "tenant";
+     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+     // Spec contains the configuration of the tenant.
+     TenantSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+     // Status contains the current state of the tenant.
+     TenantStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of tenants
+message TenantList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated Tenant Tenants = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tenants,omitempty"];
+}
+
+// Tenant REST API
+service TenantV1 {
+     // Prefix for all resources served by this service.
+     option (venice.apiPrefix) = "tenant";
+     // API Version.
+     option (venice.apiVersion) = "v1";
+
+     rpc GetTenantList(TenantList) returns(TenantList) {
+         option (google.api.http) = {
+             get: "/tenant"
+         };
+     }
+
+     rpc TenantOper(Tenant) returns(Tenant) {
+         option (google.api.http) = {
+             post: "/tenant/{O.Name}"
+             body: "*"
+             additional_bindings: {
+                 put: "/tenant/{O.Name}"
+                 body: "*"
+             }
+             additional_bindings: {
+                 get: "/tenant/{O.Name}"
+             }
+             additional_bindings: {
+                 delete : "/tenant/{O.Name}"
+             }
+         };
+     }
+}
+
+// ----------------------------- Network Object -----------------------------
+
+// spec part of network object
+message NetworkSpec {
+    // type of network. (vlan/vxlan/routed etc)
+    string Type    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
+    // IPv4 subnet CIDR
+    string IPv4Subnet  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-subnet,omitempty"];
+    // IPv4 gateway for this subnet
+    string IPv4Gateway = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    // IPv6 subnet CIDR
+    string IPv6Subnet  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-subnet,omitempty"];
+    // IPv6 gateway
+    string IPv6Gateway = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    // Vlan ID for the network
+    uint32 VlanID      = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vlan-id,omitempty"];
+    // Vxlan VNI for the network
+    uint32 VxlanVNI    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty"];
+}
+
+// status part of network object
+message NetworkStatus {
+    // list of all workloads in this network
+    repeated string Workloads = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workloads,omitempty"];
+}
+
+// Network represents a subnet
+message Network {
+     option (venice.objectPrefix) = "network";
+     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+     // Spec contains the configuration of the network.
+     NetworkSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+     // Status contains the current state of the network.
+     NetworkStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of networks
+message NetworkList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated Network Networks = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "networks,omitempty"];
+}
+
+// Network REST API
+service NetworkV1 {
+     // Prefix for all resources served by this service.
+     option (venice.apiPrefix) = "network";
+     // API Version.
+     option (venice.apiVersion) = "v1";
+
+     rpc GetNetworkList(NetworkList) returns(NetworkList) {
+         option (google.api.http) = {
+             get: "/network"
+         };
+     }
+     rpc NetworkOper(Network) returns(Network) {
+         option (google.api.http) = {
+             post: "/{O.Tenant}/network/{O.Name}"
+             body: "*"
+             additional_bindings: {
+                 put: "/{O.Tenant}/network/{O.Name}"
+                 body: "*"
+             }
+             additional_bindings: {
+                 get: "/{O.Tenant}/network/{O.Name}"
+              }
+             additional_bindings: {
+                 delete : "/{O.Tenant}/network/{O.Name}"
+              }
+         };
+     }
+ }
+
+ // ----------------------------- SecurityGroup Object -----------------------------
+
+// security group configuration
+message SecurityGroupSpec {
+    // FIXME: maps are not working. change this after its fixed
+    // map<string, string> WorkloadSelector = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // map<string, string> ServiceSelector  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-labels,omitempty"];
+
+    // Workload selector (list of labels)
+    repeated string WorkloadSelector = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // Service object selector
+    repeated string ServiceSelector  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-labels,omitempty"];
+    // list of CIDRs that are part of this security group
+    repeated string MatchPrefixes      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "match-prefixes,omitempty"];
+}
+
+// security group status
+message SecurityGroupStatus {
+    // list of workloads that are part of this security group
+    repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+}
+
+// SecurityGroup represents a security zone or domain
+message SecurityGroup {
+  option (venice.objectPrefix) = "security-group";
+  api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+  // Spec contains the configuration of the security group.
+  SecurityGroupSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the security group.
+  SecurityGroupStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of security groups
+message SecurityGroupList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated SecurityGroup SecurityGroups = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-groups,omitempty"];
+}
+
+// SecurityGroup REST API
+service SecurityGroupV1 {
+  // Prefix for all resources served by this service.
+  option (venice.apiPrefix) = "security-group";
+  // API Version.
+  option (venice.apiVersion) = "v1";
+
+  rpc GetSecurityGroupList(SecurityGroupList) returns(SecurityGroupList) {
+      option (google.api.http) = {
+          get: "/security-group"
+      };
+  }
+
+  rpc SecurityGroupOper(SecurityGroup) returns(SecurityGroup) {
+      option (google.api.http) = {
+          post: "/{O.Tenant}/security-group/{O.Name}"
+          body: "*"
+          additional_bindings: {
+              put: "/{O.Tenant}/security-group/{O.Name}"
+              body: "*"
+          }
+          additional_bindings: {
+              get: "/{O.Tenant}/security-group/{O.Name}"
+          }
+          additional_bindings: {
+              delete : "/{O.Tenant}/security-group/{O.Name}"
+          }
+      };
+  }
+}
+
+// ----------------------------- SgPolicy Object -----------------------------
+
+message SGRule {
+    // match ports for the rule
+    string Ports     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ports,omitempty"];
+    // Rule action (allow/deny/log/train)
+    string Action    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "acion,omitempty"];
+    // Peer group for the rule (from/to group depending on direction)
+    string PeerGroup = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "peer-group,omitempty"];
+}
+
+message SgpolicySpec {
+    // list of security groups this policy is attached to
+    repeated string AttachGroups = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-groups,omitempty"];
+    // Incoming rules
+    repeated SGRule InRules      = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "in-rules,omitempty"];
+    // Outgoing rules
+    repeated SGRule OutRules     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "out-rules,omitempty"];
+}
+
+message SgpolicyStatus {
+    // list of workloads in this group
+    repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+}
+
+
+// Sgpolicy represents a security policy for security groups
+message Sgpolicy {
+    option (venice.objectPrefix) = "sgpolicy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the sgpolicy.
+    SgpolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the sgpolicy.
+    SgpolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of sgpolicies
+message SgpolicyList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated Sgpolicy SgPolicies = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sgpolicies,omitempty"];
+}
+
+// Sgpolicy REST API
+service SgpolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "sgpolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    rpc GetSgpolicyList(SgpolicyList) returns(SgpolicyList) {
+        option (google.api.http) = {
+          get: "/sgpolicy"
+        };
+    }
+    rpc SgpolicyOper(Sgpolicy) returns(Sgpolicy) {
+        option (google.api.http) = {
+          post: "/{O.Tenant}/sgpolicy/{O.Name}"
+          body: "*"
+          additional_bindings: {
+              put: "/{O.Tenant}/sgpolicy/{O.Name}"
+              body: "*"
+          }
+          additional_bindings: {
+              get: "/{O.Tenant}/sgpolicy/{O.Name}"
+           }
+          additional_bindings: {
+              delete : "/{O.Tenant}/sgpolicy/{O.Name}"
+           }
+        };
+    }
+}
+
+
+// ----------------------------- Service Object -----------------------------
+
+// spec part of service object(load balancer)
+message ServiceSpec {
+    // FIXME: maps are not working. change this after its fixed
+    // map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
+
+    // workload selector for the service (list of labels to match)
+    repeated string WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // Virtual IP of the load balancer
+    string VirtualIp                = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "virtual-ip,omitempty"];
+    // load balancer port
+    string Ports                    = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ports,omitempty"];
+    // load balancing policy (reference to LbPolicy object)
+    string LBPolicy                 = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "lb-policy,omitempty"];
+}
+
+// status part of service object
+message ServiceStatus {
+    // list of workloads that are backends of this service (load balancer)
+    repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+}
+
+// Service represents a L4 load balancer
+message Service {
+    option (venice.objectPrefix) = "service";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the Service.
+    ServiceSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the Service.
+    ServiceStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of services
+message ServiceList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated Service Services = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
+}
+
+// Service REST API
+service ServiceV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "service";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    rpc GetServiceList(ServiceList) returns(ServiceList) {
+        option (google.api.http) = {
+          get: "/service"
+        };
+    }
+    rpc ServiceOper(Service) returns(Service) {
+        option (google.api.http) = {
+          post: "/{O.Tenant}/service/{O.Name}"
+          body: "*"
+          additional_bindings: {
+              put: "/{O.Tenant}/service/{O.Name}"
+              body: "*"
+          }
+          additional_bindings: {
+              get: "/{O.Tenant}/service/{O.Name}"
+           }
+          additional_bindings: {
+              delete : "/{O.Tenant}/service/{O.Name}"
+           }
+        };
+    }
+}
+
+// ----------------------------- LbPolicy Object -----------------------------
+
+message HealthCheckSpec {
+    // Health check interval
+    uint32    Interval            = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interval,omitempty"];
+    // # of probes per interval
+    uint32    ProbesPerInterval   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "probes-per-interval,omitempty"];
+    // probe URL
+    string    ProbePortOrUrl      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "probe-port-or-url,omitempty"];
+    // timeout for declaring backend down
+    uint32    MaxTimeouts         = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-timeouts,omitempty"];
+    // # of successful probes before we declare the backend back up
+    uint32    DeclareHealthyCount = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "declare-healthy-count,omitempty"];
+}
+
+message LbPolicySpec {
+    // load balancing type
+    string Type                      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
+    // load balancing algorithm
+    string Algorithm                 = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "algorithm,omitempty"];
+    // session affinity
+    string SessionAffinity           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-affinity,omitempty"];
+    // health check policy
+    HealthCheckSpec HealthCheck      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "health-check,omitempty"];
+}
+
+message LbPolicyStatus {
+    // list of service objects refering this lb-policy
+    repeated string Services = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
+}
+
+// LbPolicy represents a load balancer policy
+message LbPolicy {
+    option (venice.objectPrefix) = "lb-policy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the LbPolicy.
+    LbPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the LbPolicy.
+    LbPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of lb-policies
+message LbPolicyList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated LbPolicy LbPolicies = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "lb-policies,omitempty"];
+}
+
+// LbPolicy REST API
+service LbPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "lb-policy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    rpc GetLbPolicyList(LbPolicyList) returns(LbPolicyList) {
+        option (google.api.http) = {
+          get: "/lb-policy"
+        };
+    }
+    rpc LbPolicyOper(LbPolicy) returns(LbPolicy) {
+        option (google.api.http) = {
+          post: "/{O.Tenant}/lb-policy/{O.Name}"
+          body: "*"
+          additional_bindings: {
+              put: "/{O.Tenant}/lb-policy/{O.Name}"
+              body: "*"
+          }
+          additional_bindings: {
+              get: "/{O.Tenant}/lb-policy/{O.Name}"
+           }
+          additional_bindings: {
+              delete : "/{O.Tenant}/lb-policy/{O.Name}"
+           }
+        };
+    }
+}
+
+// ----------------------------- Endpoint Object -----------------------------
+
+// spec part of Endpoint object
+message EndpointSpec {
+    // empty
+}
+
+// status part of Endpoint object
+message EndpointStatus {
+    // endpoint UUID
+    string EndpointUUID   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint-uuid,omitempty"];
+    // VM or container UUID
+    string WorkloadUUID   = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "qorkload-uuid,omitempty"];
+    // VM or container name
+    string WorkloadName   = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
+    // network this endpoint belogs to
+    string Network        = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "network,omitempty"];
+    // host address of the host where this endpoint exists
+    string HomingHostAddr = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
+    // host name of the host where this endpoint exists
+    string HomingHostName = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-name,omitempty"];
+    // IPv4 address of the endpoint
+    string IPv4Address    = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-address,omitempty"];
+    // IPv4 gateway for the endpoint
+    string IPv4Gateway    = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    // IPv6 address for the endpoint
+    string IPv6Address    = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-address,omitempty"];
+    // IPv6 gateway
+    string IPv6Gateway    = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    // Mac address of the endpoint
+    string MacAddress     = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
+    // VM or container attribute/labels
+    // FIXME: maps are not working. change this after its fixed
+    // map<string, string> WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    repeated string WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+}
+
+// Endpoint represents a network endpoint
+message Endpoint {
+    option (venice.objectPrefix) = "endpoint";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the Endpoint.
+    EndpointSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the Endpoint.
+    EndpointStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of endpoints
+message EndpointList {
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    repeated Endpoint Endpoints = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoints,omitempty"];
+}
+
+// endpoint REST API
+service EndpointV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "endpoint";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    rpc GetEndpointList(EndpointList) returns(EndpointList) {
+        option (google.api.http) = {
+          get: "/endpoint"
+        };
+    }
+    rpc EndpointOper(Endpoint) returns(Endpoint) {
+        option (google.api.http) = {
+          post: "/{O.Tenant}/endpoint/{O.Name}"
+          body: "*"
+          additional_bindings: {
+              put: "/{O.Tenant}/endpoint/{O.Name}"
+              body: "*"
+          }
+          additional_bindings: {
+              get: "/{O.Tenant}/endpoint/{O.Name}"
+           }
+          additional_bindings: {
+              delete : "/{O.Tenant}/endpoint/{O.Name}"
+           }
+        };
+    }
+}

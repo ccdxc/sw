@@ -56,6 +56,13 @@
             "type": "string"
           },
           {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "O.Namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
@@ -163,6 +170,13 @@
             "type": "string"
           },
           {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "O.Namespace",
             "description": "Namespace of the object, for scoped objects.",
             "in": "query",
@@ -199,6 +213,13 @@
           {
             "name": "Status.T.APIVersion",
             "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -298,6 +319,10 @@
         "Name": {
           "type": "string",
           "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
         },
         "Namespace": {
           "type": "string",

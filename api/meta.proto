@@ -21,12 +21,15 @@ message ListMeta {
 message ObjectMeta {
   // Name of the object, unique within a Namespace for scoped objects.
   string Name = 1;
+  // Tenant is global namespace isolation for various objects. This can be automatically
+  // filled in many cases based on the tenant a user, who created the object, belongs go.
+  string Tenant = 2;
   // Namespace of the object, for scoped objects.
-  string Namespace = 2;
+  string Namespace = 3;
   // Resource version in the object store. This can only be set by the server.
-  string ResourceVersion = 3;
+  string ResourceVersion = 4;
   // UUID is the unique identifier for the object. This can only be set by the server.
-  string UUID = 4;
+  string UUID = 5;
   // TODO: Add timestamps, labels etc.
 }
 

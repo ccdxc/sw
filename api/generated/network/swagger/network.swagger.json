@@ -1,0 +1,2463 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/endpoint": {
+      "get": {
+        "operationId": "GetEndpointList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkEndpointList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EndpointV1"
+        ]
+      }
+    },
+    "/lb-policy": {
+      "get": {
+        "operationId": "GetLbPolicyList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LbPolicyV1"
+        ]
+      }
+    },
+    "/network": {
+      "get": {
+        "operationId": "GetNetworkList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkNetworkList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NetworkV1"
+        ]
+      }
+    },
+    "/security-group": {
+      "get": {
+        "operationId": "GetSecurityGroupList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroupList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SecurityGroupV1"
+        ]
+      }
+    },
+    "/service": {
+      "get": {
+        "operationId": "GetServiceList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkServiceList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServiceV1"
+        ]
+      }
+    },
+    "/sgpolicy": {
+      "get": {
+        "operationId": "GetSgpolicyList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SgpolicyV1"
+        ]
+      }
+    },
+    "/tenant": {
+      "get": {
+        "operationId": "GetTenantList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkTenantList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "L.ResourceVersion",
+            "description": "Resource version of object store at the time of list generation.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TenantV1"
+        ]
+      }
+    },
+    "/tenant/{O.Name}": {
+      "get": {
+        "operationId": "TenantOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.AdminUser",
+            "description": "Tenant admin user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Users",
+            "description": "list of all users in this tenant.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Networks",
+            "description": "list of all networks in this tenant.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.SGs",
+            "description": "list of all security groups in this tenant.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Services",
+            "description": "list of all service(LB) objects in this tenant.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "TenantV1"
+        ]
+      },
+      "delete": {
+        "operationId": "TenantOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TenantV1"
+        ]
+      },
+      "post": {
+        "operationId": "TenantOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        ],
+        "tags": [
+          "TenantV1"
+        ]
+      },
+      "put": {
+        "operationId": "TenantOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkTenant"
+            }
+          }
+        ],
+        "tags": [
+          "TenantV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/endpoint/{O.Name}": {
+      "get": {
+        "operationId": "EndpointOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.EndpointUUID",
+            "description": "endpoint UUID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.WorkloadUUID",
+            "description": "VM or container UUID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.WorkloadName",
+            "description": "VM or container name.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Network",
+            "description": "network this endpoint belogs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.HomingHostAddr",
+            "description": "host address of the host where this endpoint exists.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.HomingHostName",
+            "description": "host name of the host where this endpoint exists.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.IPv4Address",
+            "description": "IPv4 address of the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.IPv4Gateway",
+            "description": "IPv4 gateway for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.IPv6Address",
+            "description": "IPv6 address for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.IPv6Gateway",
+            "description": "IPv6 gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.MacAddress",
+            "description": "Mac address of the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.WorkloadAttributes",
+            "description": "VM or container attribute/labels\nFIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-attributes,omitempty\"];.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "EndpointV1"
+        ]
+      },
+      "delete": {
+        "operationId": "EndpointOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EndpointV1"
+        ]
+      },
+      "post": {
+        "operationId": "EndpointOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        ],
+        "tags": [
+          "EndpointV1"
+        ]
+      },
+      "put": {
+        "operationId": "EndpointOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkEndpoint"
+            }
+          }
+        ],
+        "tags": [
+          "EndpointV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/lb-policy/{O.Name}": {
+      "get": {
+        "operationId": "LbPolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Type",
+            "description": "load balancing type.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Algorithm",
+            "description": "load balancing algorithm.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.SessionAffinity",
+            "description": "session affinity.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.HealthCheck.Interval",
+            "description": "Health check interval.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.HealthCheck.ProbesPerInterval",
+            "description": "# of probes per interval.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.HealthCheck.ProbePortOrUrl",
+            "description": "probe URL.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.HealthCheck.MaxTimeouts",
+            "description": "timeout for declaring backend down.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.HealthCheck.DeclareHealthyCount",
+            "description": "# of successful probes before we declare the backend back up.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Status.Services",
+            "description": "list of service objects refering this lb-policy.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "LbPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "LbPolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LbPolicyV1"
+        ]
+      },
+      "post": {
+        "operationId": "LbPolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "LbPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "LbPolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkLbPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "LbPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/network/{O.Name}": {
+      "get": {
+        "operationId": "NetworkOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Type",
+            "description": "type of network. (vlan/vxlan/routed etc).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPv4Subnet",
+            "description": "IPv4 subnet CIDR.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPv4Gateway",
+            "description": "IPv4 gateway for this subnet.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPv6Subnet",
+            "description": "IPv6 subnet CIDR.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPv6Gateway",
+            "description": "IPv6 gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.VlanID",
+            "description": "Vlan ID for the network.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Spec.VxlanVNI",
+            "description": "Vxlan VNI for the network.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "Status.Workloads",
+            "description": "list of all workloads in this network.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "NetworkV1"
+        ]
+      },
+      "delete": {
+        "operationId": "NetworkOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NetworkV1"
+        ]
+      },
+      "post": {
+        "operationId": "NetworkOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        ],
+        "tags": [
+          "NetworkV1"
+        ]
+      },
+      "put": {
+        "operationId": "NetworkOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkNetwork"
+            }
+          }
+        ],
+        "tags": [
+          "NetworkV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/security-group/{O.Name}": {
+      "get": {
+        "operationId": "SecurityGroupOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.WorkloadSelector",
+            "description": "Workload selector (list of labels).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.ServiceSelector",
+            "description": "Service object selector.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.MatchPrefixes",
+            "description": "list of CIDRs that are part of this security group.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Workloads",
+            "description": "list of workloads that are part of this security group.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "SecurityGroupV1"
+        ]
+      },
+      "delete": {
+        "operationId": "SecurityGroupOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SecurityGroupV1"
+        ]
+      },
+      "post": {
+        "operationId": "SecurityGroupOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        ],
+        "tags": [
+          "SecurityGroupV1"
+        ]
+      },
+      "put": {
+        "operationId": "SecurityGroupOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkSecurityGroup"
+            }
+          }
+        ],
+        "tags": [
+          "SecurityGroupV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/service/{O.Name}": {
+      "get": {
+        "operationId": "ServiceOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.WorkloadSelector",
+            "description": "workload selector for the service (list of labels to match).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.VirtualIp",
+            "description": "Virtual IP of the load balancer.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Ports",
+            "description": "load balancer port.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.LBPolicy",
+            "description": "load balancing policy (reference to LbPolicy object).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Workloads",
+            "description": "list of workloads that are backends of this service (load balancer).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ServiceV1"
+        ]
+      },
+      "delete": {
+        "operationId": "ServiceOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ServiceV1"
+        ]
+      },
+      "post": {
+        "operationId": "ServiceOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        ],
+        "tags": [
+          "ServiceV1"
+        ]
+      },
+      "put": {
+        "operationId": "ServiceOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkService"
+            }
+          }
+        ],
+        "tags": [
+          "ServiceV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/sgpolicy/{O.Name}": {
+      "get": {
+        "operationId": "SgpolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.AttachGroups",
+            "description": "list of security groups this policy is attached to.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Workloads",
+            "description": "list of workloads in this group.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "SgpolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "SgpolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SgpolicyV1"
+        ]
+      },
+      "post": {
+        "operationId": "SgpolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        ],
+        "tags": [
+          "SgpolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "SgpolicyOper",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkSgpolicy"
+            }
+          }
+        ],
+        "tags": [
+          "SgpolicyV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "networkEndpoint": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkEndpointSpec",
+          "description": "Spec contains the configuration of the Endpoint."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkEndpointStatus",
+          "description": "Status contains the current state of the Endpoint."
+        }
+      },
+      "title": "Endpoint represents a network endpoint"
+    },
+    "networkEndpointList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Endpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkEndpoint"
+          }
+        }
+      },
+      "title": "list of endpoints"
+    },
+    "networkEndpointSpec": {
+      "type": "object",
+      "title": "spec part of Endpoint object"
+    },
+    "networkEndpointStatus": {
+      "type": "object",
+      "properties": {
+        "EndpointUUID": {
+          "type": "string",
+          "title": "endpoint UUID"
+        },
+        "WorkloadUUID": {
+          "type": "string",
+          "title": "VM or container UUID"
+        },
+        "WorkloadName": {
+          "type": "string",
+          "title": "VM or container name"
+        },
+        "Network": {
+          "type": "string",
+          "title": "network this endpoint belogs to"
+        },
+        "HomingHostAddr": {
+          "type": "string",
+          "title": "host address of the host where this endpoint exists"
+        },
+        "HomingHostName": {
+          "type": "string",
+          "title": "host name of the host where this endpoint exists"
+        },
+        "IPv4Address": {
+          "type": "string",
+          "title": "IPv4 address of the endpoint"
+        },
+        "IPv4Gateway": {
+          "type": "string",
+          "title": "IPv4 gateway for the endpoint"
+        },
+        "IPv6Address": {
+          "type": "string",
+          "title": "IPv6 address for the endpoint"
+        },
+        "IPv6Gateway": {
+          "type": "string",
+          "title": "IPv6 gateway"
+        },
+        "MacAddress": {
+          "type": "string",
+          "title": "Mac address of the endpoint"
+        },
+        "WorkloadAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "VM or container attribute/labels\nFIXME: maps are not working. change this after its fixed\nmap\u003cstring, string\u003e WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = \"workload-attributes,omitempty\"];"
+        }
+      },
+      "title": "status part of Endpoint object"
+    },
+    "networkHealthCheckSpec": {
+      "type": "object",
+      "properties": {
+        "Interval": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Health check interval"
+        },
+        "ProbesPerInterval": {
+          "type": "integer",
+          "format": "int64",
+          "title": "# of probes per interval"
+        },
+        "ProbePortOrUrl": {
+          "type": "string",
+          "title": "probe URL"
+        },
+        "MaxTimeouts": {
+          "type": "integer",
+          "format": "int64",
+          "title": "timeout for declaring backend down"
+        },
+        "DeclareHealthyCount": {
+          "type": "integer",
+          "format": "int64",
+          "title": "# of successful probes before we declare the backend back up"
+        }
+      }
+    },
+    "networkLbPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkLbPolicySpec",
+          "description": "Spec contains the configuration of the LbPolicy."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkLbPolicyStatus",
+          "description": "Status contains the current state of the LbPolicy."
+        }
+      },
+      "title": "LbPolicy represents a load balancer policy"
+    },
+    "networkLbPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "LbPolicies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkLbPolicy"
+          }
+        }
+      },
+      "title": "list of lb-policies"
+    },
+    "networkLbPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "load balancing type"
+        },
+        "Algorithm": {
+          "type": "string",
+          "title": "load balancing algorithm"
+        },
+        "SessionAffinity": {
+          "type": "string",
+          "title": "session affinity"
+        },
+        "HealthCheck": {
+          "$ref": "#/definitions/networkHealthCheckSpec",
+          "title": "health check policy"
+        }
+      }
+    },
+    "networkLbPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "Services": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of service objects refering this lb-policy"
+        }
+      }
+    },
+    "networkNetwork": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkNetworkSpec",
+          "description": "Spec contains the configuration of the network."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkNetworkStatus",
+          "description": "Status contains the current state of the network."
+        }
+      },
+      "title": "Network represents a subnet"
+    },
+    "networkNetworkList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Networks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkNetwork"
+          }
+        }
+      },
+      "title": "list of networks"
+    },
+    "networkNetworkSpec": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "type of network. (vlan/vxlan/routed etc)"
+        },
+        "IPv4Subnet": {
+          "type": "string",
+          "title": "IPv4 subnet CIDR"
+        },
+        "IPv4Gateway": {
+          "type": "string",
+          "title": "IPv4 gateway for this subnet"
+        },
+        "IPv6Subnet": {
+          "type": "string",
+          "title": "IPv6 subnet CIDR"
+        },
+        "IPv6Gateway": {
+          "type": "string",
+          "title": "IPv6 gateway"
+        },
+        "VlanID": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Vlan ID for the network"
+        },
+        "VxlanVNI": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Vxlan VNI for the network"
+        }
+      },
+      "title": "spec part of network object"
+    },
+    "networkNetworkStatus": {
+      "type": "object",
+      "properties": {
+        "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of all workloads in this network"
+        }
+      },
+      "title": "status part of network object"
+    },
+    "networkSGRule": {
+      "type": "object",
+      "properties": {
+        "Ports": {
+          "type": "string",
+          "title": "match ports for the rule"
+        },
+        "Action": {
+          "type": "string",
+          "title": "Rule action (allow/deny/log/train)"
+        },
+        "PeerGroup": {
+          "type": "string",
+          "title": "Peer group for the rule (from/to group depending on direction)"
+        }
+      }
+    },
+    "networkSecurityGroup": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkSecurityGroupSpec",
+          "description": "Spec contains the configuration of the security group."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkSecurityGroupStatus",
+          "description": "Status contains the current state of the security group."
+        }
+      },
+      "title": "SecurityGroup represents a security zone or domain"
+    },
+    "networkSecurityGroupList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "SecurityGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSecurityGroup"
+          }
+        }
+      },
+      "title": "list of security groups"
+    },
+    "networkSecurityGroupSpec": {
+      "type": "object",
+      "properties": {
+        "WorkloadSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Workload selector (list of labels)"
+        },
+        "ServiceSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Service object selector"
+        },
+        "MatchPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of CIDRs that are part of this security group"
+        }
+      },
+      "title": "security group configuration"
+    },
+    "networkSecurityGroupStatus": {
+      "type": "object",
+      "properties": {
+        "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of workloads that are part of this security group"
+        }
+      },
+      "title": "security group status"
+    },
+    "networkService": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkServiceSpec",
+          "description": "Spec contains the configuration of the Service."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkServiceStatus",
+          "description": "Status contains the current state of the Service."
+        }
+      },
+      "title": "Service represents a L4 load balancer"
+    },
+    "networkServiceList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkService"
+          }
+        }
+      },
+      "title": "list of services"
+    },
+    "networkServiceSpec": {
+      "type": "object",
+      "properties": {
+        "WorkloadSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "workload selector for the service (list of labels to match)"
+        },
+        "VirtualIp": {
+          "type": "string",
+          "title": "Virtual IP of the load balancer"
+        },
+        "Ports": {
+          "type": "string",
+          "title": "load balancer port"
+        },
+        "LBPolicy": {
+          "type": "string",
+          "title": "load balancing policy (reference to LbPolicy object)"
+        }
+      },
+      "title": "spec part of service object(load balancer)"
+    },
+    "networkServiceStatus": {
+      "type": "object",
+      "properties": {
+        "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of workloads that are backends of this service (load balancer)"
+        }
+      },
+      "title": "status part of service object"
+    },
+    "networkSgpolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkSgpolicySpec",
+          "description": "Spec contains the configuration of the sgpolicy."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkSgpolicyStatus",
+          "description": "Status contains the current state of the sgpolicy."
+        }
+      },
+      "title": "Sgpolicy represents a security policy for security groups"
+    },
+    "networkSgpolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "SgPolicies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSgpolicy"
+          }
+        }
+      },
+      "title": "list of sgpolicies"
+    },
+    "networkSgpolicySpec": {
+      "type": "object",
+      "properties": {
+        "AttachGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of security groups this policy is attached to"
+        },
+        "InRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSGRule"
+          },
+          "title": "Incoming rules"
+        },
+        "OutRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSGRule"
+          },
+          "title": "Outgoing rules"
+        }
+      }
+    },
+    "networkSgpolicyStatus": {
+      "type": "object",
+      "properties": {
+        "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of workloads in this group"
+        }
+      }
+    },
+    "networkTenant": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkTenantSpec",
+          "description": "Spec contains the configuration of the tenant."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkTenantStatus",
+          "description": "Status contains the current state of the tenant."
+        }
+      },
+      "title": "Tenant represents an org or a tenant"
+    },
+    "networkTenantList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "L": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Tenants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkTenant"
+          }
+        }
+      },
+      "title": "list of tenants"
+    },
+    "networkTenantSpec": {
+      "type": "object",
+      "properties": {
+        "AdminUser": {
+          "type": "string",
+          "title": "Tenant admin user"
+        }
+      },
+      "title": "spec part of tenant object"
+    },
+    "networkTenantStatus": {
+      "type": "object",
+      "properties": {
+        "Users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of all users in this tenant"
+        },
+        "Networks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of all networks in this tenant"
+        },
+        "SGs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of all security groups in this tenant"
+        },
+        "Services": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of all service(LB) objects in this tenant"
+        }
+      },
+      "title": "status part of tenant object"
+    }
+  }
+}
