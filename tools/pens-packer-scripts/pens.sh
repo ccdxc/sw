@@ -48,3 +48,17 @@ sudo cp /tmp/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
 # Install docker and kubernetes
 sudo setenforce 0
 sudo yum install -y docker kubelet kubeadm kubectl kubernetes-cni
+
+# install protobuf related tools
+mkdir -p ~/go && cd ~/go
+export GOPATH=$PWD
+mkdir -p $GOPATH/src/github.com/google
+rm -rf protobuf
+git clone https://github.com/google/protobuf.git
+cd protobuf
+./autogen.sh && ./configure && make
+sudo make install && sudo ldconfig
+
+# Install protoc-gen-go
+go get -u github.com/golang/protobuf/protoc-gen-go
+cp $GOPATH/bin/protoc-gen-go /usr/local/bin/

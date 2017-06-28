@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/utils/kvstore"
 )
 
+// constants used by REST interface
 const (
 	uRLPrefix  = "/api/v1"
 	clusterURL = "/cluster"

@@ -21,7 +21,7 @@ func Assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 func AssertOk(tb testing.TB, err error, msg string) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
-		tb.Fatalf("\033[31m%s:%d: unexpected error: %s\033[39m\n\n", filepath.Base(file), line, err.Error())
+		tb.Fatalf("\033[31m%s:%d: %s. unexpected error: %s\033[39m\n\n", filepath.Base(file), line, msg, err.Error())
 		tb.FailNow()
 	}
 }
