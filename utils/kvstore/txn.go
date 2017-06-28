@@ -6,6 +6,29 @@ import (
 	"github.com/pensando/sw/utils/runtime"
 )
 
+// Operation is the type of Kv Store operation.
+type Operation uint8
+
+const (
+	OperUnknown Operation = iota
+	OperUpdate
+	OperGet
+	OperDelete
+)
+
+// TxnResponse is a response from a transaction.
+type TxnResponse struct {
+	Succeeded bool
+	Responses []TxnOpResponse
+}
+
+// TxnOpResponse is a response from a operation in a transaction.
+type TxnOpResponse struct {
+	Oper Operation
+	Key  string
+	Obj  runtime.Object
+}
+
 // Txn is an interface on top of key value store for:
 //
 // a) creating/updating/deleting keys conditionally
@@ -23,5 +46,11 @@ type Txn interface {
 	Update(key string, obj runtime.Object, cs ...Cmp) error
 
 	// Commit tries to commit the transaction.
-	Commit(ctx context.Context) error
+	Commit(ctx context.Context) (TxnResponse, error)
+
+	// IsEmpty returns true if the Txn is empty
+	IsEmpty() bool
+
+	// AddComparator adds a condition for the transaction.
+	AddComparator(cs ...Cmp)
 }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
 	"google.golang.org/grpc/metadata"
@@ -37,12 +38,12 @@ func newFakeMethod(skipkv bool) apisrv.Method {
 	return &fakeMethod{skipkv: skipkv}
 }
 
-func (m *fakeMethod) precommitFunc(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
+func (m *fakeMethod) precommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
 	m.pres++
 	if m.skipkv {
-		return i, false
+		return i, false, nil
 	}
-	return i, true
+	return i, true, nil
 }
 
 func (m *fakeMethod) postcommitfFunc(ctx context.Context, oper string, i interface{}) {
@@ -119,7 +120,6 @@ func TestMethodKvWrite(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
 
-	//f := newFakeMethod(true).(*fakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
@@ -142,15 +142,25 @@ func TestMethodKvWrite(t *testing.T) {
 	if req.kvwrites != 1 {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
-
-	// Now delete the object and check
+	// Now modify the object and check
 	md2 := metadata.Pairs("req-version", singletonApiSrv.version,
-		"req-method", "DELETE")
+		"req-method", "PUT")
 	ctx2 := metadata.NewContext(context.Background(), md2)
+	m.HandleInvocation(ctx2, reqmsg)
+	if req.kvwrites != 2 {
+		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
+	}
+	// Now delete the object and check
+	md3 := metadata.Pairs("req-version", singletonApiSrv.version,
+		"req-method", "DELETE")
+	ctx3 := metadata.NewContext(context.Background(), md3)
 	span := opentracing.StartSpan("delete")
-	ctx3 := opentracing.ContextWithSpan(ctx2, span)
+	ctx3 = opentracing.ContextWithSpan(ctx3, span)
 	if _, err := m.HandleInvocation(ctx3, reqmsg); err != nil {
 		t.Errorf("Expecting success but failed %v", err)
+	}
+	if req.kvdels != 1 {
+		t.Errorf("Expecting [1] kvdels but found [%v]", req.kvdels)
 	}
 }
 
@@ -158,7 +168,6 @@ func TestMapOper(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
 
-	//f := newFakeMethod(true).(*fakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	md := metadata.Pairs("req-version", singletonApiSrv.version,
@@ -184,5 +193,50 @@ func TestMapOper(t *testing.T) {
 	m.WithOper("delete")
 	if mhdlr.mapOper(md) != "DELETE" {
 		t.Errorf("Found wrong oper type")
+	}
+}
+
+func testTxnPreCommithook(ctx context.Context,
+	kv kvstore.Interface,
+	txn kvstore.Txn, key, oper string,
+	i interface{}) (interface{}, bool, error) {
+
+	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", 0))
+	return i, true, nil
+}
+
+func TestTxn(t *testing.T) {
+	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
+	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
+
+	// Add a few Pres and Posts and skip KV for testing
+	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
+	reqmsg := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	md := metadata.Pairs("req-version", singletonApiSrv.version,
+		"req-method", "POST")
+	ctx := metadata.NewContext(context.Background(), md)
+	m.HandleInvocation(ctx, reqmsg)
+	if req.txnwrites != 1 {
+		t.Fatalf("Txn Write: expecting [1] saw [%d]", req.txnwrites)
+	}
+	// Modify the same object
+	md1 := metadata.Pairs("req-version", singletonApiSrv.version,
+		"req-method", "PUT")
+	ctx1 := metadata.NewContext(context.Background(), md1)
+	req.kvpath = txnTestKey
+	m.HandleInvocation(ctx1, reqmsg)
+	if req.txnwrites != 2 {
+		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.txnwrites)
+	}
+	// Delete the Object
+	md2 := metadata.Pairs("req-version", singletonApiSrv.version,
+		"req-method", "DELETE")
+	ctx2 := metadata.NewContext(context.Background(), md2)
+	_, err := m.HandleInvocation(ctx2, reqmsg)
+	if err != nil {
+		t.Fatalf("Invocation failed (%s)", err)
+	}
+	if req.txndels != 1 {
+		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.txnwrites)
 	}
 }

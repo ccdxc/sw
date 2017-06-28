@@ -114,7 +114,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		}
 	}
 
-	if err := txn.Commit(context.Background()); err != nil {
+	if _, err := txn.Commit(context.Background()); err != nil {
 		log.Errorf("Failed to commit cluster create txn to kvstore, error: %v", err)
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 		return nil, errors.NewInternalError(err)

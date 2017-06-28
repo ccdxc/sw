@@ -52,6 +52,18 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.({{$pkgname}}.{{.Name}})
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)
@@ -61,6 +73,8 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),{{else}},{{end}}{{end}}
 	}
 	
@@ -74,8 +88,8 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 		srv := apisrvpkg.NewService("{{.Name}}")
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}
 		s.endpoints_{{$svcname}}.fn_{{.Name}} = srv.AddMethod("{{.Name}}", 
-			apisrvpkg.NewMethod(s.Messages["{{$pkgname}}.{{.RequestType.Name}}"], s.Messages["{{$pkgname}}.{{.ResponseType.Name}}"], "{{$svcprefix}}", "{{.Name}}")) {{if $methparams.GrpcOnly}}.WithOper("{{$methparams.Oper}}"){{end}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["{{$pkgname}}.{{.RequestType.Name}}"], s.Messages["{{$pkgname}}.{{.ResponseType.Name}}"], "{{$svcprefix}}", "{{.Name}}")) {{if $methparams.GrpcOnly}}.WithOper("{{$methparams.Oper}}"){{end}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}){{end}}.WithVersion("{{$svcver}}").HandleInvocation
 		{{end}}		
 		s.Services = map[string]apiserver.Service{

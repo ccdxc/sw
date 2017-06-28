@@ -31,22 +31,22 @@ func (r *cmdHooks) getNodeList(ctx context.Context, kvs kvstore.Interface, prefi
 	return n, nil
 
 }
-func (r *cmdHooks) clusterOper(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
+func (r *cmdHooks) clusterOper(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
 	if oper == "POST" {
 		n := i.(cmd.Cluster)
 		n.UUID = uuid.New()
-		return n, true
+		return n, true, nil
 	}
-	return i, true
+	return i, true, nil
 }
 
-func (r *cmdHooks) nodeOper(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
+func (r *cmdHooks) nodeOper(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
 	if oper == "POST" {
 		n := i.(cmd.Node)
 		n.UUID = uuid.New()
-		return n, true
+		return n, true, nil
 	}
-	return i, true
+	return i, true, nil
 }
 
 func registerCmdHooks(svc apiserver.Service, logger log.Logger) {

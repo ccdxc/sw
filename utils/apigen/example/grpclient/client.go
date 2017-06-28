@@ -9,14 +9,15 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/bookstore"
 	bookstoreclient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"github.com/pensando/sw/api/generated/network"
 	netclient "github.com/pensando/sw/api/generated/network/grpc/client"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
+	"github.com/pensando/sw/utils/log"
 )
 
 func main() {
@@ -33,8 +34,8 @@ func main() {
 		os.Exit(-1)
 	}
 	defer conn.Close()
-
-	cl := bookstoreclient.NewBookstoreV1(conn)
+	l := log.GetNewLogger(false)
+	cl := bookstoreclient.NewBookstoreV1(conn, l)
 
 	// Add a Publisher
 	var pub bookstore.Publisher
@@ -116,7 +117,7 @@ func main() {
 	}
 
 	// tenant API tests
-	tcl := netclient.NewTenantV1(conn)
+	tcl := netclient.NewTenantV1(conn, l)
 
 	// Add a tenant
 	tenant := network.Tenant{
@@ -139,5 +140,5 @@ func main() {
 
 	// perform a POST operation on tenant object
 	tret, err := tcl.TenantOper(ctx, tenant)
-	logrus.Infof("TenantOper returned: {%+v}, Err: %v", tret, err)
+	l.Infof("TenantOper returned: {%+v}, Err: %v", tret, err)
 }

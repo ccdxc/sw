@@ -830,8 +830,8 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	c, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, c)
 
-	obj1 := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
-	obj2 := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj2"}}
+	obj1 := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	obj2 := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj2"}}
 
 	txn1 := store.NewTxn()
 	if err := txn1.Create(obj1.Name, obj1); err != nil {
@@ -840,7 +840,7 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	if err := txn1.Create(obj2.Name, obj2); err != nil {
 		t.Fatalf("Failed to create obj1 in with error: %v", err)
 	}
-	if err := txn1.Commit(context.Background()); err != nil {
+	if _, err := txn1.Commit(context.Background()); err != nil {
 		t.Fatalf("Failed to commit txn with multiple Creates with error: %v", err)
 	}
 	if err := store.Get(context.Background(), obj1.Name, obj1); err != nil {
@@ -859,7 +859,7 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	if err := txn2.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj2 in with error: %v", err)
 	}
-	if err := txn2.Commit(context.Background()); err != nil {
+	if _, err := txn2.Commit(context.Background()); err != nil {
 		t.Fatalf("Failed to commit txn with multiple Updates with error: %v", err)
 	} else if obj1.ResourceVersion == oldVersion {
 		t.Fatalf("Failed to update version in txn")
@@ -876,8 +876,29 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	if err := txn3.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj2 in with error: %v", err)
 	}
-	if err := txn3.Commit(context.Background()); err != nil {
+	if resp, err := txn3.Commit(context.Background()); err != nil {
 		t.Fatalf("Failed to commit txn with Update+Delete with error: %v", err)
+	} else {
+		if resp.Succeeded != true {
+			t.Fatalf("Transaction failed")
+		}
+		found := false
+		for _, r := range resp.Responses {
+			if r.Oper == OperDelete {
+				found = true
+				robj, ok := r.Obj.(*TestObj)
+				if !ok {
+					t.Fatalf("Retrieved Object is not right kind")
+				}
+				robj.ResourceVersion = obj1.ResourceVersion
+				if !reflect.DeepEqual(obj1, r.Obj) {
+					t.Fatalf("Retrieved object is not the same [%+v] [%+v]", obj1, r.Obj)
+				}
+			}
+		}
+		if !found {
+			t.Fatalf("Response for delete not found")
+		}
 	}
 	if err := store.Get(context.Background(), obj1.Name, obj1); err == nil {
 		t.Fatalf("Found obj1 deleted in txn, %+v", obj1)

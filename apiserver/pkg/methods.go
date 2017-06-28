@@ -11,7 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
+	"fmt"
+
 	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/utils/kvstore"
 )
 
 // TODO(sanjayt): Add method level stats.
@@ -43,13 +46,18 @@ type MethodHdlr struct {
 }
 
 var (
-	errApiDisabled       = grpc.Errorf(codes.ResourceExhausted, "API is disabled")
-	errRequestInfo       = grpc.Errorf(codes.InvalidArgument, "internal error (request information)")
-	errVersionTransform  = grpc.Errorf(codes.Unimplemented, "internal error (version transformation)")
-	errRequestValidation = grpc.Errorf(codes.InvalidArgument, "request validation failed")
-	errKVStoreOperation  = grpc.Errorf(codes.AlreadyExists, "internal error (persisting)")
-	errKVStoreNotFound   = grpc.Errorf(codes.NotFound, "Not Found")
-	errResponseWriter    = grpc.Errorf(codes.Unimplemented, "internal error(response writer)")
+	errApiDisabled        = grpc.Errorf(codes.ResourceExhausted, "API is disabled")
+	errRequestInfo        = grpc.Errorf(codes.InvalidArgument, "internal error (request information)")
+	errVersionTransform   = grpc.Errorf(codes.Unimplemented, "internal error (version transformation)")
+	errRequestValidation  = grpc.Errorf(codes.InvalidArgument, "request validation failed")
+	errKVStoreOperation   = grpc.Errorf(codes.AlreadyExists, "internal error (persisting)")
+	errKVStoreNotFound    = grpc.Errorf(codes.NotFound, "Not Found")
+	errResponseWriter     = grpc.Errorf(codes.Unimplemented, "internal error(response writer)")
+	errUnknownOperation   = grpc.Errorf(codes.Unimplemented, "unknown operation")
+	errPreOpChecksFailed  = grpc.Errorf(codes.FailedPrecondition, "failed pre conditions")
+	errTransactionFailed  = grpc.Errorf(codes.FailedPrecondition, "cannot execute operation")
+	errTransactionErrored = grpc.Errorf(codes.Internal, "transaction execution error")
+	errInternalError      = grpc.Errorf(codes.Internal, "internal error")
 )
 
 // NewMethod initializes and returns a new Method object.
@@ -111,6 +119,94 @@ func (m *MethodHdlr) GetResponseType() apiserver.Message {
 	return m.responseType
 }
 
+// updateKvStore handles updating the KV store either via a transaction or without as needed.
+func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper string, txn kvstore.Txn) (interface{}, error) {
+	l := singletonApiSrv.Logger
+	key, err := m.requestType.GetKVKey(i, m.svcPrefix)
+	if err != nil {
+		l.ErrorLog("msg", "could not get key", "error", err)
+		return nil, errInternalError
+	}
+	nonTxn := txn.IsEmpty()
+	kvOp := kvstore.OperUnknown
+	// Update the KV if desired.
+	var (
+		resp interface{}
+	)
+	switch oper {
+	case "POST":
+		if nonTxn {
+			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, true)
+			err = errors.Wrap(err, "oper: POST")
+		} else {
+			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, true)
+			err = errors.Wrap(err, "oper: Txn POST")
+			resp = i
+		}
+		kvOp = kvstore.OperUpdate
+	case "PUT":
+		if nonTxn {
+			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, false)
+			err = errors.Wrap(err, "oper: PUT")
+		} else {
+			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, false)
+			err = errors.Wrap(err, "oper: Txn PUT")
+			resp = i
+		}
+		kvOp = kvstore.OperUpdate
+	case "DELETE":
+		err = errors.Wrap(err, "oper: DELETE")
+		if err == nil {
+			if nonTxn {
+				resp, err = m.requestType.DelFromKv(ctx, key)
+				err = errors.Wrap(err, "oper: DELETE")
+			} else {
+				err = m.requestType.DelFromKvTxn(ctx, txn, key)
+				err = errors.Wrap(err, "oper: Txn DELETE")
+			}
+		}
+		kvOp = kvstore.OperDelete
+	case "GET":
+		// TODO(sanjayt): Add support for listing all objects of a type.
+		//  and with selectors.
+		// Transactions are not supported for a GET operation.
+		err = errors.Wrap(err, "oper: GET")
+		if err == nil {
+			resp, err = m.requestType.GetFromKv(ctx, key)
+			err = errors.Wrap(err, "oper: GET")
+		}
+		kvOp = kvstore.OperGet
+	default:
+		err = errors.Wrap(errUnknownOperation, fmt.Sprintf("oper: [%s]", oper))
+	}
+	if err != nil {
+		l.ErrorLog("msg", "failed Kv store operation", "error", err, "resp", resp)
+		return nil, errKVStoreOperation
+	}
+	txnResp := kvstore.TxnResponse{}
+	if !nonTxn && (oper == "POST" || oper == "PUT" || oper == "DELETE") {
+		txnResp, err = txn.Commit(ctx)
+		if err != nil {
+			err = errors.Wrap(err, "transaction failed")
+		} else {
+			if !txnResp.Succeeded {
+				l.ErrorLog("msg", "transaction failed")
+				return nil, errTransactionFailed
+			}
+			for _, t := range txnResp.Responses {
+				if t.Oper == kvOp && t.Key == key {
+					resp = t.Obj
+				}
+			}
+		}
+	}
+	if err != nil {
+		l.ErrorLog("msg", "failed Kv store transaction operation", "error", err, "resp", resp)
+		return nil, errTransactionErrored
+	}
+	return resp, nil
+}
+
 // HandleInvocation handles the invocation of an API.
 // THe invocation goes through
 // 1. Version tranformation of the request if the request version is different
@@ -135,6 +231,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		old, resp interface{}
 		err       error
 		ver       string
+		key       string
 	)
 	l := singletonApiSrv.Logger
 
@@ -192,53 +289,32 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		span.LogFields(log.String("event", "calling precommit hooks"))
 	}
 
+	txn := singletonApiSrv.kv.NewTxn()
+	key, err = m.requestType.GetKVKey(i, m.svcPrefix)
+	if err != nil {
+		l.ErrorLog("msg", "could not get key", "error", err)
+		return nil, errInternalError
+	}
+
 	// Invoke registered precommit hooks
 	kvwrite := true
 	for _, v := range m.precommitFunc {
 		kvold := kvwrite
-		i, kvwrite = v(ctx, oper, i)
+		i, kvwrite, err = v(ctx, singletonApiSrv.kv, txn, key, oper, i)
+		if err != nil {
+			l.ErrorLog("msg", "precommit hook failed", "error", err)
+			return nil, errPreOpChecksFailed
+		}
 		kvwrite = kvwrite && kvold
 	}
 	if span != nil {
 		span.LogFields(log.String("event", "precommit hooks done"))
 	}
 
-	// Update the KV if desired.
 	if kvwrite {
-		var key string
-		// TODO(sanjayt): The Object meta needs to be updated with version.
-		if oper != "" {
-			switch oper {
-			case "POST":
-				resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, true)
-				err = errors.Wrap(err, "oper: POST")
-			case "PUT":
-				resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, false)
-				err = errors.Wrap(err, "oper: PUT")
-			case "DELETE":
-				key, err = m.requestType.GetKVKey(i, m.svcPrefix)
-				err = errors.Wrap(err, "oper: DELETE")
-				if err == nil {
-					old, err = m.requestType.DelFromKv(ctx, key)
-					err = errors.Wrap(err, "oper: DELETE")
-				}
-			case "GET":
-				// TODO(sanjayt): Add support for listing all objects of a type.
-				//  and with selectors.
-				key, err = m.requestType.GetKVKey(i, m.svcPrefix)
-				err = errors.Wrap(err, "oper: GET")
-				if err == nil {
-					resp, err = m.requestType.GetFromKv(ctx, key)
-					err = errors.Wrap(err, "oper: GET")
-				}
-			}
-			if err != nil {
-				l.ErrorLog("msg", "KV Store operation failed", "error", err)
-				if oper == "GET" {
-					return nil, errKVStoreNotFound
-				}
-				return nil, errKVStoreOperation
-			}
+		resp, err = m.updateKvStore(ctx, i, oper, txn)
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		l.DebugLog("msg", "KV operation over-ridden")
@@ -247,6 +323,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if span != nil {
 		span.LogFields(log.String("event", "calling postcommit hooks"))
 	}
+
 	// Invoke registered postcommit hooks
 	for _, v := range m.postcommitFunc {
 		v(ctx, oper, i)
@@ -263,12 +340,6 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			l.ErrorLog("msg", "response writer returned", "error", err)
 			return nil, errResponseWriter
 		}
-	} else {
-		// The method must be returning the config back in the response. return
-		//  the current object in the KV store.
-		if oper == "DELETE" {
-			resp = old
-		} // Else the KV store operation should have populated resp
 	}
 
 	// transform to request Version.

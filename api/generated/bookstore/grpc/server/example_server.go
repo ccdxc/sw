@@ -60,6 +60,18 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(bookstore.Publisher)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
 			err := kvs.Get(ctx, key, &r)
@@ -69,6 +81,8 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			r := bookstore.Publisher{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"bookstore.PublisherSpec": apisrvpkg.NewMessage("bookstore.PublisherSpec"),
 		"bookstore.Book": apisrvpkg.NewMessage("bookstore.Book").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -86,6 +100,18 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(bookstore.Book)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Book{}
 			err := kvs.Get(ctx, key, &r)
@@ -95,6 +121,8 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			r := bookstore.Book{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"bookstore.BookSpec":   apisrvpkg.NewMessage("bookstore.BookSpec"),
 		"bookstore.BookStatus": apisrvpkg.NewMessage("bookstore.BookStatus"),
@@ -113,6 +141,18 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(bookstore.Order)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Order{}
 			err := kvs.Get(ctx, key, &r)
@@ -122,6 +162,8 @@ func (s *s_bookstoreBackend) CompleteRegistration(ctx context.Context, logger lo
 			r := bookstore.Order{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"bookstore.OrderSpec":   apisrvpkg.NewMessage("bookstore.OrderSpec"),
 		"bookstore.OrderItem":   apisrvpkg.NewMessage("bookstore.OrderItem"),

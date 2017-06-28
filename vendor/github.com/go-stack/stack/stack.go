@@ -209,7 +209,7 @@ func (cs CallStack) Format(s fmt.State, verb rune) {
 // containing an entry for runtime.sigpanic.
 func findSigpanic() *runtime.Func {
 	var fn *runtime.Func
-	var p *int
+	//var p *int
 	func() int {
 		defer func() {
 			if p := recover(); p != nil {
@@ -225,7 +225,8 @@ func findSigpanic() *runtime.Func {
 			}
 		}()
 		// intentional nil pointer dereference to trigger sigpanic
-		return *p
+		//return *p
+		return 0
 	}()
 	return fn
 }

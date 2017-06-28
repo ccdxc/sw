@@ -72,7 +72,8 @@ type ValidateFunc func(i interface{}) error
 // (the KV store operation). Multiple precommitFuncs could be registered. All registered funcs
 // are called. Any of the precommit functions can provide feedback to skip the KV operation by
 // returning False.
-type PreCommitFunc func(ctx context.Context, oper string, i interface{}) (interface{}, bool)
+// Returning an error aborts processing of this API call.
+type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error)
 
 // PostCommitFunc are registered functions that will be invoked after the KV store operation. Multiple
 // functions could be registered and all registered functions are called.
@@ -89,6 +90,10 @@ type KeyGenFunc func(i interface{}, prefix string) string
 // UpdateKvFunc is the function to Update the KV store. Usually registered by generated code.
 type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error)
 
+// UpdateKvTxnFunc is the function to Update the object in a transaction. The transaction itself is applied via a txn.Commit()
+// by the API server. Usually registered by generated code.
+type UpdateKvTxnFunc func(ctx context.Context, kvstore kvstore.Txn, i interface{}, prefix string, create bool) error
+
 // GetFromKvFunc is the function registered to retrieve from the KV store.
 // Usually registered by generated code.
 type GetFromKvFunc func(ctx context.Context, kvstore kvstore.Interface, key string) (interface{}, error)
@@ -96,6 +101,10 @@ type GetFromKvFunc func(ctx context.Context, kvstore kvstore.Interface, key stri
 // DelFromKvFunc is the function registered to delete from the KV store.
 // Usually registered by generated code.
 type DelFromKvFunc func(ctx context.Context, kvstore kvstore.Interface, key string) (interface{}, error)
+
+// DelFromKvTxnFunc is the function registered to delete from a KV store transaction.
+// Usually registered by generated code.
+type DelFromKvTxnFunc func(ctx context.Context, kvstore kvstore.Txn, key string) error
 
 // Message is the interface satisfied by the representation of the Message in the Api Server infra.
 // A Message may be the definition of parameters passed in and out of a gRPC method or an object that
@@ -119,10 +128,14 @@ type MessageRegistration interface {
 	WithKeyGenerator(fn KeyGenFunc) Message
 	// WithKVUpdater registers a function to update the KV store
 	WithKvUpdater(fn UpdateKvFunc) Message
+	// WithKvTxnUpdater registers a function to update the KV store via a transaction.
+	WithKvTxnUpdater(fn UpdateKvTxnFunc) Message
 	// WithKvGetter registers a function that retrieves the message from kv store.
 	WithKvGetter(fn GetFromKvFunc) Message
 	// WithKvDelFunc registers a function that deletes a message from the KV store.
 	WithKvDelFunc(fn DelFromKvFunc) Message
+	// WithKvTxnDelFunc registers a function that deletes a message from the KV store via a transaction.
+	WithKvTxnDelFunc(fn DelFromKvTxnFunc) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -134,10 +147,15 @@ type MessageAction interface {
 	// WriteToKv writes the object to KV store. If create flag is set then the object
 	// must not exist for success.
 	WriteToKv(ctx context.Context, i interface{}, prerfix string, create bool) (interface{}, error)
+	// WriteToKvTxn writes the object to the KV store Transaction. Actual applying of the transaction via
+	// a Commit() happens elsewhere.
+	WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error
 	// GetFromKv retrieves an object from the KV Store.
 	GetFromKv(ctx context.Context, key string) (interface{}, error)
 	// DelFromKv deletes an object from the KV store.
 	DelFromKv(ctx context.Context, key string) (interface{}, error)
+	// DelFromKvTxn deletes an object from the KV store as part of a transaction.
+	DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key string) error
 	// PrepareMsg prepares the message to the "to" version by applying any transforms needed.
 	PrepareMsg(from, to string, i interface{}) (interface{}, error)
 	// Default applies the custom defaulter if registered.

@@ -204,52 +204,18 @@
             "type": "string"
           },
           {
-            "name": "Status.T.Kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.T.APIVersion",
-            "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.O.Tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.O.Namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.O.ResourceVersion",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Status.O.UUID",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "Status.Status",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "PROCESSING",
+              "FILLED",
+              "SHIPPED",
+              "COMPLETED"
+            ],
+            "default": "CREATED"
           }
         ],
         "tags": [
@@ -441,14 +407,8 @@
     "bookstoreOrderStatus": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "O": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
         "Status": {
-          "type": "string"
+          "$ref": "#/definitions/bookstoreOrderStatusOrderStatus"
         },
         "Filled": {
           "type": "array",
@@ -457,6 +417,17 @@
           }
         }
       }
+    },
+    "bookstoreOrderStatusOrderStatus": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "PROCESSING",
+        "FILLED",
+        "SHIPPED",
+        "COMPLETED"
+      ],
+      "default": "CREATED"
     },
     "bookstorePublisher": {
       "type": "object",

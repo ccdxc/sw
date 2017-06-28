@@ -163,6 +163,10 @@ func compCheck(f *MemKv, cs ...kvstore.Cmp) error {
 	for _, cmp := range cs {
 		v, ok := f.kvs[cmp.Key]
 		if !ok {
+			if cmp.Target == kvstore.Version &&
+				((cmp.Operator == "=" && cmp.Version == 0) || (cmp.Operator == "<" && cmp.Version == 1)) {
+				return nil
+			}
 			return kvstore.NewKeyNotFoundError(cmp.Key, 0)
 		}
 
@@ -436,16 +440,18 @@ func (f *MemKv) NewTxn() kvstore.Txn {
 	return f.newTxn()
 }
 
-func (f *MemKv) commitTxn(t *txn) error {
+func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	f.Lock()
 	defer f.Unlock()
+	ret := kvstore.TxnResponse{}
 
 	if f.returnErr {
-		return errors.New("returnErr set")
+		return ret, errors.New("returnErr set")
 	}
+
 	err := compCheck(f, t.cmps...)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	// other checks based on the ops
@@ -453,20 +459,21 @@ func (f *MemKv) commitTxn(t *txn) error {
 		switch o.t {
 		case tCreate:
 			if _, ok := f.kvs[o.key]; ok {
-				return kvstore.NewKeyExistsError(o.key, 0)
+				return ret, kvstore.NewKeyExistsError(o.key, 0)
 			}
 		case tUpdate:
 			_, ok := f.kvs[o.key]
 			if !ok {
-				return kvstore.NewKeyNotFoundError(o.key, 0)
+				return ret, kvstore.NewKeyNotFoundError(o.key, 0)
 			}
 		case tDelete:
 			_, ok := f.kvs[o.key]
 			if !ok {
-				return kvstore.NewKeyNotFoundError(o.key, 0)
+				return ret, kvstore.NewKeyNotFoundError(o.key, 0)
 			}
 		}
 	}
+	ret.Succeeded = true
 
 	// actual operations - Point of no return
 	for _, o := range t.ops {
@@ -475,21 +482,31 @@ func (f *MemKv) commitTxn(t *txn) error {
 			v := &memKvRec{value: o.val, revision: 1}
 			f.kvs[o.key] = v
 			f.setupWatchers(o.key, v)
-
 			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
+			opresp := kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: o.key, Obj: nil}
+			ret.Responses = append(ret.Responses, opresp)
 		case tUpdate:
 			v := f.kvs[o.key]
 			v.value = o.val
 			v.revision++
 			f.sendWatchEvents(o.key, v, false)
 			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
+			opresp := kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: o.key, Obj: nil}
+			ret.Responses = append(ret.Responses, opresp)
 		case tDelete:
-			v, _ := f.kvs[o.key]
-			defer delete(f.kvs, o.key)
-			f.sendWatchEvents(o.key, v, true)
+			v, ok := f.kvs[o.key]
+			if ok {
+				into, err := f.codec.Decode([]byte(v.value), nil)
+				if err == nil {
+					opresp := kvstore.TxnOpResponse{Oper: kvstore.OperDelete, Key: o.key, Obj: into}
+					defer delete(f.kvs, o.key)
+					f.sendWatchEvents(o.key, v, true)
+					ret.Responses = append(ret.Responses, opresp)
+				}
+			}
 		}
 	}
-	return nil
+	return ret, nil
 }
 
 // InjectWatchEvent injects the given event to the watcher of the specified prefix

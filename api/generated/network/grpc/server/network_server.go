@@ -97,6 +97,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Tenant)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Tenant{}
 			err := kvs.Get(ctx, key, &r)
@@ -106,6 +118,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.Tenant{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.TenantList":    apisrvpkg.NewMessage("network.TenantList"),
 		"network.NetworkSpec":   apisrvpkg.NewMessage("network.NetworkSpec"),
@@ -125,6 +139,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Network)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Network{}
 			err := kvs.Get(ctx, key, &r)
@@ -134,6 +160,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.Network{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.NetworkList":         apisrvpkg.NewMessage("network.NetworkList"),
 		"network.SecurityGroupSpec":   apisrvpkg.NewMessage("network.SecurityGroupSpec"),
@@ -153,6 +181,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.SecurityGroup)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.SecurityGroup{}
 			err := kvs.Get(ctx, key, &r)
@@ -162,6 +202,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.SecurityGroup{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.SecurityGroupList": apisrvpkg.NewMessage("network.SecurityGroupList"),
 		"network.SGRule":            apisrvpkg.NewMessage("network.SGRule"),
@@ -182,6 +224,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Sgpolicy)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Sgpolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -191,6 +245,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.Sgpolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.SgpolicyList":  apisrvpkg.NewMessage("network.SgpolicyList"),
 		"network.ServiceSpec":   apisrvpkg.NewMessage("network.ServiceSpec"),
@@ -210,6 +266,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Service)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Service{}
 			err := kvs.Get(ctx, key, &r)
@@ -219,6 +287,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.Service{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.ServiceList":     apisrvpkg.NewMessage("network.ServiceList"),
 		"network.HealthCheckSpec": apisrvpkg.NewMessage("network.HealthCheckSpec"),
@@ -239,6 +309,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.LbPolicy)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.LbPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -248,6 +330,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.LbPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.LbPolicyList":   apisrvpkg.NewMessage("network.LbPolicyList"),
 		"network.EndpointSpec":   apisrvpkg.NewMessage("network.EndpointSpec"),
@@ -267,6 +351,18 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Endpoint)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Endpoint{}
 			err := kvs.Get(ctx, key, &r)
@@ -276,6 +372,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 			r := network.Endpoint{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"network.EndpointList": apisrvpkg.NewMessage("network.EndpointList"),
 	}
@@ -296,8 +394,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("TenantV1")
 
 		s.endpoints_TenantV1.fn_GetTenantList = srv.AddMethod("GetTenantList",
-			apisrvpkg.NewMethod(s.Messages["network.TenantList"], s.Messages["network.TenantList"], "tenant", "GetTenantList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.TenantList"], s.Messages["network.TenantList"], "tenant", "GetTenantList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_TenantV1.fn_TenantOper = srv.AddMethod("TenantOper",
@@ -315,8 +413,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("NetworkV1")
 
 		s.endpoints_NetworkV1.fn_GetNetworkList = srv.AddMethod("GetNetworkList",
-			apisrvpkg.NewMethod(s.Messages["network.NetworkList"], s.Messages["network.NetworkList"], "network", "GetNetworkList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.NetworkList"], s.Messages["network.NetworkList"], "network", "GetNetworkList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_NetworkV1.fn_NetworkOper = srv.AddMethod("NetworkOper",
@@ -334,8 +432,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("SecurityGroupV1")
 
 		s.endpoints_SecurityGroupV1.fn_GetSecurityGroupList = srv.AddMethod("GetSecurityGroupList",
-			apisrvpkg.NewMethod(s.Messages["network.SecurityGroupList"], s.Messages["network.SecurityGroupList"], "security-group", "GetSecurityGroupList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.SecurityGroupList"], s.Messages["network.SecurityGroupList"], "security-group", "GetSecurityGroupList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_SecurityGroupV1.fn_SecurityGroupOper = srv.AddMethod("SecurityGroupOper",
@@ -353,8 +451,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("SgpolicyV1")
 
 		s.endpoints_SgpolicyV1.fn_GetSgpolicyList = srv.AddMethod("GetSgpolicyList",
-			apisrvpkg.NewMethod(s.Messages["network.SgpolicyList"], s.Messages["network.SgpolicyList"], "sgpolicy", "GetSgpolicyList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.SgpolicyList"], s.Messages["network.SgpolicyList"], "sgpolicy", "GetSgpolicyList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_SgpolicyV1.fn_SgpolicyOper = srv.AddMethod("SgpolicyOper",
@@ -372,8 +470,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("ServiceV1")
 
 		s.endpoints_ServiceV1.fn_GetServiceList = srv.AddMethod("GetServiceList",
-			apisrvpkg.NewMethod(s.Messages["network.ServiceList"], s.Messages["network.ServiceList"], "service", "GetServiceList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.ServiceList"], s.Messages["network.ServiceList"], "service", "GetServiceList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_ServiceV1.fn_ServiceOper = srv.AddMethod("ServiceOper",
@@ -391,8 +489,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("LbPolicyV1")
 
 		s.endpoints_LbPolicyV1.fn_GetLbPolicyList = srv.AddMethod("GetLbPolicyList",
-			apisrvpkg.NewMethod(s.Messages["network.LbPolicyList"], s.Messages["network.LbPolicyList"], "lb-policy", "GetLbPolicyList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.LbPolicyList"], s.Messages["network.LbPolicyList"], "lb-policy", "GetLbPolicyList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_LbPolicyV1.fn_LbPolicyOper = srv.AddMethod("LbPolicyOper",
@@ -410,8 +508,8 @@ func (s *s_networkBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("EndpointV1")
 
 		s.endpoints_EndpointV1.fn_GetEndpointList = srv.AddMethod("GetEndpointList",
-			apisrvpkg.NewMethod(s.Messages["network.EndpointList"], s.Messages["network.EndpointList"], "endpoint", "GetEndpointList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["network.EndpointList"], s.Messages["network.EndpointList"], "endpoint", "GetEndpointList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_EndpointV1.fn_EndpointOper = srv.AddMethod("EndpointOper",

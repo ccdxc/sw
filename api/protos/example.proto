@@ -68,9 +68,14 @@ message OrderItem {
 }
 
 message OrderStatus {
-  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
-  string Status = 3;
+  enum OrderStatus {
+    CREATED = 0;
+    PROCESSING = 1;
+    FILLED = 2;
+    SHIPPED = 3;
+    COMPLETED = 4;
+  }
+  OrderStatus Status = 3;
   repeated OrderSpec Filled = 4;
 }
 

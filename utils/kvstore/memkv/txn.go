@@ -95,13 +95,23 @@ func (t *txn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 }
 
 // Commit tries to commit the transaction.
-func (t *txn) Commit(ctx context.Context) error {
+func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	t.Lock()
 	defer t.Unlock()
 
-	err := t.store.commitTxn(t)
+	txnResp, err := t.store.commitTxn(t)
 
 	t.cmps = make([]kvstore.Cmp, 0)
 	t.ops = make([]op, 0)
-	return err
+	return txnResp, err
+}
+
+// IsEmpty returns true if the transaction is empty.
+func (t *txn) IsEmpty() bool {
+	return (len(t.cmps) == 0) && (len(t.ops) == 0)
+}
+
+// AddConditions add a comparator to the transaction.
+func (t *txn) AddComparator(cs ...kvstore.Cmp) {
+	t.cmps = append(t.cmps, cs...)
 }

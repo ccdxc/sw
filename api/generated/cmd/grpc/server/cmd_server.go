@@ -56,6 +56,18 @@ func (s *s_cmdBackend) CompleteRegistration(ctx context.Context, logger log.Logg
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(cmd.Node)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.Node{}
 			err := kvs.Get(ctx, key, &r)
@@ -65,6 +77,8 @@ func (s *s_cmdBackend) CompleteRegistration(ctx context.Context, logger log.Logg
 			r := cmd.Node{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 		"cmd.NodeList":      apisrvpkg.NewMessage("cmd.NodeList"),
 		"cmd.ClusterSpec":   apisrvpkg.NewMessage("cmd.ClusterSpec"),
@@ -84,6 +98,18 @@ func (s *s_cmdBackend) CompleteRegistration(ctx context.Context, logger log.Logg
 				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(cmd.Cluster)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.Cluster{}
 			err := kvs.Get(ctx, key, &r)
@@ -93,6 +119,8 @@ func (s *s_cmdBackend) CompleteRegistration(ctx context.Context, logger log.Logg
 			r := cmd.Cluster{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
 	}
 
@@ -107,8 +135,8 @@ func (s *s_cmdBackend) CompleteRegistration(ctx context.Context, logger log.Logg
 		srv := apisrvpkg.NewService("CmdV1")
 
 		s.endpoints_CmdV1.fn_GetNodeList = srv.AddMethod("GetNodeList",
-			apisrvpkg.NewMethod(s.Messages["cmd.NodeList"], s.Messages["cmd.NodeList"], "cmd", "GetNodeList")).WithPreCommitHook(func(ctx context.Context, oper string, i interface{}) (interface{}, bool) {
-			return i, false
+			apisrvpkg.NewMethod(s.Messages["cmd.NodeList"], s.Messages["cmd.NodeList"], "cmd", "GetNodeList")).WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+			return i, false, nil
 		}).WithVersion("v1").HandleInvocation
 
 		s.endpoints_CmdV1.fn_NodeOper = srv.AddMethod("NodeOper",

@@ -19,7 +19,12 @@ type fakeMessage struct {
 	kvwrites       int
 	kvreads        int
 	kvdels         int
+	txnwrites      int
+	txngets        int
+	txndels        int
 }
+
+var txnTestKey = "/txn/testobj"
 
 func (m *fakeMessage) WithTransform(from, to string, fn apisrv.TransformFunc) apisrv.Message { return m }
 func (m *fakeMessage) WithValidate(fn apisrv.ValidateFunc) apisrv.Message                    { return m }
@@ -29,8 +34,28 @@ func (m *fakeMessage) WithKvUpdater(fn apisrv.UpdateKvFunc) apisrv.Message      
 func (m *fakeMessage) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message                   { return m }
 func (m *fakeMessage) WithKvDelFunc(fn apisrv.DelFromKvFunc) apisrv.Message                  { return m }
 func (m *fakeMessage) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Message        { return m }
+func (m *fakeMessage) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Message            { return m }
+func (m *fakeMessage) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message             { return m }
 func (m *fakeMessage) GetKind() string                                                       { return "" }
-func (m *fakeMessage) DelFromKv(ctx context.Context, key string) (interface{}, error)        { return nil, nil }
+func (m *fakeMessage) DelFromKv(ctx context.Context, key string) (interface{}, error) {
+	m.kvdels++
+	return nil, nil
+}
+func (m *fakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key string) error {
+	m.txndels++
+	txn.Delete(key)
+	return nil
+}
+func (m *fakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error {
+	m.txnwrites++
+	msg := i.(*kvstore.TestObj)
+	if create {
+		txn.Create(txnTestKey, msg)
+	} else {
+		txn.Update(txnTestKey, msg)
+	}
+	return nil
+}
 func (m *fakeMessage) GetKVKey(i interface{}, prefix string) (string, error) {
 	return m.kvpath, nil
 }
@@ -81,6 +106,11 @@ func (m *fakeMessage) kvUpdateFunc(ctx context.Context, kv kvstore.Interface, i 
 	return i, nil
 }
 
+func (m *fakeMessage) txnUpdateFunc(ctx context.Context, kvstore kvstore.Txn, i interface{}, prefix string, create bool) error {
+	m.txnwrites++
+	return nil
+}
+
 func (m *fakeMessage) kvGetFunc(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
 	m.kvreads++
 	return nil, nil
@@ -89,6 +119,11 @@ func (m *fakeMessage) kvGetFunc(ctx context.Context, kv kvstore.Interface, key s
 func (m *fakeMessage) kvDelFunc(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
 	m.kvdels++
 	return nil, nil
+}
+
+func (m *fakeMessage) delFromKvTxnFunc(ctx context.Context, kvstore kvstore.Txn, key string) error {
+	m.txndels++
+	return nil
 }
 
 // TestPrepareMessage
@@ -121,6 +156,7 @@ func TestMessageWith(t *testing.T) {
 	f := newFakeMessage("/test", true).(*fakeMessage)
 	m := NewMessage("TestType1").WithValidate(f.validateFunc).WithDefaulter(f.defaultFunc)
 	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc)
+	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
 	m.Validate(nil)
 	if f.validateCalled != 1 {
 		t.Errorf("Expecting validation count of %v found", f.validateCalled)
@@ -140,8 +176,17 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to KV Write found %d", f.kvwrites)
 	}
 
+	m.WriteToKvTxn(context.TODO(), nil, nil, "testprefix", true)
+	if f.txnwrites != 1 {
+		t.Errorf("Expecting 1 call to Txn write found %d", f.kvdels)
+	}
 	m.DelFromKv(context.TODO(), "testKey")
 	if f.kvdels != 1 {
+		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
+	}
+
+	m.DelFromKvTxn(context.TODO(), nil, "testKey")
+	if f.txndels != 1 {
 		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	apisrv "github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/utils/kvstore"
 )
 
 var (
@@ -27,10 +28,14 @@ type MessageHdlr struct {
 	keyFunc apisrv.KeyGenFunc
 	// kvUpdateFunc handles updating the KV store
 	kvUpdateFunc apisrv.UpdateKvFunc
+	// txnUpdateFunc handles updating a KV store transaction.
+	txnUpdateFunc apisrv.UpdateKvTxnFunc
 	// kvGetFunc handles gets from the KV store for the object.
 	kvGetFunc apisrv.GetFromKvFunc
 	// kvDelFunc handles deleting the object from the KV store.
 	kvDelFunc apisrv.DelFromKvFunc
+	// txnDelFunc handles deleting the object as part of a KV store transaction.
+	txnDelFunc apisrv.DelFromKvTxnFunc
 	// Kind holds the kind of object.
 	Kind string
 }
@@ -73,6 +78,13 @@ func (m *MessageHdlr) WithKvUpdater(fn apisrv.UpdateKvFunc) apisrv.Message {
 	return m
 }
 
+// WithKvTxnUpdater registers a function to handle KV store updates for the object
+//   as part of a transaction. Usually registered by the generated code.
+func (m *MessageHdlr) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message {
+	m.txnUpdateFunc = fn
+	return m
+}
+
 // WithKvGetter registers a function to handle KV store retrieves for the object
 //  typically registered by the generated code.
 func (m *MessageHdlr) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message {
@@ -84,6 +96,13 @@ func (m *MessageHdlr) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message {
 //  typically registered by the generated code.
 func (m *MessageHdlr) WithKvDelFunc(fn apisrv.DelFromKvFunc) apisrv.Message {
 	m.kvDelFunc = fn
+	return m
+}
+
+// WithKvTxnDelFunc registers a function to handle KV store deletes for the object
+//  via a transaction. Typically registered by the generated code.
+func (m *MessageHdlr) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Message {
+	m.txnDelFunc = fn
 	return m
 }
 
@@ -99,6 +118,14 @@ func (m *MessageHdlr) GetKVKey(i interface{}, prefix string) (string, error) {
 	}
 	// TODO(sanjayt): Add validation to generated key (size, allowed characters etc.)
 	return m.keyFunc(i, prefix), nil
+}
+
+// WriteToKvTxn is a wrapper around txnUpdateFunc to update the object in the KV store via a transaction.
+func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+	if m.txnUpdateFunc != nil {
+		return m.txnUpdateFunc(ctx, txn, i, prefix, create)
+	}
+	return errNotImplemented
 }
 
 // WriteToKv is a wrapper around kvUpdateFunc to update the object in the KV store.
@@ -123,6 +150,14 @@ func (m *MessageHdlr) DelFromKv(ctx context.Context, key string) (interface{}, e
 		return m.kvDelFunc(ctx, singletonApiSrv.kv, key)
 	}
 	return nil, singletonApiSrv.kv.Delete(ctx, key, nil)
+}
+
+// DelFromKvTxn is a wrapper around kvDelFunc to delete the object in the KV store.
+func (m *MessageHdlr) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key string) error {
+	if m.txnDelFunc != nil {
+		return m.txnDelFunc(ctx, txn, key)
+	}
+	return errNotImplemented
 }
 
 // WithKeyGenerator registers a Key Generation function for the omessage.
