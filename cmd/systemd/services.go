@@ -22,6 +22,7 @@ type systemdService struct {
 	sync.Mutex
 }
 
+// NewSystemdService returns a Systemd Service
 func NewSystemdService() types.SystemdService {
 	return &systemdService{}
 }

@@ -12,6 +12,7 @@ type mockSystemdService struct {
 	leaderSvcsRunning bool
 }
 
+// NewMockSystemdService returns a Mock service
 func NewMockSystemdService() types.SystemdService {
 	return &mockSystemdService{}
 }

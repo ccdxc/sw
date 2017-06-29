@@ -1070,6 +1070,12 @@
 			"revision": "2c9454e4fc6e2edc1a1c84e64ed3d6e662fb6991"
 		},
 		{
+			"checksumSHA1": "6KZEap6v/5gD+tjiNbpD81kD61o=",
+			"path": "github.com/willf/bitset",
+			"revision": "988f4f24992fc745de53c42df0da6581e42a6686",
+			"revisionTime": "2017-05-05T19:16:46Z"
+		},
+		{
 			"path": "github.com/xiang90/probing",
 			"revision": "07dd2e8dfe18522e9c447ba95f2fe95262f63bb2"
 		},

@@ -80,7 +80,7 @@ func NewProtoCodec(creater ObjectCreater) *ProtoCodec {
 }
 
 // Encode implements the json serialization of an object.
-func (p *ProtoCodec) Encode(obj Object) ([]byte, error) {
+func (j *ProtoCodec) Encode(obj Object) ([]byte, error) {
 	protoIntf, ok := reflect.ValueOf(obj).Interface().(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("Object is not a proto")
