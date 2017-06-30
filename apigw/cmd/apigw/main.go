@@ -49,13 +49,13 @@ func main() {
 	}
 	var config apigw.Config
 	{
-		config.HttpAddr = *httpaddr
+		config.HTTPAddr = *httpaddr
 		config.DebugMode = *debugflag
 		config.Logger = pl
 	}
 	trace.Init("ApiGateway")
 	pl.Log("msg", "Starting Run")
-	gw := apigwpkg.MustGetApiGateway()
+	gw := apigwpkg.MustGetAPIGateway()
 	grpclog.SetLogger(pl)
 	gw.Run(config)
 }

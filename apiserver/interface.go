@@ -19,7 +19,7 @@ type ServiceBackend interface {
 	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, scheme *runtime.Scheme) error
 }
 
-// ServiceHooksCb is a callback registered with the ApiServer for the purpose of registering Hooks for services.
+// ServiceHookCb is a callback registered with the ApiServer for the purpose of registering Hooks for services.
 type ServiceHookCb func(srv Service, logger log.Logger)
 
 // Server interface is implemented by the API server and used by the backends to register themselves
@@ -39,7 +39,7 @@ type Server interface {
 	Run(config Config)
 }
 
-// Configuration holds config for the API Server.
+// Config holds config for the API Server.
 type Config struct {
 	// Connection string for the KV store.
 	Kvstore store.Config

@@ -27,15 +27,15 @@ type TestType2 struct {
 func TestMain(m *testing.M) {
 	// Setup the Apiserver Singleton.
 	fmt.Printf("Setting up test main")
-	_ = MustGetApiServer()
+	_ = MustGetAPIServer()
 	buf := &bytes.Buffer{}
 	l := log.GetNewLogger(false).SetOutput(buf)
-	singletonApiSrv.version = "v1"
-	singletonApiSrv.Logger = l
+	singletonAPISrv.version = "v1"
+	singletonAPISrv.Logger = l
 	s := runtime.NewScheme()
 	s.AddKnownTypes(&TestType1{}, &TestType2{})
 	var err error
-	singletonApiSrv.kv, err = memkv.NewMemKv(nil, runtime.NewJSONCodec(s))
+	singletonAPISrv.kv, err = memkv.NewMemKv(nil, runtime.NewJSONCodec(s))
 	if err != nil {
 		panic("Failed to intialize KV store")
 	}

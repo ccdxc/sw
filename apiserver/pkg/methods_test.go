@@ -67,7 +67,7 @@ func TestMethodWiths(t *testing.T) {
 	m = m.WithPostCommitHook(f.postcommitfFunc).WithPostCommitHook(f.postcommitfFunc).WithResponseWriter(f.respWriterFunc)
 	m = m.WithOper("POST").WithVersion("Vtest")
 	reqmsg := TestType1{}
-	md := metadata.Pairs("req-version", singletonApiSrv.version,
+	md := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "GET")
 	mhdlr := m.(*MethodHdlr)
 	if mhdlr.version != "Vtest" || mhdlr.oper != "POST" {
@@ -125,7 +125,7 @@ func TestMethodKvWrite(t *testing.T) {
 	reqmsg := TestType1{}
 
 	// Set the same version as the apiServer
-	md := metadata.Pairs("req-version", singletonApiSrv.version,
+	md := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "GET")
 	ctx := metadata.NewContext(context.Background(), md)
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
@@ -135,7 +135,7 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Expecting [1] read but found [%v]", req.kvreads)
 	}
 	// Now add the object and check
-	md1 := metadata.Pairs("req-version", singletonApiSrv.version,
+	md1 := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "POST")
 	ctx1 := metadata.NewContext(context.Background(), md1)
 	m.HandleInvocation(ctx1, reqmsg)
@@ -143,7 +143,7 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
 	// Now modify the object and check
-	md2 := metadata.Pairs("req-version", singletonApiSrv.version,
+	md2 := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "PUT")
 	ctx2 := metadata.NewContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
@@ -151,7 +151,7 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
 	// Now delete the object and check
-	md3 := metadata.Pairs("req-version", singletonApiSrv.version,
+	md3 := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "DELETE")
 	ctx3 := metadata.NewContext(context.Background(), md3)
 	span := opentracing.StartSpan("delete")
@@ -170,7 +170,7 @@ func TestMapOper(t *testing.T) {
 
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
-	md := metadata.Pairs("req-version", singletonApiSrv.version,
+	md := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "GET")
 	// Test that the oper method is correct
 	mhdlr := m.(*MethodHdlr)
@@ -212,7 +212,7 @@ func TestTxn(t *testing.T) {
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
 	reqmsg := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
-	md := metadata.Pairs("req-version", singletonApiSrv.version,
+	md := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "POST")
 	ctx := metadata.NewContext(context.Background(), md)
 	m.HandleInvocation(ctx, reqmsg)
@@ -220,7 +220,7 @@ func TestTxn(t *testing.T) {
 		t.Fatalf("Txn Write: expecting [1] saw [%d]", req.txnwrites)
 	}
 	// Modify the same object
-	md1 := metadata.Pairs("req-version", singletonApiSrv.version,
+	md1 := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "PUT")
 	ctx1 := metadata.NewContext(context.Background(), md1)
 	req.kvpath = txnTestKey
@@ -229,7 +229,7 @@ func TestTxn(t *testing.T) {
 		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.txnwrites)
 	}
 	// Delete the Object
-	md2 := metadata.Pairs("req-version", singletonApiSrv.version,
+	md2 := metadata.Pairs("req-version", singletonAPISrv.version,
 		"req-method", "DELETE")
 	ctx2 := metadata.NewContext(context.Background(), md2)
 	_, err := m.HandleInvocation(ctx2, reqmsg)

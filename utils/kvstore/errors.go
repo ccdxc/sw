@@ -102,7 +102,7 @@ func NewInvalidTTLError(ttl int64) *KVError {
 	}
 }
 
-// IsKeyExistsError checks if it is key exists error
+// IsInvalidTTLError checks if it is invalid TTL error
 func IsInvalidTTLError(err error) bool {
 	return isErrorCode(err, ErrCodeKeyExists)
 }

@@ -17,34 +17,34 @@ import (
 )
 
 type apiGw struct {
-	svcmap  map[string]apigw.ApiGwService
+	svcmap  map[string]apigw.APIGatewayService
 	svcname map[string]string
 	logger  log.Logger
 	doneCh  chan error
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
-var sinletonApiGw apiGw
+var sinletonAPIGw apiGw
 var once sync.Once
 
-// MustGetApiGateway gets the singleton API Gateway Object. Initialize if not already done.
-func MustGetApiGateway() apigw.ApiGateway {
-	once.Do(initApiGw)
-	return &sinletonApiGw
+// MustGetAPIGateway gets the singleton API Gateway Object. Initialize if not already done.
+func MustGetAPIGateway() apigw.APIGateway {
+	once.Do(initAPIGw)
+	return &sinletonAPIGw
 }
 
-// initApiGw funciton is called exactly once. (Guarded by the once)
+// initAPIGw funciton is called exactly once. (Guarded by the once)
 // All inititializaion for the apiGw object goes here.
-func initApiGw() {
-	sinletonApiGw.svcmap = make(map[string]apigw.ApiGwService)
-	sinletonApiGw.svcname = make(map[string]string)
-	sinletonApiGw.doneCh = make(chan error)
+func initAPIGw() {
+	sinletonAPIGw.svcmap = make(map[string]apigw.APIGatewayService)
+	sinletonAPIGw.svcname = make(map[string]string)
+	sinletonAPIGw.doneCh = make(chan error)
 }
 
 // Register a service with the APi Gateway service. Duplicate registrations
 // are not allowed and will cause a panic. Each service is expected to serve
 // non overlapping API path prefixes.
-func (a *apiGw) Register(name, path string, svc apigw.ApiGwService) apigw.ApiGwService {
+func (a *apiGw) Register(name, path string, svc apigw.APIGatewayService) apigw.APIGatewayService {
 	fmt.Printf("Register for %v\n", name)
 	if svc == nil {
 		panic(fmt.Sprintf("Invalid service registration for %s", name))
@@ -60,7 +60,7 @@ func (a *apiGw) Register(name, path string, svc apigw.ApiGwService) apigw.ApiGwS
 }
 
 // GetService returns registered Service, nil if not found.
-func (a *apiGw) GetService(name string) apigw.ApiGwService {
+func (a *apiGw) GetService(name string) apigw.APIGatewayService {
 	return a.svcmap[name]
 }
 
@@ -169,8 +169,8 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	go func() {
-		a.logger.InfoLog("msg", "Http Listen Start", "address", config.HttpAddr)
-		a.doneCh <- http.ListenAndServe(config.HttpAddr, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
+		a.logger.InfoLog("msg", "Http Listen Start", "address", config.HTTPAddr)
+		a.doneCh <- http.ListenAndServe(config.HTTPAddr, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
 	}()
 
 	a.logger.Infof("exit", <-a.doneCh)

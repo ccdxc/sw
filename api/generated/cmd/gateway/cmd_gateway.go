@@ -121,7 +121,7 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 }
 
 func init() {
-	apigw := apigwpkg.MustGetApiGateway()
+	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcCmdV1 := s_CmdV1GwService{}
 	apigw.Register("cmd.CmdV1", "cmd/", &svcCmdV1)

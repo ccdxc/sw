@@ -163,7 +163,7 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 }
 
 func init() {
-	apigw := apigwpkg.MustGetApiGateway()
+	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcBookstoreV1 := s_BookstoreV1GwService{}
 	apigw.Register("bookstore.BookstoreV1", "bookstore/", &svcBookstoreV1)

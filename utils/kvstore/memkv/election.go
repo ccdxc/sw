@@ -25,21 +25,21 @@ type election struct {
 	name    string                      // name of the election
 	id      string                      // identifier of the contender
 	leader  string                      // winner of the election
-	termId  int                         // termId for current election
+	termID  int                         // termID for current election
 	ttl     int                         // ttl for lease
 	outCh   chan *kvstore.ElectionEvent // channel for election results
 }
 
 type memkvElection struct {
 	leader     string
-	termId     int
+	termID     int
 	contenders []*election
 }
 
 type memkvCluster struct {
 	sync.Mutex
 	elections map[string]*memkvElection // current elections
-	clientId  int                       // current id of the store
+	clientID  int                       // current id of the store
 	stores    map[string]*MemKv         // all client stores
 }
 
@@ -133,7 +133,7 @@ func (el *election) run(ctx context.Context) {
 		if elec.leader == "" {
 			// pick a leader
 			elec.leader = el.id
-			elec.termId += 1
+			elec.termID++
 
 			// notify all contenders
 			for _, contender := range elec.contenders {
@@ -141,12 +141,12 @@ func (el *election) run(ctx context.Context) {
 					contender.sendEvent(kvstore.Elected, elec.leader)
 				}
 			}
-		} else if elec.termId != el.termId {
+		} else if elec.termID != el.termID {
 			el.sendEvent(kvstore.Changed, elec.leader)
 		}
 
 		el.leader = elec.leader
-		el.termId = elec.termId
+		el.termID = elec.termID
 
 		// TBD: no need to adjust ttl and auto-renew the lease for memkv
 

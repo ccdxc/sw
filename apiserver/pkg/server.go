@@ -36,26 +36,26 @@ type apiSrv struct {
 	doneCh chan error
 }
 
-// singletonApiSrv is the singleton instance of the API server. This is
+// singletonAPISrv is the singleton instance of the API server. This is
 //  initialized exactly once and is guarded by the once.
-var singletonApiSrv apiSrv
+var singletonAPISrv apiSrv
 var once sync.Once
 
-// initApiServer performs all needed initializations.
-func initApiServer() {
-	singletonApiSrv.svcmap = make(map[string]apiserver.ServiceBackend)
-	singletonApiSrv.services = make(map[string]apiserver.Service)
-	singletonApiSrv.messages = make(map[string]apiserver.Message)
-	singletonApiSrv.hookregs = make(map[string]apiserver.ServiceHookCb)
-	singletonApiSrv.doneCh = make(chan error)
+// initAPIServer performs all needed initializations.
+func initAPIServer() {
+	singletonAPISrv.svcmap = make(map[string]apiserver.ServiceBackend)
+	singletonAPISrv.services = make(map[string]apiserver.Service)
+	singletonAPISrv.messages = make(map[string]apiserver.Message)
+	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
+	singletonAPISrv.doneCh = make(chan error)
 
 }
 
-// MustGetApiServer returns the singleton instance. If it is not already
+// MustGetAPIServer returns the singleton instance. If it is not already
 //  initialized, it initializes the singleton.
-func MustGetApiServer() apiserver.Server {
-	once.Do(initApiServer)
-	return &singletonApiSrv
+func MustGetAPIServer() apiserver.Server {
+	once.Do(initAPIServer)
+	return &singletonAPISrv
 }
 
 // Register is the registration entrypoint used by the service backends/Modules. Each registration

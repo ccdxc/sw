@@ -50,6 +50,6 @@ func main() {
 	trace.Init("ApiServer")
 	grpclog.SetLogger(pl)
 	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
-	srv := apisrvpkg.MustGetApiServer()
+	srv := apisrvpkg.MustGetAPIServer()
 	srv.Run(config)
 }

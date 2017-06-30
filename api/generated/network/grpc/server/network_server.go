@@ -640,7 +640,7 @@ func (e *e_EndpointV1Endpoints) EndpointOper(ctx context.Context, t network.Endp
 }
 
 func init() {
-	apisrv = apisrvpkg.MustGetApiServer()
+	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := s_networkBackend{}
 

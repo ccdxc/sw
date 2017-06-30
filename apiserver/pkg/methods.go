@@ -46,7 +46,7 @@ type MethodHdlr struct {
 }
 
 var (
-	errApiDisabled        = grpc.Errorf(codes.ResourceExhausted, "API is disabled")
+	errAPIDisabled        = grpc.Errorf(codes.ResourceExhausted, "API is disabled")
 	errRequestInfo        = grpc.Errorf(codes.InvalidArgument, "internal error (request information)")
 	errVersionTransform   = grpc.Errorf(codes.Unimplemented, "internal error (version transformation)")
 	errRequestValidation  = grpc.Errorf(codes.InvalidArgument, "request validation failed")
@@ -121,7 +121,7 @@ func (m *MethodHdlr) GetResponseType() apiserver.Message {
 
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
 func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper string, txn kvstore.Txn) (interface{}, error) {
-	l := singletonApiSrv.Logger
+	l := singletonAPISrv.Logger
 	key, err := m.requestType.GetKVKey(i, m.svcPrefix)
 	if err != nil {
 		l.ErrorLog("msg", "could not get key", "error", err)
@@ -233,12 +233,12 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		ver       string
 		key       string
 	)
-	l := singletonApiSrv.Logger
+	l := singletonAPISrv.Logger
 
 	l.DebugLog("service", m.svcPrefix, "method", m.name, "version", m.version)
 	if m.enabled == false {
 		l.Infof("Api is disabled ignoring invocation")
-		return nil, errApiDisabled
+		return nil, errAPIDisabled
 	}
 
 	md, ok := metadata.FromContext(ctx)
@@ -258,11 +258,11 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	l.DebugLog("version", ver, "operation", oper)
 
 	// Version transform if needed.
-	if singletonApiSrv.version != ver {
-		l.DebugLog("msg", "version mismatch", "version-from", singletonApiSrv.version, "version-to", ver)
-		i, err = m.requestType.PrepareMsg(ver, singletonApiSrv.version, i)
+	if singletonAPISrv.version != ver {
+		l.DebugLog("msg", "version mismatch", "version-from", singletonAPISrv.version, "version-to", ver)
+		i, err = m.requestType.PrepareMsg(ver, singletonAPISrv.version, i)
 		if err != nil {
-			l.ErrorLog("msg", "Version transformation failed", "version-from", ver, "version-to", singletonApiSrv.version, "error", err)
+			l.ErrorLog("msg", "Version transformation failed", "version-from", ver, "version-to", singletonAPISrv.version, "error", err)
 			return nil, errVersionTransform
 		}
 	}
@@ -289,7 +289,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		span.LogFields(log.String("event", "calling precommit hooks"))
 	}
 
-	txn := singletonApiSrv.kv.NewTxn()
+	txn := singletonAPISrv.kv.NewTxn()
 	key, err = m.requestType.GetKVKey(i, m.svcPrefix)
 	if err != nil {
 		l.ErrorLog("msg", "could not get key", "error", err)
@@ -300,7 +300,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	kvwrite := true
 	for _, v := range m.precommitFunc {
 		kvold := kvwrite
-		i, kvwrite, err = v(ctx, singletonApiSrv.kv, txn, key, oper, i)
+		i, kvwrite, err = v(ctx, singletonAPISrv.kv, txn, key, oper, i)
 		if err != nil {
 			l.ErrorLog("msg", "precommit hook failed", "error", err)
 			return nil, errPreOpChecksFailed
@@ -335,7 +335,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	//Generate response
 	if m.responseWriter != nil {
 		l.DebugLog("msg", "response overide is enabled")
-		resp, err = m.responseWriter(ctx, singletonApiSrv.kv, m.svcPrefix, i, old, oper)
+		resp, err = m.responseWriter(ctx, singletonAPISrv.kv, m.svcPrefix, i, old, oper)
 		if err != nil {
 			l.ErrorLog("msg", "response writer returned", "error", err)
 			return nil, errResponseWriter
@@ -343,10 +343,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	// transform to request Version.
-	if singletonApiSrv.version != ver {
-		resp, err = m.requestType.PrepareMsg(singletonApiSrv.version, ver, resp)
+	if singletonAPISrv.version != ver {
+		resp, err = m.requestType.PrepareMsg(singletonAPISrv.version, ver, resp)
 		if err != nil {
-			l.ErrorLog("msg", "response version transformation failed", "ver-from", singletonApiSrv.version, "ver-to", ver)
+			l.ErrorLog("msg", "response version transformation failed", "ver-from", singletonAPISrv.version, "ver-to", ver)
 			return nil, errVersionTransform
 		}
 	}

@@ -1,5 +1,26 @@
 #!/bin/bash
 
+LIMIT=10
+for a in $(seq 1 $LIMIT)
+do
+  # check if all nodes are running
+  numRunning=`vagrant ssh -c "kubectl get nodes" node1 | grep Ready | wc -l`
+  echo $numRunning nodes are running
+  if [ "$numRunning" -ge 2 ]
+  then
+    echo "All nodes are running"
+    break
+  fi
+
+  # Check if we exceeded the loop
+  if [ "$a" -ge $LIMIT ]
+  then
+    die 1 "All nodes are not running. Failing test"
+  fi
+
+  sleep 10
+done
+
 # Run two pods
 if ! vagrant ssh -c "kubectl run nginx1 --image=nginx" node1; then
   echo "Failed to start nginx container"

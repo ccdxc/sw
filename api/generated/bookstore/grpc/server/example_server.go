@@ -293,7 +293,7 @@ func (e *e_BookstoreV1Endpoints) OrderOper(ctx context.Context, t bookstore.Orde
 }
 
 func init() {
-	apisrv = apisrvpkg.MustGetApiServer()
+	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := s_bookstoreBackend{}
 

@@ -7,6 +7,7 @@ import (
 // CmpTarget is used to identify the target for comparison.
 type CmpTarget int
 
+// exported constants
 const (
 	Version CmpTarget = iota
 	Value

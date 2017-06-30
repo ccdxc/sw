@@ -9,6 +9,7 @@ import (
 // Operation is the type of Kv Store operation.
 type Operation uint8
 
+// exported constatnts
 const (
 	OperUnknown Operation = iota
 	OperUpdate

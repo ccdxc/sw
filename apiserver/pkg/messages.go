@@ -131,7 +131,7 @@ func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 // WriteToKv is a wrapper around kvUpdateFunc to update the object in the KV store.
 func (m *MessageHdlr) WriteToKv(ctx context.Context, i interface{}, prefix string, create bool) (interface{}, error) {
 	if m.kvUpdateFunc != nil {
-		return m.kvUpdateFunc(ctx, singletonApiSrv.kv, i, prefix, create)
+		return m.kvUpdateFunc(ctx, singletonAPISrv.kv, i, prefix, create)
 	}
 	return nil, errNotImplemented
 }
@@ -139,7 +139,7 @@ func (m *MessageHdlr) WriteToKv(ctx context.Context, i interface{}, prefix strin
 // GetFromKv is a wrapper around kvGetFunc to get the object in the KV store.
 func (m *MessageHdlr) GetFromKv(ctx context.Context, key string) (interface{}, error) {
 	if m.kvGetFunc != nil {
-		return m.kvGetFunc(ctx, singletonApiSrv.kv, key)
+		return m.kvGetFunc(ctx, singletonAPISrv.kv, key)
 	}
 	return nil, errNotImplemented
 }
@@ -147,9 +147,9 @@ func (m *MessageHdlr) GetFromKv(ctx context.Context, key string) (interface{}, e
 // DelFromKv is a wrapper around kvDelFunc to delete the object in the KV store.
 func (m *MessageHdlr) DelFromKv(ctx context.Context, key string) (interface{}, error) {
 	if m.kvDelFunc != nil {
-		return m.kvDelFunc(ctx, singletonApiSrv.kv, key)
+		return m.kvDelFunc(ctx, singletonAPISrv.kv, key)
 	}
-	return nil, singletonApiSrv.kv.Delete(ctx, key, nil)
+	return nil, singletonAPISrv.kv.Delete(ctx, key, nil)
 }
 
 // DelFromKvTxn is a wrapper around kvDelFunc to delete the object in the KV store.

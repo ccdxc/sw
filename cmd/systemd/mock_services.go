@@ -17,6 +17,7 @@ func NewMockSystemdService() types.SystemdService {
 	return &mockSystemdService{}
 }
 
+// StartNodeServices mocks sstart node
 func (m *mockSystemdService) StartNodeServices(virtualIP string) error {
 	m.Lock()
 	defer m.Unlock()
@@ -24,16 +25,19 @@ func (m *mockSystemdService) StartNodeServices(virtualIP string) error {
 	return nil
 }
 
+// StopNodeServices mocks stop node
 func (m *mockSystemdService) StopNodeServices() {
 	m.Lock()
 	defer m.Unlock()
 	m.nodeSvcsRunning = false
 }
 
+// AreNodeServicesRunning mocks service running api
 func (m *mockSystemdService) AreNodeServicesRunning() bool {
 	return m.nodeSvcsRunning
 }
 
+// StartLeaderServices mocks start leader
 func (m *mockSystemdService) StartLeaderServices(virtualIP string) error {
 	m.Lock()
 	defer m.Unlock()
@@ -41,12 +45,14 @@ func (m *mockSystemdService) StartLeaderServices(virtualIP string) error {
 	return nil
 }
 
+// StopLeaderServices mocks leader service
 func (m *mockSystemdService) StopLeaderServices() {
 	m.Lock()
 	defer m.Unlock()
 	m.leaderSvcsRunning = false
 }
 
+// AreLeaderServicesRunning mocks leader running api
 func (m *mockSystemdService) AreLeaderServicesRunning() bool {
 	return m.leaderSvcsRunning
 }

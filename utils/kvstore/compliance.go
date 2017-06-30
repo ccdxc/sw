@@ -16,6 +16,7 @@ import (
 // rest of the code. The test cases are meant to test semantic nature of the APIs
 //
 
+// exported constants
 const (
 	TestKey     = "/nbv"
 	testDir     = "/registry"
@@ -32,12 +33,14 @@ type expectedObj struct {
 	evType  WatchEventType
 }
 
+// TestObj is test object
 type TestObj struct {
 	api.TypeMeta
 	api.ObjectMeta
 	Counter int
 }
 
+// TestObjList is test list object
 type TestObjList struct {
 	api.TypeMeta
 	api.ListMeta
@@ -56,6 +59,7 @@ type StoreSetupFunc func(t *testing.T, cluster TestCluster) (Interface, error)
 // ClusterCleanupFunc cleans up (terminate, destroy objects, etc.) the specified cluster
 type ClusterCleanupFunc func(t *testing.T, cluster TestCluster)
 
+// RunInterfaceTests runs interface tests
 func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	fns := []func(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc){
 		TestCreate,
@@ -93,6 +97,7 @@ func setupTestCluster(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	return cluster, store
 }
 
+// TestCreate tests create
 func TestCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -116,6 +121,7 @@ func TestCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	t.Logf("Create succeeded with version: %s", obj.ResourceVersion)
 }
 
+// TestDuplicateCreate tests duplicate creates
 func TestDuplicateCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -135,6 +141,7 @@ func TestDuplicateCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetu
 	t.Logf("Duplicate create was detected")
 }
 
+// TestDelete tests deletes
 func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -165,6 +172,7 @@ func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	t.Logf("Delete of a key succeeded")
 }
 
+// TestNonExistentDelete tests non-existent deletes
 func TestNonExistentDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -179,6 +187,7 @@ func TestNonExistentDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	t.Logf("Delete of a non existent key failed as expected")
 }
 
+// TestAtomicDelete tests atomic deletes
 func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -190,7 +199,7 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	if err := store.Delete(context.Background(), TestKey, nil, Compare(WithVersion(TestKey), "=", 0)); err == nil {
+	if err = store.Delete(context.Background(), TestKey, nil, Compare(WithVersion(TestKey), "=", 0)); err == nil {
 		t.Fatalf("AtomicDelete failed with incorrect previous version")
 	}
 
@@ -208,6 +217,7 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	t.Logf("AtomicDelete of a key succeeded")
 }
 
+// TestPrefixDelete tests prefix deletes
 func TestPrefixDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -242,6 +252,7 @@ func TestPrefixDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	t.Logf("PrefixDelete of a key succeeded")
 }
 
+// TestUpdate tests updates
 func TestUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -270,6 +281,7 @@ func TestUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	t.Logf("Update of a key succeeded")
 }
 
+// TestNonExistentUpdate tests non-existent updates
 func TestNonExistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -284,6 +296,7 @@ func TestNonExistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	t.Logf("Update of a non existent object failed as expected")
 }
 
+// TestAtomicUpdate tests atomic updates
 func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -308,6 +321,7 @@ func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	t.Logf("AtomicUpdate of a key succeeded")
 }
 
+// TestConsistentUpdate tests consistent updates
 func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -331,7 +345,7 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	ch := make(chan bool, numUpdates)
 	for ii := 0; ii < numUpdates; ii++ {
 		go func() {
-			if err := store.ConsistentUpdate(context.Background(), TestKey, &TestObj{}, updateFunc); err != nil {
+			if err = store.ConsistentUpdate(context.Background(), TestKey, &TestObj{}, updateFunc); err != nil {
 				t.Fatalf("ConsistentUpdate of a key failed with error: %v", err)
 			}
 			ch <- true
@@ -356,6 +370,7 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	t.Logf("ConsistentUpdate of a key succeeded")
 }
 
+// TestList tests lists
 func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
@@ -397,7 +412,7 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	}
 
 	for ii := range keys {
-		err := store.Delete(context.Background(), TestKey+"/"+keys[ii], nil)
+		err = store.Delete(context.Background(), TestKey+"/"+keys[ii], nil)
 		if err != nil {
 			t.Fatalf("Failed to delete key %v, err %v", keys[ii], err)
 		}
@@ -514,7 +529,7 @@ func TestWatchExisting(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 
 	// Case 2 - created and updated.
 	obj.Counter = 1
-	if err := store.Update(context.Background(), TestKey, obj); err != nil {
+	if err = store.Update(context.Background(), TestKey, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
@@ -658,7 +673,7 @@ func expectWatchEvent(t *testing.T, ch <-chan *WatchEvent, evType WatchEventType
 }
 
 // newContest creates a new contender.
-func newContest(t *testing.T, ctx context.Context, store Interface, id string, ttl uint64) Election {
+func newContest(ctx context.Context, t *testing.T, store Interface, id string, ttl uint64) Election {
 	election, err := store.Contest(ctx, contestName, id, ttl)
 	if err != nil {
 		t.Fatalf("Contest creation for %v failed with error: %v", id, err)
@@ -668,22 +683,22 @@ func newContest(t *testing.T, ctx context.Context, store Interface, id string, t
 }
 
 // addCandidates creates the specified number of candidates.
-func addCandidates(t *testing.T, sSetup StoreSetupFunc, ctx context.Context, cluster TestCluster, numCandidates, startId int) []Election {
+func addCandidates(ctx context.Context, t *testing.T, sSetup StoreSetupFunc, cluster TestCluster, numCandidates, startID int) []Election {
 	contenders := []Election{}
 	for ii := 0; ii < numCandidates; ii++ {
 		store, err := sSetup(t, cluster)
 		if err != nil {
 			t.Fatalf("Store creation failed with error: %v", err)
 		}
-		contenders = append(contenders, newContest(t, ctx, store, fmt.Sprintf("contender-%d", ii+1+startId), minTTL))
+		contenders = append(contenders, newContest(ctx, t, store, fmt.Sprintf("contender-%d", ii+1+startID), minTTL))
 	}
 	return contenders
 }
 
 // setupContest sets up the asked number of candidates.
-func setupContest(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, ctx context.Context, numCandidates int) (TestCluster, []Election) {
+func setupContest(ctx context.Context, t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, numCandidates int) (TestCluster, []Election) {
 	cluster := cSetup(t)
-	return cluster, addCandidates(t, sSetup, ctx, cluster, numCandidates, 0)
+	return cluster, addCandidates(ctx, t, sSetup, cluster, numCandidates, 0)
 }
 
 // checkElectionEvents pulls one event out of each contender provided and checks that
@@ -715,7 +730,7 @@ func checkElectionEvents(t *testing.T, contenders []Election, expLeader bool) {
 // 1) One contender wins an election (among 3).
 // 2) Stopping the contest on the leader results in another election+winner.
 func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	cluster, contenders := setupContest(t, cSetup, sSetup, context.Background(), 3)
+	cluster, contenders := setupContest(context.Background(), t, cSetup, sSetup, 3)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
@@ -740,7 +755,7 @@ func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, 
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	contenders = append(contenders, newContest(t, context.Background(), store, newID, minTTL))
+	contenders = append(contenders, newContest(context.Background(), t, store, newID, minTTL))
 
 	if leader != contenders[0].Leader() {
 		t.Fatalf("Leader changed to %v, expecting %v", contenders[0].Leader(), leader)
@@ -752,12 +767,12 @@ func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, 
 	}
 }
 
-// TestRestart checks the following.
+// TestElectionRestartContender checks the following.
 // 1) One contender wins an election (among 3).
 // 2) Start another contender with the same ID.
 // 3) Check that the same ID wins the election.
 func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	cluster, contenders := setupContest(t, cSetup, sSetup, context.Background(), 3)
+	cluster, contenders := setupContest(context.Background(), t, cSetup, sSetup, 3)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
@@ -769,7 +784,7 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	contender := newContest(t, context.Background(), store, contenders[0].Leader(), minTTL)
+	contender := newContest(context.Background(), t, store, contenders[0].Leader(), minTTL)
 
 	time.Sleep(time.Second)
 	if contenders[0].Leader() != contender.Leader() {
@@ -787,13 +802,13 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	t.Logf("Starting CancelElection")
 	ctx, cancel := context.WithCancel(context.Background())
-	cluster, contenders := setupContest(t, cSetup, sSetup, ctx, 1)
+	cluster, contenders := setupContest(ctx, t, cSetup, sSetup, 1)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
 
 	// Add two more candidates.
-	newContenders := addCandidates(t, sSetup, context.Background(), cluster, 2, 1)
+	newContenders := addCandidates(context.Background(), t, sSetup, cluster, 2, 1)
 
 	// Check that original candidate is leader.
 	if !contenders[0].IsLeader() {

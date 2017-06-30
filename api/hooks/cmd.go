@@ -60,6 +60,6 @@ func registerCmdHooks(svc apiserver.Service, logger log.Logger) {
 
 func init() {
 	fmt.Printf("registered Hooks")
-	apisrv := apisrvpkg.MustGetApiServer()
+	apisrv := apisrvpkg.MustGetAPIServer()
 	apisrv.RegisterHooksCb("cmd.CmdV1", registerCmdHooks)
 }

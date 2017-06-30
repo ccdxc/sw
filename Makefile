@@ -28,7 +28,7 @@ govet-src: $(PKG_DIRS)
 
 checks: gofmt-src golint-src govet-src
 
-build: deps ws-tools checks
+build: deps checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 

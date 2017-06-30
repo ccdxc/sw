@@ -552,7 +552,7 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 }
 
 func init() {
-	apigw := apigwpkg.MustGetApiGateway()
+	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcTenantV1 := s_TenantV1GwService{}
 	apigw.Register("network.TenantV1", "tenant/", &svcTenantV1)

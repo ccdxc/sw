@@ -77,21 +77,21 @@ func (s *s_{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger
 			return txn.Delete(key)
 		}),{{else}},{{end}}{{end}}
 	}
-	
+
 	scheme.AddKnownTypes({{range  .Messages}}{{if (len (getDbKey .)) ne 0}}
 		&{{$pkgname}}.{{.Name}}{},{{end}}{{end}}
 	)
-	
+
 	apisrv.RegisterMessages("{{$pkgname}}", s.Messages)
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	{
 		srv := apisrvpkg.NewService("{{.Name}}")
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}
-		s.endpoints_{{$svcname}}.fn_{{.Name}} = srv.AddMethod("{{.Name}}", 
+		s.endpoints_{{$svcname}}.fn_{{.Name}} = srv.AddMethod("{{.Name}}",
 			apisrvpkg.NewMethod(s.Messages["{{$pkgname}}.{{.RequestType.Name}}"], s.Messages["{{$pkgname}}.{{.ResponseType.Name}}"], "{{$svcprefix}}", "{{.Name}}")) {{if $methparams.GrpcOnly}}.WithOper("{{$methparams.Oper}}"){{end}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
 		}){{end}}.WithVersion("{{$svcver}}").HandleInvocation
-		{{end}}		
+		{{end}}
 		s.Services = map[string]apiserver.Service{
 			"{{$pkgname}}.{{.Name}}": srv,
 		}
@@ -114,7 +114,7 @@ func (e *e_{{$svcname}}Endpoints) {{.Name}}(ctx context.Context, t {{$pkgname}}.
 }{{end}}{{end}}
 
 func init() {
-	apisrv = apisrvpkg.MustGetApiServer()
+	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := s_{{$pkgname}}Backend{}
 

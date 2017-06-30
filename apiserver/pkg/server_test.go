@@ -16,36 +16,36 @@ import (
 	"github.com/pensando/sw/utils/runtime"
 )
 
-type testApiSrvBackend struct {
+type testAPISrvBackend struct {
 	regevents int
 }
 
-func (t *testApiSrvBackend) CompleteRegistration(ctx context.Context,
+func (t *testAPISrvBackend) CompleteRegistration(ctx context.Context,
 	logger log.Logger, grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	t.regevents = t.regevents + 1
 	return nil
 }
 
-type testApiSrvService struct {
+type testAPISrvService struct {
 	hookcbCalled int
 }
 
-func (t *testApiSrvService) hooksCb(srv apisrv.Service, logger log.Logger) {
+func (t *testAPISrvService) hooksCb(srv apisrv.Service, logger log.Logger) {
 	t.hookcbCalled++
 }
 
-func (t *testApiSrvService) Enable()                                           {}
-func (t *testApiSrvService) Disable()                                          {}
-func (t *testApiSrvService) GetMethod(n string) apisrv.Method                  { return nil }
-func (t *testApiSrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
+func (t *testAPISrvService) Enable()                                           {}
+func (t *testAPISrvService) Disable()                                          {}
+func (t *testAPISrvService) GetMethod(n string) apisrv.Method                  { return nil }
+func (t *testAPISrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
 
 func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.
 	// Make sure to initialize the singleton.
-	_ = MustGetApiServer()
-	a := singletonApiSrv
-	s := testApiSrvBackend{}
-	s1 := testApiSrvBackend{}
+	_ = MustGetAPIServer()
+	a := singletonAPISrv
+	s := testAPISrvBackend{}
+	s1 := testAPISrvBackend{}
 	a.Register("register-test1", &s)
 	a.Register("register-test2", &s1)
 	if len(a.svcmap) != 2 {
@@ -58,7 +58,7 @@ func TestRegistration(t *testing.T) {
 		}
 	}
 
-	srv1 := testApiSrvService{}
+	srv1 := testAPISrvService{}
 	a.RegisterService("test-service", &srv1)
 	s2 := a.GetService("test-service")
 	if s2 == nil || s2 != &srv1 {
@@ -79,9 +79,9 @@ func TestRegistration(t *testing.T) {
 
 func TestDupRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
-	_ = MustGetApiServer()
-	a := singletonApiSrv
-	s := testApiSrvBackend{}
+	_ = MustGetAPIServer()
+	a := singletonAPISrv
+	s := testAPISrvBackend{}
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expecting panic but did not")
@@ -93,9 +93,9 @@ func TestDupRegistration(t *testing.T) {
 
 func TestDupPathRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
-	_ = MustGetApiServer()
-	a := singletonApiSrv
-	s := testApiSrvBackend{}
+	_ = MustGetAPIServer()
+	a := singletonAPISrv
+	s := testAPISrvBackend{}
 
 	// This is allowed and should not panic
 	a.Register("duppath-test1", &s)
@@ -103,14 +103,14 @@ func TestDupPathRegistration(t *testing.T) {
 }
 
 // TestInitOnce
-// Tests that multiple MustGetApiServer initializes the singleton only once.
+// Tests that multiple MustGetAPIServer initializes the singleton only once.
 func TestInitOnce(t *testing.T) {
-	srv := MustGetApiServer().(*apiSrv)
-	s := testApiSrvBackend{}
+	srv := MustGetAPIServer().(*apiSrv)
+	s := testAPISrvBackend{}
 
-	singletonApiSrv.svcmap["Testsvc"] = &s
+	singletonAPISrv.svcmap["Testsvc"] = &s
 
-	srv1 := MustGetApiServer().(*apiSrv)
+	srv1 := MustGetAPIServer().(*apiSrv)
 	if _, ok := srv1.svcmap["Testsvc"]; !ok {
 		t.Errorf("Did not find service in new API server")
 	}
@@ -134,9 +134,9 @@ func TestRunApiSrv(t *testing.T) {
 		},
 	}
 
-	_ = MustGetApiServer()
-	a := singletonApiSrv
-	s1 := testApiSrvService{}
+	_ = MustGetAPIServer()
+	a := singletonAPISrv
+	s1 := testAPISrvService{}
 	a.RegisterService("test-service1", &s1)
 	a.RegisterService("test-service2", &s1)
 	a.RegisterHooksCb("test-service1", s1.hooksCb)

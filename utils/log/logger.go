@@ -14,6 +14,7 @@ import (
 	"github.com/go-stack/stack"
 )
 
+// Logger interface definition
 type Logger interface {
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
@@ -43,10 +44,20 @@ type kitLogger struct {
 
 var caller = kitlog.Caller(4)
 
+// CtxKey is context key type
+type CtxKey int
+
+// context keys
+const (
+	PensandoTenant CtxKey = 1
+	PensandoUserID CtxKey = 2
+	PensandoTxnID  CtxKey = 3
+)
+
 func stackTrace() kitlog.Valuer {
 	return func() interface{} {
 		v := stack.Trace().TrimRuntime().TrimBelow(stack.Caller(4))
-		var r string = "["
+		var r = "["
 		var fmtstr = "[%s:%d %n()]"
 		for _, c := range v {
 			r = r + " " + fmt.Sprintf(fmtstr, c, c, c)
@@ -55,6 +66,7 @@ func stackTrace() kitlog.Valuer {
 	}
 }
 
+// GetNewLogger returns a new logger instance
 func GetNewLogger(debug bool) Logger {
 	l := kitlog.NewLogfmtLogger(os.Stdout)
 	if debug {
@@ -161,16 +173,16 @@ func (l *kitLogger) Audit(ctx context.Context, keyvals ...interface{}) error {
 	if ctx == nil {
 		return nil
 	}
-	v := ctx.Value("pensando-tenant")
+	v := ctx.Value(PensandoTenant)
 	if v != nil {
 		s := v.(string)
 		keyvals = append(keyvals, "tenant", s)
 	}
 
-	if v, ok := ctx.Value("pensando-user-id").(string); ok {
+	if v, ok := ctx.Value(PensandoUserID).(string); ok {
 		keyvals = append(keyvals, "user", v)
 	}
-	if v, ok := ctx.Value("pensando-txnid").(string); ok {
+	if v, ok := ctx.Value(PensandoTxnID).(string); ok {
 		keyvals = append(keyvals, "txnId", v)
 	}
 	// XXX-TBD add Span id from open tracing to the audit log.
@@ -178,7 +190,7 @@ func (l *kitLogger) Audit(ctx context.Context, keyvals ...interface{}) error {
 	return l.logger.Log(keyvals...)
 }
 
-// SetTraceDebug
+// SetTraceDebug enables trace debug
 // Enable tracedumping with SIGQUIT or ^\
 // Will dump stacktrace for all go routines and continue execution
 func SetTraceDebug() {

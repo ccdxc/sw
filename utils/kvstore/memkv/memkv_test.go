@@ -17,7 +17,7 @@ func clusterSetup(t *testing.T) kvstore.TestCluster {
 	rand.Seed(74)
 	return &memkvCluster{
 		elections: make(map[string]*memkvElection),
-		clientId:  0,
+		clientID:  0,
 		stores:    make(map[string]*MemKv),
 	}
 }
@@ -47,8 +47,8 @@ func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, e
 	c.Lock()
 	defer c.Unlock()
 
-	c.clientId++
-	clientName := fmt.Sprintf("memkv-%d", c.clientId)
+	c.clientID++
+	clientName := fmt.Sprintf("memkv-%d", c.clientID)
 
 	s := runtime.NewScheme()
 	s.AddKnownTypes(&kvstore.TestObj{}, &kvstore.TestObjList{})
@@ -92,7 +92,7 @@ func TestWatchVersion(t *testing.T) {
 		t.Fatalf("Get of the key failed with error: %v", err)
 	}
 
-	if err := store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
+	if err = store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 

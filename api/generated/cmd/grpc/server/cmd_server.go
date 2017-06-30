@@ -182,7 +182,7 @@ func (e *e_CmdV1Endpoints) ClusterOper(ctx context.Context, t cmd.Cluster) (cmd.
 }
 
 func init() {
-	apisrv = apisrvpkg.MustGetApiServer()
+	apisrv = apisrvpkg.MustGetAPIServer()
 
 	svc := s_cmdBackend{}
 

@@ -3,7 +3,7 @@
 for pkg in $@
 do
     echo "linting " $pkg
-    lint_error=$(golint $pkg | grep -v "orch\|kvstore\|agent\|apiserver\|apigw\|logger\|vendor\|scripts\|bi\|docs\|Godeps" | grep -v ".pb.go\|_mock.go" | tee /dev/stderr)
+    lint_error=$(golint $pkg | grep -v "orch\|agent\|vendor\|scripts\|bi\|docs\|Godeps" | grep -v ".pb.go\|_mock.go" | tee /dev/stderr)
 
     if [ "$lint_error" != "" ]; then
     	exit 1

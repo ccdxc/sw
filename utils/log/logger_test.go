@@ -162,10 +162,10 @@ func TestAuditLog(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 	l := GetNewLogger(false).SetOutput(buf)
-	var ctx context.Context
-	ctx = context.WithValue(ctx, "pensando-tenant", "TestTenant")
-	ctx = context.WithValue(ctx, "pensando-user-id", "TestUser")
-	ctx = context.WithValue(ctx, "pensando-txnid", "TestTxnId")
+	var ctx = context.Background()
+	ctx = context.WithValue(ctx, PensandoTenant, "TestTenant")
+	ctx = context.WithValue(ctx, PensandoUserID, "TestUser")
+	ctx = context.WithValue(ctx, PensandoTxnID, "TestTxnId")
 
 	l.Audit(ctx, "msg", "TestMsg")
 	if !strings.Contains(buf.String(), "user=TestUser") || !strings.Contains(buf.String(), "tenant=TestTenant") ||
@@ -178,7 +178,7 @@ func TestAuditLog(t *testing.T) {
 	// This is to test when all auditlog fields are not available in the context
 	buf.Reset()
 	ctx = context.Background()
-	ctx1 := context.WithValue(ctx, "pensando-tenant", "TestTenant")
+	ctx1 := context.WithValue(ctx, PensandoTenant, "TestTenant")
 	l.Audit(ctx1, "msg", "TestMsg")
 	if strings.Contains(buf.String(), "user=") || !strings.Contains(buf.String(), "tenant=TestTenant") ||
 		strings.Contains(buf.String(), "txnId=") || !strings.Contains(buf.String(), "msg=TestMsg") ||

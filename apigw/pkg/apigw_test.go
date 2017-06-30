@@ -31,12 +31,12 @@ func (t *testGwService) CompleteRegistration(ctx context.Context,
 // TestInitOnce
 // Tests that multiple MustGetAPiGateway initializes the singleton only once.
 func TestInitOnce(t *testing.T) {
-	gw := MustGetApiGateway().(*apiGw)
+	gw := MustGetAPIGateway().(*apiGw)
 	s := testGwService{}
 
 	gw.svcmap["Testsvc"] = &s
 
-	gw1 := MustGetApiGateway().(*apiGw)
+	gw1 := MustGetAPIGateway().(*apiGw)
 	if _, ok := gw1.svcmap["Testsvc"]; !ok {
 		t.Errorf("Did not find service in new Gateway")
 	}
@@ -48,8 +48,8 @@ func TestInitOnce(t *testing.T) {
 func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.
 	// Make sure to initialize the singleton.
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	s := testGwService{}
 	s1 := testGwService{}
 	a.Register("register-test1", "/test1", &s)
@@ -86,8 +86,8 @@ func dummyHandler(w http.ResponseWriter, r *http.Request) {
 // TestPreflightHandler
 // Test the preflight handler functionality
 func TestPreflightHandler(t *testing.T) {
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	buf := &bytes.Buffer{}
 
 	l := log.GetNewLogger(false).SetOutput(buf)
@@ -133,8 +133,8 @@ func TestPreflightHandler(t *testing.T) {
 // TestExtractHdrInfo
 // Test Extracting of the header information.
 func TestExtractHdrInfo(t *testing.T) {
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	buf := &bytes.Buffer{}
 
 	l := log.GetNewLogger(false).SetOutput(buf)
@@ -172,8 +172,8 @@ func TestExtractHdrInfo(t *testing.T) {
 // Expectation is to panic.
 func TestDupRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	s := testGwService{}
 	defer func() {
 		if r := recover(); r == nil {
@@ -188,8 +188,8 @@ func TestDupRegistration(t *testing.T) {
 // Tests duplicate registrations with same path which is allowed.
 func TestDupPathRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	s := testGwService{}
 
 	// This is allowed and should not panic
@@ -203,12 +203,12 @@ func TestRunApiGw(t *testing.T) {
 	buf := &bytes.Buffer{}
 	l := log.GetNewLogger(false).SetOutput(buf)
 	config := apigw.Config{
-		HttpAddr:  ":0",
+		HTTPAddr:  ":0",
 		DebugMode: true,
 		Logger:    l,
 	}
-	_ = MustGetApiGateway()
-	a := sinletonApiGw
+	_ = MustGetAPIGateway()
+	a := sinletonAPIGw
 	go a.Run(config)
 	err := errors.New("Testing Exit for ApiGateway")
 	a.doneCh <- err
