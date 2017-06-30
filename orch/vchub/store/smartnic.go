@@ -11,26 +11,31 @@ const (
 	smartNICPath = "/vchub/smartnics/"
 )
 
-func SmartNIC_Create(ctx context.Context, ID string, s *api.SmartNIC) error {
+// SmartNICCreate creates a SmartNIC object in the kv store
+func SmartNICCreate(ctx context.Context, ID string, s *api.SmartNIC) error {
 	key := smartNICPath + ID
 	return kvStore.Create(ctx, key, s)
 }
 
-func SmartNIC_Delete(ctx context.Context, ID string) error {
+// SmartNICDelete deletes a SmartNIC object from the kv store
+func SmartNICDelete(ctx context.Context, ID string) error {
 	key := smartNICPath + ID
 	return kvStore.Delete(ctx, key, nil)
 }
 
-func SmartNIC_Update(ctx context.Context, ID string, s *api.SmartNIC) error {
+// SmartNICUpdate updates a SmartNIC object in the kv store
+func SmartNICUpdate(ctx context.Context, ID string, s *api.SmartNIC) error {
 	key := smartNICPath + ID
 	return kvStore.Update(ctx, key, s)
 }
 
-func SmartNIC_WatchAll(ctx context.Context, refVersion string) (kvstore.Watcher, error) {
+// SmartNICWatchAll is used for watching all SmartNIC objects in the kv store
+func SmartNICWatchAll(ctx context.Context, refVersion string) (kvstore.Watcher, error) {
 	return kvStore.PrefixWatch(ctx, smartNICPath, refVersion)
 }
 
-func SmartNIC_List(ctx context.Context) (*api.SmartNICList, error) {
+// SmartNICList lists all SmartNIC objects in the kv store
+func SmartNICList(ctx context.Context) (*api.SmartNICList, error) {
 	list := api.SmartNICList{ListMeta: &swapi.ListMeta{}}
 	err := kvStore.List(ctx, smartNICPath, &list)
 	return &list, err

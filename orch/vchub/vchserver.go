@@ -40,7 +40,7 @@ var asInstance *vchServer
 // ListSmartNICs implements the RPC
 func (as *vchServer) ListSmartNICs(c context.Context, f *api.Filter) (*api.SmartNICList, error) {
 	// TODO: support filter
-	return store.SmartNIC_List(c)
+	return store.SmartNICList(c)
 }
 
 // WatchSmartNICs implements the watch RPC
@@ -48,7 +48,7 @@ func (as *vchServer) WatchSmartNICs(ws *api.WatchSpec, stream api.VCHubApi_Watch
 	watchVer := ws.GetRefversion()
 	// ignore filter for now - tbd
 	for {
-		watcher, err := store.SmartNIC_WatchAll(stream.Context(), watchVer)
+		watcher, err := store.SmartNICWatchAll(stream.Context(), watchVer)
 		if err != nil {
 			log.Errorf("Unable to watch store -- %v", err)
 			as.stats.StoreWatchFailCount++
@@ -118,7 +118,7 @@ func (as *vchServer) WatchSmartNICs(ws *api.WatchSpec, stream api.VCHubApi_Watch
 // ListNwIFs implements the RPC
 func (as *vchServer) ListNwIFs(c context.Context, f *api.Filter) (*api.NwIFList, error) {
 	// ignore filter for now - tbd
-	return store.NwIF_List(c)
+	return store.NwIFList(c)
 }
 
 // WatchNwIFs implements the watch RPC
@@ -126,7 +126,7 @@ func (as *vchServer) WatchNwIFs(ws *api.WatchSpec, stream api.VCHubApi_WatchNwIF
 	// ignore filter for now - TODO
 	watchVer := ws.GetRefversion()
 	for {
-		watcher, err := store.NwIF_WatchAll(stream.Context(), watchVer)
+		watcher, err := store.NwIFWatchAll(stream.Context(), watchVer)
 		if err != nil {
 			log.Errorf("Unable to watch store -- %v", err)
 			as.stats.StoreWatchFailCount++

@@ -11,6 +11,7 @@ import (
 
 var kvStore kvstore.Interface
 
+// Init initializes the VCHub store
 func Init(servers, storeType string) (kvstore.Interface, error) {
 	var err error
 	s := runtime.NewScheme()

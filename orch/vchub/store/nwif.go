@@ -11,26 +11,31 @@ const (
 	nwifPath = "/vchub/nwifs/"
 )
 
-func NwIF_Create(ctx context.Context, ID string, n *api.NwIF) error {
+// NwIFCreate creates a NwIF object in the kv store
+func NwIFCreate(ctx context.Context, ID string, n *api.NwIF) error {
 	key := nwifPath + ID
 	return kvStore.Create(ctx, key, n)
 }
 
-func NwIF_Delete(ctx context.Context, ID string) error {
+// NwIFDelete deletes a NwIF object from the kv store
+func NwIFDelete(ctx context.Context, ID string) error {
 	key := nwifPath + ID
 	return kvStore.Delete(ctx, key, nil)
 }
 
-func NwIF_Update(ctx context.Context, ID string, n *api.NwIF) error {
+// NwIFUpdate updates a NwIF object in the kv store
+func NwIFUpdate(ctx context.Context, ID string, n *api.NwIF) error {
 	key := nwifPath + ID
 	return kvStore.Update(ctx, key, n)
 }
 
-func NwIF_WatchAll(ctx context.Context, refVersion string) (kvstore.Watcher, error) {
+// NwIFWatchAll is used for watching all NwIF objects in the kv store
+func NwIFWatchAll(ctx context.Context, refVersion string) (kvstore.Watcher, error) {
 	return kvStore.PrefixWatch(ctx, nwifPath, refVersion)
 }
 
-func NwIF_List(ctx context.Context) (*api.NwIFList, error) {
+// NwIFList lists all NwIF objects in the kv store
+func NwIFList(ctx context.Context) (*api.NwIFList, error) {
 	list := api.NwIFList{ListMeta: &swapi.ListMeta{}}
 	err := kvStore.List(ctx, nwifPath, &list)
 	return &list, err

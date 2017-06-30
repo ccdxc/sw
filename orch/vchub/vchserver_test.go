@@ -214,16 +214,16 @@ func TestListSmartNICs(t *testing.T) {
 	nicMap[testNic2Mac] = suite.testNics[1]
 
 	for k, v := range nicMap {
-		err = store.SmartNIC_Create(context.Background(), k, v)
+		err = store.SmartNICCreate(context.Background(), k, v)
 		if err != nil {
-			t.Errorf("SmartNIC_Create failed %v", err)
+			t.Errorf("SmartNICCreate failed %v", err)
 		}
 	}
 
 	verifySmartNICList(t, nicMap) // empties the map!
 
 	// Delete one object and verify
-	err = store.SmartNIC_Delete(context.Background(), testNic1Mac)
+	err = store.SmartNICDelete(context.Background(), testNic1Mac)
 	nicMap[testNic2Mac] = suite.testNics[1]
 	verifySmartNICList(t, nicMap) // empties the map!
 }
@@ -246,7 +246,7 @@ func verifyWatch(t *testing.T, sndMap, rcvMap interface{}, wc <-chan int, loopCo
 	}
 }
 
-func watchSmartNICs(t *testing.T, rcvMap map[string]*api.SmartNIC, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int, rcvCtx context.Context) {
+func watchSmartNICs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api.SmartNIC, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int) {
 
 	defer close(ackCh)
 	ws := &api.WatchSpec{}
@@ -294,21 +294,21 @@ func TestWatchSmartNICs(t *testing.T) {
 	rcvCtx, rcvCancel := context.WithCancel(context.Background())
 	eventMap := make(map[api.WatchEvent_EventType]int)
 	ackCh := make(chan int)
-	go watchSmartNICs(t, rcvMap, eventMap, ackCh, rcvCtx)
+	go watchSmartNICs(rcvCtx, t, rcvMap, eventMap, ackCh)
 
 	// Create an object and verify
-	err := store.SmartNIC_Create(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
+	err := store.SmartNICCreate(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
 	if err != nil {
-		t.Errorf("SmartNIC_Create failed %v", err)
+		t.Errorf("SmartNICCreate failed %v", err)
 	}
 
 	sndMap[suite.testNics[0].Status.MacAddress] = suite.testNics[0]
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 
 	// Create another object and verify
-	err = store.SmartNIC_Create(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
+	err = store.SmartNICCreate(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
 	if err != nil {
-		t.Errorf("SmartNIC_Create failed %v", err)
+		t.Errorf("SmartNICCreate failed %v", err)
 	}
 
 	sndMap[suite.testNics[1].Status.MacAddress] = suite.testNics[1]
@@ -316,17 +316,17 @@ func TestWatchSmartNICs(t *testing.T) {
 
 	// Update an object and verify
 	suite.testNics[1].ObjectMeta.Name = "Butterfly.vmnic0"
-	err = store.SmartNIC_Update(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
+	err = store.SmartNICUpdate(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
 	if err != nil {
-		t.Errorf("SmartNIC_Update failed %v", err)
+		t.Errorf("SmartNICUpdate failed %v", err)
 	}
 
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 
 	// Delete an object and verify
-	err = store.SmartNIC_Delete(context.Background(), suite.testNics[1].Status.MacAddress)
+	err = store.SmartNICDelete(context.Background(), suite.testNics[1].Status.MacAddress)
 	if err != nil {
-		t.Errorf("SmartNIC_Delete failed %v", err)
+		t.Errorf("SmartNICDelete failed %v", err)
 	}
 
 	delete(sndMap, suite.testNics[1].Status.MacAddress)
@@ -350,21 +350,21 @@ func TestWatchSmartNICs(t *testing.T) {
 	}
 	// Update, Create, Delete, Create
 	suite.testNics[0].Status.HostIP = "10.193.246.201"
-	err = store.SmartNIC_Update(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
+	err = store.SmartNICUpdate(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
 	if err != nil {
-		t.Errorf("SmartNIC_Update failed %v", err)
+		t.Errorf("SmartNICUpdate failed %v", err)
 	}
-	err = store.SmartNIC_Create(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
+	err = store.SmartNICCreate(context.Background(), suite.testNics[1].Status.MacAddress, suite.testNics[1])
 	if err != nil {
-		t.Errorf("SmartNIC_Create failed %v", err)
+		t.Errorf("SmartNICCreate failed %v", err)
 	}
-	err = store.SmartNIC_Delete(context.Background(), suite.testNics[0].Status.MacAddress)
+	err = store.SmartNICDelete(context.Background(), suite.testNics[0].Status.MacAddress)
 	if err != nil {
-		t.Errorf("SmartNIC_Delete failed %v", err)
+		t.Errorf("SmartNICDelete failed %v", err)
 	}
-	err = store.SmartNIC_Create(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
+	err = store.SmartNICCreate(context.Background(), suite.testNics[0].Status.MacAddress, suite.testNics[0])
 	if err != nil {
-		t.Errorf("SmartNIC_Create failed %v", err)
+		t.Errorf("SmartNICCreate failed %v", err)
 	}
 	sndMap[suite.testNics[0].Status.MacAddress] = suite.testNics[0]
 	sndMap[suite.testNics[1].Status.MacAddress] = suite.testNics[1]
@@ -372,7 +372,7 @@ func TestWatchSmartNICs(t *testing.T) {
 	// start watch on the updated database
 	rcvCtx, rcvCancel = context.WithCancel(context.Background())
 	ackCh = make(chan int, 4)
-	go watchSmartNICs(t, rcvMap, eventMap, ackCh, rcvCtx)
+	go watchSmartNICs(rcvCtx, t, rcvMap, eventMap, ackCh)
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
 
 	// Verify the event count
@@ -535,21 +535,21 @@ func TestListNwIFs(t *testing.T) {
 	ifMap[testIf2ID] = suite.testIfs[1]
 
 	for k, v := range ifMap {
-		err = store.NwIF_Create(context.Background(), k, v)
+		err = store.NwIFCreate(context.Background(), k, v)
 		if err != nil {
-			t.Errorf("NwIF_Create failed %v", err)
+			t.Errorf("NwIFCreate failed %v", err)
 		}
 	}
 
 	verifyNwIFList(t, ifMap) // empties the map!
 
 	// Delete one object and verify
-	err = store.NwIF_Delete(context.Background(), testIf2ID)
+	err = store.NwIFDelete(context.Background(), testIf2ID)
 	ifMap[testIf1ID] = suite.testIfs[0]
 	verifyNwIFList(t, ifMap)
 }
 
-func watchNwIFs(t *testing.T, rcvMap map[string]*api.NwIF, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int, rcvCtx context.Context) {
+func watchNwIFs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api.NwIF, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int) {
 
 	defer close(ackCh)
 	ws := &api.WatchSpec{}
@@ -597,21 +597,21 @@ func TestWatchNwIFs(t *testing.T) {
 	rcvCtx, rcvCancel := context.WithCancel(context.Background())
 	eventMap := make(map[api.WatchEvent_EventType]int)
 	ackCh := make(chan int)
-	go watchNwIFs(t, rcvMap, eventMap, ackCh, rcvCtx)
+	go watchNwIFs(rcvCtx, t, rcvMap, eventMap, ackCh)
 
 	// Create an object and verify
-	err := store.NwIF_Create(context.Background(), testIf1ID, suite.testIfs[0])
+	err := store.NwIFCreate(context.Background(), testIf1ID, suite.testIfs[0])
 	if err != nil {
-		t.Errorf("NwIF_Create failed %v", err)
+		t.Errorf("NwIFCreate failed %v", err)
 	}
 
 	sndMap[testIf1ID] = suite.testIfs[0]
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 
 	// Create another object and verify
-	err = store.NwIF_Create(context.Background(), testIf2ID, suite.testIfs[1])
+	err = store.NwIFCreate(context.Background(), testIf2ID, suite.testIfs[1])
 	if err != nil {
-		t.Errorf("NwIF_Create failed %v", err)
+		t.Errorf("NwIFCreate failed %v", err)
 	}
 
 	sndMap[testIf2ID] = suite.testIfs[1]
@@ -619,17 +619,17 @@ func TestWatchNwIFs(t *testing.T) {
 
 	// Update an object and verify
 	suite.testIfs[1].ObjectMeta.Name = "spur.eth0"
-	err = store.NwIF_Update(context.Background(), testIf2ID, suite.testIfs[1])
+	err = store.NwIFUpdate(context.Background(), testIf2ID, suite.testIfs[1])
 	if err != nil {
-		t.Errorf("NwIF_Update failed %v", err)
+		t.Errorf("NwIFUpdate failed %v", err)
 	}
 
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 
 	// Delete an object and verify
-	err = store.NwIF_Delete(context.Background(), testIf2ID)
+	err = store.NwIFDelete(context.Background(), testIf2ID)
 	if err != nil {
-		t.Errorf("NwIF_Delete failed %v", err)
+		t.Errorf("NwIFDelete failed %v", err)
 	}
 
 	delete(sndMap, testIf2ID)
@@ -637,9 +637,9 @@ func TestWatchNwIFs(t *testing.T) {
 
 	// Another update
 	suite.testIfs[0].Attributes["titles"] = "2"
-	err = store.NwIF_Update(context.Background(), testIf1ID, suite.testIfs[0])
+	err = store.NwIFUpdate(context.Background(), testIf1ID, suite.testIfs[0])
 	if err != nil {
-		t.Errorf("NwIF_Update failed %v", err)
+		t.Errorf("NwIFUpdate failed %v", err)
 	}
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 	rcvCancel()
@@ -660,17 +660,17 @@ func TestWatchNwIFs(t *testing.T) {
 		eventMap[k] = 0
 	}
 	// Create, Delete, Create
-	err = store.NwIF_Create(context.Background(), testIf2ID, suite.testIfs[1])
+	err = store.NwIFCreate(context.Background(), testIf2ID, suite.testIfs[1])
 	if err != nil {
-		t.Errorf("NwIF_Create failed %v", err)
+		t.Errorf("NwIFCreate failed %v", err)
 	}
-	err = store.NwIF_Delete(context.Background(), testIf1ID)
+	err = store.NwIFDelete(context.Background(), testIf1ID)
 	if err != nil {
-		t.Errorf("NwIF_Delete failed %v", err)
+		t.Errorf("NwIFDelete failed %v", err)
 	}
-	err = store.NwIF_Create(context.Background(), testIf1ID, suite.testIfs[0])
+	err = store.NwIFCreate(context.Background(), testIf1ID, suite.testIfs[0])
 	if err != nil {
-		t.Errorf("NwIF_Create failed %v", err)
+		t.Errorf("NwIFCreate failed %v", err)
 	}
 	sndMap[testIf1ID] = suite.testIfs[0]
 	sndMap[testIf2ID] = suite.testIfs[1]
@@ -678,7 +678,7 @@ func TestWatchNwIFs(t *testing.T) {
 	// start watch on the updated database
 	rcvCtx, rcvCancel = context.WithCancel(context.Background())
 	ackCh = make(chan int, 4)
-	go watchNwIFs(t, rcvMap, eventMap, ackCh, rcvCtx)
+	go watchNwIFs(rcvCtx, t, rcvMap, eventMap, ackCh)
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
 
 	// Verify the event count
