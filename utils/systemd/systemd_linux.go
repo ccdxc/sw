@@ -1,6 +1,7 @@
 package systemd
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -25,7 +26,7 @@ func StartTarget(name string) (err error) {
 	reschan := make(chan string)
 	pid, err := conn.StartUnit(name, "replace", reschan)
 	if err != nil {
-		return errors.Wrapf(err, "unable to start target")
+		return errors.Wrapf(err, "unable to start target(%s)", name)
 	}
 	select {
 	case status := <-reschan:
@@ -35,7 +36,7 @@ func StartTarget(name string) (err error) {
 		log.Infof("Started %v with pid %v", name, pid)
 		return nil
 	case <-time.After(targetStateChangeWaitTime):
-		return errors.New("timedout when starting target")
+		return fmt.Errorf("timedout when starting target(%s)", name)
 	}
 }
 
@@ -50,7 +51,7 @@ func StopTarget(name string) error {
 	reschan := make(chan string)
 	_, err = conn.StopUnit(name, "replace", reschan)
 	if err != nil {
-		return errors.Wrapf(err, "unable to stop target")
+		return errors.Wrapf(err, "unable to stop target(%s)", name)
 	}
 	select {
 	case status := <-reschan:
@@ -59,7 +60,7 @@ func StopTarget(name string) error {
 		}
 		return nil
 	case <-time.After(targetStateChangeWaitTime):
-		return errors.New("timedout when stopping target")
+		return fmt.Errorf("timedout when stopping target(%s)", name)
 	}
 }
 
@@ -74,7 +75,7 @@ func RestartTarget(name string) error {
 	reschan := make(chan string)
 	_, err = conn.StopUnit(name, "replace", reschan)
 	if err != nil {
-		return errors.Wrapf(err, "unable to stop target during restart unit")
+		return errors.Wrapf(err, "unable to stop target(%s) during restart unit", name)
 	}
 
 	// we dont care about the status. However we wait for upto a second for response
@@ -89,7 +90,7 @@ func RestartTarget(name string) error {
 	reschan = make(chan string)
 	_, err = conn.StartUnit(name, "replace", reschan)
 	if err != nil {
-		return errors.Wrapf(err, "unable to start target during restart unit")
+		return errors.Wrapf(err, "unable to start target(%s) during restart unit", name)
 	}
 	select {
 	case status := <-reschan:
@@ -98,7 +99,7 @@ func RestartTarget(name string) error {
 		}
 		return nil
 	case <-time.After(targetStateChangeWaitTime):
-		return errors.New("timedout when restarting target")
+		return fmt.Errorf("timedout when restarting target(%s)", name)
 	}
 
 }

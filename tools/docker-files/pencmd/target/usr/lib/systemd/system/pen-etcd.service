@@ -1,0 +1,14 @@
+[Unit]
+Description=ETC kvstore daemon
+
+[Service]
+User=root
+Type=oneshot
+EnvironmentFile=-/etc/pensando/etcd.conf
+ExecStartPre=-/usr/bin/docker kill etcd
+ExecStartPre=-/usr/bin/docker rm etcd
+ExecStart=/usr/bin/docker run -d --privileged --net=host --name etcd -v /etc/pensando:/etc/pensando quay.io/coreos/etcd:v3.2.1 \
+			etcd $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
+			$INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
+			$LIS_PEER_URLS
+LimitNOFILE=40000

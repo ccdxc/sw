@@ -3,17 +3,13 @@ Description=Kubernetes API Server
 
 [Service]
 User=root
-Type=simple
+Type=oneshot
 EnvironmentFile=-/etc/pensando/kube-apiserver.conf
-ExecStart=/import/src/k8s.io/kubernetes/_output/local/bin/linux/amd64/kube-apiserver \
+ExecStart=/usr/bin/docker run --privileged --net=host --name kube-apiserver -d gcr.io/google_containers/kube-apiserver-amd64:v1.6.6 \
+			kube-apiserver \
 			$INSECURE_ALLOW \
 			$INSECURE_ADDR \
 			$INSECURE_PORT \
 			$ETCD_SERVERS \
-			$SERVICE_CLUSTER \
-Restart=always
-RestartSec=10s
+			$SERVICE_CLUSTER 
 LimitNOFILE=40000
-
-[Install]
-WantedBy=multi-user.target

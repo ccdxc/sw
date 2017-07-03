@@ -1,0 +1,11 @@
+[Unit]
+Description=Kubernetes Scheduler
+
+[Service]
+User=root
+Type=oneshot
+EnvironmentFile=-/etc/pensando/kube.conf
+ExecStart=/usr/bin/docker run --privileged --net=host --name kube-scheduler -d gcr.io/google_containers/kube-scheduler-amd64:v1.6.6 \
+		kube-scheduler \
+		$KUBE_MASTER 
+LimitNOFILE=40000

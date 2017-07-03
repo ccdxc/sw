@@ -1,15 +1,66 @@
 #!/bin/bash
 
-cd tools/docker-files
-
-if git diff-index --quiet HEAD --; then
-    #no changes in tree. Tag by githash of tree and date
-    VER=$(date +%Y%m%d.%H%M%S)-$(git rev-parse --short HEAD)
-else
-    # some local changes in the tree
-    VER=$(date +%Y%m%d.%H%M%S)-local
+if [ "$PENS_NODES" == "" ]
+then
+    PENS_NODES=3
 fi
-echo Building docker image with tag pen.io:${VER}
-docker build --rm --no-cache -t pen.io:${VER} .
-echo now you can run the image with syntax like:
-echo docker run --privileged --net=host --name pen.io -v /sys/fs/cgroup:/sys/fs/cgroup:ro  -d pen.io:${VER}
+
+function createBaseContainer() {
+    if git diff-index --quiet HEAD --; then
+        #no changes in tree. Tag by githash of tree and date
+        VER=$(date +%Y%m%d.%H%M%S)-$(git rev-parse --short HEAD)
+    else
+        # some local changes in the tree
+        VER=$(date +%Y%m%d.%H%M%S)-local
+    fi
+    echo Building docker image with tag pen-base:${VER}
+    docker build --rm --no-cache -t pen-base:${VER} -f tools/docker-files/pencmd/Dockerfile tools/docker-files/pencmd
+    docker tag pen-base:${VER} pen-base:latest
+}
+
+function createBinContainerTarBall() {
+    if [ "$(docker images -q pen-ntp)"  == "" ] 
+    then
+        docker build --rm -t pen-ntp -f tools/docker-files/ntp/Dockerfile tools/docker-files/ntp
+    fi
+    for i in gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 gcr.io/google_containers/kube-scheduler-amd64:v1.6.6  gcr.io/google_containers/kube-apiserver-amd64:v1.6.6  quay.io/coreos/etcd:v3.2.1
+    do
+        if [ "$(docker images -q $i)"  == "" ] 
+        then
+            docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.6.6 
+        fi
+    done
+    docker save -o bin/pen.tar pen-base:latest pen-ntp gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 gcr.io/google_containers/kube-scheduler-amd64:v1.6.6  gcr.io/google_containers/kube-apiserver-amd64:v1.6.6  quay.io/coreos/etcd:v3.2.1 
+}
+
+function stopCluster() {
+    for i in $(seq 1 $PENS_NODES)
+    do
+        echo cleaning up node${i}
+        for j in pen-base etcd kube-controller-manager kube-scheduler kube-apiserver
+        do
+            vagrant ssh node${i} -- docker stop $j '&&' docker rm $j >/dev/null 2>&1
+        done
+        vagrant ssh node${i} -- sudo systemctl stop pen-kubelet 
+        vagrant ssh node${i} -- sudo rm -fr /etc/pensando/* /etc/kubernetes/*
+        # TODO : stop other services/containers that get started by pensando
+    done
+}
+
+function startCluster() {
+    for i in $(seq 1 $PENS_NODES)
+    do
+        echo provisioning node${i}
+        vagrant ssh node${i} -- sudo mkdir  -p /usr/pensando/bin
+        vagrant ssh node${i} -- docker load -i /import/bin/pen.tar
+        vagrant ssh node${i} -- docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d pen-base
+    done
+}
+
+case $1 in 
+    createBaseContainer) createBaseContainer ;;
+    createBinContainerTarBall) createBinContainerTarBall;;
+    startCluster) stopCluster ; startCluster;;
+    stopCluster) stopCluster ;;
+    *) ;;
+esac

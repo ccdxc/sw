@@ -2,7 +2,11 @@ package globals
 
 const (
 	// Config directory
-	ConfigDir = "/etc/pensando"
+	ConfigDir       = "/etc/pensando"
+	EtcdServiceFile = "pen-etcd.service"
+
+	// Data directory
+	EtcdDataDir = "/var/lib/etcd"
 
 	// Ports
 	// CMD

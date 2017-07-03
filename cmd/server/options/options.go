@@ -47,9 +47,9 @@ func NewServerRunOptions() *ServerRunOptions {
 	kvStoreOptions := &KVStoreOptions{
 		PeerPort:   globals.KVStorePeerPort,
 		ClientPort: globals.KVStoreClientPort,
-		ConfigFile: "/etc/etcd.conf",
-		UnitFile:   "etcd.service",
-		DataDir:    "/var/lib/etcd",
+		ConfigFile: globals.EtcdConfigFile,
+		UnitFile:   globals.EtcdServiceFile,
+		DataDir:    globals.EtcdDataDir,
 	}
 
 	return &ServerRunOptions{

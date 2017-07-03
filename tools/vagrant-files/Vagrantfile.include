@@ -52,7 +52,7 @@ def preamble_script(postamble)
     systemctl stop firewalld
     setenforce 0
     gpasswd -a vagrant root
-    curl -sSL box-builder.sh | bash
+    # curl -sSL box-builder.sh | bash
 
     # Add pensando internal docker registry
     echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json

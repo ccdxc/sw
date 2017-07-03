@@ -6,7 +6,8 @@ After=network.target
 
 [Service]
 EnvironmentFile=-/etc/pensando/pencmd.conf
-ExecStart=/usr/bin/pen-cmd $MYCMD -start
+ExecStartPre=/usr/bin/ln -s /docker.sock /var/run
+ExecStart=/usr/bin/pen-cmd
 
 Type=simple
 Restart=always

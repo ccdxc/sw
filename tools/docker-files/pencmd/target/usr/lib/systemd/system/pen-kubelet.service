@@ -3,17 +3,13 @@ Description=Kubelet
 
 [Service]
 User=root
-Type=simple
 EnvironmentFile=-/etc/pensando/kubelet.conf
-ExecStart=/import/src/k8s.io/kubernetes/_output/local/bin/linux/amd64/kubelet \
+ExecStart=/usr/pensando/bin/kubelet \
 			$KUBELET_ADDRESS \
 			$ALLOW_PRIVILEGED \
 			$KUBE_CONFIG \
 			$REQUIRE_KUBE_CONFIG \
-			$CGROUP_DRIVER \
+			$CGROUP_DRIVER 
 Restart=always
 RestartSec=10s
 LimitNOFILE=40000
-
-[Install]
-WantedBy=multi-user.target

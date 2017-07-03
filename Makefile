@@ -32,9 +32,17 @@ build: deps checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
+c-start:
+	@tools/scripts/create-container.sh startCluster
+
+c-stop:
+	@tools/scripts/create-container.sh stopCluster
+
 install:
-	@cp bin/cmd tools/docker-files/target/usr/bin/pen-cmd
-	@tools/scripts/create-container.sh
+	@cp bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
+	@tools/scripts/create-container.sh createBaseContainer
+	@tools/scripts/create-container.sh createBinContainerTarBall
+
 
 build-container:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld .

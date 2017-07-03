@@ -10,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/clientv3"
 
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/quorum"
 	"github.com/pensando/sw/utils/systemd"
 )
@@ -22,9 +23,9 @@ type etcdQuorum struct {
 
 const (
 	// Defaults
-	defaultCfgFile  = "/etc/etcd.conf"
-	defaultDataDir  = "/var/lib/etcd"
-	defaultUnitFile = "etcd.service"
+	defaultCfgFile  = globals.EtcdConfigFile
+	defaultDataDir  = globals.EtcdDataDir
+	defaultUnitFile = globals.EtcdServiceFile
 	timeout         = time.Second * 5
 
 	// Environment variables
@@ -122,7 +123,7 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	cfgFile.Sync()
 
 	// Start etcd using systemd.
-	err = systemd.StartTarget("etcd.service")
+	err = systemd.StartTarget(c.UnitFile)
 	if err != nil {
 		return nil, err
 	}

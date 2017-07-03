@@ -14,8 +14,8 @@ import (
 // Services that run on node that wins the election.
 // TODO: Spread these out when it makes sense to do so.
 var (
-	masterServices = []string{"kube-apiserver", "kube-scheduler", "kube-controller-manager"}
-	nodeServices   = []string{"kubelet"}
+	masterServices = []string{"pen-kube-apiserver", "pen-kube-scheduler", "pen-kube-controller-manager"}
+	nodeServices   = []string{"pen-kubelet"}
 )
 
 type systemdService struct {

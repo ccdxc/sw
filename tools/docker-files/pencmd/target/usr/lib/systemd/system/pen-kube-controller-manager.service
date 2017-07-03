@@ -1,0 +1,12 @@
+[Unit]
+Description=Kubernetes Controller Manager
+
+[Service]
+User=root
+Type=oneshot
+EnvironmentFile=-/etc/pensando/kube.conf
+ExecStart=/usr/bin/docker run --privileged --net=host --name kube-controller-manager -d gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 \
+			kube-controller-manager \
+			$KUBE_MASTER 
+
+LimitNOFILE=40000
