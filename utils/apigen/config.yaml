@@ -20,3 +20,5 @@ templates:
     outputpath: "../exports/apiserver/backends.go"
   - template: "apigwservices.tmpl"
     outputpath: "../exports/apigw/services.go"
+  - template: "genobjrelations.tmpl"
+    outputpath: "../relations.json"

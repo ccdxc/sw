@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/golang/glog"
 
 	descriptor "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	venice "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando/annotations"
 	reg "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 )
 
@@ -30,6 +32,14 @@ func parseStringOptions(val interface{}) (interface{}, error) {
 
 func parseInt32Options(val interface{}) (interface{}, error) {
 	v, ok := val.(*int32)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return *v, nil
+}
+
+func parseObjRelation(val interface{}) (interface{}, error) {
+	v, ok := val.(*venice.ObjectRln)
 	if !ok {
 		return nil, errInvalidOption
 	}
@@ -237,6 +247,68 @@ func genManifest(path, pkg, file string) (map[string]string, error) {
 	return manifest, nil
 }
 
+type RelationRef struct {
+	Type  string
+	To    string
+	Field string
+}
+
+var relMap = make(map[string][]RelationRef)
+
+func addRelations(f *descriptor.Field) error {
+	if r, err := reg.GetExtension("venice.objRelation", f); err == nil {
+		glog.V(1).Infof("Checking relation to %s", *f.Name)
+		name := f.Message.File.GoPkg.Name + "." + *f.Message.Name
+		if fr, ok := r.(venice.ObjectRln); ok {
+			glog.V(1).Infof("adding relation to %s.%s", name, *f.Name)
+			m := RelationRef{Type: fr.Type, To: fr.To, Field: *f.Name}
+			relMap[name] = append(relMap[name], m)
+		}
+	} else {
+		glog.V(1).Infof("relations.. not found on %s", *f.Name)
+	}
+	return nil
+}
+
+func genRelMap(path string) (string, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("RelationRef [%s] not found", path)
+	} else {
+		glog.V(1).Infof("RelationRef exists, reading from manifest")
+		raw, err := ioutil.ReadFile(path)
+		if err != nil {
+			glog.V(1).Infof("Reading Relation failed (%s)", err)
+			return "", err
+		}
+		rmap := make(map[string][]RelationRef)
+		err = json.Unmarshal(raw, &rmap)
+		if err != nil {
+			glog.V(1).Infof("Json Unmarshall of rel map file failed ignoring current file")
+		} else {
+			for k, v := range rmap {
+				if _, ok := relMap[k]; ok {
+					relMap[k] = append(relMap[k], v...)
+				} else {
+					relMap[k] = v
+				}
+			}
+		}
+	}
+	if len(relMap) > 0 {
+		ret, err := json.MarshalIndent(relMap, "", "  ")
+		if err != nil {
+			glog.V(1).Infof("Failed to marshall output rel map")
+			return "", err
+		}
+		str := string(ret[:])
+		glog.V(1).Infof("Generated Relations.json %v", str)
+		return str, nil
+	} else {
+		return "{}", nil
+	}
+
+}
+
 func init() {
 	// Register Option Parsers
 	reg.RegisterOptionParser("venice.fileGrpcDest", parseStringOptions)
@@ -247,6 +319,7 @@ func init() {
 	reg.RegisterOptionParser("venice.methodOper", parseStringOptions)
 	reg.RegisterOptionParser("venice.objectIdentifier", parseStringOptions)
 	reg.RegisterOptionParser("venice.objectPrefix", parseStringOptions)
+	reg.RegisterOptionParser("venice.objRelation", parseObjRelation)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -256,4 +329,6 @@ func init() {
 	reg.RegisterFunc("getSwaggerFileName", getSwaggerFileName)
 	reg.RegisterFunc("createDir", createDir)
 	reg.RegisterFunc("genManifest", genManifest)
+	reg.RegisterFunc("addRelations", addRelations)
+	reg.RegisterFunc("genRelMap", genRelMap)
 }

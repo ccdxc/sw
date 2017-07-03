@@ -20,6 +20,11 @@ if [ -e ${curdir}/generated/manifest ]; then
     rm -f ${curdir}/generated/manifest
 fi
 
+# Delete the relations file if already exists.
+if [ -e ${curdir}/generated/relations.json ]; then
+    rm -f ${curdir}/generated/relations.json
+fi
+
 echo "++ generating manifest"
 for protofile in ${protopath}/*.proto
 do

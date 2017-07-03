@@ -4,6 +4,13 @@ package venice;
 
 import "google/protobuf/descriptor.proto";
 
+message ObjectRln {
+  // Type of reference one of [ NamedRef, SelectorRef, BackRef ]
+  string Type = 1;
+  // Object being referred to.
+  string To = 2;
+}
+
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key. 
@@ -30,4 +37,9 @@ extend google.protobuf.MessageOptions {
   // Path prefix specification for the KV Store for this message. Needs to be specified for all objects that
   // the api server is to persist in the KV store.
   string objectPrefix = 51290;
+};
+
+extend google.protobuf.FieldOptions {
+  // Relation definition between a field and an object.
+  ObjectRln objRelation = 51300;
 };
