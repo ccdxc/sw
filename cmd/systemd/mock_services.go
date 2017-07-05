@@ -1,6 +1,7 @@
 package systemd
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pensando/sw/cmd/types"
@@ -41,6 +42,9 @@ func (m *mockSystemdService) AreNodeServicesRunning() bool {
 func (m *mockSystemdService) StartLeaderServices(virtualIP string) error {
 	m.Lock()
 	defer m.Unlock()
+	if m.leaderSvcsRunning {
+		return fmt.Errorf("Leader services already running")
+	}
 	m.leaderSvcsRunning = true
 	return nil
 }

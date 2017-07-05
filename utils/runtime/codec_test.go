@@ -49,14 +49,17 @@ func TestJSONEncode(t *testing.T) {
 }
 
 func TestJSONDecode(t *testing.T) {
-	expectedObj := TestObj{Bar: "def"}
+	expectedObj := TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, Bar: "def"}
 	var obj TestObj
-	input := "{\"Bar\":\"def\"}"
+	input := "{\"Kind\": \"TestObj\", \"Bar\":\"def\"}"
 
 	codec := newCodec("json")
 
 	if _, err := codec.Decode([]byte(input), &obj); err != nil || obj != expectedObj {
 		t.Fatalf("Decode test failed, err %v, obj %v", err, obj)
+	}
+	if obj, err := codec.Decode([]byte(input), nil); err != nil || obj == nil {
+		t.Fatalf("Decode with nil obj failed, error: %v", err)
 	}
 }
 
@@ -96,5 +99,8 @@ func TestProtoDecode(t *testing.T) {
 
 	if _, err := codec.Decode(input, &obj); err != nil || !reflect.DeepEqual(obj, expectedObj) {
 		t.Fatalf("Decode test failed, err %v, obj %v", err, obj)
+	}
+	if obj, err := codec.Decode([]byte(input), nil); err != nil || obj == nil {
+		t.Fatalf("Decode with nil obj failed, error: %v", err)
 	}
 }

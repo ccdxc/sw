@@ -19,6 +19,7 @@ const (
 type leaderService struct {
 	sync.Mutex
 	id        string
+	leader    string
 	isLeader  bool
 	virtualIP string
 	store     kvstore.Interface
@@ -64,20 +65,22 @@ func (l *leaderService) start() error {
 
 // waitForEventsOrCancel waits for events until ctx is canceled.
 func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
+	evCh := l.election.EventChan()
 	for {
 		select {
-		case e, ok := <-l.election.EventChan():
-			if !ok {
+		case e, ok := <-evCh:
+			if ok {
+				log.Infof("Election event: %+v", e)
+				l.Lock()
+				l.processEvent(e.Leader)
+				l.Unlock()
+			} else {
 				// Cant trust being a leader anymore.
-				l.processEvent("")
-				return
+				l.Stop()
+				go l.start()
 			}
-			log.Infof("Election event: %+v", e)
-			l.processEvent(e.Leader)
 		case <-ctx.Done():
 			log.Infof("Leader election cancelled")
-			l.cancel = nil
-			l.processEvent("")
 			return
 		}
 	}
@@ -88,28 +91,25 @@ func (l *leaderService) Stop() {
 	l.Lock()
 	defer l.Unlock()
 	l.stop()
+	l.processEvent("")
 }
 
 // stop is a helper function to stop the leader election.
 func (l *leaderService) stop() {
+	if l.election != nil {
+		l.election.Stop()
+		l.election = nil
+	}
+	l.leader = ""
 	if l.cancel != nil {
 		l.cancel()
 		l.cancel = nil
 	}
 }
 
-// restartElection restarts the election, needs to be called in case of failures
-// when starting master services. This will give another node a chance to become
-// leader in case of persistent failures.
-func (l *leaderService) restartElection() {
-	l.stop()
-	l.start()
-}
-
 // processEvent handles leader election events.
 func (l *leaderService) processEvent(leader string) {
-	l.Lock()
-	defer l.Unlock()
+	l.leader = leader
 	if l.id == leader {
 		if l.isLeader {
 			// Already leader, nothing to do.
@@ -118,7 +118,8 @@ func (l *leaderService) processEvent(leader string) {
 		if err := l.startLeaderServices(); err != nil {
 			log.Errorf("Failed to start leader services with error: %v", err)
 			l.stopLeaderServices()
-			l.restartElection()
+			l.stop()
+			go l.start()
 			return
 		}
 		l.isLeader = true
@@ -158,8 +159,5 @@ func (l *leaderService) stopLeaderServices() {
 func (l *leaderService) Leader() string {
 	l.Lock()
 	defer l.Unlock()
-	if l.election != nil {
-		return l.election.Leader()
-	}
-	return ""
+	return l.leader
 }

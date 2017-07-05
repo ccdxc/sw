@@ -203,6 +203,9 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 				break
 			}
 		}
+		if stopped {
+			return
+		}
 		leaseID = clientv3.NoLease
 	}
 }

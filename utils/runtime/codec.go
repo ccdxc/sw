@@ -62,7 +62,10 @@ func (j *JSONCodec) findKind(data []byte) (string, error) {
 // findKind finds the kind from a serialized version of an API object.
 func (j *ProtoCodec) findKind(data []byte) (string, error) {
 	var meta api.TypeMeta
-	if err := proto.Unmarshal(data, &meta); err != nil {
+	// Protobuf encoding has a header that is variable. The assumption here is
+	// that TypeMeta is in front of the object. Checks will be implemented in
+	// the generator.
+	if err := proto.Unmarshal(data[2:], &meta); err != nil {
 		return "", err
 	}
 

@@ -72,3 +72,38 @@ func TestLeaderService(t *testing.T) {
 		t.Fatalf("Failed to stop leader services")
 	}
 }
+
+func TestLeaderServiceWithIPError(t *testing.T) {
+	cluster, store := setupTestCluster(t)
+	defer cluster.Terminate(t)
+
+	id := "foo"
+
+	ip := "192.168.30.10"
+	ipSvc := NewMockIPService()
+	ipSvc.(*mockIPService).SetError()
+	systemdSvc := systemd.NewMockSystemdService()
+
+	l := NewLeaderService(store, ipSvc, systemdSvc, id, ip)
+	go l.Start()
+
+	for ii := 0; ii < 5; ii++ {
+		if l.Leader() == id {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if l.Leader() == id {
+		t.Fatalf("Became leader when it shouldn't")
+	}
+	ipSvc.(*mockIPService).ClearError()
+	for ii := 0; ii < 5; ii++ {
+		if l.Leader() == id {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if l.Leader() != id {
+		t.Fatalf("Failed to become leader")
+	}
+}
