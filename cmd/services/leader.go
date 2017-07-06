@@ -20,7 +20,6 @@ type leaderService struct {
 	sync.Mutex
 	id        string
 	leader    string
-	isLeader  bool
 	virtualIP string
 	store     kvstore.Interface
 	election  kvstore.Election
@@ -77,7 +76,7 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 			} else {
 				// Cant trust being a leader anymore.
 				l.Stop()
-				go l.start()
+				go l.Start()
 			}
 		case <-ctx.Done():
 			log.Infof("Leader election cancelled")
@@ -100,7 +99,6 @@ func (l *leaderService) stop() {
 		l.election.Stop()
 		l.election = nil
 	}
-	l.leader = ""
 	if l.cancel != nil {
 		l.cancel()
 		l.cancel = nil
@@ -109,9 +107,8 @@ func (l *leaderService) stop() {
 
 // processEvent handles leader election events.
 func (l *leaderService) processEvent(leader string) {
-	l.leader = leader
 	if l.id == leader {
-		if l.isLeader {
+		if l.isLeader() {
 			// Already leader, nothing to do.
 			return
 		}
@@ -119,14 +116,14 @@ func (l *leaderService) processEvent(leader string) {
 			log.Errorf("Failed to start leader services with error: %v", err)
 			l.stopLeaderServices()
 			l.stop()
-			go l.start()
+			go l.Start()
 			return
 		}
-		l.isLeader = true
-	} else if l.isLeader {
-		l.isLeader = false
+	} else if l.isLeader() {
 		l.stopLeaderServices()
 	}
+	log.Infof("Setting leader to %v", leader)
+	l.leader = leader
 }
 
 // startLeaderServices configures Virtual IP and starts the leader services.
@@ -153,6 +150,11 @@ func (l *leaderService) stopLeaderServices() {
 	if err := l.ipSvc.DeleteIP(l.virtualIP); err != nil {
 		log.Errorf("Failed to delete virtual IP with error: %v", err)
 	}
+}
+
+// isLeader checks if this instance is the leader.
+func (l *leaderService) isLeader() bool {
+	return l.id == l.leader
 }
 
 // Leader returns the current leader.
