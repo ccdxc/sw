@@ -54,6 +54,16 @@ do
 done < ${curdir}/generated/manifest
 
 cd ${curdir}
+PROTOSUBST=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api
+cd $protopath && while read -r line || [[ -n "$line" ]];
+do
+    protofile=$(echo $line | awk '{ print $1 }')
+    pkg=$(echo $line | awk '{ print $2 }')
+    [[ -z "${protofile// }" ]] || [[ -z "${pkg// }" ]] && continue
+    PROTOSUBST=${PROTOSUBST},Mgithub.com/pensando/sw/api/protos/${protofile}=github.com/pensando/sw/api/generated/${pkg}
+done < ${curdir}/generated/manifest
+
+cd ${curdir}
 cd $protopath && while read -r line || [[ -n "$line" ]];
 do
     protofile=$(echo $line | awk '{ print $1 }')
@@ -73,7 +83,7 @@ do
         -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --gofast_out=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api,plugins=grpc:${curdir}/generated/${pkg} \
+        --gofast_out=plugins=grpc,${PROTOSUBST}:${curdir}/generated/${pkg} \
         ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
         echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .
