@@ -2,13 +2,21 @@
 Description=ETC kvstore daemon
 
 [Service]
-User=root
-Type=oneshot
 EnvironmentFile=-/etc/pensando/etcd.conf
-ExecStartPre=-/usr/bin/docker kill etcd
-ExecStartPre=-/usr/bin/docker rm etcd
-ExecStart=/usr/bin/docker run -d --privileged --net=host --name etcd -v /etc/pensando:/etc/pensando quay.io/coreos/etcd:v3.2.1 \
-			etcd $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
-			$INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
-			$LIS_PEER_URLS
-LimitNOFILE=40000
+ExecStartPre=-/usr/bin/docker kill pen-etcd
+ExecStartPre=-/usr/bin/docker rm -f pen-etcd
+ExecStart=/usr/pensando/bin/systemd-docker \
+	 --cgroups name=systemd --cgroups=cpu  run --rm --privileged --net=host --name pen-etcd \
+	 -v /var/lib/pensando/etcd:/var/lib/etcd -v /etc/pensando:/etc/pensando \
+	quay.io/coreos/etcd:v3.2.1 \
+	etcd $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
+	$INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
+	$LIS_PEER_URLS
+ExecStop=/usr/bin/docker stop -t 2 pen-etcd
+ExecStopPost=/usr/bin/docker rm -f pen-etcd
+Restart=always
+RestartSec=10s
+Type=notify
+NotifyAccess=all
+TimeoutStartSec=120
+TimeoutStopSec=15

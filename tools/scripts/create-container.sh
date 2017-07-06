@@ -34,15 +34,20 @@ function createBinContainerTarBall() {
 }
 
 function stopCluster() {
+    ( 
+        echo '#!/bin/bash -x'
+        for j in pen-base pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver
+        do
+            echo "systemctl stop $j; docker stop $j ; docker rm $j" 
+        done
+        echo systemctl stop pen-kubelet 
+        echo 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/*'
+    ) > bin/node-cleanup
+    chmod +x bin/node-cleanup    
     for i in $(seq 1 $PENS_NODES)
     do
         echo cleaning up node${i}
-        for j in pen-base etcd kube-controller-manager kube-scheduler kube-apiserver
-        do
-            vagrant ssh node${i} -- docker stop $j '&&' docker rm $j >/dev/null 2>&1
-        done
-        vagrant ssh node${i} -- sudo systemctl stop pen-kubelet 
-        vagrant ssh node${i} -- sudo rm -fr /etc/pensando/* /etc/kubernetes/*
+        vagrant ssh node${i} -- sudo bash -c /import/bin/node-cleanup > /dev/null 2>&1
         # TODO : stop other services/containers that get started by pensando
     done
 }
@@ -51,7 +56,6 @@ function startCluster() {
     for i in $(seq 1 $PENS_NODES)
     do
         echo provisioning node${i}
-        vagrant ssh node${i} -- sudo mkdir  -p /usr/pensando/bin
         vagrant ssh node${i} -- docker load -i /import/bin/pen.tar
         vagrant ssh node${i} -- docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d pen-base
     done

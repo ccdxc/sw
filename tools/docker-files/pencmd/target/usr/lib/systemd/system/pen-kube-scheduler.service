@@ -2,10 +2,19 @@
 Description=Kubernetes Scheduler
 
 [Service]
-User=root
-Type=oneshot
 EnvironmentFile=-/etc/pensando/kube.conf
-ExecStart=/usr/bin/docker run --privileged --net=host --name kube-scheduler -d gcr.io/google_containers/kube-scheduler-amd64:v1.6.6 \
-		kube-scheduler \
-		$KUBE_MASTER 
-LimitNOFILE=40000
+ExecStartPre=-/usr/bin/docker kill pen-kube-scheduler
+ExecStartPre=-/usr/bin/docker rm pen-kube-scheduler
+ExecStart=/usr/pensando/bin/systemd-docker \
+	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host \
+	--name pen-kube-scheduler gcr.io/google_containers/kube-scheduler-amd64:v1.6.6 \
+	kube-scheduler \
+	$KUBE_MASTER 
+ExecStop=/usr/bin/docker stop -t 2 pen-kube-scheduler
+ExecStopPost=/usr/bin/docker rm -f pen-kube-scheduler
+Restart=always
+RestartSec=10s
+Type=notify
+NotifyAccess=all
+TimeoutStartSec=120
+TimeoutStopSec=15
