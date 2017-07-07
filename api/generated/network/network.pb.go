@@ -46,7 +46,7 @@ package network
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api"
+import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 import _ "github.com/pensando/sw/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"

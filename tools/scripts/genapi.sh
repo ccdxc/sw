@@ -30,8 +30,8 @@ for protofile in ${protopath}/*.proto
 do
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
         ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
@@ -46,15 +46,15 @@ do
     echo "++ parsing ${protofile} for pkg ${pkg}"
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
         ${protopath}/${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 done < ${curdir}/generated/manifest
 
 cd ${curdir}
-PROTOSUBST=Mgoogle/api/annotations.proto=github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api
+PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api
 cd $protopath && while read -r line || [[ -n "$line" ]];
 do
     protofile=$(echo $line | awk '{ print $1 }')
@@ -73,15 +73,15 @@ do
 
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --swagger_out=logtostderr=true:../generated/${pkg}/swagger \
         ${protofile} || { echo "swagger generation failed" ; exit -1; }
     protoc -I/usr/local/include -I. \
         -I${GOPATH}/src \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-        -I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --gofast_out=plugins=grpc,${PROTOSUBST}:${curdir}/generated/${pkg} \
         ${protofile} || { echo "Protobuf generation failed" ; exit -1; }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pensando/grpc-gateway/runtime"
 	network "github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/network/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"

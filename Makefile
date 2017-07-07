@@ -11,8 +11,8 @@ SHELL := /bin/bash
 default: build unit-test cover
 
 deps:
-	go get github.com/tools/godep
-	go get github.com/golang/lint/golint
+	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/kardianos/govendor/ && go install )
 
 gofmt-src: $(PKG_DIRS)
 	$(info +++ gofmt $(PKG_DIRS))
@@ -28,7 +28,7 @@ govet-src: $(PKG_DIRS)
 
 checks: gofmt-src golint-src govet-src
 
-build: deps checks
+build: deps ws-tools checks
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
@@ -52,19 +52,11 @@ container-compile:
 
 ws-tools:
 	$(info +++ building WS tools)
-	@go get -u github.com/kardianos/govendor
-	@go get -u github.com/golang/protobuf/protoc-gen-go
-	@go get -u github.com/gogo/protobuf/protoc-gen-gofast
-	@go get -u github.com/GeertJohan/go.rice/rice
-	@ if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway ]; then \
-	mkdir -p $(GOPATH)/src/github.com/grpc-ecosystem && cd $(GOPATH)/src/github.com/grpc-ecosystem && \
-	git clone https://github.com/pensando/grpc-gateway  ; \
-	fi  && \
-	if [ ! -d $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando ]; then \
-	        ln -fs $(GOPATH)/src/github.com/pensando/sw/utils/apigen/ $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando; \
-	fi  && \
-	( cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/ && go get && go install ) && \
-	( cd $(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/ && go get && go install )
+	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/protobuf/protoc-gen-go/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protoc-gen-gofast/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install )
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))

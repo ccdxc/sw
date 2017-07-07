@@ -11,9 +11,9 @@ import (
 
 	"github.com/golang/glog"
 
-	descriptor "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
-	venice "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/extpkgs/pensando/annotations"
-	reg "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/plugins"
+	descriptor "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
+	venice "github.com/pensando/sw/utils/apigen/annotations"
 )
 
 var (
