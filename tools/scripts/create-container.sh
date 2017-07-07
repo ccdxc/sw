@@ -43,6 +43,7 @@ function stopCluster() {
         done
         echo systemctl stop pen-kubelet 
         echo 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/*'
+	echo 'ip addr flush dev eth1 label *pens'
     ) > bin/node-cleanup
     chmod +x bin/node-cleanup    
     for i in $(seq 1 $PENS_NODES)

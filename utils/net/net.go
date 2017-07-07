@@ -122,7 +122,7 @@ func AddSecondaryIP(ipAddr string) error {
 		return err
 	}
 	network.IP = ip
-	return netlink.AddrAdd(link, &netlink.Addr{IPNet: network})
+	return netlink.AddrAdd(link, &netlink.Addr{Label: fmt.Sprintf("%s:pens", intf.Name), IPNet: network})
 }
 
 // DeleteIP deletes the specified address from the interface it is found on.
