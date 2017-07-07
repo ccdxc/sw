@@ -39,10 +39,13 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@cp bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
+	@cp $(GOPATH)/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh createBaseContainer
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
+deploy: container-compile install c-start
+
+clean: c-stop
 
 build-container:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld .

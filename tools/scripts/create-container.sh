@@ -23,14 +23,15 @@ function createBinContainerTarBall() {
     then
         docker build --rm -t pen-ntp -f tools/docker-files/ntp/Dockerfile tools/docker-files/ntp
     fi
-    for i in gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 gcr.io/google_containers/kube-scheduler-amd64:v1.6.6  gcr.io/google_containers/kube-apiserver-amd64:v1.6.6  quay.io/coreos/etcd:v3.2.1
+    images="gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 gcr.io/google_containers/kube-scheduler-amd64:v1.6.6 gcr.io/google_containers/kube-apiserver-amd64:v1.6.6 quay.io/coreos/etcd:v3.2.1"
+    for i in $images
     do
         if [ "$(docker images -q $i)"  == "" ] 
         then
-            docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.6.6 
+            docker pull $i
         fi
     done
-    docker save -o bin/pen.tar pen-base:latest pen-ntp gcr.io/google_containers/kube-controller-manager-amd64:v1.6.6 gcr.io/google_containers/kube-scheduler-amd64:v1.6.6  gcr.io/google_containers/kube-apiserver-amd64:v1.6.6  quay.io/coreos/etcd:v3.2.1 
+    docker save -o bin/pen.tar pen-base:latest pen-ntp $images
 }
 
 function stopCluster() {
