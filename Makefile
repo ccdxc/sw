@@ -39,11 +39,14 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@cp $(GOPATH)/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
+	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh createBaseContainer
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
-deploy: container-compile install c-start
+deploy:
+	$(MAKE) container-compile
+	$(MAKE) install
+	$(MAKE) c-start
 
 clean: c-stop
 
