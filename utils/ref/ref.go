@@ -2,16 +2,19 @@ package ref
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"reflect"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
+// FInfo has information about field
 type FInfo struct {
 	ValueStr []string
 	TypeStr  string
 }
 
+// NewFInfo returns FInfo for string
 func NewFInfo(strs []string) FInfo {
 	return FInfo{ValueStr: strs, TypeStr: ""}
 }
@@ -122,7 +125,7 @@ func getKv(v reflect.Value) (string, string, bool) {
 		isLeaf = true
 	case reflect.Int:
 		typeStr = "int"
-		valueStr = fmt.Sprintf("%d", v)
+		valueStr = fmt.Sprintf("%d", v.Int())
 		isLeaf = true
 	case reflect.String:
 		typeStr = "string"
@@ -287,7 +290,7 @@ func writeKv(new, orig reflect.Value, kvString string) {
 // This function is called inline for the type of structs, other sub-objects refer to
 type GetSubObj func(string) interface{}
 
-// Walkstruct walks a structure nested and all types using reflect
+// WalkStruct walks a structure nested and all types using reflect
 func WalkStruct(v interface{}, getSubObj GetSubObj) string {
 	rv := reflect.Indirect(reflect.ValueOf(v))
 	return walkStruct(rv, getSubObj, 0)
@@ -326,7 +329,7 @@ func walkStruct(v reflect.Value, getSubObj GetSubObj, level int) string {
 				}
 			}
 
-			for i := 0; i < v.Len(); i += 1 {
+			for i := 0; i < v.Len(); i++ {
 				outStr += walkStruct(v.Index(i), getSubObj, level+1)
 			}
 		}
@@ -390,7 +393,7 @@ func FieldByName(v reflect.Value, fieldName string) []string {
 			}
 		}
 	case reflect.Slice:
-		for i := 0; i < v.Len(); i += 1 {
+		for i := 0; i < v.Len(); i++ {
 			retSubStrs := FieldByName(v.Index(i), fieldName)
 			if len(retSubStrs) > 0 {
 				retStrs = append(retStrs, retSubStrs...)
