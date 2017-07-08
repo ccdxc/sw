@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := bin docs Godeps vendor scripts
+EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif \
   ./apiserver/... ./apigw/... ./utils/log/... ./orch/... ./utils/resource/...
@@ -83,6 +83,30 @@ ci-test:
 	make dev
 	make ci-testrun
 	make dev-clean
+
+install_box:
+	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
+
+clean-grpc:
+	rm -rf grpc-gateway
+
+update-grpc: clean-grpc
+	@if git remote show origin | grep -q git@github.com; \
+	then \
+		echo Using ssh, trying git submodule...; \
+		git submodule update --init; \
+	else \
+		echo Using https, trying direct clone...; \
+		git clone https://github.com/pensando/grpc-gateway; \
+	fi
+
+docker-test: install_box
+	box box.rb
+	docker run -it --rm pensando/sw
+
+docker-test-debug: install_box
+	box box-base.rb
+	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" pensando/sw:dependencies
 
 # Dev environment targets
 dev:
