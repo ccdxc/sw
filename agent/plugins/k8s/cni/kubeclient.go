@@ -6,11 +6,11 @@ import (
 	"flag"
 	"fmt"
 
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
-	meta_v1 "k8s.io/client-go/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 )
 
 // location of kubelet config file.
@@ -19,9 +19,9 @@ const KubeletConfPath = "/etc/kubernetes/kubelet.conf"
 
 // KubeClient is the kubernetes api server client
 type KubeClient struct {
-	config    *rest.Config          // kubeconfig or kubelet config for auth
-	clientset *kubernetes.Clientset // apiserver client
-	isMock    bool                  // mock kubeclient API
+	config    *rest.Config        // kubeconfig or kubelet config for auth
+	clientset clientset.Interface // apiserver client
+	isMock    bool                // mock kubeclient API
 }
 
 // NewKubeclient returns a kubeclient instance
@@ -37,7 +37,7 @@ func NewKubeclient() (*KubeClient, error) {
 	}
 
 	// creates the clientset
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := clientset.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating kubeclient clientset: %v", err)
 	}
@@ -70,5 +70,5 @@ func (kc *KubeClient) ListPods(namespace string) (*v1.PodList, error) {
 	}
 
 	// get info from API server
-	return kc.clientset.Core().Pods(namespace).List(v1.ListOptions{})
+	return kc.clientset.Core().Pods(namespace).List(meta_v1.ListOptions{})
 }

@@ -23,17 +23,19 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/emicklei/go-restful/swagger"
+	"github.com/emicklei/go-restful-swagger12"
+	"github.com/golang/protobuf/proto"
+	"github.com/googleapis/gnostic/OpenAPIv2"
 
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/errors"
-	"k8s.io/client-go/pkg/api/v1"
-	metav1 "k8s.io/client-go/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/runtime/serializer"
-	"k8s.io/client-go/pkg/version"
-	"k8s.io/client-go/rest"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/scheme"
+	restclient "k8s.io/client-go/rest"
 )
 
 // defaultRetries is the number of times a resource discovery is repeated if an api group disappears on the fly (e.g. ThirdPartyResources).
@@ -42,17 +44,22 @@ const defaultRetries = 2
 // DiscoveryInterface holds the methods that discover server-supported API groups,
 // versions and resources.
 type DiscoveryInterface interface {
-	RESTClient() rest.Interface
+	RESTClient() restclient.Interface
 	ServerGroupsInterface
 	ServerResourcesInterface
 	ServerVersionInterface
 	SwaggerSchemaInterface
+	OpenAPISchemaInterface
 }
 
 // CachedDiscoveryInterface is a DiscoveryInterface with cache invalidation and freshness.
 type CachedDiscoveryInterface interface {
 	DiscoveryInterface
-	// Fresh returns true if no cached data was used that had been retrieved before the instantiation.
+	// Fresh is supposed to tell the caller whether or not to retry if the cache
+	// fails to find something (false = retry, true = no need to retry).
+	//
+	// TODO: this needs to be revisited, this interface can't be locked properly
+	// and doesn't make a lot of sense.
 	Fresh() bool
 	// Invalidate enforces that no cached data is used in the future that is older than the current time.
 	Invalidate()
@@ -91,10 +98,16 @@ type SwaggerSchemaInterface interface {
 	SwaggerSchema(version schema.GroupVersion) (*swagger.ApiDeclaration, error)
 }
 
+// OpenAPISchemaInterface has a method to retrieve the open API schema.
+type OpenAPISchemaInterface interface {
+	// OpenAPISchema retrieves and parses the swagger API schema the server supports.
+	OpenAPISchema() (*openapi_v2.Document, error)
+}
+
 // DiscoveryClient implements the functions that discover server-supported API groups,
 // versions and resources.
 type DiscoveryClient struct {
-	restClient rest.Interface
+	restClient restclient.Interface
 
 	LegacyPrefix string
 }
@@ -123,7 +136,7 @@ func (d *DiscoveryClient) ServerGroups() (apiGroupList *metav1.APIGroupList, err
 	v := &metav1.APIVersions{}
 	err = d.restClient.Get().AbsPath(d.LegacyPrefix).Do().Into(v)
 	apiGroup := metav1.APIGroup{}
-	if err == nil {
+	if err == nil && len(v.Versions) != 0 {
 		apiGroup = apiVersionsToAPIGroup(v)
 	}
 	if err != nil && !errors.IsNotFound(err) && !errors.IsForbidden(err) {
@@ -141,8 +154,10 @@ func (d *DiscoveryClient) ServerGroups() (apiGroupList *metav1.APIGroupList, err
 		apiGroupList = &metav1.APIGroupList{}
 	}
 
-	// append the group retrieved from /api to the list
-	apiGroupList.Groups = append(apiGroupList.Groups, apiGroup)
+	// append the group retrieved from /api to the list if not empty
+	if len(v.Versions) != 0 {
+		apiGroupList.Groups = append(apiGroupList.Groups, apiGroup)
+	}
 	return apiGroupList, nil
 }
 
@@ -330,6 +345,7 @@ func (d *DiscoveryClient) ServerVersion() (*version.Info, error) {
 }
 
 // SwaggerSchema retrieves and parses the swagger API schema the server supports.
+// TODO: Replace usages with Open API.  Tracked in https://github.com/kubernetes/kubernetes/issues/44589
 func (d *DiscoveryClient) SwaggerSchema(version schema.GroupVersion) (*swagger.ApiDeclaration, error) {
 	if version.Empty() {
 		return nil, fmt.Errorf("groupVersion cannot be empty")
@@ -363,6 +379,20 @@ func (d *DiscoveryClient) SwaggerSchema(version schema.GroupVersion) (*swagger.A
 	return &schema, nil
 }
 
+// OpenAPISchema fetches the open api schema using a rest client and parses the proto.
+func (d *DiscoveryClient) OpenAPISchema() (*openapi_v2.Document, error) {
+	data, err := d.restClient.Get().AbsPath("/swagger-2.0.0.pb-v1").Do().Raw()
+	if err != nil {
+		return nil, err
+	}
+	document := &openapi_v2.Document{}
+	err = proto.Unmarshal(data, document)
+	if err != nil {
+		return nil, err
+	}
+	return document, nil
+}
+
 // withRetries retries the given recovery function in case the groups supported by the server change after ServerGroup() returns.
 func withRetries(maxRetries int, f func(failEarly bool) ([]*metav1.APIResourceList, error)) ([]*metav1.APIResourceList, error) {
 	var result []*metav1.APIResourceList
@@ -380,31 +410,31 @@ func withRetries(maxRetries int, f func(failEarly bool) ([]*metav1.APIResourceLi
 	return result, err
 }
 
-func setDiscoveryDefaults(config *rest.Config) error {
+func setDiscoveryDefaults(config *restclient.Config) error {
 	config.APIPath = ""
 	config.GroupVersion = nil
-	codec := runtime.NoopEncoder{Decoder: api.Codecs.UniversalDecoder()}
+	codec := runtime.NoopEncoder{Decoder: scheme.Codecs.UniversalDecoder()}
 	config.NegotiatedSerializer = serializer.NegotiatedSerializerWrapper(runtime.SerializerInfo{Serializer: codec})
 	if len(config.UserAgent) == 0 {
-		config.UserAgent = rest.DefaultKubernetesUserAgent()
+		config.UserAgent = restclient.DefaultKubernetesUserAgent()
 	}
 	return nil
 }
 
 // NewDiscoveryClientForConfig creates a new DiscoveryClient for the given config. This client
 // can be used to discover supported resources in the API server.
-func NewDiscoveryClientForConfig(c *rest.Config) (*DiscoveryClient, error) {
+func NewDiscoveryClientForConfig(c *restclient.Config) (*DiscoveryClient, error) {
 	config := *c
 	if err := setDiscoveryDefaults(&config); err != nil {
 		return nil, err
 	}
-	client, err := rest.UnversionedRESTClientFor(&config)
+	client, err := restclient.UnversionedRESTClientFor(&config)
 	return &DiscoveryClient{restClient: client, LegacyPrefix: "/api"}, err
 }
 
 // NewDiscoveryClientForConfig creates a new DiscoveryClient for the given config. If
 // there is an error, it panics.
-func NewDiscoveryClientForConfigOrDie(c *rest.Config) *DiscoveryClient {
+func NewDiscoveryClientForConfigOrDie(c *restclient.Config) *DiscoveryClient {
 	client, err := NewDiscoveryClientForConfig(c)
 	if err != nil {
 		panic(err)
@@ -414,7 +444,7 @@ func NewDiscoveryClientForConfigOrDie(c *rest.Config) *DiscoveryClient {
 }
 
 // New creates a new DiscoveryClient for the given RESTClient.
-func NewDiscoveryClient(c rest.Interface) *DiscoveryClient {
+func NewDiscoveryClient(c restclient.Interface) *DiscoveryClient {
 	return &DiscoveryClient{restClient: c, LegacyPrefix: "/api"}
 }
 
@@ -429,7 +459,7 @@ func stringDoesntExistIn(str string, slice []string) bool {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *DiscoveryClient) RESTClient() rest.Interface {
+func (c *DiscoveryClient) RESTClient() restclient.Interface {
 	if c == nil {
 		return nil
 	}
