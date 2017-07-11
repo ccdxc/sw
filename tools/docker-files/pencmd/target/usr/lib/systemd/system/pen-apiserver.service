@@ -1,0 +1,20 @@
+[Unit]
+Description=Pensando API Server
+
+[Service]
+EnvironmentFile=-/etc/pensando/apiserver.conf
+ExecStartPre=-/usr/bin/docker kill pen-apiserver
+ExecStartPre=-/usr/bin/docker rm -f pen-apiserver
+ExecStart=/usr/pensando/bin/systemd-docker \
+	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-apiserver \
+	-v /etc/pensando:/etc/pensando \
+	pen-apiserver \
+	$KVSTORE_URL
+ExecStop=/usr/bin/docker stop -t 2 pen-apiserver
+ExecStopPost=/usr/bin/docker rm -f pen-apiserver
+Restart=always
+RestartSec=10s
+Type=notify
+NotifyAccess=all
+TimeoutStartSec=120
+TimeoutStopSec=15

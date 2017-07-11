@@ -3,7 +3,7 @@
 EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif \
-  ./apiserver/... ./apigw/... ./utils/log/... ./orch/... ./utils/resource/...
+ ./apiserver/... ./apigw/... ./utils/log/... ./orch/... ./utils/resource/...
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
@@ -30,7 +30,7 @@ checks: gofmt-src golint-src govet-src
 
 build: deps ws-tools checks
 	$(info +++ go install $(TO_BUILD))
-	go install -v $(TO_BUILD)
+	CGO_ENABLED=0 go install -v $(TO_BUILD)
 
 c-start:
 	@tools/scripts/create-container.sh startCluster
@@ -39,8 +39,14 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
+	@docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
 	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
+	@cp ${PWD}/bin/apigw tools/docker-files/apigw/apigw
+	@cp ${PWD}/bin/apiserver tools/docker-files/apiserver/apiserver
+	@chmod 755 tools/docker-files/pencmd/target/usr/bin/pen-cmd tools/docker-files/apigw/apigw tools/docker-files/apiserver/apiserver
 	@tools/scripts/create-container.sh createBaseContainer
+	@tools/scripts/create-container.sh createApiGwContainer
+	@tools/scripts/create-container.sh createApiSrvContainer
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
 deploy:

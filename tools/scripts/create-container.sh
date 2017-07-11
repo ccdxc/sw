@@ -6,17 +6,17 @@ then
 fi
 
 function createBaseContainer() {
-    if git diff-index --quiet HEAD --; then
-        #no changes in tree. Tag by githash of tree and date
-        VER=$(date +%Y%m%d.%H%M%S)-$(git rev-parse --short HEAD)
-    else
-        # some local changes in the tree
-        VER=$(date +%Y%m%d.%H%M%S)-local
-    fi
-    echo Building docker image with tag pen-base:${VER}
-    docker build --rm --no-cache -t pen-base:${VER} -f tools/docker-files/pencmd/Dockerfile tools/docker-files/pencmd
-    docker tag pen-base:${VER} pen-base:latest
+    docker build --rm --no-cache -t pen-base:latest -f tools/docker-files/pencmd/Dockerfile tools/docker-files/pencmd
 }
+
+function createApiSrvContainer() {
+    docker build --rm --no-cache -t pen-apiserver:latest -f tools/docker-files/apiserver/Dockerfile tools/docker-files/apiserver
+}
+
+function createApiGwContainer() {
+    docker build --rm --no-cache -t pen-apigw:latest -f tools/docker-files/apigw/Dockerfile tools/docker-files/apigw
+}
+
 
 function createBinContainerTarBall() {
     if [ "$(docker images -q pen-ntp)"  == "" ] 
@@ -31,13 +31,13 @@ function createBinContainerTarBall() {
             docker pull $i
         fi
     done
-    docker save -o bin/pen.tar pen-base:latest pen-ntp $images
+    docker save -o bin/pen.tar pen-base:latest pen-apiserver:latest pen-apigw:latest pen-ntp $images
 }
 
 function stopCluster() {
     ( 
         echo '#!/bin/bash -x'
-        for j in pen-base pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver
+        for j in pen-base pen-apiserver pen-apigw pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver
         do
             echo "systemctl stop $j; docker stop $j ; docker rm $j" 
         done
@@ -65,6 +65,8 @@ function startCluster() {
 
 case $1 in 
     createBaseContainer) createBaseContainer ;;
+    createApiGwContainer) createApiGwContainer ;;
+    createApiSrvContainer) createApiSrvContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) stopCluster ; startCluster;;
     stopCluster) stopCluster ;;

@@ -11,6 +11,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	"github.com/pensando/sw/apigw"
 	apigwpkg "github.com/pensando/sw/apigw/pkg"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/log"
 	trace "github.com/pensando/sw/utils/trace"
 )
@@ -19,7 +20,7 @@ const srvName = "ApiGw"
 
 func main() {
 	var (
-		httpaddr  = flag.String("port", ":8080", "HTTP port to listen on")
+		httpaddr  = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
 		debugflag = flag.Bool("debug", false, "enable debug mode")
 		host      = flag.String("host", "localhost", "host identity")
 		logoutput = flag.String("logfile", "", "redirect logs to file")

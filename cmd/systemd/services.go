@@ -14,7 +14,7 @@ import (
 // Services that run on node that wins the election.
 // TODO: Spread these out when it makes sense to do so.
 var (
-	masterServices = []string{"pen-kube-apiserver", "pen-kube-scheduler", "pen-kube-controller-manager"}
+	masterServices = []string{"pen-kube-apiserver", "pen-kube-scheduler", "pen-kube-controller-manager", "pen-apiserver", "pen-apigw"}
 	nodeServices   = []string{"pen-kubelet"}
 )
 
@@ -33,6 +33,9 @@ func (s *systemdService) StartNodeServices(virtualIP string) error {
 	s.Lock()
 	defer s.Unlock()
 	if err := configs.GenerateKubeletConfig(virtualIP); err != nil {
+		return err
+	}
+	if err := configs.GenerateAPIServerConfig(); err != nil {
 		return err
 	}
 	for ii := range nodeServices {
@@ -54,6 +57,7 @@ func (s *systemdService) StopNodeServices() {
 		}
 	}
 	configs.RemoveKubeletConfig()
+	configs.RemoveAPIServerConfig()
 }
 
 // AreNodeServicesRunning returns if all the controller node services are

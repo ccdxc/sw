@@ -9,6 +9,7 @@ const (
 	EtcdDataDir = "/var/lib/etcd"
 
 	// Ports
+	APIGwRESTPort = "9000"
 	// CMD
 	CMDRESTPort = "9001"
 	CMDGRPCPort = "9002"
