@@ -29,21 +29,35 @@ We use govendor for external package management. Please see links below.
 [ Readme ](https://github.com/kardianos/govendor/blob/master/README.md)
 [ Cheat Sheet ](https://github.com/kardianos/govendor/wiki/Govendor-CheatSheet)
 
-##### 4. SSH into the nodes, make changes, run tests
+##### 4. make deploy to compile and deploy code
 ```
-$ vagrant ssh node1
-$ vagrant ssh node2
+$ make deploy
+```
+##### 5. Create a cluster, run tests
+```
+$ curl -XPOST -d @/tmp/cluster.json http://192.168.30.11:9001/api/v1/cluster
+```
+###### Sample cluster.json file
+{
+	"kind": "Cluster",
+	"metadata": {
+		"name": "testCluster"
+	},
+	"spec": {
+		"quorumNodes": [ "node1", "node2", "node3" ],
+		"virtualIP": "192.168.30.10"
+	}
+}
 
-< inside the VM >
-[vagrant@node1]$ cd /import/src/github.com/pensando/sw
-[vagrant@node1]$ make build
-[vagrant@node1]$ make unit-test
+##### 6. Clean up
 
-[vagrant@node1]$ exit
+```
+To cleanup the cluster (remove configs etc):
+$ make clean
 ```
 
-##### 5. Clean up
 ```
+To remove the testbed:
 $ make dev-clean
 ```
 Note: cleaning up would destroy the VMs, but it would *not* destroy the
