@@ -7,6 +7,7 @@ ExecStartPre=-/usr/bin/docker rm -f pen-apigw
 ExecStart=/usr/pensando/bin/systemd-docker \
 	 --cgroups name=systemd --cgroups=cpu  run --rm --net=host --name pen-apigw \
 	-v /etc/pensando:/etc/pensando \
+	-v /var/log/pensando:/var/log/pensando \
 	pen-apigw
 ExecStop=/usr/bin/docker stop -t 2 pen-apigw
 ExecStopPost=/usr/bin/docker rm -f pen-apigw

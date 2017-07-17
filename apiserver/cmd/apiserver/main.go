@@ -20,18 +20,36 @@ const srvName = "ApiServer"
 
 func main() {
 	var (
-		grpcaddr  = flag.String("grpc-server-port", ":8082", "GRPC Port to listen on")
-		kvstore   = flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
-		debugflag = flag.Bool("debug", false, "Enable debug mode")
-		version   = flag.String("version", "v1", "Version string for native version")
+		grpcaddr        = flag.String("grpc-server-port", ":8082", "GRPC Port to listen on")
+		kvstore         = flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		version         = flag.String("version", "v1", "Version string for native version")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/apiserver.log", "redirect logs to file")
 	)
 
 	flag.Parse()
 
 	var pl log.Logger
 	{
-		pl = log.GetNewLogger(*debugflag)
-		pl = pl.WithContext("module", "ApiServer")
+		logtoFileFlag := true
+		if *logToFile == "" {
+			logtoFileFlag = false
+		}
+		logConfig := &log.Config{
+			Module:      srvName,
+			Format:      log.LogFmt,
+			Debug:       *debugflag,
+			LogToStdout: *logToStdoutFlag,
+			LogToFile:   logtoFileFlag,
+			FileCfg: log.FileConfig{
+				Filename:   *logToFile,
+				MaxSize:    10, // TODO: These needs to be part of Service Config Object
+				MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
+				MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			},
+		}
+		pl = log.GetNewLogger(logConfig)
 	}
 
 	var config apisrv.Config

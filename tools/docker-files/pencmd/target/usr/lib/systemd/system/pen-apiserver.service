@@ -8,6 +8,7 @@ ExecStartPre=-/usr/bin/docker rm -f pen-apiserver
 ExecStart=/usr/pensando/bin/systemd-docker \
 	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-apiserver \
 	-v /etc/pensando:/etc/pensando \
+	-v /var/log/pensando:/var/log/pensando \
 	pen-apiserver \
 	$KVSTORE_URL
 ExecStop=/usr/bin/docker stop -t 2 pen-apiserver

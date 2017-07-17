@@ -90,7 +90,8 @@ func TestPreflightHandler(t *testing.T) {
 	a := sinletonAPIGw
 	buf := &bytes.Buffer{}
 
-	l := log.GetNewLogger(false).SetOutput(buf)
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	a.logger = l
 	req, err := http.NewRequest("OPTIONS", "http://127.0.0.1/test/a", nil)
 	if err != nil {
@@ -137,7 +138,8 @@ func TestExtractHdrInfo(t *testing.T) {
 	a := sinletonAPIGw
 	buf := &bytes.Buffer{}
 
-	l := log.GetNewLogger(false).SetOutput(buf)
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	a.logger = l
 	req, err := http.NewRequest("POST", "http://127.0.0.1/v1/TestSvc/Resource", nil)
 	if err != nil {
@@ -201,7 +203,8 @@ func TestDupPathRegistration(t *testing.T) {
 // Test the Run function of API Gw to ensure it exits on failure.
 func TestRunApiGw(t *testing.T) {
 	buf := &bytes.Buffer{}
-	l := log.GetNewLogger(false).SetOutput(buf)
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	config := apigw.Config{
 		HTTPAddr:  ":0",
 		DebugMode: true,

@@ -29,7 +29,9 @@ func TestMain(m *testing.M) {
 	fmt.Printf("Setting up test main")
 	_ = MustGetAPIServer()
 	buf := &bytes.Buffer{}
-	l := log.GetNewLogger(false).SetOutput(buf)
+
+	logConfig := log.GetDefaultConfig("TestApiServer")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	singletonAPISrv.version = "v1"
 	singletonAPISrv.Logger = l
 	s := runtime.NewScheme()
