@@ -3,15 +3,15 @@ package log
 import (
 	"context"
 	"fmt"
+	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-stack/stack"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
-
-	"io"
-
-	kitlog "github.com/go-kit/kit/log"
-	"github.com/go-stack/stack"
 )
 
 // Logger interface definition
@@ -37,9 +37,55 @@ type Logger interface {
 	SetOutput(w io.Writer) Logger
 }
 
+// FormatType identifies logging format
+type FormatType int
+
+// Log Format Types
+const (
+	LogFmt FormatType = iota
+	JSONFmt
+)
+
+// FileConfig contains config params for logging to file
+type FileConfig struct {
+	// Filename of the Log file
+	Filename string
+
+	// MaxSize of a Logfile in MBs
+	MaxSize int
+
+	// MaxBackups indicates #of backup files in rotation
+	MaxBackups int
+
+	// MaxAge indicates log retention period in days
+	MaxAge int
+}
+
+// Config contains config params for the logger
+type Config struct {
+	// Module Name
+	Module string
+
+	// Format Type
+	Format FormatType
+
+	// Debug flag enables logging with stack-trace
+	Debug bool
+
+	// LogToStdout enable logging to stdout
+	LogToStdout bool
+
+	// LogtoFile enabled logging to file
+	LogToFile bool
+
+	// FileCfg contains config params for
+	// logging to file with log rotation
+	FileCfg FileConfig
+}
+
 type kitLogger struct {
 	logger kitlog.Logger
-	debug  bool
+	config Config
 }
 
 var caller = kitlog.Caller(4)
@@ -66,22 +112,83 @@ func stackTrace() kitlog.Valuer {
 	}
 }
 
-// GetNewLogger returns a new logger instance
-func GetNewLogger(debug bool) Logger {
-	l := kitlog.NewLogfmtLogger(os.Stdout)
-	if debug {
-		l = kitlog.With(l, "ts", kitlog.DefaultTimestampUTC, "caller", stackTrace())
-	} else {
-		l = kitlog.With(l, "ts", kitlog.DefaultTimestampUTC, "caller", caller)
+// GetDefaultConfig returns default log config object
+func GetDefaultConfig(module string) *Config {
+	return &Config{
+		Module:      module,
+		Format:      LogFmt,
+		Debug:       false,
+		LogToStdout: true,
+		LogToFile:   false,
+		FileCfg:     FileConfig{},
 	}
-	return &kitLogger{logger: l, debug: debug}
+}
+
+// GetNewLogger returns a new logger instance
+func GetNewLogger(config *Config) Logger {
+
+	// Init stdout io writer if enabled
+	var stdoutWr io.Writer
+	if config.LogToStdout {
+		stdoutWr = os.Stdout
+	}
+
+	// Init File io writer if enabled
+	var fileWr io.Writer
+	if config.LogToFile {
+		fileWr = &lumberjack.Logger{
+			Filename:   config.FileCfg.Filename,
+			MaxSize:    config.FileCfg.MaxSize,
+			MaxBackups: config.FileCfg.MaxBackups,
+			MaxAge:     config.FileCfg.MaxAge,
+		}
+	}
+
+	// Choose io writers based on config
+	var wr io.Writer
+	if config.LogToStdout && config.LogToFile {
+		mw := io.MultiWriter(stdoutWr, fileWr)
+		wr = kitlog.NewSyncWriter(mw)
+	} else if config.LogToStdout {
+		wr = kitlog.NewSyncWriter(stdoutWr)
+	} else if config.LogToFile {
+		wr = kitlog.NewSyncWriter(fileWr)
+	}
+
+	// Instantiate logger based on format
+	var l kitlog.Logger
+	switch config.Format {
+	case LogFmt:
+		l = kitlog.NewLogfmtLogger(wr)
+	case JSONFmt:
+		l = kitlog.NewJSONLogger(wr)
+	default:
+		// By default, choose log-fmt
+		l = kitlog.NewLogfmtLogger(wr)
+	}
+
+	// Add context data: Timestamp, Module, Pid
+	l = kitlog.With(l,
+		"ts", kitlog.DefaultTimestampUTC,
+		"module", config.Module,
+		"pid", strconv.Itoa(os.Getpid()),
+	)
+
+	// Add debug trace if enabled
+	if config.Debug {
+		l = kitlog.With(l, "caller", stackTrace())
+	} else {
+		l = kitlog.With(l, "caller", caller)
+	}
+
+	return &kitLogger{logger: l, config: *config}
 }
 
 func (l *kitLogger) WithContext(pairs ...string) Logger {
 	if (len(pairs) % 2) != 0 {
 		panic("invalid argument")
 	}
-	r := kitLogger{logger: l.logger, debug: l.debug}
+	r := kitLogger{logger: l.logger, config: l.config}
 	for i := 0; i < len(pairs); i = i + 2 {
 		r.logger = kitlog.With(r.logger, pairs[i], pairs[i+1])
 	}
@@ -91,7 +198,7 @@ func (l *kitLogger) WithContext(pairs ...string) Logger {
 func (l *kitLogger) SetOutput(w io.Writer) Logger {
 	wr := kitlog.NewSyncWriter(w)
 	l.logger = kitlog.NewLogfmtLogger(wr)
-	if l.debug {
+	if l.config.Debug {
 		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", stackTrace())
 	} else {
 		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", caller)

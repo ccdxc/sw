@@ -3,18 +3,45 @@ package log
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestLoggerToFile(t *testing.T) {
 	t.Parallel()
-	buf := &bytes.Buffer{}
+	file := "/tmp/test.log"
+	config := &Config{
+		Module:      "LogTester",
+		Format:      LogFmt,
+		Debug:       false,
+		LogToStdout: false,
+		LogToFile:   true,
+		FileCfg: FileConfig{
+			Filename:   file,
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
+		},
+	}
 
-	l := GetNewLogger(false).SetOutput(buf)
+	l := GetNewLogger(config)
 	l.Log("msg", "testmsg")
-	if !strings.Contains(buf.String(), "msg=testmsg") {
-		t.Errorf("Expecting [%s] got:[%s]", "msg=testmsg", buf.String())
+
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		t.Errorf("Error opening file: %s err: %v", file, err)
+	}
+
+	str := string(data)
+	if !strings.Contains(str, "msg=testmsg") {
+		t.Errorf("Expecting [%s] got:[%s]", "msg=testmsg", str)
+	}
+
+	err = os.Remove(file)
+	if err != nil {
+		t.Errorf("Error removing file: %s err: %v", file, err)
 	}
 }
 
@@ -23,7 +50,8 @@ func TestLevels(t *testing.T) {
 	buf := &bytes.Buffer{}
 
 	// Debug
-	l := GetNewLogger(false).SetOutput(buf)
+	config := GetDefaultConfig("TestLogger")
+	l := GetNewLogger(config).SetOutput(buf)
 	l.Printf("testmsg")
 	if !strings.Contains(buf.String(), "msg=testmsg") || !strings.Contains(buf.String(), "level=debug") {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
@@ -93,7 +121,9 @@ func TestDebugMode(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 
-	l := GetNewLogger(true).SetOutput(buf)
+	config := GetDefaultConfig("TestLogger")
+	config.Debug = true
+	l := GetNewLogger(config).SetOutput(buf)
 	l.InfoLog("msg", "testmsg1", "error", "TestError")
 	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=info") ||
 		!strings.Contains(buf.String(), "error=TestError") || !strings.Contains(buf.String(), "caller=\"[ [") {
@@ -105,7 +135,9 @@ func TestWithContext(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
 
-	l := GetNewLogger(true).SetOutput(buf).WithContext("Tag1", "ONE", "tag2", "TWO")
+	config := GetDefaultConfig("TestLogger")
+	config.Debug = true
+	l := GetNewLogger(config).SetOutput(buf).WithContext("Tag1", "ONE", "tag2", "TWO")
 	l.InfoLog("msg", "testmsg1", "error", "TestError")
 	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=info") ||
 		!strings.Contains(buf.String(), "Tag1=ONE") || !strings.Contains(buf.String(), "tag2=TWO") {
@@ -116,7 +148,9 @@ func TestWithContext(t *testing.T) {
 func TestFatalf(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
-	l := GetNewLogger(false).SetOutput(buf)
+
+	config := GetDefaultConfig("TestLogger")
+	l := GetNewLogger(config).SetOutput(buf)
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expecting panic but did not")
@@ -131,7 +165,9 @@ func TestFatalf(t *testing.T) {
 func TestFatal(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
-	l := GetNewLogger(false).SetOutput(buf)
+
+	config := GetDefaultConfig("TestLogger")
+	l := GetNewLogger(config).SetOutput(buf)
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expecting panic but did not")
@@ -146,7 +182,9 @@ func TestFatal(t *testing.T) {
 func TestFatalln(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
-	l := GetNewLogger(false).SetOutput(buf)
+
+	config := GetDefaultConfig("TestLogger")
+	l := GetNewLogger(config).SetOutput(buf)
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expecting panic but did not")
@@ -161,7 +199,9 @@ func TestFatalln(t *testing.T) {
 func TestAuditLog(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
-	l := GetNewLogger(false).SetOutput(buf)
+
+	config := GetDefaultConfig("TestLogger")
+	l := GetNewLogger(config).SetOutput(buf)
 	var ctx = context.Background()
 	ctx = context.WithValue(ctx, PensandoTenant, "TestTenant")
 	ctx = context.WithValue(ctx, PensandoUserID, "TestUser")

@@ -2,9 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"io"
-	"os"
 
 	"google.golang.org/grpc/grpclog"
 
@@ -20,34 +17,40 @@ const srvName = "ApiGw"
 
 func main() {
 	var (
-		httpaddr  = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
-		debugflag = flag.Bool("debug", false, "enable debug mode")
-		host      = flag.String("host", "localhost", "host identity")
-		logoutput = flag.String("logfile", "", "redirect logs to file")
+		httpaddr        = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
+		debugflag       = flag.Bool("debug", false, "enable debug mode")
+		host            = flag.String("host", "localhost", "host identity")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
 	)
 
 	flag.Parse()
 
 	var pl log.Logger
 	{
-		var w io.Writer
-		var err error
-		if *logoutput == "" {
-			w = os.Stdout
-			fmt.Printf("setting log output to Stdout\n")
-		} else {
-			w, err = os.OpenFile(*logoutput, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0777)
-			fmt.Printf("Output redirected to to [%v]\n", *logoutput)
-			if err != nil {
-				fmt.Printf("Unable to open file [%v]\n", *logoutput)
-				return
-			}
-			w.Write([]byte("Logging start for apigateway\n"))
-
+		logtoFileFlag := true
+		if *logToFile == "" {
+			logtoFileFlag = false
 		}
-		pl = log.GetNewLogger(*debugflag).SetOutput(w).WithContext("module", "ApiGateway", "host", *host+*httpaddr)
+		logConfig := &log.Config{
+			Module:      srvName,
+			Format:      log.LogFmt,
+			Debug:       *debugflag,
+			LogToStdout: *logToStdoutFlag,
+			LogToFile:   logtoFileFlag,
+			FileCfg: log.FileConfig{
+				Filename:   *logToFile,
+				MaxSize:    10, // TODO: These needs to be part of Service Config Object
+				MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
+				MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+			},
+		}
+		pl = log.GetNewLogger(logConfig)
 
+		// Add ApiGw specific context data
+		pl = pl.WithContext("host", *host+*httpaddr)
 	}
+
 	var config apigw.Config
 	{
 		config.HTTPAddr = *httpaddr

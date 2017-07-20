@@ -34,7 +34,9 @@ func main() {
 		os.Exit(-1)
 	}
 	defer conn.Close()
-	l := log.GetNewLogger(false)
+
+	config := log.GetDefaultConfig("GrpcClientExample")
+	l := log.GetNewLogger(config)
 	cl := bookstoreclient.NewBookstoreV1(conn, l)
 
 	// Add a Publisher

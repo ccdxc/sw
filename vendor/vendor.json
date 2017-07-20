@@ -712,10 +712,10 @@
 			"revision": "1d0bd113de87027671077d3c71eb3ac5d7dbba72"
 		},
 		{
-			"checksumSHA1": "VcLNrvCcnZuSnebTxMRyNtzY3ZY=",
+			"checksumSHA1": "KZ3QD2QgUS4RcoKiA3mn5pSlJxQ=",
 			"path": "github.com/go-stack/stack",
-			"revision": "7a2f19628aabfe68f0766b59e74d6315f8347d22",
-			"revisionTime": "2017-05-04T03:43:18Z"
+			"revision": "54be5f394ed2c3e19dac9134a40a95ba5a017f7b",
+			"revisionTime": "2017-07-10T16:04:46Z"
 		},
 		{
 			"comment": "v4.0.0-20-g4b24ebe",
@@ -1943,6 +1943,12 @@
 			"comment": "v0.9.0",
 			"path": "gopkg.in/inf.v0",
 			"revision": "3887ee99ecf07df5b447e9b00d9c0b2adaa9f3e4"
+		},
+		{
+			"checksumSHA1": "TM3Neoy1xRAKyZYMGzKc41sDFW4=",
+			"path": "gopkg.in/natefinch/lumberjack.v2",
+			"revision": "a96e63847dc3c67d17befa69c303767e2f84e54f",
+			"revisionTime": "2017-05-31T16:03:50Z"
 		},
 		{
 			"checksumSHA1": "ALQFMX3kmJkyB/8VEzVnGZG1H4A=",

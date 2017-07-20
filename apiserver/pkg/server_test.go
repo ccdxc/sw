@@ -121,7 +121,9 @@ func TestInitOnce(t *testing.T) {
 // Test the Run function of API Server to ensure it exits on failure.
 func TestRunApiSrv(t *testing.T) {
 	buf := &bytes.Buffer{}
-	l := log.GetNewLogger(false).SetOutput(buf)
+
+	logConfig := log.GetDefaultConfig("TestApiServer")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	config := apisrv.Config{
 		GrpcServerPort: ":0",
 		DebugMode:      true,
