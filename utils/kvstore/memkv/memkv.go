@@ -385,13 +385,25 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 	f.Lock()
 	defer f.Unlock()
 
+	ptr := false
+	elem := target.Type().Elem()
+	if elem.Kind() == reflect.Ptr {
+		ptr = true
+		elem = elem.Elem()
+	}
+
 	for key, v := range f.kvs {
 		if strings.HasPrefix(key, prefix) {
-			obj := reflect.New(target.Type().Elem()).Interface().(runtime.Object)
+			obj := reflect.New(elem).Interface().(runtime.Object)
 			if err := f.decode([]byte(v.value), obj, v.revision); err != nil {
 				return err
 			}
-			target.Set(reflect.Append(target, reflect.ValueOf(obj).Elem()))
+
+			if ptr {
+				target.Set(reflect.Append(target, reflect.ValueOf(obj)))
+			} else {
+				target.Set(reflect.Append(target, reflect.ValueOf(obj).Elem()))
+			}
 		}
 	}
 
@@ -512,7 +524,9 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 // InjectWatchEvent injects the given event to the watcher of the specified prefix
 // Useful for testing
 func (f *MemKv) InjectWatchEvent(prefix string, e *kvstore.WatchEvent, timeOutSec int) error {
+	f.Lock()
 	w := f.watchers[prefix]
+	f.Unlock()
 	if w == nil {
 		return errors.New("No watcher on the prefix")
 	}
@@ -529,6 +543,8 @@ func (f *MemKv) InjectWatchEvent(prefix string, e *kvstore.WatchEvent, timeOutSe
 // IsWatchActive tests the presence of a watcher on a given prefix
 // Useful for testing
 func (f *MemKv) IsWatchActive(prefix string) bool {
+	f.Lock()
+	defer f.Unlock()
 	w := f.watchers[prefix]
 	return w != nil
 }
@@ -536,7 +552,9 @@ func (f *MemKv) IsWatchActive(prefix string) bool {
 // CloseWatch closes the watch channel on a given prefix
 // Useful for testing
 func (f *MemKv) CloseWatch(prefix string) {
+	f.Lock()
 	w := f.watchers[prefix]
+	f.Unlock()
 	if w != nil {
 		close(w.outCh)
 		w.f.deleteWatchers(w)

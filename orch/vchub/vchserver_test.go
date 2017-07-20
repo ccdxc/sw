@@ -8,24 +8,28 @@
 package vchub
 
 import (
-	log "github.com/Sirupsen/logrus"
-	//"os"
 	"reflect"
 	"runtime/debug"
 	"testing"
 	"time"
-	//	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/vmware/govmomi/vim25/soap"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 
 	infraapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/orch/vchub/api"
+	"github.com/pensando/sw/orch/vchub/defs"
+	"github.com/pensando/sw/orch/vchub/sim"
 	"github.com/pensando/sw/orch/vchub/store"
+	vcp "github.com/pensando/sw/orch/vchub/vcprobe"
 	kv "github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/utils/kvstore/store"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 const (
@@ -152,6 +156,7 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 		},
 	}
 
+	sim.Setup()
 }
 
 func (ts *TestSuite) teardown(t *testing.T) {
@@ -160,6 +165,7 @@ func (ts *TestSuite) teardown(t *testing.T) {
 		ts.cluster.Terminate(t)
 	}
 	stopVCHServer()
+	sim.TearDown()
 	time.Sleep(200 * time.Millisecond)
 }
 
@@ -192,6 +198,8 @@ func verifySmartNICList(t *testing.T, expected map[string]*api.SmartNIC) {
 
 	for _, n1 := range nics {
 		n2 := expected[n1.Status.MacAddress]
+		// ignore resource version for now
+		n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
 		if !reflect.DeepEqual(n1, n2) {
 			t.Errorf("Expected %+v, got %+v", n2, n1)
 		}
@@ -800,4 +808,105 @@ func TestNwIFInspect(t *testing.T) {
 		t.Errorf("Expected non-zero stats. Got %+v", stats)
 	}
 
+}
+
+func getExpectedNICs(t *testing.T) map[string]*api.SmartNIC {
+	nicMap := make(map[string]*api.SmartNIC)
+	hosts := esx.GetHostList()
+	if hosts == nil || len(hosts) < 1 {
+		t.Errorf("Error -- no esx hosts")
+		return nicMap
+	}
+	for _, e := range hosts {
+		for _, n := range e.Config.Network.Pnic {
+			nicMap[n.Mac] = &api.SmartNIC{
+				ObjectKind:       "SmartNIC",
+				ObjectAPIVersion: "v1",
+				ObjectMeta:       &infraapi.ObjectMeta{},
+				Status: &api.SmartNIC_Status{
+					MacAddress: n.Mac,
+				},
+			}
+		}
+	}
+
+	return nicMap
+}
+
+func TestVCP(t *testing.T) {
+	suite = &TestSuite{}
+	suite.setup(t, false)
+	defer suite.teardown(t)
+
+	// Start a vc simulator
+	vc1, err := sim.Simulate("127.0.0.1:8989", 3, 3)
+	if err != nil {
+		t.Errorf("Error %v simulating vCenter", err)
+		return
+	}
+	//u, err := soap.ParseURL("administrator@vsphere.local:N0isystem$@vcenter-vm1")
+	//vc := "https://user:pass@127.0.0.1:8990/sdk"
+	//vc := "administrator@vsphere.local:N0isystem$@192.168.70.194"
+	u1, err := soap.ParseURL(vc1)
+	if err != nil {
+		t.Errorf("Error %v parsing url %s", err, vc1)
+		return
+	}
+
+	hostCh := make(chan defs.HostMsg, 96)
+	snicStore := store.NewSNICStore()
+	go snicStore.Run(context.Background(), hostCh)
+	v1 := vcp.NewVCProbe(u1, hostCh)
+	err = v1.Start()
+	if err != nil {
+		t.Errorf("Error %v from vcp.Start", err)
+		return
+	}
+
+	time.Sleep(1 * time.Second)
+	go v1.Run()
+	time.Sleep(1 * time.Second)
+	nicMap := getExpectedNICs(t)
+	verifySmartNICList(t, nicMap)
+
+	hosts := esx.GetHostList()
+	esx.AddPnicToHost(hosts[0], "vmnic2", "0c:c4:7a:70:68:68")
+	esx.AddPnicToHost(hosts[1], "vmnic3", "0c:c4:7a:70:86:86")
+	time.Sleep(1200 * time.Millisecond)
+	nicMap = getExpectedNICs(t)
+	verifySmartNICList(t, nicMap)
+	esx.DelPnicFromHost(hosts[1], "vmnic3")
+	time.Sleep(1200 * time.Millisecond)
+	nicMap = getExpectedNICs(t)
+	verifySmartNICList(t, nicMap)
+
+	// Start another vc simulator
+	vc2, err := sim.Simulate("127.0.0.1:8990", 4, 3)
+	if err != nil {
+		t.Errorf("Error %v simulating vCenter", err)
+		return
+	}
+	time.Sleep(1 * time.Second)
+
+	u2, err := soap.ParseURL(vc2)
+	if err != nil {
+		t.Errorf("Error %v parsing url %s", err, vc2)
+		return
+	}
+	v2 := vcp.NewVCProbe(u2, hostCh)
+	err = v2.Start()
+	if err != nil {
+		t.Errorf("Error %v from vcp.Start", err)
+		return
+	}
+
+	time.Sleep(1 * time.Second)
+	go v2.Run()
+	time.Sleep(1 * time.Second)
+	nicMap = getExpectedNICs(t)
+	verifySmartNICList(t, nicMap)
+
+	v1.Stop()
+	v2.Stop()
+	close(hostCh)
 }
