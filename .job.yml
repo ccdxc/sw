@@ -1,6 +1,6 @@
 ---
 targets:
-  - [ "make", "unit-test-verbose" ]
+  - [ "make", "jobd-test" ]
 image:
   name: "pensando/sw"
   bind_dir: "/go/src/github.com/pensando/sw"

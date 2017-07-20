@@ -6,4 +6,6 @@ if [ "$coverage" != "" ]; then
 	exit 1
 fi
 
+echo "================== Coverage test SUCCESSFUL =============="
+
 exit 0

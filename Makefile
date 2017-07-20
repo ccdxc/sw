@@ -90,6 +90,8 @@ ci-test:
 	make ci-testrun
 	make dev-clean
 
+jobd-test: build unit-test-verbose cover
+
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
