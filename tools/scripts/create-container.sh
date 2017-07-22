@@ -23,7 +23,7 @@ function createBinContainerTarBall() {
     then
         docker build --rm -t pen-ntp -f tools/docker-files/ntp/Dockerfile tools/docker-files/ntp
     fi
-    images="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 srv1.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 srv1.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 srv1.pensando.io:5000/coreos/etcd:v3.2.1"
+    images="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 srv1.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 srv1.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 srv1.pensando.io:5000/coreos/etcd:v3.2.1 srv1.pensando.io:5000/elasticsearch/elasticsearch:5.4.1"
     for i in $images
     do
         if [ "$(docker images -q $i)"  == "" ] 
@@ -37,7 +37,7 @@ function createBinContainerTarBall() {
 function stopCluster() {
     ( 
         echo '#!/bin/bash -x'
-        for j in pen-base pen-apiserver pen-apigw pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver
+        for j in pen-base pen-apiserver pen-apigw pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver pen-elasticsearch
         do
             echo "systemctl stop $j; docker stop $j ; docker rm $j" 
         done

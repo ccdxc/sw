@@ -48,6 +48,9 @@ def preamble_script(postamble)
     echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
     source /etc/profile.d/env.sh
 
+    # Increase mmap count to support elasticsearch
+    sysctl -w vm.max_map_count=262144
+
     # stop firewall service and disable selinux
     systemctl stop firewalld
     setenforce 0

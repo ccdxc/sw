@@ -14,7 +14,7 @@ import (
 // Services that run on node that wins the election.
 // TODO: Spread these out when it makes sense to do so.
 var (
-	masterServices = []string{"pen-kube-apiserver", "pen-kube-scheduler", "pen-kube-controller-manager", "pen-apiserver", "pen-apigw"}
+	masterServices = []string{"pen-kube-apiserver", "pen-kube-scheduler", "pen-kube-controller-manager", "pen-apiserver", "pen-apigw", "pen-elasticsearch"}
 	nodeServices   = []string{"pen-kubelet"}
 )
 
