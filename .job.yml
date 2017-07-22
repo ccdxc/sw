@@ -4,3 +4,4 @@ targets:
 image:
   name: "pensando/sw"
   bind_dir: "/go/src/github.com/pensando/sw"
+rebase: true
