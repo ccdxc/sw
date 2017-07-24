@@ -19,18 +19,26 @@ type Logger interface {
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Fatalln(args ...interface{})
+
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
 	ErrorLog(keyvals ...interface{})
 	Errorln(args ...interface{})
+
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
 	InfoLog(keyvals ...interface{})
 	Infoln(args ...interface{})
+
 	Print(args ...interface{})
 	Printf(format string, args ...interface{})
 	Println(args ...interface{})
+
+	Debug(args ...interface{})
+	Debugf(format string, args ...interface{})
 	DebugLog(keyvals ...interface{})
+	Debugln(args ...interface{})
+
 	Log(keyvals ...interface{}) error
 	Audit(ctx context.Context, keyvals ...interface{}) error
 	WithContext(pairs ...string) Logger
@@ -263,9 +271,21 @@ func (l *kitLogger) Printf(format string, args ...interface{}) {
 	l.logger.Log("level", "debug", "msg", fmt.Sprintf(format, args...))
 }
 
+func (l *kitLogger) Debug(args ...interface{}) {
+	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
+}
+
+func (l *kitLogger) Debugf(format string, args ...interface{}) {
+	l.logger.Log("level", "debug", "msg", fmt.Sprintf(format, args...))
+}
+
 func (l *kitLogger) DebugLog(keyvals ...interface{}) {
 	keyvals = append(keyvals, "level", "debug")
 	l.logger.Log(keyvals...)
+}
+
+func (l *kitLogger) Debugln(args ...interface{}) {
+	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Println(args ...interface{}) {

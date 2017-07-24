@@ -76,6 +76,24 @@ func TestLevels(t *testing.T) {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
 	}
 
+	buf.Reset()
+	l.Debug("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	l.Debugf("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	l.Debugln("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
 	// info
 	buf.Reset()
 	l.Infof("testmsg1")
