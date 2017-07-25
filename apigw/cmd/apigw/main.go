@@ -35,7 +35,9 @@ func main() {
 		logConfig := &log.Config{
 			Module:      srvName,
 			Format:      log.LogFmt,
+			Filter:      log.AllowAllFilter,
 			Debug:       *debugflag,
+			Context:     true,
 			LogToStdout: *logToStdoutFlag,
 			LogToFile:   logtoFileFlag,
 			FileCfg: log.FileConfig{

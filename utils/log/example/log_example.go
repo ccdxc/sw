@@ -33,7 +33,9 @@ func main() {
 		logConfig := &log.Config{
 			Module:      "LogTester",
 			Format:      log.LogFmt,
+			Filter:      log.AllowAllFilter,
 			Debug:       false,
+			Context:     true,
 			LogToStdout: true,
 			LogToFile:   true,
 			FileCfg: log.FileConfig{

@@ -53,6 +53,7 @@ func TestLevels(t *testing.T) {
 	config := GetDefaultConfig("TestLogger")
 	l := GetNewLogger(config).SetOutput(buf)
 	l.Printf("testmsg")
+
 	if !strings.Contains(buf.String(), "msg=testmsg") || !strings.Contains(buf.String(), "level=debug") {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
 	}
@@ -212,6 +213,83 @@ func TestFatalln(t *testing.T) {
 		}
 	}()
 	l.Fatalln("Testing Panic")
+}
+
+func TestLogFilter(t *testing.T) {
+	testCases := []struct {
+		name     string
+		filter   FilterType
+		expected string
+	}{
+		{
+			"TestAllowAll",
+			AllowAllFilter,
+			strings.Join([]string{
+				`level=debug msg="debug log"`,
+				`level=info msg="info log"`,
+				`level=warn msg="warn log"`,
+				`level=error msg="error log"`,
+			}, "\n"),
+		},
+		{
+			"TestAllowDebug",
+			AllowDebugFilter,
+			strings.Join([]string{
+				`level=debug msg="debug log"`,
+				`level=info msg="info log"`,
+				`level=warn msg="warn log"`,
+				`level=error msg="error log"`,
+			}, "\n"),
+		},
+		{
+			"TestAllowInfo",
+			AllowInfoFilter,
+			strings.Join([]string{
+				`level=info msg="info log"`,
+				`level=warn msg="warn log"`,
+				`level=error msg="error log"`,
+			}, "\n"),
+		},
+		{
+			"TestAllowWarn",
+			AllowWarnFilter,
+			strings.Join([]string{
+				`level=warn msg="warn log"`,
+				`level=error msg="error log"`,
+			}, "\n"),
+		},
+		{
+			"TestAllowError",
+			AllowErrorFilter,
+			strings.Join([]string{
+				`level=error msg="error log"`,
+			}, "\n"),
+		},
+		{
+			"TestAllowNone",
+			AllowNoneFilter,
+			``,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			buf := &bytes.Buffer{}
+			config := GetDefaultConfig("TestLogger")
+			config.Context = false
+			l := GetNewLogger(config).SetOutput(buf).SetFilter(tc.filter)
+
+			l.Debug("debug log")
+			l.Info("info log")
+			l.Warn("warn log")
+			l.Error("error log")
+
+			if expected, obtained := tc.expected, strings.TrimSpace(buf.String()); expected != obtained {
+				t.Errorf("\nexpected:\n%s\nobtained:\n%s", expected, obtained)
+			}
+		})
+	}
 }
 
 func TestAuditLog(t *testing.T) {

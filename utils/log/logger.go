@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	kitlog "github.com/go-kit/kit/log"
+	kitlevel "github.com/go-kit/kit/log/level"
 	"github.com/go-stack/stack"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
@@ -25,33 +26,64 @@ type Logger interface {
 	ErrorLog(keyvals ...interface{})
 	Errorln(args ...interface{})
 
+	Warn(args ...interface{})
+	Warnf(format string, args ...interface{})
+	WarnLog(keyvals ...interface{})
+	WarnLn(args ...interface{})
+
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
 	InfoLog(keyvals ...interface{})
 	Infoln(args ...interface{})
-
-	Print(args ...interface{})
-	Printf(format string, args ...interface{})
-	Println(args ...interface{})
 
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	DebugLog(keyvals ...interface{})
 	Debugln(args ...interface{})
 
+	Print(args ...interface{})
+	Printf(format string, args ...interface{})
+	Println(args ...interface{})
+
 	Log(keyvals ...interface{}) error
 	Audit(ctx context.Context, keyvals ...interface{}) error
+
 	WithContext(pairs ...string) Logger
 	SetOutput(w io.Writer) Logger
+	SetFilter(f FilterType) Logger
 }
 
-// FormatType identifies logging format
+// FormatType identifies logging format type
 type FormatType int
 
-// Log Format Types
+// Log format types
 const (
 	LogFmt FormatType = iota
 	JSONFmt
+)
+
+// FilterType defines the log levels allowed
+type FilterType byte
+
+const (
+
+	// AllowAllFilter allows all levels
+	AllowAllFilter FilterType = 1 << iota
+
+	// AllowDebugFilter allows debug, info, warn, error levels
+	AllowDebugFilter
+
+	// AllowInfoFilter allows info, warn, error levels
+	AllowInfoFilter
+
+	// AllowWarnFilter allows warn, error levels
+	AllowWarnFilter
+
+	// AllowErrorFilter allows only error levels
+	AllowErrorFilter
+
+	// AllowNoneFilter none
+	AllowNoneFilter
 )
 
 // FileConfig contains config params for logging to file
@@ -77,8 +109,14 @@ type Config struct {
 	// Format Type
 	Format FormatType
 
+	// Filter sets the allowed log levels
+	Filter FilterType
+
 	// Debug flag enables logging with stack-trace
 	Debug bool
+
+	// Enable context data annotation (timestamp, module, pid)
+	Context bool
 
 	// LogToStdout enable logging to stdout
 	LogToStdout bool
@@ -125,7 +163,9 @@ func GetDefaultConfig(module string) *Config {
 	return &Config{
 		Module:      module,
 		Format:      LogFmt,
+		Filter:      AllowAllFilter,
 		Debug:       false,
+		Context:     true,
 		LogToStdout: true,
 		LogToFile:   false,
 		FileCfg:     FileConfig{},
@@ -176,22 +216,30 @@ func GetNewLogger(config *Config) Logger {
 	}
 
 	// Add context data: Timestamp, Module, Pid
-	l = kitlog.With(l,
-		"ts", kitlog.DefaultTimestampUTC,
-		"module", config.Module,
-		"pid", strconv.Itoa(os.Getpid()),
-	)
+	if config.Context == true {
+		l = kitlog.With(l,
+			"ts", kitlog.DefaultTimestampUTC,
+			"module", config.Module,
+			"pid", strconv.Itoa(os.Getpid()),
+		)
+	}
 
 	// Add debug trace if enabled
 	if config.Debug {
 		l = kitlog.With(l, "caller", stackTrace())
 	} else {
-		l = kitlog.With(l, "caller", caller)
+		if config.Context == true {
+			l = kitlog.With(l, "caller", caller)
+		}
 	}
+
+	// Configure log filter
+	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
 
 	return &kitLogger{logger: l, config: *config}
 }
 
+// WithContext adds context data specified as KV pairs
 func (l *kitLogger) WithContext(pairs ...string) Logger {
 	if (len(pairs) % 2) != 0 {
 		panic("invalid argument")
@@ -203,93 +251,132 @@ func (l *kitLogger) WithContext(pairs ...string) Logger {
 	return &r
 }
 
+// SetOutput configures the io.Writer
 func (l *kitLogger) SetOutput(w io.Writer) Logger {
 	wr := kitlog.NewSyncWriter(w)
 	l.logger = kitlog.NewLogfmtLogger(wr)
 	if l.config.Debug {
 		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", stackTrace())
-	} else {
-		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", caller)
 	}
 	return l
 }
 
+// getFilterOption returns the filter function based on filter type.
+// The filter function returned is used internally by kit logger to
+// implement filtering of log levels.
+func getFilterOption(filter FilterType) kitlevel.Option {
+
+	switch filter {
+	case AllowAllFilter, AllowDebugFilter:
+		return kitlevel.AllowDebug()
+	case AllowInfoFilter:
+		return kitlevel.AllowInfo()
+	case AllowWarnFilter:
+		return kitlevel.AllowWarn()
+	case AllowErrorFilter:
+		return kitlevel.AllowError()
+	case AllowNoneFilter:
+		return kitlevel.AllowNone()
+	}
+
+	return kitlevel.AllowInfo()
+}
+
+// SetFilter configures the log filter based on filter type
+func (l *kitLogger) SetFilter(filter FilterType) Logger {
+	l.logger = kitlevel.NewFilter(l.logger, getFilterOption(filter))
+	return l
+}
+
 func (l *kitLogger) Fatal(args ...interface{}) {
-	l.logger.Log("level", "fatal", "msg", fmt.Sprint(args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprint(args...))
 	panic(fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Fatalf(format string, args ...interface{}) {
-	l.logger.Log("level", "fatal", "msg", fmt.Sprintf(format, args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprintf(format, args...))
 	panic(fmt.Sprintf(format, args...))
 }
 
 func (l *kitLogger) Fatalln(args ...interface{}) {
-	l.logger.Log("level", "fatal", "msg", fmt.Sprint(args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprint(args...))
 	panic(fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Error(args ...interface{}) {
-	l.logger.Log("level", "error", "msg", fmt.Sprint(args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Errorf(format string, args ...interface{}) {
-	l.logger.Log("level", "error", "msg", fmt.Sprintf(format, args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprintf(format, args...))
 }
 
 func (l *kitLogger) ErrorLog(keyvals ...interface{}) {
-	keyvals = append(keyvals, "level", "error")
-	l.logger.Log(keyvals...)
+	kitlevel.Error(l.logger).Log(keyvals...)
 }
 
 func (l *kitLogger) Errorln(args ...interface{}) {
-	l.logger.Log("level", "error", "msg", fmt.Sprint(args...))
+	kitlevel.Error(l.logger).Log("msg", fmt.Sprint(args...))
+}
+
+func (l *kitLogger) Warn(args ...interface{}) {
+	kitlevel.Warn(l.logger).Log("msg", fmt.Sprint(args...))
+}
+
+func (l *kitLogger) Warnf(format string, args ...interface{}) {
+	kitlevel.Warn(l.logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+func (l *kitLogger) WarnLog(keyvals ...interface{}) {
+	kitlevel.Warn(l.logger).Log(keyvals...)
+}
+
+func (l *kitLogger) WarnLn(args ...interface{}) {
+	kitlevel.Warn(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Info(args ...interface{}) {
-	l.logger.Log("level", "info", "msg", fmt.Sprint(args...))
+	kitlevel.Info(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Infof(format string, args ...interface{}) {
-	l.logger.Log("level", "info", "msg", fmt.Sprintf(format, args...))
+	kitlevel.Info(l.logger).Log("msg", fmt.Sprintf(format, args...))
 }
 
 func (l *kitLogger) InfoLog(keyvals ...interface{}) {
-	keyvals = append(keyvals, "level", "info")
-	l.logger.Log(keyvals...)
+	kitlevel.Info(l.logger).Log(keyvals...)
 }
 
 func (l *kitLogger) Infoln(args ...interface{}) {
-	l.logger.Log("level", "info", "msg", fmt.Sprint(args...))
+	kitlevel.Info(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Print(args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Printf(format string, args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprintf(format, args...))
-}
-
-func (l *kitLogger) Debug(args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
-}
-
-func (l *kitLogger) Debugf(format string, args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprintf(format, args...))
-}
-
-func (l *kitLogger) DebugLog(keyvals ...interface{}) {
-	keyvals = append(keyvals, "level", "debug")
-	l.logger.Log(keyvals...)
-}
-
-func (l *kitLogger) Debugln(args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprintf(format, args...))
 }
 
 func (l *kitLogger) Println(args ...interface{}) {
-	l.logger.Log("level", "debug", "msg", fmt.Sprint(args...))
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprint(args...))
+}
+
+func (l *kitLogger) Debug(args ...interface{}) {
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprint(args...))
+}
+
+func (l *kitLogger) Debugf(format string, args ...interface{}) {
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+func (l *kitLogger) DebugLog(keyvals ...interface{}) {
+	kitlevel.Debug(l.logger).Log(keyvals...)
+}
+
+func (l *kitLogger) Debugln(args ...interface{}) {
+	kitlevel.Debug(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
 func (l *kitLogger) Log(keyvals ...interface{}) error {
