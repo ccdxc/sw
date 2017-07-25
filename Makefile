@@ -78,6 +78,9 @@ unit-test-verbose:
 	$(info +++ go test $(TO_BUILD))
 	go test -v $(TO_BUILD)
 
+# target to run before git push
+precommit: checks build unit-test
+
 cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
