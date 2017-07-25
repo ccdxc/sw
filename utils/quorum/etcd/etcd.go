@@ -114,7 +114,7 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	defer cfgFile.Close()
 
 	for k, v := range cfgMap {
-		_, err := cfgFile.WriteString(fmt.Sprintf("%s='%s'\n", k, v))
+		_, err = cfgFile.WriteString(fmt.Sprintf("%s='%s'\n", k, v))
 		if err != nil {
 			return nil, err
 		}
@@ -122,8 +122,9 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 
 	cfgFile.Sync()
 
+	s := systemd.New()
 	// Start etcd using systemd.
-	err = systemd.StartTarget(c.UnitFile)
+	err = s.StartTarget(c.UnitFile)
 	if err != nil {
 		return nil, err
 	}

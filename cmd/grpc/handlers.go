@@ -2,17 +2,17 @@ package grpc
 
 import (
 	"fmt"
-	context "golang.org/x/net/context"
 	"net"
 	"os"
 	"strings"
 	"time"
 
+	context "golang.org/x/net/context"
+
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/services"
-	"github.com/pensando/sw/cmd/systemd"
 	"github.com/pensando/sw/cmd/utils"
 	kvstore "github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/quorum"
@@ -25,6 +25,8 @@ import (
 const (
 	maxIters              = 50
 	sleepBetweenItersMsec = 100
+
+	masterLeaderKey = "master"
 )
 
 // RunServer creates a gRPC server for cluster operations.
@@ -79,8 +81,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 	}); err != nil {
 		return nil, err
 	}
-
-	systemdSvc := systemd.NewSystemdService()
 
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
@@ -152,14 +152,21 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		}
 
 		env.KVStore = kv
+		// Create leader service before its users
+		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
+		env.SystemdService = services.NewSystemdService()
+		env.VipService = services.NewVIPService()
+		env.MasterService = services.NewMasterService(req.VirtualIp)
 
-		// Start leader election on quorum nodes.
-		env.LeaderService = services.NewLeaderService(kv, services.NewIPService(), systemdSvc, hostname, req.VirtualIp)
+		env.SystemdService.Start() // must be called before dependent services
+		env.VipService.AddVirtualIPs(req.VirtualIp)
+		env.MasterService.Start()
 		env.LeaderService.Start()
 	}
 
-	// Start node services.
-	if err := systemdSvc.StartNodeServices(req.VirtualIp); err != nil {
+	env.NodeService = services.NewNodeService(req.VirtualIp)
+	// Start node services. Currently we are running Node services on Quorum nodes also
+	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
 

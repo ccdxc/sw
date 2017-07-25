@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"path"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
-
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/ops"
@@ -30,7 +30,7 @@ func NewRESTServer() *martini.ClassicMartini {
 	m := martini.Classic()
 
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
-	m.Get(uRLPrefix+clusterURL, ClusterGetHandler)
+	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 
 	m.Get(uRLPrefix+nodesURL, NodeListHandler)
 
@@ -57,17 +57,23 @@ func ClusterCreateHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // ClusterGetHandler returns the cluster information.
-func ClusterGetHandler(w http.ResponseWriter, req *http.Request) {
+func ClusterGetHandler(w http.ResponseWriter, params martini.Params) {
 	cluster := cmd.Cluster{}
+	id := params["id"]
+
+	if id == "" {
+		errors.SendNotFound(w, "Cluster", "")
+		return
+	}
 
 	if env.KVStore == nil {
 		errors.SendNotFound(w, "Cluster", "")
 		return
 	}
 
-	if err := env.KVStore.Get(context.Background(), globals.ClusterKey, &cluster); err != nil {
+	if err := env.KVStore.Get(context.Background(), path.Join(globals.ClusterKey, id), &cluster); err != nil {
 		if kvstore.IsKeyNotFoundError(err) {
-			errors.SendNotFound(w, "Cluster", "")
+			errors.SendNotFound(w, "Cluster", id)
 			return
 		}
 		errors.SendInternalError(w, err)

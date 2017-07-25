@@ -7,12 +7,30 @@ import (
 )
 
 // Watcher watches for events from systemd
-type Watcher struct {
+type sysWatcher struct {
 	sync.RWMutex
 	conn     *dbus.Conn          // dbus connection reference
 	set      map[string]struct{} // sevices for which we are interested in
 	stopChan chan bool           // to return from the go routine
 	pokeChan chan bool           // to immediately update cache after subscriber update
+}
+
+// Interface provided by systemd package
+type Interface interface {
+	DaemonReload() error
+	StartTarget(name string) (err error)
+	StopTarget(name string) error
+	RestartTarget(name string) error
+	NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error)
+}
+
+// Watcher interface provides a channel for watching on systemd bus for interesting services
+type Watcher interface {
+	Close()
+	Subscribe(name string)
+	Unsubscribe(name string)
+	TargetDeps(name string) ([]string, error)
+	GetPID(name string) (uint32, error)
 }
 
 // UnitStatus is current state of the Unit/Target

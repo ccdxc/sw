@@ -33,6 +33,6 @@ const (
 	ElasticsearchRESTPort = "9200"
 
 	// KV Store keys
-	ClusterKey = "/cluster"
-	NodesKey   = "/nodes"
+	ClusterKey = "/venice/cmd/cluster"
+	NodesKey   = "/venice/cmd/nodes"
 )

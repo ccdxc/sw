@@ -15,8 +15,40 @@ var (
 	watcherPollInterval       = time.Second
 )
 
-// StartTarget starts the specified systemd target
-func StartTarget(name string) (err error) {
+type systemd struct {
+}
+
+func (s *systemd) DaemonReload() error {
+	conn, err := dbus.New()
+	if err != nil {
+		return errors.Wrap(err, "unable to establish dbus connection to systemd")
+	}
+	defer conn.Close()
+	return conn.Reload()
+}
+
+func New() Interface {
+	return &systemd{}
+}
+
+func (s *systemd) StartTarget(name string) (err error) {
+	return startTarget(name)
+}
+
+func (s *systemd) StopTarget(name string) error {
+	return stopTarget(name)
+}
+
+func (s *systemd) RestartTarget(name string) error {
+	return restartTarget(name)
+}
+
+func (s *systemd) NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error) {
+	return newWatcher()
+}
+
+// startTarget starts the specified systemd target
+func startTarget(name string) (err error) {
 	conn, err := dbus.New()
 	if err != nil {
 		return errors.Wrap(err, "unable to establish dbus connection to systemd")
@@ -40,8 +72,8 @@ func StartTarget(name string) (err error) {
 	}
 }
 
-// StopTarget stops a systemd target
-func StopTarget(name string) error {
+// stopTarget stops a systemd target
+func stopTarget(name string) error {
 	conn, err := dbus.New()
 	if err != nil {
 		return errors.Wrap(err, "unable to establish dbus connection to systemd")
@@ -64,8 +96,8 @@ func StopTarget(name string) error {
 	}
 }
 
-// RestartTarget to restart a given target. Stops for a second between stop and start
-func RestartTarget(name string) error {
+// restartTarget to restart a given target. Stops for a second between stop and start
+func restartTarget(name string) error {
 	conn, err := dbus.New()
 	if err != nil {
 		return errors.Wrap(err, "unable to establish dbus connection to systemd")
@@ -112,7 +144,7 @@ func mismatchUnitStatus(u1, u2 *dbus.UnitStatus) bool {
 		u1.SubState != u2.SubState
 }
 
-func (w *Watcher) subscribeUnits(interval time.Duration) (<-chan *UnitEvent, <-chan error) {
+func (w *sysWatcher) subscribeUnits(interval time.Duration) (<-chan *UnitEvent, <-chan error) {
 	w.stopChan = make(chan bool, 0)
 	w.pokeChan = make(chan bool, 0)
 
@@ -199,9 +231,9 @@ func (w *Watcher) subscribeUnits(interval time.Duration) (<-chan *UnitEvent, <-c
 	return statusChan, errChan
 }
 
-// NewWatcher creates a Watcher object on which the caller can subscribe to events
-func NewWatcher() (*Watcher, <-chan *UnitEvent, <-chan error) {
-	w := Watcher{set: make(map[string]struct{})}
+// newWatcher creates a Watcher object on which the caller can subscribe to events
+func newWatcher() (Watcher, <-chan *UnitEvent, <-chan error) {
+	w := sysWatcher{set: make(map[string]struct{})}
 	var err error
 	w.conn, err = dbus.New()
 	if err != nil {
@@ -213,7 +245,7 @@ func NewWatcher() (*Watcher, <-chan *UnitEvent, <-chan error) {
 }
 
 // Close the subscription
-func (w *Watcher) Close() {
+func (w *sysWatcher) Close() {
 	w.stopChan <- true
 	w.conn.Unsubscribe()
 	w.conn.Close()
@@ -221,7 +253,7 @@ func (w *Watcher) Close() {
 }
 
 // Unsubscribe removes watching on a service and its dependents
-func (w *Watcher) Unsubscribe(name string) {
+func (w *sysWatcher) Unsubscribe(name string) {
 	w.Lock()
 	delete(w.set, name)
 	w.Unlock()
@@ -240,7 +272,7 @@ func (w *Watcher) Unsubscribe(name string) {
 }
 
 // Subscribe starts watching on a service and its dependents. This is internally implemented using a poller
-func (w *Watcher) Subscribe(name string) {
+func (w *sysWatcher) Subscribe(name string) {
 	w.Lock()
 	w.set[name] = struct{}{}
 	w.Unlock()
@@ -260,7 +292,7 @@ func (w *Watcher) Subscribe(name string) {
 }
 
 // TargetDeps returns units which are dependent on a target
-func (w *Watcher) TargetDeps(name string) ([]string, error) {
+func (w *sysWatcher) TargetDeps(name string) ([]string, error) {
 	i, err := w.conn.GetUnitProperty(name, "Wants")
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to determine dependent services")
@@ -269,7 +301,7 @@ func (w *Watcher) TargetDeps(name string) ([]string, error) {
 }
 
 // GetPID returns PID of specified unit. May be needed if we need to send SIGTERM etc to a unit
-func (w *Watcher) GetPID(name string) (uint32, error) {
+func (w *sysWatcher) GetPID(name string) (uint32, error) {
 	i, err := w.conn.GetServiceProperty(name, "MainPID")
 	if err != nil {
 		return 0, errors.Wrapf(err, "unable to determine PID for service")

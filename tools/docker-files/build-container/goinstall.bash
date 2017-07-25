@@ -2,6 +2,7 @@
 
 export GOBIN=/usr/local/go/bin
 export PATH=/usr/local/go/bin:$PATH
+
 go get  "github.com/tools/godep"
 go get  "github.com/nsf/gocode"
 go get  "github.com/alecthomas/gometalinter"

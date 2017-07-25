@@ -28,9 +28,12 @@ govet-src: $(PKG_DIRS)
 
 checks: gofmt-src golint-src govet-src
 
-build: deps ws-tools checks
+qbuild:
 	$(info +++ go install $(TO_BUILD))
-	CGO_ENABLED=0 go install -v $(TO_BUILD)
+	go install -v $(TO_BUILD)
+
+build: deps ws-tools checks
+	$(MAKE) qbuild
 
 c-start:
 	@tools/scripts/create-container.sh startCluster
@@ -49,6 +52,11 @@ install:
 	@tools/scripts/create-container.sh createApiSrvContainer
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
+qdeploy:
+	$(MAKE) container-qcompile
+	$(MAKE) install
+	$(MAKE) c-start
+
 deploy:
 	$(MAKE) container-compile
 	$(MAKE) install
@@ -56,11 +64,17 @@ deploy:
 
 clean: c-stop
 
+base-container:
+	@cd tools/docker-files/pens-base; docker build -t srv1.pensando.io:5000/pens-base:v0.1 .
+
 build-container:
-	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld .
+	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.2 .
+
+container-qcompile:
+	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 make qbuild
 
 container-compile:
-	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld
+	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2
 
 ws-tools:
 	$(info +++ building WS tools)

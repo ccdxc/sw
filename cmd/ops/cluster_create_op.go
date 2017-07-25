@@ -96,7 +96,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 
 	// Store Cluster and Node objects in kv store.
 	txn := env.KVStore.NewTxn()
-	err = txn.Create(globals.ClusterKey, o.cluster)
+	err = txn.Create(path.Join(globals.ClusterKey, o.cluster.Name), o.cluster)
 	if err != nil {
 		log.Errorf("Failed to add cluster to txn, error: %v", err)
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
