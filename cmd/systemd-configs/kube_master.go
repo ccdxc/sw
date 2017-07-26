@@ -17,6 +17,7 @@ const (
 
 	userGroup             = "admin/admin"
 	serviceClusterIPRange = "10.0.0.0/24" // TODO: What should this be?
+	enableDaemonSet       = "extensions/v1beta1/daemonsets=true"
 
 	// Environment variables
 	insecureAllowVar  = "INSECURE_ALLOW"
@@ -25,6 +26,7 @@ const (
 	etcdServersVar    = "ETCD_SERVERS"
 	serviceClusterVar = "SERVICE_CLUSTER"
 	kubeMasterVar     = "KUBE_MASTER"
+	runtimeConfigVar  = "RUNTIME_CONFIG"
 
 	// Parameters
 	insecureAllowParam  = "--insecure-allow-any-token"
@@ -33,6 +35,7 @@ const (
 	etcdServersParam    = "--etcd-servers"
 	serviceClusterParam = "--service-cluster-ip-range"
 	kubeMasterParam     = "--master"
+	runtimeConfigParam  = "--runtime-config"
 )
 
 // GenerateKubeMasterConfig generates the systemd configuration files for
@@ -57,6 +60,7 @@ func generateKubeAPIServerConfig() error {
 	cfgMap[insecurePortVar] = fmt.Sprintf("%s %s", insecurePortParam, globals.KubeAPIServerPort)
 	cfgMap[etcdServersVar] = fmt.Sprintf("%s %s", etcdServersParam, strings.Join(env.KVServers, ","))
 	cfgMap[serviceClusterVar] = fmt.Sprintf("%s %s", serviceClusterParam, serviceClusterIPRange)
+	cfgMap[runtimeConfigVar] = fmt.Sprintf("%s %s", runtimeConfigParam, enableDaemonSet)
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeAPIServerCfgFile))
 }
 

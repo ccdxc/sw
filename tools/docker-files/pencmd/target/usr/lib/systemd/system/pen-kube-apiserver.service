@@ -13,7 +13,8 @@ ExecStart=/usr/pensando/bin/systemd-docker \
 	$INSECURE_ADDR \
 	$INSECURE_PORT \
 	$ETCD_SERVERS \
-	$SERVICE_CLUSTER 
+	$SERVICE_CLUSTER \
+	$RUNTIME_CONFIG
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-apiserver
 ExecStopPost=/usr/bin/docker rm -f pen-kube-apiserver
 Restart=always

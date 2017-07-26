@@ -5,10 +5,13 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
+	k8sclient "k8s.io/client-go/kubernetes"
+	k8srest "k8s.io/client-go/rest"
 
 	"github.com/pensando/sw/cmd/env"
 	configs "github.com/pensando/sw/cmd/systemd-configs"
 	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/globals"
 )
 
 // Services that run on node that wins the Leader election.
@@ -19,7 +22,6 @@ var (
 		"pen-kube-scheduler",
 		"pen-kube-controller-manager",
 		"pen-apiserver",
-		"pen-apigw",
 		"pen-elasticsearch",
 	}
 )
@@ -28,6 +30,7 @@ type masterService struct {
 	sync.Mutex
 	sysSvc    types.SystemdService
 	leaderSvc types.LeaderService
+	k8sSvc    types.K8sService
 	isLeader  bool
 	enabled   bool
 	virtualIP string // virtualIP for services which can listed on only one VIP
@@ -46,15 +49,22 @@ func WithConfigsMasterOption(configs configs.Interface) MasterOption {
 
 // WithLeaderSvcMasterOption to pass a specifc types.LeaderService implementation
 func WithLeaderSvcMasterOption(leaderSvc types.LeaderService) MasterOption {
-	return func(o *masterService) {
-		o.leaderSvc = leaderSvc
+	return func(m *masterService) {
+		m.leaderSvc = leaderSvc
 	}
 }
 
 // WithSystemdSvcMasterOption to pass a specifc types.SystemdService implementation
 func WithSystemdSvcMasterOption(sysSvc types.SystemdService) MasterOption {
-	return func(o *masterService) {
-		o.sysSvc = sysSvc
+	return func(m *masterService) {
+		m.sysSvc = sysSvc
+	}
+}
+
+// WithK8sSvcMasterOption to pass a specifc types.K8sService implementation
+func WithK8sSvcMasterOption(k8sSvc types.K8sService) MasterOption {
+	return func(m *masterService) {
+		m.k8sSvc = k8sSvc
 	}
 }
 
@@ -77,6 +87,12 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 	if m.sysSvc == nil {
 		panic("Current implementation of Master Service needs a global SystemdService")
 	}
+	if m.k8sSvc == nil {
+		config := &k8srest.Config{
+			Host: fmt.Sprintf("%v:%v", virtualIP, globals.KubeAPIServerPort),
+		}
+		m.k8sSvc = newK8sService(k8sclient.NewForConfigOrDie(config))
+	}
 	m.leaderSvc.Register(&m)
 	m.sysSvc.Register(&m)
 
@@ -87,88 +103,90 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 // cluster after running election. These include kubernetes master components and API Gateway, services
 // that have affinity to the Virtual IP.
 // TODO: Spread out kubernetes master services also?
-func (s *masterService) Start() error {
-	s.sysSvc.Start()
-	s.leaderSvc.Start()
+func (m *masterService) Start() error {
+	m.sysSvc.Start()
+	m.leaderSvc.Start()
 
-	s.Lock()
-	defer s.Unlock()
-	if s.leaderSvc.IsLeader() {
-		s.isLeader = true
+	m.Lock()
+	defer m.Unlock()
+	if m.leaderSvc.IsLeader() {
+		m.isLeader = true
 	}
-	s.enabled = true
-	if s.isLeader {
-		return s.startLeaderServices(s.virtualIP)
+	m.enabled = true
+	if m.isLeader {
+		return m.startLeaderServices(m.virtualIP)
 	}
 	return nil
 }
 
 // caller holds the lock
-func (s *masterService) startLeaderServices(virtualIP string) error {
-	if err := s.configs.GenerateKubeMasterConfig(virtualIP); err != nil {
+func (m *masterService) startLeaderServices(virtualIP string) error {
+	if err := m.configs.GenerateKubeMasterConfig(virtualIP); err != nil {
 		return err
 	}
-	if err := s.configs.GenerateAPIServerConfig(); err != nil {
+	if err := m.configs.GenerateAPIServerConfig(); err != nil {
 		return err
 	}
 	for ii := range masterServices {
-		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
+		if err := m.sysSvc.StartUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
 			return err
 		}
 	}
+	m.k8sSvc.Start()
 	return nil
 }
 
 // Stop stops the services that run on the leader node in the
 // cluster.
-func (s *masterService) Stop() {
-	s.Lock()
-	defer s.Unlock()
-	s.enabled = false
-	s.stopLeaderServices()
+func (m *masterService) Stop() {
+	m.Lock()
+	defer m.Unlock()
+	m.enabled = false
+	m.stopLeaderServices()
 }
 
 // caller holds the lock
-func (s *masterService) stopLeaderServices() {
+func (m *masterService) stopLeaderServices() {
+	m.k8sSvc.Stop()
 	for ii := range masterServices {
-		if err := s.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
+		if err := m.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
 			log.Errorf("Failed to stop leader service %v with error: %v", masterServices[ii], err)
 		}
 	}
-	s.configs.RemoveKubeMasterConfig()
-	s.configs.RemoveAPIServerConfig()
+	m.configs.RemoveKubeMasterConfig()
+	m.configs.RemoveAPIServerConfig()
 }
 
 // AreLeaderServicesRunning returns if all the leader node services are
 // running.
-func (s *masterService) AreLeaderServicesRunning() bool {
+func (m *masterService) AreLeaderServicesRunning() bool {
 	// TODO: Need systemd API for this
 	return true
 }
 
-func (s *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
+func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	var err error
 	switch e.Evt {
 	case types.LeaderEventChange:
 	case types.LeaderEventWon:
-		s.Lock()
-		defer s.Unlock()
-		s.isLeader = true
-		if s.enabled {
-			s.startLeaderServices(s.virtualIP)
+		m.Lock()
+		defer m.Unlock()
+		m.isLeader = true
+		if m.enabled {
+			m.startLeaderServices(m.virtualIP)
 		}
 	case types.LeaderEventLost:
-		s.Lock()
-		defer s.Unlock()
-		s.isLeader = false
-		if s.enabled {
-			s.stopLeaderServices()
+		m.Lock()
+		defer m.Unlock()
+		m.isLeader = false
+		if m.enabled {
+			m.stopLeaderServices()
 		}
 	}
 	return err
 }
 
-func (s *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {
+func (m *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 	found := false
 	for _, n := range masterServices {
 		if e.Name == n {

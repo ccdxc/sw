@@ -148,3 +148,12 @@ type SystemdService interface {
 	// Units return the systemd units that are watched by this service
 	Units() []string
 }
+
+// K8sService is the interface for managing controllers deployed through K8s.
+type K8sService interface {
+	// Start the k8s service.
+	Start()
+
+	// Stop the k8s service.
+	Stop()
+}
