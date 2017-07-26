@@ -136,12 +136,12 @@ func MemberRemoveHandler(w http.ResponseWriter, params martini.Params) (int, str
 
 	}
 
-	memberId, err := strconv.ParseUint(id, 10, 64)
+	memberID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return http.StatusBadRequest, fmt.Sprintf("Member id %v is invalid, needs to be uint64", id)
 	}
 
-	if err := quorumIntf.Remove(memberId); err != nil {
+	if err := quorumIntf.Remove(memberID); err != nil {
 		return http.StatusInternalServerError, fmt.Sprintf("Member %q removal failed: %v\n", id, err)
 	}
 

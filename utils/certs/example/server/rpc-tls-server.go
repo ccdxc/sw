@@ -13,8 +13,20 @@ import (
 	"net/rpc"
 )
 
+type foo bool
+
+type result struct {
+	Data int
+}
+
+func (f *foo) Bar(args *string, res *result) error {
+	res.Data = len(*args)
+	log.Printf("Received %q, its length is %d", *args, res.Data)
+	return nil
+}
+
 func main() {
-	if err := rpc.Register(new(Foo)); err != nil {
+	if err := rpc.Register(new(foo)); err != nil {
 		log.Fatal("Failed to register RPC method")
 	}
 	cert, err := tls.LoadX509KeyPair("certs/server.crt", "certs/server.key")
@@ -63,16 +75,4 @@ func handleClient(conn net.Conn) {
 	defer conn.Close()
 	rpc.ServeConn(conn)
 	log.Println("server: conn: closed")
-}
-
-type Foo bool
-
-type Result struct {
-	Data int
-}
-
-func (f *Foo) Bar(args *string, res *Result) error {
-	res.Data = len(*args)
-	log.Printf("Received %q, its length is %d", *args, res.Data)
-	return nil
 }

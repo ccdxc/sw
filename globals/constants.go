@@ -1,5 +1,6 @@
 package globals
 
+// global constants
 const (
 	// Config directory
 	ConfigDir       = "/etc/pensando"

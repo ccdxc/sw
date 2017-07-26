@@ -2,8 +2,7 @@
 
 EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
-TO_BUILD := ./utils/rpckit/... ./utils/kvstore/... ./utils/runtime/... ./agent/... ./cmd/... ./utils/certs ./utils/mdns ./utils/sysif \
- ./apiserver/... ./apigw/... ./utils/log/... ./orch/... ./utils/resource/...
+TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... ./apiserver/... ./globals/...
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
@@ -24,7 +23,7 @@ golint-src: $(PKG_DIRS)
 
 govet-src: $(PKG_DIRS)
 	$(info +++ govet $(PKG_DIRS))
-	@for dir in $?; do $(GOVET_CMD) $${dir} || exit 1;done
+	@for dir in $(PKG_DIRS); do $(GOVET_CMD) $${dir} || exit 1;done
 
 checks: gofmt-src golint-src govet-src
 

@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// WriteCfgMapToFile writes config to a file
 func WriteCfgMapToFile(cfgMap map[string]string, file string) error {
 	cfgFile, err := os.Create(file)
 	if err != nil {

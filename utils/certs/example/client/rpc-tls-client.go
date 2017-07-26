@@ -9,6 +9,10 @@ import (
 	"net/rpc"
 )
 
+type result struct {
+	Data int
+}
+
 func main() {
 	cert, err := tls.LoadX509KeyPair("certs/client.crt", "certs/client.key")
 	if err != nil {
@@ -41,13 +45,9 @@ func main() {
 	defer conn.Close()
 	log.Println("client: connected to: ", conn.RemoteAddr())
 	rpcClient := rpc.NewClient(conn)
-	res := new(Result)
+	res := new(result)
 	if err := rpcClient.Call("Foo.Bar", "twenty-three", &res); err != nil {
 		log.Fatal("Failed to call RPC", err)
 	}
 	log.Printf("Returned result is %d", res.Data)
-}
-
-type Result struct {
-	Data int
 }

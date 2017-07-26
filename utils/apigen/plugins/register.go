@@ -247,6 +247,7 @@ func genManifest(path, pkg, file string) (map[string]string, error) {
 	return manifest, nil
 }
 
+// RelationRef is reference to relations
 type RelationRef struct {
 	Type  string
 	To    string
@@ -303,10 +304,9 @@ func genRelMap(path string) (string, error) {
 		str := string(ret[:])
 		glog.V(1).Infof("Generated Relations.json %v", str)
 		return str, nil
-	} else {
-		return "{}", nil
 	}
 
+	return "{}", nil
 }
 
 func init() {

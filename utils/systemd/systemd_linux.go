@@ -27,22 +27,27 @@ func (s *systemd) DaemonReload() error {
 	return conn.Reload()
 }
 
+// New returns a new systemd interface
 func New() Interface {
 	return &systemd{}
 }
 
+// StartTarget starts the specified systemd target
 func (s *systemd) StartTarget(name string) (err error) {
 	return startTarget(name)
 }
 
+// StopTarget stops target
 func (s *systemd) StopTarget(name string) error {
 	return stopTarget(name)
 }
 
+// RestartTarget restart target
 func (s *systemd) RestartTarget(name string) error {
 	return restartTarget(name)
 }
 
+// NewWatcher creates new watcher
 func (s *systemd) NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error) {
 	return newWatcher()
 }

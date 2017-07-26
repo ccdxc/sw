@@ -148,7 +148,7 @@ func TestWalkStruct(t *testing.T) {
     }
   }
 `
-	refCtx := &RefCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj}
 	outStr := WalkStruct(User{}, refCtx)
 	if outStr != expectedStr {
 		t.Fatalf("Out:\n--%s--\nExpected:\n--%s--\n", outStr, expectedStr)
@@ -156,7 +156,7 @@ func TestWalkStruct(t *testing.T) {
 }
 
 func TestEmptyGet(t *testing.T) {
-	refCtx := &RefCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj}
 	kvs := make(map[string]FInfo)
 	GetKvs(User{}, refCtx, kvs)
 	total := 0
@@ -399,7 +399,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 	kvs := make(map[string]FInfo)
-	refCtx := &RefCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj}
 	GetKvs(u, refCtx, kvs)
 
 	if fi, ok := kvs["Name"]; ok {
@@ -728,7 +728,7 @@ func TestUpdate(t *testing.T) {
 	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
 	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
 
-	refCtx := &RefCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(u, refCtx, kvs)
 	newUser := newObj.(User)
 
@@ -861,7 +861,7 @@ func TestNewWrite(t *testing.T) {
 	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
 	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
 
-	refCtx := &RefCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(User{}, refCtx, kvs)
 	newUser := newObj.(User)
 

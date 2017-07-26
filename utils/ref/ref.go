@@ -23,14 +23,14 @@ func NewFInfo(strs []string) FInfo {
 	return FInfo{ValueStr: strs, TypeStr: ""}
 }
 
-// GetSubObj returns an empty struct object by struct's name
+// GetSubObjFn returns an empty struct object by struct's name
 // struct's name is either an object's name within caller's package
 // or referred object in another package
 // The function is called by Get/Write/Walk routines to fetch empty embeded structs
 type GetSubObjFn func(string) interface{}
 
-// RefCtx is context used by the package to pass on intermediate context or user context
-type RefCtx struct {
+// RfCtx is context used by the package to pass on intermediate context or user context
+type RfCtx struct {
 	GetSubObj GetSubObjFn
 }
 
@@ -42,7 +42,7 @@ type kvContext struct {
 
 // GetKvs recursively reads an object and extract all fields as (key, value) pairs
 // in the map passed as 'kvs'
-func GetKvs(obj interface{}, refCtx *RefCtx, kvs map[string]FInfo) {
+func GetKvs(obj interface{}, refCtx *RfCtx, kvs map[string]FInfo) {
 	rv := reflect.ValueOf(obj)
 	kvCtx := &kvContext{}
 	getKvs(rv, kvCtx, refCtx, kvs)
@@ -52,7 +52,7 @@ func GetKvs(obj interface{}, refCtx *RefCtx, kvs map[string]FInfo) {
 // in the map. Upon update it returns the struct that is passed into it
 // If the input object is non-null, this function performs an update to existing fields
 // Input object is left unchanged, while a copy is made with updates
-func WriteKvs(obj interface{}, refCtx *RefCtx, kvs map[string]FInfo) interface{} {
+func WriteKvs(obj interface{}, refCtx *RfCtx, kvs map[string]FInfo) interface{} {
 	orig := reflect.ValueOf(obj)
 	new := reflect.New(orig.Type()).Elem()
 	kvCtx := &kvContext{}
@@ -61,10 +61,10 @@ func WriteKvs(obj interface{}, refCtx *RefCtx, kvs map[string]FInfo) interface{}
 	return new.Interface()
 }
 
-// Walkstruct recursively walks an object and pretty prints the structure output
+// WalkStruct recursively walks an object and pretty prints the structure output
 // It is different from go fmt printf in a way that it walks pointers to various
 // fields as well
-func WalkStruct(v interface{}, refCtx *RefCtx) string {
+func WalkStruct(v interface{}, refCtx *RfCtx) string {
 	rv := reflect.Indirect(reflect.ValueOf(v))
 	return walkObj(rv, refCtx, 0)
 }
@@ -108,7 +108,7 @@ func FieldByName(v reflect.Value, fieldName string) []string {
 			}
 		}
 	case reflect.Slice, reflect.Array:
-		for i := 0; i < v.Len(); i += 1 {
+		for i := 0; i < v.Len(); i++ {
 			retSubStrs := FieldByName(v.Index(i), fieldName)
 			if len(retSubStrs) > 0 {
 				retStrs = append(retStrs, retSubStrs...)
@@ -209,7 +209,7 @@ func removeTag(kvCtx *kvContext, insTag string) {
 }
 
 // getKvs is shadow routine that works recursively for GetKvs
-func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	switch v.Kind() {
 	case reflect.Ptr:
 		elem := v.Elem()
@@ -226,7 +226,7 @@ func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FI
 	}
 }
 
-func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	fieldName := kvCtx.fieldName
 	if isPrimitive(kind) {
 		veniceTag := kvCtx.prefixKey
@@ -248,7 +248,7 @@ func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx
 	}
 }
 
-func getKvsSlice(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func getKvsSlice(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	elem := v.Type().Elem()
 	elemKind := elem.Kind()
 	if elemKind == reflect.Ptr {
@@ -269,7 +269,7 @@ func getKvsSlice(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[stri
 	}
 }
 
-func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	elem := v.Type().Elem()
 	if v.Len() == 0 && !isPrimitive(elem.Kind()) {
 		rv := reflect.ValueOf(refCtx.GetSubObj(elem.Name()))
@@ -283,7 +283,7 @@ func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string
 	}
 }
 
-func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	for i := 0; i < v.NumField(); i++ {
 		val := v.Field(i)
 		typeField := v.Type().Field(i)
@@ -358,7 +358,7 @@ func getKv(kvCtx *kvContext, v reflect.Value) (string, string, bool) {
 }
 
 // writeKvs is shadow routine that works recursively for WriteKvs
-func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	switch orig.Kind() {
 	case reflect.Struct:
 		writeKvsStruct(new, orig, kvCtx, refCtx, kvs)
@@ -373,7 +373,7 @@ func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map
 	}
 }
 
-func writeKvsMap(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func writeKvsMap(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	new.Set(reflect.MakeMap(orig.Type()))
 	for _, key := range orig.MapKeys() {
 		origValue := orig.MapIndex(key)
@@ -385,7 +385,7 @@ func writeKvsMap(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs 
 	}
 }
 
-func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	if fi, ok := kvs[fieldName]; ok {
 		if len(fi.ValueStr) > 1 {
 			newfi := FInfo{TypeStr: fi.TypeStr, SSkip: fi.SSkip, Key: fi.Key, ValueStr: fi.ValueStr[1:]}
@@ -401,7 +401,7 @@ func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kv
 	}
 }
 
-func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) bool {
+func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) bool {
 	replace := false
 	fieldName := kvCtx.fieldName
 	if isPrimitive(elemKind) {
@@ -432,7 +432,7 @@ func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext
 	return replace
 }
 
-func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	elem := orig.Type().Elem()
 	fieldName := kvCtx.fieldName
 	elemKind := elem.Kind()
@@ -497,7 +497,7 @@ func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kv
 	}
 }
 
-func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RefCtx, kvs map[string]FInfo) {
+func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	for i := 0; i < orig.NumField(); i++ {
 		typeField := orig.Type().Field(i)
 		val := orig.Field(i)
@@ -591,7 +591,7 @@ func writeKv(new, orig reflect.Value, kvString string) {
 }
 
 // walkObj is shadow routine that works recursively for WalkStruct
-func walkObj(v reflect.Value, refCtx *RefCtx, level int) string {
+func walkObj(v reflect.Value, refCtx *RfCtx, level int) string {
 	outStr := ""
 	switch v.Kind() {
 	case reflect.Struct:
@@ -607,7 +607,7 @@ func walkObj(v reflect.Value, refCtx *RefCtx, level int) string {
 	return outStr
 }
 
-func walkObjMap(v reflect.Value, refCtx *RefCtx, level int) string {
+func walkObjMap(v reflect.Value, refCtx *RfCtx, level int) string {
 	elem := v.Type().Elem()
 	outStr := fmt.Sprintf("map[%s]%s\n", v.Type().Key().Kind(), elem.Kind())
 	level++
@@ -631,7 +631,7 @@ func walkObjMap(v reflect.Value, refCtx *RefCtx, level int) string {
 	return outStr
 }
 
-func walkObjSlice(v reflect.Value, refCtx *RefCtx, level int) string {
+func walkObjSlice(v reflect.Value, refCtx *RfCtx, level int) string {
 	elem := v.Type().Elem()
 	outStr := fmt.Sprintf("[]")
 	if !isPrimitive(elem.Kind()) {
@@ -648,7 +648,7 @@ func walkObjSlice(v reflect.Value, refCtx *RefCtx, level int) string {
 				outStr += walkObj(nv, refCtx, level+1)
 			}
 		} else {
-			for i := 0; i < v.Len(); i += 1 {
+			for i := 0; i < v.Len(); i++ {
 				outStr += walkObj(v.Index(i), refCtx, level+1)
 			}
 		}
@@ -658,7 +658,7 @@ func walkObjSlice(v reflect.Value, refCtx *RefCtx, level int) string {
 	return outStr
 }
 
-func walkObjStruct(v reflect.Value, refCtx *RefCtx, level int) string {
+func walkObjStruct(v reflect.Value, refCtx *RfCtx, level int) string {
 	outStr := fmt.Sprintf("%s{\n", GetIndent(level))
 	level++
 	for i := 0; i < v.NumField(); i++ {
@@ -726,7 +726,7 @@ func getKindString(kind reflect.Kind) string {
 	}
 }
 
-func getSubObj(val reflect.Value, name string, kind reflect.Kind, refCtx *RefCtx) reflect.Value {
+func getSubObj(val reflect.Value, name string, kind reflect.Kind, refCtx *RfCtx) reflect.Value {
 	if !val.IsValid() || val.IsNil() {
 		if isPrimitive(kind) {
 			val = reflect.ValueOf(getBaseObj(name))

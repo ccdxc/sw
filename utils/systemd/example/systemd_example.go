@@ -20,9 +20,11 @@ var (
 func main() {
 	flag.Parse()
 
-	s, evChan, errChan := systemd.NewWatcher()
-
-	s.Subscribe(*target)
+	w := systemd.New()
+	s, evChan, errChan := w.NewWatcher()
+	if s == nil {
+		os.Exit(1)
+	}
 
 	// keep observing events till timeout fires
 	timeout := make(chan bool, 1)
@@ -32,15 +34,15 @@ func main() {
 	}()
 
 	if *startFlag {
-		err := systemd.StartTarget(*target)
+		err := w.StartTarget(*target)
 		log.Printf("startTarget %v err: %v\n", *target, err)
 	}
 	if *restartFlag {
-		err := systemd.RestartTarget(*target)
+		err := w.RestartTarget(*target)
 		log.Printf("RestartTarget %v err: %v\n", *target, err)
 	}
 	if *stopFlag {
-		err := systemd.StopTarget(*target)
+		err := w.StopTarget(*target)
 		log.Printf("StopTarget %v err: %v\n", *target, err)
 	}
 	for {
@@ -55,7 +57,6 @@ func main() {
 			log.Printf("from error channel %+v \n", err)
 		case <-timeout:
 			log.Printf("Reached timeout. Exiting.")
-			s.Close()
 			// to check for any race conditions in exit path
 			time.Sleep(time.Second)
 			os.Exit(0)

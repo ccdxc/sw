@@ -3,6 +3,7 @@ package systemd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 func setupConn(t *testing.T) *dbus.Conn {
 	conn, err := dbus.New()
 	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			t.Skip("Requires systemd. Skipping tests")
+			return nil
+		}
 		t.Fatal(err)
 	}
 
@@ -94,7 +99,8 @@ func TestStartStopUnit(t *testing.T) {
 	setupUnit(target, conn, t)
 	defer teardownUnit(target, conn, t)
 
-	err := StartTarget(target)
+	s := New()
+	err := s.StartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +118,7 @@ func TestStartStopUnit(t *testing.T) {
 		t.Fatalf("Test unit not active")
 	}
 
-	err = StopTarget(target)
+	err = s.StopTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +148,8 @@ func TestRestartUnitAfterStart(t *testing.T) {
 	setupUnit(target, conn, t)
 	defer teardownUnit(target, conn, t)
 
-	err := StartTarget(target)
+	s := New()
+	err := s.StartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +165,7 @@ func TestRestartUnitAfterStart(t *testing.T) {
 		t.Fatalf("Test unit not active")
 	}
 
-	err = RestartTarget(target)
+	err = s.RestartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +197,8 @@ func TestRestartUnitAfterStop(t *testing.T) {
 	defer teardownUnit(target, conn, t)
 	// service is stopped by now
 
-	err := RestartTarget(target)
+	s := New()
+	err := s.RestartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +250,8 @@ func TestTargetDepsAndPID(t *testing.T) {
 	setupThreeUnitTest(t, conn)
 	defer teardownThreeUnitTest(t, conn)
 
-	w, _, _ := NewWatcher()
+	s := New()
+	w, _, _ := s.NewWatcher()
 	defer w.Close()
 
 	// Test TargetDeps
@@ -299,14 +308,15 @@ func TestWatcherStartTarget(t *testing.T) {
 	setupThreeUnitTest(t, conn)
 	defer teardownThreeUnitTest(t, conn)
 
-	w, evChan, errChan := NewWatcher()
+	s := New()
+	w, evChan, errChan := s.NewWatcher()
 	defer w.Close()
 
 	// Test Subscribe
 	w.Subscribe(target)
 
 	// Check for expected events after StartTarget
-	err := StartTarget(target)
+	err := s.StartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,9 +337,10 @@ func TestWatcherReStartTargetAfterStart(t *testing.T) {
 	setupThreeUnitTest(t, conn)
 	defer teardownThreeUnitTest(t, conn)
 
-	w, evChan, errChan := NewWatcher()
+	s := New()
+	w, evChan, errChan := s.NewWatcher()
 	defer w.Close()
-	StartTarget(target)
+	s.StartTarget(target)
 
 	// Test Subscribe
 	w.Subscribe(target)
@@ -344,7 +355,7 @@ func TestWatcherReStartTargetAfterStart(t *testing.T) {
 		{srv2, Dead, "", "", "", ""}:                                   {},
 	}
 
-	err := RestartTarget(target)
+	err := s.RestartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +369,8 @@ func TestWatcherReStartTargetAfterStop(t *testing.T) {
 	setupThreeUnitTest(t, conn)
 	defer teardownThreeUnitTest(t, conn)
 
-	w, evChan, errChan := NewWatcher()
+	s := New()
+	w, evChan, errChan := s.NewWatcher()
 	defer w.Close()
 
 	// Test Subscribe
@@ -371,7 +383,7 @@ func TestWatcherReStartTargetAfterStop(t *testing.T) {
 		{srv2, Active, "desc_service2", "loaded", "active", "running"}: {},
 	}
 
-	err := RestartTarget(target)
+	err := s.RestartTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,15 +397,17 @@ func TestWatcherStopTarget(t *testing.T) {
 
 	setupThreeUnitTest(t, conn)
 	defer teardownThreeUnitTest(t, conn)
-	StartTarget(target)
 
-	w, evChan, errChan := NewWatcher()
+	s := New()
+	s.StartTarget(target)
+
+	w, evChan, errChan := s.NewWatcher()
 	defer w.Close()
 
 	// Test Subscribe
 	w.Subscribe(target)
 
-	err := StopTarget(target)
+	err := s.StopTarget(target)
 	if err != nil {
 		t.Fatal(err)
 	}
