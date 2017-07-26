@@ -13,42 +13,42 @@ func TestVIPServiceAfterLeaderStart(t *testing.T) {
 
 	l := NewMockLeaderService(id)
 	i := NewMockIPService()
-	vipSrv := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
+	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
 
 	l.Start()
 
-	if err := vipSrv.AddVirtualIPs(testIP); err != nil {
+	if err := vipSvc.AddVirtualIPs(testIP); err != nil {
 		t.Errorf("AddVirtualIPs(%v) returned %v", testIP, err)
 	}
 
-	allVIPs := vipSrv.GetAllVirtualIPs()
+	allVIPs := vipSvc.GetAllVirtualIPs()
 	if len(allVIPs) != 1 || allVIPs[0] != testIP {
 		t.Errorf("expected %v got %v", testIP, allVIPs)
 	}
 
-	configuredVIPs := vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs := vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
 	}
 
-	if err := vipSrv.AddVirtualIPs(testIP2); err != nil {
+	if err := vipSvc.AddVirtualIPs(testIP2); err != nil {
 		t.Errorf("AddVirtualIPs(%v) returned %v", testIP2, err)
 	}
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 2 ||
 		!((configuredVIPs[0] == testIP && configuredVIPs[1] == testIP2) || (configuredVIPs[1] == testIP && configuredVIPs[0] == testIP2)) {
 		t.Errorf("GetConfiguredVirtualIPs() returned unexpected %v", configuredVIPs)
 	}
-	if err := vipSrv.DeleteVirtualIPs(testIP2); err != nil {
+	if err := vipSvc.DeleteVirtualIPs(testIP2); err != nil {
 		t.Errorf("DeleteVirtualIPs(%v) returned %v", testIP2, err)
 	}
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
 	}
 
 	i.SetError()
-	if err := vipSrv.AddVirtualIPs(testIP2); err == nil {
+	if err := vipSvc.AddVirtualIPs(testIP2); err == nil {
 		t.Errorf("Expected AddVirtualIPS to return an error. Didnt get error	")
 	}
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
@@ -64,20 +64,20 @@ func TestVIPServiceBeforeLeaderStart(t *testing.T) {
 
 	l := NewMockLeaderService(id)
 	i := NewMockIPService()
-	vipSrv := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
-	vipSrv.AddVirtualIPs(testIP)
+	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
+	vipSvc.AddVirtualIPs(testIP)
 
-	allVIPs := vipSrv.GetAllVirtualIPs()
+	allVIPs := vipSvc.GetAllVirtualIPs()
 	if len(allVIPs) != 1 || allVIPs[0] != testIP {
 		t.Errorf("expected %v got %v", testIP, allVIPs)
 	}
-	configuredVIPs := vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs := vipSvc.GetConfiguredVirtualIPs()
 	if configuredVIPs != nil && len(configuredVIPs) != 0 {
 		t.Errorf("expected %v got %v", nil, configuredVIPs)
 	}
 
 	l.Start()
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
 	}
@@ -86,7 +86,7 @@ func TestVIPServiceBeforeLeaderStart(t *testing.T) {
 	if err := l.GiveupLeadership(); err != nil {
 		t.Errorf("GiveupLeadership failed with error %v", err)
 	}
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if configuredVIPs != nil && len(configuredVIPs) != 0 {
 		t.Errorf("expected %v got %v", nil, configuredVIPs)
 	}
@@ -95,7 +95,7 @@ func TestVIPServiceBeforeLeaderStart(t *testing.T) {
 	if err := l.ChangeLeadership(); err != nil {
 		t.Errorf("ChangeLeadership failed with error %v", err)
 	}
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if configuredVIPs != nil && len(configuredVIPs) != 0 {
 		t.Errorf("expected %v got %v", nil, configuredVIPs)
 	}
@@ -110,11 +110,11 @@ func TestVIPServiceWithIPLayerErrors(t *testing.T) {
 
 	l := NewMockLeaderService(id)
 	i := NewMockIPService()
-	vipSrv := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
+	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
 	l.Start()
-	vipSrv.AddVirtualIPs(testIP)
+	vipSvc.AddVirtualIPs(testIP)
 
-	configuredVIPs := vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs := vipSvc.GetConfiguredVirtualIPs()
 	if len(configuredVIPs) != 1 || configuredVIPs[0] != testIP {
 		t.Errorf("expected %v not returned from GetConfiguredVirtualIPs(). got %v", testIP, configuredVIPs)
 	}
@@ -123,7 +123,7 @@ func TestVIPServiceWithIPLayerErrors(t *testing.T) {
 	if err := l.BecomeLeader(); err == nil {
 		t.Errorf("expected error to be returned to leaderService when IP layer errors. Didnt get error")
 	}
-	configuredVIPs = vipSrv.GetConfiguredVirtualIPs()
+	configuredVIPs = vipSvc.GetConfiguredVirtualIPs()
 	if configuredVIPs != nil && len(configuredVIPs) != 0 {
 		t.Errorf("expected %v got %v", nil, configuredVIPs)
 	}

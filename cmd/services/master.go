@@ -26,8 +26,8 @@ var (
 
 type masterService struct {
 	sync.Mutex
-	sysSrv    types.SystemdService
-	leaderSrv types.LeaderService
+	sysSvc    types.SystemdService
+	leaderSvc types.LeaderService
 	isLeader  bool
 	enabled   bool
 	virtualIP string // virtualIP for services which can listed on only one VIP
@@ -45,24 +45,24 @@ func WithConfigsMasterOption(configs configs.Interface) MasterOption {
 }
 
 // WithLeaderSvcMasterOption to pass a specifc types.LeaderService implementation
-func WithLeaderSvcMasterOption(leaderSrv types.LeaderService) MasterOption {
+func WithLeaderSvcMasterOption(leaderSvc types.LeaderService) MasterOption {
 	return func(o *masterService) {
-		o.leaderSrv = leaderSrv
+		o.leaderSvc = leaderSvc
 	}
 }
 
 // WithSystemdSvcMasterOption to pass a specifc types.SystemdService implementation
-func WithSystemdSvcMasterOption(sysSrv types.SystemdService) MasterOption {
+func WithSystemdSvcMasterOption(sysSvc types.SystemdService) MasterOption {
 	return func(o *masterService) {
-		o.sysSrv = sysSrv
+		o.sysSvc = sysSvc
 	}
 }
 
 // NewMasterService returns a Master Service
 func NewMasterService(virtualIP string, options ...MasterOption) types.MasterService {
 	m := masterService{
-		leaderSrv: env.LeaderService,
-		sysSrv:    env.SystemdService,
+		leaderSvc: env.LeaderService,
+		sysSvc:    env.SystemdService,
 		virtualIP: virtualIP,
 		configs:   configs.New(),
 	}
@@ -71,14 +71,14 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 			o(&m)
 		}
 	}
-	if m.leaderSrv == nil {
+	if m.leaderSvc == nil {
 		panic("Current implementation of Master Service needs a global Leaderservice")
 	}
-	if m.sysSrv == nil {
+	if m.sysSvc == nil {
 		panic("Current implementation of Master Service needs a global SystemdService")
 	}
-	m.leaderSrv.Register(&m)
-	m.sysSrv.Register(&m)
+	m.leaderSvc.Register(&m)
+	m.sysSvc.Register(&m)
 
 	return &m
 }
@@ -88,12 +88,12 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 // that have affinity to the Virtual IP.
 // TODO: Spread out kubernetes master services also?
 func (s *masterService) Start() error {
-	s.sysSrv.Start()
-	s.leaderSrv.Start()
+	s.sysSvc.Start()
+	s.leaderSvc.Start()
 
 	s.Lock()
 	defer s.Unlock()
-	if s.leaderSrv.IsLeader() {
+	if s.leaderSvc.IsLeader() {
 		s.isLeader = true
 	}
 	s.enabled = true
@@ -112,7 +112,7 @@ func (s *masterService) startLeaderServices(virtualIP string) error {
 		return err
 	}
 	for ii := range masterServices {
-		if err := s.sysSrv.StartUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
+		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
 			return err
 		}
 	}
@@ -131,7 +131,7 @@ func (s *masterService) Stop() {
 // caller holds the lock
 func (s *masterService) stopLeaderServices() {
 	for ii := range masterServices {
-		if err := s.sysSrv.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
+		if err := s.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
 			log.Errorf("Failed to stop leader service %v with error: %v", masterServices[ii], err)
 		}
 	}

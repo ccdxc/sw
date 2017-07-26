@@ -9,7 +9,7 @@ import (
 func setupNode(testName string) (types.SystemdService, types.NodeService) {
 	testIP := "11.1.1.1"
 
-	s := NewSystemdService(WithSysIfSystemdSrvOption(&mockSystemdIf{}))
+	s := NewSystemdService(WithSysIfSystemdSvcOption(&mockSystemdIf{}))
 	n := NewNodeService(testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mockConfigs{}))
 	return s, n
 }

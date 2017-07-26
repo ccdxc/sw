@@ -11,7 +11,7 @@ import (
 // vipService provides ip configuration utilities on ethernet interfaces.
 type vipService struct {
 	sync.Mutex
-	leaderSrv  types.LeaderService
+	leaderSvc  types.LeaderService
 	virtualIPs map[string]interface{}
 	isLeader   bool // implementation will eventually use multiple leaders
 	ipservice  types.IPService
@@ -21,16 +21,16 @@ type vipService struct {
 type VIPOption func(service *vipService)
 
 // WithIPServiceVIPOption to pass a specifc types.IPService implementation
-func WithIPServiceVIPOption(ipSrv types.IPService) VIPOption {
+func WithIPServiceVIPOption(ipSvc types.IPService) VIPOption {
 	return func(o *vipService) {
-		o.ipservice = ipSrv
+		o.ipservice = ipSvc
 	}
 }
 
 // WithLeaderServiceVIPOption to pass a specifc types.LeaderService implementation
-func WithLeaderServiceVIPOption(leaderSrv types.LeaderService) VIPOption {
+func WithLeaderServiceVIPOption(leaderSvc types.LeaderService) VIPOption {
 	return func(o *vipService) {
-		o.leaderSrv = leaderSrv
+		o.leaderSvc = leaderSvc
 	}
 }
 
@@ -39,7 +39,7 @@ func NewVIPService(options ...VIPOption) types.VIPService {
 	vip := vipService{
 		virtualIPs: make(map[string]interface{}),
 		ipservice:  NewIPService(),
-		leaderSrv:  env.LeaderService,
+		leaderSvc:  env.LeaderService,
 	}
 
 	for _, o := range options {
@@ -47,11 +47,11 @@ func NewVIPService(options ...VIPOption) types.VIPService {
 			o(&vip)
 		}
 	}
-	if vip.leaderSrv == nil {
+	if vip.leaderSvc == nil {
 		panic("Current implementation of VIP Service needs a global Leaderservice")
 	}
 
-	vip.leaderSrv.Register(&vip)
+	vip.leaderSvc.Register(&vip)
 	return &vip
 }
 

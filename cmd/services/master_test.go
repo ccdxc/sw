@@ -11,7 +11,7 @@ func setupMaster(t *testing.T) (*MockLeaderService, types.SystemdService, types.
 	testIP := "11.1.1.1"
 
 	l := NewMockLeaderService(t.Name())
-	s := NewSystemdService(WithSysIfSystemdSrvOption(&mockSystemdIf{}))
+	s := NewSystemdService(WithSysIfSystemdSvcOption(&mockSystemdIf{}))
 	m := NewMasterService(testIP, WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mockConfigs{}))
 	return l, s, m
 }

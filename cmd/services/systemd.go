@@ -21,18 +21,18 @@ type systemdService struct {
 	systemdIf systemd.Interface
 }
 
-// SystemdSrvOption fills the optional params
-type SystemdSrvOption func(service *systemdService)
+// SystemdSvcOption fills the optional params
+type SystemdSvcOption func(service *systemdService)
 
-// WithSysIfSystemdSrvOption to pass a specifc systemd Interface
-func WithSysIfSystemdSrvOption(systemdIf systemd.Interface) SystemdSrvOption {
+// WithSysIfSystemdSvcOption to pass a specifc systemd Interface
+func WithSysIfSystemdSvcOption(systemdIf systemd.Interface) SystemdSvcOption {
 	return func(o *systemdService) {
 		o.systemdIf = systemdIf
 	}
 }
 
 // NewSystemdService provides a new SystemdService
-func NewSystemdService(options ...SystemdSrvOption) types.SystemdService {
+func NewSystemdService(options ...SystemdSvcOption) types.SystemdService {
 	svc := systemdService{
 		units:     make(map[string]interface{}),
 		systemdIf: systemd.New(),

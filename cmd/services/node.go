@@ -17,7 +17,7 @@ var (
 
 type nodeService struct {
 	sync.Mutex
-	sysSrv    types.SystemdService
+	sysSvc    types.SystemdService
 	virtualIP string
 	enabled   bool
 	configs   configs.Interface
@@ -34,9 +34,9 @@ func WithConfigsNodeOption(configs configs.Interface) NodeOption {
 }
 
 // WithSystemdSvcNodeOption to pass a specifc types.SystemdService implementation
-func WithSystemdSvcNodeOption(sysSrv types.SystemdService) NodeOption {
+func WithSystemdSvcNodeOption(sysSvc types.SystemdService) NodeOption {
 	return func(o *nodeService) {
-		o.sysSrv = sysSrv
+		o.sysSvc = sysSvc
 	}
 }
 
@@ -44,7 +44,7 @@ func WithSystemdSvcNodeOption(sysSrv types.SystemdService) NodeOption {
 func NewNodeService(virtualIP string, options ...NodeOption) types.NodeService {
 	s := nodeService{
 		virtualIP: virtualIP,
-		sysSrv:    env.SystemdService,
+		sysSvc:    env.SystemdService,
 		configs:   configs.New(),
 	}
 
@@ -54,14 +54,14 @@ func NewNodeService(virtualIP string, options ...NodeOption) types.NodeService {
 		}
 	}
 
-	s.sysSrv.Register(&s)
+	s.sysSvc.Register(&s)
 	return &s
 }
 
 // Start starts the services that run on all controller nodes in
 // the cluster.
 func (s *nodeService) Start() error {
-	s.sysSrv.Start()
+	s.sysSvc.Start()
 
 	s.Lock()
 	defer s.Unlock()
@@ -71,7 +71,7 @@ func (s *nodeService) Start() error {
 	}
 
 	for ii := range nodeServices {
-		if err := s.sysSrv.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
+		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
 			return err
 		}
 	}
@@ -85,7 +85,7 @@ func (s *nodeService) Stop() {
 	defer s.Unlock()
 	s.enabled = false
 	for ii := range nodeServices {
-		if err := s.sysSrv.StopUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
+		if err := s.sysSvc.StopUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
 			log.Errorf("Failed to stop node service %v with error: %v", nodeServices[ii], err)
 		}
 	}
