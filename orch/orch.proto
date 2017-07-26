@@ -1,14 +1,15 @@
 // Copyright 2017, Pensando Systems
 // All rights reserved.
 //
+// Orchestrator API
 
 syntax = "proto3";
 
-package api; 
+package orch; 
 import "github.com/pensando/sw/api/meta.proto";
 
-// The VC Hub API service definition.
-service VCHubApi {
+// The Orchestrator API service definition.
+service OrchApi {
   // List all SmartNIC objects that match the filter spec
   rpc ListSmartNICs (Filter) returns (SmartNICList) {}
 

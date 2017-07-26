@@ -6,7 +6,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/pensando/sw/orch/vchub/api"
+	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/utils/kvstore"
 	ks "github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/runtime"
@@ -23,8 +23,8 @@ var config ks.Config
 func Init(servers, storeType string) (kvstore.Interface, error) {
 	var err error
 	s := runtime.NewScheme()
-	s.AddKnownTypes(&api.SmartNIC{ObjectKind: "SmartNIC"}, &api.SmartNICList{})
-	s.AddKnownTypes(&api.NwIF{ObjectKind: "NwIF"}, &api.NwIFList{})
+	s.AddKnownTypes(&orch.SmartNIC{ObjectKind: "SmartNIC"}, &orch.SmartNICList{})
+	s.AddKnownTypes(&orch.NwIF{ObjectKind: "NwIF"}, &orch.NwIFList{})
 
 	config = ks.Config{
 		Type:    storeType,

@@ -20,7 +20,7 @@ import (
 
 	infraapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/globals"
-	"github.com/pensando/sw/orch/vchub/api"
+	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/defs"
 	"github.com/pensando/sw/orch/vchub/sim"
 	"github.com/pensando/sw/orch/vchub/store"
@@ -45,10 +45,10 @@ const (
 
 type TestSuite struct {
 	cc          *grpc.ClientConn
-	vcHubClient api.VCHubApiClient
+	vcHubClient orch.OrchApiClient
 	cluster     *integration.ClusterV3
-	testNics    []*api.SmartNIC
-	testIfs     []*api.NwIF
+	testNics    []*orch.SmartNIC
+	testIfs     []*orch.NwIF
 	testStore   *memkv.MemKv
 }
 
@@ -80,38 +80,38 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	ts.cc = conn
-	ts.vcHubClient = api.NewVCHubApiClient(conn)
-	ts.testNics = make([]*api.SmartNIC, 2)
-	ts.testNics[0] = &api.SmartNIC{
+	ts.vcHubClient = orch.NewOrchApiClient(conn)
+	ts.testNics = make([]*orch.SmartNIC, 2)
+	ts.testNics[0] = &orch.SmartNIC{
 		ObjectKind:       "SmartNIC",
 		ObjectAPIVersion: "v1",
 		ObjectMeta: &infraapi.ObjectMeta{
 			Name:            "ServerA.vmnic0",
 			ResourceVersion: "3",
 		},
-		Status: &api.SmartNIC_Status{
+		Status: &orch.SmartNIC_Status{
 			HostIP:     "10.193.231.234",
 			MacAddress: testNic1Mac,
 			Switch:     "Pensando-dvs-1",
 		},
 	}
 
-	ts.testNics[1] = &api.SmartNIC{
+	ts.testNics[1] = &orch.SmartNIC{
 		ObjectKind:       "SmartNIC",
 		ObjectAPIVersion: "v1",
 		ObjectMeta: &infraapi.ObjectMeta{
 			Name:            "ServerB.vmnic0",
 			ResourceVersion: "4",
 		},
-		Status: &api.SmartNIC_Status{
+		Status: &orch.SmartNIC_Status{
 			HostIP:     "10.193.231.251",
 			MacAddress: testNic2Mac,
 			Switch:     "Pensando-dvs-1",
 		},
 	}
 
-	ts.testIfs = make([]*api.NwIF, 2)
-	ts.testIfs[0] = &api.NwIF{
+	ts.testIfs = make([]*orch.NwIF, 2)
+	ts.testIfs[0] = &orch.NwIF{
 		ObjectKind:       "NwIF",
 		ObjectAPIVersion: "v1",
 		ObjectMeta: &infraapi.ObjectMeta{
@@ -119,10 +119,10 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 			ResourceVersion: "4",
 			UUID:            "52fd7958-f4da-78bb-1590-856861348cee:4001",
 		},
-		Config: &api.NwIF_Config{
+		Config: &orch.NwIF_Config{
 			LocalVLAN: 321,
 		},
-		Status: &api.NwIF_Status{
+		Status: &orch.NwIF_Status{
 			MacAddress:  testIf1Mac,
 			PortGroup:   "Pensando-default",
 			Switch:      "Pensando-dvs-1",
@@ -133,7 +133,7 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 			"Org":    "Winner",
 		},
 	}
-	ts.testIfs[1] = &api.NwIF{
+	ts.testIfs[1] = &orch.NwIF{
 		ObjectKind:       "NwIF",
 		ObjectAPIVersion: "v1",
 		ObjectMeta: &infraapi.ObjectMeta{
@@ -141,10 +141,10 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 			ResourceVersion: "4",
 			UUID:            "53256758-eecc-79bb-1590-899861348cfd:4004",
 		},
-		Config: &api.NwIF_Config{
+		Config: &orch.NwIF_Config{
 			LocalVLAN: 322,
 		},
-		Status: &api.NwIF_Status{
+		Status: &orch.NwIF_Status{
 			MacAddress:  testIf2Mac,
 			PortGroup:   "Pensando-default",
 			Switch:      "Pensando-dvs-1",
@@ -184,8 +184,8 @@ func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
 
 var suite *TestSuite
 
-func verifySmartNICList(t *testing.T, expected map[string]*api.SmartNIC) {
-	filter := &api.Filter{}
+func verifySmartNICList(t *testing.T, expected map[string]*orch.SmartNIC) {
+	filter := &orch.Filter{}
 	nicList, err := suite.vcHubClient.ListSmartNICs(context.Background(), filter)
 	if err != nil {
 		t.Errorf("Error listing nics %v", err)
@@ -214,7 +214,7 @@ func TestListSmartNICs(t *testing.T) {
 	suite.setup(t, false)
 	defer suite.teardown(t)
 
-	nicMap := make(map[string]*api.SmartNIC)
+	nicMap := make(map[string]*orch.SmartNIC)
 	// verify empty list
 	verifySmartNICList(t, nicMap) // empties the map!
 
@@ -254,10 +254,10 @@ func verifyWatch(t *testing.T, sndMap, rcvMap interface{}, wc <-chan int, loopCo
 	}
 }
 
-func watchSmartNICs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api.SmartNIC, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int) {
+func watchSmartNICs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*orch.SmartNIC, eventMap map[orch.WatchEvent_EventType]int, ackCh chan<- int) {
 
 	defer close(ackCh)
-	ws := &api.WatchSpec{}
+	ws := &orch.WatchSpec{}
 	stream, err := suite.vcHubClient.WatchSmartNICs(rcvCtx, ws)
 	if err != nil {
 		t.Fatalf("Error %v", err)
@@ -273,7 +273,7 @@ func watchSmartNICs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api
 
 		event := e.GetE()
 		nics := e.GetSmartnics()
-		if event.Event == api.WatchEvent_Delete {
+		if event.Event == orch.WatchEvent_Delete {
 			for _, nic := range nics {
 				delete(rcvMap, nic.Status.MacAddress)
 			}
@@ -295,12 +295,12 @@ func TestWatchSmartNICs(t *testing.T) {
 	suite.setup(t, false)
 	defer suite.teardown(t)
 
-	rcvMap := make(map[string]*api.SmartNIC)
-	sndMap := make(map[string]*api.SmartNIC)
+	rcvMap := make(map[string]*orch.SmartNIC)
+	sndMap := make(map[string]*orch.SmartNIC)
 
 	// start watch on an empty database
 	rcvCtx, rcvCancel := context.WithCancel(context.Background())
-	eventMap := make(map[api.WatchEvent_EventType]int)
+	eventMap := make(map[orch.WatchEvent_EventType]int)
 	ackCh := make(chan int)
 	go watchSmartNICs(rcvCtx, t, rcvMap, eventMap, ackCh)
 
@@ -341,14 +341,14 @@ func TestWatchSmartNICs(t *testing.T) {
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 	rcvCancel()
 	// Verify the event count
-	if eventMap[api.WatchEvent_Create] != 2 {
-		t.Errorf("Expected 2 create events, got :%d", eventMap[api.WatchEvent_Create])
+	if eventMap[orch.WatchEvent_Create] != 2 {
+		t.Errorf("Expected 2 create events, got :%d", eventMap[orch.WatchEvent_Create])
 	}
-	if eventMap[api.WatchEvent_Delete] != 1 {
-		t.Errorf("Expected 1 delete event, got :%d", eventMap[api.WatchEvent_Delete])
+	if eventMap[orch.WatchEvent_Delete] != 1 {
+		t.Errorf("Expected 1 delete event, got :%d", eventMap[orch.WatchEvent_Delete])
 	}
-	if eventMap[api.WatchEvent_Update] != 1 {
-		t.Errorf("Expected 1 update event, got :%d", eventMap[api.WatchEvent_Update])
+	if eventMap[orch.WatchEvent_Update] != 1 {
+		t.Errorf("Expected 1 update event, got :%d", eventMap[orch.WatchEvent_Update])
 	}
 
 	delete(rcvMap, suite.testNics[0].Status.MacAddress)
@@ -384,8 +384,8 @@ func TestWatchSmartNICs(t *testing.T) {
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
 
 	// Verify the event count
-	if eventMap[api.WatchEvent_Create] != 2 {
-		t.Errorf("Expected 2 create events, got :%d", eventMap[api.WatchEvent_Create])
+	if eventMap[orch.WatchEvent_Create] != 2 {
+		t.Errorf("Expected 2 create events, got :%d", eventMap[orch.WatchEvent_Create])
 	}
 }
 
@@ -395,7 +395,7 @@ func TestSmartNICInspect(t *testing.T) {
 	defer suite.teardown(t)
 
 	// verify initial values of stats
-	empty := &api.Empty{}
+	empty := &orch.Empty{}
 	stats, err := suite.vcHubClient.Inspect(context.Background(), empty)
 	if err != nil {
 		t.Errorf("Error %v from inspect", err)
@@ -405,7 +405,7 @@ func TestSmartNICInspect(t *testing.T) {
 		t.Errorf("Expected zero stats. Got %+v", stats)
 	}
 
-	ws := &api.WatchSpec{}
+	ws := &orch.WatchSpec{}
 	wCtx, wCancel := context.WithCancel(context.Background())
 	// Generate an error from store.
 	suite.testStore.SetErrorState(true)
@@ -493,8 +493,8 @@ func TestSmartNICInspect(t *testing.T) {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	suite.cc = conn
-	suite.vcHubClient = api.NewVCHubApiClient(conn)
-	empty = &api.Empty{}
+	suite.vcHubClient = orch.NewOrchApiClient(conn)
+	empty = &orch.Empty{}
 	stats, err = suite.vcHubClient.Inspect(context.Background(), empty)
 	if err != nil {
 		t.Errorf("Error %v from inspect", err)
@@ -506,8 +506,8 @@ func TestSmartNICInspect(t *testing.T) {
 
 }
 
-func verifyNwIFList(t *testing.T, expected map[string]*api.NwIF) {
-	filter := &api.Filter{}
+func verifyNwIFList(t *testing.T, expected map[string]*orch.NwIF) {
+	filter := &orch.Filter{}
 	ifList, err := suite.vcHubClient.ListNwIFs(context.Background(), filter)
 	if err != nil {
 		t.Errorf("Error listing ifs %v", err)
@@ -534,7 +534,7 @@ func TestListNwIFs(t *testing.T) {
 	suite.setup(t, false)
 	defer suite.teardown(t)
 
-	ifMap := make(map[string]*api.NwIF)
+	ifMap := make(map[string]*orch.NwIF)
 
 	// Verify empty list
 	verifyNwIFList(t, ifMap)
@@ -557,10 +557,10 @@ func TestListNwIFs(t *testing.T) {
 	verifyNwIFList(t, ifMap)
 }
 
-func watchNwIFs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api.NwIF, eventMap map[api.WatchEvent_EventType]int, ackCh chan<- int) {
+func watchNwIFs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*orch.NwIF, eventMap map[orch.WatchEvent_EventType]int, ackCh chan<- int) {
 
 	defer close(ackCh)
-	ws := &api.WatchSpec{}
+	ws := &orch.WatchSpec{}
 	stream, err := suite.vcHubClient.WatchNwIFs(rcvCtx, ws)
 	if err != nil {
 		t.Fatalf("Error %v", err)
@@ -576,7 +576,7 @@ func watchNwIFs(rcvCtx context.Context, t *testing.T, rcvMap map[string]*api.NwI
 
 		event := e.GetE()
 		ifs := e.GetNwifs()
-		if event.Event == api.WatchEvent_Delete {
+		if event.Event == orch.WatchEvent_Delete {
 			for _, nif := range ifs {
 				delete(rcvMap, nif.ObjectMeta.UUID)
 			}
@@ -598,12 +598,12 @@ func TestWatchNwIFs(t *testing.T) {
 	suite.setup(t, false)
 	defer suite.teardown(t)
 
-	rcvMap := make(map[string]*api.NwIF)
-	sndMap := make(map[string]*api.NwIF)
+	rcvMap := make(map[string]*orch.NwIF)
+	sndMap := make(map[string]*orch.NwIF)
 
 	// start watch on an empty database
 	rcvCtx, rcvCancel := context.WithCancel(context.Background())
-	eventMap := make(map[api.WatchEvent_EventType]int)
+	eventMap := make(map[orch.WatchEvent_EventType]int)
 	ackCh := make(chan int)
 	go watchNwIFs(rcvCtx, t, rcvMap, eventMap, ackCh)
 
@@ -652,14 +652,14 @@ func TestWatchNwIFs(t *testing.T) {
 	verifyWatch(t, sndMap, rcvMap, ackCh, 1)
 	rcvCancel()
 	// Verify the event count
-	if eventMap[api.WatchEvent_Create] != 2 {
-		t.Errorf("Expected 2 create events, got :%d", eventMap[api.WatchEvent_Create])
+	if eventMap[orch.WatchEvent_Create] != 2 {
+		t.Errorf("Expected 2 create events, got :%d", eventMap[orch.WatchEvent_Create])
 	}
-	if eventMap[api.WatchEvent_Delete] != 1 {
-		t.Errorf("Expected 1 delete event, got :%d", eventMap[api.WatchEvent_Delete])
+	if eventMap[orch.WatchEvent_Delete] != 1 {
+		t.Errorf("Expected 1 delete event, got :%d", eventMap[orch.WatchEvent_Delete])
 	}
-	if eventMap[api.WatchEvent_Update] != 2 {
-		t.Errorf("Expected 1 update event, got :%d", eventMap[api.WatchEvent_Update])
+	if eventMap[orch.WatchEvent_Update] != 2 {
+		t.Errorf("Expected 1 update event, got :%d", eventMap[orch.WatchEvent_Update])
 	}
 
 	delete(rcvMap, testIf1ID)
@@ -690,8 +690,8 @@ func TestWatchNwIFs(t *testing.T) {
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
 
 	// Verify the event count
-	if eventMap[api.WatchEvent_Create] != 2 {
-		t.Errorf("Expected 2 create events, got :%d", eventMap[api.WatchEvent_Create])
+	if eventMap[orch.WatchEvent_Create] != 2 {
+		t.Errorf("Expected 2 create events, got :%d", eventMap[orch.WatchEvent_Create])
 	}
 }
 
@@ -701,7 +701,7 @@ func TestNwIFInspect(t *testing.T) {
 	defer suite.teardown(t)
 
 	// verify initial values of stats
-	empty := &api.Empty{}
+	empty := &orch.Empty{}
 	stats, err := suite.vcHubClient.Inspect(context.Background(), empty)
 	if err != nil {
 		t.Errorf("Error %v from inspect", err)
@@ -711,7 +711,7 @@ func TestNwIFInspect(t *testing.T) {
 		t.Errorf("Expected zero stats. Got %+v", stats)
 	}
 
-	ws := &api.WatchSpec{}
+	ws := &orch.WatchSpec{}
 	wCtx, wCancel := context.WithCancel(context.Background())
 	// Generate an error from store.
 	suite.testStore.SetErrorState(true)
@@ -798,7 +798,7 @@ func TestNwIFInspect(t *testing.T) {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	suite.cc = conn
-	suite.vcHubClient = api.NewVCHubApiClient(conn)
+	suite.vcHubClient = orch.NewOrchApiClient(conn)
 	stats, err = suite.vcHubClient.Inspect(context.Background(), empty)
 	if err != nil {
 		t.Errorf("Error %v from inspect", err)
@@ -810,8 +810,8 @@ func TestNwIFInspect(t *testing.T) {
 
 }
 
-func getExpectedNICs(t *testing.T) map[string]*api.SmartNIC {
-	nicMap := make(map[string]*api.SmartNIC)
+func getExpectedNICs(t *testing.T) map[string]*orch.SmartNIC {
+	nicMap := make(map[string]*orch.SmartNIC)
 	hosts := esx.GetHostList()
 	if hosts == nil || len(hosts) < 1 {
 		t.Errorf("Error -- no esx hosts")
@@ -819,11 +819,11 @@ func getExpectedNICs(t *testing.T) map[string]*api.SmartNIC {
 	}
 	for _, e := range hosts {
 		for _, n := range e.Config.Network.Pnic {
-			nicMap[n.Mac] = &api.SmartNIC{
+			nicMap[n.Mac] = &orch.SmartNIC{
 				ObjectKind:       "SmartNIC",
 				ObjectAPIVersion: "v1",
 				ObjectMeta:       &infraapi.ObjectMeta{},
-				Status: &api.SmartNIC_Status{
+				Status: &orch.SmartNIC_Status{
 					MacAddress: n.Mac,
 				},
 			}
@@ -853,10 +853,10 @@ func TestVCP(t *testing.T) {
 		return
 	}
 
-	hostCh := make(chan defs.HostMsg, 96)
-	snicStore := store.NewSNICStore()
-	go snicStore.Run(context.Background(), hostCh)
-	v1 := vcp.NewVCProbe(u1, hostCh)
+	storeCh := make(chan defs.StoreMsg, 96)
+	vchStore := store.NewVCHStore(context.Background())
+	go vchStore.Run(storeCh)
+	v1 := vcp.NewVCProbe(u1, storeCh)
 	err = v1.Start()
 	if err != nil {
 		t.Errorf("Error %v from vcp.Start", err)
@@ -864,7 +864,7 @@ func TestVCP(t *testing.T) {
 	}
 
 	time.Sleep(1 * time.Second)
-	go v1.Run()
+	v1.Run()
 	time.Sleep(1 * time.Second)
 	nicMap := getExpectedNICs(t)
 	verifySmartNICList(t, nicMap)
@@ -893,7 +893,7 @@ func TestVCP(t *testing.T) {
 		t.Errorf("Error %v parsing url %s", err, vc2)
 		return
 	}
-	v2 := vcp.NewVCProbe(u2, hostCh)
+	v2 := vcp.NewVCProbe(u2, storeCh)
 	err = v2.Start()
 	if err != nil {
 		t.Errorf("Error %v from vcp.Start", err)
@@ -901,12 +901,59 @@ func TestVCP(t *testing.T) {
 	}
 
 	time.Sleep(1 * time.Second)
-	go v2.Run()
+	v2.Run()
 	time.Sleep(1 * time.Second)
 	nicMap = getExpectedNICs(t)
 	verifySmartNICList(t, nicMap)
 
 	v1.Stop()
 	v2.Stop()
-	close(hostCh)
+	close(storeCh)
+}
+
+func TestVCPNwIF(t *testing.T) {
+	suite = &TestSuite{}
+	suite.setup(t, false)
+	defer suite.teardown(t)
+
+	// Start a vc simulator
+	vc1, err := sim.Simulate("127.0.0.1:8989", 3, 3)
+	if err != nil {
+		t.Errorf("Error %v simulating vCenter", err)
+		return
+	}
+	u1, err := soap.ParseURL(vc1)
+	if err != nil {
+		t.Errorf("Error %v parsing url %s", err, vc1)
+		return
+	}
+
+	storeCh := make(chan defs.StoreMsg, 96)
+	vchStore := store.NewVCHStore(context.Background())
+	go vchStore.Run(storeCh)
+	v1 := vcp.NewVCProbe(u1, storeCh)
+	err = v1.Start()
+	if err != nil {
+		t.Errorf("Error %v from vcp.Start", err)
+		return
+	}
+
+	time.Sleep(1 * time.Second)
+	v1.Run()
+	time.Sleep(1 * time.Second)
+	filter := &orch.Filter{}
+	ifList, err := suite.vcHubClient.ListNwIFs(context.Background(), filter)
+	if err != nil {
+		t.Errorf("Error listing nwifs %v", err)
+	}
+	ifs := ifList.GetItems()
+	for _, nwif := range ifs {
+		log.Infof("nwif.Status: %+v", nwif.Status)
+	}
+	if len(ifs) == 0 {
+		t.Errorf("No nwifs were created")
+	}
+
+	v1.Stop()
+	close(storeCh)
 }

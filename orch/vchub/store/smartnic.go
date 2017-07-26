@@ -5,9 +5,10 @@ import (
 	"reflect"
 
 	log "github.com/Sirupsen/logrus"
+	//"github.com/davecgh/go-spew/spew"
 
 	swapi "github.com/pensando/sw/api"
-	"github.com/pensando/sw/orch/vchub/api"
+	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/defs"
 	"github.com/pensando/sw/utils/kvstore"
 )
@@ -17,18 +18,18 @@ const (
 	smartNICKind = "SmartNIC"
 )
 
-// SNICStore maintains information about a store instance
-type SNICStore struct {
+// snicStore maintains information about a store instance
+type snicStore struct {
 	ctx   context.Context
 	hosts map[string]*defs.ESXHost
 }
 
 // SmartNICCreate creates a SmartNIC object in the kv store
-func SmartNICCreate(ctx context.Context, ID string, s *api.SmartNIC) error {
+func SmartNICCreate(ctx context.Context, ID string, s *orch.SmartNIC) error {
 	key := smartNICPath + ID
 
 	//if the object already exists, compare and update only if there is a change.
-	old := &api.SmartNIC{}
+	old := &orch.SmartNIC{}
 	err := kvStore.Get(ctx, key, old)
 
 	if err == nil {
@@ -54,7 +55,7 @@ func SmartNICDelete(ctx context.Context, ID string) error {
 }
 
 // SmartNICUpdate updates a SmartNIC object in the kv store
-func SmartNICUpdate(ctx context.Context, ID string, s *api.SmartNIC) error {
+func SmartNICUpdate(ctx context.Context, ID string, s *orch.SmartNIC) error {
 	log.Infof("vchub.store SmartNICUpdate: %+v %+v", ID, s)
 	key := smartNICPath + ID
 	return kvUpdate(ctx, key, s)
@@ -66,45 +67,22 @@ func SmartNICWatchAll(ctx context.Context, refVersion string) (kvstore.Watcher, 
 }
 
 // SmartNICList lists all SmartNIC objects in the kv store
-func SmartNICList(ctx context.Context) (*api.SmartNICList, error) {
-	list := api.SmartNICList{ListMeta: &swapi.ListMeta{}}
+func SmartNICList(ctx context.Context) (*orch.SmartNICList, error) {
+	list := orch.SmartNICList{ListMeta: &swapi.ListMeta{}}
 	err := kvStore.List(ctx, smartNICPath, &list)
 	return &list, err
 }
 
-// NewSNICStore returns an instance of SNICStore
-func NewSNICStore() *SNICStore {
-	return &SNICStore{hosts: make(map[string]*defs.ESXHost)}
-}
-
-// Run processes updates sent on the input channel
-func (s *SNICStore) Run(ctx context.Context, inbox <-chan defs.HostMsg) {
-	s.ctx = ctx
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-
-		case m, active := <-inbox:
-			if !active {
-				return
-			}
-
-			log.Infof("Msg from %v, key: %s", m.Originator, m.Key)
-			switch m.Op {
-			case defs.VCOpDelete:
-				s.deleteHost(m.Key)
-
-			case defs.VCOpSet:
-				s.setHost(m.Key, m.Value)
-			}
-		}
+// newSnicStore returns an instance of snicStore
+func newSnicStore(c context.Context) *snicStore {
+	return &snicStore{
+		ctx:   c,
+		hosts: make(map[string]*defs.ESXHost),
 	}
 }
 
 // deleteHost performs necessary store updates when an esx host is removed.
-func (s *SNICStore) deleteHost(hostKey string) {
+func (s *snicStore) deleteHost(hostKey string) {
 	// find all nics of this host and delete them
 	h := s.hosts[hostKey]
 	if h == nil {
@@ -122,7 +100,7 @@ func (s *SNICStore) deleteHost(hostKey string) {
 }
 
 // setHost performs necessary store updates when an esx host is added/changed.
-func (s *SNICStore) setHost(hostKey string, host *defs.ESXHost) {
+func (s *snicStore) setHost(hostKey string, host *defs.ESXHost) {
 	currHost := s.hosts[hostKey]
 	if reflect.DeepEqual(currHost, host) {
 		return // no change
@@ -130,11 +108,11 @@ func (s *SNICStore) setHost(hostKey string, host *defs.ESXHost) {
 
 	// create all current snics
 	for _, nic := range host.PenNICs {
-		snic := &api.SmartNIC{
+		snic := &orch.SmartNIC{
 			ObjectKind:       smartNICKind,
 			ObjectAPIVersion: "v1",
 			ObjectMeta:       &swapi.ObjectMeta{},
-			Status: &api.SmartNIC_Status{
+			Status: &orch.SmartNIC_Status{
 				HostIP:     host.HostIP,
 				MacAddress: nic.Mac,
 				Switch:     nic.DvsUUID,
@@ -159,4 +137,39 @@ func (s *SNICStore) setHost(hostKey string, host *defs.ESXHost) {
 	}
 
 	s.hosts[hostKey] = host
+}
+
+func (s *snicStore) processHostConfig(op defs.VCOp, key string, c *defs.ESXHost) {
+	switch op {
+	case defs.VCOpDelete:
+		s.deleteHost(key)
+
+	case defs.VCOpSet:
+		s.setHost(key, c)
+	}
+}
+
+func getSNICId(s *snicStore, hostKey, dvsUUID string) string {
+	h := s.hosts[hostKey]
+	if h == nil {
+		return ""
+	}
+
+	dvs := h.DvsMap[dvsUUID]
+	if dvs == nil {
+		return ""
+	}
+
+	if len(dvs.Uplinks) == 0 {
+		return ""
+	}
+
+	// if there are multiple uplinks on a dvs, we take the first
+	pnic := dvs.Uplinks[0]
+	nicInfo := h.PenNICs[pnic]
+	if nicInfo != nil {
+		return nicInfo.Mac
+	}
+
+	return ""
 }
