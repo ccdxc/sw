@@ -162,6 +162,7 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 func (ts *TestSuite) teardown(t *testing.T) {
 	ts.cc.Close()
 	if ts.cluster != nil {
+		time.Sleep(200 * time.Millisecond)
 		ts.cluster.Terminate(t)
 	}
 	stopVCHServer()

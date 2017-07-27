@@ -191,6 +191,7 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 		grpcServer: grpcServer,
 		clientPort: clientPort,
 		serverPort: serverPort,
+		walDir:     walDir,
 	}
 }
 
