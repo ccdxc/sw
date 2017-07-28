@@ -220,6 +220,8 @@ func (c *ClusterV3) NewClient(t *testing.T) *clientv3.Client {
 
 // Terminate cleans up the state created by the test.
 func (c *ClusterV3) Terminate(t *testing.T) {
+	c.client.Close()
+
 	if c.grpcServer != nil {
 		c.grpcServer.Stop()
 	}

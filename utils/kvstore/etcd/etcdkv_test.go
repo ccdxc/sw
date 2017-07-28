@@ -64,7 +64,8 @@ func TestWatchVersion(t *testing.T) {
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
-	etcdWatcher := cluster.NewClient(t).Watch(context.Background(), kvstore.TestKey)
+	client := cluster.NewClient(t)
+	etcdWatcher := client.Watch(context.Background(), kvstore.TestKey)
 
 	if err := store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
@@ -81,5 +82,8 @@ func TestWatchVersion(t *testing.T) {
 	if res.Events[0].Kv.ModRevision != int64(watchVer) {
 		t.Fatalf("Version mismatch, expected %v, got %v", res.Events[0].Kv.ModRevision, int64(watchVer))
 	}
+
+	w.Stop()
+	client.Close()
 	t.Logf("Got expected version from watch")
 }
