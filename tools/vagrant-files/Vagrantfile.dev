@@ -50,6 +50,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             # Start docker and kubelet services
             systemctl enable docker && systemctl start docker
             systemctl enable kubelet && systemctl start kubelet
+            # populate the master virtual ip
+            echo '192.168.30.10 pen-master' >> /etc/hosts
           EOF
 
           s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes]]

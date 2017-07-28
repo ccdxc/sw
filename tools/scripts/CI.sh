@@ -21,4 +21,9 @@ if ! vagrant ssh -c "cd /import/src/github.com/pensando/sw; make" node1; then
     die 1 "Make failed"
 fi
 
+# create a pensando cluster
+if ! vagrant ssh -c "cd /import/src/github.com/pensando/sw; make cluster" node1; then
+    die 1 "Make failed"
+fi
+
 exit 0

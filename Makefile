@@ -41,7 +41,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
+	@docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
 	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@cp ${PWD}/bin/apigw tools/docker-files/apigw/apigw
 	@cp ${PWD}/bin/apiserver tools/docker-files/apiserver/apiserver
@@ -60,6 +60,14 @@ deploy:
 	$(MAKE) container-compile
 	$(MAKE) install
 	$(MAKE) c-start
+
+cluster:
+	$(MAKE) container-compile
+	$(MAKE) install
+	tools/scripts/startCluster.py -nodes ${PENS_NODES}
+
+cluster-stop:
+	tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop
 
 clean: c-stop
 
