@@ -42,6 +42,9 @@ function stopCluster() {
             echo "systemctl stop $j; docker stop $j ; docker rm $j" 
         done
         echo systemctl stop pen-kubelet 
+
+	echo 'if [ "$(docker ps -qa)" != "" ] ; then docker stop $(docker ps -qa); docker rm $(docker ps -qa); fi'
+
         echo 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*'
 	echo 'ip addr flush dev eth1 label *pens'
     ) > bin/node-cleanup
