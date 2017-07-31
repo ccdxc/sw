@@ -76,4 +76,7 @@ type Interface interface {
 
 	// NewTxn creates a transaction object.
 	NewTxn() Txn
+
+	// Close closes any persistent connection for good cleanup
+	Close()
 }

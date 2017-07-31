@@ -27,6 +27,11 @@ func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) 
 	return cluster, store
 }
 
+func cleanupTestCluster(t *testing.T, c *integration.ClusterV3, s kvstore.Interface) {
+	s.Close()
+	c.Terminate(t)
+}
+
 type mockObserver struct {
 	LeaderStartCount, LeaderChangeCount, LeaderStopCount int
 	ForceError                                           bool
@@ -50,7 +55,7 @@ func (m *mockObserver) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 
 func TestLeaderService(t *testing.T) {
 	cluster, store := setupTestCluster(t)
-	defer cluster.Terminate(t)
+	defer cleanupTestCluster(t, cluster, store)
 
 	id := "foo"
 
@@ -103,7 +108,7 @@ func TestLeaderService(t *testing.T) {
 
 func TestLeaderServiceWithObserverError(t *testing.T) {
 	cluster, store := setupTestCluster(t)
-	defer cluster.Terminate(t)
+	defer cleanupTestCluster(t, cluster, store)
 
 	id := "foo"
 	l := NewLeaderService(store, "TestLeaderServiceWithObserverError", id)
@@ -141,7 +146,7 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 
 func TestLeaderRegisterService(t *testing.T) {
 	cluster, store := setupTestCluster(t)
-	defer cluster.Terminate(t)
+	defer cleanupTestCluster(t, cluster, store)
 
 	id := "TestLeaderRegisterService"
 

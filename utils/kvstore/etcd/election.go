@@ -67,8 +67,8 @@ func (e *etcdStore) newElection(ctx context.Context, name string, id string, ttl
 	// small, may lose the election soon after winning it, which will result
 	// in an unnecessary flap.
 	if leaseID != clientv3.NoLease {
-		ctx, cancel := context.WithTimeout(ctx, timeout)
-		resp, err := e.client.TimeToLive(ctx, leaseID)
+		newCtx, cancel := context.WithTimeout(ctx, timeout)
+		resp, err := e.client.TimeToLive(newCtx, leaseID)
 		cancel()
 		if err != nil {
 			return nil, err

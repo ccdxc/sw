@@ -364,3 +364,11 @@ func (e *etcdStore) Contest(ctx context.Context, name string, id string, ttl uin
 func (e *etcdStore) NewTxn() kvstore.Txn {
 	return e.newTxn()
 }
+
+// Close closes client connection to store
+func (e *etcdStore) Close() {
+	if e.client != nil {
+		e.client.Close()
+		e.client = nil
+	}
+}

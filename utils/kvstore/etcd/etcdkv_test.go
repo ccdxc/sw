@@ -67,7 +67,7 @@ func TestWatchVersion(t *testing.T) {
 	client := cluster.NewClient(t)
 	etcdWatcher := client.Watch(context.Background(), kvstore.TestKey)
 
-	if err := store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
+	if err = store.Delete(context.Background(), kvstore.TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 

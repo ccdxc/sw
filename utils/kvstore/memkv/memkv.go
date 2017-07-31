@@ -452,6 +452,10 @@ func (f *MemKv) NewTxn() kvstore.Txn {
 	return f.newTxn()
 }
 
+// Close and cleanup network resources
+func (f *MemKv) Close() {
+}
+
 func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	f.Lock()
 	defer f.Unlock()
