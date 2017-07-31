@@ -28,6 +28,7 @@ const (
 	name             = "etcdServer"
 	clusterToken     = "etcd"
 	host             = "localhost"
+	basePort         = 21000
 	basePortMax      = 21100
 	dataDir          = "/tmp/etcd"
 	requestTimeout   = 5 * time.Second
@@ -35,10 +36,6 @@ const (
 	tickMs           = 100
 	bootstrapTimeout = 10 * time.Millisecond
 	ticker           = 500 * time.Millisecond
-)
-
-var (
-	basePort = 21000
 )
 
 // ClusterV3 contains server and client pointers for etcd.
@@ -123,32 +120,34 @@ func NewClusterV3(t *testing.T) *ClusterV3 {
 
 	// Start the client and peer listeners.
 	var clientListener, serverListener net.Listener
+
+	port := basePort
 	for {
-		basePort++
-		if basePort > basePortMax {
+		port++
+		if port > basePortMax {
 			t.Fatalf("Failed to find free client port")
 		}
-		clientListener, err = net.Listen("tcp", host+":"+strconv.Itoa(basePort))
+		clientListener, err = net.Listen("tcp", host+":"+strconv.Itoa(port))
 		if err != nil {
 			t.Logf("Failed to listen on client port %v, error %v", clientPort, err)
 			continue
 		} else {
-			clientPort = basePort
+			clientPort = port
 			break
 		}
 	}
 
 	for {
-		basePort++
-		if basePort > basePortMax {
+		port++
+		if port > basePortMax {
 			t.Fatalf("Failed to find free peer port")
 		}
-		serverListener, err = net.Listen("tcp", host+":"+strconv.Itoa(basePort))
+		serverListener, err = net.Listen("tcp", host+":"+strconv.Itoa(port))
 		if err != nil {
 			t.Logf("Failed to listen on server port %v, error %v", serverPort, err)
 			continue
 		} else {
-			serverPort = basePort
+			serverPort = port
 			break
 		}
 	}
