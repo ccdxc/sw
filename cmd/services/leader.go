@@ -20,6 +20,7 @@ type leaderService struct {
 	leaderKey string
 	id        string
 	leader    string
+	stopped   bool
 	store     kvstore.Interface
 	election  kvstore.Election
 	cancel    context.CancelFunc
@@ -89,6 +90,7 @@ func (l *leaderService) start() error {
 		return err
 	}
 	l.election = election
+	l.stopped = false
 	go l.waitForEventsOrCancel(ctx)
 	return nil
 }
@@ -99,7 +101,9 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 	for {
 		select {
 		case e, ok := <-evCh:
-			if ok {
+			if l.stopped {
+				return
+			} else if ok {
 				log.Infof("Election event: %+v", e)
 				l.Lock()
 				l.processEvent(e.Leader)
@@ -126,6 +130,7 @@ func (l *leaderService) Stop() {
 
 // stop is a helper function to stop the leader election.
 func (l *leaderService) stop() {
+	l.stopped = true
 	if l.election != nil {
 		l.election.Stop()
 		l.election = nil
@@ -154,7 +159,7 @@ func (l *leaderService) processEvent(leader string) {
 
 	} else if l.IsLeader() {
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
-	} else {
+	} else if l.leader != leader {
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
 	}
 	log.Infof("Setting leader to %v", leader)
