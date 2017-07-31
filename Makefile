@@ -28,8 +28,8 @@ govet-src: $(PKG_DIRS)
 checks: gofmt-src golint-src govet-src
 
 qbuild:
-	$(info +++ go install -race $(TO_BUILD))
-	go install -race -v $(TO_BUILD)
+	$(info +++ go install $(TO_BUILD))
+	go install -v $(TO_BUILD)
 
 build: deps ws-tools checks
 	$(MAKE) qbuild
