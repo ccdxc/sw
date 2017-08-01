@@ -10,6 +10,8 @@ import paramiko
 import threading
 import json
 import http
+import exceptions
+from multiprocessing.dummy import Pool as ThreadPool
 
 # Utility function to run ssh
 def ssh_exec_thread(ssh_object, command):
@@ -25,6 +27,7 @@ def ssh_exec_thread(ssh_object, command):
 # This class represents a vagrant node
 class Node:
     def __init__(self, addr, username='vagrant', password='vagrant', gopath='/import/'):
+        self.debug = False
         self.addr = addr
         self.username = username
         self.password = password
@@ -52,7 +55,8 @@ class Node:
     # Run a command on vagrant node
     def runCmd(self, cmd, timeout=None):
         try:
-            print "run: " + cmd
+            if self.debug:
+                print "run: " + cmd
             # We we disconnected for any reason, reconnect
             if not self.isConnected():
                 self.ssh = self.sshConnect(self.username, self.password)
@@ -62,10 +66,11 @@ class Node:
             out = stdout.readlines()
             err = stderr.readlines()
             exitCode = stdout.channel.recv_exit_status()
-            if out != [] or exitCode != 0:
-                print "stdout(" + str(exitCode) + "):" + ''.join(out)
-            if err != []:
-                print "stderr: " + ''.join(err)
+            if self.debug:
+                if out != [] or exitCode != 0:
+                    print "stdout(" + str(exitCode) + "):" + ''.join(out)
+                if err != []:
+                    print "stderr: " + ''.join(err)
             return out, err, exitCode
         except exceptions.EOFError:
             print "Ignoring EOF errors executing command"
@@ -90,8 +95,10 @@ class Node:
 
         #stop kubelet
         self.runCmd("sudo systemctl stop pen-kubelet")
+        self.runCmd("bash -c 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done' ")
+        self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop $(docker ps -qa); docker rm $(docker ps -qa); fi' """)
 
-        self.runCmd("sudo rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*")
+        self.runCmd("sudo rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ")
         self.runCmd("sudo ip addr flush dev eth1 label *pens")
 
 # Inits cluster by posting a message to CMD
@@ -143,8 +150,9 @@ print "################### Stopping all cluster services ###################"
 for addr in addrList:
     node = Node(addr, args.user, args.password, args.gopath)
     nodes.append(node)
-    # Start pensando base container
-    node.stopCluster()
+
+pool = ThreadPool(len(addrList))
+pool.map(lambda x: x.stopCluster(),nodes)
 
 print "################### Waiting for cluster cleanup to complete ###################"
 time.sleep(2)
@@ -155,9 +163,9 @@ if args.stop:
 
 print "################### Starting all cluster services ###################"
 
-for node in nodes:
-    # Start pensando base container
-    node.startCluster()
+pool = ThreadPool(len(addrList))
+pool.map(lambda x: x.startCluster(),nodes)
+
 
 print "################### Waiting for pen-base container to come up ###################"
 time.sleep(5)

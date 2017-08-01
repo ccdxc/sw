@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [ "$PENS_NODES" == "" ]
-then
-    PENS_NODES=3
-fi
-
 function createBaseContainer() {
     docker build --rm --no-cache -t pen-base:latest -f tools/docker-files/pencmd/Dockerfile tools/docker-files/pencmd
 }
@@ -34,36 +29,11 @@ function createBinContainerTarBall() {
     docker save -o bin/pen.tar pen-base:latest pen-apiserver:latest pen-apigw:latest pen-ntp $images
 }
 
-function stopCluster() {
-    ( 
-        echo '#!/bin/bash -x'
-        for j in pen-base pen-apiserver pen-apigw pen-etcd pen-kube-controller-manager pen-kube-scheduler pen-kube-apiserver pen-elasticsearch
-        do
-            echo "systemctl stop $j; docker stop $j ; docker rm $j" 
-        done
-        echo systemctl stop pen-kubelet 
-
-	echo 'if [ "$(docker ps -qa)" != "" ] ; then docker stop $(docker ps -qa); docker rm $(docker ps -qa); fi'
-
-        echo 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*'
-	echo 'ip addr flush dev eth1 label *pens'
-    ) > bin/node-cleanup
-    chmod +x bin/node-cleanup    
-    for i in $(seq 1 $PENS_NODES)
-    do
-        echo cleaning up node${i}
-        vagrant ssh node${i} -- sudo bash -c /import/bin/node-cleanup > /dev/null 2>&1
-        # TODO : stop other services/containers that get started by pensando
-    done
+function startCluster() {    
+    vagrant ssh -c  '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes ${PENS_NODES}'  node1
 }
-
-function startCluster() {
-    for i in $(seq 1 $PENS_NODES)
-    do
-        echo provisioning node${i}
-        vagrant ssh node${i} -- docker load -i /import/bin/pen.tar
-        vagrant ssh node${i} -- docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d pen-base
-    done
+function stopCluster() {
+    vagrant ssh -c  '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop'  node1
 }
 
 case $1 in 
@@ -71,7 +41,7 @@ case $1 in
     createApiGwContainer) createApiGwContainer ;;
     createApiSrvContainer) createApiSrvContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
-    startCluster) stopCluster ; startCluster;;
+    startCluster) startCluster;;
     stopCluster) stopCluster ;;
     *) ;;
 esac
