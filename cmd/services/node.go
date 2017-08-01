@@ -70,6 +70,10 @@ func (s *nodeService) Start() error {
 		return err
 	}
 
+	if err := s.configs.GenerateFilebeatConfig(s.virtualIP); err != nil {
+		return err
+	}
+
 	for ii := range nodeServices {
 		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
 			return err
@@ -90,6 +94,8 @@ func (s *nodeService) Stop() {
 		}
 	}
 	s.configs.RemoveKubeletConfig()
+	s.configs.RemoveFilebeatConfig()
+
 }
 
 // AreNodeServicesRunning returns if all the controller node services are

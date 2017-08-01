@@ -33,6 +33,9 @@ const (
 	// Elasticsearch
 	ElasticsearchRESTPort = "9200"
 
+	// Kibana
+	KibanaRESTPort = "5601"
+
 	// KV Store keys
 	ClusterKey = "/venice/cmd/cluster"
 	NodesKey   = "/venice/cmd/nodes"

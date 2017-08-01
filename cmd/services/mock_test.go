@@ -235,6 +235,13 @@ func (c *mockConfigs) GenerateAPIServerConfig() error {
 func (c *mockConfigs) RemoveAPIServerConfig() {
 }
 
+func (c *mockConfigs) GenerateFilebeatConfig(virtualIP string) error {
+	return nil
+}
+
+func (c *mockConfigs) RemoveFilebeatConfig() {
+}
+
 func (c *mockConfigs) GenerateKubeMasterConfig(virtualIP string) error {
 	return nil
 }

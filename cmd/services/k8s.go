@@ -49,6 +49,7 @@ type k8sManifest struct {
 	volumes []volume
 }
 
+// TBD: Maybe configs objects (common and service specific) can be moved to cmd/configs package ?
 // configVolume is a reusable volume definition for Pensando configs.
 var configVolume = volume{
 	name:      "configs",
@@ -63,6 +64,13 @@ var logVolume = volume{
 	mountPath: "/var/log/pensando",
 }
 
+// filebeatConfigVolume is config volume definition for Filebeat.
+var filebeatConfigVolume = volume{
+	name:      "configs",
+	hostPath:  "/etc/pensando/filebeat.yml",
+	mountPath: "/usr/share/filebeat/filebeat.yml",
+}
+
 // k8sManifests contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sManifests = map[string]k8sManifest{
@@ -71,6 +79,14 @@ var k8sManifests = map[string]k8sManifest{
 		kind:  daemonSet,
 		volumes: []volume{
 			configVolume,
+			logVolume,
+		},
+	},
+	"pen-filebeat": {
+		image: "srv1.pensando.io:5000/beats/filebeat:5.4.1",
+		kind:  daemonSet,
+		volumes: []volume{
+			filebeatConfigVolume,
 			logVolume,
 		},
 	},
@@ -148,7 +164,6 @@ func (k *k8sService) deployManifests(manifests map[string]k8sManifest) {
 		switch manifest.kind {
 		case daemonSet:
 			createDaemonSet(k.client, name, &manifest)
-			return
 		}
 	}
 }
@@ -216,7 +231,6 @@ func (k *k8sService) deleteManifests(manifests map[string]k8sManifest) {
 		switch manifest.kind {
 		case daemonSet:
 			k.deleteDaemonSet(name)
-			return
 		}
 	}
 }
