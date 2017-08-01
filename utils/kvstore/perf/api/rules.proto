@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package api;
+
+service Rules {
+	rpc CreateRule (Rule) returns (Rule) {};
+	rpc ListRules (ListReq) returns (RuleList) {};
+	rpc WatchRules (WatchReq) returns (stream Event) {};
+	rpc DeleteRules (DeleteReq) returns (RuleList) {};
+}
+
+message TypeMeta {
+	string kind = 1;
+}
+	
+message ObjectMeta {
+	string name = 1;
+}
+
+message ListMeta {
+	string resource_version = 1;
+}
+
+message Rule {
+	TypeMeta typemeta = 1;
+	ObjectMeta metadata = 2;
+	string name = 3;
+	string src_ip = 4;
+	string dst_ip = 5;
+	int32 src_port = 6;
+	int32 dst_port = 7;
+	int32 protocol = 8;
+	bool allow = 9;
+}
+
+message RuleList {
+	TypeMeta typemeta = 1;
+	ListMeta metadata = 2;
+	repeated Rule items = 3;
+}
+
+message Event {
+	enum EventType {
+	     Created = 0;
+	     Updated = 1;
+	     Deleted = 2;
+	}
+	EventType type = 1;
+	Rule rule = 2;
+}
+
+message ListReq {
+}
+
+message WatchReq {
+}
+
+message DeleteReq {
+}

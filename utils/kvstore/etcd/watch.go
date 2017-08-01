@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	outCount = 128
+	outCount = 512
 )
 
 // watcher implements kvstore.Watcher interface.

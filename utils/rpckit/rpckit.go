@@ -279,6 +279,11 @@ func (c *RPCClient) Close() error {
 	return c.ClientConn.Close()
 }
 
+// SetGlobalMiddlewares sets the global middlewares, useful for testing
+func SetGlobalMiddlewares(middlewares []Middleware) {
+	globalMiddlewares = middlewares
+}
+
 // Library initialization
 func init() {
 	// initialize global middlewares
