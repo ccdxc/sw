@@ -20,22 +20,24 @@ const (
 	enableDaemonSet       = "extensions/v1beta1/daemonsets=true"
 
 	// Environment variables
-	insecureAllowVar  = "INSECURE_ALLOW"
-	insecureAddrVar   = "INSECURE_ADDR"
-	insecurePortVar   = "INSECURE_PORT"
-	etcdServersVar    = "ETCD_SERVERS"
-	serviceClusterVar = "SERVICE_CLUSTER"
-	kubeMasterVar     = "KUBE_MASTER"
-	runtimeConfigVar  = "RUNTIME_CONFIG"
+	insecureAllowVar       = "INSECURE_ALLOW"
+	insecureAddrVar        = "INSECURE_ADDR"
+	insecurePortVar        = "INSECURE_PORT"
+	etcdServersVar         = "ETCD_SERVERS"
+	serviceClusterVar      = "SERVICE_CLUSTER"
+	kubeMasterVar          = "KUBE_MASTER"
+	runtimeConfigVar       = "RUNTIME_CONFIG"
+	kubeAllowPrivilegedVar = "ALLOW_PRIVILEGED"
 
 	// Parameters
-	insecureAllowParam  = "--insecure-allow-any-token"
-	insecureAddrParam   = "--insecure-bind-address"
-	insecurePortParam   = "--insecure-port"
-	etcdServersParam    = "--etcd-servers"
-	serviceClusterParam = "--service-cluster-ip-range"
-	kubeMasterParam     = "--master"
-	runtimeConfigParam  = "--runtime-config"
+	insecureAllowParam       = "--insecure-allow-any-token"
+	insecureAddrParam        = "--insecure-bind-address"
+	insecurePortParam        = "--insecure-port"
+	etcdServersParam         = "--etcd-servers"
+	serviceClusterParam      = "--service-cluster-ip-range"
+	kubeMasterParam          = "--master"
+	runtimeConfigParam       = "--runtime-config"
+	kubeAllowPrivilegedParam = "--allow-privileged"
 )
 
 // GenerateKubeMasterConfig generates the systemd configuration files for
@@ -61,6 +63,7 @@ func generateKubeAPIServerConfig() error {
 	cfgMap[etcdServersVar] = fmt.Sprintf("%s %s", etcdServersParam, strings.Join(env.KVServers, ","))
 	cfgMap[serviceClusterVar] = fmt.Sprintf("%s %s", serviceClusterParam, serviceClusterIPRange)
 	cfgMap[runtimeConfigVar] = fmt.Sprintf("%s %s", runtimeConfigParam, enableDaemonSet)
+	cfgMap[kubeAllowPrivilegedVar] = kubeAllowPrivilegedParam
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeAPIServerCfgFile))
 }
 
