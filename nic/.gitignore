@@ -4,6 +4,8 @@ core*
 model_sim/build/cap_model
 model_sim/build/model_cli
 model_sim/build/sample_client
+model_sim/build/libmodelclient.so
+model_sim/build/model_server.o
 sknobs_gen/output.sknobs
 capri_tbl_rw.log
 proto/agents_proto
