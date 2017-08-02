@@ -1,0 +1,10 @@
+tls-alloc-brq-pi.run:# Executed 14 instructions; 57.1Mpps @ 800MHz
+tls-alloc-rnmdr.run:# Executed 16 instructions; 50.0Mpps @ 800MHz
+tls-alloc-rnmdr-split.run:# Executed 31 instructions; 25.8Mpps @ 800MHz
+tls-alloc-rnmpr.run:# Executed 15 instructions; 53.3Mpps @ 800MHz
+tls-queue-brq.run:# Executed 50 instructions; 16.0Mpps @ 800MHz
+tls-read-desc.run:# Executed 41 instructions; 19.5Mpps @ 800MHz
+tls-read-header.run:# Executed 23 instructions; 34.8Mpps @ 800MHz
+tls-rx-serq.run:# Executed 34 instructions; 23.5Mpps @ 800MHz
+tls-serq.run:# Executed 22 instructions; 36.4Mpps @ 800MHz
+tls-update-page-ctl.run:# Executed 12 instructions; 66.7Mpps @ 800MHz

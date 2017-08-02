@@ -1,0 +1,35 @@
+src = $(wildcard *.s)
+bin = $(src:.s=.bin)
+
+rundir = run
+ctldir = ctl
+bindir = bin
+
+LDFLAGS = 
+CFLAGS = -I. -I../include -I../../common-p4+/assembly/include -I../../tcp-p4+/assembly/include
+
+all: $(bin)
+	echo $(src)
+	echo $(bin)
+	mkdir -p $(bindir)
+	mv $(bin) $(bindir)
+
+run: $(bin)
+	mv $(bin) $(bindir)
+	capsim -c $(CFLAGS) $(ctldir)/tls-serq.ctl $(bindir)/tls-serq.bin > $(rundir)/tls-serq.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-read-desc.ctl $(bindir)/tls-read-desc.bin > $(rundir)/tls-read-desc.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-rx-serq.ctl $(bindir)/tls-rx-serq.bin > $(rundir)/tls-rx-serq.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-read-header.ctl $(bindir)/tls-read-header.bin > $(rundir)/tls-read-header.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-alloc-rnmdr-split.ctl $(bindir)/tls-alloc-rnmdr-split.bin > $(rundir)/tls-alloc-rnmdr-split.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-update-page-ctl.ctl $(bindir)/tls-update-page-ctl.bin > $(rundir)/tls-update-page-ctl.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-alloc-rnmdr.ctl $(bindir)/tls-alloc-rnmdr.bin > $(rundir)/tls-alloc-rnmdr.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-alloc-rnmpr.ctl $(bindir)/tls-alloc-rnmpr.bin > $(rundir)/tls-alloc-rnmpr.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-alloc-brq-pi.ctl $(bindir)/tls-alloc-brq-pi.bin > $(rundir)/tls-alloc-brq-pi.run
+	capsim -c $(CFLAGS) $(ctldir)/tls-queue-brq.ctl $(bindir)/tls-queue-brq.bin > $(rundir)/tls-queue-brq.run
+
+.PHONY: clean 
+clean:
+	rm -f $(bindir)/*
+
+%.bin: %.s
+	capas $(CFLAGS) $< -o $@

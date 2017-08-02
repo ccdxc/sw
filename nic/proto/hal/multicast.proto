@@ -1,0 +1,95 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Multicast APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package multicast;
+
+service Multicast {
+  rpc MulticastEntryCreate (MulticastEntryRequestMsg) returns (MulticastEntryResponseMsg) {}
+  rpc MulticastEntryUpdate (MulticastEntryRequestMsg) returns (MulticastEntryResponseMsg) {}
+  rpc MulticastEntryDelete (MulticastEntryDeleteRequestMsg) returns (MulticastEntryDeleteResponseMsg) {}
+  rpc MulticastEntryGet (MulticastEntryGetRequestMsg) returns (MulticastEntryGetResponseMsg) {}
+}
+
+message MulticastEntryKeyIP {
+  fixed64                  l2_segment_handle = 1;    // L2 segment handle
+  types.IPAddress          src               = 2;    // Source IP
+  types.IPAddress          grp               = 3;    // Destination IP
+}
+
+message MulticastEntryKeyMac {
+  fixed64 grp = 1;                                   // Multicast MAC
+}
+
+message MulticastEntryKey {
+  oneof ip_or_mac {
+    MulticastEntryKeyIP  ip  = 1;
+    MulticastEntryKeyMac mac = 2;
+  }
+}
+
+// MulticastEntryKeyHandle
+message MulticastEntryKeyHandle {
+  oneof key_or_handle {
+    MulticastEntryKey key              = 1;
+    fixed64           multicast_handle = 2;
+  }
+}
+
+message MulticastEntrySpec {
+  types.ObjectMeta        meta        = 1;
+  MulticastEntryKeyHandle key         = 2;          // key
+  repeated fixed64        oif_handles = 3;          // output interface handles
+}
+
+message MulticastEntryRequestMsg {
+  repeated MulticastEntrySpec request = 1;          // batched request
+}
+
+message MulticastEntryStatus {
+  fixed64  multicast_handle = 1;                    // handle
+}
+
+message MulticastEntryResponse {
+  types.ApiStatus      api_status   = 1;            // status
+  MulticastEntryStatus entry_status = 2;
+}
+
+message MulticastEntryResponseMsg {
+  repeated MulticastEntryResponse resp = 1;         // batched reponse
+}
+
+message MulticastEntryDeleteRequest {
+  types.ObjectMeta        meta          = 1;
+  MulticastEntryKeyHandle key_or_handle = 2;        // key or handle to delete
+}
+
+message MulticastEntryDeleteRequestMsg {
+  repeated MulticastEntryDeleteRequest request = 1; // batched request
+}
+
+message MulticastEntryDeleteResponseMsg {
+  repeated types.ApiStatus api_status = 1;          // batched response
+}
+
+message MulticastEntryGetRequest {
+  types.ObjectMeta        meta          = 1;
+  MulticastEntryKeyHandle key_or_handle = 2;        // key or handle for request
+}
+
+message MulticastEntryGetRequestMsg {
+  repeated MulticastEntryGetRequest request = 1;    // batched request
+}
+
+message MulticastEntryGetResponse {
+  types.ApiStatus  api_status  = 1;
+  repeated fixed64 oif_handles = 2;                 // output interface handles
+}
+
+message MulticastEntryGetResponseMsg {
+  repeated MulticastEntryGetResponse resp = 1;      // batched reponse
+}

@@ -1,0 +1,10 @@
+{
+  "mode": "sim",
+  "asic": {
+    "name": "capri"
+  },
+  "sw" : {
+    "grpc_port": "50054",
+    "feature_set": "iris"
+  }
+}

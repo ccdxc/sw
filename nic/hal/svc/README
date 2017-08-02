@@ -1,0 +1,16 @@
+This directory will provide the first layer of implementation of HAL APIs
+
+Every HAL APIs will perform the following steps, possibly in different order:
+
+  1. deserialize the incoming API message content
+  2. extract the key fields from the message
+  3. do lookups in the internal data structures
+  4. create/delete/modify the internal data structures
+  5. allocate/deallocate indices for P4 tables, if any
+  6. read/write from P4 tables
+  7. update the operational data in the internal data structures
+  8. raise an event to the app
+  9. etc. etc
+
+This directory contains the top level handler to receive and deserialize the
+API calls.

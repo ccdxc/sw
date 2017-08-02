@@ -1,0 +1,11 @@
+-I ../../gen
+-I ../../hal/pd/iris
+-I ../../gen/protobuf
+-I ../../third-party/crc32
+-I ../../third-party/spdlog/include
+-I ../svc
+-I ../src
+-I ../../utils
+-I ../pd/common
+-I ../../include
+-std=c++11

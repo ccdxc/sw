@@ -1,0 +1,5 @@
+- all NIC configuration files go here, examples include:
+  - HAL global configuration
+  - modeli (capri etc.) specific configuration
+  - P4 table configuration
+  - etc.

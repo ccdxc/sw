@@ -1,0 +1,30 @@
+src = $(wildcard *.s)
+bin = $(src:.s=.bin)
+
+rundir = ../run
+ctldir = ../ctl
+bindir = bin/
+
+LDFLAGS = 
+CFLAGS = -I../include -I../../../common-p4+/assembly/include
+
+all: $(bin)
+	echo $(src)
+	echo $(bin)
+	mkdir -p $(bindir)
+	mv $(bin) $(bindir)
+
+run: $(bin)
+	mv $(bin) bin
+	capsim -c $(CFLAGS) $(ctldir)/tcp-tx.ctl $(bindir)/tcp-tx.bin > $(rundir)/tcp-tx.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-tso.ctl $(bindir)/tcp-tso.bin > $(rundir)/tcp-tso.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-fast-timer.ctl $(bindir)/tcp-fast-timer.bin > $(rundir)/tcp-fast-timer.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-slow-timer-keepalive.ctl $(bindir)/tcp-slow-timer.bin > $(rundir)/tcp-slow-timer-keepalive.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-slow-timer-pmtu.ctl $(bindir)/tcp-slow-timer.bin > $(rundir)/tcp-slow-timer-pmtu.run
+
+.PHONY: clean 
+clean:
+	rm -f $(bindir)/*
+
+%.bin: %.s
+	capas $(CFLAGS) $< -o $@

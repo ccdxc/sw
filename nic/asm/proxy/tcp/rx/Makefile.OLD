@@ -1,0 +1,30 @@
+src = $(wildcard *.s)
+bin = $(src:.s=.bin)
+
+rundir = ../run
+ctldir = ../ctl
+bindir = bin/
+
+LDFLAGS = 
+CFLAGS = -I../include -I../../../common-p4+/assembly/include -I../../../tls-p4+/assembly/include
+
+all: $(bin)
+	echo $(src)
+	echo $(bin)
+	mkdir -p bin
+	mv $(bin) bin
+run: $(bin)
+	mv $(bin) bin
+	capsim -c $(CFLAGS) $(ctldir)/tcp-rx.ctl $(bindir)/tcp-rx.bin > $(rundir)/tcp-rx.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-write-serq.ctl $(bindir)/tcp-write-serq.bin > $(rundir)/tcp-write-serq.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-cc.ctl $(bindir)/tcp-cc.bin > $(rundir)/tcp-cc.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-rtt-first.ctl $(bindir)/tcp-rtt.bin > $(rundir)/tcp-rtt-first.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-rtt-non-first.ctl $(bindir)/tcp-rtt.bin > $(rundir)/tcp-rtt-non-first.run
+	capsim -c $(CFLAGS) $(ctldir)/tcp-fastretx-alert-cwr-end.ctl $(bindir)/tcp-fastretx-alert.bin > $(rundir)/tcp-fastretx-alert-cwr-end.run
+
+.PHONY: clean 
+clean:
+	rm -f $(bindir)/*
+
+%.bin: %.s
+	capas $(CFLAGS) $< -o $@

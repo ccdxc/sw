@@ -1,0 +1,4 @@
+-I ../..
+-I ../../include
+-I ../../third-party/spdlog/include
+-std=c++11

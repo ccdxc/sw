@@ -1,0 +1,52 @@
+{
+  "global": {
+    "ingress": {
+      "sram": {
+        "count": 10,
+        "depth": 4096,
+        "width": 128
+      },
+      "tcam": {
+        "count": 8,
+        "depth": 1024,
+        "width": 128
+      }
+    },
+    "egress": {
+      "sram": {
+        "count": 10,
+        "depth": 4096,
+        "width": 128
+      },
+      "tcam": {
+        "count": 4,
+        "depth": 1024,
+        "width": 128
+      }
+    }
+  },
+  "tables": [
+    {
+      "name": "input_properties",
+      "type": "hash",
+      "stage": 0,
+      "num_entries": 10240,
+      "entry_size": 100,
+      "sram": {
+        "entry_start_index": 0,       // <=== why do we need this now ?
+        "entry_end_index": 10240,     // <=== why do we need this now ?
+        "layout": {
+          "top_left": {
+            "block": 0,
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      "tcam": {                      // in i/p we are capturing sram and tcam as separate tables
+                                     // how can this come here, if i/p has no relation between
+                                     // sram and otcam tables ??
+      }
+    }
+  ]
+}

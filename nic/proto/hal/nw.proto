@@ -1,0 +1,98 @@
+//------------------------------------------------------------------------------
+// protobuf specification for network policy objects
+// Network object defined here is for policy purposes alone and is not tied
+// to routes etc.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package nw;
+
+service Network {
+  rpc NetworkCreate (NetworkRequestMsg) returns (NetworkResponseMsg) {}
+  rpc NetworkUpdate (NetworkRequestMsg) returns (NetworkResponseMsg) {}
+  rpc NetworkDelete (NetworkDeleteRequestMsg) returns (NetworkDeleteResponseMsg) {}
+  rpc NetworkGet (NetworkGetRequestMsg) returns (NetworkGetResponseMsg) {}
+}
+
+// NetworkKeyHandle uniquely identifies a Network
+message NetworkKeyHandle {
+  oneof key_or_handle {
+    types.IPPrefix     ip_prefix    = 1;    // IP prefix
+    fixed64            nw_handle    = 2;    // network's handle returned by HAL
+  }
+}
+
+// NetworkSpec is used to add or modify a network object
+message NetworkSpec {
+  types.ObjectMeta    meta              = 1;    // common object meta
+  NetworkKeyHandle    key_or_handle     = 2;    // network being create or updated
+  repeated uint32     security_group    = 3;    // security group list(s) of this network
+}
+
+// NetworkRequestMsg is batched request message used to create/update network
+// objects
+message NetworkRequestMsg {
+  repeated NetworkSpec    request = 1;    // batch of requests
+}
+
+// NetworkStatus represents the current status of the network policy object
+message NetworkStatus {
+  fixed64    nw_handle = 1;    // id of the network policy object returned by HAL
+}
+
+// NetworkResponse is response to one NetworkSpec
+message NetworkResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  NetworkStatus      status     = 2;    // operational status
+}
+
+// NetworkResponseMsg is response to NetworkRequestMsg
+message NetworkResponseMsg {
+  repeated NetworkResponse    response = 1;    // batch of responses
+}
+
+// NetworkDeleteRequest is used to delete a network policy object
+message NetworkDeleteRequest {
+  types.ObjectMeta    meta             = 1;    // object meta
+  NetworkKeyHandle    key_or_handle    = 2;    // network being deleted
+}
+
+// NetworkDeleteRequestMsg is used to delete a batch of network policy objects
+message NetworkDeleteRequestMsg {
+  repeated NetworkDeleteRequest    request = 1;   // batched delete request
+}
+
+// NetworkDeleteResponseMsg is batched response to NetworkDeleteRequestMsg
+message NetworkDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;      // API status code
+}
+
+// NetworkStats captures all the statistics of given network
+message NetworkStats {
+}
+
+// NetworkGetRequest is used to get information about a network
+message NetworkGetRequest {
+  types.ObjectMeta    meta          = 1;    // object meta
+  NetworkKeyHandle    key_or_handle = 2;    // network key or handle
+}
+
+// NetworkGetRequestMsg is batched GET request for networks
+message NetworkGetRequestMsg {
+  repeated NetworkGetRequest    request = 1;    // batched get request
+}
+
+// NetworkGetResponse captures all the information about a network
+message NetworkGetResponse {
+  NetworkSpec      spec     = 1;    // network specification/configuration
+  NetworkStatus    status   = 2;    // network status
+  NetworkStats     stats    = 3;    // network statistics
+}
+
+// NetworkGetResponseMsg is response to NetworkGetRequestMsg
+message NetworkGetResponseMsg {
+  repeated NetworkGetResponse    response = 1;    // batched get response
+}

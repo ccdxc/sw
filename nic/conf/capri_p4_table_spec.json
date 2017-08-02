@@ -1,0 +1,60 @@
+{
+  "global": {
+    "ingress": {
+      "sram": {
+        "count": 10,
+        "depth": 4096,
+        "width": 128
+      },
+      "tcam": {
+        "count": 8,
+        "depth": 1024,
+        "width": 128
+      }
+    },
+    "egress": {
+      "sram": {
+        "count": 10,
+        "depth": 4096,
+        "width": 128
+      },
+      "tcam": {
+        "count": 4,
+        "depth": 1024,
+        "width": 128
+      }
+    }
+  },
+  "tables": [
+    {
+      "name": "input_properties",
+      "type": "hash",
+      "memory": "sram",
+      "stage": 0,
+      "num_entries": 10240,
+      "entry_size": 100,
+      "otcam_table": "input_properties_otcam"
+    },
+    {
+      "name": "input_properties_otcam",
+      "type": "tcam",
+      "memory": "tcam",
+      "stage": 0,
+      "num_entries": 640,
+      "tcam": {
+        "key_size": 100
+      },
+      "sram": {
+        "data_size": 20
+      }
+    },
+    {
+      "name": "flow_table",
+      "type": "hash",
+      "memory": "hbm",
+      "stage": 2,
+      "num_entries": 2097152,
+      "entry_size": 324
+    }
+  ]
+}

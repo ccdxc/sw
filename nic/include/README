@@ -1,0 +1,3 @@
+- all libraries or features exposing public APIs can have their header files
+  either directly in this directory or have symlinks from here to wherever
+  they are located

@@ -1,0 +1,25 @@
+{
+    "objects": [ 
+        {
+            "name": "norm_prof",
+            "key_fields": [
+                {
+                    "type": "uint32_t",
+                    "name": "id"
+                }
+            ],
+            "data_fields": [
+                {
+                    "type": "uint8_t",
+                    "name": "stateful_check_en",
+                    "num_bits": "1"
+                },
+                {
+                    "type": "uint8_t",
+                    "name": "ip_normalization_en",
+                    "num_bits": "1"
+                }
+            ]
+        }
+    ]
+}

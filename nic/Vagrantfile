@@ -1,0 +1,154 @@
+################################################################################
+# Vagrantfile for development VM (for DOLs and HAL etc.)
+################################################################################
+#
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ----------  Initializations  ---------
+$num_nodes = 1
+$base_ip = "192.168.40."
+$node_box = "ubuntu/xenial64"
+$node_box_ver = "0.1"
+$pens_node_id = 0
+
+# ----------  Global Variables  ----------
+$cluster_ip_nodes = ""
+$node_ips = []
+$node_names = ['devvm']
+
+# -----------------------
+# "Main" of Configuration
+# -----------------------
+Vagrant.configure("2") do |config|
+  config.vm.box = $node_box
+
+  # Getting Node IPs
+  $node_ips = $num_nodes.times.collect { |n| $base_ip + "#{n+11}" }
+  $cluster_ip_nodes = $node_ips.join(",")
+  # $node_names = $num_nodes.times.collect { |n| "node#{n+1}" }
+
+  $num_nodes.times do |n|
+    node_name = $node_names[n]
+    node_addr = $node_ips[n]
+
+    configure_node(config, n, node_name, node_addr)
+  end 
+end
+
+# -----------------------
+# Configure Nodes
+# -----------------------
+def configure_node(config, nid, node_name, node_addr)
+  config.vm.synced_folder "./Shared/", "/home/ubuntu/Shared/"
+  config.vm.define node_name do |node|
+    node.vm.box = $node_box
+    # node.vm.box_version = $node_box_ver
+
+    # Private Network
+    node.vm.network :private_network, ip: node_addr, virtualbox__intnet: true
+
+    node.vm.provider "virtualbox" do |v|
+      v.name = node_name
+      v.cpus = 6
+      v.memory = 8192
+      # v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+    end
+
+    node.vm.provision "shell" do |s|
+      s.inline = $pens_vm_script
+      s.args = [node_name, node_addr, $cluster_ip_nodes]
+    end
+
+    get_files_into_server(node)
+    
+  end
+end
+
+# ---------- Pensando Model VM Script ------------
+$pens_vm_script = <<SCRIPT
+
+# No Interactive input
+export DEBIAN_FRONTEND=noninteractive
+
+# Set HostName
+echo -n "$1" > /etc/hostname
+hostname -F /etc/hostname
+
+# Install Necessary Packages
+apt-get update
+apt-get install -y libpcap-dev 
+apt-get install -y python-pytest
+apt-get install -y python-logilab-common
+apt-get install -y python-requests
+apt-get install -y python-mock
+apt-get install -y make
+apt-get install -y build-essential g++
+apt-get install -y libpcap-dev
+apt-get install -y libboost-all-dev
+apt-get install -y python-hpack
+apt-get install -y python-scapy
+apt-get install python-pip
+sudo pip install Tenjin enum34
+apt-get install python-yaml graphviz
+sudo apt-get install python3-pip
+sudo apt-get install python3-yaml
+sudo apt-get install python3-ruamel.yaml
+sudo pip3 install scapy-python3
+sudo pip3 install --upgrade google-api-python-client
+sudo pip3 install grpcio
+sudo apt install cscope
+sudo apt-get install libzmq3-dev
+sudo pip3 install zmq
+
+# Turn off StrictHostKeyChecking
+f='/home/ubuntu/.ssh/config'
+mkdir -p /home/ubuntu/.ssh/ && touch $f
+grep -q 'StrictHostKeyChecking' $f
+echo 'StrictHostKeyChecking no' >> $f
+
+SCRIPT
+
+# ---------- GIT Config Script ------------
+$gitconfig_script = <<-SCRIPT
+  cat > ~/.gitconfig <<-EOF
+  [github]
+     user = sarat-k
+     name = Sarat Kamisety 
+     ;token = 027645c86abbd90fb1c5e4f3aa36b4ff49c860e2
+  [url "https://github.com/"]
+  insteadOf = git://github.com/
+  [url "https://github.com/"]
+  insteadOf = git@github.com:
+  EOF
+SCRIPT
+
+# ---------- Get all the Binaries ---------
+$hack_script = <<-SCRIPT
+git clone git@github.com:pensando/hack
+cd hack
+SCRIPT
+
+# -------------------------------------------
+# Get Required files into Pensando Model Node
+# -------------------------------------------
+def get_files_into_server(node)
+  # Copy Model Server and SIM Client binaries 
+  # node.vm.provision "file", source: "~/Documents/Share/h2eng", destination: "h2eng"
+  # node.vm.provision "file", source: "~/Documents/Share/if_sniff", destination: "if_sniff"
+
+  # Bypass SSH password prompts
+  node.vm.provision "file", source: "~/.ssh/id_rsa", destination: ".ssh/id_rsa"
+  node.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: ".ssh/id_rsa.pub"
+  node.vm.provision "file", source: "~/.bashrc", destination: ".bashrc"
+  node.vm.provision "file", source: "~/.vimrc", destination: ".vimrc"
+  node.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  # For HTTP/2 GRPC server and client
+  # node.vm.provision "file", source: "~/go/bin/greeter_client", destination: "greeter_client"
+  # node.vm.provision "file", source: "~/go/bin/greeter_server", destination: "greeter_server"
+
+  
+  # node.vm.provision "shell", inline: $gitconfig_script, privileged: false
+  node.vm.provision "shell", inline: $hack_script, privileged: false
+end

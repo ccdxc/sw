@@ -1,0 +1,13 @@
+-I ../../..
+-I ../../../hal/svc
+-I ../../../gen
+-I ../../../p4/nw/include
+-I ../../../gen/protobuf
+-I ../../pd/common
+-I ../../src
+-I ../..
+-I ../capri
+-I ../../../include
+-I ../../../gen/iris/include
+-I ../../../third-party/spdlog/include
+-std=c++11

@@ -1,0 +1,49 @@
+CXX = g++
+CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -g
+PROTOC = protoc
+C_PROTOC = protoc-c
+GRPC_CPP_PLUGIN = grpc_cpp_plugin
+GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
+GRPC_PYTHON_PLUGIN_PATH ?= `which grpc_python_plugin`
+OBJ_DIR = ../obj
+GEN_DIR = ../gen
+COMMON_PROTO_DIR = .
+AGENTS_PROTO_DIR = ./agents
+HAL_PROTO_DIR = ./hal
+
+all:
+	$(PROTOC) -I$(COMMON_PROTO_DIR) --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) ./*.proto
+	$(PROTOC) -I$(COMMON_PROTO_DIR) --python_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_PYTHON_PLUGIN_PATH) ./*.proto
+	$(C_PROTOC) -I$(COMMON_PROTO_DIR) --c_out=$(GEN_DIR) ./*.proto
+	$(PROTOC) -I$(AGENTS_PROTO_DIR) --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) agents/*.proto
+	$(C_PROTOC) -I$(AGENTS_PROTO_DIR) --c_out=$(GEN_DIR) agents/*.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --cpp_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) hal/*.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --python_out=$(GEN_DIR) --grpc_out=$(GEN_DIR) --plugin=protoc-gen-grpc=$(GRPC_PYTHON_PLUGIN_PATH) hal/*.proto
+	$(C_PROTOC) -I$(HAL_PROTO_DIR) --c_out=$(GEN_DIR) hal/*.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/endpoint.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/l2segment.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/l4lb.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/nwsec.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/session.proto
+	$(PROTOC) -I$(HAL_PROTO_DIR) --go_out=plugins=grpc:$(GEN_DIR) hal/tenant.proto
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/types.pb.o $(GEN_DIR)/types.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/types.grpc.pb.o $(GEN_DIR)/types.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/network.pb.o $(GEN_DIR)/network.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/network.grpc.pb.o $(GEN_DIR)/network.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/tenant.pb.o $(GEN_DIR)/tenant.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/tenant.grpc.pb.o $(GEN_DIR)/tenant.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/l2segment.pb.o $(GEN_DIR)/l2segment.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/l2segment.grpc.pb.o $(GEN_DIR)/l2segment.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/interface.pb.o $(GEN_DIR)/interface.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/interface.grpc.pb.o $(GEN_DIR)/interface.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/nwsec.pb.o $(GEN_DIR)/nwsec.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/nwsec.grpc.pb.o $(GEN_DIR)/nwsec.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/endpoint.pb.o $(GEN_DIR)/endpoint.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/endpoint.grpc.pb.o $(GEN_DIR)/endpoint.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/l4lb.pb.o $(GEN_DIR)/l4lb.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/l4lb.grpc.pb.o $(GEN_DIR)/l4lb.grpc.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/session.pb.o $(GEN_DIR)/session.pb.cc
+	$(CXX) $(CPPFLAGS) -c -o $(OBJ_DIR)/session.grpc.pb.o $(GEN_DIR)/session.grpc.pb.cc
+
+clean:
+	rm -f $(OBJ_DIR)/*.pb.o $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.*

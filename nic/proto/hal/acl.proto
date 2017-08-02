@@ -1,0 +1,118 @@
+//------------------------------------------------------------------------------
+// protobuf specification for ACLs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package acl;
+
+// ACL service definition
+service Acl {
+  // LIF related APIs
+  rpc AclCreate(AclRequestMsg) returns (AclResponseMsg) {}
+  rpc AclUpdate(AclRequestMsg) returns (AclResponseMsg) {}
+  //rpc AclDelete(AclDeleteRequestMsg) returns (AclDeleteResponseMsg) {}
+  //rpc AclGet(AclGetRequestMsg) returns (AclGetResponseMsg) {}
+  }
+
+// EthSelector has match criteria for non-IP packets
+message EthSelector {
+  uint32    eth_type     = 1;
+  uint64    src_mac      = 2;
+  uint64    src_mac_mask = 3;
+  uint64    dst_mac      = 4;
+  uint64    dst_mac_mask = 5;
+}
+
+// UDPSelector is used to specify match criteria for UDP traffic
+message UDPSelector {
+  types.L4PortRange    port_range = 1;    // UDP port range
+}
+
+// TCPSelector is used to specify match criteria for TCP traffic
+message TCPSelector {
+  bool                 tcp_syn    = 1;    // TCP SYN flag
+  bool                 tcp_ack    = 2;    // TCP ACK flag
+  bool                 tcp_fin    = 3;    // TCP FIN flag
+  bool                 tcp_rst    = 4;    // TCP RST flag
+  bool                 tcp_urg    = 5;    // TCP URG flag
+  types.L4PortRange    port_range = 6;    // TCP port range
+}
+
+// ICMPSelector has match criteria for ICMP packets
+message ICMPSelector {
+  uint32    icmp_code = 1;    // ICMP code
+  uint32    icmp_type = 2;    // ICMP type
+}
+
+// IPSelector has match criteria for selecting IP packets
+message IPSelector {
+  types.IPPrefix      src_prefix       = 1;    // source IP prefix
+  types.IPPrefix      dst_prefix       = 2;    // destination IP prefix
+  types.IPProtocol    protocol         = 3;    // IP protocol
+  oneof l4_selectors {
+    ICMPSelector      icmp_selector    = 4;    // ICMP selector
+    UDPSelector       udp_selector     = 5;    // UDP selector
+    TCPSelector       tcp_selector     = 6;    // TCP selector
+  }
+}
+
+// AclSelector has all the match criteria for an ACL entry
+message AclSelector {
+  fixed64          src_if_handle     = 1;    // source interface
+  fixed64          dst_if_handle     = 2;    // destination interface
+  fixed64          l2_segment_handle = 3;    // L2 segment
+  oneof pkt_selector {
+    EthSelector    eth_selector      = 4;    // non-IP packet selector
+    IPSelector     ip_selector       = 5;    // IP packet selector
+  }
+}
+
+// AclAction specifies all possible actions for ACL entries
+enum AclAction {
+  ACL_ACTION_NONE      = 0;
+  ACL_ACTION_PERMIT    = 1;    // permit all the matched the packets
+  ACL_ACTION_REDIRECT  = 2;    // redirect all the matched packets
+  ACL_ACTION_DENY      = 3;    // deny all the matched packets
+}
+
+message AclActionInfo {
+  AclAction    action                    = 1;    // forwarding action
+  fixed64      ing_mirror_session_handle = 2;    // ingress mirror session
+  fixed64      egr_mirror_session_handle = 3;    // egress mirror session
+  fixed64      egr_policer_handle        = 4;    // egress policer
+  fixed64      redirect_if_handle        = 5;    // if handle for redirect action
+}
+
+// ACL entry configuration
+message AclSpec {
+  types.ObjectMeta    meta      = 1;    // common object meta
+  uint32              acl_id    = 2;    // user assigned unique id/key
+  uint32              priority  = 3;    // priority of the rule (0 being lowest)
+                                        // TBD: is this per-tenant priority ? or global ?
+  AclSelector         match     = 4;    // match conditions
+  AclActionInfo       action    = 5;    // action(s)
+}
+
+// AclRequestMsg is batched request used to create/update of ACLs
+message AclRequestMsg {
+  repeated AclSpec    request = 1;    // batch of requests
+}
+
+// AclStatus represents the operational status of an ACL entry
+message AclStatus {
+  fixed64    acl_handle = 1;    // ACL id returned by HAL
+}
+
+// AclResponse is response to AclSpec
+message AclResponse {
+  types.ApiStatus    api_status = 1;
+  AclStatus          status     = 2;
+}
+
+// AclResponseMsg is response to AclRequestMsg
+message AclResponseMsg {
+  repeated AclResponse    response = 1;    // batch of responses
+}

@@ -1,0 +1,159 @@
+//------------------------------------------------------------------------------
+// protobuf specification for endpoints
+//
+// Endpoint is equivalent to a VM's vnic or container's veth interface. A
+// VM/container can hanve multiple endpoints, however that higher level grouping
+// is not known to HAL. HAL treats each of them independently. Each endpoint
+// has one MAC and optionally one or more IP addresses.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package endpoint;
+
+// The Endpoint service definition
+service Endpoint {
+  rpc EndpointCreate (EndpointRequestMsg) returns (EndpointResponseMsg) {}
+  rpc EndpointUpdate (EndpointRequestMsg) returns (EndpointResponseMsg) {}
+  rpc EndpointDelete (EndpointDeleteRequestMsg) returns (EndpointDeleteResponseMsg) {}
+  rpc EndpointGet (EndpointGetRequestMsg) returns (EndpointGetResponseMsg) {}
+  rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
+  rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
+}
+
+// EndpointSpec is used to add or update an endpoint
+message EndpointSpec {
+    types.ObjectMeta            meta                 = 1;    // common object meta
+    fixed64                     l2_segment_handle    = 2;    // L2 segment endpoint is in
+    uint64                      mac_address          = 3;    // MAC address of endpoint
+    fixed64                     interface_handle     = 4;    // interface endpoint is reachable on
+    uint32                      useg_vlan            = 5;    // microseg vlan assigned to this EP
+    repeated types.IPAddress    ip_address           = 6;    // IP address(es) of endpoint
+    repeated uint32             security_group       = 7;    // security group list(s) endpoint is in
+}
+
+// EndpointRequestMsg is batched add or modify endpoint request
+message EndpointRequestMsg {
+  repeated EndpointSpec    request = 1;    // batched request
+}
+
+// EndpointStatus has the current status of an endpoint
+// TODO: capturing aging information, if any
+message EndpointStatus {
+  fixed64                     endpoint_handle     = 1;    // id of endpoint returned by HAL
+  repeated types.IPAddress    ip_address          = 2;    // IP addresses learnt, if any
+  bool                        learn_source_dhcp   = 3;    // TRUE if learnt via DHCP
+  bool                        learn_source_arp    = 4;    // TRUE if learnt via ARP/GARP
+  bool                        learn_source_rarp   = 5;    // TRUE if learnt via RARP
+  bool                        learn_source_config = 6;    // TRUE if learnt via configuration
+  bool                        is_endpoint_local   = 7;    // TRUE if endpoint is local
+}
+
+// EndpointResponse is response to EndpointSpec
+message EndpointResponse {
+  types.ApiStatus       api_status      = 1;    // API status code
+  EndpointStatus        endpoint_status = 2;    // endpoint status, if api succeeded
+}
+
+// EndpointResponseMsg is batched response to EndpointRequestMsg
+message EndpointResponseMsg {
+  repeated EndpointResponse    response = 1;    // batched response
+}
+
+// EndpointL2Key is L2 key of the endpoint
+// NOTE: An endpoint can have only one L2 key
+message EndpointL2Key {
+  fixed64    l2_segment_handle    = 1;
+  uint64     mac_address          = 2;
+}
+
+// EndpointL3Key is the L3 key of the endpoint
+// NOTE: An endpoint can have many L3 keys
+message EndpointL3Key {
+  types.IPAddress    ip_address = 1;    // IP address of the endpoint
+                                        // NOTE: tenant information is taken from meta
+}
+
+// Endpoint can be uniquely identified by its L2 or one of its L3 keys
+message EndpointKey {
+  oneof endpoint_l2_l3_key {
+    EndpointL2Key    l2_key = 1;    // L2 key
+    EndpointL3Key    l3_key = 2;    // L3 key
+  }
+}
+
+// Endpoint is accessible via its key or handle
+message EndpointKeyHandle {
+  oneof key_or_handle {
+    EndpointKey        endpoint_key        = 1;    // endpoint's key
+    fixed64            endpoint_handle     = 2;    // endpoint's handle
+  }
+}
+
+// EndpointFilter is attributes by which endpoints can be manipulated
+// or queried. As the endpoint database can be huge, this is provided
+// so that agent and HAL are less chatty when doing bulk deletes (e.g.
+// when a L2 segment is deleted or interfae goes down etc.)
+message EndpointFilter {
+  fixed64    l2_segment_handle    = 1;        // L2 segment handle
+  fixed64    interface_handle     = 2;        // interface handle
+}
+
+// EndpointDeleteRequest is used to delete an endpoint
+message EndpointDeleteRequest {
+  types.ObjectMeta       meta          = 1;    // object meta
+  oneof delete_by {
+    EndpointKeyHandle    key_or_handle = 2;    // Endpoint being deleted
+    EndpointFilter       filter        = 3;    // delete by interface and/or L2 segment etc.
+  }
+}
+
+// EndpointDeleteRequestMsg is batched endpoint delete request
+message EndpointDeleteRequestMsg {
+  repeated EndpointDeleteRequest    request = 1;    // batched request
+}
+
+// EndpointDeleteResponseMsg is used to delete a batch of Endpoints
+message EndpointDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// EndpointGetRequest is used to get information about an endpoint
+message EndpointGetRequest {
+  types.ObjectMeta     meta          = 1;    // object meta
+  EndpointKeyHandle    key_or_handle = 2;    // Endpoint being deleted
+}
+
+// EndpointGetRequestMsg is batched GET request for endpoints
+message EndpointGetRequestMsg {
+  repeated EndpointGetRequest    request = 1;    // batched get request
+}
+
+// EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
+message EndpointGetByInterfaceRequestMsg {
+  types.ObjectMeta     meta             = 1;    // object meta
+  fixed64              interface_handle = 2;    // interface of interest
+}
+
+// EndpointGetAllRequestMsg is used to GET all the endpoints
+message EndpointGetAllRequestMsg {
+}
+
+// EndpointStats is the statistics object for each Endpoint
+message EndpointStats {
+}
+
+// EndpointGetResponse captures all the information about one Endpoint
+message EndpointGetResponse {
+  EndpointSpec      spec   = 1;    // Endpoint config
+  EndpointStatus    status = 2;    // Endpoint operational status
+  EndpointStats     stats  = 3;    // Endpoint stats, if any
+}
+
+// EndpointGetResponseMsg is batched response to EndpointGetRequestMsg
+message EndpointGetResponseMsg {
+  types.ApiStatus                 api_status = 1;    // API status code
+  repeated EndpointGetResponse    response   = 2;    // batched get response
+}

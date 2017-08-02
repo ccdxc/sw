@@ -1,0 +1,27 @@
+{
+    "objects": [ 
+        {
+            "name": "seg",
+            "key_fields": [
+                {
+                    "type": "uint16_t",
+                    "name": "id"
+                }
+            ],
+            "data_fields": [
+                {
+                    "type": "uint8_t",
+                    "name": "type"
+                },
+                {
+                    "type": "vlan_id_t",
+                    "name": "underlay_encap"
+                },
+                {
+                    "type": "encap_t",
+                    "name": "overlay_encap"
+                }
+            ]
+        }
+    ]
+}

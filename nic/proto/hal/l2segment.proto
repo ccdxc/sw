@@ -1,0 +1,129 @@
+//------------------------------------------------------------------------------
+// protobuf specification for VLAN HAL APIs
+//
+// L2 segment is user provisioned vlan that will be configured on NIC uplink(s)
+// Endpoints or vNICs are put in useg vlan which will be mapped to user vlan
+// when packet is put on the wire towards uplink(s)
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package l2segment;
+
+// The L2 Segment service definition
+service L2Segment {
+  rpc L2SegmentCreate (L2SegmentRequestMsg) returns (L2SegmentResponseMsg) {}
+  rpc L2SegmentUpdate (L2SegmentRequestMsg) returns (L2SegmentResponseMsg) {}
+  rpc L2SegmentDelete (L2SegmentDeleteRequestMsg) returns (L2SegmentDeleteResponseMsg) {}
+  rpc L2SegmentGet (L2SegmentGetRequestMsg) returns (L2SegmentGetResponseMsg) {}
+}
+
+// L2SegmentKeyHandle is used to operate on a L2 segment either by its
+// segment id or HAL allocated handle
+message L2SegmentKeyHandle {
+  oneof key_or_handle {
+    uint32     segment_id      = 1;      // App allocated unique L2 segment id
+                                         // NOTE:
+                                         // 1. this is unique across all types of L2 segments
+                                         // 2. this is allocated by the HAL app
+    fixed64    l2segment_handle = 2;     // id of the L2 segment returned by HAL
+  }
+}
+
+// BroadcastFwdPolicy defines various forwarding options to deal with
+// broadcast traffic
+enum BroadcastFwdPolicy {
+  BROADCAST_FWD_POLICY_NONE     = 0;
+  BROADCAST_FWD_POLICY_DROP     = 1;    // drop action
+  BROADCAST_FWD_POLICY_FLOOD    = 2;    // flood in L2 segment
+}
+
+// MulticastFwdPolicy defines various forwarding options to deal with
+// multicast traffic
+enum MulticastFwdPolicy {
+  MULTICAST_FWD_POLICY_NONE         = 0;
+  MULTICAST_FWD_POLICY_FLOOD        = 1;    // flood mcast traffic in the L2 segment
+  MULTICAST_FWD_POLICY_REPLICATE    = 2;    // replicate based on mcast group subscription (or static config)
+  MULTICAST_FWD_POLICY_DROP         = 3;    // drop action
+}
+
+// L2SegmentSpec message is used to do add/mod of vlan
+message L2SegmentSpec {
+  types.ObjectMeta       meta                       = 1;    // common object meta
+  L2SegmentKeyHandle     key_or_handle              = 2;    // L2 segment being created/updated
+  types.L2SegmentType    segment_type               = 3;    // L2 segment type
+  MulticastFwdPolicy     mcast_fwd_policy           = 4;    // multicast forwarding policy
+  BroadcastFwdPolicy     bcast_fwd_policy           = 5;    // broadcast forwarding policy
+  types.EncapInfo        access_encap               = 6;    // wire encap for workload
+  types.EncapInfo        fabric_encap               = 7;    // wire encap on uplink(s)
+}
+
+// L2SegmentRequestMsg is batched add or modify L2 segment request
+message L2SegmentRequestMsg {
+  repeated L2SegmentSpec    request = 1;    // batched request
+}
+
+// L2SegmentStatus represents the current status of the L2 segment
+message L2SegmentStatus {
+  fixed64       l2segment_handle    = 1;    // id of the L2 segment returned by HAL
+  // TODO - add vNICs/uplinks this vlan is up on
+}
+
+// L2SegmentResponse is response to L2SegmentSpec
+message L2SegmentResponse {
+  types.ApiStatus       api_status        = 1;    // API status code
+  L2SegmentStatus       l2segment_status  = 2;    // L2 segment operational status
+}
+
+// L2SegmentResponseMsg is batched response to L2SegmentRequestMsg
+message L2SegmentResponseMsg {
+  repeated L2SegmentResponse    response = 1;    // batched response
+}
+
+// L2SegmentDeleteRequest is used to delete a L2 segment
+message L2SegmentDeleteRequest {
+  types.ObjectMeta      meta          = 1;    // object meta
+  L2SegmentKeyHandle    key_or_handle = 2;    // L2 segment being deleted
+}
+
+// L2SegmentDeleteRequestMsg is used to delete a batch of L2 segments
+message L2SegmentDeleteRequestMsg {
+  repeated L2SegmentDeleteRequest segment_id = 1;    // batched delete request
+}
+
+// L2SegmentDeleteResponseMsg is batched response to L2SegmentDeleteRequestMsg
+message L2SegmentDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// L2SegmentGetRequest is used to get information about a L2 Segment
+message L2SegmentGetRequest {
+  types.ObjectMeta      meta          = 1;    // object meta
+  L2SegmentKeyHandle    key_or_handle = 2;    // L2 segment key or handle
+}
+
+// L2SegmentGetRequestMsg is batched GET request for L2 segments
+message L2SegmentGetRequestMsg {
+  repeated L2SegmentGetRequest    request = 1;    // batched get request
+}
+
+// L2SegmentStats is the statistics object for each L2 segment
+message L2SegmentStats {
+  uint32    num_endpoints = 1;    // number of endpoints in this L2 segment
+}
+
+// L2SegmentGetResponse captures all the information about a L2 segment
+// only if api_status indicates success, other fields are valid
+message L2SegmentGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  L2SegmentSpec      spec       = 2;    // L2 segment configuration
+  L2SegmentStatus    status     = 3;    // operational state of L2 segment
+  L2SegmentStats     stats      = 4;    // stats of the L2 segment
+}
+
+// L2SegmentGetResponseMsg is the batched response to L2SegmentGetRequestMsg
+message L2SegmentGetResponseMsg {
+  repeated L2SegmentGetResponse    response = 1;    // batched get response
+}

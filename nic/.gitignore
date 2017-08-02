@@ -1,0 +1,12 @@
+gen/*
+obj/*
+core*
+model_sim/build/cap_model
+model_sim/build/model_cli
+model_sim/build/sample_client
+sknobs_gen/output.sknobs
+capri_tbl_rw.log
+proto/agents_proto
+proto/hal_proto
+proto/proto
+proto/types_proto

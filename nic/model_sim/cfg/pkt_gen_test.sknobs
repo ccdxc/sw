@@ -1,0 +1,9 @@
+// this is to get over a Scapy issue that sometimes assigns values > 64K for RandShort fields
++pkt_gen_test/IPV4\[0\]/id=0~65535
++pkt_gen_test/max_hdrs=3
++pkt_gen_test/pkt_length=65~140
++pkt_gen_test/ETH\[0\]/weight=100
++pkt_gen_test/IPV4\[0\]/weight=100
++pkt_gen_test/UDP\[0\]/weight=100
+
+

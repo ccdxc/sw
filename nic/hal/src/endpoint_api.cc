@@ -1,0 +1,44 @@
+#include <endpoint.hpp>
+#include <endpoint_api.hpp>
+#include <pd.hpp>
+#include <interface_api.hpp>
+
+namespace hal {
+
+l2seg_id_t
+ep_get_l2segid(ep_t *pi_ep)
+{
+    return pi_ep->l2_key.l2_segid;
+}
+
+mac_addr_t *
+ep_get_mac_addr(ep_t *pi_ep)
+{
+    return &(pi_ep->l2_key.mac_addr);
+}
+
+// ----------------------------------------------------------------------------
+// EP API: Set PD EP in PI EP
+// ----------------------------------------------------------------------------
+void 
+ep_set_pd_ep(ep_t *pi_ep, pd::pd_ep_t *pd_ep)
+{
+    pi_ep->pd = pd_ep;
+}
+
+if_t *
+ep_find_if_by_handle(ep_t *pi_ep)
+{
+    return (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&(pi_ep->if_handle));
+}
+
+void *
+ep_get_pd_ep(ep_t *pi_ep)
+{
+    return pi_ep->pd;
+}
+
+
+} // namespace hal
+
+

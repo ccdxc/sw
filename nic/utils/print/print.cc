@@ -1,0 +1,68 @@
+#include <base.h>
+#include <eth.h>
+#include <ip.h>
+
+//------------------------------------------------------------------------------
+// thread safe helper to stringify MAC address
+//------------------------------------------------------------------------------
+char *
+macaddr2str (mac_addr_t mac_addr)
+{
+    static thread_local char       macaddr_str[4][20];
+    static thread_local uint8_t    macaddr_str_next = 0;
+    char                           *buf;
+
+    buf = macaddr_str[macaddr_str_next++ & 0x3];
+    snprintf(buf, 20, "%02x:%02x:%02x:%02x:%02x:%02x",
+             mac_addr[0], mac_addr[1], mac_addr[2],
+             mac_addr[3], mac_addr[4], mac_addr[5]);
+    return buf;
+}
+
+//------------------------------------------------------------------------------
+// thread safe helper to stringify IPv4 address
+// NOTE: IP address is expected to be in host order
+//------------------------------------------------------------------------------
+char *
+ipv4addr2str (ipv4_addr_t v4_addr)
+{
+    static thread_local char       ipaddr_str[4][16];
+    static thread_local uint8_t    ipaddr_str_next = 0;
+    char                           *buf;
+
+    buf = ipaddr_str[ipaddr_str_next++ & 0x3];
+    snprintf(buf, 16, "%d.%d.%d.%d",
+             ((v4_addr >> 24) & 0xff), ((v4_addr >> 16) & 0xff),
+             ((v4_addr >> 8) & 0xff), (v4_addr & 0xff));
+    return buf;
+}
+
+//------------------------------------------------------------------------------
+// thread safe helper to stringify IPv6 address
+//------------------------------------------------------------------------------
+char *
+ipv6addr2str (ipv6_addr_t v6_addr)
+{
+    return "NOT-NOW";
+}
+
+//------------------------------------------------------------------------------
+// thread safe helper to stringify IP address
+//------------------------------------------------------------------------------
+char *
+ipaddr2str (ip_addr_t *ip_addr)
+{
+    switch (ip_addr->af) {
+    case IP_AF_IPV4:
+        return ipv4addr2str(ip_addr->addr.v4_addr);
+        break;
+
+    case IP_AF_IPV6:
+        return ipv6addr2str(ip_addr->addr.v6_addr);
+        break;
+
+    default:
+        return NULL;
+        break;
+    }
+}

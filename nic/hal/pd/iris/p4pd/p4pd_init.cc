@@ -1,0 +1,687 @@
+#include <base.h>
+#include <p4pd.h>
+#include <p4pd_api.hpp>
+#include <tcam.hpp>
+#include <hal_state_pd.hpp>
+#include <defines.h>
+
+using hal::pd::utils::Tcam;
+
+namespace hal {
+namespace pd {
+
+static hal_ret_t
+p4pd_input_mapping_native_init (void)
+{
+    uint32_t                             idx = 10;     // TODO: make this 0 before merging integration branch to master
+    input_mapping_native_swkey_t         key;
+    input_mapping_native_swkey_mask_t    mask;
+    input_mapping_native_actiondata      data;
+    hal_ret_t                            ret;
+    Tcam                                 *tcam;
+
+    // entry for IPv4 native packets
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 1;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.ipv4_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
+
+    // insert into the tcam now
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_NATIVE);
+    HAL_ASSERT(tcam != NULL);
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // entry for IPv6 native packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 1;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // entry for non-IP native packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // no-op entry for IPv4 transit packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 1;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // no-op entry for IPv6 transit packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 1;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set the appropriate mask for them
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.ipv4_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // no-op entry for non-IP tunnel packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set the appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_input_mapping_tunneled_init (void)
+{
+    uint32_t                             idx = 0;
+    input_mapping_tunneled_swkey_t       key;
+    input_mapping_tunneled_swkey_mask_t  mask;
+    input_mapping_tunneled_actiondata    data;
+    hal_ret_t                            ret;
+    Tcam                                 *tcam;
+
+    // no-op entry for IPv4 native packets
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 1;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+
+    // insert into the tcam now
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_TUNNELED);
+    HAL_ASSERT(tcam != NULL);
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // no-op entry for IPv6 native packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 1;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // no-op entry for non-IP native packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = 0;
+
+    // and set appropriate mask for them
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.ipv4_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // entry for IPv4 transit packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 1;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // entry for IPv6 transit packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 1;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set appropriate mask for them
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    // entry for non-IP tunnel packets
+    ++idx;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // set the key bits that we care
+    key.ipv4_valid = 0;
+    key.ipv6_valid = 0;
+    key.mpls_0_valid = 0;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+
+    // and set the appropriate mask for them
+    mask.ipv4_valid_mask = 0;
+    mask.ipv6_valid_mask = 0;
+    mask.mpls_0_valid_mask = 0;
+    mask.tunnel_metadata_tunnel_type_mask = 0;
+
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID;
+
+    // insert into the tcam now
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_l4_profile_init (void)
+{
+    hal_ret_t                ret;
+    DirectMap                *dm;
+    l4_profile_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
+    HAL_ASSERT(dm != NULL);
+    ret = dm->insert_withid(&data, 0);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("L4 profile table write failure, idx : 0, err : {}",
+                      ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_flow_info_init (void)
+{
+    uint32_t                idx = 0;
+    hal_ret_t               ret;
+    DirectMap               *dm;
+    flow_info_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" flow miss entry
+    data.actionid = FLOW_INFO_FLOW_MISS_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    // common flow hit & drop entry
+    ++idx;
+    data.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
+    data.flow_info_action_u.flow_info_flow_hit_drop.flow_index = 0;
+    data.flow_info_action_u.flow_info_flow_hit_drop.start_timestamp = 0;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_session_state_init (void)
+{
+    uint32_t                 idx = 0;
+    hal_ret_t                ret;
+    DirectMap                *dm;
+    session_state_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.actionid = SESSION_STATE_NOP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow state table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_flow_stats_init (void)
+{
+    uint32_t                 idx = 0;
+    hal_ret_t                ret;
+    DirectMap                *dm;
+    flow_stats_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.actionid = FLOW_STATS_FLOW_STATS_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    // claim one more entry to be in sync with flow info table
+    ++idx;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_tunnel_decap_copy_inner_init (void)
+{
+    uint32_t                              idx = 0;
+    hal_ret_t                             ret;
+    DirectMap                             *dm;
+    tunnel_decap_copy_inner_actiondata    data = { 0 };
+
+    return HAL_RET_OK;
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
+    HAL_ASSERT(dm != NULL);
+
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_UDP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_UDP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    ++idx;
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_twice_nat_init (void)
+{
+    uint32_t                idx = 0;
+    hal_ret_t               ret;
+    DirectMap               *dm;
+    twice_nat_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.actionid = TWICE_NAT_NOP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("twice nat table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_rewrite_init (void)
+{
+    uint32_t              idx = 0;
+    hal_ret_t             ret;
+    DirectMap             *dm;
+    rewrite_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.actionid = REWRITE_NOP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_tunnel_encap_update_inner (void)
+{
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_tunnel_rewrite_init (void)
+{
+    uint32_t                     idx = 0;
+    hal_ret_t                    ret;
+    DirectMap                    *dm;
+    tunnel_rewrite_actiondata    data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
+    HAL_ASSERT(dm != NULL);
+
+    // "catch-all" nop entry
+    data.actionid = TUNNEL_REWRITE_NOP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_table_defaults_init (void)
+{
+    // initialize all P4 ingress tables with default entries, if any
+    HAL_ASSERT(p4pd_input_mapping_native_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_input_mapping_tunneled_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
+
+    // initialize all P4 ingress tables with default entries, if any
+    HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_twice_nat_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
+    return HAL_RET_OK;
+}
+
+}    // namespace pd
+}    // namespace hal
+

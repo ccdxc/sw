@@ -1,0 +1,7 @@
+---
+targets:
+  - [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo)" ]
+image:
+  name: "pensando/nic"
+  bind_dir: "/hack/saratk/nic"
+rebase: true

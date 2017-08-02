@@ -1,0 +1,59 @@
+include ../build.mk
+
+SRC_DIR = .
+OBJ_DIR = ../obj
+GEN_DIR = ../gen
+GEN_TEST_RESULTS_DIR = ../gen/test_results
+GTEST_ROOT = ../third-party/googletest-release-1.8.0/googletest
+LDFLAGS = -L../obj/ -ltrace -lpthread
+INC = -I ../include \
+		-I ../hal \
+		-I ../gen \
+		-I $(SRC_DIR)/trace \
+		-I $(SRC_DIR)/bitmap \
+		-I $(SRC_DIR)/slab \
+		-I $(SRC_DIR)/twheel \
+		-I $(SRC_DIR)/shm \
+		-I $(SRC_DIR)/ht \
+		-I $(SRC_DIR)/pt \
+		-I $(SRC_DIR)/thread \
+		-I $(SRC_DIR)/print \
+		-I $(SRC_DIR)/../third-party/spdlog/include
+
+GTEST_INC = $(INC) \
+			-I $(GTEST_ROOT)/include \
+
+CPP_SRC_FILES :=    $(SRC_DIR)/slab/slab.cc \
+                    $(SRC_DIR)/twheel/twheel.cc \
+                    $(SRC_DIR)/shm/shmseg.cc \
+					$(SRC_DIR)/ht/ht.cc \
+					$(SRC_DIR)/pt/pt.cc \
+                    $(SRC_DIR)/bitmap/bitmap.cc \
+					$(SRC_DIR)/indexer/indexer.cc \
+					$(SRC_DIR)/thread/thread.cc \
+					$(SRC_DIR)/print/print.cc \
+					$(SRC_DIR)/trace/trace.cc \
+
+CPP_OBJ_FILES := $(patsubst %.cc, %.o, $(CPP_SRC_FILES))
+
+$(CPP_OBJ_FILES): %.o: %.cc | $(OBJ_DIR)
+	@echo Compiling $@
+	$(CXX) $(INC) $(CPPFLAGS) -fpic -c $< -o $(OBJ_DIR)/$(shell basename $@)
+	$(CXX) -shared -o $(OBJ_DIR)/lib$(notdir $(basename $@)).so $(OBJ_DIR)/$(shell basename $@)
+
+all: $(CPP_OBJ_FILES)
+	$(CXX) $(GTEST_INC) $(CPPFLAGS) -Wno-sign-compare $(SRC_DIR)/slab/slab_test.cc $(GTEST_ROOT)/make/gtest.a $(OBJ_DIR)/slab.o -lpthread -o $(OBJ_DIR)/slab_test
+	$(CXX) $(GTEST_INC) $(CPPFLAGS) -Wno-sign-compare $(SRC_DIR)/twheel/twheel_test.cc $(GTEST_ROOT)/make/gtest.a $(OBJ_DIR)/twheel.o $(OBJ_DIR)/slab.o -lpthread -o $(OBJ_DIR)/twheel_test
+	$(CXX) $(GTEST_INC) $(CPPFLAGS) -Wno-sign-compare $(SRC_DIR)/pt/pt_test.cc $(GTEST_ROOT)/make/gtest.a $(OBJ_DIR)/pt.o $(OBJ_DIR)/slab.o -lpthread $(LDFLAGS) -ltrace -o $(OBJ_DIR)/pt_test
+	$(CXX) $(GTEST_INC) $(CPPFLAGS) -Wno-sign-compare $(SRC_DIR)/indexer/indexer_test.cc $(GTEST_ROOT)/make/gtest.a $(OBJ_DIR)/indexer.o $(LDFLAGS) -o $(OBJ_DIR)/indexer_test
+	$(CXX) $(GTEST_INC) $(CPPFLAGS) -Wno-sign-compare $(SRC_DIR)/shm/shmseg_test.cc $(GTEST_ROOT)/make/gtest.a $(OBJ_DIR)/shmseg.o -lpthread -lrt -o $(OBJ_DIR)/shmseg_test
+
+test:
+	LD_LIBRARY_PATH=$(OBJ_DIR) ../obj/indexer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/indexer_test.xml"
+	LD_LIBRARY_PATH=$(OBJ_DIR) ../obj/twheel_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/twheel_test.xml"
+	LD_LIBRARY_PATH=$(OBJ_DIR) ../obj/slab_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/slab_test.xml"
+	LD_LIBRARY_PATH=$(OBJ_DIR) ../obj/shmseg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/shmseg_test.xml"
+
+clean:
+	rm -rf $(OBJ_DIR)/*_test
+	rm -rf $(GEN_TEST_RESULTS_DIR)/*.xml

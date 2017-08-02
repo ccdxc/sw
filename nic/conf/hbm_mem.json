@@ -1,0 +1,60 @@
+{
+    "regions": [
+        {
+            "name": "p4_program",
+            "size_kb": 131072
+        },
+        {
+            "name": "atomic_stats",
+            "size_kb": 131072
+        },
+        {
+            "name": "flow_hash",
+            "size_kb": 131072
+        },
+        {
+            "name": "flow_hash_oflow",
+            "size_kb": 1024
+        },
+        {
+            "name": "flow_info",
+            "size_kb": 65536
+        },
+        {
+            "name": "flow_state",
+            "size_kb": 65536
+        },
+        {
+            "name": "flow_stats",
+            "size_kb": 65536
+        },
+        {
+            "name": "mcast_repl",
+            "size_kb": 4096
+        },
+        {
+            "name": "tcpcb",
+            "size_kb": 8192
+        },
+        {
+            "name": "tlscb",
+            "size_kb": 2048
+        },
+        {
+            "name": "nmdr",
+            "size_kb": 2048 
+        },
+        {
+            "name": "nmpr-small",
+            "size_kb": 16384
+        },
+        {
+            "name": "nmpr-big",
+            "size_kb": 32768
+        },
+        {
+            "name": "ipsec-cb",
+            "size_kb": 64
+        }
+    ]
+}

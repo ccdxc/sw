@@ -1,0 +1,180 @@
+#ifndef __BASE_H__
+#define __BASE_H__
+
+#include <stdint.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <trace.hpp>
+
+
+#define __IN__
+#define __OUT__
+#define __INOUT__
+
+#define TRUE                                         1
+#define FALSE                                        0
+
+#define __PACK__ __attribute__ ((packed))
+
+// MAC address
+#define ETH_ADDR_LEN                                 6
+typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
+
+#define VRF_BIT_WIDTH                                10
+#define BD_BIT_WIDTH                                 10
+#define FW_NORM_ACTION_BIT_WIDTH                     2
+
+#define HAL_IFINDEX_INVALID                          0
+#define HAL_HANDLE_INVALID                           0
+#define HAL_TENANT_ID_INVALID                        0
+#define HAL_L2SEGMENT_ID_INVALID                     0
+#define HAL_PC_INVALID                               0xFF
+#define HAL_PORT_INVALID                             0xFF
+
+//------------------------------------------------------------------------------
+// basic types used in the packet processing path
+// WARNING: some of these types may have more bits than needed (like VRF, BD
+// etc.), so be careful in using these as key fields of other lookup data
+// structures 
+//------------------------------------------------------------------------------
+typedef uint64_t        hal_handle_t;
+typedef uint16_t        etype_t;
+typedef uint16_t        bd_id_t;       // TBD - revisit
+typedef uint16_t        vlan_id_t;
+typedef uint16_t        vrf_id_t;
+typedef uint16_t        vif_id_t;
+typedef uint32_t        rule_id_t;
+typedef uint16_t        policer_id_t;
+typedef uint16_t        vlan_id_t;
+typedef uint16_t        lport_id_t;     // TBD - revisit
+typedef uint32_t        ifindex_t;
+typedef uint32_t        seg_id_t;
+typedef uint32_t        encap_id_t;
+
+
+#define __ASSERT__(x)            assert(x)
+
+#define HAL_ABORT(cond)                                    \
+do {                                                       \
+    if (!(cond)) {                                         \
+        abort();                                           \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT_RETURN(cond, rv)                        \
+do {                                                       \
+    if (!(cond)) {                                         \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
+        __ASSERT__(FALSE);                                 \
+        return rv;                                         \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT_RETURN_VOID(cond)                       \
+do {                                                       \
+    if (!(cond)) {                                         \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
+        __ASSERT__(FALSE);                                 \
+        return;                                            \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT_GOTO(cond, label)                       \
+do {                                                       \
+    if (!(cond)) {                                         \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
+        __ASSERT__(FALSE);                                 \
+        goto label;                                        \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT(cond)                             __ASSERT__(cond)
+#define HAL_NOP                                      ((void) FALSE)
+
+//-----------------------------------------------------------------------------
+// X-Macro for defining enums (generates enum definition and string formatter)
+//
+// Example:
+//
+// #define SAMPLE_ENUM_ENTRIES(ENTRY)           
+//    ENTRY(OK, 0, "ok")                        
+//    ENTRY(ERR, 1, "err")
+//
+// ENUM_DEFINE(sample_enum_t, SAMPLE_ENUM_ENTRIES)
+//------------------------------------------------------------------------------
+
+#define _ENUM_FIELD(_name, _val, _desc) _name = _val,
+#define _ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
+
+#define DEFINE_ENUM(_typ, _entries)                                     \
+    typedef enum { _entries(_ENUM_FIELD) } _typ;                        \
+    inline std::ostream& operator<<(std::ostream& os, _typ c)           \
+    {                                                                   \
+        switch (c) {                                                    \
+            _entries(_ENUM_CASE);                                       \
+        }                                                               \
+        return os;                                                      \
+    }
+
+
+//------------------------------------------------------------------------------
+// TODO - following are strictly temporary !!
+//        use them when one off allocation is needed, otherwise use slabs
+//        we can overload new operator later on
+//------------------------------------------------------------------------------
+#define HAL_MALLOC(type, size)        malloc(size)
+#define HAL_CALLOC(type, size)        calloc(1, size)
+#define HAL_MALLOCZ(type, size)       calloc(1, size)
+#define HAL_FREE(type, ptr)           ::free(ptr)
+
+//------------------------------------------------------------------------------
+// TODO: we need atomic increment operations for ARM
+// gnu gcc builin functions aren't availabe for ARM, ARM has its own library
+//------------------------------------------------------------------------------
+#define HAL_ATOMIC_INC_UINT32(ptr, val)    (*(ptr) += (val))
+#define HAL_ATOMIC_DEC_UINT32(ptr, val)    (*(ptr) -= (val))
+
+//------------------------------------------------------------------------------
+// HAL return codes
+// NOTE: please number these enums properly for easier troubleshooting
+//------------------------------------------------------------------------------
+#define HAL_RET_ENTRIES(ENTRY)                                          \
+    ENTRY(HAL_RET_OK,                         0, "ok")                  \
+    ENTRY(HAL_RET_OOM,                        1, "out of memory error")       \
+    ENTRY(HAL_RET_INVALID_ARG,                2, "invalid arg")         \
+    ENTRY(HAL_RET_INVALID_OP,                 3, "invalid operation")   \
+    ENTRY(HAL_RET_ENTRY_NOT_FOUND,            4, "lookup failure")      \
+    ENTRY(HAL_RET_ENTRY_EXISTS,               5, "already present")     \
+    ENTRY(HAL_RET_NO_RESOURCE,                6, "resource exhaustion") \
+    ENTRY(HAL_RET_BATCH_FAIL,                 7, "batch processing failed") \
+    ENTRY(HAL_RET_BATCH_PARTIAL_FAIL,         8, "partial failure in batch processing") \
+    ENTRY(HAL_RET_HW_FAIL,                    9, "read/write into hw failure") \
+    ENTRY(HAL_RET_TABLE_FULL,                 10,"hw table full")       \
+    ENTRY(HAL_RET_OTCAM_FULL,                 11,"otcam table full")    \
+    ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail") \
+    ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail") \
+    ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")  \
+    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            15,"flow oflow table full") \
+    ENTRY(HAL_RET_FLOW_LIMT_REACHED,          16,"allowed flow limit reached") \
+    ENTRY(HAL_RET_DUP_FREE,                   17,"freeing multiple times") \
+    ENTRY(HAL_RET_TENANT_NOT_FOUND,           18,"tenant not found")    \
+    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            19,"L2 segment not found") \
+    ENTRY(HAL_RET_IF_NOT_FOUND,               20,"interface not found") \
+    ENTRY(HAL_RET_EP_NOT_FOUND,               21,"endpoint not found")  \
+    ENTRY(HAL_RET_FLOW_NOT_FOUND,             22,"flow not found")      \
+    ENTRY(HAL_RET_SESSION_NOT_FOUND,          23,"session not found")   \
+    ENTRY(HAL_RET_HANDLE_INVALID,             24,"invalid hal handle")  \
+    ENTRY(HAL_RET_LIF_NOT_FOUND,              25,"LIF not found")       \
+    ENTRY(HAL_RET_HW_PROG_ERR,                26,"Error while programming h/w") \
+    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 27, "qsecurity profile not found") \
+                                                                        \
+    ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
+
+
+DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
+
+#undef HAL_RET_ENTRIES
+
+#endif    // __BASE_H__
+

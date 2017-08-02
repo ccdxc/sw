@@ -1,0 +1,100 @@
+//------------------------------------------------------------------------------
+// protobuf specification for tcp_proxy_cb
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package tcp_proxy_cb;
+
+// The tcp proxy cb service definition
+service TcpProxyCb {
+  rpc TcpProxyCbCreate (TcpProxyCbRequestMsg) returns (TcpProxyCbResponseMsg) {}
+  rpc TcpProxyCbUpdate (TcpProxyCbRequestMsg) returns (TcpProxyCbResponseMsg) {}
+  rpc TcpProxyCbDelete (TcpProxyCbDeleteRequestMsg) returns (TcpProxyCbDeleteResponseMsg) {}
+  rpc TcpProxyCbGet (TcpProxyCbGetRequestMsg) returns (TcpProxyCbGetResponseMsg) {}
+}
+
+// TcpProxyCbKeyHandle is used to operate on a tcp_proxy_cb either by its key or handle
+message TcpProxyCbKeyHandle {
+  oneof key_or_handle {
+    uint32     tcp_proxy_cb_id          = 1;    // unique tcp_proxy_cb id allocated by app
+    fixed64    tcp_proxy_cb_handle      = 2;    // tcp_proxy_cb handle returned by HAL
+  }
+}
+
+// TcpProxyCbSpec captures all the tcp_proxy_cb level configuration
+message TcpProxyCbSpec {
+  types.ObjectMeta      meta                       = 1;    // common object meta
+  TcpProxyCbKeyHandle   key_or_handle              = 2;    // tcp_proxy_cb being created/updated
+  uint32                rcv_nxt                    = 3;
+  uint32                snd_nxt                    = 4;
+  uint32                snd_una                    = 5;
+}
+
+// TcpProxyCbRequestMsg is batched add or modify tcp_proxy_cb request
+message TcpProxyCbRequestMsg {
+  repeated TcpProxyCbSpec    request = 1;    // batched request
+}
+
+// TcpProxyCbStatus is the operational status of a given tcp_proxy_cb
+message TcpProxyCbStatus {
+  fixed64    tcp_proxy_cb_handle     = 1;    // id of tcp_proxy_cb returned by HAL
+}
+
+// TcpProxyCbResponse is response to TcpProxyCbSpec
+message TcpProxyCbResponse {
+  types.ApiStatus        api_status            = 1;    // API status code
+  TcpProxyCbStatus       tcp_proxy_cb_status   = 2;    // tcp_proxy_cb status, if api succeeded
+}
+
+// TcpProxyCbResponseMsg is batched response to TcpProxyCbRequestMsg
+message TcpProxyCbResponseMsg {
+  repeated TcpProxyCbResponse    response = 1;    // batched response
+}
+
+// TcpProxyCbDeleteRequest is used to delete a tcp_proxy_cb
+message TcpProxyCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  TcpProxyCbKeyHandle     key_or_handle = 2;    // TcpProxyCb key or handle
+}
+
+// TcpProxyCbDeleteRequestMsg is used to delete a batch of tcp_proxy_cbs
+message TcpProxyCbDeleteRequestMsg {
+  repeated TcpProxyCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// TcpProxyCbDeleteResponseMsg is batched response to TcpProxyCbDeleteRequestMsg
+message TcpProxyCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// TcpProxyCbGetRequest is used to get information about a tcp_proxy_cb
+message TcpProxyCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  TcpProxyCbKeyHandle       key_or_handle = 2;    // TcpProxyCb key or handle
+}
+
+// TcpProxyCbGetRequestMsg is batched GET requests for tcp_proxy_cbs
+message TcpProxyCbGetRequestMsg {
+  repeated TcpProxyCbGetRequest    request = 1;    // batched get request
+}
+
+// TcpProxyCbStats is the statistics object for each tcp_proxy_cb
+message TcpProxyCbStats {
+}
+
+// TcpProxyCbGetResponse captures all the information about a tcp_proxy_cb
+// only if api_status indicates success, other fields are valid
+message TcpProxyCbGetResponse {
+  types.ApiStatus        api_status = 1;    // API status code
+  TcpProxyCbSpec         spec       = 2;    // tcp_proxy_cb configuration
+  TcpProxyCbStatus       status     = 3;    // operational state of tcp_proxy_cb
+  TcpProxyCbStats        stats      = 4;    // stats of the tcp_proxy_cb
+}
+
+// TcpProxyCbGetResponseMsg is batched response to TcpProxyCbGetRequestMsg
+message TcpProxyCbGetResponseMsg {
+  repeated TcpProxyCbGetResponse    response = 1;    // batch get response
+}
