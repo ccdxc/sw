@@ -1,0 +1,3 @@
+[submodule "nic/asic"]
+	path = nic/asic
+	url = git@github.com:pensando/asic.git
