@@ -1,0 +1,115 @@
+# Template of the output for the failed test case.
+meta:
+    id : TEST_CASE
+id            : None # Test case ID	
+status        : None # Passed/Failed/Interrupted 
+steps_passed  : None # Steps passed
+step_failed   : None # If failed or interrupted which step.
+     
+session:
+    # List of steps in a session
+    - step:
+        trigger:
+            packets:
+                # List of packets
+                # Instance of Template: testobjects/packet
+                - packet:
+                    id     : None # Packet id as specified in the spec.
+                    spkt   : None # Dump of scapy packet sent out.
+                    hdump  : None # Hexdump of the packet.
+                    ports  : None # Which ports was the packet sent out.
+                    count  : None # How many times was the packet sent out on each port. 
+            descriptors:
+                # List of Descriptors
+                - descriptor:
+                    object  : None # TBD 
+        result:
+            packets:
+                missing:
+                    - packet:
+                        id     : None # Packet id as specified in the spec.
+                        spkt   : None # Dump of scapy packet actual.
+                        hdump  : None # Hexdump of the packet receivd.
+                        ports   : None # Expected ports.    
+                        
+                extra:
+                    - packet:
+                        spkt   : None # Dump of scapy packet.
+                        hdump  : None # Hexdump of the packet receivd.
+                        port   : None # Received Port.    
+               
+                mismatch:
+                    - packet:
+                        id         : None # Packet ID
+                        actual:
+                            spkt   : None # Dump of scapy packet actual.
+                            hdump  : None # Hexdump of the packet receivd.
+                            port   : None # Received Port.    
+                        expected:
+                            id     : None # Packet id as specified in the spec.
+                            spkt   : None # Dump of scapy packet actual.
+                            hdump  : None # Hexdump of the packet receivd.
+                            ports   : None # Expected ports.    
+                        mismatch:
+                            headers:
+                                mismatch:
+                                    hdr_abc : 
+                                        field_x :
+                                            expected : None # Expected value
+                                            actual : None # Received value
+                                        field_y :
+                                            expected : None # Expected value
+                                            actual : None # Received value
+                                    hdr_efg : 
+                                        field_xa :
+                                            expected : None # Expected value
+                                            actual : None # Received value
+                                        field_yb :
+                                            expected : None # Expected value
+                                            actual : None # Received value
+                matched:
+                     - packet:
+                         id     : None # Packet id as specified in the spec.
+                         spkt   : None # Dump of scapy packet actual.
+                         hdump  : None # Hexdump of the packet receivd.
+                         port   : None # Received Port.    
+            descriptors:
+                missing:
+                    - descriptor:
+                        id       : None # Object ID
+                        object   : None # Object    
+                        ring     : None # Ring.    
+                        
+                extra:
+                    - descriptor:
+                        id       : None # Object ID
+                        object   : None # Object    
+                        ring     : None # Ring.    
+               
+                mismatch:
+                    - descriptor:
+                        actual:
+                            id       : None # Object ID
+                            object   : None # Object    
+                            ring     : None # Ring.    
+                        expected:
+                            id       : None # Object ID
+                            object   : None # Object    
+                            ring     : None # Ring.    
+                        mismatch:
+                matched:
+                     - descriptor:
+                            id       : None # Object ID
+                            object   : None # Object    
+                            ring     : None # Ring.    
+            snapshots:
+                mismatch_snapshots:
+                    - entry:
+                        object : None
+                        mismatch:
+                            field_x : 
+                                expected : None # Expected value
+                                actual : None # Read value value
+                            field_y : 
+                                expected : None # Expected value
+                                actual : None # Read value value

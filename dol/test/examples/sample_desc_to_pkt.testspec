@@ -1,0 +1,76 @@
+# Test Spec
+config_filter:
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any # Local QPair
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any 
+    flow        : filter/proto=TCP,dport=80
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : PKT100
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=INFRA_UT_BUFFER
+        fields:
+           size: ref://testcase/packets/id=PKT100/hdrsize
+           data: ref://testcase/packets/id=PKT100/hdrbytes
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=INFRA_UT_BUFFER
+        fields:
+           size: ref://testcase/packets/id=PKT100/payloadsize
+           data: ref://testcase/packets/id=PKT100/payloadbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESC_INFRA_UT_TX
+        fields:
+            num_buffs   : 2
+            b0_address  : ref://testcase/buffers/id=BUF1/address
+            b0_len      : ref://testcase/buffers/id=BUF1/size
+            b1_address  : ref://testcase/buffers/id=BUF2/address
+            b1_len      : ref://testcase/buffers/id=BUF2/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/lif/queues/id=SQ/rings/id=RING0
+            # Translates to RING0.Post(DESC1)
+    doorbell:
+        object: ref://testcase/config/src/lif/queues/id=SQ/rings/id=RING0/doorbell
+        fields:
+            updbits : 1
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT100
+            port    : ref://testcase/config/src/tenant/uplinks/id=ANY

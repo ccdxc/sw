@@ -1,0 +1,8 @@
+This is the test directory. It contains the list of all test modules.
+
+examples    - Sample test modules for reference.
+l2uc        - L2 Unicast test module.
+l3uc        - L3 Unicast test module.
+l2mc        - L2 Multicast test module.
+l2bc        - L2 Broadcast test module.
+rdma        - RDMA test module.

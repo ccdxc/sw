@@ -1,0 +1,8 @@
+meta:
+    id      : ETHERNET
+    scapy   : Ether
+    size    : 14
+fields:
+    src : macaddr/001C.EB00.DA01
+    dst : macaddr/001C.EB00.DA02
+    type: const/0xFFFF

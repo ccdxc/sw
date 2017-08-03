@@ -1,0 +1,12 @@
+DOL Infra - Contains following modules.
+
+cmn     : Common Infra
+dcm     : DOL Config Manager.
+ddf     : DOL Data Factory
+ddv     : DOL Data Verification
+dpf     : DOL Packet Factory
+dpv     : DOL Packet Verification
+dmm     : DOL Memory Manager
+dsh     : DOL Shell
+fmw     : Main Framework
+tcm     : Test Case Manager.

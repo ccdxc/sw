@@ -1,0 +1,6 @@
+meta:
+    id      : CRC
+    scapy   : CRC
+    size    : 4
+fields:
+    data : const/0

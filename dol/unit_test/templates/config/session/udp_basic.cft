@@ -1,0 +1,15 @@
+# Flow generation configuration template.
+
+_meta:
+    id: UDP_BASIC
+
+proto: udp
+
+entries:
+    - entry:
+        responder: const/128
+        initiator: random/40000/48000
+
+    - entry:
+        responder: const/256
+        initiator: random/32000/40000

@@ -1,0 +1,71 @@
+# Ethernet RX Sample TestSpec file.
+config_filter:
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any # Local QPair
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any 
+    flow        : filter/any
+
+packets:
+    - packet:
+        id          : PKT1
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     : 
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/vlan
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+buffers:
+    - buffer:
+        id      : BUF1
+        size    : 4096
+        data    : ref://testcase/packets/id=PKT1/payloadbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESC_ETH_RX
+        fields  :
+            address : ref://testcase/buffers/id=BUF1/address
+            length  : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : COMP_DESC
+        template: ref://factory/template/id=DESC_ETH_RX_COMPLETION
+        fields  :
+            queue_id: #TODO
+            rss_type: #TODO
+            cindex  : #TODO
+
+trigger:
+    packets:
+        - packet:
+            id  : ref://testcase/packets/id=PKT1
+            port: ref://testcase/config/src/tenant/uplinks/id=ANY
+
+expect:
+    descriptors:
+        - descriptor:
+            id  : ref://testcase/descriptors/id=DESC1
+            ring: ref://testcase/config/dst/lif/queues/id=RQ/rings/id=RING0
+
+        - descriptor:
+            id  : ref://testcase/descriptors/id=COMP_DESC1
+            ring: ref://testcase/config/dst/lif/queues/id=RCQ/rings/id=RING0

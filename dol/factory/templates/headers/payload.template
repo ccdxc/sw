@@ -1,0 +1,8 @@
+meta:
+    id      : PAYLOAD
+    scapy   : PAYLOAD
+    size    : 0
+    pattern : pattincr/1/255/1
+
+fields:
+    data: 0 

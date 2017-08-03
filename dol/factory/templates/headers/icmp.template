@@ -1,0 +1,20 @@
+meta:
+    id      : ICMP
+    scapy   : ICMP
+    size    : 0
+
+fields:
+    type    : 0
+    code    : 0
+    chksum  : None
+    id      : 0
+    seq     : 0
+    ts_ori  : None
+    ts_rx   : None
+    ts_tx   : None
+    gw      : 0.0.0.0
+    ptr     : None
+    reserved: None
+    addr_mask: 0.0.0.0
+    unused: 0
+

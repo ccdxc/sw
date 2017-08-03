@@ -1,0 +1,16 @@
+# Ethernet TX Descriptor Object Template
+meta:
+    id      : DESC_ETH_TX
+    size    : 16
+
+address     : None
+vlan_tag    : None
+length      : None
+mss         : None
+enc         : const/0x0
+hdr_len     : const/0x0
+mode_o      : const/0x0
+bit_e       : const/0x0
+bit_c       : const/0x1
+bit_v       : const/0x0
+rsvd        : const/0x0

@@ -1,0 +1,13 @@
+meta:
+    id      : PAYLOAD_FF64
+
+size: 64
+data: FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+      FF FF FF FF FF FF FF FF
+

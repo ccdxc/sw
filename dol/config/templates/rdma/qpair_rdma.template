@@ -1,0 +1,15 @@
+# RDMA QPair Object Template
+meta:
+    id  : QPAIR_RDMA
+    base: ref://store/templates/id=QPAIR
+
+id      : None
+service : None
+pd      : None # Object Ref. to templates/config/objects/rdma/pd
+sq      : None # Object Ref. set by .Configure()
+rq      : None # Object Ref. set by .Configure()
+sq_cq   : None # Object Ref. set by .Configure()
+rq_cq   : None # Object Ref. set by .Configure()
+srq     : None # Object Ref. set by .Configure()
+sq_size : random/64/128
+rq_size : random/64/128

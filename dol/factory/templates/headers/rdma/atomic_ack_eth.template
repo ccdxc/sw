@@ -1,0 +1,7 @@
+meta:
+    id      : AtomicAckETH
+    scapy   : AtomicAckETH
+    size    : None
+
+fields:
+    orig_remdt  : const/0x0

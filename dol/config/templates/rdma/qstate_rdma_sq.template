@@ -1,0 +1,12 @@
+# RDMA Send Queue Template
+meta:
+    id  : QSTATE_RDMA_SQ
+    base: ref://store/templates/id=QSTATE 
+
+service     : None # (ATTR) template/config/rdma_qpair/service
+tx_psn      : None #
+pmtu        : None #
+dst_qp      : None #
+
+ring_sq     : None # (OBJ) template/config/objects/rdma/ID=RDMA_SQ_RING
+ring_rrq    : None # (OBJ) template/config/objects/rdma/ID=ring_rrq

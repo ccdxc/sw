@@ -1,0 +1,9 @@
+# RDMA Completion QueueState Template
+meta:
+    id: QSTATE_RDMA_CQ
+
+eqid        : None # (ATTR)
+color       : None #
+arm         : None #
+
+ring_cq     : None # (OBJ) template/config/objects/rdma/ID=ring_cq

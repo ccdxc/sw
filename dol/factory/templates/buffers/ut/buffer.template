@@ -1,0 +1,10 @@
+# Framework UT Descriptor Template
+meta:
+    id      : INFRA_UT_BUFFER
+    package : factory.objects.ut
+    module  : buffer
+    objname : InfraUtBufferObject
+
+address : None
+size    : None
+data    : None

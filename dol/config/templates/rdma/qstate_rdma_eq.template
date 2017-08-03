@@ -1,0 +1,7 @@
+# RDMA Event QueueState Template
+meta:
+    id: QSTATE_RDMA_EQ
+
+int_num     : None # (ATTR) 
+
+ring_eq     : None # (OBJ) template/config/objects/rdma/ID=ring_eq

@@ -1,0 +1,90 @@
+# Testcase Specification Config Section Template
+meta:
+    id: TESTSPEC
+
+config_filter:
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+    flow: filter/any
+    maxflows: None
+    rdma:
+        lqpair  : filter/any # Local QPair
+        rqpair  : filter/any # Remote QPair
+        session : filter/any 
+
+packets:
+    - packet:
+        id          : None
+        clone       : None
+        payloadsize : None
+        template    : None
+        encaps      : None
+        headers     : None
+
+match_profiles:
+    - profile:
+        id          : None
+        ign_fields  :
+            - None
+            - None
+
+descriptors:
+    - descriptor:
+        id      : None
+        template: None
+        fields  : None
+
+buffers:
+    - buffer:
+        id      : None
+        template: None
+        fields:
+
+state:
+    - entry:
+        object: None
+        fields:
+
+session:
+    - step:
+        # For session based Test Specs, the 'Trigger' and 'Expectation'
+        # sections will be inside 'step'
+        trigger:
+            packets:
+                - packet:
+                    object  : None
+                    port    : None
+
+            descriptors:
+                - descriptor:
+                    object  : None
+                    ring    : None
+                    
+            doorbell:
+                object: None # Instance of Doorbell object.
+                fields:
+                    updbits : None
+                    incr    : None
+
+        expect:
+            packets:
+                - packet:
+                    object        : None
+                    port          : None
+                    match_profile : None # Which match profile to use for this packet.
+
+            descriptors:
+                - descriptor:
+                    object      : None  # Expected DESCRIPTOR object
+                    ring        : None  # Expected RING
+
+            buffers:
+                - buffer:
+                    object      : None  # Expected BUFFER object
+                    rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc

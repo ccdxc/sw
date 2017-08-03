@@ -1,0 +1,10 @@
+# Testcase Spec Input Section Template
+_meta:
+    id: INPUT
+
+object:
+    poe         :
+    template    :
+    payloadsize :
+    headers     :
+

@@ -1,0 +1,50 @@
+# This file contains the list of DOL test modules.
+modules:
+    - module:
+        name    : PKT_TO_PKT_MATCH
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt.testspec
+
+    - module:
+        name    : PKT_TO_PKT_MISMATCH
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt_mismatch.testspec
+
+    - module:
+        name    : PKT_TO_PKT_MISSING
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt_missing.testspec
+
+    - module:
+        name    : PKT_TO_PKT_EXTRA
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt_extra.testspec
+
+    - module:
+        name    : PKT_TO_PKT
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt.testspec
+
+    - module:
+        name    : PKT_SESSION
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt_session.testspec
+
+    - module:
+        name    : PKT_TCP_OPTS
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_tcp_options.testspec
+
+    - module:
+        name    : PKT_VXLAN
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_vxlan.testspec
+

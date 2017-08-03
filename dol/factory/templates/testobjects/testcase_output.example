@@ -1,0 +1,228 @@
+details:
+  1:
+    id: 1
+    meta:
+      id: TEST_CASE
+    session:
+    - step:
+        result:
+          descriptors:
+            mismatch:
+            - descriptor:
+                actual:
+                  address:
+                    data: '00000007070707070000'
+                    id: 1
+                    size: 10
+                  field_a: 8
+                  field_b: 1
+                  field_c: 1
+                expected:
+                  address:
+                    data: '00000000000000000000'
+                    id: 1
+                    size: 10
+                  field_a: 1
+                  field_b: 1
+                  field_c: 1
+                id: 1
+                mismatch:
+                  mismatch_fields:
+                    address:
+                      mismatch_fields:
+                        data:
+                          actual: '00000007070707070000'
+                          expected: '00000000000000000000'
+                    field_a:
+                      actual: 8
+                      expected: 1
+            - descriptor:
+                actual:
+                  address:
+                    data: '00000007070707070000'
+                    id: 2
+                    size: 10
+                  field_a: 5
+                  field_b: 1
+                  field_c: 1
+                expected:
+                  address:
+                    data: '00000000000000000000'
+                    id: 2
+                    size: 10
+                  field_a: 1
+                  field_b: 1
+                  field_c: 1
+                id: 1
+                mismatch:
+                  mismatch_fields:
+                    address:
+                      mismatch_fields:
+                        data:
+                          actual: '00000007070707070000'
+                          expected: '00000000000000000000'
+                    field_a:
+                      actual: 5
+                      expected: 1
+          packets:
+            mismatch:
+            - packet:
+                actual:
+                  port: 1
+                  spkt: !!omap
+                  - Ethernet: !!omap
+                    - dst: 00:00:99:99:00:02
+                    - src: 00:00:99:99:00:01
+                    - type: '0x8100'
+                  - 802.1Q: !!omap
+                    - prio: '0'
+                    - id: '0'
+                    - vlan: '33'
+                    - type: '0x800'
+                  - IP: !!omap
+                    - version: '4'
+                    - ihl: '5'
+                    - tos: '0x0'
+                    - len: '128'
+                    - id: '1'
+                    - flags: ''
+                    - frag: '0'
+                    - ttl: '64'
+                    - proto: tcp
+                    - chksum: '0x65d4'
+                    - src: 10.0.0.99
+                    - dst: 10.0.0.65
+                    - options: null
+                  - TCP: !!omap
+                    - sport: newacct
+                    - dport: src
+                    - seq: '0'
+                    - ack: '0'
+                    - dataofs: '5'
+                    - reserved: '0'
+                    - flags: S
+                    - window: '8192'
+                    - chksum: '0xe06f'
+                    - urgptr: '0'
+                    - options: '[]'
+                  - Raw: !!omap
+                    - load: b'\xda\x1a\x00@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\xbe\xef'
+                expected:
+                  ports:
+                  - 1
+                  spkt: !!omap
+                  - Ethernet: !!omap
+                    - dst: 00:00:99:99:00:02
+                    - src: 00:00:99:99:00:01
+                    - type: '0x8100'
+                  - 802.1Q: !!omap
+                    - prio: '0'
+                    - id: '0'
+                    - vlan: '12'
+                    - type: '0x800'
+                  - IP: !!omap
+                    - version: '4'
+                    - ihl: '5'
+                    - tos: '0x0'
+                    - len: '128'
+                    - id: '1'
+                    - flags: ''
+                    - frag: '0'
+                    - ttl: '64'
+                    - proto: tcp
+                    - chksum: '0x65f7'
+                    - src: 10.0.0.64
+                    - dst: 10.0.0.65
+                    - options: null
+                  - TCP: !!omap
+                    - sport: newacct
+                    - dport: src
+                    - seq: '0'
+                    - ack: '0'
+                    - dataofs: '5'
+                    - reserved: '0'
+                    - flags: S
+                    - window: '8192'
+                    - chksum: '0xe092'
+                    - urgptr: '0'
+                    - options: '[]'
+                  - Raw: !!omap
+                    - load: b'\xda\x1a\x00@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\xbe\xef'
+                id: 1
+                mismatch:
+                  headers:
+                    Dot1Q:
+                      mismatch_fields:
+                        vlan:
+                          actual: 33
+                          expected: 12
+                    IP:
+                      mismatch_fields:
+                        chksum:
+                          actual: 26068
+                          expected: 26103
+                        src:
+                          actual: 10.0.0.99
+                          expected: 10.0.0.64
+                    TCP:
+                      mismatch_fields:
+                        chksum:
+                          actual: 57455
+                          expected: 57490
+          snapshots:
+            mismatch_snapshots:
+            - entry:
+                mismatch:
+                  field_x: {}
+                  field_y: {}
+        trigger:
+          descriptors:
+          - descriptor: {}
+          packets:
+          - packet:
+              count: 1
+              ports:
+              - 1
+              spkt: !!omap
+              - Ethernet: !!omap
+                - dst: 00:00:99:99:00:02
+                - src: 00:00:99:99:00:01
+                - type: '0x8100'
+              - 802.1Q: !!omap
+                - prio: '0'
+                - id: '0'
+                - vlan: '12'
+                - type: '0x800'
+              - IP: !!omap
+                - version: '4'
+                - ihl: '5'
+                - tos: '0x0'
+                - len: '128'
+                - id: '1'
+                - flags: ''
+                - frag: '0'
+                - ttl: '64'
+                - proto: tcp
+                - chksum: '0x65f7'
+                - src: 10.0.0.64
+                - dst: 10.0.0.65
+                - options: null
+              - TCP: !!omap
+                - sport: newacct
+                - dport: src
+                - seq: '0'
+                - ack: '0'
+                - dataofs: '5'
+                - reserved: '0'
+                - flags: S
+                - window: '8192'
+                - chksum: '0xe092'
+                - urgptr: '0'
+                - options: '[]'
+              - Raw: !!omap
+                - load: b'\xda\x1a\x00@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\xbe\xef'
+    status: Failed
+    steps_passed: 0
+failed_count: 1
+passed_count: 0
+pending_count: 0

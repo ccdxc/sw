@@ -1,0 +1,8 @@
+# Ethernet RX Descriptor Object Template
+meta:
+    id      : DESC_ETH_RX
+    size    : 12
+
+address     : None
+length      : None
+rsvd        : const/0x0

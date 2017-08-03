@@ -1,0 +1,17 @@
+# Capri Doorbell Object Template
+meta:
+    id      : DOORBELL
+    size    : None
+
+address:
+    bits_update : None
+    lif         : None
+    type        : None
+    rsvd        : const/0x0
+
+data:
+    pid         : None
+    qid         : None
+    rsvd        : const/0x0
+    ring        : None
+    p_index     : None

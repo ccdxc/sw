@@ -1,0 +1,8 @@
+# Testcase Specification Output Section Template
+_meta:
+    id: MULTIDEST
+
+object:
+    - dest:
+        poe :
+        template:

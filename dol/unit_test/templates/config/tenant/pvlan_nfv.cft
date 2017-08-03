@@ -1,0 +1,58 @@
+# Configuration Template.
+_meta:
+    id: PVLAN_NFV
+
+fabric:
+    vxlan: False
+
+uplinks:
+    min: 1
+
+tenants:
+    count: 1
+
+segments:
+    count: 2
+    type: pvlan
+    broadcast_policy: flood
+    multicast_policy: replicate
+
+
+endpoints:
+    count       : 2
+    pvlan       : True
+    attachment  : 
+        - entry:
+            type : MAC_VLAN
+            dist : percent/100
+
+sessions:
+    unidest:
+        scale: 16
+        ipv4:
+            - template: config/template/TCP_BASIC
+            - template: config/template/UDP_BASIC
+            - template: config/template/ICMP_BASIC
+
+        ipv6:
+            - template: config/template/TCP_BASIC
+            - template: config/template/UDP_BASIC
+            - template: config/template/ICMPV6_BASIC
+
+        l2:
+            - template: config/template/MAC_BASIC
+
+    multidest:
+        scale   : 16
+        ipv4:
+            - template: config/template/L2MC_BASIC
+            - template: config/template/L2BC_BASIC
+        ipv6:
+            - template: config/template/L2MC_BASIC
+            - template: config/template/L2BC_BASIC
+        l2:
+            - template: config/template/L2MC_BASIC
+            - template: config/template/L2BC_BASIC
+
+lifs:
+    template: config/template/ETH_RDMA

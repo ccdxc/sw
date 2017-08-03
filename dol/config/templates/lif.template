@@ -1,0 +1,20 @@
+# LIF Object Template
+meta:
+    id: LIF
+
+id      : None  # LIF ID
+macaddr : None  # Mac Address
+status  : UP    # LIF Status
+
+num_types: None  # Number of Types
+types:
+    - type: 
+        num_queues  : None # Number of queues
+        queues      : None # ref://store/object/id=Queue_xxx
+
+queues:
+    - queue: None # ref://store/object/id=Queue_xxx
+
+pds:
+    - pd:
+

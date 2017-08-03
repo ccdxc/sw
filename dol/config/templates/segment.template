@@ -1,0 +1,21 @@
+# Tenant Object Template File.
+meta:
+    id: SEGMENT
+
+id      : None # Segment Local ID
+spec    : None # (REF) Segment Spec Object
+tenant  : None # Reference to parent Tenant Object
+
+type    : None # Segment Type hal.types.L2SegmentType
+vlan_id : None
+vxlan_id: None
+
+macaddr : None # Router MAC Address
+subnet  : None # IPv4 Subnet
+subnet6 : None # IPv6 Subnet
+
+policies:
+    broadcast   : None # Flood/Drop
+    multicast   : None # Flood/Forward/Drop
+
+

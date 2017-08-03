@@ -1,0 +1,12 @@
+# Ring Object Base Template
+meta:
+    id: RING
+
+pi          : 0
+ci          : 0
+base_addr   : None # Filled by Configure()
+size        : None # Filled by ConfigSpec
+doorbell    : 
+
+descriptors:
+    - descriptor:

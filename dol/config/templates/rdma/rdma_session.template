@@ -1,0 +1,7 @@
+# RDMA Session Object Template
+meta:
+    id: RDMA_SESSION
+
+lqp: None
+rqp: None
+

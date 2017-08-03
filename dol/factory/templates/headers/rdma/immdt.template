@@ -1,0 +1,7 @@
+meta:
+    id      : ImmDT
+    scapy   : ImmDT
+    size    : None
+
+fields:
+    immdt   : const/0x0

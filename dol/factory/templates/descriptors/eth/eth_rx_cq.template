@@ -1,0 +1,22 @@
+# Ethernet TX Descriptor Object Template
+meta:
+    id      : DESC_ETH_RX_CQ
+    size    : 16
+
+queue_id        : None
+rss_type        : None
+cindex          : None
+rss_hash        : None
+vlan_tag        : None
+bit_v           : None
+bit_k           : None
+bytes_written   : None
+bit_c           : None
+rsvd0           : const/0x0
+type            : None
+rsvd1           : None
+bit_d           : None
+bit_b           : None
+flags           : None
+bit_t           : None
+

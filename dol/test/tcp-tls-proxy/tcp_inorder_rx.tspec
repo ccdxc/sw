@@ -1,0 +1,137 @@
+# TCP Proxy RX Inorder Sample TestSpec file.
+config_filter:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any # Local QPair
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any 
+    flow        : filter/sip=10.1.0.2,dip=10.1.0.1,proto=TCP,dport=80
+
+state:
+    - entry:
+        id          : N_TCP_PROXY_CB1
+        object      : ref://testcase/config/flow/n_session/tcp_proxy_cb
+        fields      :
+    - entry:
+        id          : H_TCP_PROXY_CB1
+        object      : ref://testcase/config/flow/h_session/tcp_proxy_cb
+        fields      :
+    - entry:
+        id          : N_TLS_PROXY_CB1
+        object      : ref://testcase/config/flow/n_session/tls_proxy_cb
+        fields      :
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+    - packet:
+        id          : PKT1
+        template    : ref://factory/templates/id=ETH_IPV4_TCP_TS_OPT
+        payloadsize : 128
+        headers     :
+            eth:
+                smac : ref://testcase/config/src/endpoint/macaddr
+                dmac : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                sip : ref://testcase/config/flow/sip
+                dip : ref://testcase/config/flow/dip
+            tcp:
+                seq: ref://testcase/state/id=N_TCP_PROXY_CB1/rcv_nxt
+                ack: ref//testcase/state/id=N_TCP_PROXY_CB1/snd_una
+                sport : ref://testcase/config/flow/sport
+                dport : ref://testcase/config/flow/dport
+
+            # Update: Vikasd
+            # Get a List of TCP options required and check if 
+            # Scapy supports all of them.
+            tcp_option1:
+                dataofs: 8
+                tcp_ts_val: 1000
+                tcp_ts_ecr: 2000
+            payload:
+                data: ref://factory/payloads/id=TCP_TLS_RX_ENCRYPTED_ECDHE_RSA2K_AES_GCM
+
+    - packet:
+        id          : PKT2
+        template    : ref://factory/templates/id=ETH_IPV4_TCP_TS_OPT
+        payloadsize : 128
+        headers     : 
+            # Update: Vikasd
+            eth:
+                smac : ref://testcase/config/src/endpoint/macaddr
+                dmac : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                sip : ref://testcase/config/flow/sip
+                dip : ref://testcase/config/flow/dip
+            tcp:
+                seq: ref://testcase/state/id=H_TCP_PROXY_CB1/snd_nxt
+                ack: ref://testcase/state/id=H_TCP_PROXY_CB1/rcv_nxt
+                sport : ref://testcase/config/flow/sport
+                dport : ref://testcase/config/flow/dport
+            # Update: Vikasd
+            # Get a List of TCP options required and check if 
+            # Scapy supports all of them.
+            tcp_option1:
+                dataofs: 8
+                tcp_ts_val: 11000
+                tcp_ts_ecr: 12000
+            payload:
+                data: ref://factory/payloads/id=TCP_TLS_RX_DECRYPTED_ECDHE_RSA2K_AES_GCM
+
+buffers:
+		- buffer:
+			id		: BUF1
+			template	: ref://store/templates/id=ETH_RX_BUF
+			size		: 4096
+			fields		:
+					data		: ref://testcase/packets/id=PKT2/payloadbytes
+
+descriptors:
+		- descriptor:
+			id			: DESC1
+			template	: ref://store/templates/id=ETH_RX_DESC
+			fields   :
+				address : ref://testcase/buffers/id=BUF1/address
+				length : ref://testcase/buffers/id=BUF1/size
+
+trigger:
+    packets:
+        - packet:
+            id  : ref://testcase/packets/id=PKT1
+            port: ref://testcase/config/src/tenant/uplinks/id=ANY
+
+expect:
+    descriptors:
+        - descriptor:
+            id  : ref://testcase/descriptors/id=DESC1
+            ring: ref://testcase/config/dst/lif/queues/id=RQ/rings/id=RING0
+
+    state:
+        - entry:
+            object      : ref://testcase/state/id=N_TCP_PROXY_CB1
+            fields      :
+                    rcv_nxt : callback://test/common/callbacks/increment
+                            param: ref://testcase/packets/id=PKT1/payloadsize
+            # optionally have object level callback for verification
+            callback    : callback://test/tcp-tls-proxy/tcp_tls_proxy/tcp_inorder_rx_verify
+            #    rcv_nxt : INCR(ref://testcase/packets/id=PKT1/payloadsize)
+        - entry:
+            object      : ref://testcase/state/id=H_TCP_PROXY_CB1
+            callback    : callback://test/tcp-tls-proxy/tcp_tls_proxy/tcp_inorder_rx_verify
+            #fields      :
+            #    snd_nxt : INCR(ref://testcase/packets/id=PKT2/payloadsize)
+        - entry:
+            object      : ref://testcase/state/id=N_TLS_PROXY_CB1
+            callback    : callback://test/tcp-tls-proxy/tcp_tls_proxy/tls_cb_verify
+            #fields      :
+            #    nic_dec_head : 0
+            #    nic_dec_tail : 0
+

@@ -1,0 +1,14 @@
+# RDMA Recv QueueState Template
+meta:
+    id  : QSTATE_RDMA_RQ
+    base: ref://store/templates/id=QSTATE
+
+service     : None # (ATTR) template/config/rdma_qpair/service
+pmtu        : None #
+dst_qp      : None #
+epsn        : None #
+
+ring_rq     : None # (OBJ) template/config/objects/rdma/ID=ring_rq
+ring_rsq    : None # (OBJ) template/config/objects/rdma/ID=ring_rsq
+ring_ack    : None # (OBJ) template/config/objects/rdma/ID=ring_ack
+ring_nak    : None # (OBJ) template/config/objects/rdma/ID=ring_nak

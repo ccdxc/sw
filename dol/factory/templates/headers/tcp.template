@@ -1,0 +1,30 @@
+meta:
+    id      : TCP
+    scapy   : TCP
+    size    : 20
+
+fields:
+    sport   : 100
+    dport   : 200
+    seq     : 0x1234
+    ack     : 0x5678
+    dataofs : None
+    reserved: 0
+    flags   : None
+    window  : 8192
+    chksum  : None  # Scapy will fill this
+    urgptr  : 0
+    options :
+        - kind  : None
+          data  : None  
+
+# Supported TCP Options:
+# Name-Of-Kind      Data-Format
+# ------------------------------
+# EOL               None
+# NOP               None
+# MSS               16-bit Integer
+# WScale            8-bit Shift count
+# SAckOK            None
+# SAck              space separated 32-bit numbers
+# Timestamp         TSval(32-bit) TSecr(32-bit)

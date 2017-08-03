@@ -1,0 +1,13 @@
+meta:
+    id: FRAMEWORK_DATA
+
+TestModuleID    : None # Test Module ID
+Logger          : None # Logger Instance
+Factory         : None # Handle to Factory module
+TestSpec        : None # Instance of Template:testobjects/testpec
+CfgObjectStore  : None # Store of Configuration Objects
+MemObjectStore  : None # Store of Memory Objects
+CfgFlows        : None # Config Flow Objects
+TestCases       : None # List of TestCase objects
+TrigExpEngine   : None # Handle to Trigger module
+UserData        : None # User Data Object

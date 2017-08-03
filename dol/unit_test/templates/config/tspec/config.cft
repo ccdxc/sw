@@ -1,0 +1,6 @@
+# Testcase Specification Config Section Template
+_meta:
+    id: CONFIG
+
+object:
+    base:

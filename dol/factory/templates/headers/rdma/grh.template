@@ -1,0 +1,15 @@
+meta:
+    id      : GRH
+    scapy   : GRH
+    size    : None
+
+fields:
+    ipver       : const/0x0
+    tclass      : const/0x0
+    flowlabel   : const/0x0
+    paylen      : const/0x0
+    nxthdr      : const/0x0
+    hoplmt      : const/0x0
+    sgid        : ipv6addr/2000::1
+    dgid        : ipv6addr/2000::2
+

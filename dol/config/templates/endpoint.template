@@ -1,0 +1,4 @@
+# Tenant Object Template File.
+meta:
+    id: ENDPOINT
+

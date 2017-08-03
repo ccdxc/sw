@@ -1,0 +1,9 @@
+meta:
+    id      : DETH
+    scapy   : DETH
+    size    : None
+
+fields:
+    qkey    : const/0x0
+    rsvd    : const/0x0
+    srcqp   : const/0x0

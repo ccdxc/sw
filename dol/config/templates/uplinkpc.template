@@ -1,0 +1,13 @@
+# Uplink Config Object Template
+meta:
+    id: UPLINKPC
+
+id      : None # Name of the object
+port    : None # Port Number of the object
+type    : UPLINK
+mode    : TRUNK
+status  : UP
+sriov   : False
+lif     : None # Object Reference ref://store/object/id=LIFxxx
+members : None # Member uplinks
+

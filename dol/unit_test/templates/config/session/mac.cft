@@ -1,0 +1,6 @@
+# Flow generation configuration template.
+
+_meta:
+    id: MAC_BASIC
+
+entries:

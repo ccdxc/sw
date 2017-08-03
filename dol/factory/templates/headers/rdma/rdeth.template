@@ -1,0 +1,8 @@
+meta:
+    id      : RDETH
+    scapy   : RDETH
+    size    : None
+
+fields:
+    rsvd    : const/0x0
+    eecnxt  : const/0x0

@@ -1,0 +1,47 @@
+# Test Spec
+config:
+    filter:
+        Flow        : filter/SrcIP=10.1.0.2,DstIP=10.1.0.1
+    objects:
+        - entry:
+            object: ref://store/objects/tenants/id=TEN1
+            secprofile: ref://store/objects/secprofiles/id=SP1
+        
+
+#Associate security profile (SP1) to the tenant (Tenant1)
+#
+packets:
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_QTAG_IPV4_TCP
+        headers     :
+            ipv4:
+                flags   : df
+    
+    - packet:
+        id          : PKT2     # Input packet 1
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_QTAG_IPV4_TCP
+        headers     :
+            ipv4:
+                flags   : 0
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT2
+            port    : 1
+
+teardown:
+    objects:
+        - entry:
+            object: ref://store/objects/tenants/id=TEN1
+            secprofile: None
+

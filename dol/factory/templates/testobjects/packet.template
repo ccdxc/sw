@@ -1,0 +1,14 @@
+meta:
+    id: PACKET
+
+testcase        : None  # Testcase object that this packet belongs to
+clone           : None  # 
+payloadsize     : None  # Int
+template        : None  # Packet Factory Template Object
+spec            : None  # Packet Specification (subsection of TestSpec)
+headers         : None  # List of Headers
+spkt            : None  # Scapy packet object
+headers_order   : None  # List of headers by name
+encaps          : None
+pktsize         : None
+

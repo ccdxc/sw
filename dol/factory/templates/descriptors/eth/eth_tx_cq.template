@@ -1,0 +1,13 @@
+# Ethernet TX Descriptor Object Template
+meta:
+    id      : DESC_ETH_TX_CQ
+    size    : 16
+
+cindex  : None
+rsvd0   : const/0x0
+rsvd1   : const/0x0 # 64 Bit
+rsvd2   : const/0x0 # 16 bit
+err_code: None
+queue_id: None
+type    : None
+color   : None

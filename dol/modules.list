@@ -1,0 +1,15 @@
+# This file contains the list of DOL test modules.
+modules:
+    - module:
+        name    : L2UC
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+
+# Vikasd: Commenting till it is ready
+#    - module:
+#        name    : tcp_tls_proxy
+#        package : test.tcp-tls-proxy
+#        spec    : tcp_inorder_rx.tspec
+#        module  : tcp_tls_proxy
+

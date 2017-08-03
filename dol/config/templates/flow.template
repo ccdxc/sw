@@ -1,0 +1,44 @@
+# Config Flow Object Template
+# 6-Tuple Flow Keys
+# Type          :   Elem1   Elem2   Elem3   Elem4   Elem5   Elem6
+#-------------------------------------------------------------------
+# IPvX TCP/UDP  :   Tenant  SIP     DIP     Proto   Sport   Dport
+# IPvX  ICMP    :   Tenant  SIP     DIP     Proto   <Type+Code+ID = 32 Bits>
+# L2            :   Segment SMAC    DMAC
+
+meta:
+    id: FLOW
+    grpc:
+        package         : session # session_pb2 and session_pb2_grpc
+        service         : Session # SessionStub
+        apis:
+            create: 
+                name    : SessionCreate
+                message : SessionRequestMsg
+            get: 
+                name    : SessionGet
+                message : SessionGetRequestMsg
+
+# Internal Fields (DO NOT USE DIRECTLY)
+type    : None # (ATTR) IPV4 or IPV6 or MAC
+sep     : None # (OBJ) Source Endpoint
+dep     : None # (OBJ) Destination Endpoint
+sfep    : None # (OBJ) Source Flow Endpoint
+dfep    : None # (OBJ) Destination Flow Endpoint
+sseg    : None # (OBJ) Source Segment
+dseg    : None # (OBJ) Destination Segment
+sten    : None # (OBJ) Source Tenant
+dten    : None # (OBJ) Destination Tenant
+
+# Externally Visible Attributes (DO NOT RENAME THESE)
+domid   : None # (ATTR) Domain ID
+sip     : None # (ATTR) IP or Mac Address
+dip     : None
+smac    : None
+dmac    : None
+proto   : None # (ATTR) IP Protocol
+sport   : None # (ATTR) L4 Port
+dport   : None # (ATTR) L4 Port
+icmpid  : None
+icmpcode: None
+icmptype: None

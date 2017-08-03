@@ -1,0 +1,7 @@
+meta:
+    id: RDMA_MR
+
+slab    : None  # Instance of ref://store/objects/slabs/id=XXX
+lkey    : None
+rkey    : None
+acc_ctrl: None

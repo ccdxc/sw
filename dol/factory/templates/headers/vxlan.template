@@ -1,0 +1,11 @@
+meta:
+    id      : VXLAN
+    scapy   : VXLAN
+    size    : 8
+fields:
+    flags_r0: 0
+    flag_i  : 1
+    flags_r1: 0
+    rsvd0   : 0
+    vni     : 0
+    rsdv1   : 0

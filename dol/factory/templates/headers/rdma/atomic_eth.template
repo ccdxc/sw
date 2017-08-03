@@ -1,0 +1,10 @@
+meta:
+    id      : AtomicETH
+    scapy   : AtomicETH
+    size    : None
+
+fields:
+    va      : const/0x0
+    r_key   : const/0x0
+    swapdt  : const/0x0
+    cmpdt   : const/0x0

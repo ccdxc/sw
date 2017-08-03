@@ -1,0 +1,12 @@
+# Framework UT Descriptor Template
+meta:
+    id      : DESC_INFRA_UT_TX
+    package : factory.objects.ut
+    module  : descriptor
+    objname : InfraUtTxDescriptorObject
+
+num_buffs   : None
+b0_address  : None
+b0_len      : None
+b1_address  : None
+b1_len      : None

@@ -1,0 +1,70 @@
+# Test Spec
+config:
+    filter:
+        SrcTen      : filter/any
+        DstTen      : filter/any
+        SrcSeg      : filter/any
+        DstSeg      : filter/any
+        SrcEP       : filter/any
+        DstEP       : filter/any
+        Flow        : filter/SrcIP=10.1.0.2,DstIP=10.1.0.1
+        RdmaSession : filter/any
+
+packets:
+    - packet:
+        template    : ref://factory/templates/id=RDMA
+        payloadsize : 
+        headers:
+
+memory:
+    buffers:
+        - buffer:
+            id          : BUF1
+            template    : ref://store/templates/id=RDMA_BUFFER
+            fields:
+                slab        : ref://testcase/config/RdmaSession/lqp/pd/slabs/id=1
+                size        : 4096
+        - buffer:
+            id          : BUF2
+            template    : ref://store/templates/id=RDMA_BUFFER
+            fields:
+                slab        : ref://testcase/config/RdmaSession/lqp/pd/slabs/id=2
+                size        : 4096
+
+    descriptors:
+        - descriptor:
+            id          : DESC1
+            template    : ref://store/templates/id=DESC_RDMA_SQ_RING
+            fields:
+                op_type     : SEND
+                num_sges    : 2
+                sges:
+                    - sge:
+                        va  : ref://testcase/objects/id=BUF1/virtual_address
+                        len : ref://testcase/objects/id=BUF1/size
+                        #key: ref://testcase/config/SrcEP/lif/mrs/rkey (BAD MR Case)
+                        key: ref://testcase/config/RdmaSession/lqp/pd/mrs/id=1/lkey # (GOOD MR Case)
+                     - sge:
+                        va  : ref://testcase/objects/id=BUF2/virtual_address
+                        len : ref://testcase/objects/id=BUF2/size
+                        #key: ref://testcase/config/SrcEP/lif/mrs/rkey (BAD MR Case)
+                        key: ref://testcase/config/RdmaSession/lqp/pd/mrs/id=2/lkey # (GOOD MR Case)
+               
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/objects/id=DESC1
+            ring    : ref://testcase/config/RdmaSession/lqp/sq/sq_ring
+
+    doorbell:
+        object  : ref://testcase/config/RdmaSession/lqp/sq/sq_ring/doorbell
+        fields:
+            updbits : 1
+            incr    : 1 
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1

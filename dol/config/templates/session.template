@@ -1,0 +1,18 @@
+# Config Session Object Template
+meta:
+    id: SESSION
+    grpc:
+        package         : session # session_pb2 and session_pb2_grpc
+        service         : Session # SessionStub
+        apis:
+            create: 
+                name    : SessionCreate
+                message : SessionRequestMsg
+            get: 
+                name    : SessionGet
+                message : SessionGetRequestMsg
+
+initiator   : None
+responder   : None
+iflow       : None
+rflow       : None

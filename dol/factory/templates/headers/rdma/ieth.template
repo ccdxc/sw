@@ -1,0 +1,7 @@
+meta:
+    id      : IETH
+    scapy   : IETH
+    size    : None
+
+fields:
+    r_key   : const/0x0

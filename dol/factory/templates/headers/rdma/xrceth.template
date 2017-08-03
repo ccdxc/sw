@@ -1,0 +1,8 @@
+meta:
+    id      : XRCETH
+    scapy   : XRCETH
+    size    : None
+
+fields:
+    rsvd    : const/0x0
+    xrcsrq  : const/0x0

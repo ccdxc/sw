@@ -1,0 +1,14 @@
+meta:
+    id      : ARP
+    scapy   : ARP
+    size    : 28
+fields:
+    hwtype  : 1
+    ptype   : 0x0800
+    hwlen   : 6
+    plen    : 4
+    op      : None
+    hwsrc   : None
+    psrc    : None
+    hwdst   : None
+    pdst    : None

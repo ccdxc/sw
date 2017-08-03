@@ -1,0 +1,10 @@
+meta:
+    id      : QTAG
+    scapy   : Dot1Q
+    size    : 4
+
+fields:
+    prio: 0
+    id  : 0
+    vlan: vlanid/1
+    type: None

@@ -1,0 +1,14 @@
+# Framework UT Descriptor Template
+meta:
+    id      : DESC_INFRA_UT_RX
+    package : factory.objects.ut
+    module  : descriptor
+    class   : InfraUtRxDescriptorObject
+
+
+vlan    : None # Vlan of the Recvd Packet
+count   : None # Count of Buffers
+buffers :
+    - buffer:
+        address : None  # Address of the Buffer
+        len     : None  # Length of data

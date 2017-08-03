@@ -1,0 +1,12 @@
+# RDMA Protection Domain Template
+meta:
+    id: RDMA_PD
+
+lif     : None  # Parent object
+pdid    : None  # LIF Local ID of this PD
+qpairs:
+    - qpair:
+
+mrs:
+    - mr:
+

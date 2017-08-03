@@ -1,0 +1,47 @@
+# LIF Configuration Template
+# LIFx.admin.queue[1-4].ring[1-2]
+_meta:
+    id: ETH_RDMA
+types   :
+#    - entry:
+#        type        : admin
+#        count       : 1
+#        queues      : 1
+#        entrysize   : 64
+#        rings       : 1
+    - entry:
+        type        : tx
+        count       : 1
+        queues      : 2
+        entrysize   : 64
+        rings       : 1
+    - entry:
+        type        : rx
+        count       : 1
+        queues      : 2
+        entrysize   : 64
+        rings       : 1
+#    - entry:
+#        type        : rtxq
+#        count       : 1
+#        queues      : 2
+#        entrysize   : 64
+#        rings       : 1
+#    - entry:
+#        type        : rrxq
+#        count       : 1
+#        queues      : 2
+#        entrysize   : 64
+#        rings       : 1
+#    - entry:
+#        type        : cq
+#        count       : 1
+#        queues      : 2
+#        entrysize   : 64
+#        rings       : 1
+#    - entry:
+#        type        : eq
+#        count       : 1
+#        queues      : 1
+#        entrysize   : 64
+#        rings       : 1

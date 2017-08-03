@@ -1,0 +1,14 @@
+meta:
+    id      : IPV6
+    scapy   : IPv6
+    size    : 40
+
+fields:
+    version : const/6
+    tc      : const/0
+    fl      : const/0
+    plen    : None      # Scapy will fill this.
+    nh      : ipproto/255
+    hlim    : const/64
+    src     : ipv6addr/2000::1
+    dst     : ipv6addr/2000::2

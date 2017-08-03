@@ -1,0 +1,8 @@
+meta:
+    id      : PADDING
+    scapy   : PADDING
+    size    : 0
+    pattern : pattfixed/0
+
+fields:
+    data: 0

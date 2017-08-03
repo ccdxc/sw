@@ -1,0 +1,15 @@
+meta:
+    id      : ENCAP_QTAG
+    callback: callback://common/pktencaps/AddPacketEncapQtag
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x8100
+   
+    - header:
+        id      : qtag
+        template: ref://store/headers/id=QTAG
+        fields  :

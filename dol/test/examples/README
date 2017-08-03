@@ -1,0 +1,100 @@
+Example Test-suite definition.
+
+Each Test-module will have to implement 3 methods.
+1) setup(fwdata, usrdata)
+2) debug(fwdata, usrdata)
+3) teardown(fwdata, usrdata)
+
+Params:
+--------
+1) fwdata: This contains framework objects, which can be used by 
+           the testmodules. It contains the following members that
+           are of interest to the test modules.
+           - dcm (DOL Config Manager)   - Read Only
+           - factory (DOL Factory)      - Read Only
+
+2) usrdata: This contains user data. It contains the following members
+            - cfg_file(Config File)         - RW - Set by User
+            - inp_pkt_file(Input Pkt File)  - RW - Set by User
+            - out_pkt_file(Input Pkt File)  - RW - Set by User
+            - inp_dat_file(Input Pkt File)  - RW - Set by User
+            - out_dat_file(Input Pkt File)  - RW - Set by User
+            - tc (Current Test Case)        - RW - Set by Framework
+
+Methods:
+---------------
+1) setup (fwdata, usrdata):
+    Module Expectations:
+    --------------------
+    - This method will be the first to be called.
+    - All initialization must happen in this routine.
+    - In this method, the test-module is expected to
+      * Provide configuration file (Optional)
+        Note: This config is only incremental to the base config.
+      * Provide Inputs
+        - Input Pkt File or Input Data File or Both.
+      * Provide Outputs
+        - Output Pkt File or Output Data File or Both.
+
+    Framework Part:
+    ---------------
+    Once the test-module returns from this method, the framework will
+    - Create a mini config store for the incremental config that the
+      test module has provided.
+    - Use this config-store to push the additional config to DUT.
+    - Use the input/output pkt and data files to generate the DB of
+      test-cases. Each testcase is
+      * One input (packet or memory(s))
+      * N outputs (packet(s) and/or memory object(s))
+    - Run each one of the test-cases.
+      Note:
+      * Testcases can be run serially.
+      * Testcases can be run parallely (in future)
+      * Testmodule can control this behavior.
+
+2) debug (fwdata, usrdata):
+    Module Expectations:
+    --------------------
+    - This method will be invoked for every testcase, that fails.
+    - 'usrdata.tc' will contain the failed testcase.
+    - This allows the test-module to
+      * Collect additional information.
+      * Dump more logs.
+      * Request rerun with additional debugs enabled.
+      * Abort the run (No more test-cases from this module will be run)
+    - Return types
+      * types.STATUS_SUCCESS  : Successfully collected all debug information.
+      * types.STATUS_ABORT    : Abort this test-suite completely.
+
+    
+    Framework Part:
+    ---------------
+    Once the testmodule returns from this method, the frameowork will
+    - Rerun (Based on the module return code)
+    - Abort (Based on the module return code)
+    - Continue to next case
+
+3) teardown (fwdata, usrdata):
+    Module Expectations:
+    --------------------
+    - This method will be invoked at the end of all testcases.
+    - This allows the test-module to
+      * Cleanup any additional state created by the test-module.
+    - Return types
+      * types.STATUS_SUCCESS  : Successfully cleanedup all state.
+      * types.STATUS_xxx      : Error
+      Note:
+      - In case of an error,
+        - Abort the run.
+        - Shutdown the module.
+        - Restart module --> config etc.
+        - Continue to next test module.
+
+
+    Framework Part:
+    ---------------
+    Once the testmodule returns from this method, the framework will
+    - Cleanup mini config store (If created by this test module)
+    - Cleanup testcase db.
+      * Cleanup packets (If applicable).
+      * Cleanup memory objects (If applicable).

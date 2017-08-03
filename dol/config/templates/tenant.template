@@ -1,0 +1,8 @@
+# Tenant Object Template File.
+meta:
+    id: TENANT
+
+id          : None # Tenant Local ID
+spec        : None # (REF) Tenant Spec from Base Config.
+
+

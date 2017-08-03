@@ -1,0 +1,6 @@
+# RDMA Event Queue Ring Template
+meta:
+    id  : RING_RDMA_EQ
+    base: ref://store/templates/id=RING 
+
+#template: template/config/objects/rdma/ID=RDMA_SQ_DESCRIPTOR

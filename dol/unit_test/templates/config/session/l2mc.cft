@@ -1,0 +1,6 @@
+# Flow generation configuration template.
+
+_meta:
+    id: L2MC_BASIC
+
+entries:

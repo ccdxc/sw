@@ -1,0 +1,14 @@
+meta:
+    id: SLAB
+
+size        : None # Integer
+is_virtual  : None # Boolean
+location    : None # Host or HBM
+address     : None # Virtual or Physical (Depends on 'is_virtual')
+page_size   : None
+physical_addresses:
+    - address: None # Physical address P1 (Size is implicit)
+    - address: None # Physical address P2 (Size is implicit)
+
+
+

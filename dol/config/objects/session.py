@@ -1,0 +1,185 @@
+#! /usr/bin/python3
+
+import pdb
+import copy
+
+import infra.common.defs            as defs
+import infra.common.objects         as objects
+import infra.common.utils           as utils
+import infra.config.base            as base
+
+import config.resmgr                as resmgr
+import config.objects.flow          as flow
+import config.objects.flow_endpoint as flowep
+import config.objects.endpoint      as endpoint
+
+from config.store               import Store
+from infra.common.logging       import cfglogger
+
+import config.hal.api            as halapi
+import config.hal.defs           as haldefs
+
+class SessionObject(base.ConfigObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.Clone(Store.templates.Get('SESSION'))
+        return
+
+    def Init(self, initiator, responder):
+        self.id = resmgr.SessionIdAllocator.get()
+        self.GID("Session%d" % self.id)
+        self.initiator = initiator
+        self.responder = responder
+
+        self.iflow = flow.FlowObject(self.initiator, self.responder)
+        self.rflow = flow.FlowObject(self.responder, self.initiator)
+
+        cfglogger.info("Created Session with GID:%s" % self.GID())
+        cfglogger.info("  - Initiator       : %s" % self.initiator)
+        cfglogger.info("  - Responder       : %s" % self.responder)
+        cfglogger.info("  - Initiator Flow  : %s" % self.iflow)
+        cfglogger.info("  - Responder Flow  : %s" % self.rflow)
+        return
+
+    def PrepareHALRequestSpec(self, req_spec):
+        cfglogger.info("Configuring Session with GID:%s" % self.GID())
+        cfglogger.info("  - Initiator       : %s" % self.initiator)
+        cfglogger.info("  - Responder       : %s" % self.responder)
+
+        req_spec.meta.tenant_id = self.initiator.ep.tenant.id
+
+        req_spec.session_id = self.id
+        req_spec.conn_track_en = False
+
+        self.iflow.PrepareHALRequestSpec(req_spec.initiator_flow)
+        self.rflow.PrepareHALRequestSpec(req_spec.responder_flow)
+        return
+
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        cfglogger.info("  - Session %s = %s" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+
+        self.hal_handle = resp_spec.status.session_handle
+        return
+
+class SessionObjectHelper:
+    def __init__(self):
+        self.objlist = []
+        return
+
+    def __process_multidest(self, src_ep, dst_ep):
+        return
+
+    def __process_session_specs(self, flowep1, flowep2, refs):
+        for ref in refs:
+            spec = ref.Get(Store)
+            assert(spec)
+            proto = spec.proto.upper()
+            flowep1.proto = proto
+            flowep2.proto = proto
+            for t in spec.entries:
+                flowep1.set_l4_info(t.entry.initiator)
+                flowep2.set_l4_info(t.entry.responder)
+                session = SessionObject()
+                session.Init(copy.copy(flowep1),
+                             copy.copy(flowep2))
+                self.objlist.append(session)
+        return
+            
+    def __process_ipv6(self, flowep1, flowep2, entries):
+        flowep1.type = 'IPV6'
+        flowep2.type = 'IPV6'
+
+        flowep1.dom = flowep1.ep.tenant.id
+        flowep2.dom = flowep2.ep.tenant.id
+        for addr1 in flowep1.ep.ipv6addrs:
+            for addr2 in flowep2.ep.ipv6addrs:
+                flowep1.addr = addr1
+                flowep2.addr = addr2
+                self.__process_session_specs(flowep1, flowep2, entries)
+        return
+
+
+    def __process_ipv4(self, flowep1, flowep2, entries):
+        flowep1.type = 'IPV4'
+        flowep2.type = 'IPV4'
+
+        flowep1.dom = flowep1.ep.tenant.id
+        flowep2.dom = flowep2.ep.tenant.id
+
+        for addr1 in flowep1.ep.ipaddrs:
+            for addr2 in flowep2.ep.ipaddrs:
+                flowep1.addr = addr1
+                flowep2.addr = addr2
+                self.__process_session_specs(flowep1, flowep2, entries)
+        return
+
+    def __process_unidest(self, ep1, ep2):
+        seg1 = ep1.segment
+        ten1 = ep1.tenant
+        seg2 = ep2.segment
+        ten2 = ep2.tenant
+
+        assert(ten1 == ten2)
+        tenant = ten1
+
+        flowep1 = flowep.FlowEndpointObject(ep = ep1)
+        flowep2 = flowep.FlowEndpointObject(ep = ep2)
+
+        if tenant.spec.sessions.unidest.ipv4:
+            entries = tenant.spec.sessions.unidest.ipv4
+            self.__process_ipv4(flowep1, flowep2, entries)
+
+        #if tenant.spec.sessions.unidest.ipv6:
+        #    entries = tenant.spec.sessions.unidest.ipv6
+        #    sessions += __process_ipv6(flowep1, flowep2, entries)
+
+        #if tenant.spec.sessions.unidest.l2:
+        #    entries = tenant.spec.sessions.unidest.l2
+        #    sessions += __process_unidest_type(src_ep, dst_ep, entries)
+        return
+
+
+    def __process_ep_pair(self, ep1, ep2):
+        self.__process_unidest(ep1, ep2)
+        self.__process_multidest(ep2, ep2)
+        return
+
+    def Generate(self):
+        ep1_list = Store.objects.GetAllByClass(endpoint.EndpointObject)
+        ep2_list = ep1_list
+        for ep1 in ep1_list:
+            for ep2 in ep2_list:
+                if ep1 == ep2: continue
+                if ep1.tenant != ep2.tenant: continue
+                self.__process_ep_pair(ep1, ep2)
+        return
+
+    def Configure(self):
+        cfglogger.info("Configuring %d Sessions." % len(self.objlist)) 
+        halapi.ConfigureSessions(self.objlist)
+        return
+
+    def main(self):
+        self.Generate()
+        self.Configure()
+        Store.objects.SetAll(self.objlist)
+        return
+
+    def GetAll(self):
+        return self.objlist
+
+    def GetFlows(self, config_filter = None):
+        flows = []
+        for ssn in self.objlist:
+            if ssn.iflow.IsFilterMatch(config_filter):
+                flows.append(ssn.iflow)
+            if ssn.rflow.IsFilterMatch(config_filter):
+                flows.append(ssn.rflow)
+        if config_filter.maxflows == None:
+            return flows
+        if config_filter.maxflows >= len(flows):
+            return flows
+        return flows[:config_filter.maxflows]
+
+SessionHelper = SessionObjectHelper()
