@@ -59,6 +59,7 @@ clean-docker: build-image
 	docker run -it -v ${PWD}:/hack/saratk/nic pensando/nic make clean
 
 build-image: install_box
+	docker pull srv1.pensando.io:5000/pensando/nic:dependencies
 	BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box box.rb
 
 install_box:
