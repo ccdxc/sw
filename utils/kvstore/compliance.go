@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -84,6 +85,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestElectionRestartContender,
 		TestCancelElection,
 		TestTxn,
+		TestMultipleElection,
 	}
 
 	for _, fn := range fns {
@@ -719,6 +721,10 @@ func checkElectionEvents(t *testing.T, contenders []Election, expLeader bool) {
 			} else if e.Type != Changed {
 				t.Fatalf("Contender %v with non changed event %v", contender.ID(), e.Type)
 			}
+
+			if strings.Split(e.Leader, "-")[0] != strings.Split(contender.ID(), "-")[0] {
+				t.Fatalf("Contender %v got event for some other election with leader %v", contender.ID(), e.Leader)
+			}
 		}
 	}
 	if expLeader && leaderCount != 1 {
@@ -837,6 +843,79 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 	}
 
 	t.Logf("Cancel of election succeeded")
+}
+
+// TestMultipleElection checks that multiple  elections can run with the same KvStore and they dont interfere with one another
+func TestMultipleElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+	t.Logf("Starting MultipleElection")
+
+	contenders1 := []Election{}
+	contenders1Cancel := []context.CancelFunc{}
+	contenders2 := []Election{}
+	contenders2Cancel := []context.CancelFunc{}
+
+	cluster := cSetup(t)
+	// every 2 contenders share a KV.
+	// 2 elections - each with 3 contenders.
+	for ii := 1; ii <= 3; ii++ {
+		store, err := sSetup(t, cluster)
+		if err != nil {
+			t.Fatalf("Store creation failed with error: %v", err)
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		contenders1Cancel = append(contenders1Cancel, cancel)
+
+		election, err := store.Contest(ctx, "contest1", fmt.Sprintf("contender1-%d", ii), minTTL)
+		if err != nil {
+			t.Fatalf("Store Contest failed with error: %v", err)
+		}
+		contenders1 = append(contenders1, election)
+
+		ctx, cancel = context.WithCancel(context.Background())
+		contenders2Cancel = append(contenders2Cancel, cancel)
+
+		election, err = store.Contest(ctx, "contest2", fmt.Sprintf("contender2-%d", ii), minTTL)
+		if err != nil {
+			t.Fatalf("Store Contest failed with error: %v", err)
+		}
+		contenders2 = append(contenders2, election)
+	}
+
+	defer cCleanup(t, cluster)
+
+	checkElectionEvents(t, contenders1, true)
+	checkElectionEvents(t, contenders2, true)
+
+	// Disrupt the leader from first election and make sure the leader of second election is still ok
+	// and not unhappy with disruption
+	var secondElectionLeader Election
+	for _, v := range contenders2 {
+		if v.IsLeader() {
+			secondElectionLeader = v
+			break
+		}
+	}
+	for k, v := range contenders1 {
+		if v.IsLeader() {
+			contenders1Cancel[k]()
+			break
+		}
+	}
+	time.Sleep(100 * time.Millisecond)
+	if !secondElectionLeader.IsLeader() {
+		t.Fatalf("Leader of second election %v is not leader after disruption of first election", secondElectionLeader)
+	}
+
+	// Clean up
+	for _, contender := range contenders1 {
+		contender.Stop()
+	}
+	for _, contender := range contenders2 {
+		contender.Stop()
+	}
+
+	t.Logf("test of multiple election succeeded")
 }
 
 // TestTxn tests creation/deletion/updation of keys in a transanction.

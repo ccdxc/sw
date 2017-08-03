@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 	"fmt"
+	"path"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ func (e *etcdStore) newElection(ctx context.Context, name string, id string, ttl
 	newCtx, cancel := context.WithTimeout(ctx, timeout)
 
 	// Check if there is an existing lease.
-	resp, err := e.client.KV.Get(newCtx, electionsPrefix, clientv3.WithPrefix())
+	resp, err := e.client.KV.Get(newCtx, path.Join(electionsPrefix, name), clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		return nil, err
@@ -132,7 +133,7 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 		}
 
 		el.leaseID = el.session.Lease()
-		el.election = concurrency.NewElection(el.session, electionsPrefix)
+		el.election = concurrency.NewElection(el.session, path.Join(electionsPrefix, el.name))
 
 		el.Unlock()
 

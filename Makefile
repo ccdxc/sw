@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway
+EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... ./apiserver/... ./globals/...
 GOFMT_CMD := gofmt -s -l
