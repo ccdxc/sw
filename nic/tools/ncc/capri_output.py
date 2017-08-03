@@ -1972,15 +1972,6 @@ def te_tbl_property_print(json_tbl_):
     pstr += '\tchain_shift = %s\n' % json_tbl_['chain_shift']['value']
     return pstr
 
-
-def log2size(size):
-    chk_entry_size = 1
-    lg2entry_size = 0
-    while chk_entry_size < size:
-        chk_entry_size <<= 1
-        lg2entry_size += 1
-    return lg2entry_size
-
 def capri_table_memory_spec_load():
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
@@ -1990,8 +1981,10 @@ def capri_table_memory_spec_load():
     spec_file.close()
     return spec
 
-def capri_pic_csr_load():
-    pic = {'sram':{'ingress':{}, 'egress':{}}, 'tcam':{'ingress':{}, 'egress':{}}}
+def capri_pic_csr_load(tmgr):
+    pic = {'sram':{'ingress':{}, 'egress':{}},
+           'tcam':{'ingress':{}, 'egress':{}},
+           'hbm' :{'ingress':[], 'egress':[]}}
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
     pics_file_path = os.path.join(cur_path, 'csr_json/cap_pics_csr.json')
@@ -2007,6 +2000,14 @@ def capri_pic_csr_load():
     pic['tcam']['egress']  = json.load(pict_file)
     pics_file.close()
     pict_file.close()
+    cur_path = tmgr.be.args.gen_dir + '/%s/cfg_out/' % (tmgr.be.prog_name)
+    for direction in tmgr.gress_tm:
+        for stage in sorted(direction.stages):
+            te_file_path = cur_path + 'cap_te_' + xgress_to_string(direction.d).upper() + '_' + repr(stage) + '_cfg_reg.json'
+            te_file = open(te_file_path)
+            pic['hbm'][xgress_to_string(direction.d)].append(json.load(te_file))
+            te_file.close()
+
     return pic
 
 def capri_pic_csr_output(be, out_pic):
@@ -2017,12 +2018,19 @@ def capri_pic_csr_output(be, out_pic):
         os.makedirs(out_dir)
 
     for mem_type in out_pic:
-        name = 'cap_pics_' if mem_type == 'sram' else 'cap_pict_'
         for direction in out_pic[mem_type]:
-            out_file = out_dir + name + direction.upper() + '.json'
-            with open(out_file, "w") as of:
-                json.dump(out_pic[mem_type][direction], of, indent=2, sort_keys=True)
-            of.close()
+            if mem_type == 'hbm':
+                for stage in range(len(out_pic[mem_type][direction])):
+                    out_file = out_dir + 'cap_te_' + direction.upper() + '_' + repr(stage) + '_cfg_reg.json'
+                    with open(out_file, "w") as of:
+                        json.dump(out_pic[mem_type][direction][stage], of, indent=2, sort_keys=True)
+                        of.close()
+            else:
+                name = 'cap_pics_' if mem_type == 'sram' else 'cap_pict_'
+                out_file = out_dir + name + direction.upper() + '.json'
+                with open(out_file, "w") as of:
+                    json.dump(out_pic[mem_type][direction], of, indent=2, sort_keys=True)
+                    of.close()
 
 def capri_p4_table_spec_output(be, out_dict):
 

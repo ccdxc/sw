@@ -213,6 +213,10 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     mac_int = MAC_TO_UINT64(*mac);
     memcpy(key.ethernet_srcAddr, &mac_int, 6);
 
+    mask.vlan_tag_valid_mask = ~(mask.vlan_tag_valid_mask & 0);
+    mask.vlan_tag_vid_mask = ~(mask.vlan_tag_vid_mask & 0);
+    memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
+
     pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
     HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 
@@ -233,7 +237,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.filter    
 #endif
 
-    memcpy(&mask, &key, sizeof(key));
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_host));
     if (ret != HAL_RET_OK) {
@@ -251,7 +254,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     // Entry 2: Uplink Entry - Has to be installed only in EndHost Mode
     //          Used to do Deja-vu check. The src_lif will not match the 
     //          lif on uplink if.
-    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     
     // TODO: Set the direction bit in the key. 
@@ -271,7 +273,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.src_lif_check_en = 1;
     inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
 
-    memcpy(&mask, &key, sizeof(key));
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_upl));
     if (ret != HAL_RET_OK) {

@@ -233,7 +233,7 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     HAL_ASSERT(dm != NULL);
 
     // populate the action information
-    d.actionid = P4TBL_ID_FLOW_INFO;
+    d.actionid = FLOW_INFO_FLOW_INFO_ID;
 
     // re-derive dst L2 segment if we are going to do NAT as the destination is
     // going to change

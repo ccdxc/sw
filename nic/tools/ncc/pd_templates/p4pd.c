@@ -223,6 +223,71 @@ static void p4pd_copy_into_p4field(uint8_t *dest,
 }
 
 
+static void p4pd_copy_actiondata_be_order(uint8_t *dest,
+                                uint16_t dest_start_bit,
+                                uint8_t *src,
+                                uint16_t src_start_bit,
+                                uint16_t num_bits)
+{
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    uint8_t * _dest = dest;
+    for (int k = 0; k < num_bits; k++) {
+        _dest = dest + ((dest_start_bit + k) / 8);
+        //  b7 b6 b5 b4 b3 b2 b1 b0 b7 b6 b5 b4b b3 b2 b1 b0
+        p4pd_copy_into_p4field(_dest,
+                               7 - ((dest_start_bit + k) % 8),
+                               src,
+                               src_start_bit + num_bits - 1 - k,
+                               1);
+    }
+}
+
+static void p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
+                                uint16_t dest_start_bit,
+                                uint8_t *src,
+                                uint16_t src_start_bit,
+                                uint16_t num_bits)
+{
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    uint8_t * _dest = dest;
+    _dest = dest + ((dest_start_bit) / 8);
+
+    p4pd_copy_into_p4field(_dest,
+                           (dest_start_bit % 8),
+                           src,
+                           7 - (src_start_bit % 8),
+                           1);
+}
+
+static void p4pd_place_actiondata_bit7_to_bit0_order(uint8_t *dest,
+                                uint16_t dest_start_bit,
+                                uint8_t *src,
+                                uint16_t src_start_bit,
+                                uint16_t num_bits)
+{
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    uint8_t * _dest = dest;
+    uint8_t * _src = src;
+    _dest = dest + ((dest_start_bit) / 8);
+    _src = src + ((src_start_bit) / 8);
+
+    p4pd_copy_into_p4field(_dest,
+                           7 - (dest_start_bit % 8),
+                           _src,
+                           7 - (src_start_bit % 8),
+                           1);
+}
+
+
 static void p4pd_copy_multibyte(uint8_t *dest,
                                 uint16_t dest_start_bit,
                                 uint8_t *src,
@@ -261,6 +326,7 @@ static void p4pd_copy_multibyte(uint8_t *dest,
     }
 }
 
+
 static void p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len) 
 {
 
@@ -296,6 +362,8 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                    P4PD_ACTIONPC_BITS);
     dest_start_bit += P4PD_ACTIONPC_BITS;
 
+
+    // TODO: Copying action data before key need to be fixed.
     p4pd_copy_multibyte(hwentry,
                    dest_start_bit,
                    packed_actiondata_before_matchkey,
@@ -312,24 +380,33 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
     dest_start_bit += keylen;
 
     int actiondata_startbit = 0;
+    int key_byte_shared_bits = 0;
+
     if (dest_start_bit % 8) {
         // Action data and key bits are packed within a byte.
         // Handle this case...
         for (int k = 7 - (dest_start_bit % 8); k >= 0 ; k--) {
-            p4pd_copy_multibyte(hwentry,
-                                (dest_start_bit - (dest_start_bit % 8)) + k,
+            p4pd_place_key_and_actiondata_in_byte(hwentry,
+                                                  dest_start_bit - (dest_start_bit % 8) + k,
                    packed_actiondata_after_matchkey,
                    actiondata_startbit++,
                    1);
         }
+        key_byte_shared_bits = 8 - (dest_start_bit % 8);
+        
+    }
+    dest_start_bit +=  key_byte_shared_bits;
+
+    // TODO : Optimize this... For now copying 1 bit at a time.
+    for (int k = 0; k < actiondata_after_matchkey_len - key_byte_shared_bits; k++) {
+        p4pd_place_actiondata_bit7_to_bit0_order(hwentry,
+                                             dest_start_bit + k,
+                                             packed_actiondata_after_matchkey,
+                                             actiondata_startbit++,
+                                             1);
     }
 
-    p4pd_copy_multibyte(hwentry,
-                   dest_start_bit + actiondata_startbit,
-                   packed_actiondata_after_matchkey,
-                   actiondata_startbit,
-                   actiondata_after_matchkey_len - actiondata_startbit);
-    dest_start_bit += actiondata_after_matchkey_len;
+    dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
 
     p4pd_swizzle_bytes(hwentry, dest_start_bit);
 
@@ -367,24 +444,31 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
     dest_start_bit += keylen;
 
     int actiondata_startbit = 0;
+    int key_byte_shared_bits = 0;
+
     if (dest_start_bit % 8) {
         // Action data and key bits are packed within a byte.
         // Handle this case...
         for (int k = 7 - (dest_start_bit % 8); k >= 0 ; k--) {
-            p4pd_copy_multibyte(hwentry,
-                                (dest_start_bit - (dest_start_bit % 8)) + k,
+            p4pd_place_key_and_actiondata_in_byte(hwentry,
+                                                  dest_start_bit - (dest_start_bit % 8) + k,
                    packed_actiondata,
                    actiondata_startbit++,
                    1);
         }
+        key_byte_shared_bits = 8 - (dest_start_bit % 8);
+    }
+    dest_start_bit +=  key_byte_shared_bits;
+
+    for (int k = 0; k < actiondata_len - key_byte_shared_bits; k++) {
+        p4pd_place_actiondata_bit7_to_bit0_order(hwentry,
+                                             dest_start_bit + k,
+                                             packed_actiondata,
+                                             actiondata_startbit++,
+                                             1);
     }
 
-    p4pd_copy_multibyte(hwentry,
-                   dest_start_bit + actiondata_startbit,
-                   packed_actiondata,
-                   actiondata_startbit, /* Starting bit in actiondata */
-                   actiondata_len - actiondata_startbit);
-    dest_start_bit += actiondata_len;
+    dest_start_bit += (actiondata_len - key_byte_shared_bits);
 
     p4pd_swizzle_bytes(hwentry, dest_start_bit);
 
@@ -563,6 +647,7 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
                 >= P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
+            source_start_bit = 0;
             bits_to_copy = ${actionfldwidth}; /* = length of actiondata field */
             if (copy_before_key) {
                 if ((before_key_adata_start_bit + 
@@ -571,7 +656,7 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
                      * part of the key after MatchKey 
                      */
                     bits_before_mat_key = mat_key_start_bit - dest_start_bit;
-                    p4pd_copy_multibyte(packed_action_data,
+                    p4pd_copy_actiondata_be_order(packed_action_data,
                                    dest_start_bit,
 //::                    if actionfldwidth <= 32:
                                    (uint8_t*)&(actiondata->${table}_action_u.\
@@ -593,7 +678,7 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
 
                 }
             }
-            p4pd_copy_multibyte(packed_action_data,
+            p4pd_copy_actiondata_be_order(packed_action_data,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
@@ -648,7 +733,7 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
                 >= P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
-            p4pd_copy_multibyte(packed_actiondata,
+            p4pd_copy_actiondata_be_order(packed_actiondata,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
@@ -3116,6 +3201,12 @@ p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
 
     uint8_t  _hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  _hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+
+
+    // TODO : Fix this.. For now return.
+
+    return (P4PD_SUCCESS);
+
     memcpy(_hwentry, hwentry, hwentry_len);
     p4pd_swizzle_bytes(_hwentry, hwentry_len);
     if (hwentry_y) {

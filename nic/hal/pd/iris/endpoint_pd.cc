@@ -350,7 +350,12 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
         (pi_ip_entry->ip_addr.af == IP_AF_IPV4) ? FLOW_KEY_LOOKUP_TYPE_IPV4 :
         FLOW_KEY_LOOKUP_TYPE_IPV6;
 
-    memcpy(&key_mask, &key, sizeof(key_mask));
+    key_mask.flow_lkp_metadata_lkp_vrf_mask = 
+        ~(key_mask.flow_lkp_metadata_lkp_vrf_mask & 0);
+    key_mask.flow_lkp_metadata_lkp_type_mask = 
+        ~(key_mask.flow_lkp_metadata_lkp_type_mask & 0);
+    memset(key_mask.flow_lkp_metadata_lkp_src_mask, ~0, 
+            sizeof(key_mask.flow_lkp_metadata_lkp_src_mask));
 
     pi_if = find_if_by_handle(pi_ep->if_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);

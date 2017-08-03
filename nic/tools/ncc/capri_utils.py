@@ -54,6 +54,9 @@ class lkp_fld_type(IntEnum):
     FLD_SAVED_REG   = 2
     FLD_LOCAL       = 3
 
+class memory_base_addr(IntEnum):
+    HBM             = 0x80000000
+
 def get_i2e_fname(cf):
     return '_i2e_meta__' + cf.hfname.replace('.','_')
 
@@ -100,21 +103,30 @@ def hdr_is_intrinsic(hdr):
         return True
     return False
 
+def log2size(size):
+    chk_entry_size = 1
+    lg2entry_size = 0
+    while chk_entry_size < size:
+        chk_entry_size <<= 1
+        lg2entry_size += 1
+    return lg2entry_size
+
 def is_synthetic_header(h):
     if h._parsed_pragmas and 'synthetic_header' in h._parsed_pragmas:
         return True
     return False
 
+def is_scratch_header(h):
+    return True if 'scratch_metadata' in h._parsed_pragmas else False
+
 def log2(x):
     assert(x != 0)
-    y = x
-    log = 0
-    while y > 1:
-        y = y >> 1
-        log += 1
-
+    log = log2size(x)
     assert x == 1 << log, 'Only log of powers of 2 allowed'
     return log
+
+def pad_to_power2(x):
+    return x if x == 0 else (0x01 << log2size(x))
 
 def pad_to_x(value, x):
     return (((value + (x-1)) / x) * x)
@@ -147,6 +159,10 @@ def xgress_to_string(x):
     return 'ingress' if x == xgress.INGRESS else \
            'egress'  if x == xgress.EGRESS else \
            'unknown'
+
+def xgress_from_string(x):
+    return xgress.INGRESS if x == 'ingress' else \
+           xgress.EGRESS  if x == 'egress' else 0
 
 def table_width_to_allocation_units(type, width):
     return pad_to_16(width) / 16 if type == 'sram' else \

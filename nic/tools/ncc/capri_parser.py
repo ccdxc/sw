@@ -304,7 +304,7 @@ class capri_lkp_reg:
     def __init__(self, sz):
         self.type = lkp_reg_type.LKP_REG_NONE
         self.first_pkt_fld = None   # First pkt field that is loaded into this reg
-        self.flds = {}              # flds in this register {reg_off : (lkp_fld, off, used)}
+        self.flds = OrderedDict()   # flds in this register {reg_off : (lkp_fld, off, used)}
         self.pkt_off = -1
         self.store_en = False
         self.capri_expr = None
@@ -316,7 +316,7 @@ class capri_lkp_reg:
     def reset(self):
         self.type = lkp_reg_type.LKP_REG_NONE
         self.first_pkt_fld = None   # First pkt field that is loaded into this reg
-        self.flds = {}              # flds in this register {reg_off : (lkp_fld, off, used)}
+        self.flds = OrderedDict()   # flds in this register {reg_off : (lkp_fld, off, used)}
         self.pkt_off = -1
         self.store_en = False
         self.capri_expr = None
@@ -341,7 +341,7 @@ class capri_parse_state:
         self.headers = []
         self.extracted_fields = []      # all header fields extracted, can go to phv or ohi
         self.set_ops = []
-        self.local_flds = {}
+        self.local_flds = OrderedDict()
         self.meta_extracted_fields = [] # extractions to metadata phvs
         # utility flags/variables
         self.unrolled_state = False
@@ -354,7 +354,7 @@ class capri_parse_state:
         self.variable_hdr = False
         self.deparse_only = False
 
-        self.fld_off = {}               # pkt offset(bit) of each fld relative to this state
+        self.fld_off = OrderedDict()               # pkt offset(bit) of each fld relative to this state
         self.extract_len = -1
         self.max_extract_len = -1
         self.lkp_flds = OrderedDict()   # {cf.hfname : list of capri_lkp_fld objects}
@@ -629,12 +629,12 @@ class capri_parser:
             self.flit_hv_idx_start[fl] = hv_start_bit
             hv_start_bit += hv_per_flit[fl]
 
-        self.lf_scope = {}  # { cf : _scope() } - scope of a local_field (reg)
+        self.lf_scope = OrderedDict()  # { cf : _scope() } - scope of a local_field (reg)
         self.lf_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
 
-        self.saved_lkp_scope = {}  # { cf : _scope() } - scope of a saved_lkp_field
+        self.saved_lkp_scope = OrderedDict()  # { cf : _scope() } - scope of a saved_lkp_field
         self.saved_lkp_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
-        self.saved_lkp_fld = {} # {cf : saved_lkp_reg} XXX multiple regs per field
+        self.saved_lkp_fld = OrderedDict() # {cf : saved_lkp_reg} XXX multiple regs per field
 
     def _get_pragma_param_list(self, parsed_pragmas):
         # convert recursive dictionaries into a simle list
@@ -649,7 +649,7 @@ class capri_parser:
 
     def initialize(self):
         # create the state dictionary using capri_parse_state class
-        capri_parse_states = {}
+        capri_parse_states = OrderedDict()
         for k,v in self.be.h.p4_parse_states.items():
             if 'xgress' in v._parsed_pragmas:
                 if v._parsed_pragmas['xgress'].keys()[0].upper() != self.d.name:
@@ -1741,7 +1741,7 @@ class capri_parser:
         new_cs.extract_len = cs.extract_len - split_off
         cs.extract_len = split_off
         # rebuild the fld offset dictionary
-        cs.fld_off = {}
+        cs.fld_off = OrderedDict()
         s_off = 0
         for cf in cs.extracted_fields:
             cs.fld_off[cf] = s_off

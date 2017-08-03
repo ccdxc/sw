@@ -246,6 +246,7 @@ public:
 	      memcpy(p, ptr+offset, curr_len);
 	    }
             p += curr_len;
+            addr += curr_len;
             len -= curr_len;
             // smaller of remaining len or page_size
             curr_len = len < page_size ? len : page_size;
@@ -266,6 +267,7 @@ public:
                 return false;
             memcpy(ptr+offset, p, curr_len);
             p += curr_len;
+            addr += curr_len;
             len -= curr_len;
             // smaller of remaining len or page_size
             curr_len = len < page_size ? len : page_size;

@@ -32,7 +32,11 @@ int main (void)
     step_network_pkt(ipkt, port);
     
     get_next_pkt(opkt, port, cos);
-    std::cout << "Got packet back from model! size: " << opkt.size() << " on port: " << port << " cos: " << cos << std::endl;
+    if (!opkt.size()) {
+        std::cout << "NO packet back from model! size: " << opkt.size() << std::endl;
+    } else {
+        std::cout << "Got packet back from model! size: " << opkt.size() << " on port: " << port << " cos: " << cos << std::endl;
+    }
 
 #if 0
     write_reg(0x3400000+0x8010, 0xbadabc);

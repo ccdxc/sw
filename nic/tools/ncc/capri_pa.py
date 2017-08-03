@@ -463,11 +463,11 @@ class capri_gress_pa:
         self.d = d
         self.logger = logging.getLogger('PA')
         self.phcs = []
-        self.fields = {}    # All fields unsed in this direction {hfname: capri_field}
+        self.fields = OrderedDict()    # All fields unsed in this direction {hfname: capri_field}
         self.field_order = []   # collects fields from parser and table manager
                                 # re-arrange the fields until all constraints are met
-        self.hdr_unions = {} # {hdr: (direction, [list of headers], dest_header)}
-        self.fld_unions = {} # {cf: ([list of cfields], dest_cfield)}
+        self.hdr_unions = OrderedDict() # {hdr: (direction, [list of headers], dest_header)}
+        self.fld_unions = OrderedDict() # {cf: ([list of cfields], dest_cfield)}
         # use parser flits to compute phv placement
         self.flits = [None for _ in range(self.pa.be.hw_model['parser']['parser_num_flits'])]
         self.hdr_phv_fld = OrderedDict() # {hdr: first_phv_field}
@@ -1329,7 +1329,7 @@ class capri_pa:
     def __init__(self, capri_be):
         self.be = capri_be
         self.logger = logging.getLogger('PA')
-        self.hdr_unions = {} # {hdr: (direction, [hdrs_in_union], destination)}
+        self.hdr_unions = OrderedDict() # {hdr: (direction, [hdrs_in_union], destination)}
         self.gress_pa = [capri_gress_pa(self, d) for d in xgress]
 
     def initialize(self):
@@ -1545,9 +1545,9 @@ class capri_pa:
                         prg = union_prg[direction]
                         while len(prg):
                             uh = prg.keys()[0]
-                            if uh not in self.be.h.p4_header_instances:
-                                prg = prg[uh] 
-                                continue
+                            if uh not in self.be.h.p4_header_instances or \
+                                is_scratch_header(self.be.h.p4_header_instances[uh]):
+                                assert 0, "union header %s not defined or is scratch header" % (uh)
                             n_hdr = self.be.h.p4_header_instances[uh]
                             assert(n_hdr)
                             if n_hdr not in hdr_list:

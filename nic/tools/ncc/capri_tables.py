@@ -3632,11 +3632,13 @@ class capri_gress_tm:
         return debug_info
 
 class capri_table_mapper:
-    def __init__(self, be, spec):
-        self.be = be
+    def __init__(self, tmgr):
+        self.be = tmgr.be
+        self.tmgr = tmgr
         self.tables = {}
         self.memory = {}
         self.logger = logging.getLogger('TableMapper')
+        spec = self.tmgr.table_memory_spec
         for mem_type, regions in spec.iteritems():
             self.memory[mem_type] = {}
             for region, value in regions.iteritems():
@@ -3749,12 +3751,16 @@ class capri_table_mapper:
         for tspec in table_specs:
             if 'tcam' in tspec.keys():
                 depth = pad_to_64(tspec['num_entries'])
-                width = table_width_to_allocation_units('tcam', tspec['tcam']['width'])
+                width = tspec['tcam']['width']
+                ctable = self.tmgr.gress_tm[xgress_from_string(tspec['region'])].tables[tspec['name']]
+                if ((ctable.start_key_off / 8) & 0x01):
+                    width += 1 # Pad if key doesnt start from an even byte boundary
+                width = table_width_to_allocation_units('tcam', width)
                 self.insert_table('tcam', tspec['region'], {'name':tspec['name'],
-                                                               'stage':tspec['stage'],
-                                                               'width':width,
-                                                               'depth':depth,
-                                                               'layout':{}})
+                                                            'stage':tspec['stage'],
+                                                            'width':width,
+                                                            'depth':depth,
+                                                            'layout':{}})
             if 'sram' in tspec.keys():
                 if tspec['overflow_parent']:
                     continue # Overflow SRAMs are appended to their parent SRAMs.
@@ -3770,7 +3776,8 @@ class capri_table_mapper:
                                                                'depth':depth,
                                                                'layout':{}})
             if 'hbm' in tspec.keys():
-                width = table_width_to_allocation_units('hbm', tspec['hbm']['width'])
+                width = pad_to_power2(tspec['hbm']['width'])
+                width = table_width_to_allocation_units('hbm', width)
                 self.insert_table('hbm', tspec['region'], {'name':tspec['name'],
                                                               'stage':tspec['stage'],
                                                               'width':width,
@@ -4006,6 +4013,7 @@ class capri_table_mapper:
             table_mapping['name'] = table_spec['name']
             table_mapping['match_type'] = table_spec['match_type']
             table_mapping['hash_type'] = table_spec['hash_type']
+            table_mapping['direction'] = table_spec['direction']
             table_mapping['region'] = table_spec['region']
             table_mapping['stage'] = table_spec['stage']
             table_mapping['stage_table_id'] = table_spec['stage_table_id']
@@ -4066,7 +4074,7 @@ class capri_table_manager:
         self.logger = logging.getLogger('TM')
         self.gress_tm = [capri_gress_tm(self, d) for d in xgress]
         self.table_memory_spec = capri_table_memory_spec_load()
-        self.mapper = capri_table_mapper(self.be, self.table_memory_spec)
+        self.mapper = capri_table_mapper(self)
 
     def print_tables(self):
         for gtm in self.gress_tm:
@@ -4120,6 +4128,7 @@ class capri_table_manager:
                 table_spec['name'] = table.p4_table.name
                 table_spec['match_type'] = match_type_to_string(table.match_type)
                 table_spec['hash_type'] = 0 if table.hash_type == None else table.hash_type
+                table_spec['direction'] = xgress_to_string(d)
                 table_spec['region'] = '02-p4_tables' if table.is_hbm else xgress_to_string(d)
                 table_spec['stage'] = table.stage
                 table_spec['stage_table_id'] = table.tbl_id
@@ -4157,25 +4166,24 @@ class capri_table_manager:
 
         self.logger.info("Generating cap pics ...")
 
-        pic = capri_pic_csr_load() # Load the templates
+        pic = capri_pic_csr_load(self) # Load the templates
 
-        for direction in xgress:
-            direction_s = xgress_to_string(direction)
-            for mem_type in self.mapper.tables:
-                if mem_type == 'hbm':
-                    continue
-
-                for table in self.mapper.tables[mem_type][direction_s]:
+# 02-p4_tables
+        for mem_type in self.mapper.tables:
+            for region in self.mapper.tables[mem_type]:
+                for table in self.mapper.tables[mem_type][region]:
                     if not table['layout']:
                         continue
                     layout = table['layout']
+                    direction = xgress.INGRESS if table['name'] in self.gress_tm[xgress.INGRESS].tables else xgress.EGRESS
                     ctable = self.gress_tm[direction].tables[table['name']]
                     profile_id = (ctable.stage << 4) | ctable.tbl_id
                     if mem_type == 'sram':
                         cap_name = 'cap_pics'
                         num_bkts = 0 if table['width'] == 0 else capri_get_width_from_layout(layout) / table['width']
                         profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
-                        profile = pic[mem_type][direction_s][cap_name]['registers'][profile_name]
+                        profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
+                        profile['width']['value'] = "0x%x" % table['width']
                         profile['hash']['value'] = "0x%x" % 0 # Not used, confirmed by hw
                         profile['opcode']['value'] = "0x%x" % 0 # Policer/Sampler/Counter
                         if num_bkts == 0:
@@ -4185,19 +4193,28 @@ class capri_table_manager:
 
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
-                        # this will be handled by APIs
-                        #profile['axishift']['value'] = "0x%x" % (ctable.start_key_off / 16)
-                    else:
+                        if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:
+                            #TODO Entry packing should adhere to thos logic
+                            profile['axishift']['value'] = "0x%x" % (ctable.start_key_off / 16)
+                        else:
+                            profile['axishift']['value'] = "0x%x" % (0)
+                    elif mem_type == 'tcam':
                         cap_name = 'cap_pict'
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
                         profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
-                        profile = pic[mem_type][direction_s][cap_name]['registers'][profile_name]
-                        profile['bkts']['value'] = "0x%x" % num_bkts
+                        profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
+                        profile['width']['value'] = "0x%x" % table['width']
+                        profile['bkts']['value'] = "0x%x" % (capri_get_depth_from_layout(layout) / table['depth'])
                         profile['start_addr']['value'] = "0x%x" % capri_get_tcam_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_tcam_end_address_from_layout(layout)
-
-                    profile['width']['value'] = "0x%x" % table['width']
-
+                        profile['keyshift']['value'] = "0x%x" % (ctable.start_key_off / 16)
+                    elif mem_type == 'hbm':
+                        profile_name = "cap_te_csr_cfg_table_property[%d]" % (ctable.tbl_id)
+                        profile = pic[mem_type][xgress_to_string(direction)][ctable.stage][profile_name]
+                        profile['addr_base']['value'] = "0x%x" % (memory_base_addr.HBM +
+                                                                  capri_get_hbm_start_address_from_layout(table['layout']))
+                    else:
+                        continue
 
         capri_pic_csr_output(self.be, pic)
 
