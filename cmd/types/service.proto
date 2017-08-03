@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package types;
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/common.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// ServiceAPI is used to discover services or service instances in a Venice
+// cluster. CMD builds this information by tracking a few sources:
+//
+// - Leader election for Singleton services (see ModuleType in module.proto).
+// - Kubernetes for controller services deployed using DaemonSet or ReplicaSet.
+// - Node object for services running on non controller (worker) node. Service
+//   map of services running on a worker node are published by NMD running on
+//   that node.
+service ServiceAPI {
+    // List all Services
+    rpc ListServices (api.Filter) returns (ServiceList) {}
+
+    // Get a Service
+    rpc GetService (api.ObjectMeta) returns (Service) {}
+
+    // Get a Service instance
+    rpc GetServiceInstance (api.ObjectMeta) returns (ServiceInstance) {}
+
+    // Watch Services
+    rpc WatchServices (api.WatchSpec) returns (stream ServiceList) {}
+}
+
+// ServiceInstance contains the information about a single service
+// instance.
+message ServiceInstance {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Image contains the image that the service instance is deployed
+    // with. In case of rolling upgrades, this may be different between
+    // instances.
+    string Image = 3;
+	    
+    // Node contains the IP address or hostname where the service
+    // instance is deployed.
+    string Node = 4;
+
+    // Port contains the port where the service instance is running.
+    uint32 Port = 5;
+}
+	
+// Service contains information about a single cluster service.
+message Service {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Instances contains the list of instances of this service.
+    repeated ServiceInstance Instances = 3;
+}
+
+// ServiceList contains list of Services.
+message ServiceList {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Items contains list of Services.
+    repeated Service Items = 3;
+}

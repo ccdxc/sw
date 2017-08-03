@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package api;
+
+// TODO: Need to formalize these (from orch.proto)
+
+// Elements of a filter spec
+message Spec {
+  string Key = 1;
+  string Operator = 2;
+  repeated string Values = 3;
+}
+
+// The filter selecting a subset of objects to list
+message Filter {
+  repeated Spec Specs = 1;
+}
+
+// Specification for a watch
+message WatchSpec {
+  string RefVersion = 1;
+  repeated Spec Specs = 2;
+}
+
+message Empty {
+}

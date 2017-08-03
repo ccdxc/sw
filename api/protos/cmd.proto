@@ -26,7 +26,7 @@ message Node {
     // Spec contains the configuration of the node.
     NodeSpec Spec = 3 [(gogoproto.jsontag) = "spec,omitempty"];
 
-	// Status contains the current state of the node.
+    // Status contains the current state of the node.
     NodeStatus Status = 4 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
@@ -41,25 +41,25 @@ message NodeList {
 
 // ClusterSpec contains the configuration of the cluster.
 message ClusterSpec {
-	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
-	// nodes in the cluster.
+    // QuorumNodes contains the list of hostnames for nodes configured to be quorum
+    // nodes in the cluster.
     repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorumNodes,omitempty"];
 
-	// VirtualIP is the IP address for managing the cluster. It will be hosted by
-	// the winner of election between quorum nodes.
+    // VirtualIP is the IP address for managing the cluster. It will be hosted by
+    // the winner of election between quorum nodes.
     string VirtualIP = 2 [(gogoproto.jsontag) = "virtualIP,omitempty"];
 
-	// NTPServers contains the list of NTP servers for the cluster.
+    // NTPServers contains the list of NTP servers for the cluster.
     repeated string NTPServers = 3 [(gogoproto.jsontag) = "ntpServers,omitempty"];
 
-	// DNSSubDomain is the DNS subdomain for the default tenant.
+    // DNSSubDomain is the DNS subdomain for the default tenant.
     string DNSSubDomain = 4 [(gogoproto.jsontag) = "dnsSubDomain,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.
 message ClusterStatus {
-	// Leader contains the node name of the cluster leader.
-	string Leader = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+    // Leader contains the node name of the cluster leader.
+    string Leader = 1 [(gogoproto.jsontag) = "leader,omitempty"];
 }
 
 // Cluster represents a full cluster
@@ -71,7 +71,7 @@ message Cluster {
     // Spec contains the configuration of the cluster.
     ClusterSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
-	// Status contains the current state of the cluster.
+    // Status contains the current state of the cluster.
     ClusterStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 

@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package types;
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/common.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// ModuleAPI is used to get list of modules or a module in a Venice cluster.
+service ModuleAPI {
+    // List all Modules
+    rpc ListModules (api.Empty) returns (ModuleList) {}
+
+    // Get a Module
+    rpc GetModule (api.ObjectMeta) returns (Module) {}
+}
+
+// ModuleSpec contains the configuration for a module that runs in a Venice cluster.
+// Each module can consist of multiple processes (or submodules) that are scheduled
+// together. Each submodule can support one or more services. Each service runs at
+// a port.
+message ModuleSpec {
+    // ModuleType contains the type of module.
+    enum ModuleType {
+        // Singleton module type runs at the leader node.
+        Singleton = 0;
+
+        // DaemonSet module type runs on all controller nodes.
+        DaemonSet = 1;
+
+        // ReplicaSet module type runs NumCopies number of instances.
+        ReplicaSet = 2;
+    }
+
+    // Type contains the type of the module.
+    ModuleType Type = 1;
+
+    // NumCopies identifies the number of instances to run, for example with
+    // ReplicaSet.
+    uint32 NumCopies = 2;
+
+    // Submodule contains the information about a single process in a module.
+    message Submodule {
+        // Name identifies the submodule.
+        string Name = 1;
+
+        // Image identifies the image used to run this submodule.
+        string Image = 2;
+
+        // Service defines the attributes of a service supported by this module.
+        message Service {
+            // Name specifies the name of the service.
+            string Name = 1;
+
+            // Port specifies the port where the service runs.
+            uint32 Port = 2;
+        }
+
+        // Services contain the list of services supported by the submodule.
+        repeated Service Services = 3;
+    }
+
+    // Submodules contains the list of submodules for this module.
+    repeated Submodule Submodules = 3;
+
+    // Volume defines the storage for a module. Currently, it only supports
+    // local storage.
+    message Volume {
+        // Name contains the name of the volume.
+        string Name = 1;
+
+        // HostPath contains the host directory/file being mounted.
+        string HostPath = 2;
+
+        // MountPath contains the directory/file name of the mounted path.
+        string MountPath = 3;
+    }
+
+    // Volumes contains the list of volumes for this module.
+    repeated Volume Volumes = 4;
+}
+
+message ModuleStatus {
+    // Nodes contains the hosts where the module instances are running. 
+    repeated string Nodes = 1;
+}
+
+// Module represents a module running in a Venice cluster.
+message Module {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the module.
+    ModuleSpec Spec = 3;
+
+    // Status contains the current state of the module.
+    ModuleStatus Status = 4;
+}
+
+// ModuleList contains list of Modules.
+message ModuleList {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Items contains list of Modules.
+    repeated Module Items = 3;
+}
