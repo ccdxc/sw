@@ -87,6 +87,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		Uuid:         o.cluster.UUID,
 		VirtualIp:    o.cluster.Spec.VirtualIP,
 		QuorumConfig: quorumConfig,
+		NTPServers:   o.cluster.Spec.NTPServers,
 	}
 
 	err = sendJoins(nil, joinReq, o.cluster.Spec.QuorumNodes)

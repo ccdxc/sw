@@ -71,10 +71,9 @@ cluster-stop:
 
 clean: c-stop
 
-base-container:
+helper-containers:
+	@cd tools/docker-files/ntp; docker build -t srv1.pensando.io:5000/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t srv1.pensando.io:5000/pens-base:v0.1 .
-
-build-container:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.2 .
 
 container-qcompile:

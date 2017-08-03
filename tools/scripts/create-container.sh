@@ -14,15 +14,11 @@ function createApiGwContainer() {
 
 
 function createBinContainerTarBall() {
-    if [ "$(docker images -q pen-ntp)"  == "" ] 
-    then
-        docker build --rm -t pen-ntp -f tools/docker-files/ntp/Dockerfile tools/docker-files/ntp
-    fi
     images="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
         srv1.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
         srv1.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 \
         srv1.pensando.io:5000/coreos/etcd:v3.2.1 srv1.pensando.io:5000/elasticsearch/elasticsearch:5.4.1 \
-        srv1.pensando.io:5000/beats/filebeat:5.4.1"
+        srv1.pensando.io:5000/beats/filebeat:5.4.1 srv1.pensando.io:5000/pens-ntp:v0.2"
     for i in $images
     do
         if [ "$(docker images -q $i)"  == "" ] 
@@ -30,7 +26,7 @@ function createBinContainerTarBall() {
             docker pull $i
         fi
     done
-    docker save -o bin/pen.tar pen-base:latest pen-apiserver:latest pen-apigw:latest pen-ntp $images
+    docker save -o bin/pen.tar pen-base:latest pen-apiserver:latest pen-apigw:latest $images
 }
 
 function startCluster() {    

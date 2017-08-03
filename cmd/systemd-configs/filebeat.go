@@ -3,9 +3,10 @@ package configs
 import (
 	"bytes"
 	"fmt"
-	"github.com/pensando/sw/globals"
 	"os"
 	"text/template"
+
+	"github.com/pensando/sw/globals"
 )
 
 const (

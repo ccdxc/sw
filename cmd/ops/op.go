@@ -37,11 +37,11 @@ func RunHTTP(w http.ResponseWriter, op Op) {
 
 	encoder := json.NewEncoder(w)
 	if err != nil {
-		if err := encoder.Encode(err); err != nil {
+		if err = encoder.Encode(err); err != nil {
 			log.Errorf("Failed to encode with error: %v", err)
 		}
 	} else {
-		if err := encoder.Encode(result); err != nil {
+		if err = encoder.Encode(result); err != nil {
 			log.Errorf("Failed to encode with error: %v", err)
 		}
 	}

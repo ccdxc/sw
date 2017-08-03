@@ -39,7 +39,6 @@ func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	if err != nil {
 		log.Fatalf("Error creating grpc server: %v", err)
 	}
-
 	// register the RPC handler
 	RegisterClusterServer(rpcServer.GrpcServer, h)
 	defer func() { rpcServer.Stop() }()
@@ -157,11 +156,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
 		env.MasterService = services.NewMasterService(req.VirtualIp)
+		env.NtpService = services.NewNtpService(req.NTPServers)
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)
 		env.MasterService.Start()
 		env.LeaderService.Start()
+		env.NtpService.Start()
+	} else {
+		env.NtpService = services.NewNtpService(req.NTPServers)
+		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
 	}
 
 	env.NodeService = services.NewNodeService(req.VirtualIp)

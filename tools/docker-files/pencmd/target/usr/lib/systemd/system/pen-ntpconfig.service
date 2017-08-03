@@ -1,0 +1,7 @@
+[Unit]
+Description=Pensando Ntp configuration script
+Documentation=http://pensando.io/
+
+[Service]
+ExecStart=/bin/sh -c 'CONS=`/usr/bin/docker ps -q -f "label=io.kubernetes.container.name=pen-ntp"` ; if [ "$CONS" != "" ]; then /usr/bin/docker exec $CONS /usr/bin/reload-chrony-sources.sh; fi'
+Type=oneshot

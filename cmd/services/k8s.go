@@ -43,10 +43,11 @@ type volume struct {
 
 // k8sManifest is definition of a single k8s service.
 type k8sManifest struct {
-	image   string
-	kind    string
-	copies  int
-	volumes []volume
+	image      string
+	kind       string
+	copies     int
+	privileged bool
+	volumes    []volume
 }
 
 // TBD: Maybe configs objects (common and service specific) can be moved to cmd/configs package ?
@@ -88,6 +89,14 @@ var k8sManifests = map[string]k8sManifest{
 		volumes: []volume{
 			filebeatConfigVolume,
 			logVolume,
+		},
+	},
+	"pen-ntp": {
+		image:      "srv1.pensando.io:5000/pens-ntp:v0.2",
+		kind:       daemonSet,
+		privileged: true,
+		volumes: []volume{
+			configVolume,
 		},
 	},
 }
@@ -205,6 +214,9 @@ func createDaemonSet(client k8sclient.Interface, name string, manifest *k8sManif
 							Image:           manifest.image,
 							ImagePullPolicy: v1.PullNever,
 							VolumeMounts:    volumeMounts,
+							SecurityContext: &v1.SecurityContext{
+								Privileged: &manifest.privileged,
+							},
 						},
 					},
 					Volumes:     volumes,

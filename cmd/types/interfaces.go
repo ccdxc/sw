@@ -157,3 +157,17 @@ type K8sService interface {
 	// Stop the k8s service.
 	Stop()
 }
+
+// NtpService is the interface for managing config of local NTP daemon (deployed through K8s)
+// This determines which NTP server should the NTPD listen to for updates
+type NtpService interface {
+	// Start the ntp service for maintaining config
+	Start()
+
+	// Stop the ntp service
+	Stop()
+
+	// NtpConfigFile writes the NTP config file with the specified servers.
+	// No need to Start the service for just calling this function
+	NtpConfigFile(servers []string)
+}

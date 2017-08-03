@@ -113,7 +113,8 @@ def initCluster(nodeAddr):
         },
         "spec": {
             "quorumNodes": [ "node1", "node2", "node3" ],
-            "virtualIP": "192.168.30.10"
+            "virtualIP": "192.168.30.10",
+            "ntpServers": ["1.pool.ntp.org","2.pool.ntp.org"]
         }
     })
 

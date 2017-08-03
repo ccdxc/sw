@@ -23,4 +23,5 @@ var (
 	NodeService    types.NodeService
 	VipService     types.VIPService
 	SystemdService types.SystemdService
+	NtpService     types.NtpService
 )
