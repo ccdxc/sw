@@ -1,3 +1,4 @@
+cd `dirname $0`
 export LD_LIBRARY_PATH=.:../libs:/home/asic/tools/src/0.25/x86_64/lib64:$LD_LIBRARY_PATH
 #./cap_model -f ../cfg/p4_ingress_e2i.sknobs -f ../cfg/p4_egress_e2i.sknobs -f ../cfg/top_first_pkt.sknobs +cap_mpu_num_progs=2 +cap_mpu_prog/0/path=../cfg/phvwr_p4.bin +cap_mpu_prog/0/pc=0xbfbb4000 +cap_mpu_prog/1/path=../cfg/phvwr_p4p.bin +cap_mpu_prog/1/pc=0xb7abc000  +cap_pic_csr/0/cfg_tcam_table_profile/\*=0x1002000000000 +cap_pic_csr/0/cfg_table_profile/\*=0x80000000000 +plog=info -f ../cfg/pkt_gen_test.sknobs
 #./cap_model -f ../cfg/p4_ingress_e2i.sknobs -f ../cfg/p4_egress_e2i.sknobs -f ../cfg/top_first_pkt.sknobs +cap_mpu_num_progs=2 +cap_mpu_prog/0/path=../cfg/phvwri.bin +cap_mpu_prog/0/pc=0xbfbb4000 +cap_mpu_prog/1/path=../cfg/phvwr_p4p.bin +cap_mpu_prog/1/pc=0xb7abc000  +cap_pic_csr/0/cfg_tcam_table_profile/\*=0x1002000000000 +cap_pic_csr/0/cfg_table_profile/\*=0x80000000000 +plog=info -f ../cfg/pkt_gen_test.sknobs

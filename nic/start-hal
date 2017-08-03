@@ -1,0 +1,4 @@
+#! /bin/bash
+export DIR_NIC=`dirname $0`
+export HAL_CONFIG_PATH=$DIR_NIC/conf/
+LD_LIBRARY_PATH=$DIR_NIC/obj $DIR_NIC/obj/hal -c hal.json
