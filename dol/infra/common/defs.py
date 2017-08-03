@@ -49,7 +49,7 @@ FACTORY_SPEC_PATH           = "factory/specs/"
 CONFIG_TEMPLATE_PATH        = "config/templates/"
 CONFIG_SPEC_PATH            = "config/specs/"
 
-DOL_PATH            = "/hack/dol/"
+DOL_PATH            = "/dol/"
 TEST_MODULE_PATH    = "test/"
 
 DEFAULT_MODULES_LIST_FILE = "modules.list"

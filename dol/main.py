@@ -2,16 +2,20 @@
 import sys
 import os
 import pdb
-
 import infra.common.defs as defs
 
-ws_top = os.environ['WS_TOP']
+paths = [
+    '/nic/gen/protobuf/',
+    '/nic',
+    '/dol/third_party/'
+]
 
-pb2path = ws_top + '/hack/saratk/nic/gen/protobuf/'
-sys.path.append(ws_top + '/hack/saratk/nic')
-sys.path.append(pb2path)
-tp_path = ws_top + '/hack/dol/third_party/'
-sys.path.insert(0, tp_path)
+ws_top = os.path.dirname(sys.argv[0]) + '/../'
+os.environ['WS_TOP'] = ws_top
+for path in paths:
+    fullpath = ws_top + path
+    print("Adding Path: %s" % fullpath)
+    sys.path.insert(0, fullpath)
 
 import infra.factory.factory    as factory
 import infra.engine.engine      as engine
