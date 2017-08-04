@@ -224,10 +224,14 @@ func (el *election) ID() string {
 
 // Leader returns the current leader.
 func (el *election) Leader() string {
+	el.Lock()
+	defer el.Unlock()
 	return el.leader
 }
 
 // IsLeader returns if this contender is the leader.
 func (el *election) IsLeader() bool {
+	el.Lock()
+	defer el.Unlock()
 	return el.leader == el.id
 }

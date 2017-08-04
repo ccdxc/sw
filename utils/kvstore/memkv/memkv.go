@@ -337,7 +337,7 @@ func (f *MemKv) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 
 			if into != nil {
 				f.Unlock()
-				return f.decode(value, into, v.revision)
+				return f.decode(value, into, version)
 			}
 		}
 		f.Unlock()

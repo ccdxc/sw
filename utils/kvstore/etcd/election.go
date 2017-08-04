@@ -175,19 +175,22 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 					continue
 				}
 
+				el.Lock()
 				wasLeader := el.leader == el.id
 				el.leader = leader
+				changed := el.leader != el.id
+				el.Unlock()
 
 				// If previously leader but lost election (unexpectedly), send a Lost event and start a new Campaign.
-				if wasLeader && el.leader != el.id {
+				if wasLeader && changed {
 					el.sendEvent(kvstore.Lost, "")
 					go el.attempt(errCh)
 				}
 
-				if el.leader != el.id {
-					el.sendEvent(kvstore.Changed, el.leader)
+				if changed {
+					el.sendEvent(kvstore.Changed, leader)
 				} else {
-					el.sendEvent(kvstore.Elected, el.leader)
+					el.sendEvent(kvstore.Elected, leader)
 				}
 			}
 			if foundErr || stopped {
@@ -276,10 +279,14 @@ func (el *election) ID() string {
 
 // Leader returns the current leader.
 func (el *election) Leader() string {
+	el.Lock()
+	defer el.Unlock()
 	return el.leader
 }
 
 // IsLeader returns if this contender is the leader.
 func (el *election) IsLeader() bool {
+	el.Lock()
+	defer el.Unlock()
 	return el.leader == el.id
 }

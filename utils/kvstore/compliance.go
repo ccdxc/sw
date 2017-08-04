@@ -347,8 +347,8 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	ch := make(chan bool, numUpdates)
 	for ii := 0; ii < numUpdates; ii++ {
 		go func() {
-			if err = store.ConsistentUpdate(context.Background(), TestKey, &TestObj{}, updateFunc); err != nil {
-				t.Fatalf("ConsistentUpdate of a key failed with error: %v", err)
+			if err2 := store.ConsistentUpdate(context.Background(), TestKey, &TestObj{}, updateFunc); err2 != nil {
+				t.Fatalf("ConsistentUpdate of a key failed with error: %v", err2)
 			}
 			ch <- true
 		}()
