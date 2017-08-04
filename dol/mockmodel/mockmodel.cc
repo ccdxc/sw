@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <map>
+#include <limits.h>
 #include "buf_hdr.h"
 
 using namespace std;

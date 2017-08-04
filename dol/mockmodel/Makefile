@@ -1,4 +1,4 @@
-INCS = -I../../saratk/nic/model_sim/include/
+INCS = -I../../nic/model_sim/include/
 
 all:
 	make mock_model
