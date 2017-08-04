@@ -52,7 +52,8 @@ def preamble_script(postamble)
     sysctl -w vm.max_map_count=262144
 
     # stop firewall service and disable selinux
-    systemctl stop firewalld
+    systemctl stop firewalld && systemctl disable firewalld
+    systemctl stop chronyd && systemctl disable chronyd
     setenforce 0
     gpasswd -a vagrant root
     # curl -sSL box-builder.sh | bash

@@ -23,8 +23,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
 
       node.vm.provider "virtualbox" do |v|
-          v.cpus = 2
-          v.memory = 3072
+          if n < 3
+              v.cpus = 2
+              v.memory = 3072
+          else
+              v.cpus = 1
+              v.memory = 1024
+          end
           v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
 
           # this makes provisioning faster for yum-install type of stuff with caching

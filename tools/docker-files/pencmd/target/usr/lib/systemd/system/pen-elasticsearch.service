@@ -7,7 +7,7 @@ ExecStartPre=-/usr/bin/docker rm pen-elasticsearch
 ExecStart=/usr/pensando/bin/systemd-docker \
         --cgroups name=systemd --cgroups=cpu run --rm --name pen-elasticsearch \
         -e cluster.name=pen-elasticcluster -e xpack.security.enabled=false \
-        --net=host -e "ES_JAVA_OPTS=-Xms1g -Xmx1g" -p 9200:9200 \
+        --net=host -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -p 9200:9200 \
         srv1.pensando.io:5000/elasticsearch/elasticsearch:5.4.1
 ExecStop=/usr/bin/docker stop -t 2 pen-elasticsearch
 ExecStopPost=/usr/bin/docker rm -f pen-elasticsearch
