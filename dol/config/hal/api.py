@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import os
 import types_pb2
 import infra.common.defs    as defs
 import config.hal.defs      as haldefs
@@ -86,8 +87,13 @@ def init():
     global HalChannel
     if IsHalDisabled(): return
     
+    if 'HAL_GRPC_PORT' in os.environ:
+        port = os.environ['HAL_GRPC_PORT']
+    else:
+        port = '50054'
     cfglogger.info("Creating GRPC channel to HAL")
-    HalChannel = grpc.insecure_channel('localhost:50054')
+    server = 'localhost:' + port
+    HalChannel = grpc.insecure_channel(server)
     return
 
 def IsHalDisabled():
