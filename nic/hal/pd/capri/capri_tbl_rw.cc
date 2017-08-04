@@ -27,6 +27,7 @@
 #include <cap_te_csr.h>
 #include <cpp_int_helper.h>
 #include <capri_hbm.hpp>
+#include "cpu_hal_if.h"
 #endif
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
@@ -232,6 +233,11 @@ int capri_table_rw_init()
     log_file_fd = fopen("./capri_tbl_rw.log", "w+");
 
 #ifndef HAL_GTEST
+    // register hal cpu interface
+    auto cpu_if = new cpu_hal_if("cpu", "all");
+    cpu::access()->add_if("cpu_if", cpu_if);
+    cpu::access()->set_cur_if_name("cpu_if");
+
     // Register at top level all MRL classes.
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
     cap0_ptr->init(0);

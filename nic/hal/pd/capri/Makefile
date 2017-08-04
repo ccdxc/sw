@@ -1,6 +1,12 @@
 TOPDIR = ../../..
 SHAREDLIBRARY = libcapri.so
 
+CAPTOP = $(TOPDIR)/asic/capri/model
+CAPMODS = $(wildcard $(CAPTOP)/cap_*)
+CAPMODS += $(CAPTOP)/utils
+CAPMODS += $(TOPDIR)/asic/ip/verif/pcpp
+CAPINC = $(patsubst %, -I%, $(CAPMODS))
+
 LCXXFLAGS = \
 			-I. \
 			-I./csr \
@@ -14,6 +20,7 @@ LCXXFLAGS = \
 			-I../../../gen/iris/include \
 			-I../../../p4/nw/include \
 			-I../../../hal/pd \
+			$(CAPINC) \
 			-g \
 			-Wno-maybe-uninitialized \
 			$(NULL)

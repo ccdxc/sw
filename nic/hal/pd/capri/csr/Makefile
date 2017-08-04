@@ -1,7 +1,13 @@
-
 TOPDIR = ../../../..
 SHAREDLIBRARY = libcapricsr.so
 SYSTEM_LIBRARIES = -lmodelclient -lcapri
+
+CAPTOP = $(TOPDIR)/asic/capri/model
+CAPMODS = $(wildcard $(CAPTOP)/cap_*)
+CAPMODS += $(CAPTOP)/utils
+CAPMODS += $(TOPDIR)/asic/ip/verif/pcpp
+VPATH = $(subst ' ',:, $(CAPMODS))
+CAPINC = $(patsubst %,-I%,$(subst :, ,$(VPATH)))
 
 LCXXFLAGS = \
 			-L../../../../obj \
@@ -13,7 +19,8 @@ LCXXFLAGS = \
 			-I../../../../model_sim/include \
 			-I../../../../third-party/spdlog/include \
 			-I/usr/local/include \
-			-g -Wno-unused-variable -Wno-sign-compare -Wno-return-type \
+			$(CAPINC) \
+			-g -w -Wno-sign-compare -Wno-return-type \
 			$(NULL)
 
 SOURCES = \
@@ -51,7 +58,8 @@ SOURCES = \
     cap_pxc_csr.cc \
     cap_dppmem_csr.cc \
     LogMsg.cc \
-    cpu.cc \
+	cpu.cc \
+	cpu_hal_if.cc \
     $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc
