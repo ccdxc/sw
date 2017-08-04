@@ -195,11 +195,209 @@ cap_ppa_csr_sta_qos_counter_0_t::cap_ppa_csr_sta_qos_counter_0_t(string name, ca
         }
 cap_ppa_csr_sta_qos_counter_0_t::~cap_ppa_csr_sta_qos_counter_0_t() { }
 
-cap_ppa_csr_CNT_ppa_t::cap_ppa_csr_CNT_ppa_t(string name, cap_csr_base * parent): 
+cap_ppa_csr_CNT_ppa_pe9_phv_out_t::cap_ppa_csr_CNT_ppa_pe9_phv_out_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_ppa_csr_CNT_ppa_t::~cap_ppa_csr_CNT_ppa_t() { }
+cap_ppa_csr_CNT_ppa_pe9_phv_out_t::~cap_ppa_csr_CNT_ppa_pe9_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe9_t::cap_ppa_csr_CNT_ppa_pe9_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe9_t::~cap_ppa_csr_CNT_ppa_pe9_t() { }
+
+cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::cap_ppa_csr_CNT_ppa_pe9_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe9_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe8_phv_out_t::cap_ppa_csr_CNT_ppa_pe8_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe8_phv_out_t::~cap_ppa_csr_CNT_ppa_pe8_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe8_t::cap_ppa_csr_CNT_ppa_pe8_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe8_t::~cap_ppa_csr_CNT_ppa_pe8_t() { }
+
+cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::cap_ppa_csr_CNT_ppa_pe8_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe8_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe7_phv_out_t::cap_ppa_csr_CNT_ppa_pe7_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe7_phv_out_t::~cap_ppa_csr_CNT_ppa_pe7_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe7_t::cap_ppa_csr_CNT_ppa_pe7_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe7_t::~cap_ppa_csr_CNT_ppa_pe7_t() { }
+
+cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::cap_ppa_csr_CNT_ppa_pe7_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe7_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe6_phv_out_t::cap_ppa_csr_CNT_ppa_pe6_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe6_phv_out_t::~cap_ppa_csr_CNT_ppa_pe6_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe6_t::cap_ppa_csr_CNT_ppa_pe6_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe6_t::~cap_ppa_csr_CNT_ppa_pe6_t() { }
+
+cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::cap_ppa_csr_CNT_ppa_pe6_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe6_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe5_phv_out_t::cap_ppa_csr_CNT_ppa_pe5_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe5_phv_out_t::~cap_ppa_csr_CNT_ppa_pe5_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe5_t::cap_ppa_csr_CNT_ppa_pe5_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe5_t::~cap_ppa_csr_CNT_ppa_pe5_t() { }
+
+cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::cap_ppa_csr_CNT_ppa_pe5_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe5_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe4_phv_out_t::cap_ppa_csr_CNT_ppa_pe4_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe4_phv_out_t::~cap_ppa_csr_CNT_ppa_pe4_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe4_t::cap_ppa_csr_CNT_ppa_pe4_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe4_t::~cap_ppa_csr_CNT_ppa_pe4_t() { }
+
+cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::cap_ppa_csr_CNT_ppa_pe4_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe4_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe3_phv_out_t::cap_ppa_csr_CNT_ppa_pe3_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe3_phv_out_t::~cap_ppa_csr_CNT_ppa_pe3_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe3_t::cap_ppa_csr_CNT_ppa_pe3_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe3_t::~cap_ppa_csr_CNT_ppa_pe3_t() { }
+
+cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::cap_ppa_csr_CNT_ppa_pe3_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe3_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe2_phv_out_t::cap_ppa_csr_CNT_ppa_pe2_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe2_phv_out_t::~cap_ppa_csr_CNT_ppa_pe2_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe2_t::cap_ppa_csr_CNT_ppa_pe2_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe2_t::~cap_ppa_csr_CNT_ppa_pe2_t() { }
+
+cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::cap_ppa_csr_CNT_ppa_pe2_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe2_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe1_phv_out_t::cap_ppa_csr_CNT_ppa_pe1_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe1_phv_out_t::~cap_ppa_csr_CNT_ppa_pe1_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe1_t::cap_ppa_csr_CNT_ppa_pe1_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe1_t::~cap_ppa_csr_CNT_ppa_pe1_t() { }
+
+cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::cap_ppa_csr_CNT_ppa_pe1_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe1_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_pe0_phv_out_t::cap_ppa_csr_CNT_ppa_pe0_phv_out_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe0_phv_out_t::~cap_ppa_csr_CNT_ppa_pe0_phv_out_t() { }
+
+cap_ppa_csr_CNT_ppa_pe0_t::cap_ppa_csr_CNT_ppa_pe0_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe0_t::~cap_ppa_csr_CNT_ppa_pe0_t() { }
+
+cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::cap_ppa_csr_CNT_ppa_pe0_pkt_in_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::~cap_ppa_csr_CNT_ppa_pe0_pkt_in_t() { }
+
+cap_ppa_csr_CNT_ppa_ohi_t::cap_ppa_csr_CNT_ppa_ohi_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_ohi_t::~cap_ppa_csr_CNT_ppa_ohi_t() { }
+
+cap_ppa_csr_CNT_ppa_ma_t::cap_ppa_csr_CNT_ppa_ma_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_ma_t::~cap_ppa_csr_CNT_ppa_ma_t() { }
+
+cap_ppa_csr_CNT_ppa_dp_t::cap_ppa_csr_CNT_ppa_dp_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_dp_t::~cap_ppa_csr_CNT_ppa_dp_t() { }
+
+cap_ppa_csr_CNT_ppa_pb_t::cap_ppa_csr_CNT_ppa_pb_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ppa_csr_CNT_ppa_pb_t::~cap_ppa_csr_CNT_ppa_pb_t() { }
 
 cap_ppa_csr_cfg_free_cell_init_t::cap_ppa_csr_cfg_free_cell_init_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
@@ -487,76 +685,208 @@ void cap_ppa_csr_sta_qos_counter_0_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_ppa_csr_CNT_ppa_t::show() {
+void cap_ppa_csr_CNT_ppa_pe9_phv_out_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".pb_sop: 0x" << int_var__pb_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pb_eop: 0x" << int_var__pb_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".dp_sop: 0x" << int_var__dp_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".dp_eop: 0x" << int_var__dp_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".ma_sop: 0x" << int_var__ma_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".ma_eop: 0x" << int_var__ma_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_sop: 0x" << int_var__ohi_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_eop: 0x" << int_var__ohi_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_pkt_in_sop: 0x" << int_var__pe0_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_pkt_in_eop: 0x" << int_var__pe0_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_pkt_release: 0x" << int_var__pe0_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_ohi_out: 0x" << int_var__pe0_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_phv_out_sop: 0x" << int_var__pe0_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe0_phv_out_eop: 0x" << int_var__pe0_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_pkt_in_sop: 0x" << int_var__pe1_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_pkt_in_eop: 0x" << int_var__pe1_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_pkt_release: 0x" << int_var__pe1_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_ohi_out: 0x" << int_var__pe1_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_phv_out_sop: 0x" << int_var__pe1_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe1_phv_out_eop: 0x" << int_var__pe1_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_pkt_in_sop: 0x" << int_var__pe2_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_pkt_in_eop: 0x" << int_var__pe2_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_pkt_release: 0x" << int_var__pe2_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_ohi_out: 0x" << int_var__pe2_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_phv_out_sop: 0x" << int_var__pe2_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe2_phv_out_eop: 0x" << int_var__pe2_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_pkt_in_sop: 0x" << int_var__pe3_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_pkt_in_eop: 0x" << int_var__pe3_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_pkt_release: 0x" << int_var__pe3_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_ohi_out: 0x" << int_var__pe3_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_phv_out_sop: 0x" << int_var__pe3_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe3_phv_out_eop: 0x" << int_var__pe3_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_pkt_in_sop: 0x" << int_var__pe4_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_pkt_in_eop: 0x" << int_var__pe4_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_pkt_release: 0x" << int_var__pe4_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_ohi_out: 0x" << int_var__pe4_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_phv_out_sop: 0x" << int_var__pe4_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe4_phv_out_eop: 0x" << int_var__pe4_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_pkt_in_sop: 0x" << int_var__pe5_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_pkt_in_eop: 0x" << int_var__pe5_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_pkt_release: 0x" << int_var__pe5_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_ohi_out: 0x" << int_var__pe5_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_phv_out_sop: 0x" << int_var__pe5_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe5_phv_out_eop: 0x" << int_var__pe5_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_pkt_in_sop: 0x" << int_var__pe6_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_pkt_in_eop: 0x" << int_var__pe6_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_pkt_release: 0x" << int_var__pe6_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_ohi_out: 0x" << int_var__pe6_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_phv_out_sop: 0x" << int_var__pe6_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe6_phv_out_eop: 0x" << int_var__pe6_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_pkt_in_sop: 0x" << int_var__pe7_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_pkt_in_eop: 0x" << int_var__pe7_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_pkt_release: 0x" << int_var__pe7_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_ohi_out: 0x" << int_var__pe7_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_phv_out_sop: 0x" << int_var__pe7_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe7_phv_out_eop: 0x" << int_var__pe7_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_pkt_in_sop: 0x" << int_var__pe8_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_pkt_in_eop: 0x" << int_var__pe8_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_pkt_release: 0x" << int_var__pe8_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_ohi_out: 0x" << int_var__pe8_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_phv_out_sop: 0x" << int_var__pe8_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe8_phv_out_eop: 0x" << int_var__pe8_phv_out_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_pkt_in_sop: 0x" << int_var__pe9_pkt_in_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_pkt_in_eop: 0x" << int_var__pe9_pkt_in_eop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_pkt_release: 0x" << int_var__pe9_pkt_release << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_ohi_out: 0x" << int_var__pe9_ohi_out << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_phv_out_sop: 0x" << int_var__pe9_phv_out_sop << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".pe9_phv_out_eop: 0x" << int_var__pe9_phv_out_eop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_phv_out_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".pkt_release: 0x" << int_var__pkt_release << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".ohi_out: 0x" << int_var__ohi_out << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_ohi_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_ma_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_dp_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ppa_csr_CNT_ppa_pb_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
 }
 
 void cap_ppa_csr_cfg_free_cell_init_t::show() {
@@ -700,7 +1030,40 @@ void cap_ppa_csr_t::show() {
         cfg_align_chk_profile[ii].show();
     }
     cfg_free_cell_init.show();
-    CNT_ppa.show();
+    CNT_ppa_pb.show();
+    CNT_ppa_dp.show();
+    CNT_ppa_ma.show();
+    CNT_ppa_ohi.show();
+    CNT_ppa_pe0_pkt_in.show();
+    CNT_ppa_pe0.show();
+    CNT_ppa_pe0_phv_out.show();
+    CNT_ppa_pe1_pkt_in.show();
+    CNT_ppa_pe1.show();
+    CNT_ppa_pe1_phv_out.show();
+    CNT_ppa_pe2_pkt_in.show();
+    CNT_ppa_pe2.show();
+    CNT_ppa_pe2_phv_out.show();
+    CNT_ppa_pe3_pkt_in.show();
+    CNT_ppa_pe3.show();
+    CNT_ppa_pe3_phv_out.show();
+    CNT_ppa_pe4_pkt_in.show();
+    CNT_ppa_pe4.show();
+    CNT_ppa_pe4_phv_out.show();
+    CNT_ppa_pe5_pkt_in.show();
+    CNT_ppa_pe5.show();
+    CNT_ppa_pe5_phv_out.show();
+    CNT_ppa_pe6_pkt_in.show();
+    CNT_ppa_pe6.show();
+    CNT_ppa_pe6_phv_out.show();
+    CNT_ppa_pe7_pkt_in.show();
+    CNT_ppa_pe7.show();
+    CNT_ppa_pe7_phv_out.show();
+    CNT_ppa_pe8_pkt_in.show();
+    CNT_ppa_pe8.show();
+    CNT_ppa_pe8_phv_out.show();
+    CNT_ppa_pe9_pkt_in.show();
+    CNT_ppa_pe9.show();
+    CNT_ppa_pe9_phv_out.show();
     sta_qos_counter_0.show();
     sta_qos_counter_1.show();
     sta_qos_counter_2.show();
@@ -893,8 +1256,173 @@ int cap_ppa_csr_sta_qos_counter_0_t::get_width() const {
 
 }
 
-int cap_ppa_csr_CNT_ppa_t::get_width() const {
-    return cap_ppa_csr_CNT_ppa_t::s_get_width();
+int cap_ppa_csr_CNT_ppa_pe9_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe9_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe9_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe9_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe8_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe8_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe7_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe7_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe6_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe6_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe5_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe5_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe4_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe4_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe3_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe3_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe2_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe2_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe1_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe1_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_phv_out_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe0_phv_out_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe0_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_ohi_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_ohi_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_ma_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_ma_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_dp_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_dp_t::s_get_width();
+
+}
+
+int cap_ppa_csr_CNT_ppa_pb_t::get_width() const {
+    return cap_ppa_csr_CNT_ppa_pb_t::s_get_width();
 
 }
 
@@ -1222,77 +1750,275 @@ int cap_ppa_csr_sta_qos_counter_0_t::s_get_width() {
     return _count;
 }
 
-int cap_ppa_csr_CNT_ppa_t::s_get_width() {
+int cap_ppa_csr_CNT_ppa_pe9_phv_out_t::s_get_width() {
     int _count = 0;
 
-    _count += 32; // pb_sop
-    _count += 32; // pb_eop
-    _count += 32; // dp_sop
-    _count += 32; // dp_eop
-    _count += 32; // ma_sop
-    _count += 32; // ma_eop
-    _count += 32; // ohi_sop
-    _count += 32; // ohi_eop
-    _count += 32; // pe0_pkt_in_sop
-    _count += 32; // pe0_pkt_in_eop
-    _count += 32; // pe0_pkt_release
-    _count += 32; // pe0_ohi_out
-    _count += 32; // pe0_phv_out_sop
-    _count += 32; // pe0_phv_out_eop
-    _count += 32; // pe1_pkt_in_sop
-    _count += 32; // pe1_pkt_in_eop
-    _count += 32; // pe1_pkt_release
-    _count += 32; // pe1_ohi_out
-    _count += 32; // pe1_phv_out_sop
-    _count += 32; // pe1_phv_out_eop
-    _count += 32; // pe2_pkt_in_sop
-    _count += 32; // pe2_pkt_in_eop
-    _count += 32; // pe2_pkt_release
-    _count += 32; // pe2_ohi_out
-    _count += 32; // pe2_phv_out_sop
-    _count += 32; // pe2_phv_out_eop
-    _count += 32; // pe3_pkt_in_sop
-    _count += 32; // pe3_pkt_in_eop
-    _count += 32; // pe3_pkt_release
-    _count += 32; // pe3_ohi_out
-    _count += 32; // pe3_phv_out_sop
-    _count += 32; // pe3_phv_out_eop
-    _count += 32; // pe4_pkt_in_sop
-    _count += 32; // pe4_pkt_in_eop
-    _count += 32; // pe4_pkt_release
-    _count += 32; // pe4_ohi_out
-    _count += 32; // pe4_phv_out_sop
-    _count += 32; // pe4_phv_out_eop
-    _count += 32; // pe5_pkt_in_sop
-    _count += 32; // pe5_pkt_in_eop
-    _count += 32; // pe5_pkt_release
-    _count += 32; // pe5_ohi_out
-    _count += 32; // pe5_phv_out_sop
-    _count += 32; // pe5_phv_out_eop
-    _count += 32; // pe6_pkt_in_sop
-    _count += 32; // pe6_pkt_in_eop
-    _count += 32; // pe6_pkt_release
-    _count += 32; // pe6_ohi_out
-    _count += 32; // pe6_phv_out_sop
-    _count += 32; // pe6_phv_out_eop
-    _count += 32; // pe7_pkt_in_sop
-    _count += 32; // pe7_pkt_in_eop
-    _count += 32; // pe7_pkt_release
-    _count += 32; // pe7_ohi_out
-    _count += 32; // pe7_phv_out_sop
-    _count += 32; // pe7_phv_out_eop
-    _count += 32; // pe8_pkt_in_sop
-    _count += 32; // pe8_pkt_in_eop
-    _count += 32; // pe8_pkt_release
-    _count += 32; // pe8_ohi_out
-    _count += 32; // pe8_phv_out_sop
-    _count += 32; // pe8_phv_out_eop
-    _count += 32; // pe9_pkt_in_sop
-    _count += 32; // pe9_pkt_in_eop
-    _count += 32; // pe9_pkt_release
-    _count += 32; // pe9_ohi_out
-    _count += 32; // pe9_phv_out_sop
-    _count += 32; // pe9_phv_out_eop
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe9_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_phv_out_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // pkt_release
+    _count += 32; // ohi_out
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_ohi_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_ma_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_dp_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ppa_csr_CNT_ppa_pb_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
     return _count;
 }
 
@@ -1456,7 +2182,40 @@ int cap_ppa_csr_t::s_get_width() {
     _count += (cap_ppa_csr_cfg_len_chk_profile_t::s_get_width() * 4); // cfg_len_chk_profile
     _count += (cap_ppa_csr_cfg_align_chk_profile_t::s_get_width() * 4); // cfg_align_chk_profile
     _count += cap_ppa_csr_cfg_free_cell_init_t::s_get_width(); // cfg_free_cell_init
-    _count += cap_ppa_csr_CNT_ppa_t::s_get_width(); // CNT_ppa
+    _count += cap_ppa_csr_CNT_ppa_pb_t::s_get_width(); // CNT_ppa_pb
+    _count += cap_ppa_csr_CNT_ppa_dp_t::s_get_width(); // CNT_ppa_dp
+    _count += cap_ppa_csr_CNT_ppa_ma_t::s_get_width(); // CNT_ppa_ma
+    _count += cap_ppa_csr_CNT_ppa_ohi_t::s_get_width(); // CNT_ppa_ohi
+    _count += cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::s_get_width(); // CNT_ppa_pe0_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe0_t::s_get_width(); // CNT_ppa_pe0
+    _count += cap_ppa_csr_CNT_ppa_pe0_phv_out_t::s_get_width(); // CNT_ppa_pe0_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::s_get_width(); // CNT_ppa_pe1_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe1_t::s_get_width(); // CNT_ppa_pe1
+    _count += cap_ppa_csr_CNT_ppa_pe1_phv_out_t::s_get_width(); // CNT_ppa_pe1_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::s_get_width(); // CNT_ppa_pe2_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe2_t::s_get_width(); // CNT_ppa_pe2
+    _count += cap_ppa_csr_CNT_ppa_pe2_phv_out_t::s_get_width(); // CNT_ppa_pe2_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::s_get_width(); // CNT_ppa_pe3_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe3_t::s_get_width(); // CNT_ppa_pe3
+    _count += cap_ppa_csr_CNT_ppa_pe3_phv_out_t::s_get_width(); // CNT_ppa_pe3_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::s_get_width(); // CNT_ppa_pe4_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe4_t::s_get_width(); // CNT_ppa_pe4
+    _count += cap_ppa_csr_CNT_ppa_pe4_phv_out_t::s_get_width(); // CNT_ppa_pe4_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::s_get_width(); // CNT_ppa_pe5_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe5_t::s_get_width(); // CNT_ppa_pe5
+    _count += cap_ppa_csr_CNT_ppa_pe5_phv_out_t::s_get_width(); // CNT_ppa_pe5_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::s_get_width(); // CNT_ppa_pe6_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe6_t::s_get_width(); // CNT_ppa_pe6
+    _count += cap_ppa_csr_CNT_ppa_pe6_phv_out_t::s_get_width(); // CNT_ppa_pe6_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::s_get_width(); // CNT_ppa_pe7_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe7_t::s_get_width(); // CNT_ppa_pe7
+    _count += cap_ppa_csr_CNT_ppa_pe7_phv_out_t::s_get_width(); // CNT_ppa_pe7_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::s_get_width(); // CNT_ppa_pe8_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe8_t::s_get_width(); // CNT_ppa_pe8
+    _count += cap_ppa_csr_CNT_ppa_pe8_phv_out_t::s_get_width(); // CNT_ppa_pe8_phv_out
+    _count += cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::s_get_width(); // CNT_ppa_pe9_pkt_in
+    _count += cap_ppa_csr_CNT_ppa_pe9_t::s_get_width(); // CNT_ppa_pe9
+    _count += cap_ppa_csr_CNT_ppa_pe9_phv_out_t::s_get_width(); // CNT_ppa_pe9_phv_out
     _count += cap_ppa_csr_sta_qos_counter_0_t::s_get_width(); // sta_qos_counter_0
     _count += cap_ppa_csr_sta_qos_counter_1_t::s_get_width(); // sta_qos_counter_1
     _count += cap_ppa_csr_sta_qos_counter_2_t::s_get_width(); // sta_qos_counter_2
@@ -1793,212 +2552,377 @@ void cap_ppa_csr_sta_qos_counter_0_t::all(const cpp_int & _val) {
     _count += 64;
 }
 
-void cap_ppa_csr_CNT_ppa_t::all(const cpp_int & _val) {
+void cap_ppa_csr_CNT_ppa_pe9_phv_out_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // pb_sop
-    int_var__pb_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pb_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pb_eop
-    int_var__pb_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pb_eop_cpp_int_t >()  ;
-    _count += 32;
-    // dp_sop
-    int_var__dp_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< dp_sop_cpp_int_t >()  ;
-    _count += 32;
-    // dp_eop
-    int_var__dp_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< dp_eop_cpp_int_t >()  ;
-    _count += 32;
-    // ma_sop
-    int_var__ma_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ma_sop_cpp_int_t >()  ;
-    _count += 32;
-    // ma_eop
-    int_var__ma_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ma_eop_cpp_int_t >()  ;
-    _count += 32;
-    // ohi_sop
-    int_var__ohi_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_sop_cpp_int_t >()  ;
-    _count += 32;
-    // ohi_eop
-    int_var__ohi_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_pkt_in_sop
-    int_var__pe0_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_pkt_in_eop
-    int_var__pe0_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_pkt_release
-    int_var__pe0_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_ohi_out
-    int_var__pe0_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_phv_out_sop
-    int_var__pe0_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe0_phv_out_eop
-    int_var__pe0_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe0_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_pkt_in_sop
-    int_var__pe1_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_pkt_in_eop
-    int_var__pe1_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_pkt_release
-    int_var__pe1_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_ohi_out
-    int_var__pe1_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_phv_out_sop
-    int_var__pe1_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe1_phv_out_eop
-    int_var__pe1_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe1_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_pkt_in_sop
-    int_var__pe2_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_pkt_in_eop
-    int_var__pe2_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_pkt_release
-    int_var__pe2_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_ohi_out
-    int_var__pe2_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_phv_out_sop
-    int_var__pe2_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe2_phv_out_eop
-    int_var__pe2_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe2_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_pkt_in_sop
-    int_var__pe3_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_pkt_in_eop
-    int_var__pe3_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_pkt_release
-    int_var__pe3_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_ohi_out
-    int_var__pe3_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_phv_out_sop
-    int_var__pe3_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe3_phv_out_eop
-    int_var__pe3_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe3_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_pkt_in_sop
-    int_var__pe4_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_pkt_in_eop
-    int_var__pe4_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_pkt_release
-    int_var__pe4_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_ohi_out
-    int_var__pe4_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_phv_out_sop
-    int_var__pe4_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe4_phv_out_eop
-    int_var__pe4_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe4_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_pkt_in_sop
-    int_var__pe5_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_pkt_in_eop
-    int_var__pe5_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_pkt_release
-    int_var__pe5_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_ohi_out
-    int_var__pe5_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_phv_out_sop
-    int_var__pe5_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe5_phv_out_eop
-    int_var__pe5_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe5_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_pkt_in_sop
-    int_var__pe6_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_pkt_in_eop
-    int_var__pe6_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_pkt_release
-    int_var__pe6_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_ohi_out
-    int_var__pe6_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_phv_out_sop
-    int_var__pe6_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe6_phv_out_eop
-    int_var__pe6_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe6_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_pkt_in_sop
-    int_var__pe7_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_pkt_in_eop
-    int_var__pe7_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_pkt_release
-    int_var__pe7_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_ohi_out
-    int_var__pe7_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_phv_out_sop
-    int_var__pe7_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe7_phv_out_eop
-    int_var__pe7_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe7_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_pkt_in_sop
-    int_var__pe8_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_pkt_in_eop
-    int_var__pe8_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_pkt_release
-    int_var__pe8_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_ohi_out
-    int_var__pe8_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_phv_out_sop
-    int_var__pe8_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe8_phv_out_eop
-    int_var__pe8_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe8_phv_out_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_pkt_in_sop
-    int_var__pe9_pkt_in_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_pkt_in_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_pkt_in_eop
-    int_var__pe9_pkt_in_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_pkt_in_eop_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_pkt_release
-    int_var__pe9_pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_pkt_release_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_ohi_out
-    int_var__pe9_ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_ohi_out_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_phv_out_sop
-    int_var__pe9_phv_out_sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_phv_out_sop_cpp_int_t >()  ;
-    _count += 32;
-    // pe9_phv_out_eop
-    int_var__pe9_phv_out_eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pe9_phv_out_eop_cpp_int_t >()  ;
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_phv_out_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // pkt_release
+    int_var__pkt_release = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< pkt_release_cpp_int_t >()  ;
+    _count += 32;
+    // ohi_out
+    int_var__ohi_out = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< ohi_out_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_ohi_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_ma_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_dp_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ppa_csr_CNT_ppa_pb_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
     _count += 32;
 }
 
@@ -2273,8 +3197,74 @@ void cap_ppa_csr_t::all(const cpp_int & _val) {
     }
     cfg_free_cell_init.all( hlp.get_slc(_val, _count, _count -1 + cfg_free_cell_init.get_width() )); // cfg_free_cell_init
     _count += cfg_free_cell_init.get_width();
-    CNT_ppa.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa.get_width() )); // CNT_ppa
-    _count += CNT_ppa.get_width();
+    CNT_ppa_pb.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pb.get_width() )); // CNT_ppa_pb
+    _count += CNT_ppa_pb.get_width();
+    CNT_ppa_dp.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_dp.get_width() )); // CNT_ppa_dp
+    _count += CNT_ppa_dp.get_width();
+    CNT_ppa_ma.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_ma.get_width() )); // CNT_ppa_ma
+    _count += CNT_ppa_ma.get_width();
+    CNT_ppa_ohi.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_ohi.get_width() )); // CNT_ppa_ohi
+    _count += CNT_ppa_ohi.get_width();
+    CNT_ppa_pe0_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe0_pkt_in.get_width() )); // CNT_ppa_pe0_pkt_in
+    _count += CNT_ppa_pe0_pkt_in.get_width();
+    CNT_ppa_pe0.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe0.get_width() )); // CNT_ppa_pe0
+    _count += CNT_ppa_pe0.get_width();
+    CNT_ppa_pe0_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe0_phv_out.get_width() )); // CNT_ppa_pe0_phv_out
+    _count += CNT_ppa_pe0_phv_out.get_width();
+    CNT_ppa_pe1_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe1_pkt_in.get_width() )); // CNT_ppa_pe1_pkt_in
+    _count += CNT_ppa_pe1_pkt_in.get_width();
+    CNT_ppa_pe1.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe1.get_width() )); // CNT_ppa_pe1
+    _count += CNT_ppa_pe1.get_width();
+    CNT_ppa_pe1_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe1_phv_out.get_width() )); // CNT_ppa_pe1_phv_out
+    _count += CNT_ppa_pe1_phv_out.get_width();
+    CNT_ppa_pe2_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe2_pkt_in.get_width() )); // CNT_ppa_pe2_pkt_in
+    _count += CNT_ppa_pe2_pkt_in.get_width();
+    CNT_ppa_pe2.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe2.get_width() )); // CNT_ppa_pe2
+    _count += CNT_ppa_pe2.get_width();
+    CNT_ppa_pe2_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe2_phv_out.get_width() )); // CNT_ppa_pe2_phv_out
+    _count += CNT_ppa_pe2_phv_out.get_width();
+    CNT_ppa_pe3_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe3_pkt_in.get_width() )); // CNT_ppa_pe3_pkt_in
+    _count += CNT_ppa_pe3_pkt_in.get_width();
+    CNT_ppa_pe3.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe3.get_width() )); // CNT_ppa_pe3
+    _count += CNT_ppa_pe3.get_width();
+    CNT_ppa_pe3_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe3_phv_out.get_width() )); // CNT_ppa_pe3_phv_out
+    _count += CNT_ppa_pe3_phv_out.get_width();
+    CNT_ppa_pe4_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe4_pkt_in.get_width() )); // CNT_ppa_pe4_pkt_in
+    _count += CNT_ppa_pe4_pkt_in.get_width();
+    CNT_ppa_pe4.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe4.get_width() )); // CNT_ppa_pe4
+    _count += CNT_ppa_pe4.get_width();
+    CNT_ppa_pe4_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe4_phv_out.get_width() )); // CNT_ppa_pe4_phv_out
+    _count += CNT_ppa_pe4_phv_out.get_width();
+    CNT_ppa_pe5_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe5_pkt_in.get_width() )); // CNT_ppa_pe5_pkt_in
+    _count += CNT_ppa_pe5_pkt_in.get_width();
+    CNT_ppa_pe5.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe5.get_width() )); // CNT_ppa_pe5
+    _count += CNT_ppa_pe5.get_width();
+    CNT_ppa_pe5_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe5_phv_out.get_width() )); // CNT_ppa_pe5_phv_out
+    _count += CNT_ppa_pe5_phv_out.get_width();
+    CNT_ppa_pe6_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe6_pkt_in.get_width() )); // CNT_ppa_pe6_pkt_in
+    _count += CNT_ppa_pe6_pkt_in.get_width();
+    CNT_ppa_pe6.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe6.get_width() )); // CNT_ppa_pe6
+    _count += CNT_ppa_pe6.get_width();
+    CNT_ppa_pe6_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe6_phv_out.get_width() )); // CNT_ppa_pe6_phv_out
+    _count += CNT_ppa_pe6_phv_out.get_width();
+    CNT_ppa_pe7_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe7_pkt_in.get_width() )); // CNT_ppa_pe7_pkt_in
+    _count += CNT_ppa_pe7_pkt_in.get_width();
+    CNT_ppa_pe7.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe7.get_width() )); // CNT_ppa_pe7
+    _count += CNT_ppa_pe7.get_width();
+    CNT_ppa_pe7_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe7_phv_out.get_width() )); // CNT_ppa_pe7_phv_out
+    _count += CNT_ppa_pe7_phv_out.get_width();
+    CNT_ppa_pe8_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe8_pkt_in.get_width() )); // CNT_ppa_pe8_pkt_in
+    _count += CNT_ppa_pe8_pkt_in.get_width();
+    CNT_ppa_pe8.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe8.get_width() )); // CNT_ppa_pe8
+    _count += CNT_ppa_pe8.get_width();
+    CNT_ppa_pe8_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe8_phv_out.get_width() )); // CNT_ppa_pe8_phv_out
+    _count += CNT_ppa_pe8_phv_out.get_width();
+    CNT_ppa_pe9_pkt_in.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe9_pkt_in.get_width() )); // CNT_ppa_pe9_pkt_in
+    _count += CNT_ppa_pe9_pkt_in.get_width();
+    CNT_ppa_pe9.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe9.get_width() )); // CNT_ppa_pe9
+    _count += CNT_ppa_pe9.get_width();
+    CNT_ppa_pe9_phv_out.all( hlp.get_slc(_val, _count, _count -1 + CNT_ppa_pe9_phv_out.get_width() )); // CNT_ppa_pe9_phv_out
+    _count += CNT_ppa_pe9_phv_out.get_width();
     sta_qos_counter_0.all( hlp.get_slc(_val, _count, _count -1 + sta_qos_counter_0.get_width() )); // sta_qos_counter_0
     _count += sta_qos_counter_0.get_width();
     sta_qos_counter_1.all( hlp.get_slc(_val, _count, _count -1 + sta_qos_counter_1.get_width() )); // sta_qos_counter_1
@@ -2706,213 +3696,444 @@ cpp_int cap_ppa_csr_sta_qos_counter_0_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::all() const {
+cpp_int cap_ppa_csr_CNT_ppa_pe9_phv_out_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // pb_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pb_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pb_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pb_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // dp_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__dp_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // dp_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__dp_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // ma_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ma_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // ma_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ma_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // ohi_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // ohi_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe0_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe0_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe1_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe1_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe2_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe2_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe3_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe3_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe4_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe4_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe5_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe5_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe6_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe6_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe7_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe7_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe8_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe8_phv_out_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_pkt_in_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_pkt_in_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_pkt_in_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_pkt_in_eop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_pkt_release
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_pkt_release) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_ohi_out
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_ohi_out) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_phv_out_sop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_phv_out_sop) , _count, _count -1 + 32 );
-    _count += 32;
-    // pe9_phv_out_eop
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pe9_phv_out_eop) , _count, _count -1 + 32 );
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe9_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe8_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe8_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe7_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe7_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe6_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe6_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe5_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe5_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe4_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe4_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe3_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe3_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe2_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe2_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe1_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe1_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe0_phv_out_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe0_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // pkt_release
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pkt_release) , _count, _count -1 + 32 );
+    _count += 32;
+    // ohi_out
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ohi_out) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_ohi_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_ma_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_dp_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ppa_csr_CNT_ppa_pb_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
     _count += 32;
     return ret_val;
 }
@@ -3221,8 +4442,74 @@ cpp_int cap_ppa_csr_t::all() const {
     }
     ret_val = hlp.set_slc(ret_val, cfg_free_cell_init.all() , _count, _count -1 + cfg_free_cell_init.get_width() ); // cfg_free_cell_init
     _count += cfg_free_cell_init.get_width();
-    ret_val = hlp.set_slc(ret_val, CNT_ppa.all() , _count, _count -1 + CNT_ppa.get_width() ); // CNT_ppa
-    _count += CNT_ppa.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pb.all() , _count, _count -1 + CNT_ppa_pb.get_width() ); // CNT_ppa_pb
+    _count += CNT_ppa_pb.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_dp.all() , _count, _count -1 + CNT_ppa_dp.get_width() ); // CNT_ppa_dp
+    _count += CNT_ppa_dp.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_ma.all() , _count, _count -1 + CNT_ppa_ma.get_width() ); // CNT_ppa_ma
+    _count += CNT_ppa_ma.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_ohi.all() , _count, _count -1 + CNT_ppa_ohi.get_width() ); // CNT_ppa_ohi
+    _count += CNT_ppa_ohi.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe0_pkt_in.all() , _count, _count -1 + CNT_ppa_pe0_pkt_in.get_width() ); // CNT_ppa_pe0_pkt_in
+    _count += CNT_ppa_pe0_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe0.all() , _count, _count -1 + CNT_ppa_pe0.get_width() ); // CNT_ppa_pe0
+    _count += CNT_ppa_pe0.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe0_phv_out.all() , _count, _count -1 + CNT_ppa_pe0_phv_out.get_width() ); // CNT_ppa_pe0_phv_out
+    _count += CNT_ppa_pe0_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe1_pkt_in.all() , _count, _count -1 + CNT_ppa_pe1_pkt_in.get_width() ); // CNT_ppa_pe1_pkt_in
+    _count += CNT_ppa_pe1_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe1.all() , _count, _count -1 + CNT_ppa_pe1.get_width() ); // CNT_ppa_pe1
+    _count += CNT_ppa_pe1.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe1_phv_out.all() , _count, _count -1 + CNT_ppa_pe1_phv_out.get_width() ); // CNT_ppa_pe1_phv_out
+    _count += CNT_ppa_pe1_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe2_pkt_in.all() , _count, _count -1 + CNT_ppa_pe2_pkt_in.get_width() ); // CNT_ppa_pe2_pkt_in
+    _count += CNT_ppa_pe2_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe2.all() , _count, _count -1 + CNT_ppa_pe2.get_width() ); // CNT_ppa_pe2
+    _count += CNT_ppa_pe2.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe2_phv_out.all() , _count, _count -1 + CNT_ppa_pe2_phv_out.get_width() ); // CNT_ppa_pe2_phv_out
+    _count += CNT_ppa_pe2_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe3_pkt_in.all() , _count, _count -1 + CNT_ppa_pe3_pkt_in.get_width() ); // CNT_ppa_pe3_pkt_in
+    _count += CNT_ppa_pe3_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe3.all() , _count, _count -1 + CNT_ppa_pe3.get_width() ); // CNT_ppa_pe3
+    _count += CNT_ppa_pe3.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe3_phv_out.all() , _count, _count -1 + CNT_ppa_pe3_phv_out.get_width() ); // CNT_ppa_pe3_phv_out
+    _count += CNT_ppa_pe3_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe4_pkt_in.all() , _count, _count -1 + CNT_ppa_pe4_pkt_in.get_width() ); // CNT_ppa_pe4_pkt_in
+    _count += CNT_ppa_pe4_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe4.all() , _count, _count -1 + CNT_ppa_pe4.get_width() ); // CNT_ppa_pe4
+    _count += CNT_ppa_pe4.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe4_phv_out.all() , _count, _count -1 + CNT_ppa_pe4_phv_out.get_width() ); // CNT_ppa_pe4_phv_out
+    _count += CNT_ppa_pe4_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe5_pkt_in.all() , _count, _count -1 + CNT_ppa_pe5_pkt_in.get_width() ); // CNT_ppa_pe5_pkt_in
+    _count += CNT_ppa_pe5_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe5.all() , _count, _count -1 + CNT_ppa_pe5.get_width() ); // CNT_ppa_pe5
+    _count += CNT_ppa_pe5.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe5_phv_out.all() , _count, _count -1 + CNT_ppa_pe5_phv_out.get_width() ); // CNT_ppa_pe5_phv_out
+    _count += CNT_ppa_pe5_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe6_pkt_in.all() , _count, _count -1 + CNT_ppa_pe6_pkt_in.get_width() ); // CNT_ppa_pe6_pkt_in
+    _count += CNT_ppa_pe6_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe6.all() , _count, _count -1 + CNT_ppa_pe6.get_width() ); // CNT_ppa_pe6
+    _count += CNT_ppa_pe6.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe6_phv_out.all() , _count, _count -1 + CNT_ppa_pe6_phv_out.get_width() ); // CNT_ppa_pe6_phv_out
+    _count += CNT_ppa_pe6_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe7_pkt_in.all() , _count, _count -1 + CNT_ppa_pe7_pkt_in.get_width() ); // CNT_ppa_pe7_pkt_in
+    _count += CNT_ppa_pe7_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe7.all() , _count, _count -1 + CNT_ppa_pe7.get_width() ); // CNT_ppa_pe7
+    _count += CNT_ppa_pe7.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe7_phv_out.all() , _count, _count -1 + CNT_ppa_pe7_phv_out.get_width() ); // CNT_ppa_pe7_phv_out
+    _count += CNT_ppa_pe7_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe8_pkt_in.all() , _count, _count -1 + CNT_ppa_pe8_pkt_in.get_width() ); // CNT_ppa_pe8_pkt_in
+    _count += CNT_ppa_pe8_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe8.all() , _count, _count -1 + CNT_ppa_pe8.get_width() ); // CNT_ppa_pe8
+    _count += CNT_ppa_pe8.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe8_phv_out.all() , _count, _count -1 + CNT_ppa_pe8_phv_out.get_width() ); // CNT_ppa_pe8_phv_out
+    _count += CNT_ppa_pe8_phv_out.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe9_pkt_in.all() , _count, _count -1 + CNT_ppa_pe9_pkt_in.get_width() ); // CNT_ppa_pe9_pkt_in
+    _count += CNT_ppa_pe9_pkt_in.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe9.all() , _count, _count -1 + CNT_ppa_pe9.get_width() ); // CNT_ppa_pe9
+    _count += CNT_ppa_pe9.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ppa_pe9_phv_out.all() , _count, _count -1 + CNT_ppa_pe9_phv_out.get_width() ); // CNT_ppa_pe9_phv_out
+    _count += CNT_ppa_pe9_phv_out.get_width();
     ret_val = hlp.set_slc(ret_val, sta_qos_counter_0.all() , _count, _count -1 + sta_qos_counter_0.get_width() ); // sta_qos_counter_0
     _count += sta_qos_counter_0.get_width();
     ret_val = hlp.set_slc(ret_val, sta_qos_counter_1.all() , _count, _count -1 + sta_qos_counter_1.get_width() ); // sta_qos_counter_1
@@ -3719,481 +5006,613 @@ void cap_ppa_csr_sta_qos_counter_0_t::init() {
     
 }
 
-void cap_ppa_csr_CNT_ppa_t::init() {
+void cap_ppa_csr_CNT_ppa_pe9_phv_out_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pb_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pb_sop);
-            register_get_func("pb_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pb_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pb_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pb_eop);
-            register_get_func("pb_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pb_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("dp_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::dp_sop);
-            register_get_func("dp_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::dp_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("dp_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::dp_eop);
-            register_get_func("dp_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::dp_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("ma_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::ma_sop);
-            register_get_func("ma_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::ma_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("ma_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::ma_eop);
-            register_get_func("ma_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::ma_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("ohi_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::ohi_sop);
-            register_get_func("ohi_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::ohi_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("ohi_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::ohi_eop);
-            register_get_func("ohi_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::ohi_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_sop);
-            register_get_func("pe0_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_eop);
-            register_get_func("pe0_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_release);
-            register_get_func("pe0_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_ohi_out);
-            register_get_func("pe0_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_phv_out_sop);
-            register_get_func("pe0_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe0_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_phv_out_eop);
-            register_get_func("pe0_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe0_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_sop);
-            register_get_func("pe1_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_eop);
-            register_get_func("pe1_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_release);
-            register_get_func("pe1_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_ohi_out);
-            register_get_func("pe1_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_phv_out_sop);
-            register_get_func("pe1_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe1_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_phv_out_eop);
-            register_get_func("pe1_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe1_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_sop);
-            register_get_func("pe2_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_eop);
-            register_get_func("pe2_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_release);
-            register_get_func("pe2_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_ohi_out);
-            register_get_func("pe2_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_phv_out_sop);
-            register_get_func("pe2_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe2_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_phv_out_eop);
-            register_get_func("pe2_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe2_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_sop);
-            register_get_func("pe3_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_eop);
-            register_get_func("pe3_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_release);
-            register_get_func("pe3_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_ohi_out);
-            register_get_func("pe3_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_phv_out_sop);
-            register_get_func("pe3_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe3_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_phv_out_eop);
-            register_get_func("pe3_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe3_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_sop);
-            register_get_func("pe4_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_eop);
-            register_get_func("pe4_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_release);
-            register_get_func("pe4_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_ohi_out);
-            register_get_func("pe4_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_phv_out_sop);
-            register_get_func("pe4_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe4_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_phv_out_eop);
-            register_get_func("pe4_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe4_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_sop);
-            register_get_func("pe5_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_eop);
-            register_get_func("pe5_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_release);
-            register_get_func("pe5_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_ohi_out);
-            register_get_func("pe5_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_phv_out_sop);
-            register_get_func("pe5_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe5_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_phv_out_eop);
-            register_get_func("pe5_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe5_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_sop);
-            register_get_func("pe6_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_eop);
-            register_get_func("pe6_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_release);
-            register_get_func("pe6_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_ohi_out);
-            register_get_func("pe6_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_phv_out_sop);
-            register_get_func("pe6_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe6_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_phv_out_eop);
-            register_get_func("pe6_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe6_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_sop);
-            register_get_func("pe7_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_eop);
-            register_get_func("pe7_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_release);
-            register_get_func("pe7_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_ohi_out);
-            register_get_func("pe7_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_phv_out_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_phv_out_sop);
-            register_get_func("pe7_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_phv_out_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_phv_out_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe7_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_phv_out_eop);
-            register_get_func("pe7_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe7_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_phv_out_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_phv_out_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_sop);
-            register_get_func("pe8_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_sop);
+            register_set_func("pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_t::pkt_release);
+            register_get_func("pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_t::pkt_release);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_eop);
-            register_get_func("pe8_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_eop);
+            register_set_func("ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_t::ohi_out);
+            register_get_func("ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_t::ohi_out);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_release);
-            register_get_func("pe8_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_ohi_out);
-            register_get_func("pe8_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_ohi_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_phv_out_sop);
-            register_get_func("pe8_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_ohi_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_ohi_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe8_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_phv_out_eop);
-            register_get_func("pe8_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe8_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_ohi_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_ohi_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_ma_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_pkt_in_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_sop);
-            register_get_func("pe9_pkt_in_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_ma_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_ma_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_pkt_in_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_eop);
-            register_get_func("pe9_pkt_in_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_ma_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_ma_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_dp_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_pkt_release", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_release);
-            register_get_func("pe9_pkt_release", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_pkt_release);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_dp_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_dp_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_ohi_out", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_ohi_out);
-            register_get_func("pe9_ohi_out", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_ohi_out);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_dp_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_dp_t::eop);
         }
         #endif
     
+}
+
+void cap_ppa_csr_CNT_ppa_pb_t::init() {
+
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_phv_out_sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_phv_out_sop);
-            register_get_func("pe9_phv_out_sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_phv_out_sop);
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pb_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pb_t::sop);
         }
         #endif
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("pe9_phv_out_eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_phv_out_eop);
-            register_get_func("pe9_phv_out_eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_t::pe9_phv_out_eop);
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ppa_csr_CNT_ppa_pb_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ppa_csr_CNT_ppa_pb_t::eop);
         }
         #endif
     
@@ -4621,33 +6040,66 @@ void cap_ppa_csr_t::init() {
         cfg_align_chk_profile[ii].set_attributes(this,"cfg_align_chk_profile["+to_string(ii)+"]",  0x40110 + (cfg_align_chk_profile[ii].get_byte_size()*ii));
     }
     cfg_free_cell_init.set_attributes(this,"cfg_free_cell_init", 0x40120 );
-    CNT_ppa.set_attributes(this,"CNT_ppa", 0x40200 );
-    sta_qos_counter_0.set_attributes(this,"sta_qos_counter_0", 0x40400 );
-    sta_qos_counter_1.set_attributes(this,"sta_qos_counter_1", 0x40408 );
-    sta_qos_counter_2.set_attributes(this,"sta_qos_counter_2", 0x40410 );
-    sta_qos_counter_3.set_attributes(this,"sta_qos_counter_3", 0x40418 );
-    sta_qos_counter_4.set_attributes(this,"sta_qos_counter_4", 0x40420 );
-    sta_qos_counter_5.set_attributes(this,"sta_qos_counter_5", 0x40428 );
-    sta_qos_counter_6.set_attributes(this,"sta_qos_counter_6", 0x40430 );
-    sta_qos_counter_7.set_attributes(this,"sta_qos_counter_7", 0x40438 );
-    sta_qos_counter_8.set_attributes(this,"sta_qos_counter_8", 0x40440 );
-    sta_qos_counter_9.set_attributes(this,"sta_qos_counter_9", 0x40448 );
-    sta_qos_counter_10.set_attributes(this,"sta_qos_counter_10", 0x40450 );
-    sta_qos_counter_11.set_attributes(this,"sta_qos_counter_11", 0x40458 );
-    sta_qos_counter_12.set_attributes(this,"sta_qos_counter_12", 0x40460 );
-    sta_qos_counter_13.set_attributes(this,"sta_qos_counter_13", 0x40468 );
-    sta_qos_counter_14.set_attributes(this,"sta_qos_counter_14", 0x40470 );
-    sta_qos_counter_15.set_attributes(this,"sta_qos_counter_15", 0x40478 );
+    CNT_ppa_pb.set_attributes(this,"CNT_ppa_pb", 0x40128 );
+    CNT_ppa_dp.set_attributes(this,"CNT_ppa_dp", 0x40130 );
+    CNT_ppa_ma.set_attributes(this,"CNT_ppa_ma", 0x40138 );
+    CNT_ppa_ohi.set_attributes(this,"CNT_ppa_ohi", 0x40140 );
+    CNT_ppa_pe0_pkt_in.set_attributes(this,"CNT_ppa_pe0_pkt_in", 0x40148 );
+    CNT_ppa_pe0.set_attributes(this,"CNT_ppa_pe0", 0x40150 );
+    CNT_ppa_pe0_phv_out.set_attributes(this,"CNT_ppa_pe0_phv_out", 0x40158 );
+    CNT_ppa_pe1_pkt_in.set_attributes(this,"CNT_ppa_pe1_pkt_in", 0x40160 );
+    CNT_ppa_pe1.set_attributes(this,"CNT_ppa_pe1", 0x40168 );
+    CNT_ppa_pe1_phv_out.set_attributes(this,"CNT_ppa_pe1_phv_out", 0x40170 );
+    CNT_ppa_pe2_pkt_in.set_attributes(this,"CNT_ppa_pe2_pkt_in", 0x40178 );
+    CNT_ppa_pe2.set_attributes(this,"CNT_ppa_pe2", 0x40180 );
+    CNT_ppa_pe2_phv_out.set_attributes(this,"CNT_ppa_pe2_phv_out", 0x40188 );
+    CNT_ppa_pe3_pkt_in.set_attributes(this,"CNT_ppa_pe3_pkt_in", 0x40190 );
+    CNT_ppa_pe3.set_attributes(this,"CNT_ppa_pe3", 0x40198 );
+    CNT_ppa_pe3_phv_out.set_attributes(this,"CNT_ppa_pe3_phv_out", 0x401a0 );
+    CNT_ppa_pe4_pkt_in.set_attributes(this,"CNT_ppa_pe4_pkt_in", 0x401a8 );
+    CNT_ppa_pe4.set_attributes(this,"CNT_ppa_pe4", 0x401b0 );
+    CNT_ppa_pe4_phv_out.set_attributes(this,"CNT_ppa_pe4_phv_out", 0x401b8 );
+    CNT_ppa_pe5_pkt_in.set_attributes(this,"CNT_ppa_pe5_pkt_in", 0x401c0 );
+    CNT_ppa_pe5.set_attributes(this,"CNT_ppa_pe5", 0x401c8 );
+    CNT_ppa_pe5_phv_out.set_attributes(this,"CNT_ppa_pe5_phv_out", 0x401d0 );
+    CNT_ppa_pe6_pkt_in.set_attributes(this,"CNT_ppa_pe6_pkt_in", 0x401d8 );
+    CNT_ppa_pe6.set_attributes(this,"CNT_ppa_pe6", 0x401e0 );
+    CNT_ppa_pe6_phv_out.set_attributes(this,"CNT_ppa_pe6_phv_out", 0x401e8 );
+    CNT_ppa_pe7_pkt_in.set_attributes(this,"CNT_ppa_pe7_pkt_in", 0x401f0 );
+    CNT_ppa_pe7.set_attributes(this,"CNT_ppa_pe7", 0x401f8 );
+    CNT_ppa_pe7_phv_out.set_attributes(this,"CNT_ppa_pe7_phv_out", 0x40200 );
+    CNT_ppa_pe8_pkt_in.set_attributes(this,"CNT_ppa_pe8_pkt_in", 0x40208 );
+    CNT_ppa_pe8.set_attributes(this,"CNT_ppa_pe8", 0x40210 );
+    CNT_ppa_pe8_phv_out.set_attributes(this,"CNT_ppa_pe8_phv_out", 0x40218 );
+    CNT_ppa_pe9_pkt_in.set_attributes(this,"CNT_ppa_pe9_pkt_in", 0x40220 );
+    CNT_ppa_pe9.set_attributes(this,"CNT_ppa_pe9", 0x40228 );
+    CNT_ppa_pe9_phv_out.set_attributes(this,"CNT_ppa_pe9_phv_out", 0x40230 );
+    sta_qos_counter_0.set_attributes(this,"sta_qos_counter_0", 0x40238 );
+    sta_qos_counter_1.set_attributes(this,"sta_qos_counter_1", 0x40240 );
+    sta_qos_counter_2.set_attributes(this,"sta_qos_counter_2", 0x40248 );
+    sta_qos_counter_3.set_attributes(this,"sta_qos_counter_3", 0x40250 );
+    sta_qos_counter_4.set_attributes(this,"sta_qos_counter_4", 0x40258 );
+    sta_qos_counter_5.set_attributes(this,"sta_qos_counter_5", 0x40260 );
+    sta_qos_counter_6.set_attributes(this,"sta_qos_counter_6", 0x40268 );
+    sta_qos_counter_7.set_attributes(this,"sta_qos_counter_7", 0x40270 );
+    sta_qos_counter_8.set_attributes(this,"sta_qos_counter_8", 0x40278 );
+    sta_qos_counter_9.set_attributes(this,"sta_qos_counter_9", 0x40280 );
+    sta_qos_counter_10.set_attributes(this,"sta_qos_counter_10", 0x40288 );
+    sta_qos_counter_11.set_attributes(this,"sta_qos_counter_11", 0x40290 );
+    sta_qos_counter_12.set_attributes(this,"sta_qos_counter_12", 0x40298 );
+    sta_qos_counter_13.set_attributes(this,"sta_qos_counter_13", 0x402a0 );
+    sta_qos_counter_14.set_attributes(this,"sta_qos_counter_14", 0x402a8 );
+    sta_qos_counter_15.set_attributes(this,"sta_qos_counter_15", 0x402b0 );
     for(int ii = 0; ii < 4; ii++) {
         if(ii != 0) cfg_spare[ii].set_field_init_done(true);
-        cfg_spare[ii].set_attributes(this,"cfg_spare["+to_string(ii)+"]",  0x40500 + (cfg_spare[ii].get_byte_size()*ii));
+        cfg_spare[ii].set_attributes(this,"cfg_spare["+to_string(ii)+"]",  0x40300 + (cfg_spare[ii].get_byte_size()*ii));
     }
     for(int ii = 0; ii < 2; ii++) {
         if(ii != 0) cfg_spare_ecc[ii].set_field_init_done(true);
-        cfg_spare_ecc[ii].set_attributes(this,"cfg_spare_ecc["+to_string(ii)+"]",  0x40600 + (cfg_spare_ecc[ii].get_byte_size()*ii));
+        cfg_spare_ecc[ii].set_attributes(this,"cfg_spare_ecc["+to_string(ii)+"]",  0x40400 + (cfg_spare_ecc[ii].get_byte_size()*ii));
     }
-    cfg_debug_port.set_attributes(this,"cfg_debug_port", 0x406c0 );
-    cfg_spare_dbg.set_attributes(this,"cfg_spare_dbg", 0x406c4 );
+    cfg_debug_port.set_attributes(this,"cfg_debug_port", 0x404c0 );
+    cfg_spare_dbg.set_attributes(this,"cfg_spare_dbg", 0x404c4 );
     dhs_bndl0_state_lkp_tcam.set_attributes(this,"dhs_bndl0_state_lkp_tcam", 0x4000 );
     dhs_bndl0_state_lkp_tcam_ind.set_attributes(this,"dhs_bndl0_state_lkp_tcam_ind", 0x8024 );
     dhs_bndl0_state_lkp_sram.set_attributes(this,"dhs_bndl0_state_lkp_sram", 0x10000 );
@@ -5025,616 +6477,616 @@ cpp_int cap_ppa_csr_sta_qos_counter_0_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pb_sop(const cpp_int & _val) { 
-    // pb_sop
-    int_var__pb_sop = _val.convert_to< pb_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pb_sop() const {
-    return int_var__pb_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pb_eop(const cpp_int & _val) { 
-    // pb_eop
-    int_var__pb_eop = _val.convert_to< pb_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pb_eop() const {
-    return int_var__pb_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::dp_sop(const cpp_int & _val) { 
-    // dp_sop
-    int_var__dp_sop = _val.convert_to< dp_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::dp_sop() const {
-    return int_var__dp_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::dp_eop(const cpp_int & _val) { 
-    // dp_eop
-    int_var__dp_eop = _val.convert_to< dp_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::dp_eop() const {
-    return int_var__dp_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::ma_sop(const cpp_int & _val) { 
-    // ma_sop
-    int_var__ma_sop = _val.convert_to< ma_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::ma_sop() const {
-    return int_var__ma_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::ma_eop(const cpp_int & _val) { 
-    // ma_eop
-    int_var__ma_eop = _val.convert_to< ma_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::ma_eop() const {
-    return int_var__ma_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe9_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::ohi_sop(const cpp_int & _val) { 
-    // ohi_sop
-    int_var__ohi_sop = _val.convert_to< ohi_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::ohi_sop() const {
-    return int_var__ohi_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::ohi_eop(const cpp_int & _val) { 
-    // ohi_eop
-    int_var__ohi_eop = _val.convert_to< ohi_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::ohi_eop() const {
-    return int_var__ohi_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_sop(const cpp_int & _val) { 
-    // pe0_pkt_in_sop
-    int_var__pe0_pkt_in_sop = _val.convert_to< pe0_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_sop() const {
-    return int_var__pe0_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_eop(const cpp_int & _val) { 
-    // pe0_pkt_in_eop
-    int_var__pe0_pkt_in_eop = _val.convert_to< pe0_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_pkt_in_eop() const {
-    return int_var__pe0_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_pkt_release(const cpp_int & _val) { 
-    // pe0_pkt_release
-    int_var__pe0_pkt_release = _val.convert_to< pe0_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_pkt_release() const {
-    return int_var__pe0_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_ohi_out(const cpp_int & _val) { 
-    // pe0_ohi_out
-    int_var__pe0_ohi_out = _val.convert_to< pe0_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_ohi_out() const {
-    return int_var__pe0_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe8_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_phv_out_sop(const cpp_int & _val) { 
-    // pe0_phv_out_sop
-    int_var__pe0_phv_out_sop = _val.convert_to< pe0_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_phv_out_sop() const {
-    return int_var__pe0_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe0_phv_out_eop(const cpp_int & _val) { 
-    // pe0_phv_out_eop
-    int_var__pe0_phv_out_eop = _val.convert_to< pe0_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe0_phv_out_eop() const {
-    return int_var__pe0_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_sop(const cpp_int & _val) { 
-    // pe1_pkt_in_sop
-    int_var__pe1_pkt_in_sop = _val.convert_to< pe1_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_sop() const {
-    return int_var__pe1_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_eop(const cpp_int & _val) { 
-    // pe1_pkt_in_eop
-    int_var__pe1_pkt_in_eop = _val.convert_to< pe1_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_pkt_in_eop() const {
-    return int_var__pe1_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_pkt_release(const cpp_int & _val) { 
-    // pe1_pkt_release
-    int_var__pe1_pkt_release = _val.convert_to< pe1_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_pkt_release() const {
-    return int_var__pe1_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_ohi_out(const cpp_int & _val) { 
-    // pe1_ohi_out
-    int_var__pe1_ohi_out = _val.convert_to< pe1_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_ohi_out() const {
-    return int_var__pe1_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe7_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_phv_out_sop(const cpp_int & _val) { 
-    // pe1_phv_out_sop
-    int_var__pe1_phv_out_sop = _val.convert_to< pe1_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_phv_out_sop() const {
-    return int_var__pe1_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe1_phv_out_eop(const cpp_int & _val) { 
-    // pe1_phv_out_eop
-    int_var__pe1_phv_out_eop = _val.convert_to< pe1_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe1_phv_out_eop() const {
-    return int_var__pe1_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_sop(const cpp_int & _val) { 
-    // pe2_pkt_in_sop
-    int_var__pe2_pkt_in_sop = _val.convert_to< pe2_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_sop() const {
-    return int_var__pe2_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_eop(const cpp_int & _val) { 
-    // pe2_pkt_in_eop
-    int_var__pe2_pkt_in_eop = _val.convert_to< pe2_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_pkt_in_eop() const {
-    return int_var__pe2_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_pkt_release(const cpp_int & _val) { 
-    // pe2_pkt_release
-    int_var__pe2_pkt_release = _val.convert_to< pe2_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_pkt_release() const {
-    return int_var__pe2_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_ohi_out(const cpp_int & _val) { 
-    // pe2_ohi_out
-    int_var__pe2_ohi_out = _val.convert_to< pe2_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_ohi_out() const {
-    return int_var__pe2_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe6_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_phv_out_sop(const cpp_int & _val) { 
-    // pe2_phv_out_sop
-    int_var__pe2_phv_out_sop = _val.convert_to< pe2_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_phv_out_sop() const {
-    return int_var__pe2_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe2_phv_out_eop(const cpp_int & _val) { 
-    // pe2_phv_out_eop
-    int_var__pe2_phv_out_eop = _val.convert_to< pe2_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe2_phv_out_eop() const {
-    return int_var__pe2_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_sop(const cpp_int & _val) { 
-    // pe3_pkt_in_sop
-    int_var__pe3_pkt_in_sop = _val.convert_to< pe3_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_sop() const {
-    return int_var__pe3_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_eop(const cpp_int & _val) { 
-    // pe3_pkt_in_eop
-    int_var__pe3_pkt_in_eop = _val.convert_to< pe3_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_pkt_in_eop() const {
-    return int_var__pe3_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_pkt_release(const cpp_int & _val) { 
-    // pe3_pkt_release
-    int_var__pe3_pkt_release = _val.convert_to< pe3_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_pkt_release() const {
-    return int_var__pe3_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_ohi_out(const cpp_int & _val) { 
-    // pe3_ohi_out
-    int_var__pe3_ohi_out = _val.convert_to< pe3_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_ohi_out() const {
-    return int_var__pe3_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe5_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_phv_out_sop(const cpp_int & _val) { 
-    // pe3_phv_out_sop
-    int_var__pe3_phv_out_sop = _val.convert_to< pe3_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_phv_out_sop() const {
-    return int_var__pe3_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe3_phv_out_eop(const cpp_int & _val) { 
-    // pe3_phv_out_eop
-    int_var__pe3_phv_out_eop = _val.convert_to< pe3_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe3_phv_out_eop() const {
-    return int_var__pe3_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_sop(const cpp_int & _val) { 
-    // pe4_pkt_in_sop
-    int_var__pe4_pkt_in_sop = _val.convert_to< pe4_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_sop() const {
-    return int_var__pe4_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_eop(const cpp_int & _val) { 
-    // pe4_pkt_in_eop
-    int_var__pe4_pkt_in_eop = _val.convert_to< pe4_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_pkt_in_eop() const {
-    return int_var__pe4_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_pkt_release(const cpp_int & _val) { 
-    // pe4_pkt_release
-    int_var__pe4_pkt_release = _val.convert_to< pe4_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_pkt_release() const {
-    return int_var__pe4_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_ohi_out(const cpp_int & _val) { 
-    // pe4_ohi_out
-    int_var__pe4_ohi_out = _val.convert_to< pe4_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_ohi_out() const {
-    return int_var__pe4_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe4_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_phv_out_sop(const cpp_int & _val) { 
-    // pe4_phv_out_sop
-    int_var__pe4_phv_out_sop = _val.convert_to< pe4_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_phv_out_sop() const {
-    return int_var__pe4_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe4_phv_out_eop(const cpp_int & _val) { 
-    // pe4_phv_out_eop
-    int_var__pe4_phv_out_eop = _val.convert_to< pe4_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe4_phv_out_eop() const {
-    return int_var__pe4_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_sop(const cpp_int & _val) { 
-    // pe5_pkt_in_sop
-    int_var__pe5_pkt_in_sop = _val.convert_to< pe5_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_sop() const {
-    return int_var__pe5_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_eop(const cpp_int & _val) { 
-    // pe5_pkt_in_eop
-    int_var__pe5_pkt_in_eop = _val.convert_to< pe5_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_pkt_in_eop() const {
-    return int_var__pe5_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_pkt_release(const cpp_int & _val) { 
-    // pe5_pkt_release
-    int_var__pe5_pkt_release = _val.convert_to< pe5_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_pkt_release() const {
-    return int_var__pe5_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_ohi_out(const cpp_int & _val) { 
-    // pe5_ohi_out
-    int_var__pe5_ohi_out = _val.convert_to< pe5_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_ohi_out() const {
-    return int_var__pe5_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe3_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_phv_out_sop(const cpp_int & _val) { 
-    // pe5_phv_out_sop
-    int_var__pe5_phv_out_sop = _val.convert_to< pe5_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_phv_out_sop() const {
-    return int_var__pe5_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe5_phv_out_eop(const cpp_int & _val) { 
-    // pe5_phv_out_eop
-    int_var__pe5_phv_out_eop = _val.convert_to< pe5_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe5_phv_out_eop() const {
-    return int_var__pe5_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_sop(const cpp_int & _val) { 
-    // pe6_pkt_in_sop
-    int_var__pe6_pkt_in_sop = _val.convert_to< pe6_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_sop() const {
-    return int_var__pe6_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_eop(const cpp_int & _val) { 
-    // pe6_pkt_in_eop
-    int_var__pe6_pkt_in_eop = _val.convert_to< pe6_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_pkt_in_eop() const {
-    return int_var__pe6_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_pkt_release(const cpp_int & _val) { 
-    // pe6_pkt_release
-    int_var__pe6_pkt_release = _val.convert_to< pe6_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_pkt_release() const {
-    return int_var__pe6_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_ohi_out(const cpp_int & _val) { 
-    // pe6_ohi_out
-    int_var__pe6_ohi_out = _val.convert_to< pe6_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_ohi_out() const {
-    return int_var__pe6_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe2_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_phv_out_sop(const cpp_int & _val) { 
-    // pe6_phv_out_sop
-    int_var__pe6_phv_out_sop = _val.convert_to< pe6_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_phv_out_sop() const {
-    return int_var__pe6_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe6_phv_out_eop(const cpp_int & _val) { 
-    // pe6_phv_out_eop
-    int_var__pe6_phv_out_eop = _val.convert_to< pe6_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe6_phv_out_eop() const {
-    return int_var__pe6_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_sop(const cpp_int & _val) { 
-    // pe7_pkt_in_sop
-    int_var__pe7_pkt_in_sop = _val.convert_to< pe7_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_sop() const {
-    return int_var__pe7_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_eop(const cpp_int & _val) { 
-    // pe7_pkt_in_eop
-    int_var__pe7_pkt_in_eop = _val.convert_to< pe7_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_pkt_in_eop() const {
-    return int_var__pe7_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_pkt_release(const cpp_int & _val) { 
-    // pe7_pkt_release
-    int_var__pe7_pkt_release = _val.convert_to< pe7_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_pkt_release() const {
-    return int_var__pe7_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_ohi_out(const cpp_int & _val) { 
-    // pe7_ohi_out
-    int_var__pe7_ohi_out = _val.convert_to< pe7_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_ohi_out() const {
-    return int_var__pe7_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe1_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_phv_out_sop(const cpp_int & _val) { 
-    // pe7_phv_out_sop
-    int_var__pe7_phv_out_sop = _val.convert_to< pe7_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_phv_out_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_phv_out_sop() const {
-    return int_var__pe7_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_phv_out_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe7_phv_out_eop(const cpp_int & _val) { 
-    // pe7_phv_out_eop
-    int_var__pe7_phv_out_eop = _val.convert_to< pe7_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_phv_out_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe7_phv_out_eop() const {
-    return int_var__pe7_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_phv_out_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_sop(const cpp_int & _val) { 
-    // pe8_pkt_in_sop
-    int_var__pe8_pkt_in_sop = _val.convert_to< pe8_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_t::pkt_release(const cpp_int & _val) { 
+    // pkt_release
+    int_var__pkt_release = _val.convert_to< pkt_release_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_sop() const {
-    return int_var__pe8_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_t::pkt_release() const {
+    return int_var__pkt_release.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_eop(const cpp_int & _val) { 
-    // pe8_pkt_in_eop
-    int_var__pe8_pkt_in_eop = _val.convert_to< pe8_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_t::ohi_out(const cpp_int & _val) { 
+    // ohi_out
+    int_var__ohi_out = _val.convert_to< ohi_out_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_pkt_in_eop() const {
-    return int_var__pe8_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_t::ohi_out() const {
+    return int_var__ohi_out.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_pkt_release(const cpp_int & _val) { 
-    // pe8_pkt_release
-    int_var__pe8_pkt_release = _val.convert_to< pe8_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_pkt_release() const {
-    return int_var__pe8_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_ohi_out(const cpp_int & _val) { 
-    // pe8_ohi_out
-    int_var__pe8_ohi_out = _val.convert_to< pe8_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_ohi_out() const {
-    return int_var__pe8_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pe0_pkt_in_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_phv_out_sop(const cpp_int & _val) { 
-    // pe8_phv_out_sop
-    int_var__pe8_phv_out_sop = _val.convert_to< pe8_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_ohi_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_phv_out_sop() const {
-    return int_var__pe8_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_ohi_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe8_phv_out_eop(const cpp_int & _val) { 
-    // pe8_phv_out_eop
-    int_var__pe8_phv_out_eop = _val.convert_to< pe8_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_ohi_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe8_phv_out_eop() const {
-    return int_var__pe8_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_ohi_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_sop(const cpp_int & _val) { 
-    // pe9_pkt_in_sop
-    int_var__pe9_pkt_in_sop = _val.convert_to< pe9_pkt_in_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_ma_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_sop() const {
-    return int_var__pe9_pkt_in_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_ma_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_eop(const cpp_int & _val) { 
-    // pe9_pkt_in_eop
-    int_var__pe9_pkt_in_eop = _val.convert_to< pe9_pkt_in_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_ma_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_pkt_in_eop() const {
-    return int_var__pe9_pkt_in_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_ma_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_pkt_release(const cpp_int & _val) { 
-    // pe9_pkt_release
-    int_var__pe9_pkt_release = _val.convert_to< pe9_pkt_release_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_dp_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_pkt_release() const {
-    return int_var__pe9_pkt_release.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_dp_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_ohi_out(const cpp_int & _val) { 
-    // pe9_ohi_out
-    int_var__pe9_ohi_out = _val.convert_to< pe9_ohi_out_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_dp_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_ohi_out() const {
-    return int_var__pe9_ohi_out.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_dp_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_phv_out_sop(const cpp_int & _val) { 
-    // pe9_phv_out_sop
-    int_var__pe9_phv_out_sop = _val.convert_to< pe9_phv_out_sop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pb_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_phv_out_sop() const {
-    return int_var__pe9_phv_out_sop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pb_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
 }
     
-void cap_ppa_csr_CNT_ppa_t::pe9_phv_out_eop(const cpp_int & _val) { 
-    // pe9_phv_out_eop
-    int_var__pe9_phv_out_eop = _val.convert_to< pe9_phv_out_eop_cpp_int_t >();
+void cap_ppa_csr_CNT_ppa_pb_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
 }
 
-cpp_int cap_ppa_csr_CNT_ppa_t::pe9_phv_out_eop() const {
-    return int_var__pe9_phv_out_eop.convert_to< cpp_int >();
+cpp_int cap_ppa_csr_CNT_ppa_pb_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
 void cap_ppa_csr_cfg_free_cell_init_t::vld(const cpp_int & _val) { 

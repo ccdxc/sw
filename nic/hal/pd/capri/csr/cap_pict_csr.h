@@ -189,6 +189,11 @@ class cap_pict_csr_cfg_tcam_table_profile_t : public cap_register_base {
         void bkts (const cpp_int  & l__val);
         cpp_int bkts() const;
     
+        typedef pu_cpp_int< 5 > keyshift_cpp_int_t;
+        keyshift_cpp_int_t int_var__keyshift;
+        void keyshift (const cpp_int  & l__val);
+        cpp_int keyshift() const;
+    
 }; // cap_pict_csr_cfg_tcam_table_profile_t
     
 class cap_pict_csr_cfg_global_t : public cap_register_base {

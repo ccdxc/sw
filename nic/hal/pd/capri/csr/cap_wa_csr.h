@@ -546,6 +546,46 @@ class cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t : public cap_register_base {
     
 }; // cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t
     
+class cap_wa_csr_cfg_doorbell_axi_attr_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_wa_csr_cfg_doorbell_axi_attr_t(string name = "cap_wa_csr_cfg_doorbell_axi_attr_t", cap_csr_base *parent = 0);
+        virtual ~cap_wa_csr_cfg_doorbell_axi_attr_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 4 > arcache_cpp_int_t;
+        arcache_cpp_int_t int_var__arcache;
+        void arcache (const cpp_int  & l__val);
+        cpp_int arcache() const;
+    
+        typedef pu_cpp_int< 4 > awcache_cpp_int_t;
+        awcache_cpp_int_t int_var__awcache;
+        void awcache (const cpp_int  & l__val);
+        cpp_int awcache() const;
+    
+        typedef pu_cpp_int< 3 > prot_cpp_int_t;
+        prot_cpp_int_t int_var__prot;
+        void prot (const cpp_int  & l__val);
+        cpp_int prot() const;
+    
+        typedef pu_cpp_int< 4 > qos_cpp_int_t;
+        qos_cpp_int_t int_var__qos;
+        void qos (const cpp_int  & l__val);
+        cpp_int qos() const;
+    
+        typedef pu_cpp_int< 1 > lock_cpp_int_t;
+        lock_cpp_int_t int_var__lock;
+        void lock (const cpp_int  & l__val);
+        cpp_int lock() const;
+    
+}; // cap_wa_csr_cfg_doorbell_axi_attr_t
+    
 class cap_wa_csr_sat_wa_pid_chkfail_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
@@ -734,6 +774,8 @@ class cap_wa_csr_t : public cap_block_base {
         cap_wa_csr_sat_wa_qid_overflow_t sat_wa_qid_overflow;
     
         cap_wa_csr_sat_wa_pid_chkfail_t sat_wa_pid_chkfail;
+    
+        cap_wa_csr_cfg_doorbell_axi_attr_t cfg_doorbell_axi_attr;
     
         cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t cfg_ecc_disable_lif_qstate_map;
     

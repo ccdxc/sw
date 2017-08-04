@@ -405,107 +405,107 @@ cap_txs_csr_sta_glb_t::cap_txs_csr_sta_glb_t(string name, cap_csr_base * parent)
         }
 cap_txs_csr_sta_glb_t::~cap_txs_csr_sta_glb_t() { }
 
-cap_txs_csr_cnt_txdma_cos15_t::cap_txs_csr_cnt_txdma_cos15_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos15_t::cap_txs_csr_cnt_sch_txdma_cos15_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos15_t::~cap_txs_csr_cnt_txdma_cos15_t() { }
+cap_txs_csr_cnt_sch_txdma_cos15_t::~cap_txs_csr_cnt_sch_txdma_cos15_t() { }
 
-cap_txs_csr_cnt_txdma_cos14_t::cap_txs_csr_cnt_txdma_cos14_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos14_t::cap_txs_csr_cnt_sch_txdma_cos14_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos14_t::~cap_txs_csr_cnt_txdma_cos14_t() { }
+cap_txs_csr_cnt_sch_txdma_cos14_t::~cap_txs_csr_cnt_sch_txdma_cos14_t() { }
 
-cap_txs_csr_cnt_txdma_cos13_t::cap_txs_csr_cnt_txdma_cos13_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos13_t::cap_txs_csr_cnt_sch_txdma_cos13_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos13_t::~cap_txs_csr_cnt_txdma_cos13_t() { }
+cap_txs_csr_cnt_sch_txdma_cos13_t::~cap_txs_csr_cnt_sch_txdma_cos13_t() { }
 
-cap_txs_csr_cnt_txdma_cos12_t::cap_txs_csr_cnt_txdma_cos12_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos12_t::cap_txs_csr_cnt_sch_txdma_cos12_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos12_t::~cap_txs_csr_cnt_txdma_cos12_t() { }
+cap_txs_csr_cnt_sch_txdma_cos12_t::~cap_txs_csr_cnt_sch_txdma_cos12_t() { }
 
-cap_txs_csr_cnt_txdma_cos11_t::cap_txs_csr_cnt_txdma_cos11_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos11_t::cap_txs_csr_cnt_sch_txdma_cos11_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos11_t::~cap_txs_csr_cnt_txdma_cos11_t() { }
+cap_txs_csr_cnt_sch_txdma_cos11_t::~cap_txs_csr_cnt_sch_txdma_cos11_t() { }
 
-cap_txs_csr_cnt_txdma_cos10_t::cap_txs_csr_cnt_txdma_cos10_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos10_t::cap_txs_csr_cnt_sch_txdma_cos10_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos10_t::~cap_txs_csr_cnt_txdma_cos10_t() { }
+cap_txs_csr_cnt_sch_txdma_cos10_t::~cap_txs_csr_cnt_sch_txdma_cos10_t() { }
 
-cap_txs_csr_cnt_txdma_cos9_t::cap_txs_csr_cnt_txdma_cos9_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos9_t::cap_txs_csr_cnt_sch_txdma_cos9_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos9_t::~cap_txs_csr_cnt_txdma_cos9_t() { }
+cap_txs_csr_cnt_sch_txdma_cos9_t::~cap_txs_csr_cnt_sch_txdma_cos9_t() { }
 
-cap_txs_csr_cnt_txdma_cos8_t::cap_txs_csr_cnt_txdma_cos8_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos8_t::cap_txs_csr_cnt_sch_txdma_cos8_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos8_t::~cap_txs_csr_cnt_txdma_cos8_t() { }
+cap_txs_csr_cnt_sch_txdma_cos8_t::~cap_txs_csr_cnt_sch_txdma_cos8_t() { }
 
-cap_txs_csr_cnt_txdma_cos7_t::cap_txs_csr_cnt_txdma_cos7_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos7_t::cap_txs_csr_cnt_sch_txdma_cos7_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos7_t::~cap_txs_csr_cnt_txdma_cos7_t() { }
+cap_txs_csr_cnt_sch_txdma_cos7_t::~cap_txs_csr_cnt_sch_txdma_cos7_t() { }
 
-cap_txs_csr_cnt_txdma_cos6_t::cap_txs_csr_cnt_txdma_cos6_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos6_t::cap_txs_csr_cnt_sch_txdma_cos6_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos6_t::~cap_txs_csr_cnt_txdma_cos6_t() { }
+cap_txs_csr_cnt_sch_txdma_cos6_t::~cap_txs_csr_cnt_sch_txdma_cos6_t() { }
 
-cap_txs_csr_cnt_txdma_cos5_t::cap_txs_csr_cnt_txdma_cos5_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos5_t::cap_txs_csr_cnt_sch_txdma_cos5_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos5_t::~cap_txs_csr_cnt_txdma_cos5_t() { }
+cap_txs_csr_cnt_sch_txdma_cos5_t::~cap_txs_csr_cnt_sch_txdma_cos5_t() { }
 
-cap_txs_csr_cnt_txdma_cos4_t::cap_txs_csr_cnt_txdma_cos4_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos4_t::cap_txs_csr_cnt_sch_txdma_cos4_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos4_t::~cap_txs_csr_cnt_txdma_cos4_t() { }
+cap_txs_csr_cnt_sch_txdma_cos4_t::~cap_txs_csr_cnt_sch_txdma_cos4_t() { }
 
-cap_txs_csr_cnt_txdma_cos3_t::cap_txs_csr_cnt_txdma_cos3_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos3_t::cap_txs_csr_cnt_sch_txdma_cos3_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos3_t::~cap_txs_csr_cnt_txdma_cos3_t() { }
+cap_txs_csr_cnt_sch_txdma_cos3_t::~cap_txs_csr_cnt_sch_txdma_cos3_t() { }
 
-cap_txs_csr_cnt_txdma_cos2_t::cap_txs_csr_cnt_txdma_cos2_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos2_t::cap_txs_csr_cnt_sch_txdma_cos2_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos2_t::~cap_txs_csr_cnt_txdma_cos2_t() { }
+cap_txs_csr_cnt_sch_txdma_cos2_t::~cap_txs_csr_cnt_sch_txdma_cos2_t() { }
 
-cap_txs_csr_cnt_txdma_cos1_t::cap_txs_csr_cnt_txdma_cos1_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos1_t::cap_txs_csr_cnt_sch_txdma_cos1_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos1_t::~cap_txs_csr_cnt_txdma_cos1_t() { }
+cap_txs_csr_cnt_sch_txdma_cos1_t::~cap_txs_csr_cnt_sch_txdma_cos1_t() { }
 
-cap_txs_csr_cnt_txdma_cos0_t::cap_txs_csr_cnt_txdma_cos0_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_txdma_cos0_t::cap_txs_csr_cnt_sch_txdma_cos0_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_txdma_cos0_t::~cap_txs_csr_cnt_txdma_cos0_t() { }
+cap_txs_csr_cnt_sch_txdma_cos0_t::~cap_txs_csr_cnt_sch_txdma_cos0_t() { }
 
-cap_txs_csr_cnt_doorbell_t::cap_txs_csr_cnt_doorbell_t(string name, cap_csr_base * parent): 
+cap_txs_csr_cnt_sch_doorbell_t::cap_txs_csr_cnt_sch_doorbell_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_txs_csr_cnt_doorbell_t::~cap_txs_csr_cnt_doorbell_t() { }
+cap_txs_csr_cnt_sch_doorbell_t::~cap_txs_csr_cnt_sch_doorbell_t() { }
 
 cap_txs_csr_cfg_sch_t::cap_txs_csr_cfg_sch_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
@@ -524,6 +524,12 @@ cap_txs_csr_cfw_scheduler_glb_t::cap_txs_csr_cfw_scheduler_glb_t(string name, ca
         //init();
         }
 cap_txs_csr_cfw_scheduler_glb_t::~cap_txs_csr_cfw_scheduler_glb_t() { }
+
+cap_txs_csr_cnt_tmr_hashovrf_t::cap_txs_csr_cnt_tmr_hashovrf_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_txs_csr_cnt_tmr_hashovrf_t::~cap_txs_csr_cnt_tmr_hashovrf_t() { }
 
 cap_txs_csr_sta_slow_timer_t::cap_txs_csr_sta_slow_timer_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
@@ -606,7 +612,61 @@ cap_txs_csr_t::~cap_txs_csr_t() { }
 
 void cap_txs_csr_dhs_sch_grp_sram_entry_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".data: 0x" << int_var__data << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".spare: 0x" << int_var__spare << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_offset: 0x" << int_var__qid_offset << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".lif: 0x" << int_var__lif << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".auto_clr: 0x" << int_var__auto_clr << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".rr_sel: 0x" << int_var__rr_sel << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm0: 0x" << int_var__qid_fifo_elm0 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm1: 0x" << int_var__qid_fifo_elm1 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm2: 0x" << int_var__qid_fifo_elm2 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm3: 0x" << int_var__qid_fifo_elm3 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm4: 0x" << int_var__qid_fifo_elm4 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm5: 0x" << int_var__qid_fifo_elm5 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm6: 0x" << int_var__qid_fifo_elm6 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm7: 0x" << int_var__qid_fifo_elm7 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm8: 0x" << int_var__qid_fifo_elm8 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm9: 0x" << int_var__qid_fifo_elm9 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm10: 0x" << int_var__qid_fifo_elm10 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm11: 0x" << int_var__qid_fifo_elm11 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm12: 0x" << int_var__qid_fifo_elm12 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm13: 0x" << int_var__qid_fifo_elm13 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm14: 0x" << int_var__qid_fifo_elm14 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qid_fifo_elm15: 0x" << int_var__qid_fifo_elm15 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln: 0x" << int_var__hbm_ln << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr0: 0x" << int_var__hbm_ln_ptr0 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr1: 0x" << int_var__hbm_ln_ptr1 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr2: 0x" << int_var__hbm_ln_ptr2 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr3: 0x" << int_var__hbm_ln_ptr3 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr4: 0x" << int_var__hbm_ln_ptr4 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr5: 0x" << int_var__hbm_ln_ptr5 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr6: 0x" << int_var__hbm_ln_ptr6 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr7: 0x" << int_var__hbm_ln_ptr7 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr8: 0x" << int_var__hbm_ln_ptr8 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr9: 0x" << int_var__hbm_ln_ptr9 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr10: 0x" << int_var__hbm_ln_ptr10 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr11: 0x" << int_var__hbm_ln_ptr11 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr12: 0x" << int_var__hbm_ln_ptr12 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr13: 0x" << int_var__hbm_ln_ptr13 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr14: 0x" << int_var__hbm_ln_ptr14 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_ptr15: 0x" << int_var__hbm_ln_ptr15 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".drb_cnt: 0x" << int_var__drb_cnt << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt0: 0x" << int_var__hbm_ln_cnt0 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt1: 0x" << int_var__hbm_ln_cnt1 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt2: 0x" << int_var__hbm_ln_cnt2 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt3: 0x" << int_var__hbm_ln_cnt3 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt4: 0x" << int_var__hbm_ln_cnt4 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt5: 0x" << int_var__hbm_ln_cnt5 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt6: 0x" << int_var__hbm_ln_cnt6 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt7: 0x" << int_var__hbm_ln_cnt7 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt8: 0x" << int_var__hbm_ln_cnt8 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt9: 0x" << int_var__hbm_ln_cnt9 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt10: 0x" << int_var__hbm_ln_cnt10 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt11: 0x" << int_var__hbm_ln_cnt11 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt12: 0x" << int_var__hbm_ln_cnt12 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt13: 0x" << int_var__hbm_ln_cnt13 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt14: 0x" << int_var__hbm_ln_cnt14 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".hbm_ln_cnt15: 0x" << int_var__hbm_ln_cnt15 << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".ecc: 0x" << int_var__ecc << dec << endl)
 }
 
@@ -1060,87 +1120,87 @@ void cap_txs_csr_sta_glb_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".pb_xoff: 0x" << int_var__pb_xoff << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos15_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos15_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos14_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos14_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos13_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos13_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos12_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos12_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos11_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos11_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos10_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos10_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos9_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos9_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos8_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos8_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos7_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos7_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos6_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos6_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos5_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos5_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos4_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos4_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos3_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos3_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos2_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos2_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos1_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos1_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_txdma_cos0_t::show() {
+void cap_txs_csr_cnt_sch_txdma_cos0_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
 
-void cap_txs_csr_cnt_doorbell_t::show() {
+void cap_txs_csr_cnt_sch_doorbell_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
 }
@@ -1170,6 +1230,11 @@ void cap_txs_csr_cfw_scheduler_glb_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".cos_read: 0x" << int_var__cos_read << dec << endl)
 }
 
+void cap_txs_csr_cnt_tmr_hashovrf_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".val: 0x" << int_var__val << dec << endl)
+}
+
 void cap_txs_csr_sta_slow_timer_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".hbm_init_done: 0x" << int_var__hbm_init_done << dec << endl)
@@ -1183,6 +1248,7 @@ void cap_txs_csr_cfg_slow_timer_dbell_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".addr_update: 0x" << int_var__addr_update << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".data_pid: 0x" << int_var__data_pid << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".data_reserved: 0x" << int_var__data_reserved << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".data_index: 0x" << int_var__data_index << dec << endl)
 }
 
@@ -1205,6 +1271,7 @@ void cap_txs_csr_cfg_fast_timer_dbell_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".addr_update: 0x" << int_var__addr_update << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".data_pid: 0x" << int_var__data_pid << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".data_reserved: 0x" << int_var__data_reserved << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".data_index: 0x" << int_var__data_index << dec << endl)
 }
 
@@ -1270,26 +1337,27 @@ void cap_txs_csr_t::show() {
     cfg_slow_timer.show();
     cfg_slow_timer_dbell.show();
     sta_slow_timer.show();
+    cnt_tmr_hashovrf.show();
     cfw_scheduler_glb.show();
     cfw_scheduler_static.show();
     cfg_sch.show();
-    cnt_doorbell.show();
-    cnt_txdma_cos0.show();
-    cnt_txdma_cos1.show();
-    cnt_txdma_cos2.show();
-    cnt_txdma_cos3.show();
-    cnt_txdma_cos4.show();
-    cnt_txdma_cos5.show();
-    cnt_txdma_cos6.show();
-    cnt_txdma_cos7.show();
-    cnt_txdma_cos8.show();
-    cnt_txdma_cos9.show();
-    cnt_txdma_cos10.show();
-    cnt_txdma_cos11.show();
-    cnt_txdma_cos12.show();
-    cnt_txdma_cos13.show();
-    cnt_txdma_cos14.show();
-    cnt_txdma_cos15.show();
+    cnt_sch_doorbell.show();
+    cnt_sch_txdma_cos0.show();
+    cnt_sch_txdma_cos1.show();
+    cnt_sch_txdma_cos2.show();
+    cnt_sch_txdma_cos3.show();
+    cnt_sch_txdma_cos4.show();
+    cnt_sch_txdma_cos5.show();
+    cnt_sch_txdma_cos6.show();
+    cnt_sch_txdma_cos7.show();
+    cnt_sch_txdma_cos8.show();
+    cnt_sch_txdma_cos9.show();
+    cnt_sch_txdma_cos10.show();
+    cnt_sch_txdma_cos11.show();
+    cnt_sch_txdma_cos12.show();
+    cnt_sch_txdma_cos13.show();
+    cnt_sch_txdma_cos14.show();
+    cnt_sch_txdma_cos15.show();
     sta_glb.show();
     sta_scheduler.show();
     sta_scheduler_rr.show();
@@ -1665,88 +1733,88 @@ int cap_txs_csr_sta_glb_t::get_width() const {
 
 }
 
-int cap_txs_csr_cnt_txdma_cos15_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos15_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos15_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos15_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos14_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos14_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos14_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos14_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos13_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos13_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos13_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos13_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos12_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos12_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos12_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos12_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos11_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos11_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos11_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos11_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos10_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos10_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos10_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos10_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos9_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos9_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos9_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos9_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos8_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos8_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos8_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos8_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos7_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos7_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos7_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos7_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos6_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos6_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos6_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos6_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos5_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos5_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos5_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos5_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos4_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos4_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos4_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos4_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos3_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos3_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos3_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos3_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos2_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos2_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos2_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos2_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos1_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos1_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos1_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos1_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_txdma_cos0_t::get_width() const {
-    return cap_txs_csr_cnt_txdma_cos0_t::s_get_width();
+int cap_txs_csr_cnt_sch_txdma_cos0_t::get_width() const {
+    return cap_txs_csr_cnt_sch_txdma_cos0_t::s_get_width();
 
 }
 
-int cap_txs_csr_cnt_doorbell_t::get_width() const {
-    return cap_txs_csr_cnt_doorbell_t::s_get_width();
+int cap_txs_csr_cnt_sch_doorbell_t::get_width() const {
+    return cap_txs_csr_cnt_sch_doorbell_t::s_get_width();
 
 }
 
@@ -1762,6 +1830,11 @@ int cap_txs_csr_cfw_scheduler_static_t::get_width() const {
 
 int cap_txs_csr_cfw_scheduler_glb_t::get_width() const {
     return cap_txs_csr_cfw_scheduler_glb_t::s_get_width();
+
+}
+
+int cap_txs_csr_cnt_tmr_hashovrf_t::get_width() const {
+    return cap_txs_csr_cnt_tmr_hashovrf_t::s_get_width();
 
 }
 
@@ -1833,7 +1906,61 @@ int cap_txs_csr_t::get_width() const {
 int cap_txs_csr_dhs_sch_grp_sram_entry_t::s_get_width() {
     int _count = 0;
 
-    _count += 600; // data
+    _count += 11; // spare
+    _count += 11; // qid_offset
+    _count += 11; // lif
+    _count += 1; // auto_clr
+    _count += 4; // rr_sel
+    _count += 15; // qid_fifo_elm0
+    _count += 15; // qid_fifo_elm1
+    _count += 15; // qid_fifo_elm2
+    _count += 15; // qid_fifo_elm3
+    _count += 15; // qid_fifo_elm4
+    _count += 15; // qid_fifo_elm5
+    _count += 15; // qid_fifo_elm6
+    _count += 15; // qid_fifo_elm7
+    _count += 15; // qid_fifo_elm8
+    _count += 15; // qid_fifo_elm9
+    _count += 15; // qid_fifo_elm10
+    _count += 15; // qid_fifo_elm11
+    _count += 15; // qid_fifo_elm12
+    _count += 15; // qid_fifo_elm13
+    _count += 15; // qid_fifo_elm14
+    _count += 15; // qid_fifo_elm15
+    _count += 4; // hbm_ln
+    _count += 9; // hbm_ln_ptr0
+    _count += 9; // hbm_ln_ptr1
+    _count += 9; // hbm_ln_ptr2
+    _count += 9; // hbm_ln_ptr3
+    _count += 9; // hbm_ln_ptr4
+    _count += 9; // hbm_ln_ptr5
+    _count += 9; // hbm_ln_ptr6
+    _count += 9; // hbm_ln_ptr7
+    _count += 9; // hbm_ln_ptr8
+    _count += 9; // hbm_ln_ptr9
+    _count += 9; // hbm_ln_ptr10
+    _count += 9; // hbm_ln_ptr11
+    _count += 9; // hbm_ln_ptr12
+    _count += 9; // hbm_ln_ptr13
+    _count += 9; // hbm_ln_ptr14
+    _count += 9; // hbm_ln_ptr15
+    _count += 14; // drb_cnt
+    _count += 10; // hbm_ln_cnt0
+    _count += 10; // hbm_ln_cnt1
+    _count += 10; // hbm_ln_cnt2
+    _count += 10; // hbm_ln_cnt3
+    _count += 10; // hbm_ln_cnt4
+    _count += 10; // hbm_ln_cnt5
+    _count += 10; // hbm_ln_cnt6
+    _count += 10; // hbm_ln_cnt7
+    _count += 10; // hbm_ln_cnt8
+    _count += 10; // hbm_ln_cnt9
+    _count += 10; // hbm_ln_cnt10
+    _count += 10; // hbm_ln_cnt11
+    _count += 10; // hbm_ln_cnt12
+    _count += 10; // hbm_ln_cnt13
+    _count += 10; // hbm_ln_cnt14
+    _count += 10; // hbm_ln_cnt15
     _count += 40; // ecc
     return _count;
 }
@@ -2362,119 +2489,119 @@ int cap_txs_csr_sta_glb_t::s_get_width() {
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos15_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos15_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos14_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos14_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos13_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos13_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos12_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos12_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos11_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos11_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos10_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos10_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos9_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos9_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos8_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos8_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos7_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos7_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos6_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos6_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos5_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos5_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos4_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos4_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos3_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos3_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos2_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos2_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos1_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos1_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_txdma_cos0_t::s_get_width() {
+int cap_txs_csr_cnt_sch_txdma_cos0_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
     return _count;
 }
 
-int cap_txs_csr_cnt_doorbell_t::s_get_width() {
+int cap_txs_csr_cnt_sch_doorbell_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // val
@@ -2512,6 +2639,13 @@ int cap_txs_csr_cfw_scheduler_glb_t::s_get_width() {
     return _count;
 }
 
+int cap_txs_csr_cnt_tmr_hashovrf_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // val
+    return _count;
+}
+
 int cap_txs_csr_sta_slow_timer_t::s_get_width() {
     int _count = 0;
 
@@ -2528,6 +2662,7 @@ int cap_txs_csr_cfg_slow_timer_dbell_t::s_get_width() {
 
     _count += 6; // addr_update
     _count += 16; // data_pid
+    _count += 16; // data_reserved
     _count += 16; // data_index
     return _count;
 }
@@ -2556,6 +2691,7 @@ int cap_txs_csr_cfg_fast_timer_dbell_t::s_get_width() {
 
     _count += 6; // addr_update
     _count += 16; // data_pid
+    _count += 16; // data_reserved
     _count += 16; // data_index
     return _count;
 }
@@ -2603,7 +2739,7 @@ int cap_txs_csr_cfg_timer_static_t::s_get_width() {
     int _count = 0;
 
     _count += 64; // hbm_base
-    _count += 20; // tmr_hsh_depth
+    _count += 24; // tmr_hsh_depth
     _count += 12; // tmr_wheel_depth
     return _count;
 }
@@ -2637,26 +2773,27 @@ int cap_txs_csr_t::s_get_width() {
     _count += cap_txs_csr_cfg_slow_timer_t::s_get_width(); // cfg_slow_timer
     _count += cap_txs_csr_cfg_slow_timer_dbell_t::s_get_width(); // cfg_slow_timer_dbell
     _count += cap_txs_csr_sta_slow_timer_t::s_get_width(); // sta_slow_timer
+    _count += cap_txs_csr_cnt_tmr_hashovrf_t::s_get_width(); // cnt_tmr_hashovrf
     _count += cap_txs_csr_cfw_scheduler_glb_t::s_get_width(); // cfw_scheduler_glb
     _count += cap_txs_csr_cfw_scheduler_static_t::s_get_width(); // cfw_scheduler_static
     _count += cap_txs_csr_cfg_sch_t::s_get_width(); // cfg_sch
-    _count += cap_txs_csr_cnt_doorbell_t::s_get_width(); // cnt_doorbell
-    _count += cap_txs_csr_cnt_txdma_cos0_t::s_get_width(); // cnt_txdma_cos0
-    _count += cap_txs_csr_cnt_txdma_cos1_t::s_get_width(); // cnt_txdma_cos1
-    _count += cap_txs_csr_cnt_txdma_cos2_t::s_get_width(); // cnt_txdma_cos2
-    _count += cap_txs_csr_cnt_txdma_cos3_t::s_get_width(); // cnt_txdma_cos3
-    _count += cap_txs_csr_cnt_txdma_cos4_t::s_get_width(); // cnt_txdma_cos4
-    _count += cap_txs_csr_cnt_txdma_cos5_t::s_get_width(); // cnt_txdma_cos5
-    _count += cap_txs_csr_cnt_txdma_cos6_t::s_get_width(); // cnt_txdma_cos6
-    _count += cap_txs_csr_cnt_txdma_cos7_t::s_get_width(); // cnt_txdma_cos7
-    _count += cap_txs_csr_cnt_txdma_cos8_t::s_get_width(); // cnt_txdma_cos8
-    _count += cap_txs_csr_cnt_txdma_cos9_t::s_get_width(); // cnt_txdma_cos9
-    _count += cap_txs_csr_cnt_txdma_cos10_t::s_get_width(); // cnt_txdma_cos10
-    _count += cap_txs_csr_cnt_txdma_cos11_t::s_get_width(); // cnt_txdma_cos11
-    _count += cap_txs_csr_cnt_txdma_cos12_t::s_get_width(); // cnt_txdma_cos12
-    _count += cap_txs_csr_cnt_txdma_cos13_t::s_get_width(); // cnt_txdma_cos13
-    _count += cap_txs_csr_cnt_txdma_cos14_t::s_get_width(); // cnt_txdma_cos14
-    _count += cap_txs_csr_cnt_txdma_cos15_t::s_get_width(); // cnt_txdma_cos15
+    _count += cap_txs_csr_cnt_sch_doorbell_t::s_get_width(); // cnt_sch_doorbell
+    _count += cap_txs_csr_cnt_sch_txdma_cos0_t::s_get_width(); // cnt_sch_txdma_cos0
+    _count += cap_txs_csr_cnt_sch_txdma_cos1_t::s_get_width(); // cnt_sch_txdma_cos1
+    _count += cap_txs_csr_cnt_sch_txdma_cos2_t::s_get_width(); // cnt_sch_txdma_cos2
+    _count += cap_txs_csr_cnt_sch_txdma_cos3_t::s_get_width(); // cnt_sch_txdma_cos3
+    _count += cap_txs_csr_cnt_sch_txdma_cos4_t::s_get_width(); // cnt_sch_txdma_cos4
+    _count += cap_txs_csr_cnt_sch_txdma_cos5_t::s_get_width(); // cnt_sch_txdma_cos5
+    _count += cap_txs_csr_cnt_sch_txdma_cos6_t::s_get_width(); // cnt_sch_txdma_cos6
+    _count += cap_txs_csr_cnt_sch_txdma_cos7_t::s_get_width(); // cnt_sch_txdma_cos7
+    _count += cap_txs_csr_cnt_sch_txdma_cos8_t::s_get_width(); // cnt_sch_txdma_cos8
+    _count += cap_txs_csr_cnt_sch_txdma_cos9_t::s_get_width(); // cnt_sch_txdma_cos9
+    _count += cap_txs_csr_cnt_sch_txdma_cos10_t::s_get_width(); // cnt_sch_txdma_cos10
+    _count += cap_txs_csr_cnt_sch_txdma_cos11_t::s_get_width(); // cnt_sch_txdma_cos11
+    _count += cap_txs_csr_cnt_sch_txdma_cos12_t::s_get_width(); // cnt_sch_txdma_cos12
+    _count += cap_txs_csr_cnt_sch_txdma_cos13_t::s_get_width(); // cnt_sch_txdma_cos13
+    _count += cap_txs_csr_cnt_sch_txdma_cos14_t::s_get_width(); // cnt_sch_txdma_cos14
+    _count += cap_txs_csr_cnt_sch_txdma_cos15_t::s_get_width(); // cnt_sch_txdma_cos15
     _count += cap_txs_csr_sta_glb_t::s_get_width(); // sta_glb
     _count += cap_txs_csr_sta_scheduler_t::s_get_width(); // sta_scheduler
     _count += cap_txs_csr_sta_scheduler_rr_t::s_get_width(); // sta_scheduler_rr
@@ -2701,9 +2838,171 @@ int cap_txs_csr_t::s_get_width() {
 void cap_txs_csr_dhs_sch_grp_sram_entry_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // data
-    int_var__data = hlp.get_slc(_val, _count, _count -1 + 600 ).convert_to< data_cpp_int_t >()  ;
-    _count += 600;
+    // spare
+    int_var__spare = hlp.get_slc(_val, _count, _count -1 + 11 ).convert_to< spare_cpp_int_t >()  ;
+    _count += 11;
+    // qid_offset
+    int_var__qid_offset = hlp.get_slc(_val, _count, _count -1 + 11 ).convert_to< qid_offset_cpp_int_t >()  ;
+    _count += 11;
+    // lif
+    int_var__lif = hlp.get_slc(_val, _count, _count -1 + 11 ).convert_to< lif_cpp_int_t >()  ;
+    _count += 11;
+    // auto_clr
+    int_var__auto_clr = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< auto_clr_cpp_int_t >()  ;
+    _count += 1;
+    // rr_sel
+    int_var__rr_sel = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< rr_sel_cpp_int_t >()  ;
+    _count += 4;
+    // qid_fifo_elm0
+    int_var__qid_fifo_elm0 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm0_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm1
+    int_var__qid_fifo_elm1 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm1_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm2
+    int_var__qid_fifo_elm2 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm2_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm3
+    int_var__qid_fifo_elm3 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm3_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm4
+    int_var__qid_fifo_elm4 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm4_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm5
+    int_var__qid_fifo_elm5 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm5_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm6
+    int_var__qid_fifo_elm6 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm6_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm7
+    int_var__qid_fifo_elm7 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm7_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm8
+    int_var__qid_fifo_elm8 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm8_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm9
+    int_var__qid_fifo_elm9 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm9_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm10
+    int_var__qid_fifo_elm10 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm10_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm11
+    int_var__qid_fifo_elm11 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm11_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm12
+    int_var__qid_fifo_elm12 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm12_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm13
+    int_var__qid_fifo_elm13 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm13_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm14
+    int_var__qid_fifo_elm14 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm14_cpp_int_t >()  ;
+    _count += 15;
+    // qid_fifo_elm15
+    int_var__qid_fifo_elm15 = hlp.get_slc(_val, _count, _count -1 + 15 ).convert_to< qid_fifo_elm15_cpp_int_t >()  ;
+    _count += 15;
+    // hbm_ln
+    int_var__hbm_ln = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< hbm_ln_cpp_int_t >()  ;
+    _count += 4;
+    // hbm_ln_ptr0
+    int_var__hbm_ln_ptr0 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr0_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr1
+    int_var__hbm_ln_ptr1 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr1_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr2
+    int_var__hbm_ln_ptr2 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr2_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr3
+    int_var__hbm_ln_ptr3 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr3_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr4
+    int_var__hbm_ln_ptr4 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr4_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr5
+    int_var__hbm_ln_ptr5 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr5_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr6
+    int_var__hbm_ln_ptr6 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr6_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr7
+    int_var__hbm_ln_ptr7 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr7_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr8
+    int_var__hbm_ln_ptr8 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr8_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr9
+    int_var__hbm_ln_ptr9 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr9_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr10
+    int_var__hbm_ln_ptr10 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr10_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr11
+    int_var__hbm_ln_ptr11 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr11_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr12
+    int_var__hbm_ln_ptr12 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr12_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr13
+    int_var__hbm_ln_ptr13 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr13_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr14
+    int_var__hbm_ln_ptr14 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr14_cpp_int_t >()  ;
+    _count += 9;
+    // hbm_ln_ptr15
+    int_var__hbm_ln_ptr15 = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< hbm_ln_ptr15_cpp_int_t >()  ;
+    _count += 9;
+    // drb_cnt
+    int_var__drb_cnt = hlp.get_slc(_val, _count, _count -1 + 14 ).convert_to< drb_cnt_cpp_int_t >()  ;
+    _count += 14;
+    // hbm_ln_cnt0
+    int_var__hbm_ln_cnt0 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt0_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt1
+    int_var__hbm_ln_cnt1 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt1_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt2
+    int_var__hbm_ln_cnt2 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt2_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt3
+    int_var__hbm_ln_cnt3 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt3_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt4
+    int_var__hbm_ln_cnt4 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt4_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt5
+    int_var__hbm_ln_cnt5 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt5_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt6
+    int_var__hbm_ln_cnt6 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt6_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt7
+    int_var__hbm_ln_cnt7 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt7_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt8
+    int_var__hbm_ln_cnt8 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt8_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt9
+    int_var__hbm_ln_cnt9 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt9_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt10
+    int_var__hbm_ln_cnt10 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt10_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt11
+    int_var__hbm_ln_cnt11 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt11_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt12
+    int_var__hbm_ln_cnt12 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt12_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt13
+    int_var__hbm_ln_cnt13 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt13_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt14
+    int_var__hbm_ln_cnt14 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt14_cpp_int_t >()  ;
+    _count += 10;
+    // hbm_ln_cnt15
+    int_var__hbm_ln_cnt15 = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< hbm_ln_cnt15_cpp_int_t >()  ;
+    _count += 10;
     // ecc
     int_var__ecc = hlp.get_slc(_val, _count, _count -1 + 40 ).convert_to< ecc_cpp_int_t >()  ;
     _count += 40;
@@ -3481,7 +3780,7 @@ void cap_txs_csr_sta_glb_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos15_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos15_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3489,7 +3788,7 @@ void cap_txs_csr_cnt_txdma_cos15_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos14_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos14_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3497,7 +3796,7 @@ void cap_txs_csr_cnt_txdma_cos14_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos13_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos13_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3505,7 +3804,7 @@ void cap_txs_csr_cnt_txdma_cos13_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos12_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos12_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3513,7 +3812,7 @@ void cap_txs_csr_cnt_txdma_cos12_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos11_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos11_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3521,7 +3820,7 @@ void cap_txs_csr_cnt_txdma_cos11_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos10_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos10_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3529,7 +3828,7 @@ void cap_txs_csr_cnt_txdma_cos10_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos9_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos9_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3537,7 +3836,7 @@ void cap_txs_csr_cnt_txdma_cos9_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos8_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos8_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3545,7 +3844,7 @@ void cap_txs_csr_cnt_txdma_cos8_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos7_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos7_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3553,7 +3852,7 @@ void cap_txs_csr_cnt_txdma_cos7_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos6_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos6_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3561,7 +3860,7 @@ void cap_txs_csr_cnt_txdma_cos6_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos5_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos5_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3569,7 +3868,7 @@ void cap_txs_csr_cnt_txdma_cos5_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos4_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos4_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3577,7 +3876,7 @@ void cap_txs_csr_cnt_txdma_cos4_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos3_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos3_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3585,7 +3884,7 @@ void cap_txs_csr_cnt_txdma_cos3_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos2_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos2_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3593,7 +3892,7 @@ void cap_txs_csr_cnt_txdma_cos2_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos1_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos1_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3601,7 +3900,7 @@ void cap_txs_csr_cnt_txdma_cos1_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_txdma_cos0_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_txdma_cos0_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3609,7 +3908,7 @@ void cap_txs_csr_cnt_txdma_cos0_t::all(const cpp_int & _val) {
     _count += 32;
 }
 
-void cap_txs_csr_cnt_doorbell_t::all(const cpp_int & _val) {
+void cap_txs_csr_cnt_sch_doorbell_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // val
@@ -3671,6 +3970,14 @@ void cap_txs_csr_cfw_scheduler_glb_t::all(const cpp_int & _val) {
     _count += 4;
 }
 
+void cap_txs_csr_cnt_tmr_hashovrf_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // val
+    int_var__val = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< val_cpp_int_t >()  ;
+    _count += 32;
+}
+
 void cap_txs_csr_sta_slow_timer_t::all(const cpp_int & _val) {
     int _count = 0;
 
@@ -3699,6 +4006,9 @@ void cap_txs_csr_cfg_slow_timer_dbell_t::all(const cpp_int & _val) {
     _count += 6;
     // data_pid
     int_var__data_pid = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_pid_cpp_int_t >()  ;
+    _count += 16;
+    // data_reserved
+    int_var__data_reserved = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_reserved_cpp_int_t >()  ;
     _count += 16;
     // data_index
     int_var__data_index = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_index_cpp_int_t >()  ;
@@ -3744,6 +4054,9 @@ void cap_txs_csr_cfg_fast_timer_dbell_t::all(const cpp_int & _val) {
     _count += 6;
     // data_pid
     int_var__data_pid = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_pid_cpp_int_t >()  ;
+    _count += 16;
+    // data_reserved
+    int_var__data_reserved = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_reserved_cpp_int_t >()  ;
     _count += 16;
     // data_index
     int_var__data_index = hlp.get_slc(_val, _count, _count -1 + 16 ).convert_to< data_index_cpp_int_t >()  ;
@@ -3822,8 +4135,8 @@ void cap_txs_csr_cfg_timer_static_t::all(const cpp_int & _val) {
     int_var__hbm_base = hlp.get_slc(_val, _count, _count -1 + 64 ).convert_to< hbm_base_cpp_int_t >()  ;
     _count += 64;
     // tmr_hsh_depth
-    int_var__tmr_hsh_depth = hlp.get_slc(_val, _count, _count -1 + 20 ).convert_to< tmr_hsh_depth_cpp_int_t >()  ;
-    _count += 20;
+    int_var__tmr_hsh_depth = hlp.get_slc(_val, _count, _count -1 + 24 ).convert_to< tmr_hsh_depth_cpp_int_t >()  ;
+    _count += 24;
     // tmr_wheel_depth
     int_var__tmr_wheel_depth = hlp.get_slc(_val, _count, _count -1 + 12 ).convert_to< tmr_wheel_depth_cpp_int_t >()  ;
     _count += 12;
@@ -3872,46 +4185,48 @@ void cap_txs_csr_t::all(const cpp_int & _val) {
     _count += cfg_slow_timer_dbell.get_width();
     sta_slow_timer.all( hlp.get_slc(_val, _count, _count -1 + sta_slow_timer.get_width() )); // sta_slow_timer
     _count += sta_slow_timer.get_width();
+    cnt_tmr_hashovrf.all( hlp.get_slc(_val, _count, _count -1 + cnt_tmr_hashovrf.get_width() )); // cnt_tmr_hashovrf
+    _count += cnt_tmr_hashovrf.get_width();
     cfw_scheduler_glb.all( hlp.get_slc(_val, _count, _count -1 + cfw_scheduler_glb.get_width() )); // cfw_scheduler_glb
     _count += cfw_scheduler_glb.get_width();
     cfw_scheduler_static.all( hlp.get_slc(_val, _count, _count -1 + cfw_scheduler_static.get_width() )); // cfw_scheduler_static
     _count += cfw_scheduler_static.get_width();
     cfg_sch.all( hlp.get_slc(_val, _count, _count -1 + cfg_sch.get_width() )); // cfg_sch
     _count += cfg_sch.get_width();
-    cnt_doorbell.all( hlp.get_slc(_val, _count, _count -1 + cnt_doorbell.get_width() )); // cnt_doorbell
-    _count += cnt_doorbell.get_width();
-    cnt_txdma_cos0.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos0.get_width() )); // cnt_txdma_cos0
-    _count += cnt_txdma_cos0.get_width();
-    cnt_txdma_cos1.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos1.get_width() )); // cnt_txdma_cos1
-    _count += cnt_txdma_cos1.get_width();
-    cnt_txdma_cos2.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos2.get_width() )); // cnt_txdma_cos2
-    _count += cnt_txdma_cos2.get_width();
-    cnt_txdma_cos3.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos3.get_width() )); // cnt_txdma_cos3
-    _count += cnt_txdma_cos3.get_width();
-    cnt_txdma_cos4.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos4.get_width() )); // cnt_txdma_cos4
-    _count += cnt_txdma_cos4.get_width();
-    cnt_txdma_cos5.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos5.get_width() )); // cnt_txdma_cos5
-    _count += cnt_txdma_cos5.get_width();
-    cnt_txdma_cos6.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos6.get_width() )); // cnt_txdma_cos6
-    _count += cnt_txdma_cos6.get_width();
-    cnt_txdma_cos7.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos7.get_width() )); // cnt_txdma_cos7
-    _count += cnt_txdma_cos7.get_width();
-    cnt_txdma_cos8.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos8.get_width() )); // cnt_txdma_cos8
-    _count += cnt_txdma_cos8.get_width();
-    cnt_txdma_cos9.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos9.get_width() )); // cnt_txdma_cos9
-    _count += cnt_txdma_cos9.get_width();
-    cnt_txdma_cos10.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos10.get_width() )); // cnt_txdma_cos10
-    _count += cnt_txdma_cos10.get_width();
-    cnt_txdma_cos11.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos11.get_width() )); // cnt_txdma_cos11
-    _count += cnt_txdma_cos11.get_width();
-    cnt_txdma_cos12.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos12.get_width() )); // cnt_txdma_cos12
-    _count += cnt_txdma_cos12.get_width();
-    cnt_txdma_cos13.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos13.get_width() )); // cnt_txdma_cos13
-    _count += cnt_txdma_cos13.get_width();
-    cnt_txdma_cos14.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos14.get_width() )); // cnt_txdma_cos14
-    _count += cnt_txdma_cos14.get_width();
-    cnt_txdma_cos15.all( hlp.get_slc(_val, _count, _count -1 + cnt_txdma_cos15.get_width() )); // cnt_txdma_cos15
-    _count += cnt_txdma_cos15.get_width();
+    cnt_sch_doorbell.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_doorbell.get_width() )); // cnt_sch_doorbell
+    _count += cnt_sch_doorbell.get_width();
+    cnt_sch_txdma_cos0.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos0.get_width() )); // cnt_sch_txdma_cos0
+    _count += cnt_sch_txdma_cos0.get_width();
+    cnt_sch_txdma_cos1.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos1.get_width() )); // cnt_sch_txdma_cos1
+    _count += cnt_sch_txdma_cos1.get_width();
+    cnt_sch_txdma_cos2.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos2.get_width() )); // cnt_sch_txdma_cos2
+    _count += cnt_sch_txdma_cos2.get_width();
+    cnt_sch_txdma_cos3.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos3.get_width() )); // cnt_sch_txdma_cos3
+    _count += cnt_sch_txdma_cos3.get_width();
+    cnt_sch_txdma_cos4.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos4.get_width() )); // cnt_sch_txdma_cos4
+    _count += cnt_sch_txdma_cos4.get_width();
+    cnt_sch_txdma_cos5.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos5.get_width() )); // cnt_sch_txdma_cos5
+    _count += cnt_sch_txdma_cos5.get_width();
+    cnt_sch_txdma_cos6.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos6.get_width() )); // cnt_sch_txdma_cos6
+    _count += cnt_sch_txdma_cos6.get_width();
+    cnt_sch_txdma_cos7.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos7.get_width() )); // cnt_sch_txdma_cos7
+    _count += cnt_sch_txdma_cos7.get_width();
+    cnt_sch_txdma_cos8.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos8.get_width() )); // cnt_sch_txdma_cos8
+    _count += cnt_sch_txdma_cos8.get_width();
+    cnt_sch_txdma_cos9.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos9.get_width() )); // cnt_sch_txdma_cos9
+    _count += cnt_sch_txdma_cos9.get_width();
+    cnt_sch_txdma_cos10.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos10.get_width() )); // cnt_sch_txdma_cos10
+    _count += cnt_sch_txdma_cos10.get_width();
+    cnt_sch_txdma_cos11.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos11.get_width() )); // cnt_sch_txdma_cos11
+    _count += cnt_sch_txdma_cos11.get_width();
+    cnt_sch_txdma_cos12.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos12.get_width() )); // cnt_sch_txdma_cos12
+    _count += cnt_sch_txdma_cos12.get_width();
+    cnt_sch_txdma_cos13.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos13.get_width() )); // cnt_sch_txdma_cos13
+    _count += cnt_sch_txdma_cos13.get_width();
+    cnt_sch_txdma_cos14.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos14.get_width() )); // cnt_sch_txdma_cos14
+    _count += cnt_sch_txdma_cos14.get_width();
+    cnt_sch_txdma_cos15.all( hlp.get_slc(_val, _count, _count -1 + cnt_sch_txdma_cos15.get_width() )); // cnt_sch_txdma_cos15
+    _count += cnt_sch_txdma_cos15.get_width();
     sta_glb.all( hlp.get_slc(_val, _count, _count -1 + sta_glb.get_width() )); // sta_glb
     _count += sta_glb.get_width();
     sta_scheduler.all( hlp.get_slc(_val, _count, _count -1 + sta_scheduler.get_width() )); // sta_scheduler
@@ -3994,9 +4309,171 @@ cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // data
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data) , _count, _count -1 + 600 );
-    _count += 600;
+    // spare
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__spare) , _count, _count -1 + 11 );
+    _count += 11;
+    // qid_offset
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_offset) , _count, _count -1 + 11 );
+    _count += 11;
+    // lif
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__lif) , _count, _count -1 + 11 );
+    _count += 11;
+    // auto_clr
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__auto_clr) , _count, _count -1 + 1 );
+    _count += 1;
+    // rr_sel
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rr_sel) , _count, _count -1 + 4 );
+    _count += 4;
+    // qid_fifo_elm0
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm0) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm1
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm1) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm2
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm2) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm3
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm3) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm4
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm4) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm5
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm5) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm6
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm6) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm7
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm7) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm8
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm8) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm9
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm9) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm10
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm10) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm11
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm11) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm12
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm12) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm13
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm13) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm14
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm14) , _count, _count -1 + 15 );
+    _count += 15;
+    // qid_fifo_elm15
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qid_fifo_elm15) , _count, _count -1 + 15 );
+    _count += 15;
+    // hbm_ln
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln) , _count, _count -1 + 4 );
+    _count += 4;
+    // hbm_ln_ptr0
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr0) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr1
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr1) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr2
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr2) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr3
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr3) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr4
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr4) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr5
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr5) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr6
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr6) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr7
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr7) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr8
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr8) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr9
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr9) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr10
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr10) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr11
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr11) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr12
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr12) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr13
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr13) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr14
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr14) , _count, _count -1 + 9 );
+    _count += 9;
+    // hbm_ln_ptr15
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_ptr15) , _count, _count -1 + 9 );
+    _count += 9;
+    // drb_cnt
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__drb_cnt) , _count, _count -1 + 14 );
+    _count += 14;
+    // hbm_ln_cnt0
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt0) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt1
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt1) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt2
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt2) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt3
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt3) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt4
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt4) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt5
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt5) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt6
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt6) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt7
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt7) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt8
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt8) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt9
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt9) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt10
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt10) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt11
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt11) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt12
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt12) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt13
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt13) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt14
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt14) , _count, _count -1 + 10 );
+    _count += 10;
+    // hbm_ln_cnt15
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_ln_cnt15) , _count, _count -1 + 10 );
+    _count += 10;
     // ecc
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__ecc) , _count, _count -1 + 40 );
     _count += 40;
@@ -4907,7 +5384,7 @@ cpp_int cap_txs_csr_sta_glb_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos15_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos15_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4917,7 +5394,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos15_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos14_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos14_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4927,7 +5404,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos14_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos13_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos13_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4937,7 +5414,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos13_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos12_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos12_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4947,7 +5424,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos12_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos11_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos11_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4957,7 +5434,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos11_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos10_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos10_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4967,7 +5444,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos10_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos9_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos9_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4977,7 +5454,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos9_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos8_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos8_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4987,7 +5464,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos8_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos7_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos7_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -4997,7 +5474,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos7_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos6_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos6_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5007,7 +5484,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos6_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos5_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos5_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5017,7 +5494,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos5_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos4_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos4_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5027,7 +5504,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos4_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos3_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos3_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5037,7 +5514,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos3_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos2_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos2_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5047,7 +5524,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos2_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos1_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos1_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5057,7 +5534,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos1_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos0_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos0_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5067,7 +5544,7 @@ cpp_int cap_txs_csr_cnt_txdma_cos0_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_txs_csr_cnt_doorbell_t::all() const {
+cpp_int cap_txs_csr_cnt_sch_doorbell_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
@@ -5137,6 +5614,16 @@ cpp_int cap_txs_csr_cfw_scheduler_glb_t::all() const {
     return ret_val;
 }
 
+cpp_int cap_txs_csr_cnt_tmr_hashovrf_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // val
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__val) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
 cpp_int cap_txs_csr_sta_slow_timer_t::all() const {
     int _count = 0;
     cpp_int ret_val;
@@ -5168,6 +5655,9 @@ cpp_int cap_txs_csr_cfg_slow_timer_dbell_t::all() const {
     _count += 6;
     // data_pid
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_pid) , _count, _count -1 + 16 );
+    _count += 16;
+    // data_reserved
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_reserved) , _count, _count -1 + 16 );
     _count += 16;
     // data_index
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_index) , _count, _count -1 + 16 );
@@ -5219,6 +5709,9 @@ cpp_int cap_txs_csr_cfg_fast_timer_dbell_t::all() const {
     _count += 6;
     // data_pid
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_pid) , _count, _count -1 + 16 );
+    _count += 16;
+    // data_reserved
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_reserved) , _count, _count -1 + 16 );
     _count += 16;
     // data_index
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data_index) , _count, _count -1 + 16 );
@@ -5307,8 +5800,8 @@ cpp_int cap_txs_csr_cfg_timer_static_t::all() const {
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__hbm_base) , _count, _count -1 + 64 );
     _count += 64;
     // tmr_hsh_depth
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tmr_hsh_depth) , _count, _count -1 + 20 );
-    _count += 20;
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tmr_hsh_depth) , _count, _count -1 + 24 );
+    _count += 24;
     // tmr_wheel_depth
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tmr_wheel_depth) , _count, _count -1 + 12 );
     _count += 12;
@@ -5363,46 +5856,48 @@ cpp_int cap_txs_csr_t::all() const {
     _count += cfg_slow_timer_dbell.get_width();
     ret_val = hlp.set_slc(ret_val, sta_slow_timer.all() , _count, _count -1 + sta_slow_timer.get_width() ); // sta_slow_timer
     _count += sta_slow_timer.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_tmr_hashovrf.all() , _count, _count -1 + cnt_tmr_hashovrf.get_width() ); // cnt_tmr_hashovrf
+    _count += cnt_tmr_hashovrf.get_width();
     ret_val = hlp.set_slc(ret_val, cfw_scheduler_glb.all() , _count, _count -1 + cfw_scheduler_glb.get_width() ); // cfw_scheduler_glb
     _count += cfw_scheduler_glb.get_width();
     ret_val = hlp.set_slc(ret_val, cfw_scheduler_static.all() , _count, _count -1 + cfw_scheduler_static.get_width() ); // cfw_scheduler_static
     _count += cfw_scheduler_static.get_width();
     ret_val = hlp.set_slc(ret_val, cfg_sch.all() , _count, _count -1 + cfg_sch.get_width() ); // cfg_sch
     _count += cfg_sch.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_doorbell.all() , _count, _count -1 + cnt_doorbell.get_width() ); // cnt_doorbell
-    _count += cnt_doorbell.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos0.all() , _count, _count -1 + cnt_txdma_cos0.get_width() ); // cnt_txdma_cos0
-    _count += cnt_txdma_cos0.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos1.all() , _count, _count -1 + cnt_txdma_cos1.get_width() ); // cnt_txdma_cos1
-    _count += cnt_txdma_cos1.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos2.all() , _count, _count -1 + cnt_txdma_cos2.get_width() ); // cnt_txdma_cos2
-    _count += cnt_txdma_cos2.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos3.all() , _count, _count -1 + cnt_txdma_cos3.get_width() ); // cnt_txdma_cos3
-    _count += cnt_txdma_cos3.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos4.all() , _count, _count -1 + cnt_txdma_cos4.get_width() ); // cnt_txdma_cos4
-    _count += cnt_txdma_cos4.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos5.all() , _count, _count -1 + cnt_txdma_cos5.get_width() ); // cnt_txdma_cos5
-    _count += cnt_txdma_cos5.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos6.all() , _count, _count -1 + cnt_txdma_cos6.get_width() ); // cnt_txdma_cos6
-    _count += cnt_txdma_cos6.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos7.all() , _count, _count -1 + cnt_txdma_cos7.get_width() ); // cnt_txdma_cos7
-    _count += cnt_txdma_cos7.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos8.all() , _count, _count -1 + cnt_txdma_cos8.get_width() ); // cnt_txdma_cos8
-    _count += cnt_txdma_cos8.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos9.all() , _count, _count -1 + cnt_txdma_cos9.get_width() ); // cnt_txdma_cos9
-    _count += cnt_txdma_cos9.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos10.all() , _count, _count -1 + cnt_txdma_cos10.get_width() ); // cnt_txdma_cos10
-    _count += cnt_txdma_cos10.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos11.all() , _count, _count -1 + cnt_txdma_cos11.get_width() ); // cnt_txdma_cos11
-    _count += cnt_txdma_cos11.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos12.all() , _count, _count -1 + cnt_txdma_cos12.get_width() ); // cnt_txdma_cos12
-    _count += cnt_txdma_cos12.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos13.all() , _count, _count -1 + cnt_txdma_cos13.get_width() ); // cnt_txdma_cos13
-    _count += cnt_txdma_cos13.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos14.all() , _count, _count -1 + cnt_txdma_cos14.get_width() ); // cnt_txdma_cos14
-    _count += cnt_txdma_cos14.get_width();
-    ret_val = hlp.set_slc(ret_val, cnt_txdma_cos15.all() , _count, _count -1 + cnt_txdma_cos15.get_width() ); // cnt_txdma_cos15
-    _count += cnt_txdma_cos15.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_doorbell.all() , _count, _count -1 + cnt_sch_doorbell.get_width() ); // cnt_sch_doorbell
+    _count += cnt_sch_doorbell.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos0.all() , _count, _count -1 + cnt_sch_txdma_cos0.get_width() ); // cnt_sch_txdma_cos0
+    _count += cnt_sch_txdma_cos0.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos1.all() , _count, _count -1 + cnt_sch_txdma_cos1.get_width() ); // cnt_sch_txdma_cos1
+    _count += cnt_sch_txdma_cos1.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos2.all() , _count, _count -1 + cnt_sch_txdma_cos2.get_width() ); // cnt_sch_txdma_cos2
+    _count += cnt_sch_txdma_cos2.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos3.all() , _count, _count -1 + cnt_sch_txdma_cos3.get_width() ); // cnt_sch_txdma_cos3
+    _count += cnt_sch_txdma_cos3.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos4.all() , _count, _count -1 + cnt_sch_txdma_cos4.get_width() ); // cnt_sch_txdma_cos4
+    _count += cnt_sch_txdma_cos4.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos5.all() , _count, _count -1 + cnt_sch_txdma_cos5.get_width() ); // cnt_sch_txdma_cos5
+    _count += cnt_sch_txdma_cos5.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos6.all() , _count, _count -1 + cnt_sch_txdma_cos6.get_width() ); // cnt_sch_txdma_cos6
+    _count += cnt_sch_txdma_cos6.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos7.all() , _count, _count -1 + cnt_sch_txdma_cos7.get_width() ); // cnt_sch_txdma_cos7
+    _count += cnt_sch_txdma_cos7.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos8.all() , _count, _count -1 + cnt_sch_txdma_cos8.get_width() ); // cnt_sch_txdma_cos8
+    _count += cnt_sch_txdma_cos8.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos9.all() , _count, _count -1 + cnt_sch_txdma_cos9.get_width() ); // cnt_sch_txdma_cos9
+    _count += cnt_sch_txdma_cos9.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos10.all() , _count, _count -1 + cnt_sch_txdma_cos10.get_width() ); // cnt_sch_txdma_cos10
+    _count += cnt_sch_txdma_cos10.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos11.all() , _count, _count -1 + cnt_sch_txdma_cos11.get_width() ); // cnt_sch_txdma_cos11
+    _count += cnt_sch_txdma_cos11.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos12.all() , _count, _count -1 + cnt_sch_txdma_cos12.get_width() ); // cnt_sch_txdma_cos12
+    _count += cnt_sch_txdma_cos12.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos13.all() , _count, _count -1 + cnt_sch_txdma_cos13.get_width() ); // cnt_sch_txdma_cos13
+    _count += cnt_sch_txdma_cos13.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos14.all() , _count, _count -1 + cnt_sch_txdma_cos14.get_width() ); // cnt_sch_txdma_cos14
+    _count += cnt_sch_txdma_cos14.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_sch_txdma_cos15.all() , _count, _count -1 + cnt_sch_txdma_cos15.get_width() ); // cnt_sch_txdma_cos15
+    _count += cnt_sch_txdma_cos15.get_width();
     ret_val = hlp.set_slc(ret_val, sta_glb.all() , _count, _count -1 + sta_glb.get_width() ); // sta_glb
     _count += sta_glb.get_width();
     ret_val = hlp.set_slc(ret_val, sta_scheduler.all() , _count, _count -1 + sta_scheduler.get_width() ); // sta_scheduler
@@ -5486,8 +5981,386 @@ void cap_txs_csr_dhs_sch_grp_sram_entry_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("data", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::data);
-            register_get_func("data", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::data);
+            register_set_func("spare", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::spare);
+            register_get_func("spare", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::spare);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_offset", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_offset);
+            register_get_func("qid_offset", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_offset);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("lif", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::lif);
+            register_get_func("lif", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::lif);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("auto_clr", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::auto_clr);
+            register_get_func("auto_clr", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::auto_clr);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("rr_sel", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::rr_sel);
+            register_get_func("rr_sel", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::rr_sel);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm0", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm0);
+            register_get_func("qid_fifo_elm0", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm0);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm1", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm1);
+            register_get_func("qid_fifo_elm1", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm1);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm2", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm2);
+            register_get_func("qid_fifo_elm2", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm2);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm3", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm3);
+            register_get_func("qid_fifo_elm3", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm3);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm4", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm4);
+            register_get_func("qid_fifo_elm4", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm4);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm5", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm5);
+            register_get_func("qid_fifo_elm5", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm5);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm6", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm6);
+            register_get_func("qid_fifo_elm6", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm6);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm7", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm7);
+            register_get_func("qid_fifo_elm7", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm7);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm8", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm8);
+            register_get_func("qid_fifo_elm8", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm8);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm9", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm9);
+            register_get_func("qid_fifo_elm9", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm9);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm10", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm10);
+            register_get_func("qid_fifo_elm10", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm10);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm11", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm11);
+            register_get_func("qid_fifo_elm11", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm11);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm12", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm12);
+            register_get_func("qid_fifo_elm12", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm12);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm13", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm13);
+            register_get_func("qid_fifo_elm13", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm13);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm14", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm14);
+            register_get_func("qid_fifo_elm14", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm14);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qid_fifo_elm15", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm15);
+            register_get_func("qid_fifo_elm15", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm15);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln);
+            register_get_func("hbm_ln", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr0", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr0);
+            register_get_func("hbm_ln_ptr0", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr0);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr1", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr1);
+            register_get_func("hbm_ln_ptr1", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr1);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr2", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr2);
+            register_get_func("hbm_ln_ptr2", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr2);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr3", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr3);
+            register_get_func("hbm_ln_ptr3", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr3);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr4", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr4);
+            register_get_func("hbm_ln_ptr4", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr4);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr5", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr5);
+            register_get_func("hbm_ln_ptr5", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr5);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr6", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr6);
+            register_get_func("hbm_ln_ptr6", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr6);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr7", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr7);
+            register_get_func("hbm_ln_ptr7", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr7);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr8", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr8);
+            register_get_func("hbm_ln_ptr8", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr8);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr9", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr9);
+            register_get_func("hbm_ln_ptr9", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr9);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr10", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr10);
+            register_get_func("hbm_ln_ptr10", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr10);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr11", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr11);
+            register_get_func("hbm_ln_ptr11", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr11);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr12", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr12);
+            register_get_func("hbm_ln_ptr12", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr12);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr13", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr13);
+            register_get_func("hbm_ln_ptr13", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr13);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr14", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr14);
+            register_get_func("hbm_ln_ptr14", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr14);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_ptr15", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr15);
+            register_get_func("hbm_ln_ptr15", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr15);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("drb_cnt", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::drb_cnt);
+            register_get_func("drb_cnt", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::drb_cnt);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt0", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt0);
+            register_get_func("hbm_ln_cnt0", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt0);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt1", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt1);
+            register_get_func("hbm_ln_cnt1", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt1);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt2", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt2);
+            register_get_func("hbm_ln_cnt2", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt2);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt3", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt3);
+            register_get_func("hbm_ln_cnt3", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt3);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt4", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt4);
+            register_get_func("hbm_ln_cnt4", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt4);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt5", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt5);
+            register_get_func("hbm_ln_cnt5", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt5);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt6", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt6);
+            register_get_func("hbm_ln_cnt6", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt6);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt7", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt7);
+            register_get_func("hbm_ln_cnt7", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt7);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt8", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt8);
+            register_get_func("hbm_ln_cnt8", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt8);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt9", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt9);
+            register_get_func("hbm_ln_cnt9", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt9);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt10", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt10);
+            register_get_func("hbm_ln_cnt10", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt10);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt11", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt11);
+            register_get_func("hbm_ln_cnt11", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt11);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt12", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt12);
+            register_get_func("hbm_ln_cnt12", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt12);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt13", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt13);
+            register_get_func("hbm_ln_cnt13", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt13);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt14", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt14);
+            register_get_func("hbm_ln_cnt14", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt14);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("hbm_ln_cnt15", (cap_csr_base::set_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt15);
+            register_get_func("hbm_ln_cnt15", (cap_csr_base::get_function_type_t)&cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt15);
         }
         #endif
     
@@ -6575,188 +7448,188 @@ void cap_txs_csr_sta_glb_t::init() {
     
 }
 
-void cap_txs_csr_cnt_txdma_cos15_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos15_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos15_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos15_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos15_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos15_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos14_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos14_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos14_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos14_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos14_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos14_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos13_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos13_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos13_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos13_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos13_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos13_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos12_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos12_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos12_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos12_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos12_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos12_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos11_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos11_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos11_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos11_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos11_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos11_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos10_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos10_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos10_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos10_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos10_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos10_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos9_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos9_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos9_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos9_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos9_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos9_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos8_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos8_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos8_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos8_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos8_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos8_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos7_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos7_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos7_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos7_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos7_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos7_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos6_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos6_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos6_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos6_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos6_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos6_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos5_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos5_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos5_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos5_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos5_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos5_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos4_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos4_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos4_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos4_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos4_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos4_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos3_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos3_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos3_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos3_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos3_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos3_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos2_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos2_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos2_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos2_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos2_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos2_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos1_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos1_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos1_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos1_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos1_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos1_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_txdma_cos0_t::init() {
+void cap_txs_csr_cnt_sch_txdma_cos0_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_txdma_cos0_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_txdma_cos0_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos0_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_txdma_cos0_t::val);
         }
         #endif
     
 }
 
-void cap_txs_csr_cnt_doorbell_t::init() {
+void cap_txs_csr_cnt_sch_doorbell_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_doorbell_t::val);
-            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_doorbell_t::val);
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_sch_doorbell_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_sch_doorbell_t::val);
         }
         #endif
     
@@ -6867,6 +7740,17 @@ void cap_txs_csr_cfw_scheduler_glb_t::init() {
     
 }
 
+void cap_txs_csr_cnt_tmr_hashovrf_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("val", (cap_csr_base::set_function_type_t)&cap_txs_csr_cnt_tmr_hashovrf_t::val);
+            register_get_func("val", (cap_csr_base::get_function_type_t)&cap_txs_csr_cnt_tmr_hashovrf_t::val);
+        }
+        #endif
+    
+}
+
 void cap_txs_csr_sta_slow_timer_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
@@ -6919,6 +7803,13 @@ void cap_txs_csr_cfg_slow_timer_dbell_t::init() {
         if(!get_field_init_done()) {
             register_set_func("data_pid", (cap_csr_base::set_function_type_t)&cap_txs_csr_cfg_slow_timer_dbell_t::data_pid);
             register_get_func("data_pid", (cap_csr_base::get_function_type_t)&cap_txs_csr_cfg_slow_timer_dbell_t::data_pid);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("data_reserved", (cap_csr_base::set_function_type_t)&cap_txs_csr_cfg_slow_timer_dbell_t::data_reserved);
+            register_get_func("data_reserved", (cap_csr_base::get_function_type_t)&cap_txs_csr_cfg_slow_timer_dbell_t::data_reserved);
         }
         #endif
     
@@ -7003,6 +7894,13 @@ void cap_txs_csr_cfg_fast_timer_dbell_t::init() {
         if(!get_field_init_done()) {
             register_set_func("data_pid", (cap_csr_base::set_function_type_t)&cap_txs_csr_cfg_fast_timer_dbell_t::data_pid);
             register_get_func("data_pid", (cap_csr_base::get_function_type_t)&cap_txs_csr_cfg_fast_timer_dbell_t::data_pid);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("data_reserved", (cap_csr_base::set_function_type_t)&cap_txs_csr_cfg_fast_timer_dbell_t::data_reserved);
+            register_get_func("data_reserved", (cap_csr_base::get_function_type_t)&cap_txs_csr_cfg_fast_timer_dbell_t::data_reserved);
         }
         #endif
     
@@ -7163,7 +8061,7 @@ void cap_txs_csr_cfg_timer_static_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0xffffffff0000000000000000"));
+    set_reset_val(cpp_int("0xfff0fffff0000000000000000"));
     all(get_reset_val());
 }
 
@@ -7205,26 +8103,27 @@ void cap_txs_csr_t::init() {
     cfg_slow_timer.set_attributes(this,"cfg_slow_timer", 0xc008 );
     cfg_slow_timer_dbell.set_attributes(this,"cfg_slow_timer_dbell", 0xc010 );
     sta_slow_timer.set_attributes(this,"sta_slow_timer", 0x18000 );
-    cfw_scheduler_glb.set_attributes(this,"cfw_scheduler_glb", 0x18008 );
-    cfw_scheduler_static.set_attributes(this,"cfw_scheduler_static", 0x18010 );
+    cnt_tmr_hashovrf.set_attributes(this,"cnt_tmr_hashovrf", 0x18008 );
+    cfw_scheduler_glb.set_attributes(this,"cfw_scheduler_glb", 0x18010 );
+    cfw_scheduler_static.set_attributes(this,"cfw_scheduler_static", 0x18020 );
     cfg_sch.set_attributes(this,"cfg_sch", 0x18300 );
-    cnt_doorbell.set_attributes(this,"cnt_doorbell", 0x18310 );
-    cnt_txdma_cos0.set_attributes(this,"cnt_txdma_cos0", 0x18500 );
-    cnt_txdma_cos1.set_attributes(this,"cnt_txdma_cos1", 0x18700 );
-    cnt_txdma_cos2.set_attributes(this,"cnt_txdma_cos2", 0x18900 );
-    cnt_txdma_cos3.set_attributes(this,"cnt_txdma_cos3", 0x18b00 );
-    cnt_txdma_cos4.set_attributes(this,"cnt_txdma_cos4", 0x18d00 );
-    cnt_txdma_cos5.set_attributes(this,"cnt_txdma_cos5", 0x18f00 );
-    cnt_txdma_cos6.set_attributes(this,"cnt_txdma_cos6", 0x19100 );
-    cnt_txdma_cos7.set_attributes(this,"cnt_txdma_cos7", 0x19300 );
-    cnt_txdma_cos8.set_attributes(this,"cnt_txdma_cos8", 0x19500 );
-    cnt_txdma_cos9.set_attributes(this,"cnt_txdma_cos9", 0x19700 );
-    cnt_txdma_cos10.set_attributes(this,"cnt_txdma_cos10", 0x19900 );
-    cnt_txdma_cos11.set_attributes(this,"cnt_txdma_cos11", 0x19b00 );
-    cnt_txdma_cos12.set_attributes(this,"cnt_txdma_cos12", 0x19d00 );
-    cnt_txdma_cos13.set_attributes(this,"cnt_txdma_cos13", 0x19f00 );
-    cnt_txdma_cos14.set_attributes(this,"cnt_txdma_cos14", 0x1a100 );
-    cnt_txdma_cos15.set_attributes(this,"cnt_txdma_cos15", 0x1a300 );
+    cnt_sch_doorbell.set_attributes(this,"cnt_sch_doorbell", 0x18310 );
+    cnt_sch_txdma_cos0.set_attributes(this,"cnt_sch_txdma_cos0", 0x18500 );
+    cnt_sch_txdma_cos1.set_attributes(this,"cnt_sch_txdma_cos1", 0x18700 );
+    cnt_sch_txdma_cos2.set_attributes(this,"cnt_sch_txdma_cos2", 0x18900 );
+    cnt_sch_txdma_cos3.set_attributes(this,"cnt_sch_txdma_cos3", 0x18b00 );
+    cnt_sch_txdma_cos4.set_attributes(this,"cnt_sch_txdma_cos4", 0x18d00 );
+    cnt_sch_txdma_cos5.set_attributes(this,"cnt_sch_txdma_cos5", 0x18f00 );
+    cnt_sch_txdma_cos6.set_attributes(this,"cnt_sch_txdma_cos6", 0x19100 );
+    cnt_sch_txdma_cos7.set_attributes(this,"cnt_sch_txdma_cos7", 0x19300 );
+    cnt_sch_txdma_cos8.set_attributes(this,"cnt_sch_txdma_cos8", 0x19500 );
+    cnt_sch_txdma_cos9.set_attributes(this,"cnt_sch_txdma_cos9", 0x19700 );
+    cnt_sch_txdma_cos10.set_attributes(this,"cnt_sch_txdma_cos10", 0x19900 );
+    cnt_sch_txdma_cos11.set_attributes(this,"cnt_sch_txdma_cos11", 0x19b00 );
+    cnt_sch_txdma_cos12.set_attributes(this,"cnt_sch_txdma_cos12", 0x19d00 );
+    cnt_sch_txdma_cos13.set_attributes(this,"cnt_sch_txdma_cos13", 0x19f00 );
+    cnt_sch_txdma_cos14.set_attributes(this,"cnt_sch_txdma_cos14", 0x1a100 );
+    cnt_sch_txdma_cos15.set_attributes(this,"cnt_sch_txdma_cos15", 0x1a300 );
     sta_glb.set_attributes(this,"sta_glb", 0x1a304 );
     sta_scheduler.set_attributes(this,"sta_scheduler", 0x22000 );
     sta_scheduler_rr.set_attributes(this,"sta_scheduler_rr", 0x22020 );
@@ -7265,13 +8164,499 @@ void cap_txs_csr_t::init() {
     dhs_sch_grp_sram.set_attributes(this,"dhs_sch_grp_sram", 0x40000 );
 }
 
-void cap_txs_csr_dhs_sch_grp_sram_entry_t::data(const cpp_int & _val) { 
-    // data
-    int_var__data = _val.convert_to< data_cpp_int_t >();
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::spare(const cpp_int & _val) { 
+    // spare
+    int_var__spare = _val.convert_to< spare_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::data() const {
-    return int_var__data.convert_to< cpp_int >();
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::spare() const {
+    return int_var__spare.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_offset(const cpp_int & _val) { 
+    // qid_offset
+    int_var__qid_offset = _val.convert_to< qid_offset_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_offset() const {
+    return int_var__qid_offset.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::lif(const cpp_int & _val) { 
+    // lif
+    int_var__lif = _val.convert_to< lif_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::lif() const {
+    return int_var__lif.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::auto_clr(const cpp_int & _val) { 
+    // auto_clr
+    int_var__auto_clr = _val.convert_to< auto_clr_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::auto_clr() const {
+    return int_var__auto_clr.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::rr_sel(const cpp_int & _val) { 
+    // rr_sel
+    int_var__rr_sel = _val.convert_to< rr_sel_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::rr_sel() const {
+    return int_var__rr_sel.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm0(const cpp_int & _val) { 
+    // qid_fifo_elm0
+    int_var__qid_fifo_elm0 = _val.convert_to< qid_fifo_elm0_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm0() const {
+    return int_var__qid_fifo_elm0.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm1(const cpp_int & _val) { 
+    // qid_fifo_elm1
+    int_var__qid_fifo_elm1 = _val.convert_to< qid_fifo_elm1_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm1() const {
+    return int_var__qid_fifo_elm1.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm2(const cpp_int & _val) { 
+    // qid_fifo_elm2
+    int_var__qid_fifo_elm2 = _val.convert_to< qid_fifo_elm2_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm2() const {
+    return int_var__qid_fifo_elm2.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm3(const cpp_int & _val) { 
+    // qid_fifo_elm3
+    int_var__qid_fifo_elm3 = _val.convert_to< qid_fifo_elm3_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm3() const {
+    return int_var__qid_fifo_elm3.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm4(const cpp_int & _val) { 
+    // qid_fifo_elm4
+    int_var__qid_fifo_elm4 = _val.convert_to< qid_fifo_elm4_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm4() const {
+    return int_var__qid_fifo_elm4.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm5(const cpp_int & _val) { 
+    // qid_fifo_elm5
+    int_var__qid_fifo_elm5 = _val.convert_to< qid_fifo_elm5_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm5() const {
+    return int_var__qid_fifo_elm5.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm6(const cpp_int & _val) { 
+    // qid_fifo_elm6
+    int_var__qid_fifo_elm6 = _val.convert_to< qid_fifo_elm6_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm6() const {
+    return int_var__qid_fifo_elm6.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm7(const cpp_int & _val) { 
+    // qid_fifo_elm7
+    int_var__qid_fifo_elm7 = _val.convert_to< qid_fifo_elm7_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm7() const {
+    return int_var__qid_fifo_elm7.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm8(const cpp_int & _val) { 
+    // qid_fifo_elm8
+    int_var__qid_fifo_elm8 = _val.convert_to< qid_fifo_elm8_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm8() const {
+    return int_var__qid_fifo_elm8.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm9(const cpp_int & _val) { 
+    // qid_fifo_elm9
+    int_var__qid_fifo_elm9 = _val.convert_to< qid_fifo_elm9_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm9() const {
+    return int_var__qid_fifo_elm9.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm10(const cpp_int & _val) { 
+    // qid_fifo_elm10
+    int_var__qid_fifo_elm10 = _val.convert_to< qid_fifo_elm10_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm10() const {
+    return int_var__qid_fifo_elm10.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm11(const cpp_int & _val) { 
+    // qid_fifo_elm11
+    int_var__qid_fifo_elm11 = _val.convert_to< qid_fifo_elm11_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm11() const {
+    return int_var__qid_fifo_elm11.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm12(const cpp_int & _val) { 
+    // qid_fifo_elm12
+    int_var__qid_fifo_elm12 = _val.convert_to< qid_fifo_elm12_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm12() const {
+    return int_var__qid_fifo_elm12.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm13(const cpp_int & _val) { 
+    // qid_fifo_elm13
+    int_var__qid_fifo_elm13 = _val.convert_to< qid_fifo_elm13_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm13() const {
+    return int_var__qid_fifo_elm13.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm14(const cpp_int & _val) { 
+    // qid_fifo_elm14
+    int_var__qid_fifo_elm14 = _val.convert_to< qid_fifo_elm14_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm14() const {
+    return int_var__qid_fifo_elm14.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm15(const cpp_int & _val) { 
+    // qid_fifo_elm15
+    int_var__qid_fifo_elm15 = _val.convert_to< qid_fifo_elm15_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::qid_fifo_elm15() const {
+    return int_var__qid_fifo_elm15.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln(const cpp_int & _val) { 
+    // hbm_ln
+    int_var__hbm_ln = _val.convert_to< hbm_ln_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln() const {
+    return int_var__hbm_ln.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr0(const cpp_int & _val) { 
+    // hbm_ln_ptr0
+    int_var__hbm_ln_ptr0 = _val.convert_to< hbm_ln_ptr0_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr0() const {
+    return int_var__hbm_ln_ptr0.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr1(const cpp_int & _val) { 
+    // hbm_ln_ptr1
+    int_var__hbm_ln_ptr1 = _val.convert_to< hbm_ln_ptr1_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr1() const {
+    return int_var__hbm_ln_ptr1.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr2(const cpp_int & _val) { 
+    // hbm_ln_ptr2
+    int_var__hbm_ln_ptr2 = _val.convert_to< hbm_ln_ptr2_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr2() const {
+    return int_var__hbm_ln_ptr2.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr3(const cpp_int & _val) { 
+    // hbm_ln_ptr3
+    int_var__hbm_ln_ptr3 = _val.convert_to< hbm_ln_ptr3_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr3() const {
+    return int_var__hbm_ln_ptr3.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr4(const cpp_int & _val) { 
+    // hbm_ln_ptr4
+    int_var__hbm_ln_ptr4 = _val.convert_to< hbm_ln_ptr4_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr4() const {
+    return int_var__hbm_ln_ptr4.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr5(const cpp_int & _val) { 
+    // hbm_ln_ptr5
+    int_var__hbm_ln_ptr5 = _val.convert_to< hbm_ln_ptr5_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr5() const {
+    return int_var__hbm_ln_ptr5.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr6(const cpp_int & _val) { 
+    // hbm_ln_ptr6
+    int_var__hbm_ln_ptr6 = _val.convert_to< hbm_ln_ptr6_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr6() const {
+    return int_var__hbm_ln_ptr6.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr7(const cpp_int & _val) { 
+    // hbm_ln_ptr7
+    int_var__hbm_ln_ptr7 = _val.convert_to< hbm_ln_ptr7_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr7() const {
+    return int_var__hbm_ln_ptr7.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr8(const cpp_int & _val) { 
+    // hbm_ln_ptr8
+    int_var__hbm_ln_ptr8 = _val.convert_to< hbm_ln_ptr8_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr8() const {
+    return int_var__hbm_ln_ptr8.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr9(const cpp_int & _val) { 
+    // hbm_ln_ptr9
+    int_var__hbm_ln_ptr9 = _val.convert_to< hbm_ln_ptr9_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr9() const {
+    return int_var__hbm_ln_ptr9.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr10(const cpp_int & _val) { 
+    // hbm_ln_ptr10
+    int_var__hbm_ln_ptr10 = _val.convert_to< hbm_ln_ptr10_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr10() const {
+    return int_var__hbm_ln_ptr10.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr11(const cpp_int & _val) { 
+    // hbm_ln_ptr11
+    int_var__hbm_ln_ptr11 = _val.convert_to< hbm_ln_ptr11_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr11() const {
+    return int_var__hbm_ln_ptr11.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr12(const cpp_int & _val) { 
+    // hbm_ln_ptr12
+    int_var__hbm_ln_ptr12 = _val.convert_to< hbm_ln_ptr12_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr12() const {
+    return int_var__hbm_ln_ptr12.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr13(const cpp_int & _val) { 
+    // hbm_ln_ptr13
+    int_var__hbm_ln_ptr13 = _val.convert_to< hbm_ln_ptr13_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr13() const {
+    return int_var__hbm_ln_ptr13.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr14(const cpp_int & _val) { 
+    // hbm_ln_ptr14
+    int_var__hbm_ln_ptr14 = _val.convert_to< hbm_ln_ptr14_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr14() const {
+    return int_var__hbm_ln_ptr14.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr15(const cpp_int & _val) { 
+    // hbm_ln_ptr15
+    int_var__hbm_ln_ptr15 = _val.convert_to< hbm_ln_ptr15_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_ptr15() const {
+    return int_var__hbm_ln_ptr15.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::drb_cnt(const cpp_int & _val) { 
+    // drb_cnt
+    int_var__drb_cnt = _val.convert_to< drb_cnt_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::drb_cnt() const {
+    return int_var__drb_cnt.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt0(const cpp_int & _val) { 
+    // hbm_ln_cnt0
+    int_var__hbm_ln_cnt0 = _val.convert_to< hbm_ln_cnt0_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt0() const {
+    return int_var__hbm_ln_cnt0.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt1(const cpp_int & _val) { 
+    // hbm_ln_cnt1
+    int_var__hbm_ln_cnt1 = _val.convert_to< hbm_ln_cnt1_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt1() const {
+    return int_var__hbm_ln_cnt1.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt2(const cpp_int & _val) { 
+    // hbm_ln_cnt2
+    int_var__hbm_ln_cnt2 = _val.convert_to< hbm_ln_cnt2_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt2() const {
+    return int_var__hbm_ln_cnt2.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt3(const cpp_int & _val) { 
+    // hbm_ln_cnt3
+    int_var__hbm_ln_cnt3 = _val.convert_to< hbm_ln_cnt3_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt3() const {
+    return int_var__hbm_ln_cnt3.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt4(const cpp_int & _val) { 
+    // hbm_ln_cnt4
+    int_var__hbm_ln_cnt4 = _val.convert_to< hbm_ln_cnt4_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt4() const {
+    return int_var__hbm_ln_cnt4.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt5(const cpp_int & _val) { 
+    // hbm_ln_cnt5
+    int_var__hbm_ln_cnt5 = _val.convert_to< hbm_ln_cnt5_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt5() const {
+    return int_var__hbm_ln_cnt5.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt6(const cpp_int & _val) { 
+    // hbm_ln_cnt6
+    int_var__hbm_ln_cnt6 = _val.convert_to< hbm_ln_cnt6_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt6() const {
+    return int_var__hbm_ln_cnt6.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt7(const cpp_int & _val) { 
+    // hbm_ln_cnt7
+    int_var__hbm_ln_cnt7 = _val.convert_to< hbm_ln_cnt7_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt7() const {
+    return int_var__hbm_ln_cnt7.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt8(const cpp_int & _val) { 
+    // hbm_ln_cnt8
+    int_var__hbm_ln_cnt8 = _val.convert_to< hbm_ln_cnt8_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt8() const {
+    return int_var__hbm_ln_cnt8.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt9(const cpp_int & _val) { 
+    // hbm_ln_cnt9
+    int_var__hbm_ln_cnt9 = _val.convert_to< hbm_ln_cnt9_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt9() const {
+    return int_var__hbm_ln_cnt9.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt10(const cpp_int & _val) { 
+    // hbm_ln_cnt10
+    int_var__hbm_ln_cnt10 = _val.convert_to< hbm_ln_cnt10_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt10() const {
+    return int_var__hbm_ln_cnt10.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt11(const cpp_int & _val) { 
+    // hbm_ln_cnt11
+    int_var__hbm_ln_cnt11 = _val.convert_to< hbm_ln_cnt11_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt11() const {
+    return int_var__hbm_ln_cnt11.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt12(const cpp_int & _val) { 
+    // hbm_ln_cnt12
+    int_var__hbm_ln_cnt12 = _val.convert_to< hbm_ln_cnt12_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt12() const {
+    return int_var__hbm_ln_cnt12.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt13(const cpp_int & _val) { 
+    // hbm_ln_cnt13
+    int_var__hbm_ln_cnt13 = _val.convert_to< hbm_ln_cnt13_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt13() const {
+    return int_var__hbm_ln_cnt13.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt14(const cpp_int & _val) { 
+    // hbm_ln_cnt14
+    int_var__hbm_ln_cnt14 = _val.convert_to< hbm_ln_cnt14_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt14() const {
+    return int_var__hbm_ln_cnt14.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt15(const cpp_int & _val) { 
+    // hbm_ln_cnt15
+    int_var__hbm_ln_cnt15 = _val.convert_to< hbm_ln_cnt15_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_dhs_sch_grp_sram_entry_t::hbm_ln_cnt15() const {
+    return int_var__hbm_ln_cnt15.convert_to< cpp_int >();
 }
     
 void cap_txs_csr_dhs_sch_grp_sram_entry_t::ecc(const cpp_int & _val) { 
@@ -8174,156 +9559,156 @@ cpp_int cap_txs_csr_sta_glb_t::pb_xoff() const {
     return int_var__pb_xoff.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos15_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos15_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos15_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos15_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos14_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos14_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos14_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos14_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos13_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos13_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos13_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos13_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos12_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos12_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos12_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos12_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos11_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos11_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos11_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos11_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos10_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos10_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos10_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos10_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos9_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos9_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos9_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos9_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos8_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos8_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos8_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos8_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos7_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos7_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos7_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos7_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos6_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos6_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos6_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos6_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos5_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos5_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos5_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos5_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos4_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos4_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos4_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos4_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos3_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos3_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos3_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos3_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos2_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos2_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos2_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos2_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos1_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos1_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos1_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos1_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_txdma_cos0_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_txdma_cos0_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_txdma_cos0_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_txdma_cos0_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
-void cap_txs_csr_cnt_doorbell_t::val(const cpp_int & _val) { 
+void cap_txs_csr_cnt_sch_doorbell_t::val(const cpp_int & _val) { 
     // val
     int_var__val = _val.convert_to< val_cpp_int_t >();
 }
 
-cpp_int cap_txs_csr_cnt_doorbell_t::val() const {
+cpp_int cap_txs_csr_cnt_sch_doorbell_t::val() const {
     return int_var__val.convert_to< cpp_int >();
 }
     
@@ -8444,6 +9829,15 @@ cpp_int cap_txs_csr_cfw_scheduler_glb_t::cos_read() const {
     return int_var__cos_read.convert_to< cpp_int >();
 }
     
+void cap_txs_csr_cnt_tmr_hashovrf_t::val(const cpp_int & _val) { 
+    // val
+    int_var__val = _val.convert_to< val_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_cnt_tmr_hashovrf_t::val() const {
+    return int_var__val.convert_to< cpp_int >();
+}
+    
 void cap_txs_csr_sta_slow_timer_t::hbm_init_done(const cpp_int & _val) { 
     // hbm_init_done
     int_var__hbm_init_done = _val.convert_to< hbm_init_done_cpp_int_t >();
@@ -8505,6 +9899,15 @@ void cap_txs_csr_cfg_slow_timer_dbell_t::data_pid(const cpp_int & _val) {
 
 cpp_int cap_txs_csr_cfg_slow_timer_dbell_t::data_pid() const {
     return int_var__data_pid.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_cfg_slow_timer_dbell_t::data_reserved(const cpp_int & _val) { 
+    // data_reserved
+    int_var__data_reserved = _val.convert_to< data_reserved_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_cfg_slow_timer_dbell_t::data_reserved() const {
+    return int_var__data_reserved.convert_to< cpp_int >();
 }
     
 void cap_txs_csr_cfg_slow_timer_dbell_t::data_index(const cpp_int & _val) { 
@@ -8595,6 +9998,15 @@ void cap_txs_csr_cfg_fast_timer_dbell_t::data_pid(const cpp_int & _val) {
 
 cpp_int cap_txs_csr_cfg_fast_timer_dbell_t::data_pid() const {
     return int_var__data_pid.convert_to< cpp_int >();
+}
+    
+void cap_txs_csr_cfg_fast_timer_dbell_t::data_reserved(const cpp_int & _val) { 
+    // data_reserved
+    int_var__data_reserved = _val.convert_to< data_reserved_cpp_int_t >();
+}
+
+cpp_int cap_txs_csr_cfg_fast_timer_dbell_t::data_reserved() const {
+    return int_var__data_reserved.convert_to< cpp_int >();
 }
     
 void cap_txs_csr_cfg_fast_timer_dbell_t::data_index(const cpp_int & _val) { 

@@ -70,7 +70,7 @@ void cap_csr_base::set_type_name(string _name) {
 }
 void cap_csr_base::set_parent(cap_csr_base * _base) {
     if(base__parent && (_base != base__parent)) {
-        PLOG_WARN("parent is already non-null, unexpected behavior" << endl)
+        PLOG_WARN("parent is already non-null, unexpected behavior" << endl);
     }
 
     cap_csr_base::int_func_map__get[get_type_name()]["all"] = &cap_csr_base::all;
@@ -119,7 +119,7 @@ void cap_csr_base::show() {
     bool found;
     get_function_map_t l_get_func_map;
     if(int_func_map__get.find(get_type_name()) != int_func_map__get.end()) {
-        l_get_func_map = int_func_map__get[get_type_name()]; 
+        l_get_func_map = int_func_map__get[get_type_name()];
     }
 
     get_array_function_map_t l_get_array_func_map;
@@ -195,17 +195,17 @@ int cap_csr_base::get_chip_id() const {
     if(get_parent() != 0) {
         ret_val = get_parent()->get_chip_id();
     } else {
-        PLOG_ERR("cap_csr_base: parent is null and its not block or system. Can't get chip_id" << endl)
+        PLOG_ERR("cap_csr_base: parent is null and its not block or system. Can't get chip_id" << endl);
             return 0;
     }
     return ret_val;
 }
 
 void cap_csr_base::write() {
-    PLOG_ERR("cap_csr_base:: write not to be used" << endl)
+    PLOG_ERR("cap_csr_base:: write not to be used" << endl);
 }
 void cap_csr_base::read() {
-    PLOG_ERR("cap_csr_base:: read not to be used" << endl)
+    PLOG_ERR("cap_csr_base:: read not to be used" << endl);
 }
 void cap_csr_base::set_attributes(cap_csr_base * _parent, string _name, uint64_t _offset)
 {
@@ -217,7 +217,6 @@ void cap_csr_base::set_attributes(cap_csr_base * _parent, string _name, uint64_t
     init();
     set_field_init_done(true);
     if(_parent) { _parent->update_block_boundaries(this); }
-
 }
 
 void cap_csr_base::set_reset_val(cpp_int _val) {
@@ -248,7 +247,7 @@ bool cap_csr_base::search_field_in_db(string _name) {
 }
 
 void cap_csr_base::register_set_func(string _name, cap_csr_base::set_function_type_t func_ptr) {
-    PLOG_MSG("registering " << get_hier_path() << "type : " << get_type_name() << " func: " << _name << endl)
+    PLOG_MSG("registering " << get_hier_path() << "type : " << get_type_name() << " func: " << _name << endl);
     if(!search_field_in_db(_name)) {
         cap_csr_base::int_func_map__set[get_type_name()][_name] = func_ptr;
         cap_csr_base::field_order_vector[get_type_name()].push_back(_name);
@@ -276,10 +275,10 @@ void cap_csr_base::register_get_array_func(string _name, cap_csr_base::get_array
 
 
 void cap_memory_base::write() {
-    PLOG_ERR("cap_memory_base:: write not to be used" << endl)
+    PLOG_ERR("cap_memory_base:: write not to be used" << endl);
 }
 void cap_memory_base::read() {
-    PLOG_ERR("cap_memory_base:: read not to be used" << endl)
+    PLOG_ERR("cap_memory_base:: read not to be used" << endl);
 }
 cap_memory_base::cap_memory_base(string _name, cap_csr_base * _parent):
     cap_csr_base(_name, _parent) {
@@ -289,10 +288,10 @@ cap_memory_base::~cap_memory_base() { }
 
 
 void cap_decoder_base::write() {
-    PLOG_ERR("cap_decoder_base:: write not to be used" << endl)
+    PLOG_ERR("cap_decoder_base:: write not to be used" << endl);
 }
 void cap_decoder_base::read() {
-    PLOG_ERR("cap_decoder_base:: read not to be used" << endl)
+    PLOG_ERR("cap_decoder_base:: read not to be used" << endl);
 }
 cap_decoder_base::cap_decoder_base(string _name, cap_csr_base * _parent):
     cap_csr_base(_name, _parent) {
@@ -301,10 +300,10 @@ cap_decoder_base::cap_decoder_base(string _name, cap_csr_base * _parent):
 cap_decoder_base::~cap_decoder_base() { }
 
 void cap_block_base::write() {
-    PLOG_ERR("cap_block_base:: write not to be used" << endl)
+    PLOG_ERR("cap_block_base:: write not to be used" << endl);
 }
 void cap_block_base::read() {
-    PLOG_ERR("cap_block_base:: read not to be used" << endl)
+    PLOG_ERR("cap_block_base:: read not to be used" << endl);
 }
 cap_block_base::cap_block_base(string _name, cap_csr_base * _parent):
     cap_csr_base(_name, _parent) {
@@ -390,77 +389,48 @@ void cap_csr_base::set_csr_id(string _id) {
 }
 
 
-
-int cap_register_base::write_bd() {
-    return 0;
-/*
-#ifdef _CSV_INCLUDED_
-    string csr_path = get_csr_inst_path(get_csr_id());
-    if(csr_path.compare("") == 0) return 0;
-    if(int_func_map__get.size() == 1) return 0;
-    string hdl_prefix = csr_path + ".csr_internal_field_" + get_name() + "_";
-    uint32_t my_width = get_width();
-
-    int ok = 0;
-    for(get_function_map_t::iterator ii = int_func_map__get.begin(); ii != int_func_map__get.end(); ii++) {
-        get_function_type_t my_func = ii->second;
-        cpp_int val = (this->*my_func)();
-        string my_name = ii->first;
-        if(my_name != "all") {
-            string path = hdl_prefix + my_name;
-            PLOG_MSG("path: " << path << " val: 0x" << hex << val << endl << dec);
-            vector<uint32_t> write_vector;
-            export_bits(val, std::back_inserter(write_vector), 32);
-            reverse(write_vector.begin(), write_vector.end());
-            //int words = (my_width+31)/32;
-            int words = (4096+31)/32;
-            write_vector.resize(words);
-            for(int ii = write_vector.size(); ii < words; ii++) {
-                write_vector[ii] = 0;
-            }
-            ok = cpu::access()->call_uvm_hdl_deposit(get_chip_id(), const_cast<char *>(path.c_str()), write_vector);
-            SLEEP(1200); // TODO: can we reduce this?
-            if(!ok) { PLOG_MSG("deposit failed" << endl) break;}
-            else { PLOG_MSG("deposit successful" << endl) }
-            // call uvm_hdl_deposit here
-        }
-
+vector<unsigned int> cap_register_base::int__get_write_vec() {
+    cpp_int write_val;
+    uint64_t width;
+    write_val = all();
+    width = get_width();
+    vector<unsigned int> write_vector;
+    export_bits(write_val, std::back_inserter(write_vector), 32);
+    reverse(write_vector.begin(), write_vector.end());
+    int words = (width+31)/32;
+    PU_ASSERT(write_vector.size() <= words);
+    write_vector.resize(words);
+    for(int ii = write_vector.size(); ii < words; ii++) {
+        write_vector[ii] = 0;
     }
-    SLEEP(1200); // TODO: can we reduce this?
-    if(ok) return 1;
-#endif
-    return 0;
-*/
+    return write_vector;
 }
 
-void cap_register_base::write() {
-    cpp_int write_val;
-    uint64_t offset, width;
-    if(!write_bd()) {
-        write_val = all();
-        offset = get_offset();
-        width = get_width();
-        vector<unsigned int> write_vector;
-        PLOG_MSG("write: name: " << get_hier_path() << " addr: 0x" << hex << offset << "data: 0x" << write_val << dec << endl)
-            export_bits(write_val, std::back_inserter(write_vector), 32);
-        reverse(write_vector.begin(), write_vector.end());
-        //PU_ASSERT(write_vector.size() == (width + 31)/32);
-        //
-        //write_vector[0] has upper most word
-        int words = (width+31)/32;
-        PU_ASSERT(write_vector.size() <= words);
-        write_vector.resize(words);
-        for(int ii = write_vector.size(); ii < words; ii++) {
-            write_vector[ii] = 0;
-        }
-        for(int ii = 0; ii < words; ii++) {
-            cpu::access()->write(get_chip_id(), offset + (ii*4), write_vector[ ii]);
-        }
-    }
 
+void cap_register_base::int__set_read_vec(vector<unsigned int> read_vector) {
+    cpp_int read_val;
+    uint64_t offset, width;
+    offset = get_offset();
+    width = get_width();
+    reverse(read_vector.begin(), read_vector.end());
+    import_bits(read_val, read_vector.begin(), read_vector.end());
+    PLOG_MSG("read: name: " << get_hier_path() << " addr : 0x" << hex << offset << " data: 0x" << read_val << dec <<  endl);
+    PU_ASSERT(read_vector.size() == (width + 31)/32);
+    if (cap_csr_base::update_shadow)
+        all(read_val);
+
+}
+void cap_register_base::write() {
+
+    vector<unsigned int> write_vector = int__get_write_vec();
+    uint64_t offset, width;
+    offset = get_offset();
+    PLOG_MSG("write: name: " << get_hier_path() << " addr: 0x" << hex << offset << "data: 0x" << all() << dec << endl);
+    for(int ii = 0; ii < write_vector.size(); ii++) {
+        cpu::access()->write(get_chip_id(), offset + (ii*4), write_vector[ ii], int__access_no_zero_time);
+    }
 }
 void cap_register_base::read() {
-    cpp_int read_val;
     uint64_t offset, width;
     int chip_id;
     offset = get_offset();
@@ -470,19 +440,40 @@ void cap_register_base::read() {
     int words = (width+31)/32;
     read_vector.resize(words);
     for(int ii = 0; ii < words; ii++) {
-        read_vector[ii] = cpu::access()->read(chip_id, offset + (ii*4));
+        read_vector[ii] = cpu::access()->read(chip_id, offset + (ii*4), int__access_no_zero_time);
     }
-    reverse(read_vector.begin(), read_vector.end());
-    import_bits(read_val, read_vector.begin(), read_vector.end());
-    PLOG_MSG("read: name: " << get_hier_path() << " addr : 0x" << hex << offset << " data: 0x" << read_val << dec <<  endl)
-    PU_ASSERT(read_vector.size() == (width + 31)/32);
-    if (cap_csr_base::update_shadow)
-        all(read_val);
+
+    int__set_read_vec(read_vector);
 }
+
+
+
+void cap_register_base::block_write() {
+    vector<unsigned int> write_vector = int__get_write_vec();
+    uint64_t offset, width;
+    offset = get_offset();
+    PLOG_MSG("block write: name: " << get_hier_path() << " addr: 0x" << hex << offset << "data: 0x" << all() << dec << endl);
+    cpu::access()->block_write(get_chip_id(), offset, write_vector.size(), write_vector, int__access_no_zero_time);
+}
+
+
+void cap_register_base::block_read() {
+    uint64_t offset, width;
+    offset = get_offset();
+    width = get_width();
+    vector<unsigned int> read_vector;
+    int words = (width+31)/32;
+    read_vector.resize(words);
+    read_vector = cpu::access()->block_read(get_chip_id(), offset, read_vector.size(), int__access_no_zero_time);
+    int__set_read_vec(read_vector);
+}
+
+
 
 cap_register_base::cap_register_base(string _name, cap_csr_base * _parent):
     cap_csr_base(_name, _parent) {
         set_csr_type(CSR_TYPE_REGISTER);
+        int__access_no_zero_time = false;
 }
 
 static cpp_int get_val (string & value_s)
@@ -505,7 +496,7 @@ void cap_csr_base::load_from_cfg(bool do_write, bool load_fields) {
   std::replace( name.begin(), name.end(), '.', '/');
   std::replace( name.begin(), name.end(), '[', '/');
   std::replace( name.begin(), name.end(), ']', '/');
-  int index = 0;
+  size_t index = 0;
   bool write_needed = false;
   while(true) {
       index = name.find("//", index);
@@ -522,7 +513,7 @@ void cap_csr_base::load_from_cfg(bool do_write, bool load_fields) {
     cpp_int val = get_val(value_s);
     all(val);
     if (all() != get_reset_val() && do_write)  {
-      //PLOG_MSG("load_from_cfg: writing reg " << name.c_str() << endl)
+      //PLOG_MSG("load_from_cfg: writing reg " << name.c_str() << endl);
       write_needed = true;
     }
   }

@@ -50,8 +50,8 @@ public:
   //virtual uint32_t add_mem_prop(uint64_t addr_lo, uint64_t addr_hi, string hier_path, cpu_access_type_e access_type, bool add_index);
   //virtual mem_property* get_mem_prop(uint64_t addr ); // gets a memory hierarchy, given the address
 
-  virtual uint32_t read(uint32_t chip, uint64_t addr);
-  virtual void write(uint32_t chip, uint64_t addr, uint32_t data);
+  virtual uint32_t read(uint32_t chip, uint64_t addr, bool no_zero_time=false);
+  virtual void write(uint32_t chip, uint64_t addr, uint32_t data, bool no_zero_time=false);
 
   bool check_csr_node_info_exists(uint64_t addr, uint64_t csr_size, uint32_t chip_id);
   virtual void set_access_type(cpu_access_type_e _access);
@@ -59,6 +59,10 @@ public:
   void add_cpu_csr_node_info(std::shared_ptr<cpu_csr_node_info_base> node_ptr);
   bool cpu_csr_node_write(uint32_t chip, uint64_t addr, uint32_t data);
   bool cpu_csr_node_read(uint32_t chip, uint64_t addr, uint32_t & data);
+  bool cpu_csr_node_block_write(uint32_t chip, uint64_t addr, uint32_t size, vector<uint32_t> data);
+  bool cpu_csr_node_block_read(uint32_t chip, uint64_t addr, uint32_t size, vector<uint32_t> & data);
+  void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, bool no_zero_time);
+  vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, bool no_zero_time);
   //virtual int call_uvm_hdl_deposit(uint32_t chip, char * path, vector<uint32_t> & value);
 
 };

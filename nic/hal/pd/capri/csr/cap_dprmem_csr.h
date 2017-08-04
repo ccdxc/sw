@@ -86,8 +86,8 @@ class cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t : public cap_memory_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t entry[20];
-        int get_depth_entry() { return 20; }
+        cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t entry[32];
+        int get_depth_entry() { return 32; }
     
 }; // cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t
     

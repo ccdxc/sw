@@ -119,16 +119,26 @@ class cap_csr_base {
     virtual uint64_t get_csr_end_addr() const { return int__csr_end_addr;}
     virtual bool get_field_init_done() const { return int__field_init_done; }
     virtual void set_field_init_done(bool _flag) { int__field_init_done = _flag; }
+
+    virtual void block_write() { PLOG_ERR("cap_csr_base:: block_write "<< endl);  }
+    virtual void block_read() { PLOG_ERR("cap_csr_base:: block_read "<< endl);  }
 };
 
 
 class cap_register_base : public cap_csr_base {
+    private:
+        bool int__access_no_zero_time;
     public:
         cap_register_base(string _name, cap_csr_base * _parent = 0);
         virtual ~cap_register_base();
         virtual void write();
-        virtual int write_bd();
         virtual void read();
+        vector<unsigned int> int__get_write_vec();
+        void int__set_read_vec(vector<unsigned int> read_vector);
+        virtual void block_write();
+        virtual void block_read();
+        virtual void set_access_no_zero_time(bool _val) { int__access_no_zero_time = _val; }
+        virtual bool get_access_no_zero_time() const { return int__access_no_zero_time; }
 };
 
 class cap_memory_base : public cap_csr_base {
@@ -175,7 +185,7 @@ class cap_block_base : public cap_csr_base {
 template<class T, unsigned MAX_DEPTH>
 class cap_csr_large_array_wrapper: public cap_csr_base {
     public:
-        map< int, shared_ptr<T> > entry_map;
+        map< int, std::shared_ptr<T> > entry_map;
 
         cap_csr_large_array_wrapper() :
             cap_csr_base("wrp", 0) {
@@ -196,11 +206,11 @@ class cap_csr_large_array_wrapper: public cap_csr_base {
             cap_csr_base::set_attributes(_parent, _name, _offset);
         }
 
-        T& operator[](int idx)       { 
+        T& operator[](int idx)       {
             if(entry_map.find(idx) != entry_map.end()) {
                 // already exists
             } else if(idx < MAX_DEPTH) {
-                shared_ptr<T> tmp(new T);
+                std::shared_ptr<T> tmp(new T);
                 tmp->set_attributes(this, get_name() + "[" + to_string(idx) + "]", base__int__offset + (tmp->get_byte_size()*idx));
                 entry_map[idx] = tmp;
             } else {
@@ -208,9 +218,9 @@ class cap_csr_large_array_wrapper: public cap_csr_base {
                 return *entry_map[0].get();
             }
 
-            return *entry_map[idx].get(); 
+            return *entry_map[idx].get();
         }
-        
+
 };
 
 

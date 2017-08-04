@@ -114,7 +114,7 @@ public:
      V tmp;
      for (auto i = start; i <= end; i++) {
        tmp = *ptr;
-       if (mask != 0) {
+       if ((mask & clr_mask) != 0) {
 	 V effective_mask = (mask ^ clr_mask) & mask;
 	 val = (val & effective_mask) | (tmp<<(i*8));
 	 clr_mask <<= 8;

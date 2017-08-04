@@ -22,6 +22,7 @@ protected:
     virtual void load_cfg();
     virtual void load_prog();
     virtual void load_debug();
+    virtual void load_hbm_pkt(uint64_t addr, std::vector<uint8_t> & pkt);
 
     // Push the network packet to capri
     virtual void step_network_pkt(const std::vector<uint8_t> & pkt, uint32_t port);

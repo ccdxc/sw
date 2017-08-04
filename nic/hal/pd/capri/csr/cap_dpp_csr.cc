@@ -274,7 +274,7 @@ int cap_dpp_csr_cfg_global_t::s_get_width() {
     _count += 1; // packet_in_flight_credit_en
     _count += 2; // phv_framer_credit
     _count += 1; // phv_framer_credit_en
-    _count += 5; // framer_ptr_fifo_credit
+    _count += 6; // framer_ptr_fifo_credit
     _count += 1; // framer_ptr_fifo_credit_en
     return _count;
 }
@@ -486,8 +486,8 @@ void cap_dpp_csr_cfg_global_t::all(const cpp_int & _val) {
     int_var__phv_framer_credit_en = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< phv_framer_credit_en_cpp_int_t >()  ;
     _count += 1;
     // framer_ptr_fifo_credit
-    int_var__framer_ptr_fifo_credit = hlp.get_slc(_val, _count, _count -1 + 5 ).convert_to< framer_ptr_fifo_credit_cpp_int_t >()  ;
-    _count += 5;
+    int_var__framer_ptr_fifo_credit = hlp.get_slc(_val, _count, _count -1 + 6 ).convert_to< framer_ptr_fifo_credit_cpp_int_t >()  ;
+    _count += 6;
     // framer_ptr_fifo_credit_en
     int_var__framer_ptr_fifo_credit_en = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< framer_ptr_fifo_credit_en_cpp_int_t >()  ;
     _count += 1;
@@ -723,8 +723,8 @@ cpp_int cap_dpp_csr_cfg_global_t::all() const {
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__phv_framer_credit_en) , _count, _count -1 + 1 );
     _count += 1;
     // framer_ptr_fifo_credit
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__framer_ptr_fifo_credit) , _count, _count -1 + 5 );
-    _count += 5;
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__framer_ptr_fifo_credit) , _count, _count -1 + 6 );
+    _count += 6;
     // framer_ptr_fifo_credit_en
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__framer_ptr_fifo_credit_en) , _count, _count -1 + 1 );
     _count += 1;
@@ -1167,7 +1167,7 @@ void cap_dpp_csr_cfg_global_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0xd371b80"));
+    set_reset_val(cpp_int("0x17b71b80"));
     all(get_reset_val());
 }
 

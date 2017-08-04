@@ -300,10 +300,15 @@ class cap_pics_csr_cfg_table_profile_t : public cap_register_base {
         void opcode (const cpp_int  & l__val);
         cpp_int opcode() const;
     
-        typedef pu_cpp_int< 1 > log2bkts_cpp_int_t;
+        typedef pu_cpp_int< 3 > log2bkts_cpp_int_t;
         log2bkts_cpp_int_t int_var__log2bkts;
         void log2bkts (const cpp_int  & l__val);
         cpp_int log2bkts() const;
+    
+        typedef pu_cpp_int< 5 > axishift_cpp_int_t;
+        axishift_cpp_int_t int_var__axishift;
+        void axishift (const cpp_int  & l__val);
+        cpp_int axishift() const;
     
 }; // cap_pics_csr_cfg_table_profile_t
     

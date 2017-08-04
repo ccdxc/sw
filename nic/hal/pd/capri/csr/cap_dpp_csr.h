@@ -353,7 +353,7 @@ class cap_dpp_csr_cfg_global_t : public cap_register_base {
         void phv_framer_credit_en (const cpp_int  & l__val);
         cpp_int phv_framer_credit_en() const;
     
-        typedef pu_cpp_int< 5 > framer_ptr_fifo_credit_cpp_int_t;
+        typedef pu_cpp_int< 6 > framer_ptr_fifo_credit_cpp_int_t;
         framer_ptr_fifo_credit_cpp_int_t int_var__framer_ptr_fifo_credit;
         void framer_ptr_fifo_credit (const cpp_int  & l__val);
         cpp_int framer_ptr_fifo_credit() const;

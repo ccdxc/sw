@@ -224,7 +224,7 @@ public:
         set_dirty_bits(addr, sizeof(T));
     }
 
-    virtual bool burst_read(uint64_t addr, unsigned char * data, unsigned int len) {
+    virtual bool burst_read(uint64_t addr, unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
         unsigned char * p = data;
         addr_t curr_page_num = get_page_num(addr);
         unsigned int curr_len = get_max_block_size(addr, len);
@@ -246,7 +246,7 @@ public:
 	      memcpy(p, ptr+offset, curr_len);
 	    }
             p += curr_len;
-            addr += curr_len;
+	    addr += curr_len;
             len -= curr_len;
             // smaller of remaining len or page_size
             curr_len = len < page_size ? len : page_size;
@@ -255,7 +255,7 @@ public:
         return retVal;
     }
 
-    virtual bool burst_write(uint64_t addr, const unsigned char * data, unsigned int len) {
+    virtual bool burst_write(uint64_t addr, const unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
         const unsigned char * p = data;
         unsigned int curr_len = get_max_block_size(addr, len);
         unsigned int offset = get_page_offset(addr);
@@ -267,7 +267,7 @@ public:
                 return false;
             memcpy(ptr+offset, p, curr_len);
             p += curr_len;
-            addr += curr_len;
+	    addr += curr_len;
             len -= curr_len;
             // smaller of remaining len or page_size
             curr_len = len < page_size ? len : page_size;

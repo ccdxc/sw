@@ -9,6 +9,24 @@ cap_ptd_csr_cfg_spare_dbg_t::cap_ptd_csr_cfg_spare_dbg_t(string name, cap_csr_ba
         }
 cap_ptd_csr_cfg_spare_dbg_t::~cap_ptd_csr_cfg_spare_dbg_t() { }
 
+cap_ptd_csr_CNT_ptd_pb_t::cap_ptd_csr_CNT_ptd_pb_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ptd_csr_CNT_ptd_pb_t::~cap_ptd_csr_CNT_ptd_pb_t() { }
+
+cap_ptd_csr_CNT_ptd_npv_resub_t::cap_ptd_csr_CNT_ptd_npv_resub_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ptd_csr_CNT_ptd_npv_resub_t::~cap_ptd_csr_CNT_ptd_npv_resub_t() { }
+
+cap_ptd_csr_CNT_ptd_ma_t::cap_ptd_csr_CNT_ptd_ma_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_ptd_csr_CNT_ptd_ma_t::~cap_ptd_csr_CNT_ptd_ma_t() { }
+
 cap_ptd_csr_cfg_xoff_t::cap_ptd_csr_cfg_xoff_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
@@ -55,6 +73,24 @@ cap_ptd_csr_t::~cap_ptd_csr_t() { }
 void cap_ptd_csr_cfg_spare_dbg_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".data: 0x" << int_var__data << dec << endl)
+}
+
+void cap_ptd_csr_CNT_ptd_pb_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ptd_csr_CNT_ptd_npv_resub_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
+}
+
+void cap_ptd_csr_CNT_ptd_ma_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".sop: 0x" << int_var__sop << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".eop: 0x" << int_var__eop << dec << endl)
 }
 
 void cap_ptd_csr_cfg_xoff_t::show() {
@@ -109,11 +145,29 @@ void cap_ptd_csr_t::show() {
     sta_id.show();
     axi_attr.show();
     cfg_xoff.show();
+    CNT_ptd_ma.show();
+    CNT_ptd_npv_resub.show();
+    CNT_ptd_pb.show();
     cfg_spare_dbg.show();
 }
 
 int cap_ptd_csr_cfg_spare_dbg_t::get_width() const {
     return cap_ptd_csr_cfg_spare_dbg_t::s_get_width();
+
+}
+
+int cap_ptd_csr_CNT_ptd_pb_t::get_width() const {
+    return cap_ptd_csr_CNT_ptd_pb_t::s_get_width();
+
+}
+
+int cap_ptd_csr_CNT_ptd_npv_resub_t::get_width() const {
+    return cap_ptd_csr_CNT_ptd_npv_resub_t::s_get_width();
+
+}
+
+int cap_ptd_csr_CNT_ptd_ma_t::get_width() const {
+    return cap_ptd_csr_CNT_ptd_ma_t::s_get_width();
 
 }
 
@@ -156,6 +210,30 @@ int cap_ptd_csr_cfg_spare_dbg_t::s_get_width() {
     int _count = 0;
 
     _count += 32; // data
+    return _count;
+}
+
+int cap_ptd_csr_CNT_ptd_pb_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ptd_csr_CNT_ptd_npv_resub_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
+    return _count;
+}
+
+int cap_ptd_csr_CNT_ptd_ma_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // sop
+    _count += 32; // eop
     return _count;
 }
 
@@ -224,6 +302,9 @@ int cap_ptd_csr_t::s_get_width() {
     _count += cap_ptd_csr_sta_id_t::s_get_width(); // sta_id
     _count += cap_ptd_csr_axi_attr_t::s_get_width(); // axi_attr
     _count += cap_ptd_csr_cfg_xoff_t::s_get_width(); // cfg_xoff
+    _count += cap_ptd_csr_CNT_ptd_ma_t::s_get_width(); // CNT_ptd_ma
+    _count += cap_ptd_csr_CNT_ptd_npv_resub_t::s_get_width(); // CNT_ptd_npv_resub
+    _count += cap_ptd_csr_CNT_ptd_pb_t::s_get_width(); // CNT_ptd_pb
     _count += cap_ptd_csr_cfg_spare_dbg_t::s_get_width(); // cfg_spare_dbg
     return _count;
 }
@@ -233,6 +314,39 @@ void cap_ptd_csr_cfg_spare_dbg_t::all(const cpp_int & _val) {
 
     // data
     int_var__data = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< data_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ptd_csr_CNT_ptd_pb_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ptd_csr_CNT_ptd_npv_resub_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
+    _count += 32;
+}
+
+void cap_ptd_csr_CNT_ptd_ma_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // sop
+    int_var__sop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< sop_cpp_int_t >()  ;
+    _count += 32;
+    // eop
+    int_var__eop = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< eop_cpp_int_t >()  ;
     _count += 32;
 }
 
@@ -341,6 +455,12 @@ void cap_ptd_csr_t::all(const cpp_int & _val) {
     _count += axi_attr.get_width();
     cfg_xoff.all( hlp.get_slc(_val, _count, _count -1 + cfg_xoff.get_width() )); // cfg_xoff
     _count += cfg_xoff.get_width();
+    CNT_ptd_ma.all( hlp.get_slc(_val, _count, _count -1 + CNT_ptd_ma.get_width() )); // CNT_ptd_ma
+    _count += CNT_ptd_ma.get_width();
+    CNT_ptd_npv_resub.all( hlp.get_slc(_val, _count, _count -1 + CNT_ptd_npv_resub.get_width() )); // CNT_ptd_npv_resub
+    _count += CNT_ptd_npv_resub.get_width();
+    CNT_ptd_pb.all( hlp.get_slc(_val, _count, _count -1 + CNT_ptd_pb.get_width() )); // CNT_ptd_pb
+    _count += CNT_ptd_pb.get_width();
     cfg_spare_dbg.all( hlp.get_slc(_val, _count, _count -1 + cfg_spare_dbg.get_width() )); // cfg_spare_dbg
     _count += cfg_spare_dbg.get_width();
 }
@@ -351,6 +471,45 @@ cpp_int cap_ptd_csr_cfg_spare_dbg_t::all() const {
 
     // data
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__data) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_pb_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_npv_resub_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
+    _count += 32;
+    return ret_val;
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_ma_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // sop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__sop) , _count, _count -1 + 32 );
+    _count += 32;
+    // eop
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__eop) , _count, _count -1 + 32 );
     _count += 32;
     return ret_val;
 }
@@ -473,6 +632,12 @@ cpp_int cap_ptd_csr_t::all() const {
     _count += axi_attr.get_width();
     ret_val = hlp.set_slc(ret_val, cfg_xoff.all() , _count, _count -1 + cfg_xoff.get_width() ); // cfg_xoff
     _count += cfg_xoff.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ptd_ma.all() , _count, _count -1 + CNT_ptd_ma.get_width() ); // CNT_ptd_ma
+    _count += CNT_ptd_ma.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ptd_npv_resub.all() , _count, _count -1 + CNT_ptd_npv_resub.get_width() ); // CNT_ptd_npv_resub
+    _count += CNT_ptd_npv_resub.get_width();
+    ret_val = hlp.set_slc(ret_val, CNT_ptd_pb.all() , _count, _count -1 + CNT_ptd_pb.get_width() ); // CNT_ptd_pb
+    _count += CNT_ptd_pb.get_width();
     ret_val = hlp.set_slc(ret_val, cfg_spare_dbg.all() , _count, _count -1 + cfg_spare_dbg.get_width() ); // cfg_spare_dbg
     _count += cfg_spare_dbg.get_width();
     return ret_val;
@@ -489,6 +654,60 @@ void cap_ptd_csr_cfg_spare_dbg_t::init() {
     
     set_reset_val(cpp_int("0xdeadbeef"));
     all(get_reset_val());
+}
+
+void cap_ptd_csr_CNT_ptd_pb_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_pb_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_pb_t::sop);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_pb_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_pb_t::eop);
+        }
+        #endif
+    
+}
+
+void cap_ptd_csr_CNT_ptd_npv_resub_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_npv_resub_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_npv_resub_t::sop);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_npv_resub_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_npv_resub_t::eop);
+        }
+        #endif
+    
+}
+
+void cap_ptd_csr_CNT_ptd_ma_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("sop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_ma_t::sop);
+            register_get_func("sop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_ma_t::sop);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("eop", (cap_csr_base::set_function_type_t)&cap_ptd_csr_CNT_ptd_ma_t::eop);
+            register_get_func("eop", (cap_csr_base::get_function_type_t)&cap_ptd_csr_CNT_ptd_ma_t::eop);
+        }
+        #endif
+    
 }
 
 void cap_ptd_csr_cfg_xoff_t::init() {
@@ -628,7 +847,7 @@ void cap_ptd_csr_cfg_ctrl_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x88fc8080"));
+    set_reset_val(cpp_int("0x88fb8080"));
     all(get_reset_val());
 }
 
@@ -671,7 +890,10 @@ void cap_ptd_csr_t::init() {
     sta_id.set_attributes(this,"sta_id", 0x50 );
     axi_attr.set_attributes(this,"axi_attr", 0x54 );
     cfg_xoff.set_attributes(this,"cfg_xoff", 0x58 );
-    cfg_spare_dbg.set_attributes(this,"cfg_spare_dbg", 0x5c );
+    CNT_ptd_ma.set_attributes(this,"CNT_ptd_ma", 0x60 );
+    CNT_ptd_npv_resub.set_attributes(this,"CNT_ptd_npv_resub", 0x68 );
+    CNT_ptd_pb.set_attributes(this,"CNT_ptd_pb", 0x70 );
+    cfg_spare_dbg.set_attributes(this,"cfg_spare_dbg", 0x78 );
 }
 
 void cap_ptd_csr_cfg_spare_dbg_t::data(const cpp_int & _val) { 
@@ -681,6 +903,60 @@ void cap_ptd_csr_cfg_spare_dbg_t::data(const cpp_int & _val) {
 
 cpp_int cap_ptd_csr_cfg_spare_dbg_t::data() const {
     return int_var__data.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_pb_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_pb_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_pb_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_pb_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_npv_resub_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_npv_resub_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_npv_resub_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_npv_resub_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_ma_t::sop(const cpp_int & _val) { 
+    // sop
+    int_var__sop = _val.convert_to< sop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_ma_t::sop() const {
+    return int_var__sop.convert_to< cpp_int >();
+}
+    
+void cap_ptd_csr_CNT_ptd_ma_t::eop(const cpp_int & _val) { 
+    // eop
+    int_var__eop = _val.convert_to< eop_cpp_int_t >();
+}
+
+cpp_int cap_ptd_csr_CNT_ptd_ma_t::eop() const {
+    return int_var__eop.convert_to< cpp_int >();
 }
     
 void cap_ptd_csr_cfg_xoff_t::numphv_thresh(const cpp_int & _val) { 

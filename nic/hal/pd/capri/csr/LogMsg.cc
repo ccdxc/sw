@@ -5,6 +5,7 @@
 #endif
 
 LogMsg::LogMsg() {
+
     //Read sknobs to set plog Level
     if (sknobs_exists((char *)"plog")) {
         string plogLevel = sknobs_get_string((char *)"plog", (char *)"");
@@ -44,6 +45,7 @@ LogMsg::LogMsg() {
         string plogScope = sknobs_get_string((char *)"plog_rm_scope", (char *)"");
         disableScope(plogScope);
     }
+
 }
 
 void LogMsg::enableScope(string scope) {

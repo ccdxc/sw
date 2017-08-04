@@ -3631,21 +3631,6 @@ class cap_pxb_csr_cfg_tgt_ecc_disable_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 1 > rxcrbfr_cor_cpp_int_t;
-        rxcrbfr_cor_cpp_int_t int_var__rxcrbfr_cor;
-        void rxcrbfr_cor (const cpp_int  & l__val);
-        cpp_int rxcrbfr_cor() const;
-    
-        typedef pu_cpp_int< 1 > rxcrbfr_det_cpp_int_t;
-        rxcrbfr_det_cpp_int_t int_var__rxcrbfr_det;
-        void rxcrbfr_det (const cpp_int  & l__val);
-        cpp_int rxcrbfr_det() const;
-    
-        typedef pu_cpp_int< 1 > rxcrbfr_dhs_cpp_int_t;
-        rxcrbfr_dhs_cpp_int_t int_var__rxcrbfr_dhs;
-        void rxcrbfr_dhs (const cpp_int  & l__val);
-        cpp_int rxcrbfr_dhs() const;
-    
         typedef pu_cpp_int< 1 > rxinfo_cor_cpp_int_t;
         rxinfo_cor_cpp_int_t int_var__rxinfo_cor;
         void rxinfo_cor (const cpp_int  & l__val);
@@ -3735,6 +3720,21 @@ class cap_pxb_csr_cfg_tgt_ecc_disable_t : public cap_register_base {
         romask_dhs_cpp_int_t int_var__romask_dhs;
         void romask_dhs (const cpp_int  & l__val);
         cpp_int romask_dhs() const;
+    
+        typedef pu_cpp_int< 4 > rxcrbfr_cor_cpp_int_t;
+        rxcrbfr_cor_cpp_int_t int_var__rxcrbfr_cor;
+        void rxcrbfr_cor (const cpp_int  & l__val);
+        cpp_int rxcrbfr_cor() const;
+    
+        typedef pu_cpp_int< 4 > rxcrbfr_det_cpp_int_t;
+        rxcrbfr_det_cpp_int_t int_var__rxcrbfr_det;
+        void rxcrbfr_det (const cpp_int  & l__val);
+        cpp_int rxcrbfr_det() const;
+    
+        typedef pu_cpp_int< 4 > rxcrbfr_dhs_cpp_int_t;
+        rxcrbfr_dhs_cpp_int_t int_var__rxcrbfr_dhs;
+        void rxcrbfr_dhs (const cpp_int  & l__val);
+        cpp_int rxcrbfr_dhs() const;
     
 }; // cap_pxb_csr_cfg_tgt_ecc_disable_t
     

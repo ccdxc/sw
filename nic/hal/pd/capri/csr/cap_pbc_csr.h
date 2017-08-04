@@ -8350,6 +8350,11 @@ class cap_pbc_csr_cfg_write_control_8_t : public cap_register_base {
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
     
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
+    
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
         void packing_timeout_cycles (const cpp_int  & l__val);
@@ -9089,6 +9094,11 @@ class cap_pbc_csr_cfg_write_control_7_t : public cap_register_base {
         packing_cpp_int_t int_var__packing;
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
+    
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
     
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
@@ -9830,6 +9840,11 @@ class cap_pbc_csr_cfg_write_control_6_t : public cap_register_base {
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
     
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
+    
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
         void packing_timeout_cycles (const cpp_int  & l__val);
@@ -10569,6 +10584,11 @@ class cap_pbc_csr_cfg_write_control_5_t : public cap_register_base {
         packing_cpp_int_t int_var__packing;
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
+    
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
     
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
@@ -11310,6 +11330,11 @@ class cap_pbc_csr_cfg_write_control_4_t : public cap_register_base {
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
     
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
+    
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
         void packing_timeout_cycles (const cpp_int  & l__val);
@@ -12049,6 +12074,11 @@ class cap_pbc_csr_cfg_write_control_3_t : public cap_register_base {
         packing_cpp_int_t int_var__packing;
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
+    
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
     
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
@@ -12790,6 +12820,11 @@ class cap_pbc_csr_cfg_write_control_2_t : public cap_register_base {
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
     
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
+    
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
         void packing_timeout_cycles (const cpp_int  & l__val);
@@ -13530,6 +13565,11 @@ class cap_pbc_csr_cfg_write_control_1_t : public cap_register_base {
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
     
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
+    
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;
         void packing_timeout_cycles (const cpp_int  & l__val);
@@ -14269,6 +14309,11 @@ class cap_pbc_csr_cfg_write_control_0_t : public cap_register_base {
         packing_cpp_int_t int_var__packing;
         void packing (const cpp_int  & l__val);
         cpp_int packing() const;
+    
+        typedef pu_cpp_int< 1 > packing_same_pg_cpp_int_t;
+        packing_same_pg_cpp_int_t int_var__packing_same_pg;
+        void packing_same_pg (const cpp_int  & l__val);
+        cpp_int packing_same_pg() const;
     
         typedef pu_cpp_int< 10 > packing_timeout_cycles_cpp_int_t;
         packing_timeout_cycles_cpp_int_t int_var__packing_timeout_cycles;

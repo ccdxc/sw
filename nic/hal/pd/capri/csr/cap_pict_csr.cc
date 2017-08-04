@@ -111,6 +111,7 @@ void cap_pict_csr_cfg_tcam_table_profile_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".en_tbid: 0x" << int_var__en_tbid << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".tbid: 0x" << int_var__tbid << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".bkts: 0x" << int_var__bkts << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".keyshift: 0x" << int_var__keyshift << dec << endl)
 }
 
 void cap_pict_csr_cfg_global_t::show() {
@@ -246,6 +247,7 @@ int cap_pict_csr_cfg_tcam_table_profile_t::s_get_width() {
     _count += 1; // en_tbid
     _count += 7; // tbid
     _count += 3; // bkts
+    _count += 5; // keyshift
     return _count;
 }
 
@@ -364,6 +366,9 @@ void cap_pict_csr_cfg_tcam_table_profile_t::all(const cpp_int & _val) {
     // bkts
     int_var__bkts = hlp.get_slc(_val, _count, _count -1 + 3 ).convert_to< bkts_cpp_int_t >()  ;
     _count += 3;
+    // keyshift
+    int_var__keyshift = hlp.get_slc(_val, _count, _count -1 + 5 ).convert_to< keyshift_cpp_int_t >()  ;
+    _count += 5;
 }
 
 void cap_pict_csr_cfg_global_t::all(const cpp_int & _val) {
@@ -511,6 +516,9 @@ cpp_int cap_pict_csr_cfg_tcam_table_profile_t::all() const {
     // bkts
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__bkts) , _count, _count -1 + 3 );
     _count += 3;
+    // keyshift
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__keyshift) , _count, _count -1 + 5 );
+    _count += 5;
     return ret_val;
 }
 
@@ -703,6 +711,13 @@ void cap_pict_csr_cfg_tcam_table_profile_t::init() {
         }
         #endif
     
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("keyshift", (cap_csr_base::set_function_type_t)&cap_pict_csr_cfg_tcam_table_profile_t::keyshift);
+            register_get_func("keyshift", (cap_csr_base::get_function_type_t)&cap_pict_csr_cfg_tcam_table_profile_t::keyshift);
+        }
+        #endif
+    
 }
 
 void cap_pict_csr_cfg_global_t::init() {
@@ -884,6 +899,15 @@ void cap_pict_csr_cfg_tcam_table_profile_t::bkts(const cpp_int & _val) {
 
 cpp_int cap_pict_csr_cfg_tcam_table_profile_t::bkts() const {
     return int_var__bkts.convert_to< cpp_int >();
+}
+    
+void cap_pict_csr_cfg_tcam_table_profile_t::keyshift(const cpp_int & _val) { 
+    // keyshift
+    int_var__keyshift = _val.convert_to< keyshift_cpp_int_t >();
+}
+
+cpp_int cap_pict_csr_cfg_tcam_table_profile_t::keyshift() const {
+    return int_var__keyshift.convert_to< cpp_int >();
 }
     
 void cap_pict_csr_cfg_global_t::sw_rst(const cpp_int & _val) { 

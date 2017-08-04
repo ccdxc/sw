@@ -84,6 +84,8 @@ namespace pknobs{
    static void set_seed(u64 s) { seed = s; }
    const string & getName() { return name;}
    void setName(const string & n){name = n;}
+   static void setSeed(const u64 _seed){seed = _seed;}
+   static u64 getSeed(){return seed;}
    Knob() : name("unknown"+boost::lexical_cast<std::string>(knob_cnt)),parent(NULL){
      knob_cnt++;
    };
@@ -169,6 +171,8 @@ namespace pknobs{
     }
     virtual Knob* clone() const{ return new RRKnob(*this);}
     virtual void print (std::ostream& os) const;
+    virtual int64 get_max_val() const { return upper; }
+    virtual int64 get_min_val() const { return lower; }
   };
 
 
@@ -278,7 +282,7 @@ namespace pknobs{
   // weighted list of knobs.  Knob selection is evaluated based on ratio of weights
   // provided
   class WLKnob : public RKnob {
-  private:
+  protected:
     vector<Knob *>  knob_vec;
     vector<int>     wgt_vec;
     int             total_wgt;
@@ -460,6 +464,152 @@ namespace pknobs{
     void addValueKnob (Knob * k){ knob_vec.push_back(k); }
     virtual void print (std::ostream& os) const ;
   };
+
+
+  class UniqKnob : public WLKnob {
+      protected:
+
+          int64 lower;
+          int64 upper;
+      public:
+          void copy(const UniqKnob & k){
+              WLKnob::copy(k);
+              lower = k.lower;
+              upper = k.upper;
+          }
+
+          void init(int64 _lower, int64 _upper) {
+              lower = _lower;
+              upper = _upper;
+
+              knob_vec.push_back( new pknobs::RRKnob(lower,upper));
+              int u = upper - lower + 1;
+              wgt_vec.push_back(u);
+              total_wgt = u; 
+              setParent(this);
+          }
+
+          UniqKnob(const string &n, int64 _lower, int64 _upper) : WLKnob("foo"){
+              init(lower,upper);
+          }
+
+
+          UniqKnob(int64 _lower, int64 _upper) : WLKnob("foo"){
+              init(_lower, _upper);
+          }
+
+          void print (std::ostream& os) const {
+              os << "UniqKnob->"; WLKnob::print(os); os << endl;
+          }
+
+          UniqKnob(const string & n) : WLKnob(n) { 
+              total_wgt = 0;
+              lower = 0;
+              upper = 0;
+          }
+          UniqKnob(const UniqKnob & k) : WLKnob(k) {copy(k);}
+          virtual ~UniqKnob(){
+          }
+          virtual Knob* clone() const{ return new UniqKnob(*this);}
+          virtual void setParent(Knob * p){
+              WLKnob::setParent(p); 
+          }
+
+          virtual int64 eval() {
+              pknobs::int64 prob = ((pknobs::u64) WLKnob::eval()) % total_wgt;
+              pknobs::RRKnob * new_min_rrknob = 0;
+              pknobs::RRKnob * new_max_rrknob = 0;
+              pknobs::int64 ret_value;
+              int idx = -1;
+              //cout << "total_wgt: " << total_wgt << " prob: " << prob << endl;
+              for(unsigned int i=0;i<knob_vec.size();i++){
+                  if (prob < wgt_vec[i]){
+
+                      pknobs::RRKnob & old_rrknob = dynamic_cast<pknobs::RRKnob&>(*knob_vec[i]);
+                      ret_value = old_rrknob.eval(); 
+                      pknobs::int64 old_max = old_rrknob.get_max_val();
+                      pknobs::int64 old_min = old_rrknob.get_min_val();
+                      idx = i;
+                      //cout << "DEBUG: " << "ret_value " << ret_value << " old_min " << old_min << " old_max " << old_max << endl;
+
+
+
+                      if(old_min < ret_value) {
+                          new_min_rrknob = new pknobs::RRKnob(old_min, ret_value - 1);
+                      }
+
+                      if(ret_value < old_max) {
+                          new_max_rrknob = new pknobs::RRKnob(ret_value + 1, old_max);
+                      }
+
+                      //cout << "idx: " << idx << endl;
+                      break;
+                  }
+              }
+
+              if(idx != -1) {
+                  //stringstream debug;
+                  //knob_vec[idx]->print(debug);
+                  //cout << "deleting : " << debug.str() << endl;
+                  delete knob_vec[idx];
+                  knob_vec.erase(knob_vec.begin() + idx);
+                  pknobs::int64 old_wgt; 
+
+                  if(idx != 0) {
+                      old_wgt = wgt_vec[idx-1];
+                  } else {
+                      old_wgt = 0;
+                  }
+
+
+
+                  wgt_vec.erase(wgt_vec.begin() + idx);
+
+
+                  if(knob_vec.size() != wgt_vec.size()) {
+                      cout <<" ERROR: knob_vec and wgt_vec are not of same size (" << knob_vec.size() << " vs " << wgt_vec.size() << endl; 
+                  }
+
+                  if((knob_vec.size() == 0) && !new_max_rrknob && !new_min_rrknob) {
+                      knob_vec.push_back( new pknobs::RRKnob(lower,upper));
+                      int u = upper - lower + 1;
+                      wgt_vec.push_back(u);
+                      total_wgt = u; 
+                      //cout << "resetting" << endl;
+                  } else {
+
+                      total_wgt -= 1;
+
+                      if(new_min_rrknob) {
+                          knob_vec.insert(knob_vec.begin() + idx, new_min_rrknob);
+                          old_wgt += (new_min_rrknob->get_max_val() - new_min_rrknob->get_min_val() + 1);
+                          wgt_vec.insert(wgt_vec.begin() + idx, old_wgt);
+                          idx++;
+                      }
+
+                      if(new_max_rrknob) {
+                          knob_vec.insert(knob_vec.begin() + idx, new_max_rrknob);
+                          old_wgt += (new_max_rrknob->get_max_val() - new_max_rrknob->get_min_val() + 1);
+                          wgt_vec.insert(wgt_vec.begin() + idx, old_wgt);
+                          idx++;
+                      }
+
+                      // update upper index weights
+                      for(int ii = idx; ii < wgt_vec.size(); ii++) {
+                          wgt_vec[ii]--;
+                      }
+
+                  }
+
+
+
+                  return ret_value;
+              }
+              assert(0);
+          }
+
+  };
+
 }
 
 

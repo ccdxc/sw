@@ -139,7 +139,7 @@ void cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t::show() {
 
 void cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t::show() {
 
-    for(int ii = 0; ii < 20; ii++) {
+    for(int ii = 0; ii < 32; ii++) {
         entry[ii].show();
     }
 }
@@ -381,7 +381,7 @@ int cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t::s_get_width() {
 int cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t::s_get_width() {
     int _count = 0;
 
-    _count += (cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t::s_get_width() * 20); // entry
+    _count += (cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t::s_get_width() * 32); // entry
     return _count;
 }
 
@@ -559,7 +559,7 @@ void cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t::all(const cpp_int & _val) {
     int _count = 0;
 
     // entry
-    for(int ii = 0; ii < 20; ii++) {
+    for(int ii = 0; ii < 32; ii++) {
         entry[ii].all( hlp.get_slc(_val, _count, _count -1 + entry[ii].get_width()));
         _count += entry[ii].get_width();
     }
@@ -823,7 +823,7 @@ cpp_int cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t::all() const {
     cpp_int ret_val;
 
     // entry
-    for(int ii = 0; ii < 20; ii++) {
+    for(int ii = 0; ii < 32; ii++) {
          ret_val = hlp.set_slc(ret_val, entry[ii].all() , _count, _count -1 + entry[ii].get_width() );
         _count += entry[ii].get_width();
     }
@@ -1121,7 +1121,7 @@ void cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_entry_t::init() {
 
 void cap_dprmem_csr_dhs_dpr_ptr_fifo_sram_t::init() {
 
-    for(int ii = 0; ii < 20; ii++) {
+    for(int ii = 0; ii < 32; ii++) {
         if(ii != 0) entry[ii].set_field_init_done(true);
         entry[ii].set_attributes(this,"entry["+to_string(ii)+"]",  0x0 + (entry[ii].get_byte_size()*ii));
     }

@@ -38,7 +38,7 @@ class cap_blk_reg_model{
                     return *class_map[chip_id][inst];
                 }
             }
-            PLOG_ERR("chip_id : " << chip_id << " is not registerd yet! for class " << classname << endl)
+            PLOG_ERR("chip_id : " << chip_id << " is not registerd yet! for class " << classname << endl);
             PU_ASSERT(0);
             return *class_map[chip_id][inst];
         }
@@ -52,11 +52,11 @@ class cap_blk_reg_model{
                 
                 ///class_map.insert(make_pair(chip_id, inst_to_class_map_t()) ); I believe it is a typos which causes trouble for multi instance, comment out. by Changqi 
                 class_map[chip_id].insert(make_pair(inst, blk));
-                PLOG_MSG("added reg model:" << classname << " with chip_id " << chip_id << ", " << inst << endl)
+                PLOG_MSG("added reg model:" << classname << " with chip_id " << chip_id << ", " << inst << endl);
             } else {
                 class_map.insert(make_pair(chip_id, inst_to_class_map_t()) );
                 class_map[chip_id].insert(make_pair(inst, blk));
-                PLOG_MSG("created reg model:" << classname << " with chip_id " << chip_id << ", " << inst << endl)
+                PLOG_MSG("created reg model:" << classname << " with chip_id " << chip_id << ", " << inst << endl);
             }
         }
 

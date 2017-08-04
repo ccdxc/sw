@@ -77,6 +77,21 @@ class cap_dpr_csr_cfg_interrupt_mask_t : public cap_register_base {
         void err_pkt_eop_early (const cpp_int  & l__val);
         cpp_int err_pkt_eop_early() const;
     
+        typedef pu_cpp_int< 1 > err_ptr_ff_overflow_cpp_int_t;
+        err_ptr_ff_overflow_cpp_int_t int_var__err_ptr_ff_overflow;
+        void err_ptr_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_ptr_ff_overflow() const;
+    
+        typedef pu_cpp_int< 1 > err_csum_ff_overflow_cpp_int_t;
+        err_csum_ff_overflow_cpp_int_t int_var__err_csum_ff_overflow;
+        void err_csum_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_csum_ff_overflow() const;
+    
+        typedef pu_cpp_int< 1 > err_pktout_ff_overflow_cpp_int_t;
+        err_pktout_ff_overflow_cpp_int_t int_var__err_pktout_ff_overflow;
+        void err_pktout_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_pktout_ff_overflow() const;
+    
         typedef pu_cpp_int< 32 > rsvd_cpp_int_t;
         rsvd_cpp_int_t int_var__rsvd;
         void rsvd (const cpp_int  & l__val);
@@ -151,6 +166,21 @@ class cap_dpr_csr_cfg_error_mask_t : public cap_register_base {
         err_pkt_eop_early_cpp_int_t int_var__err_pkt_eop_early;
         void err_pkt_eop_early (const cpp_int  & l__val);
         cpp_int err_pkt_eop_early() const;
+    
+        typedef pu_cpp_int< 1 > err_ptr_ff_overflow_cpp_int_t;
+        err_ptr_ff_overflow_cpp_int_t int_var__err_ptr_ff_overflow;
+        void err_ptr_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_ptr_ff_overflow() const;
+    
+        typedef pu_cpp_int< 1 > err_csum_ff_overflow_cpp_int_t;
+        err_csum_ff_overflow_cpp_int_t int_var__err_csum_ff_overflow;
+        void err_csum_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_csum_ff_overflow() const;
+    
+        typedef pu_cpp_int< 1 > err_pktout_ff_overflow_cpp_int_t;
+        err_pktout_ff_overflow_cpp_int_t int_var__err_pktout_ff_overflow;
+        void err_pktout_ff_overflow (const cpp_int  & l__val);
+        cpp_int err_pktout_ff_overflow() const;
     
         typedef pu_cpp_int< 32 > rsvd_cpp_int_t;
         rsvd_cpp_int_t int_var__rsvd;

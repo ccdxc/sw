@@ -143,6 +143,61 @@ class cap_te_csr_sta_spare_t : public cap_register_base {
     
 }; // cap_te_csr_sta_spare_t
     
+class cap_te_csr_sta_wait_entry_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_te_csr_sta_wait_entry_t(string name = "cap_te_csr_sta_wait_entry_t", cap_csr_base *parent = 0);
+        virtual ~cap_te_csr_sta_wait_entry_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 579 > key_cpp_int_t;
+        key_cpp_int_t int_var__key;
+        void key (const cpp_int  & l__val);
+        cpp_int key() const;
+    
+        typedef pu_cpp_int< 101 > cam_cpp_int_t;
+        cam_cpp_int_t int_var__cam;
+        void cam (const cpp_int  & l__val);
+        cpp_int cam() const;
+    
+        typedef pu_cpp_int< 17 > haz_cpp_int_t;
+        haz_cpp_int_t int_var__haz;
+        void haz (const cpp_int  & l__val);
+        cpp_int haz() const;
+    
+        typedef pu_cpp_int< 512 > dat_cpp_int_t;
+        dat_cpp_int_t int_var__dat;
+        void dat (const cpp_int  & l__val);
+        cpp_int dat() const;
+    
+}; // cap_te_csr_sta_wait_entry_t
+    
+class cap_te_csr_cfg_read_wait_entry_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_te_csr_cfg_read_wait_entry_t(string name = "cap_te_csr_cfg_read_wait_entry_t", cap_csr_base *parent = 0);
+        virtual ~cap_te_csr_cfg_read_wait_entry_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 4 > idx_cpp_int_t;
+        idx_cpp_int_t int_var__idx;
+        void idx (const cpp_int  & l__val);
+        cpp_int idx() const;
+    
+}; // cap_te_csr_cfg_read_wait_entry_t
+    
 class cap_te_csr_cfg_spare_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
@@ -701,6 +756,16 @@ class cap_te_csr_cfg_table_property_t : public cap_register_base {
         void mpu_lb (const cpp_int  & l__val);
         cpp_int mpu_lb() const;
     
+        typedef pu_cpp_int< 6 > mpu_pc_loc_cpp_int_t;
+        mpu_pc_loc_cpp_int_t int_var__mpu_pc_loc;
+        void mpu_pc_loc (const cpp_int  & l__val);
+        cpp_int mpu_pc_loc() const;
+    
+        typedef pu_cpp_int< 20 > oflow_base_idx_cpp_int_t;
+        oflow_base_idx_cpp_int_t int_var__oflow_base_idx;
+        void oflow_base_idx (const cpp_int  & l__val);
+        cpp_int oflow_base_idx() const;
+    
 }; // cap_te_csr_cfg_table_property_t
     
 class cap_te_csr_cfg_table_profile_t : public cap_register_base {
@@ -933,8 +998,8 @@ class cap_te_csr_t : public cap_block_base {
         cap_te_csr_cfg_km_profile_bit_sel_t cfg_km_profile_bit_sel[128];
         int get_depth_cfg_km_profile_bit_sel() { return 128; }
     
-        cap_te_csr_cfg_km_profile_bit_loc_t cfg_km_profile_bit_loc[32];
-        int get_depth_cfg_km_profile_bit_loc() { return 32; }
+        cap_te_csr_cfg_km_profile_bit_loc_t cfg_km_profile_bit_loc[16];
+        int get_depth_cfg_km_profile_bit_loc() { return 16; }
     
         cap_te_csr_dhs_single_step_t dhs_single_step;
     
@@ -970,6 +1035,10 @@ class cap_te_csr_t : public cap_block_base {
         cap_te_csr_sta_debug_bus_t sta_debug_bus;
     
         cap_te_csr_cfg_spare_t cfg_spare;
+    
+        cap_te_csr_cfg_read_wait_entry_t cfg_read_wait_entry;
+    
+        cap_te_csr_sta_wait_entry_t sta_wait_entry;
     
         cap_te_csr_sta_spare_t sta_spare;
     

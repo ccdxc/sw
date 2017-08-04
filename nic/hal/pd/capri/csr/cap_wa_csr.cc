@@ -99,6 +99,12 @@ cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::cap_wa_csr_cfg_ecc_disable_lif_qsta
         }
 cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::~cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t() { }
 
+cap_wa_csr_cfg_doorbell_axi_attr_t::cap_wa_csr_cfg_doorbell_axi_attr_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_wa_csr_cfg_doorbell_axi_attr_t::~cap_wa_csr_cfg_doorbell_axi_attr_t() { }
+
 cap_wa_csr_sat_wa_pid_chkfail_t::cap_wa_csr_sat_wa_pid_chkfail_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
@@ -292,6 +298,15 @@ void cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".dhs: 0x" << int_var__dhs << dec << endl)
 }
 
+void cap_wa_csr_cfg_doorbell_axi_attr_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".arcache: 0x" << int_var__arcache << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".awcache: 0x" << int_var__awcache << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".prot: 0x" << int_var__prot << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".qos: 0x" << int_var__qos << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".lock: 0x" << int_var__lock << dec << endl)
+}
+
 void cap_wa_csr_sat_wa_pid_chkfail_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".cnt: 0x" << int_var__cnt << dec << endl)
@@ -342,6 +357,7 @@ void cap_wa_csr_t::show() {
     sat_wa_qaddr_cam_conflict.show();
     sat_wa_qid_overflow.show();
     sat_wa_pid_chkfail.show();
+    cfg_doorbell_axi_attr.show();
     cfg_ecc_disable_lif_qstate_map.show();
     sta_ecc_lif_qstate_map.show();
     dhs_host_doorbell.show();
@@ -430,6 +446,11 @@ int cap_wa_csr_sta_ecc_lif_qstate_map_t::get_width() const {
 
 int cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::get_width() const {
     return cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::s_get_width();
+
+}
+
+int cap_wa_csr_cfg_doorbell_axi_attr_t::get_width() const {
+    return cap_wa_csr_cfg_doorbell_axi_attr_t::s_get_width();
 
 }
 
@@ -637,6 +658,17 @@ int cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::s_get_width() {
     return _count;
 }
 
+int cap_wa_csr_cfg_doorbell_axi_attr_t::s_get_width() {
+    int _count = 0;
+
+    _count += 4; // arcache
+    _count += 4; // awcache
+    _count += 3; // prot
+    _count += 4; // qos
+    _count += 1; // lock
+    return _count;
+}
+
 int cap_wa_csr_sat_wa_pid_chkfail_t::s_get_width() {
     int _count = 0;
 
@@ -704,6 +736,7 @@ int cap_wa_csr_t::s_get_width() {
     _count += cap_wa_csr_sat_wa_qaddr_cam_conflict_t::s_get_width(); // sat_wa_qaddr_cam_conflict
     _count += cap_wa_csr_sat_wa_qid_overflow_t::s_get_width(); // sat_wa_qid_overflow
     _count += cap_wa_csr_sat_wa_pid_chkfail_t::s_get_width(); // sat_wa_pid_chkfail
+    _count += cap_wa_csr_cfg_doorbell_axi_attr_t::s_get_width(); // cfg_doorbell_axi_attr
     _count += cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::s_get_width(); // cfg_ecc_disable_lif_qstate_map
     _count += cap_wa_csr_sta_ecc_lif_qstate_map_t::s_get_width(); // sta_ecc_lif_qstate_map
     _count += cap_wa_csr_dhs_host_doorbell_t::s_get_width(); // dhs_host_doorbell
@@ -990,6 +1023,26 @@ void cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::all(const cpp_int & _val) {
     _count += 1;
 }
 
+void cap_wa_csr_cfg_doorbell_axi_attr_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // arcache
+    int_var__arcache = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< arcache_cpp_int_t >()  ;
+    _count += 4;
+    // awcache
+    int_var__awcache = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< awcache_cpp_int_t >()  ;
+    _count += 4;
+    // prot
+    int_var__prot = hlp.get_slc(_val, _count, _count -1 + 3 ).convert_to< prot_cpp_int_t >()  ;
+    _count += 3;
+    // qos
+    int_var__qos = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< qos_cpp_int_t >()  ;
+    _count += 4;
+    // lock
+    int_var__lock = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< lock_cpp_int_t >()  ;
+    _count += 1;
+}
+
 void cap_wa_csr_sat_wa_pid_chkfail_t::all(const cpp_int & _val) {
     int _count = 0;
 
@@ -1073,6 +1126,8 @@ void cap_wa_csr_t::all(const cpp_int & _val) {
     _count += sat_wa_qid_overflow.get_width();
     sat_wa_pid_chkfail.all( hlp.get_slc(_val, _count, _count -1 + sat_wa_pid_chkfail.get_width() )); // sat_wa_pid_chkfail
     _count += sat_wa_pid_chkfail.get_width();
+    cfg_doorbell_axi_attr.all( hlp.get_slc(_val, _count, _count -1 + cfg_doorbell_axi_attr.get_width() )); // cfg_doorbell_axi_attr
+    _count += cfg_doorbell_axi_attr.get_width();
     cfg_ecc_disable_lif_qstate_map.all( hlp.get_slc(_val, _count, _count -1 + cfg_ecc_disable_lif_qstate_map.get_width() )); // cfg_ecc_disable_lif_qstate_map
     _count += cfg_ecc_disable_lif_qstate_map.get_width();
     sta_ecc_lif_qstate_map.all( hlp.get_slc(_val, _count, _count -1 + sta_ecc_lif_qstate_map.get_width() )); // sta_ecc_lif_qstate_map
@@ -1399,6 +1454,28 @@ cpp_int cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::all() const {
     return ret_val;
 }
 
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // arcache
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__arcache) , _count, _count -1 + 4 );
+    _count += 4;
+    // awcache
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__awcache) , _count, _count -1 + 4 );
+    _count += 4;
+    // prot
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__prot) , _count, _count -1 + 3 );
+    _count += 3;
+    // qos
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__qos) , _count, _count -1 + 4 );
+    _count += 4;
+    // lock
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__lock) , _count, _count -1 + 1 );
+    _count += 1;
+    return ret_val;
+}
+
 cpp_int cap_wa_csr_sat_wa_pid_chkfail_t::all() const {
     int _count = 0;
     cpp_int ret_val;
@@ -1499,6 +1576,8 @@ cpp_int cap_wa_csr_t::all() const {
     _count += sat_wa_qid_overflow.get_width();
     ret_val = hlp.set_slc(ret_val, sat_wa_pid_chkfail.all() , _count, _count -1 + sat_wa_pid_chkfail.get_width() ); // sat_wa_pid_chkfail
     _count += sat_wa_pid_chkfail.get_width();
+    ret_val = hlp.set_slc(ret_val, cfg_doorbell_axi_attr.all() , _count, _count -1 + cfg_doorbell_axi_attr.get_width() ); // cfg_doorbell_axi_attr
+    _count += cfg_doorbell_axi_attr.get_width();
     ret_val = hlp.set_slc(ret_val, cfg_ecc_disable_lif_qstate_map.all() , _count, _count -1 + cfg_ecc_disable_lif_qstate_map.get_width() ); // cfg_ecc_disable_lif_qstate_map
     _count += cfg_ecc_disable_lif_qstate_map.get_width();
     ret_val = hlp.set_slc(ret_val, sta_ecc_lif_qstate_map.all() , _count, _count -1 + sta_ecc_lif_qstate_map.get_width() ); // sta_ecc_lif_qstate_map
@@ -1998,6 +2077,47 @@ void cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::init() {
     
 }
 
+void cap_wa_csr_cfg_doorbell_axi_attr_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("arcache", (cap_csr_base::set_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::arcache);
+            register_get_func("arcache", (cap_csr_base::get_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::arcache);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("awcache", (cap_csr_base::set_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::awcache);
+            register_get_func("awcache", (cap_csr_base::get_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::awcache);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("prot", (cap_csr_base::set_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::prot);
+            register_get_func("prot", (cap_csr_base::get_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::prot);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("qos", (cap_csr_base::set_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::qos);
+            register_get_func("qos", (cap_csr_base::get_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::qos);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("lock", (cap_csr_base::set_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::lock);
+            register_get_func("lock", (cap_csr_base::get_function_type_t)&cap_wa_csr_cfg_doorbell_axi_attr_t::lock);
+        }
+        #endif
+    
+    set_reset_val(cpp_int("0xff"));
+    all(get_reset_val());
+}
+
 void cap_wa_csr_sat_wa_pid_chkfail_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
@@ -2098,6 +2218,7 @@ void cap_wa_csr_t::init() {
     sat_wa_qaddr_cam_conflict.set_attributes(this,"sat_wa_qaddr_cam_conflict", 0xe20210 );
     sat_wa_qid_overflow.set_attributes(this,"sat_wa_qid_overflow", 0xe20214 );
     sat_wa_pid_chkfail.set_attributes(this,"sat_wa_pid_chkfail", 0xe20218 );
+    cfg_doorbell_axi_attr.set_attributes(this,"cfg_doorbell_axi_attr", 0xe20280 );
     cfg_ecc_disable_lif_qstate_map.set_attributes(this,"cfg_ecc_disable_lif_qstate_map", 0xe30000 );
     sta_ecc_lif_qstate_map.set_attributes(this,"sta_ecc_lif_qstate_map", 0xe30004 );
     dhs_host_doorbell.set_attributes(this,"dhs_host_doorbell", 0x400000 );
@@ -2611,6 +2732,51 @@ void cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::dhs(const cpp_int & _val) {
 
 cpp_int cap_wa_csr_cfg_ecc_disable_lif_qstate_map_t::dhs() const {
     return int_var__dhs.convert_to< cpp_int >();
+}
+    
+void cap_wa_csr_cfg_doorbell_axi_attr_t::arcache(const cpp_int & _val) { 
+    // arcache
+    int_var__arcache = _val.convert_to< arcache_cpp_int_t >();
+}
+
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::arcache() const {
+    return int_var__arcache.convert_to< cpp_int >();
+}
+    
+void cap_wa_csr_cfg_doorbell_axi_attr_t::awcache(const cpp_int & _val) { 
+    // awcache
+    int_var__awcache = _val.convert_to< awcache_cpp_int_t >();
+}
+
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::awcache() const {
+    return int_var__awcache.convert_to< cpp_int >();
+}
+    
+void cap_wa_csr_cfg_doorbell_axi_attr_t::prot(const cpp_int & _val) { 
+    // prot
+    int_var__prot = _val.convert_to< prot_cpp_int_t >();
+}
+
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::prot() const {
+    return int_var__prot.convert_to< cpp_int >();
+}
+    
+void cap_wa_csr_cfg_doorbell_axi_attr_t::qos(const cpp_int & _val) { 
+    // qos
+    int_var__qos = _val.convert_to< qos_cpp_int_t >();
+}
+
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::qos() const {
+    return int_var__qos.convert_to< cpp_int >();
+}
+    
+void cap_wa_csr_cfg_doorbell_axi_attr_t::lock(const cpp_int & _val) { 
+    // lock
+    int_var__lock = _val.convert_to< lock_cpp_int_t >();
+}
+
+cpp_int cap_wa_csr_cfg_doorbell_axi_attr_t::lock() const {
+    return int_var__lock.convert_to< cpp_int >();
 }
     
 void cap_wa_csr_sat_wa_pid_chkfail_t::cnt(const cpp_int & _val) { 

@@ -706,12 +706,12 @@ class cap_ppa_csr_sta_qos_counter_0_t : public cap_register_base {
     
 }; // cap_ppa_csr_sta_qos_counter_0_t
     
-class cap_ppa_csr_CNT_ppa_t : public cap_register_base {
+class cap_ppa_csr_CNT_ppa_pe9_phv_out_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_ppa_csr_CNT_ppa_t(string name = "cap_ppa_csr_CNT_ppa_t", cap_csr_base *parent = 0);
-        virtual ~cap_ppa_csr_CNT_ppa_t();
+        cap_ppa_csr_CNT_ppa_pe9_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe9_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe9_phv_out_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -719,347 +719,842 @@ class cap_ppa_csr_CNT_ppa_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 32 > pb_sop_cpp_int_t;
-        pb_sop_cpp_int_t int_var__pb_sop;
-        void pb_sop (const cpp_int  & l__val);
-        cpp_int pb_sop() const;
-    
-        typedef pu_cpp_int< 32 > pb_eop_cpp_int_t;
-        pb_eop_cpp_int_t int_var__pb_eop;
-        void pb_eop (const cpp_int  & l__val);
-        cpp_int pb_eop() const;
-    
-        typedef pu_cpp_int< 32 > dp_sop_cpp_int_t;
-        dp_sop_cpp_int_t int_var__dp_sop;
-        void dp_sop (const cpp_int  & l__val);
-        cpp_int dp_sop() const;
-    
-        typedef pu_cpp_int< 32 > dp_eop_cpp_int_t;
-        dp_eop_cpp_int_t int_var__dp_eop;
-        void dp_eop (const cpp_int  & l__val);
-        cpp_int dp_eop() const;
-    
-        typedef pu_cpp_int< 32 > ma_sop_cpp_int_t;
-        ma_sop_cpp_int_t int_var__ma_sop;
-        void ma_sop (const cpp_int  & l__val);
-        cpp_int ma_sop() const;
-    
-        typedef pu_cpp_int< 32 > ma_eop_cpp_int_t;
-        ma_eop_cpp_int_t int_var__ma_eop;
-        void ma_eop (const cpp_int  & l__val);
-        cpp_int ma_eop() const;
-    
-        typedef pu_cpp_int< 32 > ohi_sop_cpp_int_t;
-        ohi_sop_cpp_int_t int_var__ohi_sop;
-        void ohi_sop (const cpp_int  & l__val);
-        cpp_int ohi_sop() const;
-    
-        typedef pu_cpp_int< 32 > ohi_eop_cpp_int_t;
-        ohi_eop_cpp_int_t int_var__ohi_eop;
-        void ohi_eop (const cpp_int  & l__val);
-        cpp_int ohi_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe0_pkt_in_sop_cpp_int_t;
-        pe0_pkt_in_sop_cpp_int_t int_var__pe0_pkt_in_sop;
-        void pe0_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe0_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe0_pkt_in_eop_cpp_int_t;
-        pe0_pkt_in_eop_cpp_int_t int_var__pe0_pkt_in_eop;
-        void pe0_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe0_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe0_pkt_release_cpp_int_t;
-        pe0_pkt_release_cpp_int_t int_var__pe0_pkt_release;
-        void pe0_pkt_release (const cpp_int  & l__val);
-        cpp_int pe0_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe0_ohi_out_cpp_int_t;
-        pe0_ohi_out_cpp_int_t int_var__pe0_ohi_out;
-        void pe0_ohi_out (const cpp_int  & l__val);
-        cpp_int pe0_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe0_phv_out_sop_cpp_int_t;
-        pe0_phv_out_sop_cpp_int_t int_var__pe0_phv_out_sop;
-        void pe0_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe0_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe0_phv_out_eop_cpp_int_t;
-        pe0_phv_out_eop_cpp_int_t int_var__pe0_phv_out_eop;
-        void pe0_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe0_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe1_pkt_in_sop_cpp_int_t;
-        pe1_pkt_in_sop_cpp_int_t int_var__pe1_pkt_in_sop;
-        void pe1_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe1_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe1_pkt_in_eop_cpp_int_t;
-        pe1_pkt_in_eop_cpp_int_t int_var__pe1_pkt_in_eop;
-        void pe1_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe1_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe1_pkt_release_cpp_int_t;
-        pe1_pkt_release_cpp_int_t int_var__pe1_pkt_release;
-        void pe1_pkt_release (const cpp_int  & l__val);
-        cpp_int pe1_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe1_ohi_out_cpp_int_t;
-        pe1_ohi_out_cpp_int_t int_var__pe1_ohi_out;
-        void pe1_ohi_out (const cpp_int  & l__val);
-        cpp_int pe1_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe1_phv_out_sop_cpp_int_t;
-        pe1_phv_out_sop_cpp_int_t int_var__pe1_phv_out_sop;
-        void pe1_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe1_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe1_phv_out_eop_cpp_int_t;
-        pe1_phv_out_eop_cpp_int_t int_var__pe1_phv_out_eop;
-        void pe1_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe1_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe2_pkt_in_sop_cpp_int_t;
-        pe2_pkt_in_sop_cpp_int_t int_var__pe2_pkt_in_sop;
-        void pe2_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe2_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe2_pkt_in_eop_cpp_int_t;
-        pe2_pkt_in_eop_cpp_int_t int_var__pe2_pkt_in_eop;
-        void pe2_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe2_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe2_pkt_release_cpp_int_t;
-        pe2_pkt_release_cpp_int_t int_var__pe2_pkt_release;
-        void pe2_pkt_release (const cpp_int  & l__val);
-        cpp_int pe2_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe2_ohi_out_cpp_int_t;
-        pe2_ohi_out_cpp_int_t int_var__pe2_ohi_out;
-        void pe2_ohi_out (const cpp_int  & l__val);
-        cpp_int pe2_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe2_phv_out_sop_cpp_int_t;
-        pe2_phv_out_sop_cpp_int_t int_var__pe2_phv_out_sop;
-        void pe2_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe2_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe2_phv_out_eop_cpp_int_t;
-        pe2_phv_out_eop_cpp_int_t int_var__pe2_phv_out_eop;
-        void pe2_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe2_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe3_pkt_in_sop_cpp_int_t;
-        pe3_pkt_in_sop_cpp_int_t int_var__pe3_pkt_in_sop;
-        void pe3_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe3_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe3_pkt_in_eop_cpp_int_t;
-        pe3_pkt_in_eop_cpp_int_t int_var__pe3_pkt_in_eop;
-        void pe3_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe3_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe3_pkt_release_cpp_int_t;
-        pe3_pkt_release_cpp_int_t int_var__pe3_pkt_release;
-        void pe3_pkt_release (const cpp_int  & l__val);
-        cpp_int pe3_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe3_ohi_out_cpp_int_t;
-        pe3_ohi_out_cpp_int_t int_var__pe3_ohi_out;
-        void pe3_ohi_out (const cpp_int  & l__val);
-        cpp_int pe3_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe3_phv_out_sop_cpp_int_t;
-        pe3_phv_out_sop_cpp_int_t int_var__pe3_phv_out_sop;
-        void pe3_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe3_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe3_phv_out_eop_cpp_int_t;
-        pe3_phv_out_eop_cpp_int_t int_var__pe3_phv_out_eop;
-        void pe3_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe3_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe4_pkt_in_sop_cpp_int_t;
-        pe4_pkt_in_sop_cpp_int_t int_var__pe4_pkt_in_sop;
-        void pe4_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe4_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe4_pkt_in_eop_cpp_int_t;
-        pe4_pkt_in_eop_cpp_int_t int_var__pe4_pkt_in_eop;
-        void pe4_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe4_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe4_pkt_release_cpp_int_t;
-        pe4_pkt_release_cpp_int_t int_var__pe4_pkt_release;
-        void pe4_pkt_release (const cpp_int  & l__val);
-        cpp_int pe4_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe4_ohi_out_cpp_int_t;
-        pe4_ohi_out_cpp_int_t int_var__pe4_ohi_out;
-        void pe4_ohi_out (const cpp_int  & l__val);
-        cpp_int pe4_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe4_phv_out_sop_cpp_int_t;
-        pe4_phv_out_sop_cpp_int_t int_var__pe4_phv_out_sop;
-        void pe4_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe4_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe4_phv_out_eop_cpp_int_t;
-        pe4_phv_out_eop_cpp_int_t int_var__pe4_phv_out_eop;
-        void pe4_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe4_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe5_pkt_in_sop_cpp_int_t;
-        pe5_pkt_in_sop_cpp_int_t int_var__pe5_pkt_in_sop;
-        void pe5_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe5_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe5_pkt_in_eop_cpp_int_t;
-        pe5_pkt_in_eop_cpp_int_t int_var__pe5_pkt_in_eop;
-        void pe5_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe5_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe5_pkt_release_cpp_int_t;
-        pe5_pkt_release_cpp_int_t int_var__pe5_pkt_release;
-        void pe5_pkt_release (const cpp_int  & l__val);
-        cpp_int pe5_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe5_ohi_out_cpp_int_t;
-        pe5_ohi_out_cpp_int_t int_var__pe5_ohi_out;
-        void pe5_ohi_out (const cpp_int  & l__val);
-        cpp_int pe5_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe5_phv_out_sop_cpp_int_t;
-        pe5_phv_out_sop_cpp_int_t int_var__pe5_phv_out_sop;
-        void pe5_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe5_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe5_phv_out_eop_cpp_int_t;
-        pe5_phv_out_eop_cpp_int_t int_var__pe5_phv_out_eop;
-        void pe5_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe5_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe6_pkt_in_sop_cpp_int_t;
-        pe6_pkt_in_sop_cpp_int_t int_var__pe6_pkt_in_sop;
-        void pe6_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe6_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe6_pkt_in_eop_cpp_int_t;
-        pe6_pkt_in_eop_cpp_int_t int_var__pe6_pkt_in_eop;
-        void pe6_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe6_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe6_pkt_release_cpp_int_t;
-        pe6_pkt_release_cpp_int_t int_var__pe6_pkt_release;
-        void pe6_pkt_release (const cpp_int  & l__val);
-        cpp_int pe6_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe6_ohi_out_cpp_int_t;
-        pe6_ohi_out_cpp_int_t int_var__pe6_ohi_out;
-        void pe6_ohi_out (const cpp_int  & l__val);
-        cpp_int pe6_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe6_phv_out_sop_cpp_int_t;
-        pe6_phv_out_sop_cpp_int_t int_var__pe6_phv_out_sop;
-        void pe6_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe6_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe6_phv_out_eop_cpp_int_t;
-        pe6_phv_out_eop_cpp_int_t int_var__pe6_phv_out_eop;
-        void pe6_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe6_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe7_pkt_in_sop_cpp_int_t;
-        pe7_pkt_in_sop_cpp_int_t int_var__pe7_pkt_in_sop;
-        void pe7_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe7_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe7_pkt_in_eop_cpp_int_t;
-        pe7_pkt_in_eop_cpp_int_t int_var__pe7_pkt_in_eop;
-        void pe7_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe7_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe7_pkt_release_cpp_int_t;
-        pe7_pkt_release_cpp_int_t int_var__pe7_pkt_release;
-        void pe7_pkt_release (const cpp_int  & l__val);
-        cpp_int pe7_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe7_ohi_out_cpp_int_t;
-        pe7_ohi_out_cpp_int_t int_var__pe7_ohi_out;
-        void pe7_ohi_out (const cpp_int  & l__val);
-        cpp_int pe7_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe7_phv_out_sop_cpp_int_t;
-        pe7_phv_out_sop_cpp_int_t int_var__pe7_phv_out_sop;
-        void pe7_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe7_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe7_phv_out_eop_cpp_int_t;
-        pe7_phv_out_eop_cpp_int_t int_var__pe7_phv_out_eop;
-        void pe7_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe7_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe8_pkt_in_sop_cpp_int_t;
-        pe8_pkt_in_sop_cpp_int_t int_var__pe8_pkt_in_sop;
-        void pe8_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe8_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe8_pkt_in_eop_cpp_int_t;
-        pe8_pkt_in_eop_cpp_int_t int_var__pe8_pkt_in_eop;
-        void pe8_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe8_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe8_pkt_release_cpp_int_t;
-        pe8_pkt_release_cpp_int_t int_var__pe8_pkt_release;
-        void pe8_pkt_release (const cpp_int  & l__val);
-        cpp_int pe8_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe8_ohi_out_cpp_int_t;
-        pe8_ohi_out_cpp_int_t int_var__pe8_ohi_out;
-        void pe8_ohi_out (const cpp_int  & l__val);
-        cpp_int pe8_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe8_phv_out_sop_cpp_int_t;
-        pe8_phv_out_sop_cpp_int_t int_var__pe8_phv_out_sop;
-        void pe8_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe8_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe8_phv_out_eop_cpp_int_t;
-        pe8_phv_out_eop_cpp_int_t int_var__pe8_phv_out_eop;
-        void pe8_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe8_phv_out_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe9_pkt_in_sop_cpp_int_t;
-        pe9_pkt_in_sop_cpp_int_t int_var__pe9_pkt_in_sop;
-        void pe9_pkt_in_sop (const cpp_int  & l__val);
-        cpp_int pe9_pkt_in_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe9_pkt_in_eop_cpp_int_t;
-        pe9_pkt_in_eop_cpp_int_t int_var__pe9_pkt_in_eop;
-        void pe9_pkt_in_eop (const cpp_int  & l__val);
-        cpp_int pe9_pkt_in_eop() const;
-    
-        typedef pu_cpp_int< 32 > pe9_pkt_release_cpp_int_t;
-        pe9_pkt_release_cpp_int_t int_var__pe9_pkt_release;
-        void pe9_pkt_release (const cpp_int  & l__val);
-        cpp_int pe9_pkt_release() const;
-    
-        typedef pu_cpp_int< 32 > pe9_ohi_out_cpp_int_t;
-        pe9_ohi_out_cpp_int_t int_var__pe9_ohi_out;
-        void pe9_ohi_out (const cpp_int  & l__val);
-        cpp_int pe9_ohi_out() const;
-    
-        typedef pu_cpp_int< 32 > pe9_phv_out_sop_cpp_int_t;
-        pe9_phv_out_sop_cpp_int_t int_var__pe9_phv_out_sop;
-        void pe9_phv_out_sop (const cpp_int  & l__val);
-        cpp_int pe9_phv_out_sop() const;
-    
-        typedef pu_cpp_int< 32 > pe9_phv_out_eop_cpp_int_t;
-        pe9_phv_out_eop_cpp_int_t int_var__pe9_phv_out_eop;
-        void pe9_phv_out_eop (const cpp_int  & l__val);
-        cpp_int pe9_phv_out_eop() const;
-    
-}; // cap_ppa_csr_CNT_ppa_t
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe9_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe9_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe9_t(string name = "cap_ppa_csr_CNT_ppa_pe9_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe9_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe9_t
+    
+class cap_ppa_csr_CNT_ppa_pe9_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe9_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe9_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe9_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe9_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe8_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe8_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe8_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe8_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe8_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe8_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe8_t(string name = "cap_ppa_csr_CNT_ppa_pe8_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe8_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe8_t
+    
+class cap_ppa_csr_CNT_ppa_pe8_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe8_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe8_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe8_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe8_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe7_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe7_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe7_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe7_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe7_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe7_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe7_t(string name = "cap_ppa_csr_CNT_ppa_pe7_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe7_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe7_t
+    
+class cap_ppa_csr_CNT_ppa_pe7_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe7_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe7_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe7_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe7_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe6_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe6_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe6_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe6_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe6_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe6_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe6_t(string name = "cap_ppa_csr_CNT_ppa_pe6_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe6_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe6_t
+    
+class cap_ppa_csr_CNT_ppa_pe6_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe6_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe6_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe6_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe6_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe5_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe5_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe5_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe5_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe5_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe5_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe5_t(string name = "cap_ppa_csr_CNT_ppa_pe5_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe5_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe5_t
+    
+class cap_ppa_csr_CNT_ppa_pe5_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe5_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe5_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe5_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe5_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe4_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe4_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe4_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe4_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe4_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe4_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe4_t(string name = "cap_ppa_csr_CNT_ppa_pe4_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe4_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe4_t
+    
+class cap_ppa_csr_CNT_ppa_pe4_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe4_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe4_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe4_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe4_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe3_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe3_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe3_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe3_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe3_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe3_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe3_t(string name = "cap_ppa_csr_CNT_ppa_pe3_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe3_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe3_t
+    
+class cap_ppa_csr_CNT_ppa_pe3_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe3_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe3_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe3_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe3_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe2_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe2_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe2_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe2_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe2_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe2_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe2_t(string name = "cap_ppa_csr_CNT_ppa_pe2_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe2_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe2_t
+    
+class cap_ppa_csr_CNT_ppa_pe2_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe2_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe2_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe2_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe2_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe1_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe1_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe1_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe1_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe1_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe1_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe1_t(string name = "cap_ppa_csr_CNT_ppa_pe1_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe1_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe1_t
+    
+class cap_ppa_csr_CNT_ppa_pe1_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe1_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe1_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe1_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe1_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_pe0_phv_out_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe0_phv_out_t(string name = "cap_ppa_csr_CNT_ppa_pe0_phv_out_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe0_phv_out_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe0_phv_out_t
+    
+class cap_ppa_csr_CNT_ppa_pe0_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe0_t(string name = "cap_ppa_csr_CNT_ppa_pe0_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe0_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > pkt_release_cpp_int_t;
+        pkt_release_cpp_int_t int_var__pkt_release;
+        void pkt_release (const cpp_int  & l__val);
+        cpp_int pkt_release() const;
+    
+        typedef pu_cpp_int< 32 > ohi_out_cpp_int_t;
+        ohi_out_cpp_int_t int_var__ohi_out;
+        void ohi_out (const cpp_int  & l__val);
+        cpp_int ohi_out() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe0_t
+    
+class cap_ppa_csr_CNT_ppa_pe0_pkt_in_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pe0_pkt_in_t(string name = "cap_ppa_csr_CNT_ppa_pe0_pkt_in_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pe0_pkt_in_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pe0_pkt_in_t
+    
+class cap_ppa_csr_CNT_ppa_ohi_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_ohi_t(string name = "cap_ppa_csr_CNT_ppa_ohi_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_ohi_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_ohi_t
+    
+class cap_ppa_csr_CNT_ppa_ma_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_ma_t(string name = "cap_ppa_csr_CNT_ppa_ma_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_ma_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_ma_t
+    
+class cap_ppa_csr_CNT_ppa_dp_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_dp_t(string name = "cap_ppa_csr_CNT_ppa_dp_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_dp_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_dp_t
+    
+class cap_ppa_csr_CNT_ppa_pb_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ppa_csr_CNT_ppa_pb_t(string name = "cap_ppa_csr_CNT_ppa_pb_t", cap_csr_base *parent = 0);
+        virtual ~cap_ppa_csr_CNT_ppa_pb_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ppa_csr_CNT_ppa_pb_t
     
 class cap_ppa_csr_cfg_free_cell_init_t : public cap_register_base {
     public:
@@ -1578,7 +2073,73 @@ class cap_ppa_csr_t : public cap_block_base {
     
         cap_ppa_csr_cfg_free_cell_init_t cfg_free_cell_init;
     
-        cap_ppa_csr_CNT_ppa_t CNT_ppa;
+        cap_ppa_csr_CNT_ppa_pb_t CNT_ppa_pb;
+    
+        cap_ppa_csr_CNT_ppa_dp_t CNT_ppa_dp;
+    
+        cap_ppa_csr_CNT_ppa_ma_t CNT_ppa_ma;
+    
+        cap_ppa_csr_CNT_ppa_ohi_t CNT_ppa_ohi;
+    
+        cap_ppa_csr_CNT_ppa_pe0_pkt_in_t CNT_ppa_pe0_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe0_t CNT_ppa_pe0;
+    
+        cap_ppa_csr_CNT_ppa_pe0_phv_out_t CNT_ppa_pe0_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe1_pkt_in_t CNT_ppa_pe1_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe1_t CNT_ppa_pe1;
+    
+        cap_ppa_csr_CNT_ppa_pe1_phv_out_t CNT_ppa_pe1_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe2_pkt_in_t CNT_ppa_pe2_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe2_t CNT_ppa_pe2;
+    
+        cap_ppa_csr_CNT_ppa_pe2_phv_out_t CNT_ppa_pe2_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe3_pkt_in_t CNT_ppa_pe3_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe3_t CNT_ppa_pe3;
+    
+        cap_ppa_csr_CNT_ppa_pe3_phv_out_t CNT_ppa_pe3_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe4_pkt_in_t CNT_ppa_pe4_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe4_t CNT_ppa_pe4;
+    
+        cap_ppa_csr_CNT_ppa_pe4_phv_out_t CNT_ppa_pe4_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe5_pkt_in_t CNT_ppa_pe5_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe5_t CNT_ppa_pe5;
+    
+        cap_ppa_csr_CNT_ppa_pe5_phv_out_t CNT_ppa_pe5_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe6_pkt_in_t CNT_ppa_pe6_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe6_t CNT_ppa_pe6;
+    
+        cap_ppa_csr_CNT_ppa_pe6_phv_out_t CNT_ppa_pe6_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe7_pkt_in_t CNT_ppa_pe7_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe7_t CNT_ppa_pe7;
+    
+        cap_ppa_csr_CNT_ppa_pe7_phv_out_t CNT_ppa_pe7_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe8_pkt_in_t CNT_ppa_pe8_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe8_t CNT_ppa_pe8;
+    
+        cap_ppa_csr_CNT_ppa_pe8_phv_out_t CNT_ppa_pe8_phv_out;
+    
+        cap_ppa_csr_CNT_ppa_pe9_pkt_in_t CNT_ppa_pe9_pkt_in;
+    
+        cap_ppa_csr_CNT_ppa_pe9_t CNT_ppa_pe9;
+    
+        cap_ppa_csr_CNT_ppa_pe9_phv_out_t CNT_ppa_pe9_phv_out;
     
         cap_ppa_csr_sta_qos_counter_0_t sta_qos_counter_0;
     

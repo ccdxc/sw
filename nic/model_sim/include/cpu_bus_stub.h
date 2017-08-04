@@ -17,6 +17,12 @@ public:
 
   virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e) {return 0;} ; 
   virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e) {};
+  void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, cpu_access_type_e do_backdoor) {}
+  vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, cpu_access_type_e do_backdoor) {
+      vector<uint32_t> ret_val;
+      for(int ii = 0; ii < size; ii++) { ret_val.push_back(0); }
+      return ret_val;
+  }
 
 };
 

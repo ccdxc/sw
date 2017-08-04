@@ -12,3 +12,4 @@ proto/agents_proto
 proto/hal_proto
 proto/proto
 proto/types_proto
+asic_gen

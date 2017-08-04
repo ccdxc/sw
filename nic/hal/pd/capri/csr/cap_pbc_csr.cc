@@ -4064,6 +4064,7 @@ void cap_pbc_csr_cfg_write_control_8_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -4230,6 +4231,7 @@ void cap_pbc_csr_cfg_write_control_7_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -4396,6 +4398,7 @@ void cap_pbc_csr_cfg_write_control_6_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -4562,6 +4565,7 @@ void cap_pbc_csr_cfg_write_control_5_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -4728,6 +4732,7 @@ void cap_pbc_csr_cfg_write_control_4_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -4894,6 +4899,7 @@ void cap_pbc_csr_cfg_write_control_3_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -5060,6 +5066,7 @@ void cap_pbc_csr_cfg_write_control_2_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -5226,6 +5233,7 @@ void cap_pbc_csr_cfg_write_control_1_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -5392,6 +5400,7 @@ void cap_pbc_csr_cfg_write_control_0_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".enable: 0x" << int_var__enable << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".cut_thru: 0x" << int_var__cut_thru << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing: 0x" << int_var__packing << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".packing_same_pg: 0x" << int_var__packing_same_pg << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".packing_timeout_cycles: 0x" << int_var__packing_timeout_cycles << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rewrite: 0x" << int_var__rewrite << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rate_limiter: 0x" << int_var__rate_limiter << dec << endl)
@@ -9883,6 +9892,7 @@ int cap_pbc_csr_cfg_write_control_8_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -10085,6 +10095,7 @@ int cap_pbc_csr_cfg_write_control_7_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -10287,6 +10298,7 @@ int cap_pbc_csr_cfg_write_control_6_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -10489,6 +10501,7 @@ int cap_pbc_csr_cfg_write_control_5_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -10691,6 +10704,7 @@ int cap_pbc_csr_cfg_write_control_4_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -10893,6 +10907,7 @@ int cap_pbc_csr_cfg_write_control_3_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -11095,6 +11110,7 @@ int cap_pbc_csr_cfg_write_control_2_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -11297,6 +11313,7 @@ int cap_pbc_csr_cfg_write_control_1_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -11499,6 +11516,7 @@ int cap_pbc_csr_cfg_write_control_0_t::s_get_width() {
     _count += 1; // enable
     _count += 5; // cut_thru
     _count += 1; // packing
+    _count += 1; // packing_same_pg
     _count += 10; // packing_timeout_cycles
     _count += 1; // rewrite
     _count += 3; // rate_limiter
@@ -16032,6 +16050,9 @@ void cap_pbc_csr_cfg_write_control_8_t::all(const cpp_int & _val) {
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
     _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
+    _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
     _count += 10;
@@ -16403,6 +16424,9 @@ void cap_pbc_csr_cfg_write_control_7_t::all(const cpp_int & _val) {
     _count += 5;
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
+    _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
     _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
@@ -16776,6 +16800,9 @@ void cap_pbc_csr_cfg_write_control_6_t::all(const cpp_int & _val) {
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
     _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
+    _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
     _count += 10;
@@ -17147,6 +17174,9 @@ void cap_pbc_csr_cfg_write_control_5_t::all(const cpp_int & _val) {
     _count += 5;
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
+    _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
     _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
@@ -17520,6 +17550,9 @@ void cap_pbc_csr_cfg_write_control_4_t::all(const cpp_int & _val) {
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
     _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
+    _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
     _count += 10;
@@ -17891,6 +17924,9 @@ void cap_pbc_csr_cfg_write_control_3_t::all(const cpp_int & _val) {
     _count += 5;
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
+    _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
     _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
@@ -18264,6 +18300,9 @@ void cap_pbc_csr_cfg_write_control_2_t::all(const cpp_int & _val) {
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
     _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
+    _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
     _count += 10;
@@ -18636,6 +18675,9 @@ void cap_pbc_csr_cfg_write_control_1_t::all(const cpp_int & _val) {
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
     _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
+    _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
     _count += 10;
@@ -19007,6 +19049,9 @@ void cap_pbc_csr_cfg_write_control_0_t::all(const cpp_int & _val) {
     _count += 5;
     // packing
     int_var__packing = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_cpp_int_t >()  ;
+    _count += 1;
+    // packing_same_pg
+    int_var__packing_same_pg = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< packing_same_pg_cpp_int_t >()  ;
     _count += 1;
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = hlp.get_slc(_val, _count, _count -1 + 10 ).convert_to< packing_timeout_cycles_cpp_int_t >()  ;
@@ -24324,6 +24369,9 @@ cpp_int cap_pbc_csr_cfg_write_control_8_t::all() const {
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
     _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
+    _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
     _count += 10;
@@ -24731,6 +24779,9 @@ cpp_int cap_pbc_csr_cfg_write_control_7_t::all() const {
     _count += 5;
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
+    _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
     _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
@@ -25140,6 +25191,9 @@ cpp_int cap_pbc_csr_cfg_write_control_6_t::all() const {
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
     _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
+    _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
     _count += 10;
@@ -25547,6 +25601,9 @@ cpp_int cap_pbc_csr_cfg_write_control_5_t::all() const {
     _count += 5;
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
+    _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
     _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
@@ -25956,6 +26013,9 @@ cpp_int cap_pbc_csr_cfg_write_control_4_t::all() const {
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
     _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
+    _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
     _count += 10;
@@ -26363,6 +26423,9 @@ cpp_int cap_pbc_csr_cfg_write_control_3_t::all() const {
     _count += 5;
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
+    _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
     _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
@@ -26772,6 +26835,9 @@ cpp_int cap_pbc_csr_cfg_write_control_2_t::all() const {
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
     _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
+    _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
     _count += 10;
@@ -27180,6 +27246,9 @@ cpp_int cap_pbc_csr_cfg_write_control_1_t::all() const {
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
     _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
+    _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
     _count += 10;
@@ -27587,6 +27656,9 @@ cpp_int cap_pbc_csr_cfg_write_control_0_t::all() const {
     _count += 5;
     // packing
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing) , _count, _count -1 + 1 );
+    _count += 1;
+    // packing_same_pg
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_same_pg) , _count, _count -1 + 1 );
     _count += 1;
     // packing_timeout_cycles
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__packing_timeout_cycles) , _count, _count -1 + 10 );
@@ -28939,7 +29011,7 @@ void cap_pbc_csr_cfg_tail_drop_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10201020"));
+    set_reset_val(cpp_int("0x3e803e8"));
     all(get_reset_val());
 }
 
@@ -36383,6 +36455,13 @@ void cap_pbc_csr_cfg_write_control_8_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_8_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_8_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_8_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_8_t::packing_timeout_cycles);
         }
@@ -36409,7 +36488,7 @@ void cap_pbc_csr_cfg_write_control_8_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -37123,6 +37202,13 @@ void cap_pbc_csr_cfg_write_control_7_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_7_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_7_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_7_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_7_t::packing_timeout_cycles);
         }
@@ -37149,7 +37235,7 @@ void cap_pbc_csr_cfg_write_control_7_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -37863,6 +37949,13 @@ void cap_pbc_csr_cfg_write_control_6_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_6_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_6_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_6_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_6_t::packing_timeout_cycles);
         }
@@ -37889,7 +37982,7 @@ void cap_pbc_csr_cfg_write_control_6_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -38603,6 +38696,13 @@ void cap_pbc_csr_cfg_write_control_5_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_5_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_5_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_5_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_5_t::packing_timeout_cycles);
         }
@@ -38629,7 +38729,7 @@ void cap_pbc_csr_cfg_write_control_5_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -39343,6 +39443,13 @@ void cap_pbc_csr_cfg_write_control_4_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_4_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_4_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_4_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_4_t::packing_timeout_cycles);
         }
@@ -39369,7 +39476,7 @@ void cap_pbc_csr_cfg_write_control_4_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -40083,6 +40190,13 @@ void cap_pbc_csr_cfg_write_control_3_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_3_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_3_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_3_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_3_t::packing_timeout_cycles);
         }
@@ -40109,7 +40223,7 @@ void cap_pbc_csr_cfg_write_control_3_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -40823,6 +40937,13 @@ void cap_pbc_csr_cfg_write_control_2_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_2_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_2_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_2_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_2_t::packing_timeout_cycles);
         }
@@ -40849,7 +40970,7 @@ void cap_pbc_csr_cfg_write_control_2_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -41563,6 +41684,13 @@ void cap_pbc_csr_cfg_write_control_1_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_1_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_1_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_1_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_1_t::packing_timeout_cycles);
         }
@@ -41589,7 +41717,7 @@ void cap_pbc_csr_cfg_write_control_1_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -42303,6 +42431,13 @@ void cap_pbc_csr_cfg_write_control_0_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("packing_same_pg", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_0_t::packing_same_pg);
+            register_get_func("packing_same_pg", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_0_t::packing_same_pg);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("packing_timeout_cycles", (cap_csr_base::set_function_type_t)&cap_pbc_csr_cfg_write_control_0_t::packing_timeout_cycles);
             register_get_func("packing_timeout_cycles", (cap_csr_base::get_function_type_t)&cap_pbc_csr_cfg_write_control_0_t::packing_timeout_cycles);
         }
@@ -42329,7 +42464,7 @@ void cap_pbc_csr_cfg_write_control_0_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x10057e"));
+    set_reset_val(cpp_int("0x200afe"));
     all(get_reset_val());
 }
 
@@ -51880,6 +52015,15 @@ cpp_int cap_pbc_csr_cfg_write_control_8_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
 }
     
+void cap_pbc_csr_cfg_write_control_8_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_8_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
+}
+    
 void cap_pbc_csr_cfg_write_control_8_t::packing_timeout_cycles(const cpp_int & _val) { 
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = _val.convert_to< packing_timeout_cycles_cpp_int_t >();
@@ -52724,6 +52868,15 @@ void cap_pbc_csr_cfg_write_control_7_t::packing(const cpp_int & _val) {
 
 cpp_int cap_pbc_csr_cfg_write_control_7_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
+}
+    
+void cap_pbc_csr_cfg_write_control_7_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_7_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
 }
     
 void cap_pbc_csr_cfg_write_control_7_t::packing_timeout_cycles(const cpp_int & _val) { 
@@ -53572,6 +53725,15 @@ cpp_int cap_pbc_csr_cfg_write_control_6_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
 }
     
+void cap_pbc_csr_cfg_write_control_6_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_6_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
+}
+    
 void cap_pbc_csr_cfg_write_control_6_t::packing_timeout_cycles(const cpp_int & _val) { 
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = _val.convert_to< packing_timeout_cycles_cpp_int_t >();
@@ -54416,6 +54578,15 @@ void cap_pbc_csr_cfg_write_control_5_t::packing(const cpp_int & _val) {
 
 cpp_int cap_pbc_csr_cfg_write_control_5_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
+}
+    
+void cap_pbc_csr_cfg_write_control_5_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_5_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
 }
     
 void cap_pbc_csr_cfg_write_control_5_t::packing_timeout_cycles(const cpp_int & _val) { 
@@ -55264,6 +55435,15 @@ cpp_int cap_pbc_csr_cfg_write_control_4_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
 }
     
+void cap_pbc_csr_cfg_write_control_4_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_4_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
+}
+    
 void cap_pbc_csr_cfg_write_control_4_t::packing_timeout_cycles(const cpp_int & _val) { 
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = _val.convert_to< packing_timeout_cycles_cpp_int_t >();
@@ -56108,6 +56288,15 @@ void cap_pbc_csr_cfg_write_control_3_t::packing(const cpp_int & _val) {
 
 cpp_int cap_pbc_csr_cfg_write_control_3_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
+}
+    
+void cap_pbc_csr_cfg_write_control_3_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_3_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
 }
     
 void cap_pbc_csr_cfg_write_control_3_t::packing_timeout_cycles(const cpp_int & _val) { 
@@ -56956,6 +57145,15 @@ cpp_int cap_pbc_csr_cfg_write_control_2_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
 }
     
+void cap_pbc_csr_cfg_write_control_2_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_2_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
+}
+    
 void cap_pbc_csr_cfg_write_control_2_t::packing_timeout_cycles(const cpp_int & _val) { 
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = _val.convert_to< packing_timeout_cycles_cpp_int_t >();
@@ -57802,6 +58000,15 @@ cpp_int cap_pbc_csr_cfg_write_control_1_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
 }
     
+void cap_pbc_csr_cfg_write_control_1_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_1_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
+}
+    
 void cap_pbc_csr_cfg_write_control_1_t::packing_timeout_cycles(const cpp_int & _val) { 
     // packing_timeout_cycles
     int_var__packing_timeout_cycles = _val.convert_to< packing_timeout_cycles_cpp_int_t >();
@@ -58646,6 +58853,15 @@ void cap_pbc_csr_cfg_write_control_0_t::packing(const cpp_int & _val) {
 
 cpp_int cap_pbc_csr_cfg_write_control_0_t::packing() const {
     return int_var__packing.convert_to< cpp_int >();
+}
+    
+void cap_pbc_csr_cfg_write_control_0_t::packing_same_pg(const cpp_int & _val) { 
+    // packing_same_pg
+    int_var__packing_same_pg = _val.convert_to< packing_same_pg_cpp_int_t >();
+}
+
+cpp_int cap_pbc_csr_cfg_write_control_0_t::packing_same_pg() const {
+    return int_var__packing_same_pg.convert_to< cpp_int >();
 }
     
 void cap_pbc_csr_cfg_write_control_0_t::packing_timeout_cycles(const cpp_int & _val) { 

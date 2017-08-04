@@ -21,23 +21,23 @@ cap_pxc_csr_sta_c_port_phystatus_t::cap_pxc_csr_sta_c_port_phystatus_t(string na
         }
 cap_pxc_csr_sta_c_port_phystatus_t::~cap_pxc_csr_sta_c_port_phystatus_t() { }
 
-cap_pxc_csr_sat_c_port_cnt15_t::cap_pxc_csr_sat_c_port_cnt15_t(string name, cap_csr_base * parent): 
+cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_pxc_csr_sat_c_port_cnt15_t::~cap_pxc_csr_sat_c_port_cnt15_t() { }
+cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::~cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t() { }
 
-cap_pxc_csr_sat_c_port_cnt14_t::cap_pxc_csr_sat_c_port_cnt14_t(string name, cap_csr_base * parent): 
+cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_pxc_csr_sat_c_port_cnt14_t::~cap_pxc_csr_sat_c_port_cnt14_t() { }
+cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::~cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t() { }
 
-cap_pxc_csr_sat_c_port_cnt13_t::cap_pxc_csr_sat_c_port_cnt13_t(string name, cap_csr_base * parent): 
+cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
         }
-cap_pxc_csr_sat_c_port_cnt13_t::~cap_pxc_csr_sat_c_port_cnt13_t() { }
+cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::~cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t() { }
 
 cap_pxc_csr_sat_c_port_cnt12_t::cap_pxc_csr_sat_c_port_cnt12_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
@@ -213,6 +213,12 @@ cap_pxc_csr_sta_c_port_mac_t::cap_pxc_csr_sta_c_port_mac_t(string name, cap_csr_
         }
 cap_pxc_csr_sta_c_port_mac_t::~cap_pxc_csr_sta_c_port_mac_t() { }
 
+cap_pxc_csr_cnt_c_tl_tx_t::cap_pxc_csr_cnt_c_tl_tx_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_pxc_csr_cnt_c_tl_tx_t::~cap_pxc_csr_cnt_c_tl_tx_t() { }
+
 cap_pxc_csr_cnt_c_tl_rx_t::cap_pxc_csr_cnt_c_tl_rx_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
@@ -297,19 +303,19 @@ void cap_pxc_csr_sta_c_port_phystatus_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".per_lane: 0x" << int_var__per_lane << dec << endl)
 }
 
-void cap_pxc_csr_sat_c_port_cnt15_t::show() {
+void cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".tbd: 0x" << int_var__tbd << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".event: 0x" << int_var__event << dec << endl)
 }
 
-void cap_pxc_csr_sat_c_port_cnt14_t::show() {
+void cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".tbd: 0x" << int_var__tbd << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".event: 0x" << int_var__event << dec << endl)
 }
 
-void cap_pxc_csr_sat_c_port_cnt13_t::show() {
+void cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".tbd: 0x" << int_var__tbd << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".event: 0x" << int_var__event << dec << endl)
 }
 
 void cap_pxc_csr_sat_c_port_cnt12_t::show() {
@@ -473,9 +479,20 @@ void cap_pxc_csr_sta_c_port_mac_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".dl_up: 0x" << int_var__dl_up << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".portgate_open: 0x" << int_var__portgate_open << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".lp_state: 0x" << int_var__lp_state << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".trn2ltssm_l0s: 0x" << int_var__trn2ltssm_l0s << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".trn2ltssm_l1: 0x" << int_var__trn2ltssm_l1 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".trn2ltssm_l2: 0x" << int_var__trn2ltssm_l2 << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".dpc_active: 0x" << int_var__dpc_active << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rc_int_pinstate: 0x" << int_var__rc_int_pinstate << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".pm_turnoffstatus: 0x" << int_var__pm_turnoffstatus << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".pm_clkstatus: 0x" << int_var__pm_clkstatus << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".tlp_tx_inhibited: 0x" << int_var__tlp_tx_inhibited << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".dllp_tx_inhibited: 0x" << int_var__dllp_tx_inhibited << dec << endl)
+}
+
+void cap_pxc_csr_cnt_c_tl_tx_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".tlp: 0x" << int_var__tlp << dec << endl)
 }
 
 void cap_pxc_csr_cnt_c_tl_rx_t::show() {
@@ -625,6 +642,7 @@ void cap_pxc_csr_t::show() {
     cfg_c_mac_k_bar0windows.show();
     cfg_c_port_mac.show();
     cnt_c_tl_rx.show();
+    cnt_c_tl_tx.show();
     sta_c_port_mac.show();
     sta_c_port_rst.show();
     cfg_c_portgate_open.show();
@@ -654,9 +672,9 @@ void cap_pxc_csr_t::show() {
     sat_c_port_cnt10.show();
     sat_c_port_cnt11.show();
     sat_c_port_cnt12.show();
-    sat_c_port_cnt13.show();
-    sat_c_port_cnt14.show();
-    sat_c_port_cnt15.show();
+    sat_c_port_cnt_rx_malform_tlp.show();
+    sat_c_port_cnt_rx_framing_err.show();
+    sat_c_port_cnt_txbfr_overflow.show();
     sta_c_port_phystatus.show();
     dhs_c_mac_apb.show();
 }
@@ -676,18 +694,18 @@ int cap_pxc_csr_sta_c_port_phystatus_t::get_width() const {
 
 }
 
-int cap_pxc_csr_sat_c_port_cnt15_t::get_width() const {
-    return cap_pxc_csr_sat_c_port_cnt15_t::s_get_width();
+int cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::get_width() const {
+    return cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::s_get_width();
 
 }
 
-int cap_pxc_csr_sat_c_port_cnt14_t::get_width() const {
-    return cap_pxc_csr_sat_c_port_cnt14_t::s_get_width();
+int cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::get_width() const {
+    return cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::s_get_width();
 
 }
 
-int cap_pxc_csr_sat_c_port_cnt13_t::get_width() const {
-    return cap_pxc_csr_sat_c_port_cnt13_t::s_get_width();
+int cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::get_width() const {
+    return cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::s_get_width();
 
 }
 
@@ -836,6 +854,11 @@ int cap_pxc_csr_sta_c_port_mac_t::get_width() const {
 
 }
 
+int cap_pxc_csr_cnt_c_tl_tx_t::get_width() const {
+    return cap_pxc_csr_cnt_c_tl_tx_t::s_get_width();
+
+}
+
 int cap_pxc_csr_cnt_c_tl_rx_t::get_width() const {
     return cap_pxc_csr_cnt_c_tl_rx_t::s_get_width();
 
@@ -912,24 +935,24 @@ int cap_pxc_csr_sta_c_port_phystatus_t::s_get_width() {
     return _count;
 }
 
-int cap_pxc_csr_sat_c_port_cnt15_t::s_get_width() {
+int cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::s_get_width() {
     int _count = 0;
 
-    _count += 8; // tbd
+    _count += 8; // event
     return _count;
 }
 
-int cap_pxc_csr_sat_c_port_cnt14_t::s_get_width() {
+int cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::s_get_width() {
     int _count = 0;
 
-    _count += 8; // tbd
+    _count += 8; // event
     return _count;
 }
 
-int cap_pxc_csr_sat_c_port_cnt13_t::s_get_width() {
+int cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::s_get_width() {
     int _count = 0;
 
-    _count += 8; // tbd
+    _count += 8; // event
     return _count;
 }
 
@@ -1151,9 +1174,22 @@ int cap_pxc_csr_sta_c_port_mac_t::s_get_width() {
     _count += 1; // dl_up
     _count += 1; // portgate_open
     _count += 4; // lp_state
+    _count += 1; // trn2ltssm_l0s
+    _count += 1; // trn2ltssm_l1
+    _count += 1; // trn2ltssm_l2
+    _count += 1; // dpc_active
     _count += 4; // rc_int_pinstate
     _count += 1; // pm_turnoffstatus
     _count += 4; // pm_clkstatus
+    _count += 1; // tlp_tx_inhibited
+    _count += 1; // dllp_tx_inhibited
+    return _count;
+}
+
+int cap_pxc_csr_cnt_c_tl_tx_t::s_get_width() {
+    int _count = 0;
+
+    _count += 32; // tlp
     return _count;
 }
 
@@ -1325,6 +1361,7 @@ int cap_pxc_csr_t::s_get_width() {
     _count += cap_pxc_csr_cfg_c_mac_k_bar0windows_t::s_get_width(); // cfg_c_mac_k_bar0windows
     _count += cap_pxc_csr_cfg_c_port_mac_t::s_get_width(); // cfg_c_port_mac
     _count += cap_pxc_csr_cnt_c_tl_rx_t::s_get_width(); // cnt_c_tl_rx
+    _count += cap_pxc_csr_cnt_c_tl_tx_t::s_get_width(); // cnt_c_tl_tx
     _count += cap_pxc_csr_sta_c_port_mac_t::s_get_width(); // sta_c_port_mac
     _count += cap_pxc_csr_sta_c_port_rst_t::s_get_width(); // sta_c_port_rst
     _count += cap_pxc_csr_cfg_c_portgate_open_t::s_get_width(); // cfg_c_portgate_open
@@ -1354,9 +1391,9 @@ int cap_pxc_csr_t::s_get_width() {
     _count += cap_pxc_csr_sat_c_port_cnt10_t::s_get_width(); // sat_c_port_cnt10
     _count += cap_pxc_csr_sat_c_port_cnt11_t::s_get_width(); // sat_c_port_cnt11
     _count += cap_pxc_csr_sat_c_port_cnt12_t::s_get_width(); // sat_c_port_cnt12
-    _count += cap_pxc_csr_sat_c_port_cnt13_t::s_get_width(); // sat_c_port_cnt13
-    _count += cap_pxc_csr_sat_c_port_cnt14_t::s_get_width(); // sat_c_port_cnt14
-    _count += cap_pxc_csr_sat_c_port_cnt15_t::s_get_width(); // sat_c_port_cnt15
+    _count += cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::s_get_width(); // sat_c_port_cnt_rx_malform_tlp
+    _count += cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::s_get_width(); // sat_c_port_cnt_rx_framing_err
+    _count += cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::s_get_width(); // sat_c_port_cnt_txbfr_overflow
     _count += cap_pxc_csr_sta_c_port_phystatus_t::s_get_width(); // sta_c_port_phystatus
     _count += cap_pxc_csr_dhs_c_mac_apb_t::s_get_width(); // dhs_c_mac_apb
     return _count;
@@ -1388,27 +1425,27 @@ void cap_pxc_csr_sta_c_port_phystatus_t::all(const cpp_int & _val) {
     _count += 16;
 }
 
-void cap_pxc_csr_sat_c_port_cnt15_t::all(const cpp_int & _val) {
+void cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // tbd
-    int_var__tbd = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< tbd_cpp_int_t >()  ;
+    // event
+    int_var__event = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< event_cpp_int_t >()  ;
     _count += 8;
 }
 
-void cap_pxc_csr_sat_c_port_cnt14_t::all(const cpp_int & _val) {
+void cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // tbd
-    int_var__tbd = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< tbd_cpp_int_t >()  ;
+    // event
+    int_var__event = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< event_cpp_int_t >()  ;
     _count += 8;
 }
 
-void cap_pxc_csr_sat_c_port_cnt13_t::all(const cpp_int & _val) {
+void cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // tbd
-    int_var__tbd = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< tbd_cpp_int_t >()  ;
+    // event
+    int_var__event = hlp.get_slc(_val, _count, _count -1 + 8 ).convert_to< event_cpp_int_t >()  ;
     _count += 8;
 }
 
@@ -1696,6 +1733,18 @@ void cap_pxc_csr_sta_c_port_mac_t::all(const cpp_int & _val) {
     // lp_state
     int_var__lp_state = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< lp_state_cpp_int_t >()  ;
     _count += 4;
+    // trn2ltssm_l0s
+    int_var__trn2ltssm_l0s = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< trn2ltssm_l0s_cpp_int_t >()  ;
+    _count += 1;
+    // trn2ltssm_l1
+    int_var__trn2ltssm_l1 = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< trn2ltssm_l1_cpp_int_t >()  ;
+    _count += 1;
+    // trn2ltssm_l2
+    int_var__trn2ltssm_l2 = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< trn2ltssm_l2_cpp_int_t >()  ;
+    _count += 1;
+    // dpc_active
+    int_var__dpc_active = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< dpc_active_cpp_int_t >()  ;
+    _count += 1;
     // rc_int_pinstate
     int_var__rc_int_pinstate = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< rc_int_pinstate_cpp_int_t >()  ;
     _count += 4;
@@ -1705,6 +1754,20 @@ void cap_pxc_csr_sta_c_port_mac_t::all(const cpp_int & _val) {
     // pm_clkstatus
     int_var__pm_clkstatus = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< pm_clkstatus_cpp_int_t >()  ;
     _count += 4;
+    // tlp_tx_inhibited
+    int_var__tlp_tx_inhibited = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< tlp_tx_inhibited_cpp_int_t >()  ;
+    _count += 1;
+    // dllp_tx_inhibited
+    int_var__dllp_tx_inhibited = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< dllp_tx_inhibited_cpp_int_t >()  ;
+    _count += 1;
+}
+
+void cap_pxc_csr_cnt_c_tl_tx_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // tlp
+    int_var__tlp = hlp.get_slc(_val, _count, _count -1 + 32 ).convert_to< tlp_cpp_int_t >()  ;
+    _count += 32;
 }
 
 void cap_pxc_csr_cnt_c_tl_rx_t::all(const cpp_int & _val) {
@@ -2065,6 +2128,8 @@ void cap_pxc_csr_t::all(const cpp_int & _val) {
     _count += cfg_c_port_mac.get_width();
     cnt_c_tl_rx.all( hlp.get_slc(_val, _count, _count -1 + cnt_c_tl_rx.get_width() )); // cnt_c_tl_rx
     _count += cnt_c_tl_rx.get_width();
+    cnt_c_tl_tx.all( hlp.get_slc(_val, _count, _count -1 + cnt_c_tl_tx.get_width() )); // cnt_c_tl_tx
+    _count += cnt_c_tl_tx.get_width();
     sta_c_port_mac.all( hlp.get_slc(_val, _count, _count -1 + sta_c_port_mac.get_width() )); // sta_c_port_mac
     _count += sta_c_port_mac.get_width();
     sta_c_port_rst.all( hlp.get_slc(_val, _count, _count -1 + sta_c_port_rst.get_width() )); // sta_c_port_rst
@@ -2123,12 +2188,12 @@ void cap_pxc_csr_t::all(const cpp_int & _val) {
     _count += sat_c_port_cnt11.get_width();
     sat_c_port_cnt12.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt12.get_width() )); // sat_c_port_cnt12
     _count += sat_c_port_cnt12.get_width();
-    sat_c_port_cnt13.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt13.get_width() )); // sat_c_port_cnt13
-    _count += sat_c_port_cnt13.get_width();
-    sat_c_port_cnt14.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt14.get_width() )); // sat_c_port_cnt14
-    _count += sat_c_port_cnt14.get_width();
-    sat_c_port_cnt15.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt15.get_width() )); // sat_c_port_cnt15
-    _count += sat_c_port_cnt15.get_width();
+    sat_c_port_cnt_rx_malform_tlp.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt_rx_malform_tlp.get_width() )); // sat_c_port_cnt_rx_malform_tlp
+    _count += sat_c_port_cnt_rx_malform_tlp.get_width();
+    sat_c_port_cnt_rx_framing_err.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt_rx_framing_err.get_width() )); // sat_c_port_cnt_rx_framing_err
+    _count += sat_c_port_cnt_rx_framing_err.get_width();
+    sat_c_port_cnt_txbfr_overflow.all( hlp.get_slc(_val, _count, _count -1 + sat_c_port_cnt_txbfr_overflow.get_width() )); // sat_c_port_cnt_txbfr_overflow
+    _count += sat_c_port_cnt_txbfr_overflow.get_width();
     sta_c_port_phystatus.all( hlp.get_slc(_val, _count, _count -1 + sta_c_port_phystatus.get_width() )); // sta_c_port_phystatus
     _count += sta_c_port_phystatus.get_width();
     dhs_c_mac_apb.all( hlp.get_slc(_val, _count, _count -1 + dhs_c_mac_apb.get_width() )); // dhs_c_mac_apb
@@ -2167,32 +2232,32 @@ cpp_int cap_pxc_csr_sta_c_port_phystatus_t::all() const {
     return ret_val;
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt15_t::all() const {
+cpp_int cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // tbd
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tbd) , _count, _count -1 + 8 );
+    // event
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__event) , _count, _count -1 + 8 );
     _count += 8;
     return ret_val;
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt14_t::all() const {
+cpp_int cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // tbd
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tbd) , _count, _count -1 + 8 );
+    // event
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__event) , _count, _count -1 + 8 );
     _count += 8;
     return ret_val;
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt13_t::all() const {
+cpp_int cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // tbd
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tbd) , _count, _count -1 + 8 );
+    // event
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__event) , _count, _count -1 + 8 );
     _count += 8;
     return ret_val;
 }
@@ -2538,6 +2603,18 @@ cpp_int cap_pxc_csr_sta_c_port_mac_t::all() const {
     // lp_state
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__lp_state) , _count, _count -1 + 4 );
     _count += 4;
+    // trn2ltssm_l0s
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__trn2ltssm_l0s) , _count, _count -1 + 1 );
+    _count += 1;
+    // trn2ltssm_l1
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__trn2ltssm_l1) , _count, _count -1 + 1 );
+    _count += 1;
+    // trn2ltssm_l2
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__trn2ltssm_l2) , _count, _count -1 + 1 );
+    _count += 1;
+    // dpc_active
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__dpc_active) , _count, _count -1 + 1 );
+    _count += 1;
     // rc_int_pinstate
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rc_int_pinstate) , _count, _count -1 + 4 );
     _count += 4;
@@ -2547,6 +2624,22 @@ cpp_int cap_pxc_csr_sta_c_port_mac_t::all() const {
     // pm_clkstatus
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__pm_clkstatus) , _count, _count -1 + 4 );
     _count += 4;
+    // tlp_tx_inhibited
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tlp_tx_inhibited) , _count, _count -1 + 1 );
+    _count += 1;
+    // dllp_tx_inhibited
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__dllp_tx_inhibited) , _count, _count -1 + 1 );
+    _count += 1;
+    return ret_val;
+}
+
+cpp_int cap_pxc_csr_cnt_c_tl_tx_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // tlp
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__tlp) , _count, _count -1 + 32 );
+    _count += 32;
     return ret_val;
 }
 
@@ -2929,6 +3022,8 @@ cpp_int cap_pxc_csr_t::all() const {
     _count += cfg_c_port_mac.get_width();
     ret_val = hlp.set_slc(ret_val, cnt_c_tl_rx.all() , _count, _count -1 + cnt_c_tl_rx.get_width() ); // cnt_c_tl_rx
     _count += cnt_c_tl_rx.get_width();
+    ret_val = hlp.set_slc(ret_val, cnt_c_tl_tx.all() , _count, _count -1 + cnt_c_tl_tx.get_width() ); // cnt_c_tl_tx
+    _count += cnt_c_tl_tx.get_width();
     ret_val = hlp.set_slc(ret_val, sta_c_port_mac.all() , _count, _count -1 + sta_c_port_mac.get_width() ); // sta_c_port_mac
     _count += sta_c_port_mac.get_width();
     ret_val = hlp.set_slc(ret_val, sta_c_port_rst.all() , _count, _count -1 + sta_c_port_rst.get_width() ); // sta_c_port_rst
@@ -2987,12 +3082,12 @@ cpp_int cap_pxc_csr_t::all() const {
     _count += sat_c_port_cnt11.get_width();
     ret_val = hlp.set_slc(ret_val, sat_c_port_cnt12.all() , _count, _count -1 + sat_c_port_cnt12.get_width() ); // sat_c_port_cnt12
     _count += sat_c_port_cnt12.get_width();
-    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt13.all() , _count, _count -1 + sat_c_port_cnt13.get_width() ); // sat_c_port_cnt13
-    _count += sat_c_port_cnt13.get_width();
-    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt14.all() , _count, _count -1 + sat_c_port_cnt14.get_width() ); // sat_c_port_cnt14
-    _count += sat_c_port_cnt14.get_width();
-    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt15.all() , _count, _count -1 + sat_c_port_cnt15.get_width() ); // sat_c_port_cnt15
-    _count += sat_c_port_cnt15.get_width();
+    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt_rx_malform_tlp.all() , _count, _count -1 + sat_c_port_cnt_rx_malform_tlp.get_width() ); // sat_c_port_cnt_rx_malform_tlp
+    _count += sat_c_port_cnt_rx_malform_tlp.get_width();
+    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt_rx_framing_err.all() , _count, _count -1 + sat_c_port_cnt_rx_framing_err.get_width() ); // sat_c_port_cnt_rx_framing_err
+    _count += sat_c_port_cnt_rx_framing_err.get_width();
+    ret_val = hlp.set_slc(ret_val, sat_c_port_cnt_txbfr_overflow.all() , _count, _count -1 + sat_c_port_cnt_txbfr_overflow.get_width() ); // sat_c_port_cnt_txbfr_overflow
+    _count += sat_c_port_cnt_txbfr_overflow.get_width();
     ret_val = hlp.set_slc(ret_val, sta_c_port_phystatus.all() , _count, _count -1 + sta_c_port_phystatus.get_width() ); // sta_c_port_phystatus
     _count += sta_c_port_phystatus.get_width();
     ret_val = hlp.set_slc(ret_val, dhs_c_mac_apb.all() , _count, _count -1 + dhs_c_mac_apb.get_width() ); // dhs_c_mac_apb
@@ -3030,34 +3125,34 @@ void cap_pxc_csr_sta_c_port_phystatus_t::init() {
     
 }
 
-void cap_pxc_csr_sat_c_port_cnt15_t::init() {
+void cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("tbd", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt15_t::tbd);
-            register_get_func("tbd", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt15_t::tbd);
+            register_set_func("event", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::event);
+            register_get_func("event", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::event);
         }
         #endif
     
 }
 
-void cap_pxc_csr_sat_c_port_cnt14_t::init() {
+void cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("tbd", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt14_t::tbd);
-            register_get_func("tbd", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt14_t::tbd);
+            register_set_func("event", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::event);
+            register_get_func("event", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::event);
         }
         #endif
     
 }
 
-void cap_pxc_csr_sat_c_port_cnt13_t::init() {
+void cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("tbd", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt13_t::tbd);
-            register_get_func("tbd", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt13_t::tbd);
+            register_set_func("event", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::event);
+            register_get_func("event", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::event);
         }
         #endif
     
@@ -3510,6 +3605,34 @@ void cap_pxc_csr_sta_c_port_mac_t::init() {
     
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
+            register_set_func("trn2ltssm_l0s", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l0s);
+            register_get_func("trn2ltssm_l0s", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l0s);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("trn2ltssm_l1", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l1);
+            register_get_func("trn2ltssm_l1", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l1);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("trn2ltssm_l2", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l2);
+            register_get_func("trn2ltssm_l2", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l2);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("dpc_active", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::dpc_active);
+            register_get_func("dpc_active", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::dpc_active);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
             register_set_func("rc_int_pinstate", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::rc_int_pinstate);
             register_get_func("rc_int_pinstate", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::rc_int_pinstate);
         }
@@ -3526,6 +3649,31 @@ void cap_pxc_csr_sta_c_port_mac_t::init() {
         if(!get_field_init_done()) {
             register_set_func("pm_clkstatus", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::pm_clkstatus);
             register_get_func("pm_clkstatus", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::pm_clkstatus);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("tlp_tx_inhibited", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::tlp_tx_inhibited);
+            register_get_func("tlp_tx_inhibited", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::tlp_tx_inhibited);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("dllp_tx_inhibited", (cap_csr_base::set_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::dllp_tx_inhibited);
+            register_get_func("dllp_tx_inhibited", (cap_csr_base::get_function_type_t)&cap_pxc_csr_sta_c_port_mac_t::dllp_tx_inhibited);
+        }
+        #endif
+    
+}
+
+void cap_pxc_csr_cnt_c_tl_tx_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("tlp", (cap_csr_base::set_function_type_t)&cap_pxc_csr_cnt_c_tl_tx_t::tlp);
+            register_get_func("tlp", (cap_csr_base::get_function_type_t)&cap_pxc_csr_cnt_c_tl_tx_t::tlp);
         }
         #endif
     
@@ -3918,7 +4066,7 @@ void cap_pxc_csr_cfg_c_mac_k_pciconf_t::init() {
         }
         #endif
     
-    set_reset_val(cpp_int("0x8000000000000000000000000000006800004000100015560400000010001556"));
+    set_reset_val(cpp_int("0x8000000000000000000000000000006800004000100015560400000010001dd8"));
     all(get_reset_val());
 }
 
@@ -4266,10 +4414,11 @@ void cap_pxc_csr_t::init() {
     cfg_c_mac_k_bar0windows.set_attributes(this,"cfg_c_mac_k_bar0windows", 0x10f0 );
     cfg_c_port_mac.set_attributes(this,"cfg_c_port_mac", 0x10f8 );
     cnt_c_tl_rx.set_attributes(this,"cnt_c_tl_rx", 0x1100 );
-    sta_c_port_mac.set_attributes(this,"sta_c_port_mac", 0x1104 );
-    sta_c_port_rst.set_attributes(this,"sta_c_port_rst", 0x1108 );
-    cfg_c_portgate_open.set_attributes(this,"cfg_c_portgate_open", 0x110c );
-    cfg_c_portgate_close.set_attributes(this,"cfg_c_portgate_close", 0x1110 );
+    cnt_c_tl_tx.set_attributes(this,"cnt_c_tl_tx", 0x1104 );
+    sta_c_port_mac.set_attributes(this,"sta_c_port_mac", 0x1108 );
+    sta_c_port_rst.set_attributes(this,"sta_c_port_rst", 0x110c );
+    cfg_c_portgate_open.set_attributes(this,"cfg_c_portgate_open", 0x1110 );
+    cfg_c_portgate_close.set_attributes(this,"cfg_c_portgate_close", 0x1114 );
     cfg_c_ltr_latency.set_attributes(this,"cfg_c_ltr_latency", 0x1118 );
     cfg_c_autonomous_linkwidth.set_attributes(this,"cfg_c_autonomous_linkwidth", 0x1120 );
     cfg_c_ecc_disable.set_attributes(this,"cfg_c_ecc_disable", 0x1124 );
@@ -4295,9 +4444,9 @@ void cap_pxc_csr_t::init() {
     sat_c_port_cnt10.set_attributes(this,"sat_c_port_cnt10", 0x1178 );
     sat_c_port_cnt11.set_attributes(this,"sat_c_port_cnt11", 0x117c );
     sat_c_port_cnt12.set_attributes(this,"sat_c_port_cnt12", 0x1180 );
-    sat_c_port_cnt13.set_attributes(this,"sat_c_port_cnt13", 0x1184 );
-    sat_c_port_cnt14.set_attributes(this,"sat_c_port_cnt14", 0x1188 );
-    sat_c_port_cnt15.set_attributes(this,"sat_c_port_cnt15", 0x118c );
+    sat_c_port_cnt_rx_malform_tlp.set_attributes(this,"sat_c_port_cnt_rx_malform_tlp", 0x1184 );
+    sat_c_port_cnt_rx_framing_err.set_attributes(this,"sat_c_port_cnt_rx_framing_err", 0x1188 );
+    sat_c_port_cnt_txbfr_overflow.set_attributes(this,"sat_c_port_cnt_txbfr_overflow", 0x118c );
     sta_c_port_phystatus.set_attributes(this,"sta_c_port_phystatus", 0x1190 );
     dhs_c_mac_apb.set_attributes(this,"dhs_c_mac_apb", 0x0 );
 }
@@ -4320,31 +4469,31 @@ cpp_int cap_pxc_csr_sta_c_port_phystatus_t::per_lane() const {
     return int_var__per_lane.convert_to< cpp_int >();
 }
     
-void cap_pxc_csr_sat_c_port_cnt15_t::tbd(const cpp_int & _val) { 
-    // tbd
-    int_var__tbd = _val.convert_to< tbd_cpp_int_t >();
+void cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::event(const cpp_int & _val) { 
+    // event
+    int_var__event = _val.convert_to< event_cpp_int_t >();
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt15_t::tbd() const {
-    return int_var__tbd.convert_to< cpp_int >();
+cpp_int cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t::event() const {
+    return int_var__event.convert_to< cpp_int >();
 }
     
-void cap_pxc_csr_sat_c_port_cnt14_t::tbd(const cpp_int & _val) { 
-    // tbd
-    int_var__tbd = _val.convert_to< tbd_cpp_int_t >();
+void cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::event(const cpp_int & _val) { 
+    // event
+    int_var__event = _val.convert_to< event_cpp_int_t >();
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt14_t::tbd() const {
-    return int_var__tbd.convert_to< cpp_int >();
+cpp_int cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t::event() const {
+    return int_var__event.convert_to< cpp_int >();
 }
     
-void cap_pxc_csr_sat_c_port_cnt13_t::tbd(const cpp_int & _val) { 
-    // tbd
-    int_var__tbd = _val.convert_to< tbd_cpp_int_t >();
+void cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::event(const cpp_int & _val) { 
+    // event
+    int_var__event = _val.convert_to< event_cpp_int_t >();
 }
 
-cpp_int cap_pxc_csr_sat_c_port_cnt13_t::tbd() const {
-    return int_var__tbd.convert_to< cpp_int >();
+cpp_int cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t::event() const {
+    return int_var__event.convert_to< cpp_int >();
 }
     
 void cap_pxc_csr_sat_c_port_cnt12_t::tbd(const cpp_int & _val) { 
@@ -4770,6 +4919,42 @@ cpp_int cap_pxc_csr_sta_c_port_mac_t::lp_state() const {
     return int_var__lp_state.convert_to< cpp_int >();
 }
     
+void cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l0s(const cpp_int & _val) { 
+    // trn2ltssm_l0s
+    int_var__trn2ltssm_l0s = _val.convert_to< trn2ltssm_l0s_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l0s() const {
+    return int_var__trn2ltssm_l0s.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l1(const cpp_int & _val) { 
+    // trn2ltssm_l1
+    int_var__trn2ltssm_l1 = _val.convert_to< trn2ltssm_l1_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l1() const {
+    return int_var__trn2ltssm_l1.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l2(const cpp_int & _val) { 
+    // trn2ltssm_l2
+    int_var__trn2ltssm_l2 = _val.convert_to< trn2ltssm_l2_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::trn2ltssm_l2() const {
+    return int_var__trn2ltssm_l2.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_sta_c_port_mac_t::dpc_active(const cpp_int & _val) { 
+    // dpc_active
+    int_var__dpc_active = _val.convert_to< dpc_active_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::dpc_active() const {
+    return int_var__dpc_active.convert_to< cpp_int >();
+}
+    
 void cap_pxc_csr_sta_c_port_mac_t::rc_int_pinstate(const cpp_int & _val) { 
     // rc_int_pinstate
     int_var__rc_int_pinstate = _val.convert_to< rc_int_pinstate_cpp_int_t >();
@@ -4795,6 +4980,33 @@ void cap_pxc_csr_sta_c_port_mac_t::pm_clkstatus(const cpp_int & _val) {
 
 cpp_int cap_pxc_csr_sta_c_port_mac_t::pm_clkstatus() const {
     return int_var__pm_clkstatus.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_sta_c_port_mac_t::tlp_tx_inhibited(const cpp_int & _val) { 
+    // tlp_tx_inhibited
+    int_var__tlp_tx_inhibited = _val.convert_to< tlp_tx_inhibited_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::tlp_tx_inhibited() const {
+    return int_var__tlp_tx_inhibited.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_sta_c_port_mac_t::dllp_tx_inhibited(const cpp_int & _val) { 
+    // dllp_tx_inhibited
+    int_var__dllp_tx_inhibited = _val.convert_to< dllp_tx_inhibited_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_sta_c_port_mac_t::dllp_tx_inhibited() const {
+    return int_var__dllp_tx_inhibited.convert_to< cpp_int >();
+}
+    
+void cap_pxc_csr_cnt_c_tl_tx_t::tlp(const cpp_int & _val) { 
+    // tlp
+    int_var__tlp = _val.convert_to< tlp_cpp_int_t >();
+}
+
+cpp_int cap_pxc_csr_cnt_c_tl_tx_t::tlp() const {
+    return int_var__tlp.convert_to< cpp_int >();
 }
     
 void cap_pxc_csr_cnt_c_tl_rx_t::tlp(const cpp_int & _val) { 

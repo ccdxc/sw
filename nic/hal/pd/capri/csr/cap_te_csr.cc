@@ -21,6 +21,18 @@ cap_te_csr_sta_spare_t::cap_te_csr_sta_spare_t(string name, cap_csr_base * paren
         }
 cap_te_csr_sta_spare_t::~cap_te_csr_sta_spare_t() { }
 
+cap_te_csr_sta_wait_entry_t::cap_te_csr_sta_wait_entry_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_te_csr_sta_wait_entry_t::~cap_te_csr_sta_wait_entry_t() { }
+
+cap_te_csr_cfg_read_wait_entry_t::cap_te_csr_cfg_read_wait_entry_t(string name, cap_csr_base * parent): 
+    cap_register_base(name, parent)  { 
+        //init();
+        }
+cap_te_csr_cfg_read_wait_entry_t::~cap_te_csr_cfg_read_wait_entry_t() { }
+
 cap_te_csr_cfg_spare_t::cap_te_csr_cfg_spare_t(string name, cap_csr_base * parent): 
     cap_register_base(name, parent)  { 
         //init();
@@ -223,6 +235,19 @@ void cap_te_csr_sta_spare_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".spare: 0x" << int_var__spare << dec << endl)
 }
 
+void cap_te_csr_sta_wait_entry_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".key: 0x" << int_var__key << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".cam: 0x" << int_var__cam << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".haz: 0x" << int_var__haz << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".dat: 0x" << int_var__dat << dec << endl)
+}
+
+void cap_te_csr_cfg_read_wait_entry_t::show() {
+
+    PLOG_MSG(hex << string(get_hier_path()) << ".idx: 0x" << int_var__idx << dec << endl)
+}
+
 void cap_te_csr_cfg_spare_t::show() {
 
     PLOG_MSG(hex << string(get_hier_path()) << ".spare: 0x" << int_var__spare << dec << endl)
@@ -354,6 +379,8 @@ void cap_te_csr_cfg_table_property_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".max_bypass_cnt: 0x" << int_var__max_bypass_cnt << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".lock_en_raw: 0x" << int_var__lock_en_raw << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".mpu_lb: 0x" << int_var__mpu_lb << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".mpu_pc_loc: 0x" << int_var__mpu_pc_loc << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".oflow_base_idx: 0x" << int_var__oflow_base_idx << dec << endl)
 }
 
 void cap_te_csr_cfg_table_profile_t::show() {
@@ -426,7 +453,7 @@ void cap_te_csr_t::show() {
     for(int ii = 0; ii < 128; ii++) {
         cfg_km_profile_bit_sel[ii].show();
     }
-    for(int ii = 0; ii < 32; ii++) {
+    for(int ii = 0; ii < 16; ii++) {
         cfg_km_profile_bit_loc[ii].show();
     }
     dhs_single_step.show();
@@ -451,6 +478,8 @@ void cap_te_csr_t::show() {
     cfg_lock_timeout.show();
     sta_debug_bus.show();
     cfg_spare.show();
+    cfg_read_wait_entry.show();
+    sta_wait_entry.show();
     sta_spare.show();
     dhs_table_profile_ctrl_sram.show();
 }
@@ -467,6 +496,16 @@ int cap_te_csr_dhs_table_profile_ctrl_sram_t::get_width() const {
 
 int cap_te_csr_sta_spare_t::get_width() const {
     return cap_te_csr_sta_spare_t::s_get_width();
+
+}
+
+int cap_te_csr_sta_wait_entry_t::get_width() const {
+    return cap_te_csr_sta_wait_entry_t::s_get_width();
+
+}
+
+int cap_te_csr_cfg_read_wait_entry_t::get_width() const {
+    return cap_te_csr_cfg_read_wait_entry_t::s_get_width();
 
 }
 
@@ -647,6 +686,23 @@ int cap_te_csr_sta_spare_t::s_get_width() {
     return _count;
 }
 
+int cap_te_csr_sta_wait_entry_t::s_get_width() {
+    int _count = 0;
+
+    _count += 579; // key
+    _count += 101; // cam
+    _count += 17; // haz
+    _count += 512; // dat
+    return _count;
+}
+
+int cap_te_csr_cfg_read_wait_entry_t::s_get_width() {
+    int _count = 0;
+
+    _count += 4; // idx
+    return _count;
+}
+
 int cap_te_csr_cfg_spare_t::s_get_width() {
     int _count = 0;
 
@@ -819,6 +875,8 @@ int cap_te_csr_cfg_table_property_t::s_get_width() {
     _count += 10; // max_bypass_cnt
     _count += 1; // lock_en_raw
     _count += 1; // mpu_lb
+    _count += 6; // mpu_pc_loc
+    _count += 20; // oflow_base_idx
     return _count;
 }
 
@@ -891,7 +949,7 @@ int cap_te_csr_t::s_get_width() {
     _count += (cap_te_csr_cfg_table_mpu_const_t::s_get_width() * 16); // cfg_table_mpu_const
     _count += (cap_te_csr_cfg_km_profile_byte_sel_t::s_get_width() * 256); // cfg_km_profile_byte_sel
     _count += (cap_te_csr_cfg_km_profile_bit_sel_t::s_get_width() * 128); // cfg_km_profile_bit_sel
-    _count += (cap_te_csr_cfg_km_profile_bit_loc_t::s_get_width() * 32); // cfg_km_profile_bit_loc
+    _count += (cap_te_csr_cfg_km_profile_bit_loc_t::s_get_width() * 16); // cfg_km_profile_bit_loc
     _count += cap_te_csr_dhs_single_step_t::s_get_width(); // dhs_single_step
     _count += cap_te_csr_cnt_phv_in_sop_t::s_get_width(); // cnt_phv_in_sop
     _count += cap_te_csr_cnt_phv_in_eop_t::s_get_width(); // cnt_phv_in_eop
@@ -908,6 +966,8 @@ int cap_te_csr_t::s_get_width() {
     _count += cap_te_csr_cfg_lock_timeout_t::s_get_width(); // cfg_lock_timeout
     _count += cap_te_csr_sta_debug_bus_t::s_get_width(); // sta_debug_bus
     _count += cap_te_csr_cfg_spare_t::s_get_width(); // cfg_spare
+    _count += cap_te_csr_cfg_read_wait_entry_t::s_get_width(); // cfg_read_wait_entry
+    _count += cap_te_csr_sta_wait_entry_t::s_get_width(); // sta_wait_entry
     _count += cap_te_csr_sta_spare_t::s_get_width(); // sta_spare
     _count += cap_te_csr_dhs_table_profile_ctrl_sram_t::s_get_width(); // dhs_table_profile_ctrl_sram
     return _count;
@@ -985,6 +1045,31 @@ void cap_te_csr_sta_spare_t::all(const cpp_int & _val) {
     // spare
     int_var__spare = hlp.get_slc(_val, _count, _count -1 + 128 ).convert_to< spare_cpp_int_t >()  ;
     _count += 128;
+}
+
+void cap_te_csr_sta_wait_entry_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // key
+    int_var__key = hlp.get_slc(_val, _count, _count -1 + 579 ).convert_to< key_cpp_int_t >()  ;
+    _count += 579;
+    // cam
+    int_var__cam = hlp.get_slc(_val, _count, _count -1 + 101 ).convert_to< cam_cpp_int_t >()  ;
+    _count += 101;
+    // haz
+    int_var__haz = hlp.get_slc(_val, _count, _count -1 + 17 ).convert_to< haz_cpp_int_t >()  ;
+    _count += 17;
+    // dat
+    int_var__dat = hlp.get_slc(_val, _count, _count -1 + 512 ).convert_to< dat_cpp_int_t >()  ;
+    _count += 512;
+}
+
+void cap_te_csr_cfg_read_wait_entry_t::all(const cpp_int & _val) {
+    int _count = 0;
+
+    // idx
+    int_var__idx = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< idx_cpp_int_t >()  ;
+    _count += 4;
 }
 
 void cap_te_csr_cfg_spare_t::all(const cpp_int & _val) {
@@ -1237,6 +1322,12 @@ void cap_te_csr_cfg_table_property_t::all(const cpp_int & _val) {
     // mpu_lb
     int_var__mpu_lb = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< mpu_lb_cpp_int_t >()  ;
     _count += 1;
+    // mpu_pc_loc
+    int_var__mpu_pc_loc = hlp.get_slc(_val, _count, _count -1 + 6 ).convert_to< mpu_pc_loc_cpp_int_t >()  ;
+    _count += 6;
+    // oflow_base_idx
+    int_var__oflow_base_idx = hlp.get_slc(_val, _count, _count -1 + 20 ).convert_to< oflow_base_idx_cpp_int_t >()  ;
+    _count += 20;
 }
 
 void cap_te_csr_cfg_table_profile_t::all(const cpp_int & _val) {
@@ -1374,7 +1465,7 @@ void cap_te_csr_t::all(const cpp_int & _val) {
         _count += cfg_km_profile_bit_sel[ii].get_width();
     }
     // cfg_km_profile_bit_loc
-    for(int ii = 0; ii < 32; ii++) {
+    for(int ii = 0; ii < 16; ii++) {
         cfg_km_profile_bit_loc[ii].all( hlp.get_slc(_val, _count, _count -1 + cfg_km_profile_bit_loc[ii].get_width()));
         _count += cfg_km_profile_bit_loc[ii].get_width();
     }
@@ -1419,6 +1510,10 @@ void cap_te_csr_t::all(const cpp_int & _val) {
     _count += sta_debug_bus.get_width();
     cfg_spare.all( hlp.get_slc(_val, _count, _count -1 + cfg_spare.get_width() )); // cfg_spare
     _count += cfg_spare.get_width();
+    cfg_read_wait_entry.all( hlp.get_slc(_val, _count, _count -1 + cfg_read_wait_entry.get_width() )); // cfg_read_wait_entry
+    _count += cfg_read_wait_entry.get_width();
+    sta_wait_entry.all( hlp.get_slc(_val, _count, _count -1 + sta_wait_entry.get_width() )); // sta_wait_entry
+    _count += sta_wait_entry.get_width();
     sta_spare.all( hlp.get_slc(_val, _count, _count -1 + sta_spare.get_width() )); // sta_spare
     _count += sta_spare.get_width();
     dhs_table_profile_ctrl_sram.all( hlp.get_slc(_val, _count, _count -1 + dhs_table_profile_ctrl_sram.get_width() )); // dhs_table_profile_ctrl_sram
@@ -1502,6 +1597,35 @@ cpp_int cap_te_csr_sta_spare_t::all() const {
     // spare
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__spare) , _count, _count -1 + 128 );
     _count += 128;
+    return ret_val;
+}
+
+cpp_int cap_te_csr_sta_wait_entry_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // key
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__key) , _count, _count -1 + 579 );
+    _count += 579;
+    // cam
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__cam) , _count, _count -1 + 101 );
+    _count += 101;
+    // haz
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__haz) , _count, _count -1 + 17 );
+    _count += 17;
+    // dat
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__dat) , _count, _count -1 + 512 );
+    _count += 512;
+    return ret_val;
+}
+
+cpp_int cap_te_csr_cfg_read_wait_entry_t::all() const {
+    int _count = 0;
+    cpp_int ret_val;
+
+    // idx
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__idx) , _count, _count -1 + 4 );
+    _count += 4;
     return ret_val;
 }
 
@@ -1796,6 +1920,12 @@ cpp_int cap_te_csr_cfg_table_property_t::all() const {
     // mpu_lb
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__mpu_lb) , _count, _count -1 + 1 );
     _count += 1;
+    // mpu_pc_loc
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__mpu_pc_loc) , _count, _count -1 + 6 );
+    _count += 6;
+    // oflow_base_idx
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__oflow_base_idx) , _count, _count -1 + 20 );
+    _count += 20;
     return ret_val;
 }
 
@@ -1947,7 +2077,7 @@ cpp_int cap_te_csr_t::all() const {
         _count += cfg_km_profile_bit_sel[ii].get_width();
     }
     // cfg_km_profile_bit_loc
-    for(int ii = 0; ii < 32; ii++) {
+    for(int ii = 0; ii < 16; ii++) {
          ret_val = hlp.set_slc(ret_val, cfg_km_profile_bit_loc[ii].all() , _count, _count -1 + cfg_km_profile_bit_loc[ii].get_width() );
         _count += cfg_km_profile_bit_loc[ii].get_width();
     }
@@ -1992,6 +2122,10 @@ cpp_int cap_te_csr_t::all() const {
     _count += sta_debug_bus.get_width();
     ret_val = hlp.set_slc(ret_val, cfg_spare.all() , _count, _count -1 + cfg_spare.get_width() ); // cfg_spare
     _count += cfg_spare.get_width();
+    ret_val = hlp.set_slc(ret_val, cfg_read_wait_entry.all() , _count, _count -1 + cfg_read_wait_entry.get_width() ); // cfg_read_wait_entry
+    _count += cfg_read_wait_entry.get_width();
+    ret_val = hlp.set_slc(ret_val, sta_wait_entry.all() , _count, _count -1 + sta_wait_entry.get_width() ); // sta_wait_entry
+    _count += sta_wait_entry.get_width();
     ret_val = hlp.set_slc(ret_val, sta_spare.all() , _count, _count -1 + sta_spare.get_width() ); // sta_spare
     _count += sta_spare.get_width();
     ret_val = hlp.set_slc(ret_val, dhs_table_profile_ctrl_sram.all() , _count, _count -1 + dhs_table_profile_ctrl_sram.get_width() ); // dhs_table_profile_ctrl_sram
@@ -2136,6 +2270,49 @@ void cap_te_csr_sta_spare_t::init() {
         if(!get_field_init_done()) {
             register_set_func("spare", (cap_csr_base::set_function_type_t)&cap_te_csr_sta_spare_t::spare);
             register_get_func("spare", (cap_csr_base::get_function_type_t)&cap_te_csr_sta_spare_t::spare);
+        }
+        #endif
+    
+}
+
+void cap_te_csr_sta_wait_entry_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("key", (cap_csr_base::set_function_type_t)&cap_te_csr_sta_wait_entry_t::key);
+            register_get_func("key", (cap_csr_base::get_function_type_t)&cap_te_csr_sta_wait_entry_t::key);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("cam", (cap_csr_base::set_function_type_t)&cap_te_csr_sta_wait_entry_t::cam);
+            register_get_func("cam", (cap_csr_base::get_function_type_t)&cap_te_csr_sta_wait_entry_t::cam);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("haz", (cap_csr_base::set_function_type_t)&cap_te_csr_sta_wait_entry_t::haz);
+            register_get_func("haz", (cap_csr_base::get_function_type_t)&cap_te_csr_sta_wait_entry_t::haz);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("dat", (cap_csr_base::set_function_type_t)&cap_te_csr_sta_wait_entry_t::dat);
+            register_get_func("dat", (cap_csr_base::get_function_type_t)&cap_te_csr_sta_wait_entry_t::dat);
+        }
+        #endif
+    
+}
+
+void cap_te_csr_cfg_read_wait_entry_t::init() {
+
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("idx", (cap_csr_base::set_function_type_t)&cap_te_csr_cfg_read_wait_entry_t::idx);
+            register_get_func("idx", (cap_csr_base::get_function_type_t)&cap_te_csr_cfg_read_wait_entry_t::idx);
         }
         #endif
     
@@ -2568,6 +2745,20 @@ void cap_te_csr_cfg_table_property_t::init() {
         }
         #endif
     
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("mpu_pc_loc", (cap_csr_base::set_function_type_t)&cap_te_csr_cfg_table_property_t::mpu_pc_loc);
+            register_get_func("mpu_pc_loc", (cap_csr_base::get_function_type_t)&cap_te_csr_cfg_table_property_t::mpu_pc_loc);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("oflow_base_idx", (cap_csr_base::set_function_type_t)&cap_te_csr_cfg_table_property_t::oflow_base_idx);
+            register_get_func("oflow_base_idx", (cap_csr_base::get_function_type_t)&cap_te_csr_cfg_table_property_t::oflow_base_idx);
+        }
+        #endif
+    
     set_reset_val(cpp_int("0xffc8000000000000000000001e0000000000000000"));
     all(get_reset_val());
 }
@@ -2775,36 +2966,38 @@ void cap_te_csr_t::init() {
         if(ii != 0) cfg_km_profile_bit_sel[ii].set_field_init_done(true);
         cfg_km_profile_bit_sel[ii].set_attributes(this,"cfg_km_profile_bit_sel["+to_string(ii)+"]",  0x2000 + (cfg_km_profile_bit_sel[ii].get_byte_size()*ii));
     }
-    for(int ii = 0; ii < 32; ii++) {
+    for(int ii = 0; ii < 16; ii++) {
         if(ii != 0) cfg_km_profile_bit_loc[ii].set_field_init_done(true);
         cfg_km_profile_bit_loc[ii].set_attributes(this,"cfg_km_profile_bit_loc["+to_string(ii)+"]",  0x2200 + (cfg_km_profile_bit_loc[ii].get_byte_size()*ii));
     }
-    dhs_single_step.set_attributes(this,"dhs_single_step", 0x2280 );
-    cnt_phv_in_sop.set_attributes(this,"cnt_phv_in_sop", 0x2284 );
-    cnt_phv_in_eop.set_attributes(this,"cnt_phv_in_eop", 0x2288 );
-    cnt_phv_out_sop.set_attributes(this,"cnt_phv_out_sop", 0x228c );
-    cnt_phv_out_eop.set_attributes(this,"cnt_phv_out_eop", 0x2290 );
-    cnt_axi_rdreq.set_attributes(this,"cnt_axi_rdreq", 0x2294 );
-    cnt_axi_rdrsp.set_attributes(this,"cnt_axi_rdrsp", 0x2298 );
-    cnt_tcam_req.set_attributes(this,"cnt_tcam_req", 0x229c );
-    cnt_tcam_rsp.set_attributes(this,"cnt_tcam_rsp", 0x22a0 );
+    dhs_single_step.set_attributes(this,"dhs_single_step", 0x2240 );
+    cnt_phv_in_sop.set_attributes(this,"cnt_phv_in_sop", 0x2244 );
+    cnt_phv_in_eop.set_attributes(this,"cnt_phv_in_eop", 0x2248 );
+    cnt_phv_out_sop.set_attributes(this,"cnt_phv_out_sop", 0x224c );
+    cnt_phv_out_eop.set_attributes(this,"cnt_phv_out_eop", 0x2250 );
+    cnt_axi_rdreq.set_attributes(this,"cnt_axi_rdreq", 0x2254 );
+    cnt_axi_rdrsp.set_attributes(this,"cnt_axi_rdrsp", 0x2258 );
+    cnt_tcam_req.set_attributes(this,"cnt_tcam_req", 0x225c );
+    cnt_tcam_rsp.set_attributes(this,"cnt_tcam_rsp", 0x2260 );
     for(int ii = 0; ii < 4; ii++) {
         if(ii != 0) cnt_mpu_out[ii].set_field_init_done(true);
-        cnt_mpu_out[ii].set_attributes(this,"cnt_mpu_out["+to_string(ii)+"]",  0x22b0 + (cnt_mpu_out[ii].get_byte_size()*ii));
+        cnt_mpu_out[ii].set_attributes(this,"cnt_mpu_out["+to_string(ii)+"]",  0x2270 + (cnt_mpu_out[ii].get_byte_size()*ii));
     }
     for(int ii = 0; ii < 4; ii++) {
         if(ii != 0) cnt_debug[ii].set_field_init_done(true);
-        cnt_debug[ii].set_attributes(this,"cnt_debug["+to_string(ii)+"]",  0x22c0 + (cnt_debug[ii].get_byte_size()*ii));
+        cnt_debug[ii].set_attributes(this,"cnt_debug["+to_string(ii)+"]",  0x2280 + (cnt_debug[ii].get_byte_size()*ii));
     }
     for(int ii = 0; ii < 4; ii++) {
         if(ii != 0) cfg_cnt_debug[ii].set_field_init_done(true);
-        cfg_cnt_debug[ii].set_attributes(this,"cfg_cnt_debug["+to_string(ii)+"]",  0x22d0 + (cfg_cnt_debug[ii].get_byte_size()*ii));
+        cfg_cnt_debug[ii].set_attributes(this,"cfg_cnt_debug["+to_string(ii)+"]",  0x2290 + (cfg_cnt_debug[ii].get_byte_size()*ii));
     }
-    cfg_debug_bus.set_attributes(this,"cfg_debug_bus", 0x22e0 );
-    cfg_lock_timeout.set_attributes(this,"cfg_lock_timeout", 0x22e4 );
-    sta_debug_bus.set_attributes(this,"sta_debug_bus", 0x2300 );
-    cfg_spare.set_attributes(this,"cfg_spare", 0x2320 );
-    sta_spare.set_attributes(this,"sta_spare", 0x2330 );
+    cfg_debug_bus.set_attributes(this,"cfg_debug_bus", 0x22a0 );
+    cfg_lock_timeout.set_attributes(this,"cfg_lock_timeout", 0x22a4 );
+    sta_debug_bus.set_attributes(this,"sta_debug_bus", 0x22c0 );
+    cfg_spare.set_attributes(this,"cfg_spare", 0x22e0 );
+    cfg_read_wait_entry.set_attributes(this,"cfg_read_wait_entry", 0x22e8 );
+    sta_wait_entry.set_attributes(this,"sta_wait_entry", 0x2300 );
+    sta_spare.set_attributes(this,"sta_spare", 0x2400 );
     dhs_table_profile_ctrl_sram.set_attributes(this,"dhs_table_profile_ctrl_sram", 0x800 );
 }
 
@@ -2968,6 +3161,51 @@ void cap_te_csr_sta_spare_t::spare(const cpp_int & _val) {
 
 cpp_int cap_te_csr_sta_spare_t::spare() const {
     return int_var__spare.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_sta_wait_entry_t::key(const cpp_int & _val) { 
+    // key
+    int_var__key = _val.convert_to< key_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_sta_wait_entry_t::key() const {
+    return int_var__key.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_sta_wait_entry_t::cam(const cpp_int & _val) { 
+    // cam
+    int_var__cam = _val.convert_to< cam_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_sta_wait_entry_t::cam() const {
+    return int_var__cam.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_sta_wait_entry_t::haz(const cpp_int & _val) { 
+    // haz
+    int_var__haz = _val.convert_to< haz_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_sta_wait_entry_t::haz() const {
+    return int_var__haz.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_sta_wait_entry_t::dat(const cpp_int & _val) { 
+    // dat
+    int_var__dat = _val.convert_to< dat_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_sta_wait_entry_t::dat() const {
+    return int_var__dat.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_cfg_read_wait_entry_t::idx(const cpp_int & _val) { 
+    // idx
+    int_var__idx = _val.convert_to< idx_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_cfg_read_wait_entry_t::idx() const {
+    return int_var__idx.convert_to< cpp_int >();
 }
     
 void cap_te_csr_cfg_spare_t::spare(const cpp_int & _val) { 
@@ -3409,6 +3647,24 @@ void cap_te_csr_cfg_table_property_t::mpu_lb(const cpp_int & _val) {
 
 cpp_int cap_te_csr_cfg_table_property_t::mpu_lb() const {
     return int_var__mpu_lb.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_cfg_table_property_t::mpu_pc_loc(const cpp_int & _val) { 
+    // mpu_pc_loc
+    int_var__mpu_pc_loc = _val.convert_to< mpu_pc_loc_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_cfg_table_property_t::mpu_pc_loc() const {
+    return int_var__mpu_pc_loc.convert_to< cpp_int >();
+}
+    
+void cap_te_csr_cfg_table_property_t::oflow_base_idx(const cpp_int & _val) { 
+    // oflow_base_idx
+    int_var__oflow_base_idx = _val.convert_to< oflow_base_idx_cpp_int_t >();
+}
+
+cpp_int cap_te_csr_cfg_table_property_t::oflow_base_idx() const {
+    return int_var__oflow_base_idx.convert_to< cpp_int >();
 }
     
 void cap_te_csr_cfg_table_profile_t::mpu_results(const cpp_int & _val) { 

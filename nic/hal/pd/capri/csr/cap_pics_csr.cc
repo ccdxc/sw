@@ -161,6 +161,7 @@ void cap_pics_csr_cfg_table_profile_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".hash: 0x" << int_var__hash << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".opcode: 0x" << int_var__opcode << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".log2bkts: 0x" << int_var__log2bkts << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".axishift: 0x" << int_var__axishift << dec << endl)
 }
 
 void cap_pics_csr_cfg_sram_t::show() {
@@ -355,7 +356,8 @@ int cap_pics_csr_cfg_table_profile_t::s_get_width() {
     _count += 6; // width
     _count += 1; // hash
     _count += 9; // opcode
-    _count += 1; // log2bkts
+    _count += 3; // log2bkts
+    _count += 5; // axishift
     return _count;
 }
 
@@ -528,8 +530,11 @@ void cap_pics_csr_cfg_table_profile_t::all(const cpp_int & _val) {
     int_var__opcode = hlp.get_slc(_val, _count, _count -1 + 9 ).convert_to< opcode_cpp_int_t >()  ;
     _count += 9;
     // log2bkts
-    int_var__log2bkts = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< log2bkts_cpp_int_t >()  ;
-    _count += 1;
+    int_var__log2bkts = hlp.get_slc(_val, _count, _count -1 + 3 ).convert_to< log2bkts_cpp_int_t >()  ;
+    _count += 3;
+    // axishift
+    int_var__axishift = hlp.get_slc(_val, _count, _count -1 + 5 ).convert_to< axishift_cpp_int_t >()  ;
+    _count += 5;
 }
 
 void cap_pics_csr_cfg_sram_t::all(const cpp_int & _val) {
@@ -744,8 +749,11 @@ cpp_int cap_pics_csr_cfg_table_profile_t::all() const {
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__opcode) , _count, _count -1 + 9 );
     _count += 9;
     // log2bkts
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__log2bkts) , _count, _count -1 + 1 );
-    _count += 1;
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__log2bkts) , _count, _count -1 + 3 );
+    _count += 3;
+    // axishift
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__axishift) , _count, _count -1 + 5 );
+    _count += 5;
     return ret_val;
 }
 
@@ -1040,6 +1048,13 @@ void cap_pics_csr_cfg_table_profile_t::init() {
         }
         #endif
     
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("axishift", (cap_csr_base::set_function_type_t)&cap_pics_csr_cfg_table_profile_t::axishift);
+            register_get_func("axishift", (cap_csr_base::get_function_type_t)&cap_pics_csr_cfg_table_profile_t::axishift);
+        }
+        #endif
+    
 }
 
 void cap_pics_csr_cfg_sram_t::init() {
@@ -1328,6 +1343,15 @@ void cap_pics_csr_cfg_table_profile_t::log2bkts(const cpp_int & _val) {
 
 cpp_int cap_pics_csr_cfg_table_profile_t::log2bkts() const {
     return int_var__log2bkts.convert_to< cpp_int >();
+}
+    
+void cap_pics_csr_cfg_table_profile_t::axishift(const cpp_int & _val) { 
+    // axishift
+    int_var__axishift = _val.convert_to< axishift_cpp_int_t >();
+}
+
+cpp_int cap_pics_csr_cfg_table_profile_t::axishift() const {
+    return int_var__axishift.convert_to< cpp_int >();
 }
     
 void cap_pics_csr_cfg_sram_t::ecc_disable_cor(const cpp_int & _val) { 

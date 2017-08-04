@@ -16,7 +16,7 @@ cpu *cpu::access(void) {
 cpu::cpu() {
 }
 
-uint32_t cpu::read(uint32_t chip, uint64_t addr) {
+uint32_t cpu::read(uint32_t chip, uint64_t addr, bool no_zero_time) {
     uint32_t data;
 
     (void)chip;
@@ -24,7 +24,7 @@ uint32_t cpu::read(uint32_t chip, uint64_t addr) {
     return data;
 }
 
-void cpu::write(uint32_t chip, uint64_t addr, uint32_t data) {
+void cpu::write(uint32_t chip, uint64_t addr, uint32_t data, bool no_zero_time) {
     (void)chip;
     write_reg(addr, data);
 }

@@ -1890,9 +1890,6 @@ void cap_pxb_csr_sta_itr_ecc_wrbfr_0_t::show() {
 
 void cap_pxb_csr_cfg_tgt_ecc_disable_t::show() {
 
-    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_cor: 0x" << int_var__rxcrbfr_cor << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_det: 0x" << int_var__rxcrbfr_det << dec << endl)
-    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_dhs: 0x" << int_var__rxcrbfr_dhs << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rxinfo_cor: 0x" << int_var__rxinfo_cor << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rxinfo_det: 0x" << int_var__rxinfo_det << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".rxinfo_dhs: 0x" << int_var__rxinfo_dhs << dec << endl)
@@ -1911,6 +1908,9 @@ void cap_pxb_csr_cfg_tgt_ecc_disable_t::show() {
     PLOG_MSG(hex << string(get_hier_path()) << ".romask_cor: 0x" << int_var__romask_cor << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".romask_det: 0x" << int_var__romask_det << dec << endl)
     PLOG_MSG(hex << string(get_hier_path()) << ".romask_dhs: 0x" << int_var__romask_dhs << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_cor: 0x" << int_var__rxcrbfr_cor << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_det: 0x" << int_var__rxcrbfr_det << dec << endl)
+    PLOG_MSG(hex << string(get_hier_path()) << ".rxcrbfr_dhs: 0x" << int_var__rxcrbfr_dhs << dec << endl)
 }
 
 void cap_pxb_csr_cfg_itr_ecc_disable_t::show() {
@@ -4195,9 +4195,6 @@ int cap_pxb_csr_sta_itr_ecc_wrbfr_0_t::s_get_width() {
 int cap_pxb_csr_cfg_tgt_ecc_disable_t::s_get_width() {
     int _count = 0;
 
-    _count += 1; // rxcrbfr_cor
-    _count += 1; // rxcrbfr_det
-    _count += 1; // rxcrbfr_dhs
     _count += 1; // rxinfo_cor
     _count += 1; // rxinfo_det
     _count += 1; // rxinfo_dhs
@@ -4216,6 +4213,9 @@ int cap_pxb_csr_cfg_tgt_ecc_disable_t::s_get_width() {
     _count += 1; // romask_cor
     _count += 1; // romask_det
     _count += 1; // romask_dhs
+    _count += 4; // rxcrbfr_cor
+    _count += 4; // rxcrbfr_det
+    _count += 4; // rxcrbfr_dhs
     return _count;
 }
 
@@ -6392,15 +6392,6 @@ void cap_pxb_csr_sta_itr_ecc_wrbfr_0_t::all(const cpp_int & _val) {
 void cap_pxb_csr_cfg_tgt_ecc_disable_t::all(const cpp_int & _val) {
     int _count = 0;
 
-    // rxcrbfr_cor
-    int_var__rxcrbfr_cor = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< rxcrbfr_cor_cpp_int_t >()  ;
-    _count += 1;
-    // rxcrbfr_det
-    int_var__rxcrbfr_det = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< rxcrbfr_det_cpp_int_t >()  ;
-    _count += 1;
-    // rxcrbfr_dhs
-    int_var__rxcrbfr_dhs = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< rxcrbfr_dhs_cpp_int_t >()  ;
-    _count += 1;
     // rxinfo_cor
     int_var__rxinfo_cor = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< rxinfo_cor_cpp_int_t >()  ;
     _count += 1;
@@ -6455,6 +6446,15 @@ void cap_pxb_csr_cfg_tgt_ecc_disable_t::all(const cpp_int & _val) {
     // romask_dhs
     int_var__romask_dhs = hlp.get_slc(_val, _count, _count -1 + 1 ).convert_to< romask_dhs_cpp_int_t >()  ;
     _count += 1;
+    // rxcrbfr_cor
+    int_var__rxcrbfr_cor = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< rxcrbfr_cor_cpp_int_t >()  ;
+    _count += 4;
+    // rxcrbfr_det
+    int_var__rxcrbfr_det = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< rxcrbfr_det_cpp_int_t >()  ;
+    _count += 4;
+    // rxcrbfr_dhs
+    int_var__rxcrbfr_dhs = hlp.get_slc(_val, _count, _count -1 + 4 ).convert_to< rxcrbfr_dhs_cpp_int_t >()  ;
+    _count += 4;
 }
 
 void cap_pxb_csr_cfg_itr_ecc_disable_t::all(const cpp_int & _val) {
@@ -9340,15 +9340,6 @@ cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::all() const {
     int _count = 0;
     cpp_int ret_val;
 
-    // rxcrbfr_cor
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_cor) , _count, _count -1 + 1 );
-    _count += 1;
-    // rxcrbfr_det
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_det) , _count, _count -1 + 1 );
-    _count += 1;
-    // rxcrbfr_dhs
-    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_dhs) , _count, _count -1 + 1 );
-    _count += 1;
     // rxinfo_cor
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxinfo_cor) , _count, _count -1 + 1 );
     _count += 1;
@@ -9403,6 +9394,15 @@ cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::all() const {
     // romask_dhs
     ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__romask_dhs) , _count, _count -1 + 1 );
     _count += 1;
+    // rxcrbfr_cor
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_cor) , _count, _count -1 + 4 );
+    _count += 4;
+    // rxcrbfr_det
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_det) , _count, _count -1 + 4 );
+    _count += 4;
+    // rxcrbfr_dhs
+    ret_val = hlp.set_slc(ret_val, static_cast<cpp_int>(int_var__rxcrbfr_dhs) , _count, _count -1 + 4 );
+    _count += 4;
     return ret_val;
 }
 
@@ -13077,27 +13077,6 @@ void cap_pxb_csr_cfg_tgt_ecc_disable_t::init() {
 
         #ifndef EXCLUDE_PER_FIELD_CNTRL
         if(!get_field_init_done()) {
-            register_set_func("rxcrbfr_cor", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor);
-            register_get_func("rxcrbfr_cor", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor);
-        }
-        #endif
-    
-        #ifndef EXCLUDE_PER_FIELD_CNTRL
-        if(!get_field_init_done()) {
-            register_set_func("rxcrbfr_det", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det);
-            register_get_func("rxcrbfr_det", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det);
-        }
-        #endif
-    
-        #ifndef EXCLUDE_PER_FIELD_CNTRL
-        if(!get_field_init_done()) {
-            register_set_func("rxcrbfr_dhs", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs);
-            register_get_func("rxcrbfr_dhs", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs);
-        }
-        #endif
-    
-        #ifndef EXCLUDE_PER_FIELD_CNTRL
-        if(!get_field_init_done()) {
             register_set_func("rxinfo_cor", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxinfo_cor);
             register_get_func("rxinfo_cor", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxinfo_cor);
         }
@@ -13219,6 +13198,27 @@ void cap_pxb_csr_cfg_tgt_ecc_disable_t::init() {
         if(!get_field_init_done()) {
             register_set_func("romask_dhs", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::romask_dhs);
             register_get_func("romask_dhs", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::romask_dhs);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("rxcrbfr_cor", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor);
+            register_get_func("rxcrbfr_cor", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("rxcrbfr_det", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det);
+            register_get_func("rxcrbfr_det", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det);
+        }
+        #endif
+    
+        #ifndef EXCLUDE_PER_FIELD_CNTRL
+        if(!get_field_init_done()) {
+            register_set_func("rxcrbfr_dhs", (cap_csr_base::set_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs);
+            register_get_func("rxcrbfr_dhs", (cap_csr_base::get_function_type_t)&cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs);
         }
         #endif
     
@@ -17287,33 +17287,6 @@ cpp_int cap_pxb_csr_sta_itr_ecc_wrbfr_0_t::addr() const {
     return int_var__addr.convert_to< cpp_int >();
 }
     
-void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor(const cpp_int & _val) { 
-    // rxcrbfr_cor
-    int_var__rxcrbfr_cor = _val.convert_to< rxcrbfr_cor_cpp_int_t >();
-}
-
-cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor() const {
-    return int_var__rxcrbfr_cor.convert_to< cpp_int >();
-}
-    
-void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det(const cpp_int & _val) { 
-    // rxcrbfr_det
-    int_var__rxcrbfr_det = _val.convert_to< rxcrbfr_det_cpp_int_t >();
-}
-
-cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det() const {
-    return int_var__rxcrbfr_det.convert_to< cpp_int >();
-}
-    
-void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs(const cpp_int & _val) { 
-    // rxcrbfr_dhs
-    int_var__rxcrbfr_dhs = _val.convert_to< rxcrbfr_dhs_cpp_int_t >();
-}
-
-cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs() const {
-    return int_var__rxcrbfr_dhs.convert_to< cpp_int >();
-}
-    
 void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxinfo_cor(const cpp_int & _val) { 
     // rxinfo_cor
     int_var__rxinfo_cor = _val.convert_to< rxinfo_cor_cpp_int_t >();
@@ -17474,6 +17447,33 @@ void cap_pxb_csr_cfg_tgt_ecc_disable_t::romask_dhs(const cpp_int & _val) {
 
 cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::romask_dhs() const {
     return int_var__romask_dhs.convert_to< cpp_int >();
+}
+    
+void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor(const cpp_int & _val) { 
+    // rxcrbfr_cor
+    int_var__rxcrbfr_cor = _val.convert_to< rxcrbfr_cor_cpp_int_t >();
+}
+
+cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_cor() const {
+    return int_var__rxcrbfr_cor.convert_to< cpp_int >();
+}
+    
+void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det(const cpp_int & _val) { 
+    // rxcrbfr_det
+    int_var__rxcrbfr_det = _val.convert_to< rxcrbfr_det_cpp_int_t >();
+}
+
+cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_det() const {
+    return int_var__rxcrbfr_det.convert_to< cpp_int >();
+}
+    
+void cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs(const cpp_int & _val) { 
+    // rxcrbfr_dhs
+    int_var__rxcrbfr_dhs = _val.convert_to< rxcrbfr_dhs_cpp_int_t >();
+}
+
+cpp_int cap_pxb_csr_cfg_tgt_ecc_disable_t::rxcrbfr_dhs() const {
+    return int_var__rxcrbfr_dhs.convert_to< cpp_int >();
 }
     
 void cap_pxb_csr_cfg_itr_ecc_disable_t::pcihdrt_cor(const cpp_int & _val) { 

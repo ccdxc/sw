@@ -63,12 +63,12 @@ class cap_pxc_csr_sta_c_port_phystatus_t : public cap_register_base {
     
 }; // cap_pxc_csr_sta_c_port_phystatus_t
     
-class cap_pxc_csr_sat_c_port_cnt15_t : public cap_register_base {
+class cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_pxc_csr_sat_c_port_cnt15_t(string name = "cap_pxc_csr_sat_c_port_cnt15_t", cap_csr_base *parent = 0);
-        virtual ~cap_pxc_csr_sat_c_port_cnt15_t();
+        cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t(string name = "cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t", cap_csr_base *parent = 0);
+        virtual ~cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -76,19 +76,19 @@ class cap_pxc_csr_sat_c_port_cnt15_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 8 > tbd_cpp_int_t;
-        tbd_cpp_int_t int_var__tbd;
-        void tbd (const cpp_int  & l__val);
-        cpp_int tbd() const;
+        typedef pu_cpp_int< 8 > event_cpp_int_t;
+        event_cpp_int_t int_var__event;
+        void event (const cpp_int  & l__val);
+        cpp_int event() const;
     
-}; // cap_pxc_csr_sat_c_port_cnt15_t
+}; // cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t
     
-class cap_pxc_csr_sat_c_port_cnt14_t : public cap_register_base {
+class cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_pxc_csr_sat_c_port_cnt14_t(string name = "cap_pxc_csr_sat_c_port_cnt14_t", cap_csr_base *parent = 0);
-        virtual ~cap_pxc_csr_sat_c_port_cnt14_t();
+        cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t(string name = "cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t", cap_csr_base *parent = 0);
+        virtual ~cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -96,19 +96,19 @@ class cap_pxc_csr_sat_c_port_cnt14_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 8 > tbd_cpp_int_t;
-        tbd_cpp_int_t int_var__tbd;
-        void tbd (const cpp_int  & l__val);
-        cpp_int tbd() const;
+        typedef pu_cpp_int< 8 > event_cpp_int_t;
+        event_cpp_int_t int_var__event;
+        void event (const cpp_int  & l__val);
+        cpp_int event() const;
     
-}; // cap_pxc_csr_sat_c_port_cnt14_t
+}; // cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t
     
-class cap_pxc_csr_sat_c_port_cnt13_t : public cap_register_base {
+class cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_pxc_csr_sat_c_port_cnt13_t(string name = "cap_pxc_csr_sat_c_port_cnt13_t", cap_csr_base *parent = 0);
-        virtual ~cap_pxc_csr_sat_c_port_cnt13_t();
+        cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t(string name = "cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t", cap_csr_base *parent = 0);
+        virtual ~cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -116,12 +116,12 @@ class cap_pxc_csr_sat_c_port_cnt13_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 8 > tbd_cpp_int_t;
-        tbd_cpp_int_t int_var__tbd;
-        void tbd (const cpp_int  & l__val);
-        cpp_int tbd() const;
+        typedef pu_cpp_int< 8 > event_cpp_int_t;
+        event_cpp_int_t int_var__event;
+        void event (const cpp_int  & l__val);
+        cpp_int event() const;
     
-}; // cap_pxc_csr_sat_c_port_cnt13_t
+}; // cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t
     
 class cap_pxc_csr_sat_c_port_cnt12_t : public cap_register_base {
     public:
@@ -791,6 +791,26 @@ class cap_pxc_csr_sta_c_port_mac_t : public cap_register_base {
         void lp_state (const cpp_int  & l__val);
         cpp_int lp_state() const;
     
+        typedef pu_cpp_int< 1 > trn2ltssm_l0s_cpp_int_t;
+        trn2ltssm_l0s_cpp_int_t int_var__trn2ltssm_l0s;
+        void trn2ltssm_l0s (const cpp_int  & l__val);
+        cpp_int trn2ltssm_l0s() const;
+    
+        typedef pu_cpp_int< 1 > trn2ltssm_l1_cpp_int_t;
+        trn2ltssm_l1_cpp_int_t int_var__trn2ltssm_l1;
+        void trn2ltssm_l1 (const cpp_int  & l__val);
+        cpp_int trn2ltssm_l1() const;
+    
+        typedef pu_cpp_int< 1 > trn2ltssm_l2_cpp_int_t;
+        trn2ltssm_l2_cpp_int_t int_var__trn2ltssm_l2;
+        void trn2ltssm_l2 (const cpp_int  & l__val);
+        cpp_int trn2ltssm_l2() const;
+    
+        typedef pu_cpp_int< 1 > dpc_active_cpp_int_t;
+        dpc_active_cpp_int_t int_var__dpc_active;
+        void dpc_active (const cpp_int  & l__val);
+        cpp_int dpc_active() const;
+    
         typedef pu_cpp_int< 4 > rc_int_pinstate_cpp_int_t;
         rc_int_pinstate_cpp_int_t int_var__rc_int_pinstate;
         void rc_int_pinstate (const cpp_int  & l__val);
@@ -806,7 +826,37 @@ class cap_pxc_csr_sta_c_port_mac_t : public cap_register_base {
         void pm_clkstatus (const cpp_int  & l__val);
         cpp_int pm_clkstatus() const;
     
+        typedef pu_cpp_int< 1 > tlp_tx_inhibited_cpp_int_t;
+        tlp_tx_inhibited_cpp_int_t int_var__tlp_tx_inhibited;
+        void tlp_tx_inhibited (const cpp_int  & l__val);
+        cpp_int tlp_tx_inhibited() const;
+    
+        typedef pu_cpp_int< 1 > dllp_tx_inhibited_cpp_int_t;
+        dllp_tx_inhibited_cpp_int_t int_var__dllp_tx_inhibited;
+        void dllp_tx_inhibited (const cpp_int  & l__val);
+        cpp_int dllp_tx_inhibited() const;
+    
 }; // cap_pxc_csr_sta_c_port_mac_t
+    
+class cap_pxc_csr_cnt_c_tl_tx_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_pxc_csr_cnt_c_tl_tx_t(string name = "cap_pxc_csr_cnt_c_tl_tx_t", cap_csr_base *parent = 0);
+        virtual ~cap_pxc_csr_cnt_c_tl_tx_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > tlp_cpp_int_t;
+        tlp_cpp_int_t int_var__tlp;
+        void tlp (const cpp_int  & l__val);
+        cpp_int tlp() const;
+    
+}; // cap_pxc_csr_cnt_c_tl_tx_t
     
 class cap_pxc_csr_cnt_c_tl_rx_t : public cap_register_base {
     public:
@@ -1466,6 +1516,8 @@ class cap_pxc_csr_t : public cap_block_base {
     
         cap_pxc_csr_cnt_c_tl_rx_t cnt_c_tl_rx;
     
+        cap_pxc_csr_cnt_c_tl_tx_t cnt_c_tl_tx;
+    
         cap_pxc_csr_sta_c_port_mac_t sta_c_port_mac;
     
         cap_pxc_csr_sta_c_port_rst_t sta_c_port_rst;
@@ -1524,11 +1576,11 @@ class cap_pxc_csr_t : public cap_block_base {
     
         cap_pxc_csr_sat_c_port_cnt12_t sat_c_port_cnt12;
     
-        cap_pxc_csr_sat_c_port_cnt13_t sat_c_port_cnt13;
+        cap_pxc_csr_sat_c_port_cnt_rx_malform_tlp_t sat_c_port_cnt_rx_malform_tlp;
     
-        cap_pxc_csr_sat_c_port_cnt14_t sat_c_port_cnt14;
+        cap_pxc_csr_sat_c_port_cnt_rx_framing_err_t sat_c_port_cnt_rx_framing_err;
     
-        cap_pxc_csr_sat_c_port_cnt15_t sat_c_port_cnt15;
+        cap_pxc_csr_sat_c_port_cnt_txbfr_overflow_t sat_c_port_cnt_txbfr_overflow;
     
         cap_pxc_csr_sta_c_port_phystatus_t sta_c_port_phystatus;
     

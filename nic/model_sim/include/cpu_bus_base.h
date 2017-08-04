@@ -28,6 +28,12 @@ class cpu_csr_node_info_base {
 
         virtual void write(uint64_t addr, uint32_t data) {};
         virtual uint32_t read(uint64_t addr) { return 0xdeadbeef; };
+        virtual void block_write(uint64_t addr, int size, vector<uint32_t> data) {}
+        virtual vector<uint32_t> block_read(uint64_t addr, int size) {
+            vector<uint32_t> a;
+            for(int ii = 0; ii < size; ii++) { a.push_back(0xdeadbeef); }
+            return a;
+        }
 };
 
 
@@ -57,6 +63,9 @@ public:
 
   virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e) = 0 ; 
   virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e) = 0;
+  virtual void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, cpu_access_type_e do_backdoor=front_door_e) = 0;
+  virtual vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, cpu_access_type_e do_backdoor=front_door_e) = 0; 
+
   //virtual int call_uvm_hdl_deposit(uint32_t chip, char * path, vector<uint32_t> & value) { return 0; }
 
 };

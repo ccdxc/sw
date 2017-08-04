@@ -4055,7 +4055,7 @@ void cap_pp_csr_t::init() {
     dhs_sbus_indir.set_attributes(this,"dhs_sbus_indir", 0x20010 );
     for(int ii = 0; ii < 8; ii++) {
         if(ii != 0) port_p[ii].set_field_init_done(true);
-        port_p[ii].set_attributes(this,"port_p["+to_string(ii)+"]",  0x400 + (port_p[ii].get_byte_size()*ii));
+        port_p[ii].set_attributes(this,"port_p["+to_string(ii)+"]",  0x800 + (port_p[ii].get_byte_size()*ii));
     }
     for(int ii = 0; ii < 8; ii++) {
         if(ii != 0) port_c[ii].set_field_init_done(true);

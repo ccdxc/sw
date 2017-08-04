@@ -25,6 +25,81 @@ class cap_ptd_csr_cfg_spare_dbg_t : public cap_register_base {
     
 }; // cap_ptd_csr_cfg_spare_dbg_t
     
+class cap_ptd_csr_CNT_ptd_pb_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ptd_csr_CNT_ptd_pb_t(string name = "cap_ptd_csr_CNT_ptd_pb_t", cap_csr_base *parent = 0);
+        virtual ~cap_ptd_csr_CNT_ptd_pb_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ptd_csr_CNT_ptd_pb_t
+    
+class cap_ptd_csr_CNT_ptd_npv_resub_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ptd_csr_CNT_ptd_npv_resub_t(string name = "cap_ptd_csr_CNT_ptd_npv_resub_t", cap_csr_base *parent = 0);
+        virtual ~cap_ptd_csr_CNT_ptd_npv_resub_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ptd_csr_CNT_ptd_npv_resub_t
+    
+class cap_ptd_csr_CNT_ptd_ma_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_ptd_csr_CNT_ptd_ma_t(string name = "cap_ptd_csr_CNT_ptd_ma_t", cap_csr_base *parent = 0);
+        virtual ~cap_ptd_csr_CNT_ptd_ma_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > sop_cpp_int_t;
+        sop_cpp_int_t int_var__sop;
+        void sop (const cpp_int  & l__val);
+        cpp_int sop() const;
+    
+        typedef pu_cpp_int< 32 > eop_cpp_int_t;
+        eop_cpp_int_t int_var__eop;
+        void eop (const cpp_int  & l__val);
+        cpp_int eop() const;
+    
+}; // cap_ptd_csr_CNT_ptd_ma_t
+    
 class cap_ptd_csr_cfg_xoff_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
@@ -239,6 +314,12 @@ class cap_ptd_csr_t : public cap_block_base {
         cap_ptd_csr_axi_attr_t axi_attr;
     
         cap_ptd_csr_cfg_xoff_t cfg_xoff;
+    
+        cap_ptd_csr_CNT_ptd_ma_t CNT_ptd_ma;
+    
+        cap_ptd_csr_CNT_ptd_npv_resub_t CNT_ptd_npv_resub;
+    
+        cap_ptd_csr_CNT_ptd_pb_t CNT_ptd_pb;
     
         cap_ptd_csr_cfg_spare_dbg_t cfg_spare_dbg;
     

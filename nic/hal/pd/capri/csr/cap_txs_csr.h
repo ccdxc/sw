@@ -18,10 +18,280 @@ class cap_txs_csr_dhs_sch_grp_sram_entry_t : public cap_register_base {
         virtual void all (const cpp_int & l__val);
         virtual cpp_int all() const;
     
-        typedef pu_cpp_int< 600 > data_cpp_int_t;
-        data_cpp_int_t int_var__data;
-        void data (const cpp_int  & l__val);
-        cpp_int data() const;
+        typedef pu_cpp_int< 11 > spare_cpp_int_t;
+        spare_cpp_int_t int_var__spare;
+        void spare (const cpp_int  & l__val);
+        cpp_int spare() const;
+    
+        typedef pu_cpp_int< 11 > qid_offset_cpp_int_t;
+        qid_offset_cpp_int_t int_var__qid_offset;
+        void qid_offset (const cpp_int  & l__val);
+        cpp_int qid_offset() const;
+    
+        typedef pu_cpp_int< 11 > lif_cpp_int_t;
+        lif_cpp_int_t int_var__lif;
+        void lif (const cpp_int  & l__val);
+        cpp_int lif() const;
+    
+        typedef pu_cpp_int< 1 > auto_clr_cpp_int_t;
+        auto_clr_cpp_int_t int_var__auto_clr;
+        void auto_clr (const cpp_int  & l__val);
+        cpp_int auto_clr() const;
+    
+        typedef pu_cpp_int< 4 > rr_sel_cpp_int_t;
+        rr_sel_cpp_int_t int_var__rr_sel;
+        void rr_sel (const cpp_int  & l__val);
+        cpp_int rr_sel() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm0_cpp_int_t;
+        qid_fifo_elm0_cpp_int_t int_var__qid_fifo_elm0;
+        void qid_fifo_elm0 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm0() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm1_cpp_int_t;
+        qid_fifo_elm1_cpp_int_t int_var__qid_fifo_elm1;
+        void qid_fifo_elm1 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm1() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm2_cpp_int_t;
+        qid_fifo_elm2_cpp_int_t int_var__qid_fifo_elm2;
+        void qid_fifo_elm2 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm2() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm3_cpp_int_t;
+        qid_fifo_elm3_cpp_int_t int_var__qid_fifo_elm3;
+        void qid_fifo_elm3 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm3() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm4_cpp_int_t;
+        qid_fifo_elm4_cpp_int_t int_var__qid_fifo_elm4;
+        void qid_fifo_elm4 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm4() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm5_cpp_int_t;
+        qid_fifo_elm5_cpp_int_t int_var__qid_fifo_elm5;
+        void qid_fifo_elm5 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm5() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm6_cpp_int_t;
+        qid_fifo_elm6_cpp_int_t int_var__qid_fifo_elm6;
+        void qid_fifo_elm6 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm6() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm7_cpp_int_t;
+        qid_fifo_elm7_cpp_int_t int_var__qid_fifo_elm7;
+        void qid_fifo_elm7 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm7() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm8_cpp_int_t;
+        qid_fifo_elm8_cpp_int_t int_var__qid_fifo_elm8;
+        void qid_fifo_elm8 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm8() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm9_cpp_int_t;
+        qid_fifo_elm9_cpp_int_t int_var__qid_fifo_elm9;
+        void qid_fifo_elm9 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm9() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm10_cpp_int_t;
+        qid_fifo_elm10_cpp_int_t int_var__qid_fifo_elm10;
+        void qid_fifo_elm10 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm10() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm11_cpp_int_t;
+        qid_fifo_elm11_cpp_int_t int_var__qid_fifo_elm11;
+        void qid_fifo_elm11 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm11() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm12_cpp_int_t;
+        qid_fifo_elm12_cpp_int_t int_var__qid_fifo_elm12;
+        void qid_fifo_elm12 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm12() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm13_cpp_int_t;
+        qid_fifo_elm13_cpp_int_t int_var__qid_fifo_elm13;
+        void qid_fifo_elm13 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm13() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm14_cpp_int_t;
+        qid_fifo_elm14_cpp_int_t int_var__qid_fifo_elm14;
+        void qid_fifo_elm14 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm14() const;
+    
+        typedef pu_cpp_int< 15 > qid_fifo_elm15_cpp_int_t;
+        qid_fifo_elm15_cpp_int_t int_var__qid_fifo_elm15;
+        void qid_fifo_elm15 (const cpp_int  & l__val);
+        cpp_int qid_fifo_elm15() const;
+    
+        typedef pu_cpp_int< 4 > hbm_ln_cpp_int_t;
+        hbm_ln_cpp_int_t int_var__hbm_ln;
+        void hbm_ln (const cpp_int  & l__val);
+        cpp_int hbm_ln() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr0_cpp_int_t;
+        hbm_ln_ptr0_cpp_int_t int_var__hbm_ln_ptr0;
+        void hbm_ln_ptr0 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr0() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr1_cpp_int_t;
+        hbm_ln_ptr1_cpp_int_t int_var__hbm_ln_ptr1;
+        void hbm_ln_ptr1 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr1() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr2_cpp_int_t;
+        hbm_ln_ptr2_cpp_int_t int_var__hbm_ln_ptr2;
+        void hbm_ln_ptr2 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr2() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr3_cpp_int_t;
+        hbm_ln_ptr3_cpp_int_t int_var__hbm_ln_ptr3;
+        void hbm_ln_ptr3 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr3() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr4_cpp_int_t;
+        hbm_ln_ptr4_cpp_int_t int_var__hbm_ln_ptr4;
+        void hbm_ln_ptr4 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr4() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr5_cpp_int_t;
+        hbm_ln_ptr5_cpp_int_t int_var__hbm_ln_ptr5;
+        void hbm_ln_ptr5 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr5() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr6_cpp_int_t;
+        hbm_ln_ptr6_cpp_int_t int_var__hbm_ln_ptr6;
+        void hbm_ln_ptr6 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr6() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr7_cpp_int_t;
+        hbm_ln_ptr7_cpp_int_t int_var__hbm_ln_ptr7;
+        void hbm_ln_ptr7 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr7() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr8_cpp_int_t;
+        hbm_ln_ptr8_cpp_int_t int_var__hbm_ln_ptr8;
+        void hbm_ln_ptr8 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr8() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr9_cpp_int_t;
+        hbm_ln_ptr9_cpp_int_t int_var__hbm_ln_ptr9;
+        void hbm_ln_ptr9 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr9() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr10_cpp_int_t;
+        hbm_ln_ptr10_cpp_int_t int_var__hbm_ln_ptr10;
+        void hbm_ln_ptr10 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr10() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr11_cpp_int_t;
+        hbm_ln_ptr11_cpp_int_t int_var__hbm_ln_ptr11;
+        void hbm_ln_ptr11 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr11() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr12_cpp_int_t;
+        hbm_ln_ptr12_cpp_int_t int_var__hbm_ln_ptr12;
+        void hbm_ln_ptr12 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr12() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr13_cpp_int_t;
+        hbm_ln_ptr13_cpp_int_t int_var__hbm_ln_ptr13;
+        void hbm_ln_ptr13 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr13() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr14_cpp_int_t;
+        hbm_ln_ptr14_cpp_int_t int_var__hbm_ln_ptr14;
+        void hbm_ln_ptr14 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr14() const;
+    
+        typedef pu_cpp_int< 9 > hbm_ln_ptr15_cpp_int_t;
+        hbm_ln_ptr15_cpp_int_t int_var__hbm_ln_ptr15;
+        void hbm_ln_ptr15 (const cpp_int  & l__val);
+        cpp_int hbm_ln_ptr15() const;
+    
+        typedef pu_cpp_int< 14 > drb_cnt_cpp_int_t;
+        drb_cnt_cpp_int_t int_var__drb_cnt;
+        void drb_cnt (const cpp_int  & l__val);
+        cpp_int drb_cnt() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt0_cpp_int_t;
+        hbm_ln_cnt0_cpp_int_t int_var__hbm_ln_cnt0;
+        void hbm_ln_cnt0 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt0() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt1_cpp_int_t;
+        hbm_ln_cnt1_cpp_int_t int_var__hbm_ln_cnt1;
+        void hbm_ln_cnt1 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt1() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt2_cpp_int_t;
+        hbm_ln_cnt2_cpp_int_t int_var__hbm_ln_cnt2;
+        void hbm_ln_cnt2 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt2() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt3_cpp_int_t;
+        hbm_ln_cnt3_cpp_int_t int_var__hbm_ln_cnt3;
+        void hbm_ln_cnt3 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt3() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt4_cpp_int_t;
+        hbm_ln_cnt4_cpp_int_t int_var__hbm_ln_cnt4;
+        void hbm_ln_cnt4 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt4() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt5_cpp_int_t;
+        hbm_ln_cnt5_cpp_int_t int_var__hbm_ln_cnt5;
+        void hbm_ln_cnt5 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt5() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt6_cpp_int_t;
+        hbm_ln_cnt6_cpp_int_t int_var__hbm_ln_cnt6;
+        void hbm_ln_cnt6 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt6() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt7_cpp_int_t;
+        hbm_ln_cnt7_cpp_int_t int_var__hbm_ln_cnt7;
+        void hbm_ln_cnt7 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt7() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt8_cpp_int_t;
+        hbm_ln_cnt8_cpp_int_t int_var__hbm_ln_cnt8;
+        void hbm_ln_cnt8 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt8() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt9_cpp_int_t;
+        hbm_ln_cnt9_cpp_int_t int_var__hbm_ln_cnt9;
+        void hbm_ln_cnt9 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt9() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt10_cpp_int_t;
+        hbm_ln_cnt10_cpp_int_t int_var__hbm_ln_cnt10;
+        void hbm_ln_cnt10 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt10() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt11_cpp_int_t;
+        hbm_ln_cnt11_cpp_int_t int_var__hbm_ln_cnt11;
+        void hbm_ln_cnt11 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt11() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt12_cpp_int_t;
+        hbm_ln_cnt12_cpp_int_t int_var__hbm_ln_cnt12;
+        void hbm_ln_cnt12 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt12() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt13_cpp_int_t;
+        hbm_ln_cnt13_cpp_int_t int_var__hbm_ln_cnt13;
+        void hbm_ln_cnt13 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt13() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt14_cpp_int_t;
+        hbm_ln_cnt14_cpp_int_t int_var__hbm_ln_cnt14;
+        void hbm_ln_cnt14 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt14() const;
+    
+        typedef pu_cpp_int< 10 > hbm_ln_cnt15_cpp_int_t;
+        hbm_ln_cnt15_cpp_int_t int_var__hbm_ln_cnt15;
+        void hbm_ln_cnt15 (const cpp_int  & l__val);
+        cpp_int hbm_ln_cnt15() const;
     
         typedef pu_cpp_int< 40 > ecc_cpp_int_t;
         ecc_cpp_int_t int_var__ecc;
@@ -1602,12 +1872,12 @@ class cap_txs_csr_sta_glb_t : public cap_register_base {
     
 }; // cap_txs_csr_sta_glb_t
     
-class cap_txs_csr_cnt_txdma_cos15_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos15_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos15_t(string name = "cap_txs_csr_cnt_txdma_cos15_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos15_t();
+        cap_txs_csr_cnt_sch_txdma_cos15_t(string name = "cap_txs_csr_cnt_sch_txdma_cos15_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos15_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1620,14 +1890,14 @@ class cap_txs_csr_cnt_txdma_cos15_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos15_t
+}; // cap_txs_csr_cnt_sch_txdma_cos15_t
     
-class cap_txs_csr_cnt_txdma_cos14_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos14_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos14_t(string name = "cap_txs_csr_cnt_txdma_cos14_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos14_t();
+        cap_txs_csr_cnt_sch_txdma_cos14_t(string name = "cap_txs_csr_cnt_sch_txdma_cos14_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos14_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1640,14 +1910,14 @@ class cap_txs_csr_cnt_txdma_cos14_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos14_t
+}; // cap_txs_csr_cnt_sch_txdma_cos14_t
     
-class cap_txs_csr_cnt_txdma_cos13_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos13_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos13_t(string name = "cap_txs_csr_cnt_txdma_cos13_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos13_t();
+        cap_txs_csr_cnt_sch_txdma_cos13_t(string name = "cap_txs_csr_cnt_sch_txdma_cos13_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos13_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1660,14 +1930,14 @@ class cap_txs_csr_cnt_txdma_cos13_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos13_t
+}; // cap_txs_csr_cnt_sch_txdma_cos13_t
     
-class cap_txs_csr_cnt_txdma_cos12_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos12_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos12_t(string name = "cap_txs_csr_cnt_txdma_cos12_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos12_t();
+        cap_txs_csr_cnt_sch_txdma_cos12_t(string name = "cap_txs_csr_cnt_sch_txdma_cos12_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos12_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1680,14 +1950,14 @@ class cap_txs_csr_cnt_txdma_cos12_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos12_t
+}; // cap_txs_csr_cnt_sch_txdma_cos12_t
     
-class cap_txs_csr_cnt_txdma_cos11_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos11_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos11_t(string name = "cap_txs_csr_cnt_txdma_cos11_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos11_t();
+        cap_txs_csr_cnt_sch_txdma_cos11_t(string name = "cap_txs_csr_cnt_sch_txdma_cos11_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos11_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1700,14 +1970,14 @@ class cap_txs_csr_cnt_txdma_cos11_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos11_t
+}; // cap_txs_csr_cnt_sch_txdma_cos11_t
     
-class cap_txs_csr_cnt_txdma_cos10_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos10_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos10_t(string name = "cap_txs_csr_cnt_txdma_cos10_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos10_t();
+        cap_txs_csr_cnt_sch_txdma_cos10_t(string name = "cap_txs_csr_cnt_sch_txdma_cos10_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos10_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1720,14 +1990,14 @@ class cap_txs_csr_cnt_txdma_cos10_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos10_t
+}; // cap_txs_csr_cnt_sch_txdma_cos10_t
     
-class cap_txs_csr_cnt_txdma_cos9_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos9_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos9_t(string name = "cap_txs_csr_cnt_txdma_cos9_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos9_t();
+        cap_txs_csr_cnt_sch_txdma_cos9_t(string name = "cap_txs_csr_cnt_sch_txdma_cos9_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos9_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1740,14 +2010,14 @@ class cap_txs_csr_cnt_txdma_cos9_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos9_t
+}; // cap_txs_csr_cnt_sch_txdma_cos9_t
     
-class cap_txs_csr_cnt_txdma_cos8_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos8_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos8_t(string name = "cap_txs_csr_cnt_txdma_cos8_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos8_t();
+        cap_txs_csr_cnt_sch_txdma_cos8_t(string name = "cap_txs_csr_cnt_sch_txdma_cos8_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos8_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1760,14 +2030,14 @@ class cap_txs_csr_cnt_txdma_cos8_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos8_t
+}; // cap_txs_csr_cnt_sch_txdma_cos8_t
     
-class cap_txs_csr_cnt_txdma_cos7_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos7_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos7_t(string name = "cap_txs_csr_cnt_txdma_cos7_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos7_t();
+        cap_txs_csr_cnt_sch_txdma_cos7_t(string name = "cap_txs_csr_cnt_sch_txdma_cos7_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos7_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1780,14 +2050,14 @@ class cap_txs_csr_cnt_txdma_cos7_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos7_t
+}; // cap_txs_csr_cnt_sch_txdma_cos7_t
     
-class cap_txs_csr_cnt_txdma_cos6_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos6_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos6_t(string name = "cap_txs_csr_cnt_txdma_cos6_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos6_t();
+        cap_txs_csr_cnt_sch_txdma_cos6_t(string name = "cap_txs_csr_cnt_sch_txdma_cos6_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos6_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1800,14 +2070,14 @@ class cap_txs_csr_cnt_txdma_cos6_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos6_t
+}; // cap_txs_csr_cnt_sch_txdma_cos6_t
     
-class cap_txs_csr_cnt_txdma_cos5_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos5_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos5_t(string name = "cap_txs_csr_cnt_txdma_cos5_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos5_t();
+        cap_txs_csr_cnt_sch_txdma_cos5_t(string name = "cap_txs_csr_cnt_sch_txdma_cos5_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos5_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1820,14 +2090,14 @@ class cap_txs_csr_cnt_txdma_cos5_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos5_t
+}; // cap_txs_csr_cnt_sch_txdma_cos5_t
     
-class cap_txs_csr_cnt_txdma_cos4_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos4_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos4_t(string name = "cap_txs_csr_cnt_txdma_cos4_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos4_t();
+        cap_txs_csr_cnt_sch_txdma_cos4_t(string name = "cap_txs_csr_cnt_sch_txdma_cos4_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos4_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1840,14 +2110,14 @@ class cap_txs_csr_cnt_txdma_cos4_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos4_t
+}; // cap_txs_csr_cnt_sch_txdma_cos4_t
     
-class cap_txs_csr_cnt_txdma_cos3_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos3_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos3_t(string name = "cap_txs_csr_cnt_txdma_cos3_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos3_t();
+        cap_txs_csr_cnt_sch_txdma_cos3_t(string name = "cap_txs_csr_cnt_sch_txdma_cos3_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos3_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1860,14 +2130,14 @@ class cap_txs_csr_cnt_txdma_cos3_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos3_t
+}; // cap_txs_csr_cnt_sch_txdma_cos3_t
     
-class cap_txs_csr_cnt_txdma_cos2_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos2_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos2_t(string name = "cap_txs_csr_cnt_txdma_cos2_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos2_t();
+        cap_txs_csr_cnt_sch_txdma_cos2_t(string name = "cap_txs_csr_cnt_sch_txdma_cos2_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos2_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1880,14 +2150,14 @@ class cap_txs_csr_cnt_txdma_cos2_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos2_t
+}; // cap_txs_csr_cnt_sch_txdma_cos2_t
     
-class cap_txs_csr_cnt_txdma_cos1_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos1_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos1_t(string name = "cap_txs_csr_cnt_txdma_cos1_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos1_t();
+        cap_txs_csr_cnt_sch_txdma_cos1_t(string name = "cap_txs_csr_cnt_sch_txdma_cos1_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos1_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1900,14 +2170,14 @@ class cap_txs_csr_cnt_txdma_cos1_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos1_t
+}; // cap_txs_csr_cnt_sch_txdma_cos1_t
     
-class cap_txs_csr_cnt_txdma_cos0_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_txdma_cos0_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_txdma_cos0_t(string name = "cap_txs_csr_cnt_txdma_cos0_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_txdma_cos0_t();
+        cap_txs_csr_cnt_sch_txdma_cos0_t(string name = "cap_txs_csr_cnt_sch_txdma_cos0_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_txdma_cos0_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1920,14 +2190,14 @@ class cap_txs_csr_cnt_txdma_cos0_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_txdma_cos0_t
+}; // cap_txs_csr_cnt_sch_txdma_cos0_t
     
-class cap_txs_csr_cnt_doorbell_t : public cap_register_base {
+class cap_txs_csr_cnt_sch_doorbell_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
     
-        cap_txs_csr_cnt_doorbell_t(string name = "cap_txs_csr_cnt_doorbell_t", cap_csr_base *parent = 0);
-        virtual ~cap_txs_csr_cnt_doorbell_t();
+        cap_txs_csr_cnt_sch_doorbell_t(string name = "cap_txs_csr_cnt_sch_doorbell_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_sch_doorbell_t();
         virtual void init();
         virtual int get_width() const;
         static int s_get_width() ;
@@ -1940,7 +2210,7 @@ class cap_txs_csr_cnt_doorbell_t : public cap_register_base {
         void val (const cpp_int  & l__val);
         cpp_int val() const;
     
-}; // cap_txs_csr_cnt_doorbell_t
+}; // cap_txs_csr_cnt_sch_doorbell_t
     
 class cap_txs_csr_cfg_sch_t : public cap_register_base {
     public:
@@ -2052,6 +2322,26 @@ class cap_txs_csr_cfw_scheduler_glb_t : public cap_register_base {
     
 }; // cap_txs_csr_cfw_scheduler_glb_t
     
+class cap_txs_csr_cnt_tmr_hashovrf_t : public cap_register_base {
+    public:
+        cpp_int_helper hlp;
+    
+        cap_txs_csr_cnt_tmr_hashovrf_t(string name = "cap_txs_csr_cnt_tmr_hashovrf_t", cap_csr_base *parent = 0);
+        virtual ~cap_txs_csr_cnt_tmr_hashovrf_t();
+        virtual void init();
+        virtual int get_width() const;
+        static int s_get_width() ;
+        virtual void show();
+        virtual void all (const cpp_int & l__val);
+        virtual cpp_int all() const;
+    
+        typedef pu_cpp_int< 32 > val_cpp_int_t;
+        val_cpp_int_t int_var__val;
+        void val (const cpp_int  & l__val);
+        cpp_int val() const;
+    
+}; // cap_txs_csr_cnt_tmr_hashovrf_t
+    
 class cap_txs_csr_sta_slow_timer_t : public cap_register_base {
     public:
         cpp_int_helper hlp;
@@ -2114,6 +2404,11 @@ class cap_txs_csr_cfg_slow_timer_dbell_t : public cap_register_base {
         data_pid_cpp_int_t int_var__data_pid;
         void data_pid (const cpp_int  & l__val);
         cpp_int data_pid() const;
+    
+        typedef pu_cpp_int< 16 > data_reserved_cpp_int_t;
+        data_reserved_cpp_int_t int_var__data_reserved;
+        void data_reserved (const cpp_int  & l__val);
+        cpp_int data_reserved() const;
     
         typedef pu_cpp_int< 16 > data_index_cpp_int_t;
         data_index_cpp_int_t int_var__data_index;
@@ -2209,6 +2504,11 @@ class cap_txs_csr_cfg_fast_timer_dbell_t : public cap_register_base {
         data_pid_cpp_int_t int_var__data_pid;
         void data_pid (const cpp_int  & l__val);
         cpp_int data_pid() const;
+    
+        typedef pu_cpp_int< 16 > data_reserved_cpp_int_t;
+        data_reserved_cpp_int_t int_var__data_reserved;
+        void data_reserved (const cpp_int  & l__val);
+        cpp_int data_reserved() const;
     
         typedef pu_cpp_int< 16 > data_index_cpp_int_t;
         data_index_cpp_int_t int_var__data_index;
@@ -2370,7 +2670,7 @@ class cap_txs_csr_cfg_timer_static_t : public cap_register_base {
         void hbm_base (const cpp_int  & l__val);
         cpp_int hbm_base() const;
     
-        typedef pu_cpp_int< 20 > tmr_hsh_depth_cpp_int_t;
+        typedef pu_cpp_int< 24 > tmr_hsh_depth_cpp_int_t;
         tmr_hsh_depth_cpp_int_t int_var__tmr_hsh_depth;
         void tmr_hsh_depth (const cpp_int  & l__val);
         cpp_int tmr_hsh_depth() const;
@@ -2459,45 +2759,47 @@ class cap_txs_csr_t : public cap_block_base {
     
         cap_txs_csr_sta_slow_timer_t sta_slow_timer;
     
+        cap_txs_csr_cnt_tmr_hashovrf_t cnt_tmr_hashovrf;
+    
         cap_txs_csr_cfw_scheduler_glb_t cfw_scheduler_glb;
     
         cap_txs_csr_cfw_scheduler_static_t cfw_scheduler_static;
     
         cap_txs_csr_cfg_sch_t cfg_sch;
     
-        cap_txs_csr_cnt_doorbell_t cnt_doorbell;
+        cap_txs_csr_cnt_sch_doorbell_t cnt_sch_doorbell;
     
-        cap_txs_csr_cnt_txdma_cos0_t cnt_txdma_cos0;
+        cap_txs_csr_cnt_sch_txdma_cos0_t cnt_sch_txdma_cos0;
     
-        cap_txs_csr_cnt_txdma_cos1_t cnt_txdma_cos1;
+        cap_txs_csr_cnt_sch_txdma_cos1_t cnt_sch_txdma_cos1;
     
-        cap_txs_csr_cnt_txdma_cos2_t cnt_txdma_cos2;
+        cap_txs_csr_cnt_sch_txdma_cos2_t cnt_sch_txdma_cos2;
     
-        cap_txs_csr_cnt_txdma_cos3_t cnt_txdma_cos3;
+        cap_txs_csr_cnt_sch_txdma_cos3_t cnt_sch_txdma_cos3;
     
-        cap_txs_csr_cnt_txdma_cos4_t cnt_txdma_cos4;
+        cap_txs_csr_cnt_sch_txdma_cos4_t cnt_sch_txdma_cos4;
     
-        cap_txs_csr_cnt_txdma_cos5_t cnt_txdma_cos5;
+        cap_txs_csr_cnt_sch_txdma_cos5_t cnt_sch_txdma_cos5;
     
-        cap_txs_csr_cnt_txdma_cos6_t cnt_txdma_cos6;
+        cap_txs_csr_cnt_sch_txdma_cos6_t cnt_sch_txdma_cos6;
     
-        cap_txs_csr_cnt_txdma_cos7_t cnt_txdma_cos7;
+        cap_txs_csr_cnt_sch_txdma_cos7_t cnt_sch_txdma_cos7;
     
-        cap_txs_csr_cnt_txdma_cos8_t cnt_txdma_cos8;
+        cap_txs_csr_cnt_sch_txdma_cos8_t cnt_sch_txdma_cos8;
     
-        cap_txs_csr_cnt_txdma_cos9_t cnt_txdma_cos9;
+        cap_txs_csr_cnt_sch_txdma_cos9_t cnt_sch_txdma_cos9;
     
-        cap_txs_csr_cnt_txdma_cos10_t cnt_txdma_cos10;
+        cap_txs_csr_cnt_sch_txdma_cos10_t cnt_sch_txdma_cos10;
     
-        cap_txs_csr_cnt_txdma_cos11_t cnt_txdma_cos11;
+        cap_txs_csr_cnt_sch_txdma_cos11_t cnt_sch_txdma_cos11;
     
-        cap_txs_csr_cnt_txdma_cos12_t cnt_txdma_cos12;
+        cap_txs_csr_cnt_sch_txdma_cos12_t cnt_sch_txdma_cos12;
     
-        cap_txs_csr_cnt_txdma_cos13_t cnt_txdma_cos13;
+        cap_txs_csr_cnt_sch_txdma_cos13_t cnt_sch_txdma_cos13;
     
-        cap_txs_csr_cnt_txdma_cos14_t cnt_txdma_cos14;
+        cap_txs_csr_cnt_sch_txdma_cos14_t cnt_sch_txdma_cos14;
     
-        cap_txs_csr_cnt_txdma_cos15_t cnt_txdma_cos15;
+        cap_txs_csr_cnt_sch_txdma_cos15_t cnt_sch_txdma_cos15;
     
         cap_txs_csr_sta_glb_t sta_glb;
     
