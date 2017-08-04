@@ -20,6 +20,8 @@ import (
 	"strings"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
@@ -299,4 +301,12 @@ func (r *Registry) FileManager() *FileManager {
 // ViewManager returns the ViewManager singleton
 func (r *Registry) ViewManager() *ViewManager {
 	return r.Get(r.content().ViewManager.Reference()).(*ViewManager)
+}
+
+func (r *Registry) Dump() {
+	log.Infof("#### %v ####", r.counter)
+	for m := range r.objects {
+		log.Infof("%+v", m)
+	}
+	log.Infof("###############################")
 }

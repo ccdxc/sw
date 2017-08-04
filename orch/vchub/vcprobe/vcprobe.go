@@ -72,9 +72,9 @@ func (v *VCProbe) Run() {
 	go v.probeNwIFs()
 }
 
-// getVeth checks if the base virtual device is a vnic and returns a pointer to
+// GetVeth checks if the base virtual device is a vnic and returns a pointer to
 // VirtualEthernetCard
-func getVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
+func GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
 	dKind := reflect.TypeOf(d).Elem()
 
 	switch dKind {
@@ -333,7 +333,7 @@ func getVirtualNICs(p *types.PropertyChange) (map[string]*defs.VirtualNIC, error
 	}
 
 	for _, d := range vmConfig.Hardware.Device {
-		vec := getVeth(d)
+		vec := GetVeth(d)
 		if vec != nil {
 			back, ok := vec.Backing.(*types.VirtualEthernetCardDistributedVirtualPortBackingInfo)
 			if !ok {

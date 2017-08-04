@@ -20,8 +20,9 @@ const (
 
 // snicStore maintains information about a store instance
 type snicStore struct {
-	ctx   context.Context
-	hosts map[string]*defs.ESXHost
+	ctx            context.Context
+	hosts          map[string]*defs.ESXHost
+	changeNotifier func(string)
 }
 
 // SmartNICCreate creates a SmartNIC object in the kv store
@@ -81,6 +82,10 @@ func newSnicStore(c context.Context) *snicStore {
 	}
 }
 
+func (s *snicStore) registerNotify(n func(string)) {
+	s.changeNotifier = n
+}
+
 // deleteHost performs necessary store updates when an esx host is removed.
 func (s *snicStore) deleteHost(hostKey string) {
 	// find all nics of this host and delete them
@@ -137,6 +142,9 @@ func (s *snicStore) setHost(hostKey string, host *defs.ESXHost) {
 	}
 
 	s.hosts[hostKey] = host
+	if s.changeNotifier != nil {
+		s.changeNotifier(hostKey)
+	}
 }
 
 func (s *snicStore) processHostConfig(op defs.VCOp, key string, c *defs.ESXHost) {

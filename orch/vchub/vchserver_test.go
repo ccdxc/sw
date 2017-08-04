@@ -15,6 +15,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/vmware/govmomi/vim25/soap"
+	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -29,18 +30,22 @@ import (
 	"github.com/pensando/sw/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/vic/pkg/vsphere/simulator"
 	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 const (
-	serverAddr  = "127.0.0.1:" + globals.VCHubAPIPort
-	testNic1Mac = "6a:00:02:e7:a8:40"
-	testNic2Mac = "6a:00:02:e7:aa:54"
-	testIf1Mac  = "6e:00:02:e7:dd:40"
-	testIf2Mac  = "6e:00:02:e7:dc:54"
-	testIf1ID   = "52fd7958-f4da-78bb-1590-856861348cee:4001"
-	testIf2ID   = "53256758-eecc-79bb-1590-899861348cfd:4004"
-	waitTO      = 2 * time.Second
+	serverAddr   = "127.0.0.1:" + globals.VCHubAPIPort
+	testNic1Mac  = "6a:00:02:e7:a8:40"
+	testNic2Mac  = "6a:00:02:e7:aa:54"
+	testIf1Mac   = "6e:00:02:e7:dd:40"
+	testIf2Mac   = "6e:00:02:e7:dc:54"
+	testIf3Mac   = "6e:00:02:e7:ee:64"
+	testPG       = "dvportgroup-30"
+	testIf1ID    = "52fd7958-f4da-78bb-1590-856861348cee:4001"
+	testIf2ID    = "53256758-eecc-79bb-1590-899861348cfd:4004"
+	waitTO       = 2 * time.Second
+	pollInterval = 10 * time.Millisecond
 )
 
 type TestSuite struct {
@@ -53,7 +58,7 @@ type TestSuite struct {
 }
 
 func (ts *TestSuite) setup(t *testing.T, fake bool) {
-	startVCHServer()
+	StartVCHServer()
 	// setup store and server
 	if fake {
 		s, err := store.Init("", kvs.KVStoreTypeMemkv)
@@ -165,7 +170,7 @@ func (ts *TestSuite) teardown(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 		ts.cluster.Terminate(t)
 	}
-	stopVCHServer()
+	StopVCHServer()
 	sim.TearDown()
 	time.Sleep(200 * time.Millisecond)
 }
@@ -201,6 +206,7 @@ func verifySmartNICList(t *testing.T, expected map[string]*orch.SmartNIC) {
 		n2 := expected[n1.Status.MacAddress]
 		// ignore resource version for now
 		n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+		n1.Status.Switch = n2.Status.Switch
 		if !reflect.DeepEqual(n1, n2) {
 			t.Errorf("Expected %+v, got %+v", n2, n1)
 		}
@@ -460,7 +466,6 @@ func TestSmartNICInspect(t *testing.T) {
 	// Cause a close
 	suite.testStore.CloseWatch("/vchub/smartnics/")
 	<-doneCh
-	time.Sleep(1 * time.Second)
 
 	// Generate send error
 	wCtx, wCancel = context.WithCancel(context.Background())
@@ -477,14 +482,12 @@ func TestSmartNICInspect(t *testing.T) {
 
 	wCancel()
 	<-doneCh
-	time.Sleep(1 * time.Second)
 
 	// Inject a valid obj
 	validObj := suite.testNics[0]
 	validEv := &kv.WatchEvent{Type: kv.Created, Object: validObj}
 	suite.testStore.InjectWatchEvent("/vchub/smartnics/", validEv, 1)
 	suite.w4Channel(t, "/vchub/smartnics/", false)
-	time.Sleep(1 * time.Second)
 
 	// setup client
 	var opts []grpc.DialOption
@@ -521,8 +524,12 @@ func verifyNwIFList(t *testing.T, expected map[string]*orch.NwIF) {
 
 	for _, n1 := range ifs {
 		n2 := expected[n1.ObjectMeta.UUID]
+		if n2 != nil {
+			n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+		}
 		if !reflect.DeepEqual(n1, n2) {
 			t.Errorf("Expected %+v, got %+v", n2, n1)
+			debug.PrintStack()
 		}
 		delete(expected, n1.ObjectMeta.UUID)
 	}
@@ -766,7 +773,6 @@ func TestNwIFInspect(t *testing.T) {
 	// Cause a close
 	suite.testStore.CloseWatch("/vchub/nwifs/")
 	<-doneCh
-	time.Sleep(1 * time.Second)
 
 	// Generate send error
 	wCtx, wCancel = context.WithCancel(context.Background())
@@ -783,7 +789,6 @@ func TestNwIFInspect(t *testing.T) {
 
 	wCancel()
 	<-doneCh
-	time.Sleep(1 * time.Second)
 
 	// Inject a valid obj
 	validObj := suite.testIfs[0]
@@ -819,6 +824,8 @@ func getExpectedNICs(t *testing.T) map[string]*orch.SmartNIC {
 		return nicMap
 	}
 	for _, e := range hosts {
+		//spew.Dump(e)
+		//spew.Dump(e.Reference())
 		for _, n := range e.Config.Network.Pnic {
 			nicMap[n.Mac] = &orch.SmartNIC{
 				ObjectKind:       "SmartNIC",
@@ -834,7 +841,7 @@ func getExpectedNICs(t *testing.T) map[string]*orch.SmartNIC {
 	return nicMap
 }
 
-func TestVCP(t *testing.T) {
+func TestVCPSnic(t *testing.T) {
 	suite = &TestSuite{}
 	suite.setup(t, false)
 	defer suite.teardown(t)
@@ -858,13 +865,13 @@ func TestVCP(t *testing.T) {
 	vchStore := store.NewVCHStore(context.Background())
 	go vchStore.Run(storeCh)
 	v1 := vcp.NewVCProbe(u1, storeCh)
+	time.Sleep(100 * time.Millisecond) // let simulator start
 	err = v1.Start()
 	if err != nil {
 		t.Errorf("Error %v from vcp.Start", err)
 		return
 	}
 
-	time.Sleep(1 * time.Second)
 	v1.Run()
 	time.Sleep(1 * time.Second)
 	nicMap := getExpectedNICs(t)
@@ -901,7 +908,6 @@ func TestVCP(t *testing.T) {
 		return
 	}
 
-	time.Sleep(1 * time.Second)
 	v2.Run()
 	time.Sleep(1 * time.Second)
 	nicMap = getExpectedNICs(t)
@@ -910,6 +916,93 @@ func TestVCP(t *testing.T) {
 	v1.Stop()
 	v2.Stop()
 	close(storeCh)
+}
+
+func getPNICMac(href *types.ManagedObjectReference) string {
+	if href == nil {
+		return ""
+	}
+
+	h := simulator.Map.Get(*href)
+	if h == nil {
+		return ""
+	}
+
+	hs := h.(*simulator.HostSystem)
+
+	if hs.Config == nil || hs.Config.Network == nil {
+		return ""
+	}
+
+	if len(hs.Config.Network.Pnic) > 0 {
+		return hs.Config.Network.Pnic[0].Mac
+	}
+	return ""
+}
+
+func getExpectedNwIFs(t *testing.T) map[string]*orch.NwIF {
+	ifMap := make(map[string]*orch.NwIF)
+	vms := simulator.GetVMList()
+	if vms == nil || len(vms) < 1 {
+		t.Errorf("Error -- no VMs")
+		return ifMap
+	}
+	for _, v := range vms {
+		vmRef := v.Reference()
+		vmKey := "127.0.0.1:8989:" + vmRef.Value
+		pnicMac := getPNICMac(v.Runtime.Host)
+		for _, d := range v.Config.Hardware.Device {
+			veth := vcp.GetVeth(d)
+			if veth == nil {
+				continue
+			}
+
+			b := veth.Backing.(*types.VirtualEthernetCardDistributedVirtualPortBackingInfo)
+			ifKey := vmKey + "::" + veth.MacAddress
+			ifMap[ifKey] = &orch.NwIF{
+				ObjectKind:       "NwIF",
+				ObjectAPIVersion: "v1",
+				ObjectMeta:       &infraapi.ObjectMeta{UUID: ifKey},
+				Config:           &orch.NwIF_Config{},
+				Status: &orch.NwIF_Status{
+					MacAddress:  veth.MacAddress,
+					PortGroup:   b.Port.PortgroupKey,
+					Switch:      b.Port.SwitchUuid,
+					SmartNIC_ID: pnicMac,
+				},
+			}
+		}
+	}
+
+	return ifMap
+}
+
+func wait4NwIFEvent(doneCh chan bool, ev orch.WatchEvent_EventType, mac, pg string) {
+	defer close(doneCh)
+	ws := &orch.WatchSpec{}
+	stream, err := suite.vcHubClient.WatchNwIFs(context.Background(), ws)
+	if err != nil {
+		log.Fatalf("Error %v", err)
+	}
+
+	for {
+		e, err := stream.Recv()
+
+		if err != nil {
+			return
+		}
+
+		event := e.GetE()
+		ifs := e.GetNwifs()
+		if event.Event == ev {
+			for _, nwif := range ifs {
+				if nwif.Status.MacAddress == mac && nwif.Status.PortGroup == pg {
+					log.Info("||||Got create for %+v", nwif)
+					doneCh <- true
+				}
+			}
+		}
+	}
 }
 
 func TestVCPNwIF(t *testing.T) {
@@ -933,13 +1026,13 @@ func TestVCPNwIF(t *testing.T) {
 	vchStore := store.NewVCHStore(context.Background())
 	go vchStore.Run(storeCh)
 	v1 := vcp.NewVCProbe(u1, storeCh)
+	time.Sleep(100 * time.Millisecond)
 	err = v1.Start()
 	if err != nil {
 		t.Errorf("Error %v from vcp.Start", err)
 		return
 	}
 
-	time.Sleep(1 * time.Second)
 	v1.Run()
 	time.Sleep(1 * time.Second)
 	filter := &orch.Filter{}
@@ -954,7 +1047,39 @@ func TestVCPNwIF(t *testing.T) {
 	if len(ifs) == 0 {
 		t.Errorf("No nwifs were created")
 	}
+	e1 := getExpectedNwIFs(t)
+	verifyNwIFList(t, e1)
+
+	// Add a new NwIF and verify
+	doneCh := make(chan bool)
+	go wait4NwIFEvent(doneCh, orch.WatchEvent_Create, testIf3Mac, testPG)
+	veth, _ := sim.AddNwIF(testIf3Mac, testPG)
+	select {
+
+	case <-doneCh:
+
+	case <-time.After(waitTO):
+		t.Errorf("Timed out waiting for watch event")
+
+	}
+
+	// Delete the new NwIF and verify
+	doneCh = make(chan bool)
+	go wait4NwIFEvent(doneCh, orch.WatchEvent_Delete, testIf3Mac, testPG)
+	err = sim.DeleteNwIF(veth)
+	if err != nil {
+		t.Errorf("Failed to delete veth %s", veth)
+	}
+	select {
+
+	case <-doneCh:
+
+	case <-time.After(waitTO):
+		t.Errorf("Timed out waiting for delete watch event")
+
+	}
 
 	v1.Stop()
+	time.Sleep(100 * time.Millisecond)
 	close(storeCh)
 }

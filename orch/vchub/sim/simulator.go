@@ -77,3 +77,33 @@ func Simulate(addr string, hosts, vms int) (string, error) {
 	vCenters[addr] = i
 	return fmt.Sprintf("%s", s.URL), nil
 }
+
+// AddSmartNIC adds a smartnic to the inventory
+func AddSmartNIC(name, mac string) error {
+	hosts := esx.GetHostList()
+	if len(hosts) == 0 {
+		return fmt.Errorf("No hosts found")
+	}
+
+	esx.AddPnicToHost(hosts[0], name, mac)
+
+	return nil
+}
+
+// AddNwIF adds a nwif to the inventory
+func AddNwIF(mac, portGroup string) (string, error) {
+	vms := simulator.GetVMList()
+	if len(vms) < 1 {
+		return "", fmt.Errorf("No vms found")
+	}
+	return vms[0].AddVeth(mac, portGroup)
+}
+
+// DeleteNwIF deletes a nwif from the inventory
+func DeleteNwIF(name string) error {
+	vms := simulator.GetVMList()
+	if len(vms) < 1 {
+		return fmt.Errorf("No vms found")
+	}
+	return vms[0].RemoveVeth(name)
+}

@@ -457,4 +457,7 @@ func (m *Model) Remove() {
 	for _, dir := range m.dirs {
 		_ = os.RemoveAll(dir)
 	}
+
+	vmList = []*VirtualMachine{}
+	Map = NewRegistry()
 }

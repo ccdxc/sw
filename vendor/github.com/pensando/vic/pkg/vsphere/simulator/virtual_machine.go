@@ -18,20 +18,22 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 type VirtualMachine struct {
@@ -514,4 +516,97 @@ func (vm *VirtualMachine) UnregisterVM(c *types.UnregisterVM) soap.HasFault {
 	r.Res = new(types.UnregisterVMResponse)
 
 	return r
+}
+
+func (vm *VirtualMachine) AddVeth(mac, pgKey string) (string, error) {
+	unitNum := int32(16 + rand.Intn(255))
+	// EthernetCard template for types.VirtualEthernetCard
+	veth := types.VirtualE1000{
+		VirtualEthernetCard: types.VirtualEthernetCard{
+			VirtualDevice: types.VirtualDevice{
+				DynamicData: types.DynamicData{},
+				Key:         -1,
+				Backing: &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
+					VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
+					Port: types.DistributedVirtualSwitchPortConnection{
+						PortgroupKey: pgKey,
+					},
+				},
+				Connectable: &types.VirtualDeviceConnectInfo{
+					DynamicData:       types.DynamicData{},
+					StartConnected:    true,
+					AllowGuestControl: true,
+					Connected:         false,
+					Status:            "untried",
+				},
+				SlotInfo: &types.VirtualDevicePciBusSlotInfo{
+					VirtualDeviceBusSlotInfo: types.VirtualDeviceBusSlotInfo{},
+					PciSlotNumber:            32,
+				},
+				ControllerKey: 100,
+				UnitNumber:    &unitNum,
+			},
+			AddressType:      "generated",
+			MacAddress:       mac,
+			WakeOnLanEnabled: types.NewBool(true),
+		},
+	}
+
+	devices := []types.BaseVirtualDevice{&veth}
+	devs, _ := object.VirtualDeviceList(devices).ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
+	spec := &types.VirtualMachineConfigSpec{
+		DeviceChange: devs,
+	}
+	err := vm.configure(spec)
+	if err == nil {
+		return object.VirtualDeviceList(devices).Name(&veth), nil
+	}
+
+	return "", fmt.Errorf("Failed -- %+v", err)
+}
+
+func (vm *VirtualMachine) RemoveVeth(name string) error {
+	namefields := strings.Split(name, "-")
+	if len(namefields) != 2 {
+		return fmt.Errorf("Bad device name %s", name)
+	}
+
+	i, _ := strconv.Atoi(namefields[1])
+	unitNum := int32(i + 7)
+	veth := types.VirtualE1000{
+		VirtualEthernetCard: types.VirtualEthernetCard{
+			VirtualDevice: types.VirtualDevice{
+				DynamicData: types.DynamicData{},
+				Key:         -1,
+				Backing:     &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{},
+				Connectable: &types.VirtualDeviceConnectInfo{
+					DynamicData:       types.DynamicData{},
+					StartConnected:    true,
+					AllowGuestControl: true,
+					Connected:         false,
+					Status:            "untried",
+				},
+				SlotInfo: &types.VirtualDevicePciBusSlotInfo{
+					VirtualDeviceBusSlotInfo: types.VirtualDeviceBusSlotInfo{},
+					PciSlotNumber:            32,
+				},
+				ControllerKey: 100,
+				UnitNumber:    &unitNum,
+			},
+			AddressType:      "generated",
+			WakeOnLanEnabled: types.NewBool(true),
+		},
+	}
+
+	devices := []types.BaseVirtualDevice{&veth}
+	devs, _ := object.VirtualDeviceList(devices).ConfigSpec(types.VirtualDeviceConfigSpecOperationRemove)
+	spec := &types.VirtualMachineConfigSpec{
+		DeviceChange: devs,
+	}
+	err := vm.configure(spec)
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("Failed -- %+v", err)
 }

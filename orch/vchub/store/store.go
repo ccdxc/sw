@@ -22,10 +22,17 @@ func NewVCHStore(ctx context.Context) *VCHStore {
 		return getSNICId(ss, hostKey, dvsUuid)
 	}
 
+	ns := newNwifStore(ctx, finder)
+
+	notifier := func(hostKey string) {
+		ns.hostUpdate(hostKey)
+	}
+	ss.registerNotify(notifier)
+
 	return &VCHStore{
 		ctx:    ctx,
 		snicDB: ss,
-		nwifDB: newNwifStore(ctx, finder),
+		nwifDB: ns,
 	}
 }
 

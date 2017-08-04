@@ -205,8 +205,8 @@ func (as *vchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, err
 	return &as.stats, nil
 }
 
-// startVCHServer starts the vchub api server
-func startVCHServer() {
+// StartVCHServer starts the vchub api server
+func StartVCHServer() {
 	lis, err := net.Listen("tcp", ":"+globals.VCHubAPIPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -226,8 +226,8 @@ func startVCHServer() {
 	log.Infof("VCHub API server started")
 }
 
-// stopVCHServer stops the vchub api server
-func stopVCHServer() {
+// StopVCHServer stops the vchub api server
+func StopVCHServer() {
 	if asInstance != nil && asInstance.listener != nil {
 		asInstance.listener.Close()
 		asInstance.listener = nil

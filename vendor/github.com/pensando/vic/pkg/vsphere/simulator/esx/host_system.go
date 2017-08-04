@@ -15,15 +15,15 @@
 package esx
 
 import (
-	"time"
-	"math/rand"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	log "github.com/Sirupsen/logrus"
 )
 
+var DvsUuid string
 var hostList []*mo.HostSystem
 var HostSystem = mo.HostSystem{
 	ManagedEntity: mo.ManagedEntity{
@@ -1811,30 +1811,34 @@ var HostSystem = mo.HostSystem{
 	SystemResources:  (*types.HostSystemResourceInfo)(nil),
 }
 
+var pnicBacking = &types.DistributedVirtualSwitchHostMemberPnicBacking{
+	PnicSpec: []types.DistributedVirtualSwitchHostMemberPnicSpec{{PnicDevice: "vmnic0"}},
+}
+
 func NewHostConfigInfo() *types.HostConfigInfo {
 	// generate a mac for the Pnic
 	mac := fmt.Sprintf("0c:c4:7a:%02x:%02x:%02x", rand.Intn(255), rand.Intn(255), rand.Intn(255))
-	pnic := types.PhysicalNic{ Key: "key-vim.host.PhysicalNic-vmnic0", Device: "vmnic0", Mac: mac }
-	hni := types.HostNetworkInfo { Pnic: []types.PhysicalNic{pnic}}
-	hci := types.HostConfigInfo{ Network: &hni }
+	pnic := types.PhysicalNic{Key: "key-vim.host.PhysicalNic-vmnic0", Device: "vmnic0", Mac: mac}
+	dvs := types.HostProxySwitch{DvsUuid: DvsUuid, Spec: types.HostProxySwitchSpec{Backing: types.BaseDistributedVirtualSwitchHostMemberBacking(pnicBacking)}}
+	hni := types.HostNetworkInfo{Pnic: []types.PhysicalNic{pnic}, ProxySwitch: []types.HostProxySwitch{dvs}}
+	hci := types.HostConfigInfo{Network: &hni}
 	return &hci
 }
 
 func NewHostSystem() mo.HostSystem {
-	log.Infof("NewHostSystem invoked...")
 	hs := HostSystem
 	hs.Config = NewHostConfigInfo()
 	hostList = append(hostList, &hs)
 	return hs
 }
 
-func GetHostList()[]*mo.HostSystem {
+func GetHostList() []*mo.HostSystem {
 	return hostList
 }
 
 func AddPnicToHost(h *mo.HostSystem, name, mac string) {
 	key := "key-vim.host.PhysicalNic-" + name
-	pnic := types.PhysicalNic{ Key: key, Device: name, Mac: mac }
+	pnic := types.PhysicalNic{Key: key, Device: name, Mac: mac}
 	h.Config.Network.Pnic = append(h.Config.Network.Pnic, pnic)
 }
 

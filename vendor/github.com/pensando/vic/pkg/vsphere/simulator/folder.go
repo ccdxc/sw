@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -33,6 +34,8 @@ type Folder struct {
 
 	m sync.Mutex
 }
+
+var vmList []*VirtualMachine
 
 // update references when objects are added/removed from a Folder
 func (f *Folder) update(o mo.Reference, u func(types.ManagedObjectReference, []types.ManagedObjectReference) []types.ManagedObjectReference) {
@@ -278,6 +281,7 @@ func (c *createVM) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
 		rp.Vm = append(rp.Vm, vm.Self)
 	}
 
+	vmList = append(vmList, vm)
 	return vm.Reference(), nil
 }
 
@@ -414,6 +418,7 @@ func (f *Folder) CreateDVSTask(c *types.CreateDVS_Task) soap.HasFault {
 		dvs.Uuid = uuid.New().String()
 
 		f.putChild(dvs)
+		esx.DvsUuid = dvs.Uuid
 
 		return dvs.Reference(), nil
 	})
@@ -425,4 +430,8 @@ func (f *Folder) CreateDVSTask(c *types.CreateDVS_Task) soap.HasFault {
 			Returnval: task.Self,
 		},
 	}
+}
+
+func GetVMList() []*VirtualMachine {
+	return vmList
 }

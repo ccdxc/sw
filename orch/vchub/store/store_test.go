@@ -24,6 +24,8 @@ import (
 const (
 	testNic1Mac = "6a:00:02:e7:a8:40"
 	testNic2Mac = "6a:00:02:e7:aa:54"
+	testNic3Mac = "6a:00:02:e7:a9:64"
+	testNic4Mac = "6a:00:02:e7:ba:94"
 	testIf1Mac  = "6e:00:02:e7:dd:40"
 	testIf2Mac  = "6e:00:02:e7:dc:54"
 	testIf1ID   = "52fd7958-f4da-78bb-1590-856861348cee:4001"
@@ -32,6 +34,7 @@ const (
 	testVCId    = "192.168.0.1:8989"
 	dvs1Id      = "00:11:zz:dd"
 	dvs2Id      = "00:11:xx:ee"
+	testVMKey   = "192.168.0.1:8989:vm-33"
 )
 
 type TestSuite struct {
@@ -360,7 +363,7 @@ func TestNwIFAPI(t *testing.T) {
 	suite.setup(t)
 
 	// simple create
-	err = NwIFCreate(context.Background(), testIf1Mac, suite.testIfs[0])
+	err = NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
 	if err != nil {
 		t.Errorf("NwIFCreate failed %v", err)
 		return
@@ -379,7 +382,7 @@ func TestNwIFAPI(t *testing.T) {
 	}
 
 	// redundant create
-	err = NwIFCreate(context.Background(), testIf1Mac, suite.testIfs[0])
+	err = NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
 	if err != nil {
 		t.Errorf("NwIFCreate failed %v", err)
 		return
@@ -390,7 +393,7 @@ func TestNwIFAPI(t *testing.T) {
 	suite.testIfs[0].ObjectMeta.Name = "Butterfly.eth0"
 	respCh := make(chan error)
 	go func() {
-		respCh <- NwIFCreate(context.Background(), testIf1Mac, suite.testIfs[0])
+		respCh <- NwIFCreate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), suite.testIfs[0])
 		close(respCh)
 	}()
 
@@ -403,7 +406,7 @@ func TestNwIFAPI(t *testing.T) {
 
 	// read and verify that it was updated
 	n := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+testIf1Mac, n)
+	err = kvStore.Get(context.Background(), nwifPath+formNwIFKey(testVMKey, testIf1Mac), n)
 	if err != nil {
 		t.Errorf("Get failed %v", err)
 	}
@@ -414,14 +417,14 @@ func TestNwIFAPI(t *testing.T) {
 
 	// update api
 	n.Status.PortGroup = "Foooo"
-	err = NwIFUpdate(context.Background(), testIf1Mac, n)
+	err = NwIFUpdate(context.Background(), formNwIFKey(testVMKey, testIf1Mac), n)
 	if err != nil {
 		t.Errorf("NwIFUpdate failed %v", err)
 	}
 
 	// read and verify that it was updated
 	nn := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+testIf1Mac, nn)
+	err = kvStore.Get(context.Background(), nwifPath+formNwIFKey(testVMKey, testIf1Mac), nn)
 	if err != nil {
 		t.Errorf("Get failed %v", err)
 	}
@@ -431,45 +434,20 @@ func TestNwIFAPI(t *testing.T) {
 	}
 
 	// delete
-	err = NwIFDelete(context.Background(), testIf1Mac)
+	err = NwIFDelete(context.Background(), formNwIFKey(testVMKey, testIf1Mac))
 	if err != nil {
 		t.Errorf("NwIFDelete failed %v", err)
 	}
 
 	// delete again
-	err = NwIFDelete(context.Background(), testIf1Mac)
+	err = NwIFDelete(context.Background(), formNwIFKey(testVMKey, testIf1Mac))
 	if err == nil {
 		t.Errorf("NwIFDelete succeeded while expecting failure")
 	}
 
 }
 
-func TestNwIFStore(t *testing.T) {
-
-	suite = &TestSuite{}
-	suite.setup(t)
-
-	s := NewVCHStore(context.Background())
-	storeCh := make(chan defs.StoreMsg, 16)
-	defer close(storeCh)
-	go s.Run(storeCh)
-
-	time.Sleep(100 * time.Millisecond) // let store start
-
-	globalHostKey := testVCId + ":" + "host-101"
-	globalVMKey := testVCId + ":" + "vm-1"
-
-	// inject a delete
-	m1 := defs.StoreMsg{
-		Op:         defs.VCOpDelete,
-		Property:   defs.VMPropConfig,
-		Key:        globalVMKey,
-		Originator: testVCId,
-	}
-
-	storeCh <- m1
-
-	// inject a set host
+func injectSetHost(storeCh chan defs.StoreMsg, hostKey string, nicMacs []string) {
 	h1 := &defs.ESXHost{
 		DvsMap:  make(map[string]*defs.DvsInstance),
 		PenNICs: make(map[string]*defs.NICInfo),
@@ -484,18 +462,67 @@ func TestNwIFStore(t *testing.T) {
 		Uplinks: []string{"vmnic1"},
 	}
 
-	h1.PenNICs["vmnic0"] = &defs.NICInfo{Mac: testNic1Mac, DvsUUID: dvs1Id}
-	h1.PenNICs["vmnic1"] = &defs.NICInfo{Mac: testNic2Mac, DvsUUID: dvs2Id}
+	h1.PenNICs["vmnic0"] = &defs.NICInfo{Mac: nicMacs[0], DvsUUID: dvs1Id}
+	h1.PenNICs["vmnic1"] = &defs.NICInfo{Mac: nicMacs[1], DvsUUID: dvs2Id}
 
 	m2 := defs.StoreMsg{
 		Op:         defs.VCOpSet,
 		Property:   defs.HostPropConfig,
-		Key:        globalHostKey,
+		Key:        testVCId + ":" + hostKey,
 		Value:      h1,
 		Originator: testVCId,
 	}
 
 	storeCh <- m2
+}
+
+func verifySNICBinding(t *testing.T, snicID string, ifCount int) {
+	// verify Status.SmartNIC_ID changed to blank
+	ifList, err := NwIFList(context.Background())
+	if err != nil {
+		t.Errorf("NwIFList failed %v", err)
+		return
+	}
+
+	ifs := ifList.GetItems()
+	if len(ifs) != ifCount {
+		t.Errorf("Expected %d nwif. Got %+v", ifCount, ifs)
+		return
+	}
+
+	for _, nwif := range ifs {
+		if nwif.Status.SmartNIC_ID != snicID {
+			t.Errorf("Expected %s. Got %+v", snicID, nwif.Status.SmartNIC_ID)
+		}
+	}
+}
+
+func TestNwIFStore(t *testing.T) {
+
+	suite = &TestSuite{}
+	suite.setup(t)
+
+	s := NewVCHStore(context.Background())
+	storeCh := make(chan defs.StoreMsg, 16)
+	defer close(storeCh)
+	go s.Run(storeCh)
+
+	time.Sleep(100 * time.Millisecond) // let store start
+
+	globalVMKey := testVCId + ":" + "vm-1"
+
+	// inject a delete
+	m1 := defs.StoreMsg{
+		Op:         defs.VCOpDelete,
+		Property:   defs.VMPropConfig,
+		Key:        globalVMKey,
+		Originator: testVCId,
+	}
+
+	storeCh <- m1
+
+	// inject a set host
+	injectSetHost(storeCh, "host-101", []string{testNic1Mac, testNic2Mac})
 	time.Sleep(100 * time.Millisecond) // let store process the msg
 
 	nicList, err := SmartNICList(context.Background())
@@ -520,7 +547,7 @@ func TestNwIFStore(t *testing.T) {
 
 	vm1 := &defs.VMConfig{Vnics: make(map[string]*defs.VirtualNIC)}
 	vm1.Vnics[testIf1Mac] = vnic1
-	m2 = defs.StoreMsg{
+	m2 := defs.StoreMsg{
 		Op:         defs.VCOpSet,
 		Property:   defs.VMPropConfig,
 		Key:        globalVMKey,
@@ -594,7 +621,7 @@ func TestNwIFStore(t *testing.T) {
 
 	// verify smartnic binding
 	if1 := &orch.NwIF{}
-	err = kvStore.Get(context.Background(), nwifPath+testIf1Mac, if1)
+	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf1Mac, if1)
 	if err != nil {
 		t.Errorf("Get failed %v", err)
 		return
@@ -603,7 +630,7 @@ func TestNwIFStore(t *testing.T) {
 	if if1.Status.SmartNIC_ID != testNic1Mac {
 		t.Errorf("Expected %s, got %s", testNic1Mac, if1.Status.SmartNIC_ID)
 	}
-	err = kvStore.Get(context.Background(), nwifPath+testIf2Mac, if1)
+	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf2Mac, if1)
 	if err != nil {
 		t.Errorf("Get failed %v", err)
 		return
@@ -633,23 +660,12 @@ func TestNwIFStore(t *testing.T) {
 	time.Sleep(200 * time.Millisecond) // let store process the msg
 
 	// verify Status.SmartNIC_ID changed to blank
-	ifList, err = NwIFList(context.Background())
-	if err != nil {
-		t.Errorf("NwIFList failed %v", err)
-		return
-	}
+	verifySNICBinding(t, "", 2)
 
-	ifs = ifList.GetItems()
-	if len(ifs) != 2 {
-		t.Errorf("Expected 2 nwif. Got %+v", ifs)
-		return
-	}
-
-	for _, nwif := range ifs {
-		if nwif.Status.SmartNIC_ID != "" {
-			t.Errorf("Expected blank Status.SmartNIC_ID. Got %+v", nwif.Status)
-		}
-	}
+	// now inject a set host for host-102 and verify SmartNIC_ID
+	injectSetHost(storeCh, "host-102", []string{testNic4Mac, testNic4Mac})
+	time.Sleep(100 * time.Millisecond) // let store process the msg
+	verifySNICBinding(t, testNic4Mac, 2)
 
 	// inject with only 1 vnic
 	vm1 = &defs.VMConfig{Vnics: make(map[string]*defs.VirtualNIC)}
@@ -663,7 +679,7 @@ func TestNwIFStore(t *testing.T) {
 	}
 	storeCh <- m2
 	time.Sleep(200 * time.Millisecond) // let store process the msg
-	err = kvStore.Get(context.Background(), nwifPath+testIf1Mac, if1)
+	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf1Mac, if1)
 	if err == nil {
 		t.Errorf("Read of %s succeeded while expecting failure", testIf1Mac)
 		return
@@ -678,7 +694,7 @@ func TestNwIFStore(t *testing.T) {
 	}
 	storeCh <- m2
 	time.Sleep(200 * time.Millisecond) // let store process the msg
-	err = kvStore.Get(context.Background(), nwifPath+testIf2Mac, if1)
+	err = kvStore.Get(context.Background(), nwifPath+globalVMKey+"::"+testIf2Mac, if1)
 	if err == nil {
 		t.Errorf("Read of %s succeeded while expecting failure", testIf2Mac)
 		return

@@ -17,9 +17,9 @@ package simulator
 import (
 	"time"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 type HostSystem struct {
@@ -118,4 +118,8 @@ func CreateStandaloneHost(f *Folder, spec types.HostConnectSpec) (*HostSystem, t
 	pool.Owner = cr.Self
 
 	return host, nil
+}
+
+func Dump() {
+	Map.Dump()
 }

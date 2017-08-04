@@ -24,6 +24,7 @@ const (
 type nwifStore struct {
 	ctx        context.Context
 	vmMap      map[string]*vmInfo
+	host2VMs   map[string]map[string]bool // hostkey to set of vmkeys
 	snicFinder func(string, string) string
 }
 
@@ -86,8 +87,13 @@ func newNwifStore(ctx context.Context, f func(string, string) string) *nwifStore
 	return &nwifStore{
 		ctx:        ctx,
 		vmMap:      make(map[string]*vmInfo),
+		host2VMs:   make(map[string]map[string]bool),
 		snicFinder: f,
 	}
+}
+
+func formNwIFKey(vmKey, mac string) string {
+	return vmKey + "::" + mac
 }
 
 func (ns *nwifStore) setConfig(vmKey string, c *defs.VMConfig) {
@@ -104,10 +110,11 @@ func (ns *nwifStore) setConfig(vmKey string, c *defs.VMConfig) {
 
 	for _, vnic := range c.Vnics {
 		snicID := ns.snicFinder(currVM.vmRunTime.HostKey, vnic.SwitchUUID)
+		k := formNwIFKey(vmKey, vnic.MacAddress)
 		nwif := &orch.NwIF{
 			ObjectKind:       nwifKind,
 			ObjectAPIVersion: "v1",
-			ObjectMeta:       &swapi.ObjectMeta{},
+			ObjectMeta:       &swapi.ObjectMeta{UUID: k},
 			Config:           &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
 			Status: &orch.NwIF_Status{
 				MacAddress: vnic.MacAddress,
@@ -119,7 +126,7 @@ func (ns *nwifStore) setConfig(vmKey string, c *defs.VMConfig) {
 			Attributes: currVM.attr,
 		}
 
-		err := NwIFCreate(ns.ctx, vnic.MacAddress, nwif)
+		err := NwIFCreate(ns.ctx, k, nwif)
 		if err != nil {
 			log.Errorf("NwIFCreate returned %v", err)
 		}
@@ -130,7 +137,7 @@ func (ns *nwifStore) setConfig(vmKey string, c *defs.VMConfig) {
 		for m := range currVM.vmConfig.Vnics {
 			_, found := c.Vnics[m]
 			if !found {
-				err := NwIFDelete(ns.ctx, m)
+				err := NwIFDelete(ns.ctx, formNwIFKey(vmKey, m))
 
 				if err != nil {
 					log.Errorf("NwIFDelete returned %v", err)
@@ -149,7 +156,7 @@ func (ns *nwifStore) deleteConfig(vmKey string) {
 
 	if currVM != nil && currVM.vmConfig != nil {
 		for m := range currVM.vmConfig.Vnics {
-			err := NwIFDelete(ns.ctx, m)
+			err := NwIFDelete(ns.ctx, formNwIFKey(vmKey, m))
 			if err != nil {
 				log.Errorf("NwIFDelete returned %v", err)
 			}
@@ -157,6 +164,13 @@ func (ns *nwifStore) deleteConfig(vmKey string) {
 	}
 
 	delete(ns.vmMap, vmKey)
+	if currVM != nil {
+		oldHostKey := currVM.vmRunTime.HostKey
+		h2vm := ns.host2VMs[oldHostKey]
+		if h2vm != nil {
+			delete(h2vm, vmKey)
+		}
+	}
 }
 
 func (ns *nwifStore) setRuntime(vmKey string, r *defs.VMRuntime) {
@@ -169,12 +183,27 @@ func (ns *nwifStore) setRuntime(vmKey string, r *defs.VMRuntime) {
 		return // no change
 	}
 
+	oldHostKey := currVM.vmRunTime.HostKey
 	currVM.vmRunTime = r
 	// create all NwIF objects
-	ns.createVMNwIFs(currVM)
+	ns.createVMNwIFs(vmKey, currVM)
 
 	// save the new data
 	ns.vmMap[vmKey] = currVM
+	h2vm := ns.host2VMs[r.HostKey]
+	if h2vm == nil {
+		h2vm = make(map[string]bool)
+	}
+
+	h2vm[vmKey] = true
+	ns.host2VMs[r.HostKey] = h2vm
+
+	if oldHostKey != r.HostKey {
+		h2vm = ns.host2VMs[oldHostKey]
+		if h2vm != nil {
+			delete(h2vm, vmKey)
+		}
+	}
 }
 
 func getLocalVLAN(vnic *defs.VirtualNIC) int32 {
@@ -219,20 +248,21 @@ func (ns *nwifStore) processVMName(op defs.VCOp, key string, n string) {
 
 		currVM.vmName = n
 		// create all NwIF objects
-		ns.createVMNwIFs(currVM)
+		ns.createVMNwIFs(key, currVM)
 		ns.vmMap[key] = currVM
 		// delete is only handled for config
 	}
 }
 
-func (ns *nwifStore) createVMNwIFs(vm *vmInfo) {
+func (ns *nwifStore) createVMNwIFs(vmKey string, vm *vmInfo) {
 	// create all NwIF objects
 	for _, vnic := range vm.vmConfig.Vnics {
 		snicID := ns.snicFinder(vm.vmRunTime.HostKey, vnic.SwitchUUID)
+		k := formNwIFKey(vmKey, vnic.MacAddress)
 		nwif := &orch.NwIF{
 			ObjectKind:       nwifKind,
 			ObjectAPIVersion: "v1",
-			ObjectMeta:       &swapi.ObjectMeta{},
+			ObjectMeta:       &swapi.ObjectMeta{UUID: k},
 			Config:           &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
 			Status: &orch.NwIF_Status{
 				MacAddress: vnic.MacAddress,
@@ -244,9 +274,20 @@ func (ns *nwifStore) createVMNwIFs(vm *vmInfo) {
 			Attributes: vm.attr,
 		}
 
-		err := NwIFCreate(ns.ctx, vnic.MacAddress, nwif)
+		err := NwIFCreate(ns.ctx, k, nwif)
 		if err != nil {
 			log.Errorf("NwIFCreate returned %v", err)
+		}
+	}
+}
+
+// hostUpdate handle host changes
+func (ns *nwifStore) hostUpdate(hostKey string) {
+	vms := ns.host2VMs[hostKey]
+	for vmKey := range vms {
+		vmInfo := ns.vmMap[vmKey]
+		if vmInfo != nil {
+			ns.createVMNwIFs(vmKey, vmInfo)
 		}
 	}
 }
