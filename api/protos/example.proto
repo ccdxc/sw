@@ -17,7 +17,7 @@ message Publisher {
   // specified with dynamic parameters in {..} (for example tenant, namespace etc.) as needed.
   option (venice.objectPrefix) = "publishers";
 
-  PublisherSpec Spec = 3;
+  PublisherSpec Spec = 3 [(gogoproto.nullable) = false];
 }
 
 message PublisherSpec {
@@ -31,8 +31,8 @@ message Book {
 
   option (venice.objectPrefix) = "books";
 
-  BookSpec Spec = 3;
-  BookStatus Status = 4;
+  BookSpec Spec = 3 [(gogoproto.nullable) = false];
+  BookStatus Status = 4 [(gogoproto.nullable) = false];
 }
 
 message BookSpec {
@@ -54,7 +54,7 @@ message Order {
 
   // Spec is not allowed to be Null hence disabling nullable.
   OrderSpec Spec = 3 [(gogoproto.nullable) = false];
-  OrderStatus Status = 4;
+  OrderStatus Status = 4 [(gogoproto.nullable) = false];
 }
 
 message OrderSpec {
@@ -85,60 +85,29 @@ service BookstoreV1 {
   option (venice.apiPrefix) = "bookstore";
   // API Version.
   option (venice.apiVersion) = "v1";
+  // The apiCrudService Option generates CRUD + List, Watch APIs for the specified message.
+  option (venice.apiGrpcCrudService) = "Order";
+  option (venice.apiGrpcCrudService) = "Book";
+  option (venice.apiGrpcCrudService) = "Publisher";
 
-  // --- Publisher resources --- //
-  // This is not exposed to the end user and hence there are only gRPC endpoints.
-  rpc AddPublisher(Publisher) returns(Publisher) {
-    // This option is specified to define the flavor of the KV operation needed.  
-    option (venice.methodOper) = "create";
-  }
-  rpc UpdatePublisher(Publisher) returns(Publisher) {
-    // This option is specified to define the flavor of the KV operation needed.  
-    option (venice.methodOper) = "update";
-  }
-  rpc DeletePublisher(Publisher) returns(Publisher) {
-    // This option is specified to define the flavor of the KV operation needed.  
-    option (venice.methodOper) = "delete";
-  }
-  rpc GetPublisher(Publisher) returns(Publisher) {
-    // This option is specified to define the flavor of the KV operation needed.  
-    option (venice.methodOper) = "get";
-  }
+  // REST resources exposed by the service. The Option specifies
+  //   Object  - The resource
+  //   Method  - REST methods allowed on the resource
+  //   Pattern - Pattern for the URI
+  option (venice.apiRestService) = {
+        Object: "Book"
+        Method: [ "get" ]
+        Pattern: "/books/{Spec.ISBNId}"
+     };
 
-  // --- Book resource -- //
-  // This resource is partially exposed on the API gateway (Get) and some actions are
-  // only internal (Create Update Delete)
-  rpc GetBook(Book) returns(Book) {
-    option (google.api.http) = {
-      get: "/books/{Spec.ISBNId}"
-    };
-  }
-  rpc AddBook(Book) returns(Book) {
-      option (venice.methodOper) = "create";
-  }
-  rpc UpdateBook(Book) returns(Book) {
-      option (venice.methodOper) = "update";
-  }
-  rpc DeleteBook(Book) returns(Book) {
-      option (venice.methodOper) = "delete";
-  }
-
-  // --- Order Resource--- //
-  // This resource is exposed to the user for all CRUD operations
-  rpc OrderOper(Order) returns(Order) {
-      option (google.api.http) = {
-      post: "/orders"
-      body: "*"
-      additional_bindings: {
-        put: "/orders/{O.Name}"
-        body: "*"
-      }
-      additional_bindings: {
-        delete: "/orders/{O.Name}"
-      }
-      additional_bindings: {
-        get: "/orders/{O.Name}"
-      }
-    };
-  }
+  option (venice.apiRestService) = {
+        Object: "Order"
+        Method: [ "put", "get", "delete" ]
+        Pattern: "/orders/{O.Name}"
+     };
+  option (venice.apiRestService) = {
+        Object: "Order"
+        Method: [ "post", "list" ]
+        Pattern: "/orders"
+     };
 }

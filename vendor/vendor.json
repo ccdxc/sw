@@ -1278,10 +1278,10 @@
 			"revisionTime": "2017-07-06T21:30:02Z"
 		},
 		{
-			"checksumSHA1": "DNTWzeXo5hW3EVmdGHRAcXl8pbo=",
+			"checksumSHA1": "amVkMCnzM505PYQhTcHx43UMMDs=",
 			"path": "github.com/pensando/grpc-gateway",
-			"revision": "8b1010d9fae7174143ca7d813931e854de2c76eb",
-			"revisionTime": "2017-07-03T07:32:47Z",
+			"revision": "5fe3d6eb857e6ed9e657e9b6568285ed37784867",
+			"revisionTime": "2017-07-18T00:41:43Z",
 			"tree": true
 		},
 		{

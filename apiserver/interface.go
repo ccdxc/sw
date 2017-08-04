@@ -5,10 +5,32 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
+
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
+)
+
+// APIOperType defines possible options on an API object
+type APIOperType string
+
+// Operations allowed by the API server on objects
+const (
+	CreateOper APIOperType = "create"
+	UpdateOper APIOperType = "update"
+	GetOper    APIOperType = "get"
+	DeleteOper APIOperType = "delete"
+	ListOper   APIOperType = "list"
+	WatchOper  APIOperType = "watch"
+)
+
+const (
+	// RequestParamVersion is passed in request metadata for version
+	RequestParamVersion = "req-version"
+	// RequestParamMethod is passed in request metadata for version
+	RequestParamMethod = "req-method"
 )
 
 // ServiceBackend is the interface  satisfied by the module that is responsible for registering
@@ -37,6 +59,8 @@ type Server interface {
 	GetService(name string) Service
 	// Run starts the "eventloop" for the API server.
 	Run(config Config)
+	// Stop sends a stop signal to the API server
+	Stop()
 }
 
 // Config holds config for the API Server.
@@ -73,19 +97,22 @@ type ValidateFunc func(i interface{}) error
 // are called. Any of the precommit functions can provide feedback to skip the KV operation by
 // returning False.
 // Returning an error aborts processing of this API call.
-type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error)
+type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper APIOperType, i interface{}) (interface{}, bool, error)
 
 // PostCommitFunc are registered functions that will be invoked after the KV store operation. Multiple
 // functions could be registered and all registered functions are called.
-type PostCommitFunc func(ctx context.Context, oper string, i interface{})
+type PostCommitFunc func(ctx context.Context, oper APIOperType, i interface{})
 
 // ResponseWriterFunc is a function that is registered to provide a custom response to a API call.
 // The ResponseWriterFunc can return a completely different type than the passed in message.
 // In case of delete the "old" parameter contains the deleted object.
-type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, old interface{}, oper string) (interface{}, error)
+type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, old interface{}, oper APIOperType) (interface{}, error)
 
 // KeyGenFunc is a function that generates the key for input i. This is usually auto-generated code.
 type KeyGenFunc func(i interface{}, prefix string) string
+
+// SetObjectVersionFunc is a function that updates the version of the object.
+type SetObjectVersionFunc func(i interface{}, version string) interface{}
 
 // UpdateKvFunc is the function to Update the KV store. Usually registered by generated code.
 type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error)
@@ -105,6 +132,14 @@ type DelFromKvFunc func(ctx context.Context, kvstore kvstore.Interface, key stri
 // DelFromKvTxnFunc is the function registered to delete from a KV store transaction.
 // Usually registered by generated code.
 type DelFromKvTxnFunc func(ctx context.Context, kvstore kvstore.Txn, key string) error
+
+// ListFromKvFunc is the function registered to list all objects of a type from the KV store.
+type ListFromKvFunc func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error)
+
+// WatchKvFunc is the function registered to watch for KV store changes from KV store. where
+//  - stream is the GRPC stream
+//  - txfn is the version transformation function to be used during the watch.
+type WatchKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
 
 // Message is the interface satisfied by the representation of the Message in the Api Server infra.
 // A Message may be the definition of parameters passed in and out of a gRPC method or an object that
@@ -126,6 +161,8 @@ type MessageRegistration interface {
 	WithDefaulter(fn DefaulterFunc) Message
 	// WithKeyGenerator registers a key generator function.
 	WithKeyGenerator(fn KeyGenFunc) Message
+	// ObjectVersionFunc registers a version writer function.
+	WithObjectVersionWriter(fn SetObjectVersionFunc) Message
 	// WithKVUpdater registers a function to update the KV store
 	WithKvUpdater(fn UpdateKvFunc) Message
 	// WithKvTxnUpdater registers a function to update the KV store via a transaction.
@@ -136,6 +173,10 @@ type MessageRegistration interface {
 	WithKvDelFunc(fn DelFromKvFunc) Message
 	// WithKvTxnDelFunc registers a function that deletes a message from the KV store via a transaction.
 	WithKvTxnDelFunc(fn DelFromKvTxnFunc) Message
+	// WithKvListFunc is the function registered to list all objects of a type from the KV store.
+	WithKvListFunc(fn ListFromKvFunc) Message
+	// WithKvWatchFunc watches the KV store for changes to object(s)
+	WithKvWatchFunc(fn WatchKvFunc) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -144,6 +185,8 @@ type MessageAction interface {
 	GetKind() string
 	// GetKvKey returns the KV store key for this message.
 	GetKVKey(i interface{}, prefix string) (string, error)
+	// WriteObjVersion writes the version to the message.
+	WriteObjVersion(i interface{}, version string) interface{}
 	// WriteToKv writes the object to KV store. If create flag is set then the object
 	// must not exist for success.
 	WriteToKv(ctx context.Context, i interface{}, prerfix string, create bool) (interface{}, error)
@@ -156,6 +199,10 @@ type MessageAction interface {
 	DelFromKv(ctx context.Context, key string) (interface{}, error)
 	// DelFromKvTxn deletes an object from the KV store as part of a transaction.
 	DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key string) error
+	// ListFromKv lists all objects of the kind from KV store.
+	ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error)
+	// WatchFromKv watches changes in KV store constrained by options passed in
+	WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error
 	// PrepareMsg prepares the message to the "to" version by applying any transforms needed.
 	PrepareMsg(from, to string, i interface{}) (interface{}, error)
 	// Default applies the custom defaulter if registered.
@@ -182,7 +229,7 @@ type MethodRegistration interface {
 	// WithResponseWriter registers a custom response generator for the method.
 	WithResponseWriter(fn ResponseWriterFunc) Method
 	// WithOper sets the CRUD operation for the method.
-	WithOper(oper string) Method
+	WithOper(oper APIOperType) Method
 	// With Version sets the version of the API
 	WithVersion(ver string) Method
 }
@@ -209,6 +256,8 @@ type Service interface {
 	Enable()
 	// GetMethod returns the Method object registered given its name. Returns nil when not found
 	GetMethod(t string) Method
+	// GetCrudService returns the Auto generated CRUD service method for a given (service, operation)
+	GetCrudService(in string, oper APIOperType) Method
 	// AddMethod add a method to the list of methods served by the Service.
 	AddMethod(n string, m Method) Method
 }

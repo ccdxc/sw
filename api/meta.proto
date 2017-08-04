@@ -43,6 +43,13 @@ message ObjectRef {
   string Name = 3;
 }
 
+message ListWatchOptions {
+  ObjectMeta O = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
+  string LabelSelector = 2;
+  string FieldSelector = 3;
+  bool PrefixWatch = 4;
+}
+
 // StatusResult contains possible statuses for a NIC.
 message StatusResult {
   string Str = 1;

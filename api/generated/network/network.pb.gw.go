@@ -16,6 +16,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
+	"github.com/pensando/sw/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,24 +28,20 @@ var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-var (
-	filter_TenantV1_GetTenantList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_TenantV1_GetTenantList_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq TenantList
+func request_TenantV1_AutoAddTenant_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Tenant
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_GetTenantList_0); err != nil {
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetTenantList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddTenant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_TenantV1_TenantOper_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_TenantV1_AutoUpdateTenant_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Tenant
 	var metadata runtime.ServerMetadata
 
@@ -70,13 +67,100 @@ func request_TenantV1_TenantOper_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, err
 	}
 
-	msg, err := client.TenantOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateTenant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_TenantV1_TenantOper_1(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+var (
+	filter_TenantV1_AutoGetTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_TenantV1_AutoGetTenant_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Tenant
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_AutoGetTenant_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetTenant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TenantV1_AutoDeleteTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_TenantV1_AutoDeleteTenant_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Tenant
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_AutoDeleteTenant_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteTenant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TenantV1_AutoListTenant_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TenantV1_AutoListTenant_0(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_AutoListTenant_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListTenant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_NetworkV1_AutoAddNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Network
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
@@ -90,110 +174,23 @@ func request_TenantV1_TenantOper_1(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["O.Name"]
+	val, ok = pathParams["O.Tenant"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
 
 	if err != nil {
 		return nil, metadata, err
 	}
 
-	msg, err := client.TenantOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddNetwork(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-var (
-	filter_TenantV1_TenantOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_TenantV1_TenantOper_2(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Tenant
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_TenantOper_2); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.TenantOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-var (
-	filter_TenantV1_TenantOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_TenantV1_TenantOper_3(ctx context.Context, marshaler runtime.Marshaler, client TenantV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Tenant
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TenantV1_TenantOper_3); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.TenantOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-var (
-	filter_NetworkV1_GetNetworkList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_NetworkV1_GetNetworkList_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq NetworkList
-	var metadata runtime.ServerMetadata
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_GetNetworkList_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.GetNetworkList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_NetworkV1_NetworkOper_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_NetworkV1_AutoUpdateNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Network
 	var metadata runtime.ServerMetadata
 
@@ -230,58 +227,16 @@ func request_NetworkV1_NetworkOper_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	msg, err := client.NetworkOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_NetworkV1_NetworkOper_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Network
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.NetworkOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateNetwork(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_NetworkV1_NetworkOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_NetworkV1_AutoGetNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_NetworkV1_NetworkOper_2(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_NetworkV1_AutoGetNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Network
 	var metadata runtime.ServerMetadata
 
@@ -314,20 +269,20 @@ func request_NetworkV1_NetworkOper_2(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_NetworkOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_AutoGetNetwork_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.NetworkOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetNetwork(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_NetworkV1_NetworkOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_NetworkV1_AutoDeleteNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_NetworkV1_NetworkOper_3(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_NetworkV1_AutoDeleteNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Network
 	var metadata runtime.ServerMetadata
 
@@ -360,33 +315,82 @@ func request_NetworkV1_NetworkOper_3(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_NetworkOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteNetwork_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.NetworkOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteNetwork(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SecurityGroupV1_GetSecurityGroupList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_NetworkV1_AutoListNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SecurityGroupV1_GetSecurityGroupList_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SecurityGroupList
+func request_NetworkV1_AutoListNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_GetSecurityGroupList_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_NetworkV1_AutoListNetwork_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetSecurityGroupList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoListNetwork(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_SecurityGroupV1_SecurityGroupOper_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SecurityGroupV1_AutoAddSecurityGroup_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SecurityGroup
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoAddSecurityGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_SecurityGroupV1_AutoUpdateSecurityGroup_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SecurityGroup
 	var metadata runtime.ServerMetadata
 
@@ -423,58 +427,16 @@ func request_SecurityGroupV1_SecurityGroupOper_0(ctx context.Context, marshaler 
 		return nil, metadata, err
 	}
 
-	msg, err := client.SecurityGroupOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_SecurityGroupV1_SecurityGroupOper_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SecurityGroup
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.SecurityGroupOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateSecurityGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SecurityGroupV1_SecurityGroupOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SecurityGroupV1_AutoGetSecurityGroup_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SecurityGroupV1_SecurityGroupOper_2(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SecurityGroupV1_AutoGetSecurityGroup_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SecurityGroup
 	var metadata runtime.ServerMetadata
 
@@ -507,20 +469,20 @@ func request_SecurityGroupV1_SecurityGroupOper_2(ctx context.Context, marshaler 
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_SecurityGroupOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_AutoGetSecurityGroup_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.SecurityGroupOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetSecurityGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SecurityGroupV1_SecurityGroupOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SecurityGroupV1_AutoDeleteSecurityGroup_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SecurityGroupV1_SecurityGroupOper_3(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SecurityGroupV1_AutoDeleteSecurityGroup_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SecurityGroup
 	var metadata runtime.ServerMetadata
 
@@ -553,33 +515,82 @@ func request_SecurityGroupV1_SecurityGroupOper_3(ctx context.Context, marshaler 
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_SecurityGroupOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_AutoDeleteSecurityGroup_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.SecurityGroupOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteSecurityGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SgpolicyV1_GetSgpolicyList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SecurityGroupV1_AutoListSecurityGroup_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_SgpolicyV1_GetSgpolicyList_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SgpolicyList
+func request_SecurityGroupV1_AutoListSecurityGroup_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityGroupV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_GetSgpolicyList_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SecurityGroupV1_AutoListSecurityGroup_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetSgpolicyList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoListSecurityGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_SgpolicyV1_SgpolicyOper_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SgpolicyV1_AutoAddSgpolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Sgpolicy
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoAddSgpolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_SgpolicyV1_AutoUpdateSgpolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Sgpolicy
 	var metadata runtime.ServerMetadata
 
@@ -616,58 +627,16 @@ func request_SgpolicyV1_SgpolicyOper_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	msg, err := client.SgpolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_SgpolicyV1_SgpolicyOper_1(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Sgpolicy
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.SgpolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateSgpolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SgpolicyV1_SgpolicyOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SgpolicyV1_AutoGetSgpolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SgpolicyV1_SgpolicyOper_2(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SgpolicyV1_AutoGetSgpolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Sgpolicy
 	var metadata runtime.ServerMetadata
 
@@ -700,20 +669,20 @@ func request_SgpolicyV1_SgpolicyOper_2(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_SgpolicyOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_AutoGetSgpolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.SgpolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetSgpolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_SgpolicyV1_SgpolicyOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_SgpolicyV1_AutoDeleteSgpolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_SgpolicyV1_SgpolicyOper_3(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_SgpolicyV1_AutoDeleteSgpolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Sgpolicy
 	var metadata runtime.ServerMetadata
 
@@ -746,33 +715,82 @@ func request_SgpolicyV1_SgpolicyOper_3(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_SgpolicyOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_AutoDeleteSgpolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.SgpolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteSgpolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_ServiceV1_GetServiceList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SgpolicyV1_AutoListSgpolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_ServiceV1_GetServiceList_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ServiceList
+func request_SgpolicyV1_AutoListSgpolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SgpolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_GetServiceList_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_SgpolicyV1_AutoListSgpolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetServiceList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoListSgpolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_ServiceV1_ServiceOper_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ServiceV1_AutoAddService_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Service
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoAddService(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_ServiceV1_AutoUpdateService_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Service
 	var metadata runtime.ServerMetadata
 
@@ -809,58 +827,16 @@ func request_ServiceV1_ServiceOper_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	msg, err := client.ServiceOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_ServiceV1_ServiceOper_1(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Service
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.ServiceOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateService(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_ServiceV1_ServiceOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_ServiceV1_AutoGetService_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_ServiceV1_ServiceOper_2(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ServiceV1_AutoGetService_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Service
 	var metadata runtime.ServerMetadata
 
@@ -893,20 +869,20 @@ func request_ServiceV1_ServiceOper_2(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_ServiceOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_AutoGetService_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ServiceOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetService(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_ServiceV1_ServiceOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_ServiceV1_AutoDeleteService_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_ServiceV1_ServiceOper_3(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ServiceV1_AutoDeleteService_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Service
 	var metadata runtime.ServerMetadata
 
@@ -939,33 +915,82 @@ func request_ServiceV1_ServiceOper_3(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_ServiceOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_AutoDeleteService_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ServiceOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteService(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_LbPolicyV1_GetLbPolicyList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_ServiceV1_AutoListService_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_LbPolicyV1_GetLbPolicyList_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LbPolicyList
+func request_ServiceV1_AutoListService_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_GetLbPolicyList_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_ServiceV1_AutoListService_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetLbPolicyList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoListService(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_LbPolicyV1_LbPolicyOper_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_LbPolicyV1_AutoAddLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq LbPolicy
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoAddLbPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_LbPolicyV1_AutoUpdateLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq LbPolicy
 	var metadata runtime.ServerMetadata
 
@@ -1002,58 +1027,16 @@ func request_LbPolicyV1_LbPolicyOper_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	msg, err := client.LbPolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_LbPolicyV1_LbPolicyOper_1(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq LbPolicy
-	var metadata runtime.ServerMetadata
-
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.LbPolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateLbPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_LbPolicyV1_LbPolicyOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_LbPolicyV1_AutoGetLbPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_LbPolicyV1_LbPolicyOper_2(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_LbPolicyV1_AutoGetLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq LbPolicy
 	var metadata runtime.ServerMetadata
 
@@ -1086,20 +1069,20 @@ func request_LbPolicyV1_LbPolicyOper_2(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_LbPolicyOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_AutoGetLbPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.LbPolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetLbPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_LbPolicyV1_LbPolicyOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_LbPolicyV1_AutoDeleteLbPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_LbPolicyV1_LbPolicyOper_3(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_LbPolicyV1_AutoDeleteLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq LbPolicy
 	var metadata runtime.ServerMetadata
 
@@ -1132,33 +1115,51 @@ func request_LbPolicyV1_LbPolicyOper_3(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_LbPolicyOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_AutoDeleteLbPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.LbPolicyOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteLbPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_EndpointV1_GetEndpointList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_LbPolicyV1_AutoListLbPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_EndpointV1_GetEndpointList_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq EndpointList
+func request_LbPolicyV1_AutoListLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client LbPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_GetEndpointList_0); err != nil {
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_LbPolicyV1_AutoListLbPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetEndpointList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoListLbPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_EndpointV1_EndpointOper_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_EndpointV1_AutoAddEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Endpoint
 	var metadata runtime.ServerMetadata
 
@@ -1184,23 +1185,12 @@ func request_EndpointV1_EndpointOper_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, metadata, err
-	}
-
-	msg, err := client.EndpointOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddEndpoint(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_EndpointV1_EndpointOper_1(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_EndpointV1_AutoUpdateEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Endpoint
 	var metadata runtime.ServerMetadata
 
@@ -1237,16 +1227,16 @@ func request_EndpointV1_EndpointOper_1(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	msg, err := client.EndpointOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateEndpoint(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_EndpointV1_EndpointOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_EndpointV1_AutoGetEndpoint_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_EndpointV1_EndpointOper_2(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_EndpointV1_AutoGetEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Endpoint
 	var metadata runtime.ServerMetadata
 
@@ -1279,20 +1269,20 @@ func request_EndpointV1_EndpointOper_2(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_EndpointOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_AutoGetEndpoint_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.EndpointOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetEndpoint(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_EndpointV1_EndpointOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+	filter_EndpointV1_AutoDeleteEndpoint_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
-func request_EndpointV1_EndpointOper_3(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_EndpointV1_AutoDeleteEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Endpoint
 	var metadata runtime.ServerMetadata
 
@@ -1325,11 +1315,46 @@ func request_EndpointV1_EndpointOper_3(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_EndpointOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_AutoDeleteEndpoint_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.EndpointOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteEndpoint(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_EndpointV1_AutoListEndpoint_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_EndpointV1_AutoListEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client EndpointV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EndpointV1_AutoListEndpoint_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListEndpoint(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -1370,7 +1395,7 @@ func RegisterTenantV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *g
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client TenantV1Client) error {
 
-	mux.Handle("GET", pattern_TenantV1_GetTenantList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_TenantV1_AutoAddTenant_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1387,18 +1412,18 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_TenantV1_GetTenantList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TenantV1_AutoAddTenant_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TenantV1_GetTenantList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TenantV1_AutoAddTenant_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_TenantV1_TenantOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_TenantV1_AutoUpdateTenant_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1415,18 +1440,18 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_TenantV1_TenantOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TenantV1_AutoUpdateTenant_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TenantV1_TenantOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TenantV1_AutoUpdateTenant_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_TenantV1_TenantOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TenantV1_AutoGetTenant_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1443,18 +1468,18 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_TenantV1_TenantOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TenantV1_AutoGetTenant_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TenantV1_TenantOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TenantV1_AutoGetTenant_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_TenantV1_TenantOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_TenantV1_AutoDeleteTenant_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1471,18 +1496,18 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_TenantV1_TenantOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TenantV1_AutoDeleteTenant_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TenantV1_TenantOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TenantV1_AutoDeleteTenant_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_TenantV1_TenantOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_TenantV1_AutoListTenant_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1499,14 +1524,14 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_TenantV1_TenantOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_TenantV1_AutoListTenant_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_TenantV1_TenantOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_TenantV1_AutoListTenant_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1514,27 +1539,27 @@ func RegisterTenantV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 }
 
 var (
-	pattern_TenantV1_GetTenantList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenant"}, ""))
+	pattern_TenantV1_AutoAddTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 
-	pattern_TenantV1_TenantOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenant", "O.Name"}, ""))
+	pattern_TenantV1_AutoUpdateTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
-	pattern_TenantV1_TenantOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenant", "O.Name"}, ""))
+	pattern_TenantV1_AutoGetTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
-	pattern_TenantV1_TenantOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenant", "O.Name"}, ""))
+	pattern_TenantV1_AutoDeleteTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenants", "O.Name"}, ""))
 
-	pattern_TenantV1_TenantOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"tenant", "O.Name"}, ""))
+	pattern_TenantV1_AutoListTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 )
 
 var (
-	forward_TenantV1_GetTenantList_0 = runtime.ForwardResponseMessage
+	forward_TenantV1_AutoAddTenant_0 = runtime.ForwardResponseMessage
 
-	forward_TenantV1_TenantOper_0 = runtime.ForwardResponseMessage
+	forward_TenantV1_AutoUpdateTenant_0 = runtime.ForwardResponseMessage
 
-	forward_TenantV1_TenantOper_1 = runtime.ForwardResponseMessage
+	forward_TenantV1_AutoGetTenant_0 = runtime.ForwardResponseMessage
 
-	forward_TenantV1_TenantOper_2 = runtime.ForwardResponseMessage
+	forward_TenantV1_AutoDeleteTenant_0 = runtime.ForwardResponseMessage
 
-	forward_TenantV1_TenantOper_3 = runtime.ForwardResponseMessage
+	forward_TenantV1_AutoListTenant_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterNetworkV1HandlerFromEndpoint is same as RegisterNetworkV1Handler but
@@ -1573,7 +1598,7 @@ func RegisterNetworkV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client NetworkV1Client) error {
 
-	mux.Handle("GET", pattern_NetworkV1_GetNetworkList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_NetworkV1_AutoAddNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1590,18 +1615,18 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_NetworkV1_GetNetworkList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NetworkV1_AutoAddNetwork_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NetworkV1_GetNetworkList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NetworkV1_AutoAddNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_NetworkV1_NetworkOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1618,18 +1643,18 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_NetworkV1_NetworkOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NetworkV1_AutoUpdateNetwork_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NetworkV1_NetworkOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NetworkV1_AutoUpdateNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_NetworkV1_NetworkOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_NetworkV1_AutoGetNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1646,18 +1671,18 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_NetworkV1_NetworkOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NetworkV1_AutoGetNetwork_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NetworkV1_NetworkOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NetworkV1_AutoGetNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_NetworkV1_NetworkOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1674,18 +1699,18 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_NetworkV1_NetworkOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NetworkV1_AutoDeleteNetwork_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NetworkV1_NetworkOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NetworkV1_AutoDeleteNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_NetworkV1_NetworkOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_NetworkV1_AutoListNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1702,14 +1727,14 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_NetworkV1_NetworkOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NetworkV1_AutoListNetwork_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NetworkV1_NetworkOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NetworkV1_AutoListNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1717,27 +1742,27 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
-	pattern_NetworkV1_GetNetworkList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"network"}, ""))
+	pattern_NetworkV1_AutoAddNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "networks"}, ""))
 
-	pattern_NetworkV1_NetworkOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "network", "O.Name"}, ""))
+	pattern_NetworkV1_AutoUpdateNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "networks", "O.Name"}, ""))
 
-	pattern_NetworkV1_NetworkOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "network", "O.Name"}, ""))
+	pattern_NetworkV1_AutoGetNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "networks", "O.Name"}, ""))
 
-	pattern_NetworkV1_NetworkOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "network", "O.Name"}, ""))
+	pattern_NetworkV1_AutoDeleteNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "networks", "O.Name"}, ""))
 
-	pattern_NetworkV1_NetworkOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "network", "O.Name"}, ""))
+	pattern_NetworkV1_AutoListNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "networks"}, ""))
 )
 
 var (
-	forward_NetworkV1_GetNetworkList_0 = runtime.ForwardResponseMessage
+	forward_NetworkV1_AutoAddNetwork_0 = runtime.ForwardResponseMessage
 
-	forward_NetworkV1_NetworkOper_0 = runtime.ForwardResponseMessage
+	forward_NetworkV1_AutoUpdateNetwork_0 = runtime.ForwardResponseMessage
 
-	forward_NetworkV1_NetworkOper_1 = runtime.ForwardResponseMessage
+	forward_NetworkV1_AutoGetNetwork_0 = runtime.ForwardResponseMessage
 
-	forward_NetworkV1_NetworkOper_2 = runtime.ForwardResponseMessage
+	forward_NetworkV1_AutoDeleteNetwork_0 = runtime.ForwardResponseMessage
 
-	forward_NetworkV1_NetworkOper_3 = runtime.ForwardResponseMessage
+	forward_NetworkV1_AutoListNetwork_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterSecurityGroupV1HandlerFromEndpoint is same as RegisterSecurityGroupV1Handler but
@@ -1776,7 +1801,7 @@ func RegisterSecurityGroupV1Handler(ctx context.Context, mux *runtime.ServeMux, 
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client SecurityGroupV1Client) error {
 
-	mux.Handle("GET", pattern_SecurityGroupV1_GetSecurityGroupList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SecurityGroupV1_AutoAddSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1793,18 +1818,18 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityGroupV1_GetSecurityGroupList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityGroupV1_AutoAddSecurityGroup_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityGroupV1_GetSecurityGroupList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityGroupV1_AutoAddSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_SecurityGroupV1_SecurityGroupOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SecurityGroupV1_AutoUpdateSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1821,18 +1846,18 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityGroupV1_SecurityGroupOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityGroupV1_AutoUpdateSecurityGroup_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityGroupV1_SecurityGroupOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityGroupV1_AutoUpdateSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_SecurityGroupV1_SecurityGroupOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityGroupV1_AutoGetSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1849,18 +1874,18 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityGroupV1_SecurityGroupOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityGroupV1_AutoGetSecurityGroup_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityGroupV1_SecurityGroupOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityGroupV1_AutoGetSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_SecurityGroupV1_SecurityGroupOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_SecurityGroupV1_AutoDeleteSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1877,18 +1902,18 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityGroupV1_SecurityGroupOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityGroupV1_AutoDeleteSecurityGroup_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityGroupV1_SecurityGroupOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityGroupV1_AutoDeleteSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_SecurityGroupV1_SecurityGroupOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SecurityGroupV1_AutoListSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1905,14 +1930,14 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SecurityGroupV1_SecurityGroupOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SecurityGroupV1_AutoListSecurityGroup_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SecurityGroupV1_SecurityGroupOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SecurityGroupV1_AutoListSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1920,27 +1945,27 @@ func RegisterSecurityGroupV1HandlerWithClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_SecurityGroupV1_GetSecurityGroupList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"security-group"}, ""))
+	pattern_SecurityGroupV1_AutoAddSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "security-groups"}, ""))
 
-	pattern_SecurityGroupV1_SecurityGroupOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-group", "O.Name"}, ""))
+	pattern_SecurityGroupV1_AutoUpdateSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-groups", "O.Name"}, ""))
 
-	pattern_SecurityGroupV1_SecurityGroupOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-group", "O.Name"}, ""))
+	pattern_SecurityGroupV1_AutoGetSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-groups", "O.Name"}, ""))
 
-	pattern_SecurityGroupV1_SecurityGroupOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-group", "O.Name"}, ""))
+	pattern_SecurityGroupV1_AutoDeleteSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-groups", "O.Name"}, ""))
 
-	pattern_SecurityGroupV1_SecurityGroupOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "security-group", "O.Name"}, ""))
+	pattern_SecurityGroupV1_AutoListSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "security-groups"}, ""))
 )
 
 var (
-	forward_SecurityGroupV1_GetSecurityGroupList_0 = runtime.ForwardResponseMessage
+	forward_SecurityGroupV1_AutoAddSecurityGroup_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityGroupV1_SecurityGroupOper_0 = runtime.ForwardResponseMessage
+	forward_SecurityGroupV1_AutoUpdateSecurityGroup_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityGroupV1_SecurityGroupOper_1 = runtime.ForwardResponseMessage
+	forward_SecurityGroupV1_AutoGetSecurityGroup_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityGroupV1_SecurityGroupOper_2 = runtime.ForwardResponseMessage
+	forward_SecurityGroupV1_AutoDeleteSecurityGroup_0 = runtime.ForwardResponseMessage
 
-	forward_SecurityGroupV1_SecurityGroupOper_3 = runtime.ForwardResponseMessage
+	forward_SecurityGroupV1_AutoListSecurityGroup_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterSgpolicyV1HandlerFromEndpoint is same as RegisterSgpolicyV1Handler but
@@ -1979,7 +2004,7 @@ func RegisterSgpolicyV1Handler(ctx context.Context, mux *runtime.ServeMux, conn 
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client SgpolicyV1Client) error {
 
-	mux.Handle("GET", pattern_SgpolicyV1_GetSgpolicyList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SgpolicyV1_AutoAddSgpolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -1996,18 +2021,18 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SgpolicyV1_GetSgpolicyList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SgpolicyV1_AutoAddSgpolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SgpolicyV1_GetSgpolicyList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SgpolicyV1_AutoAddSgpolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_SgpolicyV1_SgpolicyOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SgpolicyV1_AutoUpdateSgpolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2024,18 +2049,18 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SgpolicyV1_SgpolicyOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SgpolicyV1_AutoUpdateSgpolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SgpolicyV1_SgpolicyOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SgpolicyV1_AutoUpdateSgpolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_SgpolicyV1_SgpolicyOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SgpolicyV1_AutoGetSgpolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2052,18 +2077,18 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SgpolicyV1_SgpolicyOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SgpolicyV1_AutoGetSgpolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SgpolicyV1_SgpolicyOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SgpolicyV1_AutoGetSgpolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_SgpolicyV1_SgpolicyOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_SgpolicyV1_AutoDeleteSgpolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2080,18 +2105,18 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SgpolicyV1_SgpolicyOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SgpolicyV1_AutoDeleteSgpolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SgpolicyV1_SgpolicyOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SgpolicyV1_AutoDeleteSgpolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_SgpolicyV1_SgpolicyOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SgpolicyV1_AutoListSgpolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2108,14 +2133,14 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_SgpolicyV1_SgpolicyOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SgpolicyV1_AutoListSgpolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SgpolicyV1_SgpolicyOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SgpolicyV1_AutoListSgpolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2123,27 +2148,27 @@ func RegisterSgpolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_SgpolicyV1_GetSgpolicyList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"sgpolicy"}, ""))
+	pattern_SgpolicyV1_AutoAddSgpolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "sgpolicy"}, ""))
 
-	pattern_SgpolicyV1_SgpolicyOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SgpolicyV1_AutoUpdateSgpolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
 
-	pattern_SgpolicyV1_SgpolicyOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SgpolicyV1_AutoGetSgpolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
 
-	pattern_SgpolicyV1_SgpolicyOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SgpolicyV1_AutoDeleteSgpolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
 
-	pattern_SgpolicyV1_SgpolicyOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SgpolicyV1_AutoListSgpolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "sgpolicy"}, ""))
 )
 
 var (
-	forward_SgpolicyV1_GetSgpolicyList_0 = runtime.ForwardResponseMessage
+	forward_SgpolicyV1_AutoAddSgpolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SgpolicyV1_SgpolicyOper_0 = runtime.ForwardResponseMessage
+	forward_SgpolicyV1_AutoUpdateSgpolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SgpolicyV1_SgpolicyOper_1 = runtime.ForwardResponseMessage
+	forward_SgpolicyV1_AutoGetSgpolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SgpolicyV1_SgpolicyOper_2 = runtime.ForwardResponseMessage
+	forward_SgpolicyV1_AutoDeleteSgpolicy_0 = runtime.ForwardResponseMessage
 
-	forward_SgpolicyV1_SgpolicyOper_3 = runtime.ForwardResponseMessage
+	forward_SgpolicyV1_AutoListSgpolicy_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterServiceV1HandlerFromEndpoint is same as RegisterServiceV1Handler but
@@ -2182,7 +2207,7 @@ func RegisterServiceV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client ServiceV1Client) error {
 
-	mux.Handle("GET", pattern_ServiceV1_GetServiceList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_ServiceV1_AutoAddService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2199,18 +2224,18 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_ServiceV1_GetServiceList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ServiceV1_AutoAddService_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ServiceV1_GetServiceList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ServiceV1_AutoAddService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_ServiceV1_ServiceOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_ServiceV1_AutoUpdateService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2227,18 +2252,18 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_ServiceV1_ServiceOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ServiceV1_AutoUpdateService_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ServiceV1_ServiceOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ServiceV1_AutoUpdateService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_ServiceV1_ServiceOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_ServiceV1_AutoGetService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2255,18 +2280,18 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_ServiceV1_ServiceOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ServiceV1_AutoGetService_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ServiceV1_ServiceOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ServiceV1_AutoGetService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_ServiceV1_ServiceOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_ServiceV1_AutoDeleteService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2283,18 +2308,18 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_ServiceV1_ServiceOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ServiceV1_AutoDeleteService_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ServiceV1_ServiceOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ServiceV1_AutoDeleteService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_ServiceV1_ServiceOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_ServiceV1_AutoListService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2311,14 +2336,14 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_ServiceV1_ServiceOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ServiceV1_AutoListService_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ServiceV1_ServiceOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ServiceV1_AutoListService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2326,27 +2351,27 @@ func RegisterServiceV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
-	pattern_ServiceV1_GetServiceList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"service"}, ""))
+	pattern_ServiceV1_AutoAddService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "services"}, ""))
 
-	pattern_ServiceV1_ServiceOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "service", "O.Name"}, ""))
+	pattern_ServiceV1_AutoUpdateService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "services", "O.Name"}, ""))
 
-	pattern_ServiceV1_ServiceOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "service", "O.Name"}, ""))
+	pattern_ServiceV1_AutoGetService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "services", "O.Name"}, ""))
 
-	pattern_ServiceV1_ServiceOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "service", "O.Name"}, ""))
+	pattern_ServiceV1_AutoDeleteService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "services", "O.Name"}, ""))
 
-	pattern_ServiceV1_ServiceOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "service", "O.Name"}, ""))
+	pattern_ServiceV1_AutoListService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "services"}, ""))
 )
 
 var (
-	forward_ServiceV1_GetServiceList_0 = runtime.ForwardResponseMessage
+	forward_ServiceV1_AutoAddService_0 = runtime.ForwardResponseMessage
 
-	forward_ServiceV1_ServiceOper_0 = runtime.ForwardResponseMessage
+	forward_ServiceV1_AutoUpdateService_0 = runtime.ForwardResponseMessage
 
-	forward_ServiceV1_ServiceOper_1 = runtime.ForwardResponseMessage
+	forward_ServiceV1_AutoGetService_0 = runtime.ForwardResponseMessage
 
-	forward_ServiceV1_ServiceOper_2 = runtime.ForwardResponseMessage
+	forward_ServiceV1_AutoDeleteService_0 = runtime.ForwardResponseMessage
 
-	forward_ServiceV1_ServiceOper_3 = runtime.ForwardResponseMessage
+	forward_ServiceV1_AutoListService_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterLbPolicyV1HandlerFromEndpoint is same as RegisterLbPolicyV1Handler but
@@ -2385,7 +2410,7 @@ func RegisterLbPolicyV1Handler(ctx context.Context, mux *runtime.ServeMux, conn 
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client LbPolicyV1Client) error {
 
-	mux.Handle("GET", pattern_LbPolicyV1_GetLbPolicyList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_LbPolicyV1_AutoAddLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2402,18 +2427,18 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_LbPolicyV1_GetLbPolicyList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LbPolicyV1_AutoAddLbPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LbPolicyV1_GetLbPolicyList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LbPolicyV1_AutoAddLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_LbPolicyV1_LbPolicyOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_LbPolicyV1_AutoUpdateLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2430,18 +2455,18 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_LbPolicyV1_LbPolicyOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LbPolicyV1_AutoUpdateLbPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LbPolicyV1_LbPolicyOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LbPolicyV1_AutoUpdateLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_LbPolicyV1_LbPolicyOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_LbPolicyV1_AutoGetLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2458,18 +2483,18 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_LbPolicyV1_LbPolicyOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LbPolicyV1_AutoGetLbPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LbPolicyV1_LbPolicyOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LbPolicyV1_AutoGetLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_LbPolicyV1_LbPolicyOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_LbPolicyV1_AutoDeleteLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2486,18 +2511,18 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_LbPolicyV1_LbPolicyOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LbPolicyV1_AutoDeleteLbPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LbPolicyV1_LbPolicyOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LbPolicyV1_AutoDeleteLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_LbPolicyV1_LbPolicyOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_LbPolicyV1_AutoListLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2514,14 +2539,14 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_LbPolicyV1_LbPolicyOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LbPolicyV1_AutoListLbPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LbPolicyV1_LbPolicyOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LbPolicyV1_AutoListLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2529,27 +2554,27 @@ func RegisterLbPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_LbPolicyV1_GetLbPolicyList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"lb-policy"}, ""))
+	pattern_LbPolicyV1_AutoAddLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "lb-policy"}, ""))
 
-	pattern_LbPolicyV1_LbPolicyOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
+	pattern_LbPolicyV1_AutoUpdateLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
 
-	pattern_LbPolicyV1_LbPolicyOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
+	pattern_LbPolicyV1_AutoGetLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
 
-	pattern_LbPolicyV1_LbPolicyOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
+	pattern_LbPolicyV1_AutoDeleteLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
 
-	pattern_LbPolicyV1_LbPolicyOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "lb-policy", "O.Name"}, ""))
+	pattern_LbPolicyV1_AutoListLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "lb-policy"}, ""))
 )
 
 var (
-	forward_LbPolicyV1_GetLbPolicyList_0 = runtime.ForwardResponseMessage
+	forward_LbPolicyV1_AutoAddLbPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_LbPolicyV1_LbPolicyOper_0 = runtime.ForwardResponseMessage
+	forward_LbPolicyV1_AutoUpdateLbPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_LbPolicyV1_LbPolicyOper_1 = runtime.ForwardResponseMessage
+	forward_LbPolicyV1_AutoGetLbPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_LbPolicyV1_LbPolicyOper_2 = runtime.ForwardResponseMessage
+	forward_LbPolicyV1_AutoDeleteLbPolicy_0 = runtime.ForwardResponseMessage
 
-	forward_LbPolicyV1_LbPolicyOper_3 = runtime.ForwardResponseMessage
+	forward_LbPolicyV1_AutoListLbPolicy_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterEndpointV1HandlerFromEndpoint is same as RegisterEndpointV1Handler but
@@ -2588,7 +2613,7 @@ func RegisterEndpointV1Handler(ctx context.Context, mux *runtime.ServeMux, conn 
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client EndpointV1Client) error {
 
-	mux.Handle("GET", pattern_EndpointV1_GetEndpointList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_EndpointV1_AutoAddEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2605,18 +2630,18 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_EndpointV1_GetEndpointList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_EndpointV1_AutoAddEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EndpointV1_GetEndpointList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_EndpointV1_AutoAddEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_EndpointV1_EndpointOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_EndpointV1_AutoUpdateEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2633,18 +2658,18 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_EndpointV1_EndpointOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_EndpointV1_AutoUpdateEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EndpointV1_EndpointOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_EndpointV1_AutoUpdateEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_EndpointV1_EndpointOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_EndpointV1_AutoGetEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2661,18 +2686,18 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_EndpointV1_EndpointOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_EndpointV1_AutoGetEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EndpointV1_EndpointOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_EndpointV1_AutoGetEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_EndpointV1_EndpointOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_EndpointV1_AutoDeleteEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2689,18 +2714,18 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_EndpointV1_EndpointOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_EndpointV1_AutoDeleteEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EndpointV1_EndpointOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_EndpointV1_AutoDeleteEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_EndpointV1_EndpointOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_EndpointV1_AutoListEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -2717,14 +2742,14 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_EndpointV1_EndpointOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_EndpointV1_AutoListEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_EndpointV1_EndpointOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_EndpointV1_AutoListEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2732,25 +2757,25 @@ func RegisterEndpointV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_EndpointV1_GetEndpointList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"endpoint"}, ""))
+	pattern_EndpointV1_AutoAddEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "endpoints"}, ""))
 
-	pattern_EndpointV1_EndpointOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoint", "O.Name"}, ""))
+	pattern_EndpointV1_AutoUpdateEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoints", "O.Name"}, ""))
 
-	pattern_EndpointV1_EndpointOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoint", "O.Name"}, ""))
+	pattern_EndpointV1_AutoGetEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoints", "O.Name"}, ""))
 
-	pattern_EndpointV1_EndpointOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoint", "O.Name"}, ""))
+	pattern_EndpointV1_AutoDeleteEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoints", "O.Name"}, ""))
 
-	pattern_EndpointV1_EndpointOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "endpoint", "O.Name"}, ""))
+	pattern_EndpointV1_AutoListEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "endpoints"}, ""))
 )
 
 var (
-	forward_EndpointV1_GetEndpointList_0 = runtime.ForwardResponseMessage
+	forward_EndpointV1_AutoAddEndpoint_0 = runtime.ForwardResponseMessage
 
-	forward_EndpointV1_EndpointOper_0 = runtime.ForwardResponseMessage
+	forward_EndpointV1_AutoUpdateEndpoint_0 = runtime.ForwardResponseMessage
 
-	forward_EndpointV1_EndpointOper_1 = runtime.ForwardResponseMessage
+	forward_EndpointV1_AutoGetEndpoint_0 = runtime.ForwardResponseMessage
 
-	forward_EndpointV1_EndpointOper_2 = runtime.ForwardResponseMessage
+	forward_EndpointV1_AutoDeleteEndpoint_0 = runtime.ForwardResponseMessage
 
-	forward_EndpointV1_EndpointOper_3 = runtime.ForwardResponseMessage
+	forward_EndpointV1_AutoListEndpoint_0 = runtime.ForwardResponseMessage
 )

@@ -42,8 +42,8 @@ type File struct {
 	*descriptor.FileDescriptorProto
 	// GoPkg is the go package of the go file generated from this file..
 	GoPkg GoPackage
-	// registry is registry to which the file is attached.
-	registry *Registry
+	// Reg is registry to which the file is attached.
+	Reg *Registry
 	// Messages is the list of messages defined in this file.
 	Messages []*Message
 	// Enums is the list of enums defined in this file.
@@ -109,7 +109,7 @@ func (m *Message) FindMessageField(field string) (rmsg *Message, embedded bool, 
 	glog.V(1).Infof("\n****looking for field [%v] in Descriptor %v \n", field, m.Name)
 	rmsg = nil
 	embedded, found = false, false
-	reg := m.File.registry
+	reg := m.File.Reg
 
 	for _, v := range m.Field {
 		if v.GetName() == field {

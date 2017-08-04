@@ -16,6 +16,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
+	"github.com/pensando/sw/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,24 +28,7 @@ var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-var (
-	filter_CmdV1_GetNodeList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_CmdV1_GetNodeList_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq NodeList
-	var metadata runtime.ServerMetadata
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_GetNodeList_0); err != nil {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.GetNodeList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_CmdV1_NodeOper_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoAddNode_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Node
 	var metadata runtime.ServerMetadata
 
@@ -52,12 +36,12 @@ func request_CmdV1_NodeOper_0(ctx context.Context, marshaler runtime.Marshaler, 
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.NodeOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddNode(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_CmdV1_NodeOper_1(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoUpdateNode_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Node
 	var metadata runtime.ServerMetadata
 
@@ -83,16 +67,16 @@ func request_CmdV1_NodeOper_1(ctx context.Context, marshaler runtime.Marshaler, 
 		return nil, metadata, err
 	}
 
-	msg, err := client.NodeOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateNode(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_CmdV1_NodeOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_CmdV1_AutoGetNode_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_CmdV1_NodeOper_2(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoGetNode_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Node
 	var metadata runtime.ServerMetadata
 
@@ -114,20 +98,20 @@ func request_CmdV1_NodeOper_2(ctx context.Context, marshaler runtime.Marshaler, 
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_NodeOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoGetNode_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.NodeOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetNode(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_CmdV1_NodeOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_CmdV1_AutoDeleteNode_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_CmdV1_NodeOper_3(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoDeleteNode_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Node
 	var metadata runtime.ServerMetadata
 
@@ -149,16 +133,33 @@ func request_CmdV1_NodeOper_3(ctx context.Context, marshaler runtime.Marshaler, 
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_NodeOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoDeleteNode_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.NodeOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteNode(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_CmdV1_ClusterOper_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+var (
+	filter_CmdV1_AutoListNode_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_CmdV1_AutoListNode_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoListNode_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListNode(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_CmdV1_AutoAddCluster_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Cluster
 	var metadata runtime.ServerMetadata
 
@@ -166,12 +167,12 @@ func request_CmdV1_ClusterOper_0(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ClusterOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoAddCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_CmdV1_ClusterOper_1(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoUpdateCluster_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Cluster
 	var metadata runtime.ServerMetadata
 
@@ -197,16 +198,16 @@ func request_CmdV1_ClusterOper_1(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, err
 	}
 
-	msg, err := client.ClusterOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoUpdateCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_CmdV1_ClusterOper_2 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_CmdV1_AutoGetCluster_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_CmdV1_ClusterOper_2(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoGetCluster_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Cluster
 	var metadata runtime.ServerMetadata
 
@@ -228,20 +229,20 @@ func request_CmdV1_ClusterOper_2(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_ClusterOper_2); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoGetCluster_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ClusterOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoGetCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
 var (
-	filter_CmdV1_ClusterOper_3 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_CmdV1_AutoDeleteCluster_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
-func request_CmdV1_ClusterOper_3(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CmdV1_AutoDeleteCluster_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq Cluster
 	var metadata runtime.ServerMetadata
 
@@ -263,11 +264,28 @@ func request_CmdV1_ClusterOper_3(ctx context.Context, marshaler runtime.Marshale
 		return nil, metadata, err
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_ClusterOper_3); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoDeleteCluster_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ClusterOper(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AutoDeleteCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+var (
+	filter_CmdV1_AutoListCluster_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_CmdV1_AutoListCluster_0(ctx context.Context, marshaler runtime.Marshaler, client CmdV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListWatchOptions
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_CmdV1_AutoListCluster_0); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -308,7 +326,7 @@ func RegisterCmdV1Handler(ctx context.Context, mux *runtime.ServeMux, conn *grpc
 // The handlers forward requests to the grpc endpoint using client provided.
 func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, client CmdV1Client) error {
 
-	mux.Handle("GET", pattern_CmdV1_GetNodeList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CmdV1_AutoAddNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -325,18 +343,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_GetNodeList_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoAddNode_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_GetNodeList_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoAddNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_CmdV1_NodeOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_CmdV1_AutoUpdateNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -353,18 +371,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_NodeOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoUpdateNode_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_NodeOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoUpdateNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_CmdV1_NodeOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CmdV1_AutoGetNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -381,18 +399,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_NodeOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoGetNode_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_NodeOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoGetNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_CmdV1_NodeOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_CmdV1_AutoDeleteNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -409,18 +427,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_NodeOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoDeleteNode_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_NodeOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoDeleteNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_CmdV1_NodeOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CmdV1_AutoListNode_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -437,18 +455,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_NodeOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoListNode_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_NodeOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoListNode_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_CmdV1_ClusterOper_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_CmdV1_AutoAddCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -465,18 +483,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_ClusterOper_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoAddCluster_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_ClusterOper_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoAddCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_CmdV1_ClusterOper_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_CmdV1_AutoUpdateCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -493,18 +511,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_ClusterOper_1(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoUpdateCluster_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_ClusterOper_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoUpdateCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_CmdV1_ClusterOper_2, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_CmdV1_AutoGetCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -521,18 +539,18 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_ClusterOper_2(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoGetCluster_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_ClusterOper_2(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoGetCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_CmdV1_ClusterOper_3, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_CmdV1_AutoDeleteCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -549,14 +567,42 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
-		resp, md, err := request_CmdV1_ClusterOper_3(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_CmdV1_AutoDeleteCluster_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_CmdV1_ClusterOper_3(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CmdV1_AutoDeleteCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_CmdV1_AutoListCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_CmdV1_AutoListCluster_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CmdV1_AutoListCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -564,41 +610,45 @@ func RegisterCmdV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_CmdV1_GetNodeList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"nodes"}, ""))
+	pattern_CmdV1_AutoAddNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"nodes"}, ""))
 
-	pattern_CmdV1_NodeOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"nodes"}, ""))
+	pattern_CmdV1_AutoUpdateNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
 
-	pattern_CmdV1_NodeOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
+	pattern_CmdV1_AutoGetNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
 
-	pattern_CmdV1_NodeOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
+	pattern_CmdV1_AutoDeleteNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
 
-	pattern_CmdV1_NodeOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
+	pattern_CmdV1_AutoListNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"nodes"}, ""))
 
-	pattern_CmdV1_ClusterOper_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
+	pattern_CmdV1_AutoAddCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 
-	pattern_CmdV1_ClusterOper_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
+	pattern_CmdV1_AutoUpdateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
 
-	pattern_CmdV1_ClusterOper_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
+	pattern_CmdV1_AutoGetCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
 
-	pattern_CmdV1_ClusterOper_3 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
+	pattern_CmdV1_AutoDeleteCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"cluster", "O.Name"}, ""))
+
+	pattern_CmdV1_AutoListCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 )
 
 var (
-	forward_CmdV1_GetNodeList_0 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoAddNode_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_NodeOper_0 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoUpdateNode_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_NodeOper_1 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoGetNode_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_NodeOper_2 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoDeleteNode_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_NodeOper_3 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoListNode_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_ClusterOper_0 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoAddCluster_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_ClusterOper_1 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoUpdateCluster_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_ClusterOper_2 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoGetCluster_0 = runtime.ForwardResponseMessage
 
-	forward_CmdV1_ClusterOper_3 = runtime.ForwardResponseMessage
+	forward_CmdV1_AutoDeleteCluster_0 = runtime.ForwardResponseMessage
+
+	forward_CmdV1_AutoListCluster_0 = runtime.ForwardResponseMessage
 )

@@ -95,7 +95,7 @@ func (r *Registry) loadFile(file *descriptor.FileDescriptorProto) {
 	f := &File{
 		FileDescriptorProto: file,
 		GoPkg:               pkg,
-		registry:            r,
+		Reg:                 r,
 	}
 
 	r.files[file.GetName()] = f

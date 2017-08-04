@@ -2,7 +2,7 @@
 
 EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
-TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... ./apiserver/... ./globals/...
+TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... ./apiserver/... ./globals/... ./api/ ./api/hooks/... ./api/listerwatcher/... ./api/cache/... ./api/integration/...
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
@@ -86,6 +86,7 @@ ws-tools:
 	$(info +++ building WS tools)
 	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/protobuf/protoc-gen-go/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protoc-gen-gofast/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/utils/apigen/protoc-gen-pensando && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install )

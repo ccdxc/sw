@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/generator"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/gengateway"
+	gwplugin "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 )
 
 var (
@@ -110,6 +111,11 @@ func main() {
 				glog.Fatalf("Cannot set flag %s", p)
 			}
 		}
+	}
+
+	for k, v := range gwplugin.MutatorMap {
+		glog.V(1).Infof("Calling Mutator func %s", k)
+		v(req)
 	}
 
 	g := gengateway.New(reg, *useRequestContext)

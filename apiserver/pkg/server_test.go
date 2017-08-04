@@ -34,9 +34,12 @@ func (t *testAPISrvService) hooksCb(srv apisrv.Service, logger log.Logger) {
 	t.hookcbCalled++
 }
 
-func (t *testAPISrvService) Enable()                                           {}
-func (t *testAPISrvService) Disable()                                          {}
-func (t *testAPISrvService) GetMethod(n string) apisrv.Method                  { return nil }
+func (t *testAPISrvService) Enable()                          {}
+func (t *testAPISrvService) Disable()                         {}
+func (t *testAPISrvService) GetMethod(n string) apisrv.Method { return nil }
+func (t *testAPISrvService) GetCrudService(in string, oper apisrv.APIOperType) apisrv.Method {
+	return nil
+}
 func (t *testAPISrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
 
 func TestRegistration(t *testing.T) {

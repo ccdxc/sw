@@ -22,3 +22,7 @@ templates:
     outputpath: "../exports/apigw/services.go"
   - template: "genobjrelations.tmpl"
     outputpath: "../relations.json"
+  - template: "crudinterface.tmpl"
+    outputpath: "crudinterface.go"
+  - template: "servicemanifest.tmpl"
+    outputpath: "../apiclient/client.go"

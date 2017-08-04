@@ -40,10 +40,24 @@
 		EndpointStatus
 		Endpoint
 		EndpointList
+		AutoMsgTenantWatchHelper
+		AutoMsgTenantListHelper
+		AutoMsgNetworkWatchHelper
+		AutoMsgNetworkListHelper
+		AutoMsgSecurityGroupWatchHelper
+		AutoMsgSecurityGroupListHelper
+		AutoMsgSgpolicyWatchHelper
+		AutoMsgSgpolicyListHelper
+		AutoMsgServiceWatchHelper
+		AutoMsgServiceListHelper
+		AutoMsgLbPolicyWatchHelper
+		AutoMsgLbPolicyListHelper
+		AutoMsgEndpointWatchHelper
+		AutoMsgEndpointListHelper
 */
 package network
 
-import proto "github.com/golang/protobuf/proto"
+import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
@@ -67,7 +81,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // spec part of tenant object
 type TenantSpec struct {
@@ -1004,6 +1018,320 @@ func (m *EndpointList) GetEndpoints() []Endpoint {
 	return nil
 }
 
+type AutoMsgTenantWatchHelper struct {
+	Type   string  `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Tenant `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgTenantWatchHelper) Reset()                    { *m = AutoMsgTenantWatchHelper{} }
+func (m *AutoMsgTenantWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgTenantWatchHelper) ProtoMessage()               {}
+func (*AutoMsgTenantWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{30} }
+
+func (m *AutoMsgTenantWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgTenantWatchHelper) GetObject() *Tenant {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgTenantListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Tenant `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgTenantListHelper) Reset()                    { *m = AutoMsgTenantListHelper{} }
+func (m *AutoMsgTenantListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgTenantListHelper) ProtoMessage()               {}
+func (*AutoMsgTenantListHelper) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{31} }
+
+func (m *AutoMsgTenantListHelper) GetItems() []*Tenant {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgNetworkWatchHelper struct {
+	Type   string   `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Network `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgNetworkWatchHelper) Reset()         { *m = AutoMsgNetworkWatchHelper{} }
+func (m *AutoMsgNetworkWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgNetworkWatchHelper) ProtoMessage()    {}
+func (*AutoMsgNetworkWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{32}
+}
+
+func (m *AutoMsgNetworkWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgNetworkWatchHelper) GetObject() *Network {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgNetworkListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Network `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgNetworkListHelper) Reset()                    { *m = AutoMsgNetworkListHelper{} }
+func (m *AutoMsgNetworkListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgNetworkListHelper) ProtoMessage()               {}
+func (*AutoMsgNetworkListHelper) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{33} }
+
+func (m *AutoMsgNetworkListHelper) GetItems() []*Network {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgSecurityGroupWatchHelper struct {
+	Type   string         `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *SecurityGroup `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Reset()         { *m = AutoMsgSecurityGroupWatchHelper{} }
+func (m *AutoMsgSecurityGroupWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgSecurityGroupWatchHelper) ProtoMessage()    {}
+func (*AutoMsgSecurityGroupWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{34}
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) GetObject() *SecurityGroup {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgSecurityGroupListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*SecurityGroup `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgSecurityGroupListHelper) Reset()         { *m = AutoMsgSecurityGroupListHelper{} }
+func (m *AutoMsgSecurityGroupListHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgSecurityGroupListHelper) ProtoMessage()    {}
+func (*AutoMsgSecurityGroupListHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{35}
+}
+
+func (m *AutoMsgSecurityGroupListHelper) GetItems() []*SecurityGroup {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgSgpolicyWatchHelper struct {
+	Type   string    `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Sgpolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) Reset()         { *m = AutoMsgSgpolicyWatchHelper{} }
+func (m *AutoMsgSgpolicyWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgSgpolicyWatchHelper) ProtoMessage()    {}
+func (*AutoMsgSgpolicyWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{36}
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) GetObject() *Sgpolicy {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgSgpolicyListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Sgpolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgSgpolicyListHelper) Reset()         { *m = AutoMsgSgpolicyListHelper{} }
+func (m *AutoMsgSgpolicyListHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgSgpolicyListHelper) ProtoMessage()    {}
+func (*AutoMsgSgpolicyListHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{37}
+}
+
+func (m *AutoMsgSgpolicyListHelper) GetItems() []*Sgpolicy {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgServiceWatchHelper struct {
+	Type   string   `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Service `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgServiceWatchHelper) Reset()         { *m = AutoMsgServiceWatchHelper{} }
+func (m *AutoMsgServiceWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgServiceWatchHelper) ProtoMessage()    {}
+func (*AutoMsgServiceWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{38}
+}
+
+func (m *AutoMsgServiceWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgServiceWatchHelper) GetObject() *Service {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgServiceListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Service `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgServiceListHelper) Reset()                    { *m = AutoMsgServiceListHelper{} }
+func (m *AutoMsgServiceListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgServiceListHelper) ProtoMessage()               {}
+func (*AutoMsgServiceListHelper) Descriptor() ([]byte, []int) { return fileDescriptorNetwork, []int{39} }
+
+func (m *AutoMsgServiceListHelper) GetItems() []*Service {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgLbPolicyWatchHelper struct {
+	Type   string    `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *LbPolicy `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) Reset()         { *m = AutoMsgLbPolicyWatchHelper{} }
+func (m *AutoMsgLbPolicyWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgLbPolicyWatchHelper) ProtoMessage()    {}
+func (*AutoMsgLbPolicyWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{40}
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) GetObject() *LbPolicy {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgLbPolicyListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*LbPolicy `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgLbPolicyListHelper) Reset()         { *m = AutoMsgLbPolicyListHelper{} }
+func (m *AutoMsgLbPolicyListHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgLbPolicyListHelper) ProtoMessage()    {}
+func (*AutoMsgLbPolicyListHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{41}
+}
+
+func (m *AutoMsgLbPolicyListHelper) GetItems() []*LbPolicy {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgEndpointWatchHelper struct {
+	Type   string    `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Endpoint `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgEndpointWatchHelper) Reset()         { *m = AutoMsgEndpointWatchHelper{} }
+func (m *AutoMsgEndpointWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgEndpointWatchHelper) ProtoMessage()    {}
+func (*AutoMsgEndpointWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{42}
+}
+
+func (m *AutoMsgEndpointWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgEndpointWatchHelper) GetObject() *Endpoint {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgEndpointListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Endpoint `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgEndpointListHelper) Reset()         { *m = AutoMsgEndpointListHelper{} }
+func (m *AutoMsgEndpointListHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgEndpointListHelper) ProtoMessage()    {}
+func (*AutoMsgEndpointListHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorNetwork, []int{43}
+}
+
+func (m *AutoMsgEndpointListHelper) GetItems() []*Endpoint {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*TenantSpec)(nil), "network.TenantSpec")
 	proto.RegisterType((*TenantStatus)(nil), "network.TenantStatus")
@@ -1035,6 +1363,20 @@ func init() {
 	proto.RegisterType((*EndpointStatus)(nil), "network.EndpointStatus")
 	proto.RegisterType((*Endpoint)(nil), "network.Endpoint")
 	proto.RegisterType((*EndpointList)(nil), "network.EndpointList")
+	proto.RegisterType((*AutoMsgTenantWatchHelper)(nil), "network.AutoMsgTenantWatchHelper")
+	proto.RegisterType((*AutoMsgTenantListHelper)(nil), "network.AutoMsgTenantListHelper")
+	proto.RegisterType((*AutoMsgNetworkWatchHelper)(nil), "network.AutoMsgNetworkWatchHelper")
+	proto.RegisterType((*AutoMsgNetworkListHelper)(nil), "network.AutoMsgNetworkListHelper")
+	proto.RegisterType((*AutoMsgSecurityGroupWatchHelper)(nil), "network.AutoMsgSecurityGroupWatchHelper")
+	proto.RegisterType((*AutoMsgSecurityGroupListHelper)(nil), "network.AutoMsgSecurityGroupListHelper")
+	proto.RegisterType((*AutoMsgSgpolicyWatchHelper)(nil), "network.AutoMsgSgpolicyWatchHelper")
+	proto.RegisterType((*AutoMsgSgpolicyListHelper)(nil), "network.AutoMsgSgpolicyListHelper")
+	proto.RegisterType((*AutoMsgServiceWatchHelper)(nil), "network.AutoMsgServiceWatchHelper")
+	proto.RegisterType((*AutoMsgServiceListHelper)(nil), "network.AutoMsgServiceListHelper")
+	proto.RegisterType((*AutoMsgLbPolicyWatchHelper)(nil), "network.AutoMsgLbPolicyWatchHelper")
+	proto.RegisterType((*AutoMsgLbPolicyListHelper)(nil), "network.AutoMsgLbPolicyListHelper")
+	proto.RegisterType((*AutoMsgEndpointWatchHelper)(nil), "network.AutoMsgEndpointWatchHelper")
+	proto.RegisterType((*AutoMsgEndpointListHelper)(nil), "network.AutoMsgEndpointListHelper")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1048,8 +1390,12 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for TenantV1 service
 
 type TenantV1Client interface {
-	GetTenantList(ctx context.Context, in *TenantList, opts ...grpc.CallOption) (*TenantList, error)
-	TenantOper(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
+	AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgTenantListHelper, error)
+	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (TenantV1_AutoWatchTenantClient, error)
 }
 
 type tenantV1Client struct {
@@ -1060,69 +1406,207 @@ func NewTenantV1Client(cc *grpc.ClientConn) TenantV1Client {
 	return &tenantV1Client{cc}
 }
 
-func (c *tenantV1Client) GetTenantList(ctx context.Context, in *TenantList, opts ...grpc.CallOption) (*TenantList, error) {
-	out := new(TenantList)
-	err := grpc.Invoke(ctx, "/network.TenantV1/GetTenantList", in, out, c.cc, opts...)
+func (c *tenantV1Client) AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
+	out := new(Tenant)
+	err := grpc.Invoke(ctx, "/network.TenantV1/AutoAddTenant", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *tenantV1Client) TenantOper(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
+func (c *tenantV1Client) AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
 	out := new(Tenant)
-	err := grpc.Invoke(ctx, "/network.TenantV1/TenantOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.TenantV1/AutoUpdateTenant", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *tenantV1Client) AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
+	out := new(Tenant)
+	err := grpc.Invoke(ctx, "/network.TenantV1/AutoGetTenant", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error) {
+	out := new(Tenant)
+	err := grpc.Invoke(ctx, "/network.TenantV1/AutoDeleteTenant", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgTenantListHelper, error) {
+	out := new(AutoMsgTenantListHelper)
+	err := grpc.Invoke(ctx, "/network.TenantV1/AutoListTenant", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (TenantV1_AutoWatchTenantClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_TenantV1_serviceDesc.Streams[0], c.cc, "/network.TenantV1/AutoWatchTenant", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &tenantV1AutoWatchTenantClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type TenantV1_AutoWatchTenantClient interface {
+	Recv() (*AutoMsgTenantWatchHelper, error)
+	grpc.ClientStream
+}
+
+type tenantV1AutoWatchTenantClient struct {
+	grpc.ClientStream
+}
+
+func (x *tenantV1AutoWatchTenantClient) Recv() (*AutoMsgTenantWatchHelper, error) {
+	m := new(AutoMsgTenantWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for TenantV1 service
 
 type TenantV1Server interface {
-	GetTenantList(context.Context, *TenantList) (*TenantList, error)
-	TenantOper(context.Context, *Tenant) (*Tenant, error)
+	AutoAddTenant(context.Context, *Tenant) (*Tenant, error)
+	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
+	AutoGetTenant(context.Context, *Tenant) (*Tenant, error)
+	AutoDeleteTenant(context.Context, *Tenant) (*Tenant, error)
+	AutoListTenant(context.Context, *api.ListWatchOptions) (*AutoMsgTenantListHelper, error)
+	AutoWatchTenant(*api.ListWatchOptions, TenantV1_AutoWatchTenantServer) error
 }
 
 func RegisterTenantV1Server(s *grpc.Server, srv TenantV1Server) {
 	s.RegisterService(&_TenantV1_serviceDesc, srv)
 }
 
-func _TenantV1_GetTenantList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TenantList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TenantV1Server).GetTenantList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.TenantV1/GetTenantList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TenantV1Server).GetTenantList(ctx, req.(*TenantList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TenantV1_TenantOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TenantV1_AutoAddTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Tenant)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TenantV1Server).TenantOper(ctx, in)
+		return srv.(TenantV1Server).AutoAddTenant(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.TenantV1/TenantOper",
+		FullMethod: "/network.TenantV1/AutoAddTenant",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TenantV1Server).TenantOper(ctx, req.(*Tenant))
+		return srv.(TenantV1Server).AutoAddTenant(ctx, req.(*Tenant))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantV1_AutoUpdateTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Tenant)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantV1Server).AutoUpdateTenant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.TenantV1/AutoUpdateTenant",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantV1Server).AutoUpdateTenant(ctx, req.(*Tenant))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantV1_AutoGetTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Tenant)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantV1Server).AutoGetTenant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.TenantV1/AutoGetTenant",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantV1Server).AutoGetTenant(ctx, req.(*Tenant))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantV1_AutoDeleteTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Tenant)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantV1Server).AutoDeleteTenant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.TenantV1/AutoDeleteTenant",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantV1Server).AutoDeleteTenant(ctx, req.(*Tenant))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantV1_AutoListTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantV1Server).AutoListTenant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.TenantV1/AutoListTenant",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantV1Server).AutoListTenant(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantV1_AutoWatchTenant_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TenantV1Server).AutoWatchTenant(m, &tenantV1AutoWatchTenantServer{stream})
+}
+
+type TenantV1_AutoWatchTenantServer interface {
+	Send(*AutoMsgTenantWatchHelper) error
+	grpc.ServerStream
+}
+
+type tenantV1AutoWatchTenantServer struct {
+	grpc.ServerStream
+}
+
+func (x *tenantV1AutoWatchTenantServer) Send(m *AutoMsgTenantWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _TenantV1_serviceDesc = grpc.ServiceDesc{
@@ -1130,23 +1614,45 @@ var _TenantV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*TenantV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetTenantList",
-			Handler:    _TenantV1_GetTenantList_Handler,
+			MethodName: "AutoAddTenant",
+			Handler:    _TenantV1_AutoAddTenant_Handler,
 		},
 		{
-			MethodName: "TenantOper",
-			Handler:    _TenantV1_TenantOper_Handler,
+			MethodName: "AutoUpdateTenant",
+			Handler:    _TenantV1_AutoUpdateTenant_Handler,
+		},
+		{
+			MethodName: "AutoGetTenant",
+			Handler:    _TenantV1_AutoGetTenant_Handler,
+		},
+		{
+			MethodName: "AutoDeleteTenant",
+			Handler:    _TenantV1_AutoDeleteTenant_Handler,
+		},
+		{
+			MethodName: "AutoListTenant",
+			Handler:    _TenantV1_AutoListTenant_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchTenant",
+			Handler:       _TenantV1_AutoWatchTenant_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for NetworkV1 service
 
 type NetworkV1Client interface {
-	GetNetworkList(ctx context.Context, in *NetworkList, opts ...grpc.CallOption) (*NetworkList, error)
-	NetworkOper(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	AutoAddNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	AutoUpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	AutoGetNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	AutoDeleteNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	AutoListNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNetworkListHelper, error)
+	AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkClient, error)
 }
 
 type networkV1Client struct {
@@ -1157,69 +1663,207 @@ func NewNetworkV1Client(cc *grpc.ClientConn) NetworkV1Client {
 	return &networkV1Client{cc}
 }
 
-func (c *networkV1Client) GetNetworkList(ctx context.Context, in *NetworkList, opts ...grpc.CallOption) (*NetworkList, error) {
-	out := new(NetworkList)
-	err := grpc.Invoke(ctx, "/network.NetworkV1/GetNetworkList", in, out, c.cc, opts...)
+func (c *networkV1Client) AutoAddNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
+	out := new(Network)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoAddNetwork", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *networkV1Client) NetworkOper(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
+func (c *networkV1Client) AutoUpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
 	out := new(Network)
-	err := grpc.Invoke(ctx, "/network.NetworkV1/NetworkOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateNetwork", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *networkV1Client) AutoGetNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
+	out := new(Network)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoGetNetwork", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoDeleteNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error) {
+	out := new(Network)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoDeleteNetwork", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNetworkListHelper, error) {
+	out := new(AutoMsgNetworkListHelper)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoListNetwork", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[0], c.cc, "/network.NetworkV1/AutoWatchNetwork", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &networkV1AutoWatchNetworkClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type NetworkV1_AutoWatchNetworkClient interface {
+	Recv() (*AutoMsgNetworkWatchHelper, error)
+	grpc.ClientStream
+}
+
+type networkV1AutoWatchNetworkClient struct {
+	grpc.ClientStream
+}
+
+func (x *networkV1AutoWatchNetworkClient) Recv() (*AutoMsgNetworkWatchHelper, error) {
+	m := new(AutoMsgNetworkWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for NetworkV1 service
 
 type NetworkV1Server interface {
-	GetNetworkList(context.Context, *NetworkList) (*NetworkList, error)
-	NetworkOper(context.Context, *Network) (*Network, error)
+	AutoAddNetwork(context.Context, *Network) (*Network, error)
+	AutoUpdateNetwork(context.Context, *Network) (*Network, error)
+	AutoGetNetwork(context.Context, *Network) (*Network, error)
+	AutoDeleteNetwork(context.Context, *Network) (*Network, error)
+	AutoListNetwork(context.Context, *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error)
+	AutoWatchNetwork(*api.ListWatchOptions, NetworkV1_AutoWatchNetworkServer) error
 }
 
 func RegisterNetworkV1Server(s *grpc.Server, srv NetworkV1Server) {
 	s.RegisterService(&_NetworkV1_serviceDesc, srv)
 }
 
-func _NetworkV1_GetNetworkList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NetworkList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NetworkV1Server).GetNetworkList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.NetworkV1/GetNetworkList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NetworkV1Server).GetNetworkList(ctx, req.(*NetworkList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NetworkV1_NetworkOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NetworkV1_AutoAddNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Network)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NetworkV1Server).NetworkOper(ctx, in)
+		return srv.(NetworkV1Server).AutoAddNetwork(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.NetworkV1/NetworkOper",
+		FullMethod: "/network.NetworkV1/AutoAddNetwork",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NetworkV1Server).NetworkOper(ctx, req.(*Network))
+		return srv.(NetworkV1Server).AutoAddNetwork(ctx, req.(*Network))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoUpdateNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Network)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoUpdateNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoUpdateNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoUpdateNetwork(ctx, req.(*Network))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoGetNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Network)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoGetNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoGetNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoGetNetwork(ctx, req.(*Network))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoDeleteNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Network)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoDeleteNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoDeleteNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoDeleteNetwork(ctx, req.(*Network))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoListNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoListNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoListNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoListNetwork(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoWatchNetwork_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NetworkV1Server).AutoWatchNetwork(m, &networkV1AutoWatchNetworkServer{stream})
+}
+
+type NetworkV1_AutoWatchNetworkServer interface {
+	Send(*AutoMsgNetworkWatchHelper) error
+	grpc.ServerStream
+}
+
+type networkV1AutoWatchNetworkServer struct {
+	grpc.ServerStream
+}
+
+func (x *networkV1AutoWatchNetworkServer) Send(m *AutoMsgNetworkWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _NetworkV1_serviceDesc = grpc.ServiceDesc{
@@ -1227,23 +1871,45 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*NetworkV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetNetworkList",
-			Handler:    _NetworkV1_GetNetworkList_Handler,
+			MethodName: "AutoAddNetwork",
+			Handler:    _NetworkV1_AutoAddNetwork_Handler,
 		},
 		{
-			MethodName: "NetworkOper",
-			Handler:    _NetworkV1_NetworkOper_Handler,
+			MethodName: "AutoUpdateNetwork",
+			Handler:    _NetworkV1_AutoUpdateNetwork_Handler,
+		},
+		{
+			MethodName: "AutoGetNetwork",
+			Handler:    _NetworkV1_AutoGetNetwork_Handler,
+		},
+		{
+			MethodName: "AutoDeleteNetwork",
+			Handler:    _NetworkV1_AutoDeleteNetwork_Handler,
+		},
+		{
+			MethodName: "AutoListNetwork",
+			Handler:    _NetworkV1_AutoListNetwork_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchNetwork",
+			Handler:       _NetworkV1_AutoWatchNetwork_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for SecurityGroupV1 service
 
 type SecurityGroupV1Client interface {
-	GetSecurityGroupList(ctx context.Context, in *SecurityGroupList, opts ...grpc.CallOption) (*SecurityGroupList, error)
-	SecurityGroupOper(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSecurityGroupListHelper, error)
+	AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityGroupV1_AutoWatchSecurityGroupClient, error)
 }
 
 type securityGroupV1Client struct {
@@ -1254,69 +1920,207 @@ func NewSecurityGroupV1Client(cc *grpc.ClientConn) SecurityGroupV1Client {
 	return &securityGroupV1Client{cc}
 }
 
-func (c *securityGroupV1Client) GetSecurityGroupList(ctx context.Context, in *SecurityGroupList, opts ...grpc.CallOption) (*SecurityGroupList, error) {
-	out := new(SecurityGroupList)
-	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/GetSecurityGroupList", in, out, c.cc, opts...)
+func (c *securityGroupV1Client) AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error) {
+	out := new(SecurityGroup)
+	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/AutoAddSecurityGroup", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *securityGroupV1Client) SecurityGroupOper(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error) {
+func (c *securityGroupV1Client) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error) {
 	out := new(SecurityGroup)
-	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/SecurityGroupOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/AutoUpdateSecurityGroup", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *securityGroupV1Client) AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error) {
+	out := new(SecurityGroup)
+	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/AutoGetSecurityGroup", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *securityGroupV1Client) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error) {
+	out := new(SecurityGroup)
+	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/AutoDeleteSecurityGroup", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *securityGroupV1Client) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSecurityGroupListHelper, error) {
+	out := new(AutoMsgSecurityGroupListHelper)
+	err := grpc.Invoke(ctx, "/network.SecurityGroupV1/AutoListSecurityGroup", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *securityGroupV1Client) AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityGroupV1_AutoWatchSecurityGroupClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_SecurityGroupV1_serviceDesc.Streams[0], c.cc, "/network.SecurityGroupV1/AutoWatchSecurityGroup", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &securityGroupV1AutoWatchSecurityGroupClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SecurityGroupV1_AutoWatchSecurityGroupClient interface {
+	Recv() (*AutoMsgSecurityGroupWatchHelper, error)
+	grpc.ClientStream
+}
+
+type securityGroupV1AutoWatchSecurityGroupClient struct {
+	grpc.ClientStream
+}
+
+func (x *securityGroupV1AutoWatchSecurityGroupClient) Recv() (*AutoMsgSecurityGroupWatchHelper, error) {
+	m := new(AutoMsgSecurityGroupWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for SecurityGroupV1 service
 
 type SecurityGroupV1Server interface {
-	GetSecurityGroupList(context.Context, *SecurityGroupList) (*SecurityGroupList, error)
-	SecurityGroupOper(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	AutoAddSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	AutoUpdateSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	AutoGetSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	AutoDeleteSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	AutoListSecurityGroup(context.Context, *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error)
+	AutoWatchSecurityGroup(*api.ListWatchOptions, SecurityGroupV1_AutoWatchSecurityGroupServer) error
 }
 
 func RegisterSecurityGroupV1Server(s *grpc.Server, srv SecurityGroupV1Server) {
 	s.RegisterService(&_SecurityGroupV1_serviceDesc, srv)
 }
 
-func _SecurityGroupV1_GetSecurityGroupList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SecurityGroupList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SecurityGroupV1Server).GetSecurityGroupList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.SecurityGroupV1/GetSecurityGroupList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SecurityGroupV1Server).GetSecurityGroupList(ctx, req.(*SecurityGroupList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SecurityGroupV1_SecurityGroupOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SecurityGroupV1_AutoAddSecurityGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SecurityGroup)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SecurityGroupV1Server).SecurityGroupOper(ctx, in)
+		return srv.(SecurityGroupV1Server).AutoAddSecurityGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.SecurityGroupV1/SecurityGroupOper",
+		FullMethod: "/network.SecurityGroupV1/AutoAddSecurityGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SecurityGroupV1Server).SecurityGroupOper(ctx, req.(*SecurityGroup))
+		return srv.(SecurityGroupV1Server).AutoAddSecurityGroup(ctx, req.(*SecurityGroup))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _SecurityGroupV1_AutoUpdateSecurityGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecurityGroup)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecurityGroupV1Server).AutoUpdateSecurityGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SecurityGroupV1/AutoUpdateSecurityGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecurityGroupV1Server).AutoUpdateSecurityGroup(ctx, req.(*SecurityGroup))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecurityGroupV1_AutoGetSecurityGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecurityGroup)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecurityGroupV1Server).AutoGetSecurityGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SecurityGroupV1/AutoGetSecurityGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecurityGroupV1Server).AutoGetSecurityGroup(ctx, req.(*SecurityGroup))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecurityGroupV1_AutoDeleteSecurityGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecurityGroup)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecurityGroupV1Server).AutoDeleteSecurityGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SecurityGroupV1/AutoDeleteSecurityGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecurityGroupV1Server).AutoDeleteSecurityGroup(ctx, req.(*SecurityGroup))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecurityGroupV1_AutoListSecurityGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecurityGroupV1Server).AutoListSecurityGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SecurityGroupV1/AutoListSecurityGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecurityGroupV1Server).AutoListSecurityGroup(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecurityGroupV1_AutoWatchSecurityGroup_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SecurityGroupV1Server).AutoWatchSecurityGroup(m, &securityGroupV1AutoWatchSecurityGroupServer{stream})
+}
+
+type SecurityGroupV1_AutoWatchSecurityGroupServer interface {
+	Send(*AutoMsgSecurityGroupWatchHelper) error
+	grpc.ServerStream
+}
+
+type securityGroupV1AutoWatchSecurityGroupServer struct {
+	grpc.ServerStream
+}
+
+func (x *securityGroupV1AutoWatchSecurityGroupServer) Send(m *AutoMsgSecurityGroupWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _SecurityGroupV1_serviceDesc = grpc.ServiceDesc{
@@ -1324,23 +2128,45 @@ var _SecurityGroupV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*SecurityGroupV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetSecurityGroupList",
-			Handler:    _SecurityGroupV1_GetSecurityGroupList_Handler,
+			MethodName: "AutoAddSecurityGroup",
+			Handler:    _SecurityGroupV1_AutoAddSecurityGroup_Handler,
 		},
 		{
-			MethodName: "SecurityGroupOper",
-			Handler:    _SecurityGroupV1_SecurityGroupOper_Handler,
+			MethodName: "AutoUpdateSecurityGroup",
+			Handler:    _SecurityGroupV1_AutoUpdateSecurityGroup_Handler,
+		},
+		{
+			MethodName: "AutoGetSecurityGroup",
+			Handler:    _SecurityGroupV1_AutoGetSecurityGroup_Handler,
+		},
+		{
+			MethodName: "AutoDeleteSecurityGroup",
+			Handler:    _SecurityGroupV1_AutoDeleteSecurityGroup_Handler,
+		},
+		{
+			MethodName: "AutoListSecurityGroup",
+			Handler:    _SecurityGroupV1_AutoListSecurityGroup_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchSecurityGroup",
+			Handler:       _SecurityGroupV1_AutoWatchSecurityGroup_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for SgpolicyV1 service
 
 type SgpolicyV1Client interface {
-	GetSgpolicyList(ctx context.Context, in *SgpolicyList, opts ...grpc.CallOption) (*SgpolicyList, error)
-	SgpolicyOper(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	AutoAddSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	AutoGetSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error)
+	AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSgpolicyListHelper, error)
+	AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SgpolicyV1_AutoWatchSgpolicyClient, error)
 }
 
 type sgpolicyV1Client struct {
@@ -1351,69 +2177,207 @@ func NewSgpolicyV1Client(cc *grpc.ClientConn) SgpolicyV1Client {
 	return &sgpolicyV1Client{cc}
 }
 
-func (c *sgpolicyV1Client) GetSgpolicyList(ctx context.Context, in *SgpolicyList, opts ...grpc.CallOption) (*SgpolicyList, error) {
-	out := new(SgpolicyList)
-	err := grpc.Invoke(ctx, "/network.SgpolicyV1/GetSgpolicyList", in, out, c.cc, opts...)
+func (c *sgpolicyV1Client) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error) {
+	out := new(Sgpolicy)
+	err := grpc.Invoke(ctx, "/network.SgpolicyV1/AutoAddSgpolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sgpolicyV1Client) SgpolicyOper(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error) {
+func (c *sgpolicyV1Client) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error) {
 	out := new(Sgpolicy)
-	err := grpc.Invoke(ctx, "/network.SgpolicyV1/SgpolicyOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.SgpolicyV1/AutoUpdateSgpolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *sgpolicyV1Client) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error) {
+	out := new(Sgpolicy)
+	err := grpc.Invoke(ctx, "/network.SgpolicyV1/AutoGetSgpolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sgpolicyV1Client) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy, opts ...grpc.CallOption) (*Sgpolicy, error) {
+	out := new(Sgpolicy)
+	err := grpc.Invoke(ctx, "/network.SgpolicyV1/AutoDeleteSgpolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sgpolicyV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSgpolicyListHelper, error) {
+	out := new(AutoMsgSgpolicyListHelper)
+	err := grpc.Invoke(ctx, "/network.SgpolicyV1/AutoListSgpolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sgpolicyV1Client) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SgpolicyV1_AutoWatchSgpolicyClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_SgpolicyV1_serviceDesc.Streams[0], c.cc, "/network.SgpolicyV1/AutoWatchSgpolicy", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sgpolicyV1AutoWatchSgpolicyClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SgpolicyV1_AutoWatchSgpolicyClient interface {
+	Recv() (*AutoMsgSgpolicyWatchHelper, error)
+	grpc.ClientStream
+}
+
+type sgpolicyV1AutoWatchSgpolicyClient struct {
+	grpc.ClientStream
+}
+
+func (x *sgpolicyV1AutoWatchSgpolicyClient) Recv() (*AutoMsgSgpolicyWatchHelper, error) {
+	m := new(AutoMsgSgpolicyWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for SgpolicyV1 service
 
 type SgpolicyV1Server interface {
-	GetSgpolicyList(context.Context, *SgpolicyList) (*SgpolicyList, error)
-	SgpolicyOper(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	AutoAddSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	AutoUpdateSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	AutoGetSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	AutoDeleteSgpolicy(context.Context, *Sgpolicy) (*Sgpolicy, error)
+	AutoListSgpolicy(context.Context, *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error)
+	AutoWatchSgpolicy(*api.ListWatchOptions, SgpolicyV1_AutoWatchSgpolicyServer) error
 }
 
 func RegisterSgpolicyV1Server(s *grpc.Server, srv SgpolicyV1Server) {
 	s.RegisterService(&_SgpolicyV1_serviceDesc, srv)
 }
 
-func _SgpolicyV1_GetSgpolicyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SgpolicyList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SgpolicyV1Server).GetSgpolicyList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.SgpolicyV1/GetSgpolicyList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SgpolicyV1Server).GetSgpolicyList(ctx, req.(*SgpolicyList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SgpolicyV1_SgpolicyOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SgpolicyV1_AutoAddSgpolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Sgpolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SgpolicyV1Server).SgpolicyOper(ctx, in)
+		return srv.(SgpolicyV1Server).AutoAddSgpolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.SgpolicyV1/SgpolicyOper",
+		FullMethod: "/network.SgpolicyV1/AutoAddSgpolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SgpolicyV1Server).SgpolicyOper(ctx, req.(*Sgpolicy))
+		return srv.(SgpolicyV1Server).AutoAddSgpolicy(ctx, req.(*Sgpolicy))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _SgpolicyV1_AutoUpdateSgpolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Sgpolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SgpolicyV1Server).AutoUpdateSgpolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SgpolicyV1/AutoUpdateSgpolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SgpolicyV1Server).AutoUpdateSgpolicy(ctx, req.(*Sgpolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SgpolicyV1_AutoGetSgpolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Sgpolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SgpolicyV1Server).AutoGetSgpolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SgpolicyV1/AutoGetSgpolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SgpolicyV1Server).AutoGetSgpolicy(ctx, req.(*Sgpolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SgpolicyV1_AutoDeleteSgpolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Sgpolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SgpolicyV1Server).AutoDeleteSgpolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SgpolicyV1/AutoDeleteSgpolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SgpolicyV1Server).AutoDeleteSgpolicy(ctx, req.(*Sgpolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SgpolicyV1_AutoListSgpolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SgpolicyV1Server).AutoListSgpolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.SgpolicyV1/AutoListSgpolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SgpolicyV1Server).AutoListSgpolicy(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SgpolicyV1_AutoWatchSgpolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SgpolicyV1Server).AutoWatchSgpolicy(m, &sgpolicyV1AutoWatchSgpolicyServer{stream})
+}
+
+type SgpolicyV1_AutoWatchSgpolicyServer interface {
+	Send(*AutoMsgSgpolicyWatchHelper) error
+	grpc.ServerStream
+}
+
+type sgpolicyV1AutoWatchSgpolicyServer struct {
+	grpc.ServerStream
+}
+
+func (x *sgpolicyV1AutoWatchSgpolicyServer) Send(m *AutoMsgSgpolicyWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _SgpolicyV1_serviceDesc = grpc.ServiceDesc{
@@ -1421,23 +2385,45 @@ var _SgpolicyV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*SgpolicyV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetSgpolicyList",
-			Handler:    _SgpolicyV1_GetSgpolicyList_Handler,
+			MethodName: "AutoAddSgpolicy",
+			Handler:    _SgpolicyV1_AutoAddSgpolicy_Handler,
 		},
 		{
-			MethodName: "SgpolicyOper",
-			Handler:    _SgpolicyV1_SgpolicyOper_Handler,
+			MethodName: "AutoUpdateSgpolicy",
+			Handler:    _SgpolicyV1_AutoUpdateSgpolicy_Handler,
+		},
+		{
+			MethodName: "AutoGetSgpolicy",
+			Handler:    _SgpolicyV1_AutoGetSgpolicy_Handler,
+		},
+		{
+			MethodName: "AutoDeleteSgpolicy",
+			Handler:    _SgpolicyV1_AutoDeleteSgpolicy_Handler,
+		},
+		{
+			MethodName: "AutoListSgpolicy",
+			Handler:    _SgpolicyV1_AutoListSgpolicy_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchSgpolicy",
+			Handler:       _SgpolicyV1_AutoWatchSgpolicy_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for ServiceV1 service
 
 type ServiceV1Client interface {
-	GetServiceList(ctx context.Context, in *ServiceList, opts ...grpc.CallOption) (*ServiceList, error)
-	ServiceOper(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	AutoAddService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	AutoGetService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	AutoListService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgServiceListHelper, error)
+	AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ServiceV1_AutoWatchServiceClient, error)
 }
 
 type serviceV1Client struct {
@@ -1448,69 +2434,207 @@ func NewServiceV1Client(cc *grpc.ClientConn) ServiceV1Client {
 	return &serviceV1Client{cc}
 }
 
-func (c *serviceV1Client) GetServiceList(ctx context.Context, in *ServiceList, opts ...grpc.CallOption) (*ServiceList, error) {
-	out := new(ServiceList)
-	err := grpc.Invoke(ctx, "/network.ServiceV1/GetServiceList", in, out, c.cc, opts...)
+func (c *serviceV1Client) AutoAddService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
+	out := new(Service)
+	err := grpc.Invoke(ctx, "/network.ServiceV1/AutoAddService", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *serviceV1Client) ServiceOper(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
+func (c *serviceV1Client) AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
 	out := new(Service)
-	err := grpc.Invoke(ctx, "/network.ServiceV1/ServiceOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.ServiceV1/AutoUpdateService", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *serviceV1Client) AutoGetService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
+	out := new(Service)
+	err := grpc.Invoke(ctx, "/network.ServiceV1/AutoGetService", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceV1Client) AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
+	out := new(Service)
+	err := grpc.Invoke(ctx, "/network.ServiceV1/AutoDeleteService", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgServiceListHelper, error) {
+	out := new(AutoMsgServiceListHelper)
+	err := grpc.Invoke(ctx, "/network.ServiceV1/AutoListService", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceV1Client) AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ServiceV1_AutoWatchServiceClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ServiceV1_serviceDesc.Streams[0], c.cc, "/network.ServiceV1/AutoWatchService", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &serviceV1AutoWatchServiceClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ServiceV1_AutoWatchServiceClient interface {
+	Recv() (*AutoMsgServiceWatchHelper, error)
+	grpc.ClientStream
+}
+
+type serviceV1AutoWatchServiceClient struct {
+	grpc.ClientStream
+}
+
+func (x *serviceV1AutoWatchServiceClient) Recv() (*AutoMsgServiceWatchHelper, error) {
+	m := new(AutoMsgServiceWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for ServiceV1 service
 
 type ServiceV1Server interface {
-	GetServiceList(context.Context, *ServiceList) (*ServiceList, error)
-	ServiceOper(context.Context, *Service) (*Service, error)
+	AutoAddService(context.Context, *Service) (*Service, error)
+	AutoUpdateService(context.Context, *Service) (*Service, error)
+	AutoGetService(context.Context, *Service) (*Service, error)
+	AutoDeleteService(context.Context, *Service) (*Service, error)
+	AutoListService(context.Context, *api.ListWatchOptions) (*AutoMsgServiceListHelper, error)
+	AutoWatchService(*api.ListWatchOptions, ServiceV1_AutoWatchServiceServer) error
 }
 
 func RegisterServiceV1Server(s *grpc.Server, srv ServiceV1Server) {
 	s.RegisterService(&_ServiceV1_serviceDesc, srv)
 }
 
-func _ServiceV1_GetServiceList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ServiceList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServiceV1Server).GetServiceList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.ServiceV1/GetServiceList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceV1Server).GetServiceList(ctx, req.(*ServiceList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ServiceV1_ServiceOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ServiceV1_AutoAddService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Service)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServiceV1Server).ServiceOper(ctx, in)
+		return srv.(ServiceV1Server).AutoAddService(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.ServiceV1/ServiceOper",
+		FullMethod: "/network.ServiceV1/AutoAddService",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceV1Server).ServiceOper(ctx, req.(*Service))
+		return srv.(ServiceV1Server).AutoAddService(ctx, req.(*Service))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _ServiceV1_AutoUpdateService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Service)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceV1Server).AutoUpdateService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.ServiceV1/AutoUpdateService",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceV1Server).AutoUpdateService(ctx, req.(*Service))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ServiceV1_AutoGetService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Service)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceV1Server).AutoGetService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.ServiceV1/AutoGetService",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceV1Server).AutoGetService(ctx, req.(*Service))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ServiceV1_AutoDeleteService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Service)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceV1Server).AutoDeleteService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.ServiceV1/AutoDeleteService",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceV1Server).AutoDeleteService(ctx, req.(*Service))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ServiceV1_AutoListService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceV1Server).AutoListService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.ServiceV1/AutoListService",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceV1Server).AutoListService(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ServiceV1_AutoWatchService_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ServiceV1Server).AutoWatchService(m, &serviceV1AutoWatchServiceServer{stream})
+}
+
+type ServiceV1_AutoWatchServiceServer interface {
+	Send(*AutoMsgServiceWatchHelper) error
+	grpc.ServerStream
+}
+
+type serviceV1AutoWatchServiceServer struct {
+	grpc.ServerStream
+}
+
+func (x *serviceV1AutoWatchServiceServer) Send(m *AutoMsgServiceWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _ServiceV1_serviceDesc = grpc.ServiceDesc{
@@ -1518,23 +2642,45 @@ var _ServiceV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ServiceV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetServiceList",
-			Handler:    _ServiceV1_GetServiceList_Handler,
+			MethodName: "AutoAddService",
+			Handler:    _ServiceV1_AutoAddService_Handler,
 		},
 		{
-			MethodName: "ServiceOper",
-			Handler:    _ServiceV1_ServiceOper_Handler,
+			MethodName: "AutoUpdateService",
+			Handler:    _ServiceV1_AutoUpdateService_Handler,
+		},
+		{
+			MethodName: "AutoGetService",
+			Handler:    _ServiceV1_AutoGetService_Handler,
+		},
+		{
+			MethodName: "AutoDeleteService",
+			Handler:    _ServiceV1_AutoDeleteService_Handler,
+		},
+		{
+			MethodName: "AutoListService",
+			Handler:    _ServiceV1_AutoListService_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchService",
+			Handler:       _ServiceV1_AutoWatchService_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for LbPolicyV1 service
 
 type LbPolicyV1Client interface {
-	GetLbPolicyList(ctx context.Context, in *LbPolicyList, opts ...grpc.CallOption) (*LbPolicyList, error)
-	LbPolicyOper(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	AutoAddLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgLbPolicyListHelper, error)
+	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (LbPolicyV1_AutoWatchLbPolicyClient, error)
 }
 
 type lbPolicyV1Client struct {
@@ -1545,69 +2691,207 @@ func NewLbPolicyV1Client(cc *grpc.ClientConn) LbPolicyV1Client {
 	return &lbPolicyV1Client{cc}
 }
 
-func (c *lbPolicyV1Client) GetLbPolicyList(ctx context.Context, in *LbPolicyList, opts ...grpc.CallOption) (*LbPolicyList, error) {
-	out := new(LbPolicyList)
-	err := grpc.Invoke(ctx, "/network.LbPolicyV1/GetLbPolicyList", in, out, c.cc, opts...)
+func (c *lbPolicyV1Client) AutoAddLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
+	out := new(LbPolicy)
+	err := grpc.Invoke(ctx, "/network.LbPolicyV1/AutoAddLbPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *lbPolicyV1Client) LbPolicyOper(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
+func (c *lbPolicyV1Client) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
 	out := new(LbPolicy)
-	err := grpc.Invoke(ctx, "/network.LbPolicyV1/LbPolicyOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.LbPolicyV1/AutoUpdateLbPolicy", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *lbPolicyV1Client) AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
+	out := new(LbPolicy)
+	err := grpc.Invoke(ctx, "/network.LbPolicyV1/AutoGetLbPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lbPolicyV1Client) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
+	out := new(LbPolicy)
+	err := grpc.Invoke(ctx, "/network.LbPolicyV1/AutoDeleteLbPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lbPolicyV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgLbPolicyListHelper, error) {
+	out := new(AutoMsgLbPolicyListHelper)
+	err := grpc.Invoke(ctx, "/network.LbPolicyV1/AutoListLbPolicy", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lbPolicyV1Client) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (LbPolicyV1_AutoWatchLbPolicyClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_LbPolicyV1_serviceDesc.Streams[0], c.cc, "/network.LbPolicyV1/AutoWatchLbPolicy", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &lbPolicyV1AutoWatchLbPolicyClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type LbPolicyV1_AutoWatchLbPolicyClient interface {
+	Recv() (*AutoMsgLbPolicyWatchHelper, error)
+	grpc.ClientStream
+}
+
+type lbPolicyV1AutoWatchLbPolicyClient struct {
+	grpc.ClientStream
+}
+
+func (x *lbPolicyV1AutoWatchLbPolicyClient) Recv() (*AutoMsgLbPolicyWatchHelper, error) {
+	m := new(AutoMsgLbPolicyWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for LbPolicyV1 service
 
 type LbPolicyV1Server interface {
-	GetLbPolicyList(context.Context, *LbPolicyList) (*LbPolicyList, error)
-	LbPolicyOper(context.Context, *LbPolicy) (*LbPolicy, error)
+	AutoAddLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
+	AutoUpdateLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
+	AutoGetLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
+	AutoDeleteLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
+	AutoListLbPolicy(context.Context, *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error)
+	AutoWatchLbPolicy(*api.ListWatchOptions, LbPolicyV1_AutoWatchLbPolicyServer) error
 }
 
 func RegisterLbPolicyV1Server(s *grpc.Server, srv LbPolicyV1Server) {
 	s.RegisterService(&_LbPolicyV1_serviceDesc, srv)
 }
 
-func _LbPolicyV1_GetLbPolicyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LbPolicyList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LbPolicyV1Server).GetLbPolicyList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.LbPolicyV1/GetLbPolicyList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LbPolicyV1Server).GetLbPolicyList(ctx, req.(*LbPolicyList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _LbPolicyV1_LbPolicyOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _LbPolicyV1_AutoAddLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LbPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LbPolicyV1Server).LbPolicyOper(ctx, in)
+		return srv.(LbPolicyV1Server).AutoAddLbPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.LbPolicyV1/LbPolicyOper",
+		FullMethod: "/network.LbPolicyV1/AutoAddLbPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LbPolicyV1Server).LbPolicyOper(ctx, req.(*LbPolicy))
+		return srv.(LbPolicyV1Server).AutoAddLbPolicy(ctx, req.(*LbPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _LbPolicyV1_AutoUpdateLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LbPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LbPolicyV1Server).AutoUpdateLbPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.LbPolicyV1/AutoUpdateLbPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LbPolicyV1Server).AutoUpdateLbPolicy(ctx, req.(*LbPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LbPolicyV1_AutoGetLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LbPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LbPolicyV1Server).AutoGetLbPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.LbPolicyV1/AutoGetLbPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LbPolicyV1Server).AutoGetLbPolicy(ctx, req.(*LbPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LbPolicyV1_AutoDeleteLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LbPolicy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LbPolicyV1Server).AutoDeleteLbPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.LbPolicyV1/AutoDeleteLbPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LbPolicyV1Server).AutoDeleteLbPolicy(ctx, req.(*LbPolicy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LbPolicyV1_AutoListLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LbPolicyV1Server).AutoListLbPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.LbPolicyV1/AutoListLbPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LbPolicyV1Server).AutoListLbPolicy(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LbPolicyV1_AutoWatchLbPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(LbPolicyV1Server).AutoWatchLbPolicy(m, &lbPolicyV1AutoWatchLbPolicyServer{stream})
+}
+
+type LbPolicyV1_AutoWatchLbPolicyServer interface {
+	Send(*AutoMsgLbPolicyWatchHelper) error
+	grpc.ServerStream
+}
+
+type lbPolicyV1AutoWatchLbPolicyServer struct {
+	grpc.ServerStream
+}
+
+func (x *lbPolicyV1AutoWatchLbPolicyServer) Send(m *AutoMsgLbPolicyWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _LbPolicyV1_serviceDesc = grpc.ServiceDesc{
@@ -1615,23 +2899,45 @@ var _LbPolicyV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*LbPolicyV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetLbPolicyList",
-			Handler:    _LbPolicyV1_GetLbPolicyList_Handler,
+			MethodName: "AutoAddLbPolicy",
+			Handler:    _LbPolicyV1_AutoAddLbPolicy_Handler,
 		},
 		{
-			MethodName: "LbPolicyOper",
-			Handler:    _LbPolicyV1_LbPolicyOper_Handler,
+			MethodName: "AutoUpdateLbPolicy",
+			Handler:    _LbPolicyV1_AutoUpdateLbPolicy_Handler,
+		},
+		{
+			MethodName: "AutoGetLbPolicy",
+			Handler:    _LbPolicyV1_AutoGetLbPolicy_Handler,
+		},
+		{
+			MethodName: "AutoDeleteLbPolicy",
+			Handler:    _LbPolicyV1_AutoDeleteLbPolicy_Handler,
+		},
+		{
+			MethodName: "AutoListLbPolicy",
+			Handler:    _LbPolicyV1_AutoListLbPolicy_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchLbPolicy",
+			Handler:       _LbPolicyV1_AutoWatchLbPolicy_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
 // Client API for EndpointV1 service
 
 type EndpointV1Client interface {
-	GetEndpointList(ctx context.Context, in *EndpointList, opts ...grpc.CallOption) (*EndpointList, error)
-	EndpointOper(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoAddEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoGetEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgEndpointListHelper, error)
+	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (EndpointV1_AutoWatchEndpointClient, error)
 }
 
 type endpointV1Client struct {
@@ -1642,69 +2948,207 @@ func NewEndpointV1Client(cc *grpc.ClientConn) EndpointV1Client {
 	return &endpointV1Client{cc}
 }
 
-func (c *endpointV1Client) GetEndpointList(ctx context.Context, in *EndpointList, opts ...grpc.CallOption) (*EndpointList, error) {
-	out := new(EndpointList)
-	err := grpc.Invoke(ctx, "/network.EndpointV1/GetEndpointList", in, out, c.cc, opts...)
+func (c *endpointV1Client) AutoAddEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
+	out := new(Endpoint)
+	err := grpc.Invoke(ctx, "/network.EndpointV1/AutoAddEndpoint", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *endpointV1Client) EndpointOper(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
+func (c *endpointV1Client) AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
 	out := new(Endpoint)
-	err := grpc.Invoke(ctx, "/network.EndpointV1/EndpointOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/network.EndpointV1/AutoUpdateEndpoint", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *endpointV1Client) AutoGetEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
+	out := new(Endpoint)
+	err := grpc.Invoke(ctx, "/network.EndpointV1/AutoGetEndpoint", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *endpointV1Client) AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error) {
+	out := new(Endpoint)
+	err := grpc.Invoke(ctx, "/network.EndpointV1/AutoDeleteEndpoint", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *endpointV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgEndpointListHelper, error) {
+	out := new(AutoMsgEndpointListHelper)
+	err := grpc.Invoke(ctx, "/network.EndpointV1/AutoListEndpoint", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *endpointV1Client) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (EndpointV1_AutoWatchEndpointClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_EndpointV1_serviceDesc.Streams[0], c.cc, "/network.EndpointV1/AutoWatchEndpoint", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &endpointV1AutoWatchEndpointClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type EndpointV1_AutoWatchEndpointClient interface {
+	Recv() (*AutoMsgEndpointWatchHelper, error)
+	grpc.ClientStream
+}
+
+type endpointV1AutoWatchEndpointClient struct {
+	grpc.ClientStream
+}
+
+func (x *endpointV1AutoWatchEndpointClient) Recv() (*AutoMsgEndpointWatchHelper, error) {
+	m := new(AutoMsgEndpointWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for EndpointV1 service
 
 type EndpointV1Server interface {
-	GetEndpointList(context.Context, *EndpointList) (*EndpointList, error)
-	EndpointOper(context.Context, *Endpoint) (*Endpoint, error)
+	AutoAddEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoUpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoGetEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoDeleteEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	AutoListEndpoint(context.Context, *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error)
+	AutoWatchEndpoint(*api.ListWatchOptions, EndpointV1_AutoWatchEndpointServer) error
 }
 
 func RegisterEndpointV1Server(s *grpc.Server, srv EndpointV1Server) {
 	s.RegisterService(&_EndpointV1_serviceDesc, srv)
 }
 
-func _EndpointV1_GetEndpointList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EndpointList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EndpointV1Server).GetEndpointList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/network.EndpointV1/GetEndpointList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointV1Server).GetEndpointList(ctx, req.(*EndpointList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EndpointV1_EndpointOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EndpointV1_AutoAddEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Endpoint)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EndpointV1Server).EndpointOper(ctx, in)
+		return srv.(EndpointV1Server).AutoAddEndpoint(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/network.EndpointV1/EndpointOper",
+		FullMethod: "/network.EndpointV1/AutoAddEndpoint",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EndpointV1Server).EndpointOper(ctx, req.(*Endpoint))
+		return srv.(EndpointV1Server).AutoAddEndpoint(ctx, req.(*Endpoint))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _EndpointV1_AutoUpdateEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Endpoint)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EndpointV1Server).AutoUpdateEndpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.EndpointV1/AutoUpdateEndpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EndpointV1Server).AutoUpdateEndpoint(ctx, req.(*Endpoint))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EndpointV1_AutoGetEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Endpoint)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EndpointV1Server).AutoGetEndpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.EndpointV1/AutoGetEndpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EndpointV1Server).AutoGetEndpoint(ctx, req.(*Endpoint))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EndpointV1_AutoDeleteEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Endpoint)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EndpointV1Server).AutoDeleteEndpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.EndpointV1/AutoDeleteEndpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EndpointV1Server).AutoDeleteEndpoint(ctx, req.(*Endpoint))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EndpointV1_AutoListEndpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EndpointV1Server).AutoListEndpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.EndpointV1/AutoListEndpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EndpointV1Server).AutoListEndpoint(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EndpointV1_AutoWatchEndpoint_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(EndpointV1Server).AutoWatchEndpoint(m, &endpointV1AutoWatchEndpointServer{stream})
+}
+
+type EndpointV1_AutoWatchEndpointServer interface {
+	Send(*AutoMsgEndpointWatchHelper) error
+	grpc.ServerStream
+}
+
+type endpointV1AutoWatchEndpointServer struct {
+	grpc.ServerStream
+}
+
+func (x *endpointV1AutoWatchEndpointServer) Send(m *AutoMsgEndpointWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _EndpointV1_serviceDesc = grpc.ServiceDesc{
@@ -1712,15 +3156,33 @@ var _EndpointV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EndpointV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetEndpointList",
-			Handler:    _EndpointV1_GetEndpointList_Handler,
+			MethodName: "AutoAddEndpoint",
+			Handler:    _EndpointV1_AutoAddEndpoint_Handler,
 		},
 		{
-			MethodName: "EndpointOper",
-			Handler:    _EndpointV1_EndpointOper_Handler,
+			MethodName: "AutoUpdateEndpoint",
+			Handler:    _EndpointV1_AutoUpdateEndpoint_Handler,
+		},
+		{
+			MethodName: "AutoGetEndpoint",
+			Handler:    _EndpointV1_AutoGetEndpoint_Handler,
+		},
+		{
+			MethodName: "AutoDeleteEndpoint",
+			Handler:    _EndpointV1_AutoDeleteEndpoint_Handler,
+		},
+		{
+			MethodName: "AutoListEndpoint",
+			Handler:    _EndpointV1_AutoListEndpoint_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchEndpoint",
+			Handler:       _EndpointV1_AutoWatchEndpoint_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "network.proto",
 }
 
@@ -3135,6 +4597,566 @@ func (m *EndpointList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AutoMsgTenantWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgTenantWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n44, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n44
+	}
+	return i, nil
+}
+
+func (m *AutoMsgTenantListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgTenantListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n45, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n45
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n46, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n46
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgNetworkWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgNetworkWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n47, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n47
+	}
+	return i, nil
+}
+
+func (m *AutoMsgNetworkListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgNetworkListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n48, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n48
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n49, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n49
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n50, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n50
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSecurityGroupListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSecurityGroupListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n51, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n51
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n52, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n52
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n53, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n53
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSgpolicyListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSgpolicyListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n54, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n54
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n55, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n55
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgServiceWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgServiceWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n56, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n56
+	}
+	return i, nil
+}
+
+func (m *AutoMsgServiceListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgServiceListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n57, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n57
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n58, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n58
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n59, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n59
+	}
+	return i, nil
+}
+
+func (m *AutoMsgLbPolicyListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgLbPolicyListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n60, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n60
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n61, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n61
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgEndpointWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgEndpointWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNetwork(dAtA, i, uint64(m.Object.Size()))
+		n62, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n62
+	}
+	return i, nil
+}
+
+func (m *AutoMsgEndpointListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgEndpointListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n63, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n63
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n64, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n64
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64Network(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -3693,6 +5715,216 @@ func (m *EndpointList) Size() (n int) {
 	n += 1 + l + sovNetwork(uint64(l))
 	if len(m.Endpoints) > 0 {
 		for _, e := range m.Endpoints {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgTenantWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgTenantListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgNetworkWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgNetworkListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgSecurityGroupListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgSgpolicyListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgServiceWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgServiceListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgLbPolicyListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgEndpointWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovNetwork(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgEndpointListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
 			l = e.Size()
 			n += 1 + l + sovNetwork(uint64(l))
 		}
@@ -8117,6 +10349,1777 @@ func (m *EndpointList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AutoMsgTenantWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgTenantWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgTenantWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Tenant{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgTenantListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgTenantListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgTenantListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Tenant{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgNetworkWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgNetworkWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgNetworkWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Network{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgNetworkListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgNetworkListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgNetworkListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Network{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSecurityGroupWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSecurityGroupWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSecurityGroupWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &SecurityGroup{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSecurityGroupListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSecurityGroupListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSecurityGroupListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &SecurityGroup{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSgpolicyWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSgpolicyWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSgpolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Sgpolicy{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSgpolicyListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSgpolicyListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSgpolicyListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Sgpolicy{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgServiceWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgServiceWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgServiceWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Service{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgServiceListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgServiceListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgServiceListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Service{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgLbPolicyWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgLbPolicyWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgLbPolicyWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &LbPolicy{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgLbPolicyListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgLbPolicyListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgLbPolicyListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &LbPolicy{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgEndpointWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgEndpointWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgEndpointWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Endpoint{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgEndpointListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgEndpointListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgEndpointListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Endpoint{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipNetwork(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -8225,158 +12228,210 @@ var (
 func init() { proto.RegisterFile("network.proto", fileDescriptorNetwork) }
 
 var fileDescriptorNetwork = []byte{
-	// 2447 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5a, 0xcd, 0x6f, 0x1b, 0xc7,
-	0x15, 0xcf, 0x52, 0x8e, 0x24, 0x8e, 0x44, 0x4a, 0x1a, 0xf9, 0x83, 0x5a, 0xdb, 0x92, 0x32, 0x86,
-	0x11, 0x43, 0xc8, 0x8a, 0x91, 0x12, 0xc8, 0xb1, 0x81, 0xb4, 0x11, 0xed, 0x44, 0x92, 0x23, 0x5b,
-	0x84, 0x29, 0xab, 0xa8, 0x6e, 0xcb, 0xe5, 0x98, 0xda, 0x66, 0xb9, 0xbb, 0xdd, 0x1d, 0xca, 0x16,
-	0x8a, 0x00, 0x45, 0x12, 0x03, 0x41, 0x53, 0x20, 0x40, 0xdd, 0x43, 0x91, 0x4b, 0x7b, 0x28, 0x90,
-	0x1e, 0xfb, 0x0f, 0x04, 0x05, 0x5a, 0xa0, 0x35, 0xdc, 0x4b, 0xa0, 0x02, 0x3d, 0x1a, 0xad, 0x9b,
-	0x53, 0x81, 0x1e, 0xdb, 0x73, 0x31, 0x9f, 0x9c, 0xdd, 0x25, 0x45, 0xda, 0x01, 0x14, 0xdf, 0xac,
-	0xf7, 0xf1, 0xdb, 0x79, 0x6f, 0xde, 0x6f, 0xe6, 0xcd, 0xa3, 0x41, 0xc1, 0xc7, 0xe4, 0x5e, 0x10,
-	0x7d, 0xb0, 0x18, 0x46, 0x01, 0x09, 0xe0, 0x88, 0xf8, 0xd3, 0x3c, 0xd7, 0x0c, 0x82, 0xa6, 0x87,
-	0xcb, 0x76, 0xe8, 0x96, 0x6d, 0xdf, 0x0f, 0x88, 0x4d, 0xdc, 0xc0, 0x8f, 0xb9, 0x99, 0xf9, 0xbd,
-	0xa6, 0x4b, 0xf6, 0xda, 0xf5, 0x45, 0x27, 0x68, 0x95, 0x43, 0xec, 0xc7, 0xb6, 0xdf, 0x08, 0xca,
-	0xf1, 0xbd, 0x72, 0x9b, 0xb8, 0x5e, 0x4c, 0x7d, 0x9a, 0xd8, 0xd7, 0xdd, 0xca, 0xae, 0xef, 0x78,
-	0xed, 0x06, 0x96, 0xfe, 0x96, 0xe6, 0xdf, 0x0c, 0x9a, 0x41, 0x99, 0x89, 0xeb, 0xed, 0xbb, 0xec,
-	0x2f, 0xf6, 0x07, 0xfb, 0x97, 0x30, 0xbf, 0xd8, 0xe3, 0x73, 0x74, 0x71, 0x2d, 0x4c, 0x6c, 0x6e,
-	0x86, 0xd6, 0x01, 0xd8, 0xc6, 0xbe, 0xed, 0x93, 0x5a, 0x88, 0x1d, 0x78, 0x15, 0xe4, 0x57, 0x1b,
-	0x2d, 0xd7, 0xbf, 0x13, 0xe3, 0xa8, 0x64, 0xcc, 0x1b, 0x97, 0xf2, 0x95, 0x73, 0x8f, 0x9e, 0xcc,
-	0x19, 0xff, 0x7e, 0x32, 0x77, 0xd2, 0xa6, 0x0a, 0xab, 0x1d, 0xe3, 0xe8, 0xb5, 0xa0, 0xe5, 0x12,
-	0xdc, 0x0a, 0xc9, 0xc1, 0xed, 0x8e, 0x39, 0xfa, 0xbb, 0x01, 0xc6, 0x05, 0x14, 0xb1, 0x49, 0x3b,
-	0x86, 0x16, 0x78, 0x99, 0x2a, 0xe2, 0x92, 0x31, 0x3f, 0x74, 0x29, 0x5f, 0x39, 0x23, 0x80, 0x26,
-	0x28, 0x44, 0xac, 0x61, 0x70, 0x2b, 0xb8, 0x02, 0x46, 0x6f, 0xf1, 0x44, 0xc6, 0xa5, 0x1c, 0xf3,
-	0x30, 0x85, 0x07, 0x14, 0x09, 0xd6, 0x9d, 0x94, 0x2d, 0x7c, 0x15, 0x0c, 0xd5, 0xd6, 0xe2, 0xd2,
-	0x10, 0x73, 0x39, 0x25, 0x5c, 0x0a, 0x71, 0x53, 0xb7, 0xa6, 0x16, 0xf4, 0x03, 0x35, 0x1c, 0xed,
-	0xbb, 0x0e, 0x8e, 0x4b, 0x27, 0x92, 0x1f, 0x88, 0x85, 0x5c, 0xff, 0x80, 0xb4, 0x45, 0x9f, 0xe5,
-	0xc0, 0x30, 0x0f, 0x0c, 0xbe, 0x0e, 0x8c, 0x6d, 0x96, 0x97, 0xb1, 0xe5, 0xc2, 0xa2, 0x1d, 0xba,
-	0x8b, 0xdb, 0x07, 0x21, 0xbe, 0x89, 0x89, 0x5d, 0x99, 0x7e, 0xf4, 0x64, 0xee, 0xa5, 0xaf, 0x39,
-	0xdc, 0xc8, 0x6b, 0xae, 0xef, 0xb9, 0x3e, 0xbe, 0x6d, 0x6c, 0xc3, 0x2b, 0xc0, 0xd8, 0x2a, 0xe5,
-	0x98, 0xc7, 0x04, 0xf3, 0xd8, 0xaa, 0xff, 0x08, 0x3b, 0x84, 0xf9, 0x98, 0x9a, 0x4f, 0x91, 0xee,
-	0x89, 0xf6, 0x79, 0x63, 0x0b, 0x7e, 0x1f, 0x9c, 0xa0, 0x9b, 0x52, 0x1a, 0x62, 0xde, 0xd3, 0x8b,
-	0xb2, 0xea, 0x3a, 0xfb, 0x55, 0x39, 0x4d, 0x11, 0xa8, 0x77, 0x1c, 0x62, 0x47, 0xf3, 0x66, 0x8e,
-	0x70, 0x0d, 0x0c, 0xf3, 0xad, 0x28, 0x9d, 0x60, 0x10, 0xa7, 0xd2, 0x10, 0x4c, 0x59, 0x29, 0x09,
-	0x90, 0xc9, 0x98, 0xfd, 0xad, 0xc1, 0x08, 0xf7, 0xab, 0xe0, 0xf0, 0xc1, 0xcc, 0x30, 0x61, 0x3e,
-	0xe8, 0x2b, 0x43, 0x56, 0xcc, 0xa6, 0x1b, 0x3f, 0x4f, 0x46, 0x2e, 0x03, 0x63, 0x53, 0x64, 0x84,
-	0x7b, 0x50, 0x9c, 0xfe, 0xf9, 0xd8, 0x84, 0xd7, 0xc1, 0x08, 0xff, 0x30, 0xdf, 0x6c, 0x9a, 0xd0,
-	0x64, 0x3c, 0x95, 0x19, 0x11, 0xc9, 0x14, 0x5f, 0xab, 0x1e, 0x8a, 0x74, 0x45, 0x5f, 0x0e, 0x81,
-	0x31, 0x51, 0x3b, 0x2c, 0x49, 0x0b, 0xe0, 0x04, 0x5d, 0xb2, 0xa8, 0xf6, 0xd3, 0xa2, 0x22, 0x8a,
-	0xe4, 0x20, 0xc4, 0x7a, 0x42, 0xa9, 0x0d, 0x7c, 0x1b, 0x80, 0x8d, 0xea, 0xfe, 0x9b, 0xb5, 0x76,
-	0xdd, 0xc7, 0x84, 0xc5, 0x90, 0xaf, 0x9c, 0x17, 0x1e, 0xa7, 0xdc, 0x70, 0xff, 0x4d, 0x2b, 0x66,
-	0x2a, 0xcd, 0x51, 0x73, 0x80, 0xef, 0x80, 0x31, 0xfa, 0xd7, 0x9a, 0x4d, 0xf0, 0x3d, 0xfb, 0x80,
-	0xed, 0x6b, 0xbe, 0x32, 0x2b, 0xfc, 0x4f, 0x33, 0xff, 0x26, 0xd7, 0x69, 0x00, 0xba, 0x8b, 0x58,
-	0xc0, 0x8a, 0x58, 0xc0, 0x89, 0xcc, 0x02, 0x56, 0xba, 0x2f, 0x60, 0x25, 0xb1, 0x80, 0x15, 0xb9,
-	0x80, 0x97, 0x33, 0x0b, 0x58, 0xe9, 0xb1, 0x00, 0xe9, 0x02, 0x97, 0xc0, 0xf0, 0x8e, 0x67, 0xfb,
-	0x1b, 0xd7, 0x4b, 0xc3, 0xf3, 0xc6, 0xa5, 0x02, 0xcb, 0x38, 0x75, 0x9e, 0xda, 0xf7, 0x6c, 0xdf,
-	0x72, 0x1b, 0x7a, 0xf1, 0x70, 0x43, 0x78, 0x19, 0x8c, 0xee, 0xdc, 0xf7, 0x6c, 0x7f, 0xe7, 0xd6,
-	0x46, 0x69, 0x84, 0x39, 0x9d, 0x15, 0x4e, 0xd3, 0xfb, 0x54, 0x6e, 0xed, 0xfb, 0xae, 0xce, 0x3b,
-	0x69, 0x8c, 0x6e, 0x80, 0x82, 0xdc, 0x28, 0x7e, 0xa0, 0x5c, 0x01, 0xf9, 0x1f, 0x04, 0xd1, 0x07,
-	0x5e, 0x60, 0x37, 0xe4, 0xa1, 0x72, 0x56, 0xec, 0xf8, 0xf4, 0x3d, 0xa9, 0xd0, 0x0f, 0x27, 0x65,
-	0x8d, 0x3e, 0xcf, 0x81, 0x11, 0x01, 0x76, 0xbc, 0x24, 0x7e, 0x27, 0x41, 0xe2, 0x93, 0xaa, 0x62,
-	0xb5, 0x12, 0xec, 0xc3, 0xe2, 0xf5, 0x14, 0x8b, 0x4f, 0x67, 0x30, 0x06, 0xa5, 0xf1, 0xd8, 0xe1,
-	0x83, 0x19, 0x79, 0x59, 0xa1, 0x3f, 0x1a, 0x8a, 0x07, 0xc7, 0x4d, 0xe4, 0x75, 0xed, 0xa4, 0xe7,
-	0x4c, 0x9e, 0x4c, 0xc7, 0xc4, 0x21, 0xfa, 0x9d, 0xfd, 0xe8, 0x7f, 0x06, 0x98, 0xaa, 0x61, 0xa7,
-	0x1d, 0xb9, 0xe4, 0x60, 0x2d, 0x0a, 0xda, 0x21, 0xcb, 0xd8, 0x4d, 0x30, 0x29, 0x77, 0xbe, 0x86,
-	0x3d, 0xec, 0x90, 0x20, 0x12, 0xe5, 0xf2, 0x8a, 0x40, 0x9d, 0x91, 0xe5, 0x62, 0x79, 0x76, 0x1d,
-	0x7b, 0x3a, 0x78, 0xc6, 0x15, 0xde, 0x00, 0x13, 0xe2, 0x2e, 0x50, 0x68, 0xfc, 0x7e, 0x9a, 0x17,
-	0x68, 0x25, 0x71, 0x7d, 0x64, 0xc1, 0xd2, 0x8e, 0xf0, 0x3d, 0x50, 0xb8, 0x69, 0x13, 0x67, 0xaf,
-	0x1a, 0xe1, 0xbb, 0xee, 0x7d, 0x2c, 0xaf, 0xad, 0x79, 0xc1, 0x88, 0x52, 0x8b, 0x2a, 0xad, 0x50,
-	0x68, 0x35, 0xa4, 0xa4, 0x1b, 0xaa, 0x82, 0xe9, 0x64, 0xdc, 0x47, 0x32, 0xc4, 0x18, 0x80, 0x21,
-	0xbf, 0xcb, 0x81, 0x42, 0x02, 0xf2, 0x78, 0x79, 0xf2, 0x5e, 0x82, 0x27, 0xa6, 0xaa, 0x87, 0xcc,
-	0xee, 0xf6, 0x61, 0xcb, 0xad, 0x14, 0x5b, 0xce, 0xf5, 0x40, 0x1a, 0x94, 0x33, 0xf0, 0xf0, 0xc1,
-	0x4c, 0x31, 0x16, 0xae, 0x56, 0x93, 0xfa, 0xa2, 0x7f, 0xa6, 0xab, 0xee, 0xb8, 0x09, 0x64, 0x83,
-	0x62, 0xe2, 0xfb, 0x92, 0x46, 0xa7, 0xbb, 0x07, 0xdb, 0x29, 0xfb, 0x64, 0x20, 0x7a, 0xbc, 0x29,
-	0x40, 0xf4, 0x5b, 0x03, 0x0c, 0xd7, 0xd6, 0x6e, 0xb7, 0x3d, 0x4c, 0xfb, 0xb8, 0x6a, 0x10, 0x91,
-	0x58, 0x5c, 0x91, 0xaa, 0x8f, 0x0b, 0xa9, 0x50, 0xef, 0xe3, 0x98, 0x15, 0x2c, 0x83, 0xe1, 0x55,
-	0x87, 0x76, 0xb0, 0xe2, 0x82, 0x54, 0xf6, 0xb6, 0xe3, 0x06, 0xbe, 0x9e, 0x62, 0x6e, 0x46, 0x9b,
-	0xce, 0x2a, 0xc6, 0x11, 0xfb, 0xb0, 0xb8, 0x14, 0x55, 0xd3, 0x19, 0x62, 0x1c, 0xf1, 0xc5, 0xea,
-	0x55, 0xab, 0xcc, 0xd1, 0x37, 0x06, 0x18, 0xaf, 0x35, 0xc3, 0xc0, 0x73, 0x9d, 0x03, 0xb6, 0xff,
-	0xd7, 0xc0, 0xf8, 0x2a, 0x21, 0xb6, 0xb3, 0x27, 0x12, 0xc3, 0x49, 0x30, 0x27, 0xf0, 0xce, 0xd8,
-	0x4c, 0x97, 0x0d, 0x3f, 0xe1, 0x04, 0xdf, 0x05, 0x23, 0x1b, 0x3e, 0x8d, 0x9d, 0x77, 0xa2, 0x7a,
-	0xa7, 0xc1, 0x73, 0xd2, 0xe9, 0x1c, 0x5d, 0xdf, 0x8a, 0xa8, 0xa1, 0xde, 0x6a, 0x08, 0x5f, 0x7a,
-	0xce, 0x6d, 0xb5, 0x09, 0xc7, 0x19, 0xea, 0x8e, 0xa3, 0xd8, 0x19, 0xb4, 0x49, 0x06, 0x48, 0x79,
-	0xa3, 0xf7, 0x41, 0x51, 0x45, 0xf9, 0xad, 0x99, 0xfe, 0x30, 0x07, 0x46, 0x25, 0xda, 0xf1, 0x92,
-	0x7c, 0x35, 0x41, 0xf2, 0x4e, 0x3b, 0xaa, 0xef, 0x60, 0x1f, 0x7e, 0x6f, 0xa4, 0xf8, 0x7d, 0x26,
-	0x0b, 0x32, 0x28, 0xb5, 0xc7, 0x0f, 0x1f, 0xcc, 0x8c, 0xc6, 0xc2, 0x0b, 0x3d, 0xd6, 0x2a, 0xe9,
-	0xb8, 0xf9, 0xbc, 0x05, 0x40, 0xad, 0x59, 0xa5, 0x9f, 0x76, 0x55, 0xa9, 0x4c, 0x65, 0x02, 0x63,
-	0xac, 0xa0, 0x21, 0x9d, 0x14, 0x8b, 0x76, 0x13, 0xd5, 0xa2, 0x41, 0xa0, 0x9f, 0xe6, 0xc0, 0x98,
-	0xbc, 0x7a, 0xfa, 0xdf, 0x88, 0xc6, 0xb3, 0xde, 0x88, 0x57, 0x41, 0x7e, 0xc7, 0x8d, 0x48, 0xdb,
-	0xf6, 0x36, 0x42, 0xc1, 0x72, 0xc5, 0xd8, 0x7d, 0xae, 0xb0, 0xdc, 0x04, 0x63, 0x95, 0x79, 0xe7,
-	0x34, 0x19, 0x1a, 0xe8, 0x34, 0xb9, 0x0c, 0x46, 0x37, 0x2b, 0x2c, 0xae, 0x03, 0xd1, 0xef, 0xaa,
-	0x32, 0xf7, 0xea, 0x16, 0x4f, 0x8c, 0x4e, 0x19, 0x69, 0x4c, 0xbb, 0x47, 0x99, 0x81, 0x6f, 0xcd,
-	0x18, 0xda, 0x3d, 0x0a, 0xb0, 0x17, 0xa3, 0x7b, 0xd4, 0xf6, 0xf6, 0xb9, 0xbb, 0xc7, 0x44, 0x76,
-	0x06, 0xed, 0x1e, 0x45, 0xa7, 0xc3, 0xba, 0x47, 0x01, 0xf0, 0x1d, 0x74, 0x8f, 0xea, 0x19, 0x9f,
-	0xee, 0x1e, 0x85, 0xa2, 0xd3, 0x3d, 0x1e, 0xf9, 0xb0, 0xff, 0x74, 0x08, 0x4c, 0xac, 0x63, 0xdb,
-	0x23, 0x7b, 0xd7, 0xf6, 0xb0, 0xc3, 0x9f, 0x83, 0x2b, 0x60, 0x74, 0xc3, 0x27, 0x38, 0xda, 0xb7,
-	0x3d, 0x16, 0x4f, 0x41, 0x3f, 0xea, 0xb9, 0x5c, 0xc7, 0x92, 0xb6, 0xb0, 0x06, 0xa6, 0xaa, 0x51,
-	0x50, 0xc7, 0x71, 0x15, 0x47, 0x0a, 0x20, 0xc7, 0x00, 0x2e, 0x0a, 0x80, 0xf3, 0x21, 0x33, 0xb0,
-	0x42, 0x1c, 0x59, 0x5d, 0xb0, 0xb2, 0xfe, 0xf0, 0x7d, 0x50, 0x64, 0x42, 0x4a, 0x85, 0xad, 0xe8,
-	0x4e, 0xe4, 0x09, 0xd2, 0x5c, 0x10, 0x88, 0x67, 0x19, 0xa2, 0x45, 0xa9, 0x63, 0x05, 0x91, 0xd5,
-	0x8e, 0x74, 0xbc, 0x94, 0x2b, 0x7d, 0xfc, 0xdd, 0xb4, 0xef, 0x6f, 0xbb, 0x2d, 0x1c, 0xb4, 0x09,
-	0x2f, 0x87, 0x42, 0xe7, 0xf1, 0xd7, 0xb2, 0xef, 0x5b, 0x44, 0xe8, 0xf4, 0xc7, 0x9f, 0xe6, 0x02,
-	0x7f, 0x08, 0xa6, 0xaf, 0x63, 0xc7, 0xb3, 0x23, 0xcc, 0xb3, 0x76, 0x70, 0x2d, 0x68, 0xfb, 0x84,
-	0x3d, 0x23, 0x0b, 0x95, 0x57, 0x05, 0xd2, 0x5c, 0x83, 0x9b, 0x58, 0x7b, 0xdc, 0xc6, 0x72, 0xa8,
-	0x91, 0x06, 0xd9, 0x0d, 0x03, 0xfd, 0x3a, 0x07, 0xc6, 0x37, 0xeb, 0xd5, 0xce, 0x3d, 0xfe, 0x2c,
-	0xcf, 0xf2, 0x2b, 0x20, 0xbf, 0xea, 0x35, 0x83, 0xc8, 0x25, 0x7b, 0x2d, 0x71, 0x1c, 0x29, 0x66,
-	0xdb, 0x52, 0x91, 0x18, 0x5a, 0x49, 0x21, 0xdc, 0xa4, 0xbd, 0x7d, 0x1c, 0xbb, 0x81, 0xbf, 0x7a,
-	0xf7, 0xae, 0xeb, 0xbb, 0x44, 0x3e, 0xcb, 0x91, 0x00, 0x30, 0x63, 0xae, 0xb6, 0x6c, 0xa1, 0x4f,
-	0x76, 0xf7, 0x09, 0x57, 0xb8, 0x0b, 0xc6, 0xb4, 0x7a, 0x12, 0x8c, 0x2b, 0xa9, 0xea, 0x4c, 0xd5,
-	0x5a, 0x27, 0xf9, 0x3c, 0x55, 0x96, 0x43, 0x35, 0x7a, 0xf2, 0x35, 0x07, 0x74, 0x1d, 0x14, 0x55,
-	0x82, 0xf8, 0x81, 0xb6, 0xac, 0x11, 0x81, 0x9f, 0x67, 0xbd, 0xd2, 0xd4, 0x29, 0xf9, 0x5f, 0xe6,
-	0xc0, 0xa8, 0x84, 0x79, 0x31, 0xee, 0x7e, 0x7d, 0xd7, 0x9f, 0xfb, 0xee, 0x4f, 0x66, 0x66, 0x80,
-	0xc3, 0xac, 0x70, 0xf8, 0x60, 0x26, 0xaf, 0x2e, 0x10, 0xf4, 0x57, 0xa3, 0x53, 0x7e, 0xc7, 0x7d,
-	0x9e, 0x55, 0x01, 0x10, 0x9f, 0xee, 0x76, 0xf9, 0xcb, 0x55, 0xb1, 0x31, 0x0f, 0x8d, 0xe9, 0x94,
-	0x5c, 0x75, 0xea, 0xf6, 0xef, 0x60, 0xa0, 0x22, 0x18, 0x7f, 0xd7, 0x6f, 0x84, 0x81, 0xcb, 0xa7,
-	0x84, 0xe8, 0xf1, 0x30, 0x28, 0x2a, 0x01, 0xaf, 0x9d, 0x6b, 0x1d, 0x93, 0x3b, 0x77, 0x36, 0xae,
-	0x0b, 0x9a, 0xa9, 0x36, 0x19, 0x0b, 0x9d, 0xd5, 0x6e, 0x27, 0x66, 0x3a, 0x09, 0x27, 0x0a, 0x22,
-	0xef, 0x48, 0x06, 0x92, 0x4b, 0x82, 0xfc, 0x58, 0x76, 0x14, 0x69, 0x10, 0xdd, 0x49, 0x07, 0xb9,
-	0x65, 0xb7, 0xb0, 0xa0, 0x9f, 0x02, 0x51, 0x6d, 0x89, 0x6f, 0xb7, 0x70, 0x37, 0x10, 0xea, 0x04,
-	0xdf, 0x50, 0xd3, 0x1d, 0xd1, 0x24, 0xa8, 0xb9, 0x94, 0xc8, 0xa3, 0xde, 0x9e, 0xcb, 0x39, 0xd0,
-	0x0d, 0x50, 0x5c, 0x0f, 0x5a, 0xae, 0xdf, 0x5c, 0x0f, 0x62, 0xb2, 0xda, 0x68, 0x44, 0x62, 0x20,
-	0xa6, 0xa8, 0xbf, 0xc7, 0xb4, 0xd6, 0x5e, 0x10, 0x13, 0xcb, 0x6e, 0x34, 0xf4, 0xb9, 0x77, 0xca,
-	0x33, 0x89, 0xc5, 0xe2, 0x18, 0xee, 0x8d, 0x95, 0x0a, 0x25, 0xe5, 0x29, 0xc7, 0x84, 0x14, 0x17,
-	0xc7, 0x31, 0x9b, 0x99, 0xa5, 0xc7, 0x84, 0x36, 0xd7, 0xa5, 0xc7, 0x84, 0xc2, 0x25, 0x3d, 0x68,
-	0x1c, 0x7d, 0xf6, 0x41, 0xa3, 0x98, 0x14, 0xca, 0x35, 0xe4, 0xbb, 0x4c, 0x0a, 0xbb, 0xaf, 0x61,
-	0x25, 0xb9, 0x06, 0x35, 0x6b, 0x04, 0xcf, 0x3e, 0x6b, 0x7c, 0x1b, 0x80, 0x9b, 0xb6, 0x23, 0x97,
-	0x30, 0x96, 0x1c, 0x76, 0xb6, 0x6c, 0xa7, 0xcb, 0x0a, 0x34, 0x07, 0x78, 0x07, 0x40, 0x59, 0x23,
-	0xab, 0x84, 0x44, 0x6e, 0xbd, 0x4d, 0x70, 0x5c, 0x1a, 0x67, 0x07, 0xa5, 0xba, 0x92, 0x55, 0x79,
-	0xd9, 0xca, 0x44, 0x83, 0xeb, 0x02, 0xc0, 0x5e, 0x4f, 0x92, 0x05, 0x2f, 0xc6, 0x09, 0xaa, 0x73,
-	0xfd, 0xb9, 0x4f, 0xd0, 0xe4, 0xf9, 0x30, 0xe8, 0xeb, 0x49, 0x9e, 0x13, 0xe8, 0x2f, 0x46, 0xe7,
-	0x40, 0x39, 0xee, 0x03, 0x74, 0x13, 0xe4, 0xe5, 0xa7, 0xb3, 0xe7, 0xa7, 0xd4, 0x74, 0x26, 0xc5,
-	0x72, 0xcd, 0x89, 0x5e, 0x5f, 0x01, 0x2c, 0xff, 0xd7, 0x00, 0xa3, 0xfc, 0xb7, 0x82, 0x9d, 0x25,
-	0x78, 0x03, 0x14, 0xd6, 0x30, 0xd1, 0x7e, 0xee, 0x48, 0xff, 0x0a, 0x43, 0x85, 0x66, 0x37, 0x21,
-	0x9a, 0xf8, 0xe8, 0x6f, 0xdf, 0x3c, 0xcc, 0xe5, 0xe1, 0x48, 0x99, 0xff, 0x18, 0x01, 0x7f, 0xa6,
-	0x7e, 0x38, 0xd9, 0x0a, 0x71, 0x04, 0xd3, 0x3f, 0x5e, 0x98, 0x69, 0x01, 0xda, 0x65, 0x08, 0xdb,
-	0x68, 0x52, 0x20, 0x94, 0x7f, 0xb2, 0xb5, 0x48, 0x0f, 0x88, 0x0f, 0xaf, 0x1a, 0x0b, 0xbb, 0xa7,
-	0xcc, 0xae, 0x62, 0x08, 0x33, 0xe2, 0x5d, 0xb8, 0x90, 0x91, 0x99, 0x93, 0xbf, 0xf8, 0x78, 0x26,
-	0xb7, 0xbf, 0xf4, 0xc5, 0xc7, 0xf2, 0x77, 0x9d, 0xe5, 0xdf, 0xe7, 0x40, 0x5e, 0x9c, 0x8c, 0x3b,
-	0x4b, 0xf0, 0x16, 0x28, 0xae, 0x61, 0xa2, 0xcf, 0x87, 0x33, 0xa3, 0x6b, 0x16, 0x7a, 0x57, 0x29,
-	0x9a, 0x64, 0x2b, 0x07, 0x70, 0xb4, 0x2c, 0xb4, 0xf0, 0x0f, 0x9d, 0x69, 0x33, 0x8b, 0x3e, 0x33,
-	0xf0, 0x35, 0x33, 0x12, 0xf4, 0x99, 0xc1, 0x60, 0x3e, 0x31, 0xd0, 0x39, 0xba, 0x70, 0x9e, 0x95,
-	0x0f, 0x25, 0x64, 0x22, 0xec, 0x57, 0xcc, 0xbe, 0x26, 0xb3, 0xf0, 0x48, 0x93, 0xdd, 0xd9, 0x85,
-	0x23, 0xf5, 0xe6, 0x94, 0xca, 0x98, 0x1c, 0xa1, 0x2f, 0x7f, 0x32, 0x44, 0xbb, 0x47, 0x6d, 0x6c,
-	0xb6, 0xb3, 0x04, 0x9b, 0xe0, 0xe4, 0x1a, 0x26, 0xd9, 0xe9, 0x60, 0x8f, 0x89, 0x26, 0x4b, 0xe2,
-	0x11, 0x3a, 0x74, 0x86, 0xe5, 0x60, 0x0a, 0x4e, 0x94, 0x93, 0xb3, 0x3b, 0xf8, 0x9f, 0xf4, 0x10,
-	0x92, 0xe5, 0xb5, 0xc7, 0x04, 0xd0, 0xec, 0x21, 0x47, 0x5f, 0xf2, 0x1c, 0xff, 0xc6, 0x40, 0x17,
-	0xf4, 0xe8, 0x93, 0xdf, 0x4a, 0xe4, 0xf1, 0x92, 0x39, 0xa8, 0xe5, 0x45, 0x38, 0x88, 0xe5, 0xee,
-	0xc5, 0x85, 0x41, 0xcc, 0xcc, 0x92, 0xca, 0x7f, 0x6a, 0x1c, 0xbb, 0xfc, 0x55, 0x0e, 0x00, 0x39,
-	0x23, 0xd9, 0x59, 0x82, 0xb7, 0xc1, 0x04, 0xdd, 0x01, 0x7d, 0x94, 0x93, 0x9d, 0x34, 0xb1, 0xbc,
-	0x77, 0x17, 0xa3, 0x29, 0x96, 0x92, 0x31, 0x98, 0x2f, 0xcb, 0xe1, 0x10, 0xfc, 0xb3, 0x36, 0x1c,
-	0x62, 0x79, 0xce, 0x4e, 0x67, 0xcc, 0xac, 0x08, 0x7d, 0xce, 0xb3, 0xfb, 0xa9, 0x81, 0xce, 0x27,
-	0x42, 0x14, 0xfa, 0x44, 0xb6, 0x90, 0xd9, 0xdf, 0x66, 0x0e, 0x1e, 0x6d, 0xb3, 0x3b, 0xb7, 0x70,
-	0xb4, 0x81, 0x09, 0x55, 0x16, 0xd5, 0xe4, 0x8b, 0x31, 0x5f, 0x3c, 0x10, 0x14, 0xf3, 0xf5, 0xb7,
-	0x7d, 0x66, 0xec, 0x90, 0x62, 0xbe, 0x26, 0xd5, 0x98, 0x2f, 0x5e, 0xde, 0x8c, 0xf9, 0xc2, 0x22,
-	0xc5, 0x7c, 0x21, 0x35, 0x33, 0x92, 0x5e, 0xcc, 0x17, 0x90, 0x47, 0x31, 0xbf, 0x9b, 0x49, 0x8a,
-	0xf9, 0x69, 0x93, 0x34, 0xf3, 0xd3, 0x7a, 0x9d, 0xf9, 0x42, 0xb7, 0xfc, 0xa7, 0x9c, 0x6a, 0xda,
-	0x69, 0xc9, 0xd5, 0x58, 0xc9, 0x25, 0x1e, 0x10, 0xd9, 0x07, 0x4e, 0xaa, 0xe4, 0x74, 0x31, 0x82,
-	0x2c, 0xde, 0x71, 0x08, 0xca, 0xea, 0x4d, 0x02, 0x1f, 0x6b, 0x6f, 0x92, 0x54, 0xcd, 0x49, 0xb1,
-	0x99, 0x15, 0xa1, 0x87, 0x3c, 0x77, 0x3f, 0x37, 0xd0, 0xac, 0x1e, 0x95, 0xc2, 0x4d, 0xa4, 0xe6,
-	0x82, 0x39, 0x80, 0xd1, 0x3c, 0xec, 0x63, 0xb4, 0x3b, 0xbf, 0xd0, 0xc7, 0xc2, 0x9c, 0x56, 0x39,
-	0xec, 0xbc, 0xba, 0x18, 0x71, 0xe5, 0xc5, 0xab, 0x88, 0x9b, 0xe8, 0x22, 0xb2, 0x4d, 0x4e, 0x2a,
-	0x8b, 0xba, 0x58, 0x23, 0xae, 0xbc, 0xe3, 0x19, 0x71, 0xa5, 0x4d, 0x2a, 0x89, 0x52, 0x6c, 0x66,
-	0x45, 0xbd, 0x88, 0x2b, 0x61, 0x8f, 0x22, 0x6e, 0x57, 0x9b, 0x14, 0x71, 0x33, 0x36, 0x69, 0xe2,
-	0x66, 0x0c, 0x74, 0xe2, 0x4a, 0x65, 0x05, 0x7d, 0xf1, 0xd1, 0x4c, 0xd1, 0x0b, 0x1c, 0xdb, 0xa3,
-	0xcf, 0x8a, 0xab, 0x6f, 0xbd, 0xfe, 0xd6, 0xf2, 0xa3, 0xa7, 0xb3, 0xc6, 0xd7, 0x4f, 0x67, 0x8d,
-	0x7f, 0x3c, 0x9d, 0x35, 0x7e, 0xf5, 0xaf, 0xd9, 0x97, 0xaa, 0x46, 0x7d, 0x98, 0xfd, 0x47, 0x9f,
-	0x37, 0xfe, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x03, 0xc4, 0xbd, 0x9a, 0xb6, 0x24, 0x00, 0x00,
+	// 3265 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5b, 0xdd, 0x6f, 0x1c, 0x57,
+	0x15, 0xcf, 0xac, 0x9d, 0xb5, 0x7d, 0xed, 0x5d, 0xc7, 0x13, 0x3b, 0xd9, 0xd9, 0x24, 0xb6, 0x33,
+	0x69, 0x68, 0x70, 0x33, 0x71, 0xe2, 0xb6, 0x4e, 0xe2, 0xd2, 0x0f, 0x3b, 0x69, 0x6c, 0xb7, 0x4e,
+	0x6c, 0xd5, 0x89, 0x2b, 0x4a, 0x55, 0x31, 0xde, 0xbd, 0xd9, 0x9d, 0x76, 0x77, 0x66, 0x3b, 0x73,
+	0xd7, 0x89, 0x55, 0x8a, 0x50, 0x97, 0x48, 0x50, 0x40, 0x20, 0x9a, 0x07, 0x54, 0x21, 0x21, 0x45,
+	0x08, 0x90, 0x79, 0x82, 0x77, 0x84, 0xe0, 0xa5, 0x55, 0x79, 0xa9, 0x82, 0x84, 0x50, 0x1f, 0x02,
+	0x54, 0x7d, 0xea, 0x03, 0x7f, 0x03, 0xba, 0x9f, 0x73, 0xe7, 0x6b, 0x77, 0xd6, 0x51, 0x4d, 0xde,
+	0xbc, 0x73, 0xef, 0x39, 0xbf, 0x73, 0xce, 0x3d, 0xbf, 0x7b, 0xce, 0xbd, 0x33, 0x06, 0x39, 0x1b,
+	0xa2, 0x5b, 0x8e, 0xfb, 0xd6, 0x99, 0x86, 0xeb, 0x20, 0x47, 0xed, 0x63, 0x3f, 0x8b, 0x47, 0x2b,
+	0x8e, 0x53, 0xa9, 0xc1, 0x69, 0xb3, 0x61, 0x4d, 0x9b, 0xb6, 0xed, 0x20, 0x13, 0x59, 0x8e, 0xed,
+	0xd1, 0x69, 0xc5, 0xe7, 0x2a, 0x16, 0xaa, 0x36, 0x37, 0xcf, 0x94, 0x9c, 0xfa, 0x74, 0x03, 0xda,
+	0x9e, 0x69, 0x97, 0x9d, 0x69, 0xef, 0xd6, 0x74, 0x13, 0x59, 0x35, 0x0f, 0xcb, 0x54, 0xa0, 0x2d,
+	0x8b, 0x4d, 0x5b, 0x76, 0xa9, 0xd6, 0x2c, 0x43, 0x2e, 0x6f, 0x48, 0xf2, 0x15, 0xa7, 0xe2, 0x4c,
+	0x93, 0xc7, 0x9b, 0xcd, 0x9b, 0xe4, 0x17, 0xf9, 0x41, 0xfe, 0x62, 0xd3, 0x4f, 0x26, 0xc0, 0x61,
+	0xe3, 0xea, 0x10, 0x99, 0x74, 0x9a, 0xbe, 0x04, 0xc0, 0x75, 0x68, 0x9b, 0x36, 0x5a, 0x6f, 0xc0,
+	0x92, 0x3a, 0x07, 0x06, 0xe6, 0xcb, 0x75, 0xcb, 0xbe, 0xe1, 0x41, 0xb7, 0xa0, 0x4c, 0x2a, 0xa7,
+	0x06, 0x16, 0x8e, 0x7e, 0xfc, 0x60, 0x42, 0xf9, 0xf2, 0xc1, 0xc4, 0xa8, 0x89, 0x07, 0x8c, 0xa6,
+	0x07, 0xdd, 0xd3, 0x4e, 0xdd, 0x42, 0xb0, 0xde, 0x40, 0xdb, 0xaf, 0xf8, 0xd3, 0xf5, 0x7f, 0x28,
+	0x60, 0x88, 0xa9, 0x42, 0x26, 0x6a, 0x7a, 0xaa, 0x01, 0xf6, 0xe3, 0x01, 0xaf, 0xa0, 0x4c, 0xf6,
+	0x9c, 0x1a, 0x58, 0x38, 0xcc, 0x14, 0x0d, 0x63, 0x15, 0x9e, 0xa4, 0x83, 0xce, 0x52, 0x67, 0x41,
+	0xff, 0x35, 0x1a, 0x48, 0xaf, 0x90, 0x21, 0x12, 0x45, 0x26, 0xa1, 0xb2, 0x00, 0xcb, 0x42, 0x62,
+	0xae, 0xfa, 0x38, 0xe8, 0x59, 0x5f, 0xf4, 0x0a, 0x3d, 0x44, 0x64, 0x8c, 0x89, 0xe4, 0xbc, 0x8a,
+	0x3c, 0x1b, 0xcf, 0xc0, 0x00, 0xeb, 0xd0, 0xdd, 0xb2, 0x4a, 0xd0, 0x2b, 0xf4, 0x06, 0x01, 0x3c,
+	0xf6, 0x5c, 0x06, 0xe0, 0x73, 0xf5, 0x1f, 0x65, 0x40, 0x96, 0x3a, 0xa6, 0x9e, 0x05, 0xca, 0x75,
+	0x12, 0x97, 0xc1, 0x99, 0xdc, 0x19, 0xb3, 0x61, 0x9d, 0xb9, 0xbe, 0xdd, 0x80, 0x57, 0x21, 0x32,
+	0x17, 0x0e, 0x7e, 0xfc, 0x60, 0x62, 0xdf, 0xa7, 0x54, 0x5d, 0xdf, 0x69, 0xcb, 0xae, 0x59, 0x36,
+	0x7c, 0x45, 0xb9, 0xae, 0x5e, 0x04, 0xca, 0x6a, 0x21, 0x43, 0x24, 0x86, 0x89, 0xc4, 0xea, 0xe6,
+	0x9b, 0xb0, 0x84, 0x88, 0x4c, 0x51, 0x92, 0xc9, 0xe3, 0x35, 0x91, 0xe0, 0x95, 0x55, 0xf5, 0x79,
+	0xd0, 0x8b, 0x17, 0xa5, 0xd0, 0x43, 0xa4, 0x0f, 0x9e, 0xe1, 0x59, 0xe7, 0xaf, 0xd7, 0xc2, 0x21,
+	0xac, 0x01, 0x4b, 0x7b, 0x0d, 0x58, 0x92, 0xa4, 0x89, 0xa0, 0xba, 0x08, 0xb2, 0x74, 0x29, 0x0a,
+	0xbd, 0x44, 0xc5, 0x58, 0x58, 0x05, 0x19, 0x5c, 0x28, 0x30, 0x25, 0x07, 0x3c, 0xf2, 0x5b, 0x52,
+	0xc3, 0xc4, 0xe7, 0xc0, 0xfd, 0x3b, 0x5a, 0x16, 0x11, 0x19, 0xfd, 0x4f, 0x0a, 0xcf, 0x98, 0x15,
+	0xcb, 0xdb, 0x4d, 0x44, 0xce, 0x03, 0x65, 0x85, 0x45, 0x84, 0x4a, 0x60, 0x3d, 0x9d, 0xe3, 0xb1,
+	0xa2, 0x5e, 0x06, 0x7d, 0x14, 0x98, 0x2e, 0x36, 0x0e, 0x68, 0xd0, 0x9f, 0x05, 0x8d, 0x79, 0x32,
+	0x42, 0x6d, 0x95, 0x5d, 0xe1, 0xa2, 0xfa, 0x6f, 0x7b, 0xc0, 0x20, 0xcb, 0x1d, 0x12, 0xa4, 0x29,
+	0xd0, 0x8b, 0x4d, 0x66, 0xd9, 0x7e, 0x88, 0x65, 0x44, 0x1e, 0x6d, 0x37, 0xa0, 0x1c, 0x50, 0x3c,
+	0x47, 0x7d, 0x16, 0x80, 0xe5, 0xb5, 0xad, 0xa7, 0xd6, 0x9b, 0x9b, 0x36, 0x44, 0xc4, 0x87, 0x81,
+	0x85, 0x63, 0x4c, 0x62, 0xcc, 0x6a, 0x6c, 0x3d, 0x65, 0x78, 0x64, 0x48, 0x12, 0x94, 0x04, 0xd4,
+	0x17, 0xc0, 0x20, 0xfe, 0xb5, 0x68, 0x22, 0x78, 0xcb, 0xdc, 0x26, 0xeb, 0x3a, 0xb0, 0x30, 0xce,
+	0xe4, 0x0f, 0x11, 0xf9, 0x0a, 0x1d, 0x93, 0x14, 0xc8, 0x22, 0xcc, 0x80, 0x59, 0x66, 0x40, 0x6f,
+	0xc4, 0x80, 0xd9, 0x78, 0x03, 0x66, 0x03, 0x06, 0xcc, 0x72, 0x03, 0xf6, 0x47, 0x0c, 0x98, 0x4d,
+	0x30, 0x80, 0x8b, 0xa8, 0xe7, 0x40, 0x76, 0xa3, 0x66, 0xda, 0xcb, 0x97, 0x0b, 0xd9, 0x49, 0xe5,
+	0x54, 0x8e, 0x44, 0x1c, 0x0b, 0x8f, 0x6c, 0xd5, 0x4c, 0xdb, 0xb0, 0xca, 0x72, 0xf2, 0xd0, 0x89,
+	0xea, 0x79, 0xd0, 0xbf, 0x71, 0xbb, 0x66, 0xda, 0x1b, 0xd7, 0x96, 0x0b, 0x7d, 0x44, 0xe8, 0x08,
+	0x13, 0x3a, 0xb8, 0x85, 0x9f, 0x1b, 0x5b, 0xb6, 0x25, 0xf3, 0x8e, 0x4f, 0xd6, 0xaf, 0x80, 0x1c,
+	0x5f, 0x28, 0xba, 0xa1, 0x3c, 0x0d, 0x06, 0x5e, 0x75, 0xdc, 0xb7, 0x6a, 0x8e, 0x59, 0x16, 0x9b,
+	0x0a, 0x56, 0x73, 0x8b, 0x3f, 0x94, 0x37, 0x26, 0x31, 0x53, 0xff, 0x69, 0x06, 0xf4, 0x31, 0x45,
+	0x7b, 0x4b, 0xe0, 0x17, 0x02, 0x04, 0x1e, 0x15, 0xd9, 0x2a, 0xa5, 0x5f, 0x07, 0x06, 0x2f, 0x85,
+	0x18, 0x7c, 0x28, 0xa2, 0x23, 0x2d, 0x85, 0x07, 0xef, 0xdf, 0xd1, 0x78, 0xa1, 0xd2, 0xff, 0xaa,
+	0x08, 0x0e, 0xec, 0x35, 0x89, 0x97, 0xa4, 0x5d, 0x9e, 0xb2, 0xf8, 0x40, 0xd8, 0x27, 0xaa, 0xa2,
+	0xd3, 0xbe, 0xaf, 0xff, 0x57, 0x01, 0x23, 0xeb, 0xb0, 0xd4, 0x74, 0x2d, 0xb4, 0xbd, 0xe8, 0x3a,
+	0xcd, 0x06, 0x89, 0xd8, 0x32, 0x38, 0xc0, 0x57, 0x7e, 0x1d, 0xd6, 0x60, 0x09, 0x39, 0x2e, 0x4b,
+	0x95, 0x63, 0x5f, 0x3e, 0x98, 0xd0, 0x78, 0xaa, 0x18, 0x35, 0x73, 0x13, 0xd6, 0x64, 0xc5, 0x11,
+	0x31, 0xf5, 0x0a, 0x18, 0x66, 0x35, 0x40, 0x68, 0xa2, 0x75, 0xe9, 0xe8, 0x97, 0x0f, 0x26, 0x0a,
+	0xac, 0x64, 0x44, 0x15, 0x85, 0x85, 0xd4, 0x2b, 0x20, 0x77, 0xd5, 0x44, 0xa5, 0xea, 0x9a, 0x0b,
+	0x6f, 0x5a, 0xb7, 0x21, 0x2f, 0x55, 0x93, 0x8c, 0x05, 0x85, 0x3a, 0x1e, 0x34, 0x1a, 0x6c, 0x54,
+	0xd2, 0x14, 0x14, 0xd3, 0xd7, 0xc0, 0xc1, 0xa0, 0xbf, 0x94, 0x15, 0x17, 0xa3, 0xac, 0x10, 0x04,
+	0xeb, 0xc0, 0x8c, 0xdf, 0x65, 0x40, 0x2e, 0xa0, 0x72, 0x6f, 0xf9, 0x71, 0x25, 0xc0, 0x8f, 0xa2,
+	0xc8, 0x83, 0xc8, 0xaa, 0x76, 0x60, 0xc9, 0xb5, 0x10, 0x4b, 0x8e, 0x26, 0x68, 0x4a, 0xcb, 0x15,
+	0xf5, 0xfe, 0x1d, 0x2d, 0xef, 0x31, 0x51, 0xa3, 0x82, 0x65, 0xf5, 0xff, 0x84, 0xb3, 0x6d, 0xaf,
+	0x89, 0x63, 0x82, 0x7c, 0x00, 0x9f, 0xd3, 0xe7, 0x50, 0xbc, 0xb3, 0x0b, 0xc7, 0x99, 0x9b, 0x5a,
+	0xd0, 0x11, 0xd9, 0xdf, 0x90, 0x42, 0xfd, 0xd7, 0x0a, 0xc8, 0xae, 0x2f, 0xbe, 0xd2, 0xac, 0x41,
+	0xdc, 0xbb, 0xad, 0x39, 0x2e, 0xf2, 0x58, 0x59, 0x14, 0xbd, 0x5b, 0x03, 0x3f, 0x94, 0x7b, 0x37,
+	0x32, 0x4b, 0x9d, 0x06, 0xd9, 0xf9, 0x12, 0xee, 0x5a, 0x59, 0x51, 0x14, 0xf3, 0xcd, 0x92, 0xe5,
+	0xd8, 0x72, 0x88, 0xe9, 0x34, 0xdc, 0x68, 0xae, 0x41, 0xe8, 0x12, 0x60, 0x56, 0x08, 0x45, 0xa3,
+	0xd9, 0x80, 0xd0, 0xa5, 0xc6, 0xca, 0x59, 0x2b, 0xa6, 0xeb, 0x5f, 0x28, 0x60, 0x68, 0xbd, 0xd2,
+	0x70, 0x6a, 0x56, 0x69, 0x9b, 0xac, 0xff, 0x25, 0x30, 0x34, 0x8f, 0x90, 0x59, 0xaa, 0xb2, 0xc0,
+	0x50, 0x12, 0x4c, 0x30, 0x7d, 0x87, 0x4d, 0x32, 0x16, 0x75, 0x3f, 0x20, 0xa4, 0xbe, 0x08, 0xfa,
+	0x96, 0x6d, 0xec, 0x3b, 0xed, 0x3e, 0xe5, 0xee, 0x82, 0xc6, 0xc4, 0xef, 0x16, 0x2d, 0xdb, 0x70,
+	0xf1, 0x44, 0xb9, 0xbd, 0x60, 0xb2, 0x78, 0x7f, 0x5b, 0x6d, 0x22, 0xaa, 0xa7, 0x27, 0x5e, 0x8f,
+	0x60, 0xa7, 0xd3, 0x44, 0x11, 0x45, 0x42, 0x5a, 0x7f, 0x19, 0xe4, 0x85, 0x97, 0x0f, 0xcd, 0xf4,
+	0x0f, 0x32, 0xa0, 0x9f, 0x6b, 0xdb, 0x5b, 0x92, 0xcf, 0x07, 0x48, 0xee, 0xb7, 0xa0, 0xf2, 0x0a,
+	0x76, 0xe0, 0xf7, 0x72, 0x88, 0xdf, 0x87, 0xa3, 0x4a, 0xd2, 0x52, 0x7b, 0xe8, 0xfe, 0x1d, 0xad,
+	0xdf, 0x63, 0x52, 0xfa, 0x27, 0x52, 0x26, 0xed, 0x35, 0x9f, 0x57, 0x01, 0x58, 0xaf, 0xac, 0x61,
+	0x68, 0x4b, 0xa4, 0xca, 0x48, 0xc4, 0x31, 0xc2, 0x0a, 0xec, 0xd2, 0x28, 0x33, 0xda, 0x0a, 0x64,
+	0x8b, 0xa4, 0x42, 0xff, 0x5e, 0x06, 0x0c, 0xf2, 0xd2, 0x83, 0xa3, 0x76, 0x35, 0xb1, 0x12, 0x1e,
+	0x67, 0x49, 0xd3, 0x55, 0x35, 0x9c, 0x03, 0x03, 0x1b, 0x96, 0x8b, 0x9a, 0x66, 0x6d, 0xb9, 0xc1,
+	0x58, 0x2e, 0x18, 0xbb, 0x45, 0x07, 0x0c, 0x2b, 0xc0, 0x58, 0x31, 0xdd, 0xdf, 0x4d, 0x7a, 0x52,
+	0xed, 0x26, 0xe7, 0x41, 0xff, 0xca, 0x02, 0xf1, 0x6b, 0x9b, 0xf5, 0xb8, 0x22, 0xcd, 0x6b, 0x9b,
+	0x06, 0x0d, 0x8c, 0x4c, 0x19, 0x3e, 0x59, 0x7f, 0x09, 0x97, 0x33, 0x1a, 0x81, 0x87, 0x66, 0x0c,
+	0xee, 0x1a, 0x99, 0xb2, 0x47, 0xa3, 0x6b, 0x94, 0xd6, 0x76, 0xd7, 0x5d, 0x63, 0x20, 0x3a, 0x69,
+	0xbb, 0x46, 0xd6, 0xe9, 0x90, 0xae, 0x91, 0x29, 0xf8, 0x3f, 0x74, 0x8d, 0xe2, 0xe8, 0x1e, 0xee,
+	0x1a, 0xd9, 0x80, 0xdf, 0x35, 0xb6, 0x3d, 0xcc, 0xff, 0xa0, 0x07, 0x0c, 0x2f, 0x41, 0xb3, 0x86,
+	0xaa, 0x97, 0xaa, 0xb0, 0x44, 0x8f, 0x80, 0xb3, 0xa0, 0x7f, 0xd9, 0x46, 0xd0, 0xdd, 0x32, 0x6b,
+	0xc4, 0x9f, 0x9c, 0xbc, 0xd5, 0xd3, 0xe7, 0xb2, 0x2e, 0x3e, 0x57, 0x5d, 0x07, 0x23, 0x6b, 0xae,
+	0xb3, 0x09, 0xbd, 0x35, 0xe8, 0x0a, 0x05, 0x19, 0xa2, 0xe0, 0x24, 0x53, 0x70, 0xac, 0x41, 0x26,
+	0x18, 0x0d, 0xe8, 0x1a, 0x31, 0xba, 0xa2, 0xf2, 0xea, 0xcb, 0x20, 0x4f, 0x1e, 0x62, 0x2a, 0xac,
+	0xba, 0x37, 0xdc, 0x1a, 0x23, 0xcd, 0x09, 0xa6, 0xf1, 0x08, 0xd1, 0x68, 0x60, 0xea, 0x18, 0x8e,
+	0x6b, 0x34, 0x5d, 0x59, 0x5f, 0x48, 0x14, 0x1f, 0xf8, 0xae, 0x9a, 0xb7, 0xaf, 0x5b, 0x75, 0xe8,
+	0x34, 0x11, 0x4d, 0x87, 0x9c, 0x7f, 0xe0, 0xab, 0x9b, 0xb7, 0x0d, 0xc4, 0xc6, 0xe4, 0x03, 0x9f,
+	0x24, 0xa2, 0x7e, 0x13, 0x1c, 0xbc, 0x0c, 0x4b, 0x35, 0xd3, 0x85, 0x34, 0x6a, 0xdb, 0x97, 0x9c,
+	0xa6, 0x8d, 0xc8, 0xd1, 0x31, 0xb7, 0xf0, 0x38, 0xd3, 0x34, 0x51, 0xa6, 0x53, 0x8c, 0x2a, 0x9d,
+	0x63, 0x94, 0xf0, 0x24, 0x49, 0x65, 0x9c, 0x0e, 0xfd, 0x57, 0x19, 0x30, 0xb4, 0xb2, 0xb9, 0xe6,
+	0xd7, 0xf1, 0x6e, 0x8e, 0xe2, 0x17, 0xc1, 0xc0, 0x7c, 0xad, 0xe2, 0xb8, 0x16, 0xaa, 0xd6, 0xd9,
+	0x76, 0x24, 0x98, 0x6d, 0xf2, 0x81, 0xc0, 0x45, 0x15, 0x7f, 0xa8, 0xae, 0xe0, 0xbe, 0xde, 0xf3,
+	0x2c, 0xc7, 0x9e, 0xbf, 0x79, 0xd3, 0xb2, 0x2d, 0xc4, 0x8f, 0xe2, 0x3a, 0x53, 0x50, 0xf4, 0xe8,
+	0xb0, 0x61, 0xb2, 0xf1, 0x60, 0x77, 0x1f, 0x10, 0x55, 0x5f, 0x03, 0x83, 0x52, 0x3e, 0x31, 0xc6,
+	0x15, 0x44, 0x76, 0x86, 0x72, 0xcd, 0x0f, 0x3e, 0x0d, 0x95, 0x51, 0xc2, 0x23, 0x72, 0xf0, 0x25,
+	0x01, 0xfd, 0x32, 0xc8, 0x8b, 0x00, 0xd1, 0x0d, 0x6d, 0x46, 0x22, 0x02, 0xdd, 0xcf, 0x92, 0xc2,
+	0xe4, 0xa7, 0xfc, 0xdd, 0x0c, 0xe8, 0xe7, 0x6a, 0x1e, 0x8d, 0xda, 0x2f, 0xaf, 0xfa, 0xae, 0x6b,
+	0x7f, 0x30, 0x32, 0x29, 0x36, 0xb3, 0xdc, 0xfd, 0x3b, 0xda, 0x80, 0x28, 0x20, 0xfa, 0xdf, 0x14,
+	0x3f, 0xfd, 0xf6, 0x7a, 0x3f, 0x5b, 0x03, 0x80, 0x41, 0xc7, 0x15, 0x7f, 0x6e, 0x15, 0xb9, 0xda,
+	0xc1, 0x3e, 0x8d, 0x71, 0xab, 0x43, 0xd5, 0xdf, 0xd7, 0xa1, 0xe7, 0xc1, 0xd0, 0x8b, 0x76, 0xb9,
+	0xe1, 0x58, 0xf4, 0x66, 0x50, 0xff, 0x24, 0x0b, 0xf2, 0xe2, 0x01, 0xcd, 0x9d, 0x4b, 0xfe, 0x94,
+	0x1b, 0x37, 0x96, 0x2f, 0x33, 0x9a, 0x89, 0x36, 0x19, 0xb2, 0x31, 0xa3, 0xd9, 0x0c, 0xdc, 0xe3,
+	0x04, 0x84, 0xb0, 0x12, 0x5e, 0x23, 0x89, 0x92, 0x4c, 0x50, 0xc9, 0xdb, 0xbc, 0xa3, 0x08, 0x2b,
+	0x91, 0x85, 0x64, 0x25, 0xd7, 0xcc, 0x3a, 0x64, 0xf4, 0x13, 0x4a, 0x44, 0x5b, 0x62, 0x9b, 0x75,
+	0x18, 0xa7, 0x04, 0x0b, 0xa9, 0x4f, 0x8a, 0x5b, 0x1d, 0xd6, 0x24, 0x88, 0xbb, 0x28, 0x16, 0x47,
+	0xb9, 0x3d, 0xe7, 0xf7, 0x3f, 0x2f, 0x81, 0xfc, 0x92, 0x53, 0xb7, 0xec, 0xca, 0x92, 0xe3, 0xa1,
+	0xf9, 0x72, 0xd9, 0x65, 0x97, 0x60, 0x82, 0xfa, 0x55, 0x32, 0x6a, 0x54, 0x1d, 0x0f, 0x19, 0x66,
+	0xb9, 0x2c, 0xdf, 0x75, 0x87, 0x24, 0x83, 0xba, 0x88, 0x1f, 0xd9, 0x64, 0x5d, 0x21, 0x57, 0x42,
+	0x92, 0xfc, 0x6a, 0x10, 0xeb, 0x85, 0x9e, 0x47, 0xee, 0xc9, 0xc2, 0x57, 0x83, 0x26, 0x1d, 0x0b,
+	0x5f, 0x0d, 0x32, 0x91, 0xf0, 0xe5, 0x62, 0x7f, 0xf7, 0x97, 0x8b, 0xec, 0x76, 0x90, 0xdb, 0x30,
+	0x10, 0x73, 0x3b, 0x18, 0x6f, 0xc3, 0x6c, 0xd0, 0x06, 0x71, 0xbf, 0x08, 0xba, 0xbf, 0x5f, 0x7c,
+	0x16, 0x80, 0xab, 0x66, 0x89, 0x9b, 0x30, 0x18, 0xbc, 0xe0, 0xac, 0x9b, 0xa5, 0x18, 0x0b, 0x24,
+	0x01, 0xf5, 0x06, 0x50, 0x79, 0x8e, 0xcc, 0x23, 0xe4, 0x5a, 0x9b, 0x4d, 0x04, 0xbd, 0xc2, 0x10,
+	0xd9, 0x28, 0x45, 0x49, 0x16, 0xe9, 0x65, 0x8a, 0x29, 0x92, 0xba, 0x18, 0x05, 0xe4, 0xf4, 0xc4,
+	0x59, 0xf0, 0x68, 0xec, 0xa0, 0x32, 0xd7, 0x77, 0xbd, 0x83, 0x06, 0xf7, 0x87, 0xb4, 0xa7, 0x27,
+	0xbe, 0x4f, 0xe8, 0x1f, 0x29, 0xfe, 0x86, 0xb2, 0xd7, 0x1b, 0xe8, 0x0a, 0x18, 0xe0, 0xd0, 0xd1,
+	0xfd, 0x93, 0x8f, 0x90, 0x8e, 0x00, 0x7b, 0x74, 0x90, 0xdb, 0x1c, 0xe8, 0xf5, 0x85, 0x02, 0xfd,
+	0x35, 0x50, 0x98, 0x6f, 0x22, 0xe7, 0xaa, 0x57, 0xa1, 0x6f, 0x09, 0x5e, 0x35, 0x51, 0xa9, 0xba,
+	0x04, 0x6b, 0x0d, 0xe8, 0xaa, 0x43, 0x72, 0x53, 0xa2, 0x4e, 0x80, 0x2c, 0x5d, 0x3c, 0xb1, 0x9e,
+	0xc1, 0x57, 0x10, 0x73, 0xc3, 0x9f, 0xdd, 0x1d, 0x1d, 0xbc, 0x85, 0xe5, 0xab, 0x44, 0x5e, 0xff,
+	0x85, 0x02, 0x0e, 0x07, 0x94, 0x63, 0x17, 0x99, 0x6e, 0x1d, 0x07, 0x2c, 0x13, 0x17, 0xb0, 0x7e,
+	0xee, 0xbe, 0xfa, 0x75, 0xd0, 0xcf, 0x83, 0xc2, 0xb2, 0x20, 0x14, 0x29, 0x7f, 0xea, 0x38, 0xd8,
+	0xbf, 0x8c, 0x60, 0x9d, 0xbe, 0xdd, 0x8a, 0xb1, 0x2d, 0xff, 0xd9, 0xdd, 0x51, 0x50, 0xb3, 0x3c,
+	0xc4, 0x4c, 0x7b, 0x1d, 0x68, 0xcc, 0x32, 0xb6, 0x3d, 0x26, 0xfb, 0x3d, 0x19, 0xf2, 0x3b, 0x72,
+	0x69, 0x1b, 0x75, 0xfc, 0x43, 0x45, 0x44, 0x55, 0xba, 0x6b, 0xfe, 0x6a, 0x3c, 0x9f, 0x08, 0x7a,
+	0x1e, 0xb5, 0x2e, 0xec, 0x7a, 0x15, 0x4c, 0x30, 0xdb, 0x02, 0x77, 0x60, 0xc9, 0x01, 0xf8, 0x5a,
+	0x28, 0x00, 0x09, 0xd7, 0x6e, 0xd1, 0x30, 0xfc, 0x46, 0x01, 0xe3, 0x71, 0x50, 0x5f, 0x5d, 0x30,
+	0x4e, 0x06, 0x83, 0x91, 0x64, 0x69, 0x38, 0x24, 0x6f, 0x80, 0x22, 0xb7, 0x93, 0x5d, 0x3e, 0x24,
+	0x47, 0xe3, 0x78, 0x28, 0x1a, 0xd1, 0x8b, 0x8b, 0x68, 0x20, 0x7e, 0xa9, 0x88, 0x74, 0x93, 0xef,
+	0x5c, 0xbe, 0x9a, 0x18, 0x4c, 0x06, 0x63, 0x10, 0x63, 0x5f, 0x32, 0x19, 0x58, 0xe3, 0xbc, 0x1b,
+	0x32, 0x30, 0xd1, 0xb6, 0x64, 0x90, 0x8e, 0xd0, 0x7b, 0x4c, 0x06, 0x6e, 0x5d, 0xf2, 0xca, 0xf3,
+	0xce, 0x73, 0x37, 0x2b, 0xcf, 0x65, 0xdb, 0xae, 0xbc, 0xdc, 0x70, 0xef, 0xf1, 0xca, 0x0b, 0xfb,
+	0x92, 0xdd, 0xe7, 0x15, 0x61, 0x37, 0xee, 0x73, 0xd9, 0xb6, 0xee, 0xcb, 0xe5, 0x72, 0x8f, 0xdd,
+	0x17, 0xf6, 0x85, 0xdc, 0x9f, 0xf9, 0xcb, 0x7e, 0xd0, 0x4f, 0x0b, 0xc4, 0xc6, 0x39, 0x75, 0x03,
+	0xe4, 0xb0, 0xa9, 0xf3, 0xe5, 0x32, 0xfb, 0xe2, 0x21, 0x5c, 0x44, 0x8a, 0xe1, 0x07, 0xfa, 0x89,
+	0x7f, 0xde, 0x1d, 0x55, 0xfe, 0xf8, 0x7d, 0x2d, 0x5b, 0x72, 0xa1, 0x89, 0xe0, 0x7b, 0x7f, 0xff,
+	0xe2, 0x83, 0xcc, 0x30, 0xd8, 0x37, 0xa7, 0x4c, 0xe9, 0xfd, 0xd3, 0xec, 0x45, 0xbc, 0xba, 0x09,
+	0x0e, 0x60, 0xbd, 0x37, 0x1a, 0x65, 0x13, 0xc1, 0xd4, 0xaa, 0x4f, 0x73, 0xd5, 0x4d, 0x22, 0x47,
+	0x54, 0x17, 0x88, 0xea, 0xe2, 0x08, 0x57, 0x3d, 0xfd, 0xce, 0xea, 0x19, 0xdc, 0x42, 0xbf, 0xab,
+	0x7e, 0x8b, 0xda, 0xbe, 0x08, 0x51, 0x6a, 0x80, 0x53, 0x0c, 0xa0, 0xa7, 0x02, 0x11, 0xd1, 0x7e,
+	0x18, 0xec, 0x9b, 0xdb, 0xa7, 0xc6, 0x28, 0x37, 0xa9, 0x03, 0x97, 0x61, 0x0d, 0x76, 0xe1, 0xc0,
+	0x13, 0xdc, 0x81, 0x32, 0x91, 0xf3, 0x21, 0xa6, 0x62, 0x20, 0xde, 0x02, 0x79, 0x0c, 0x81, 0x17,
+	0x95, 0x01, 0x8c, 0x89, 0x55, 0x26, 0x19, 0xb9, 0xda, 0x20, 0x1f, 0x06, 0x15, 0x27, 0x05, 0x4c,
+	0x42, 0x63, 0xa1, 0x4f, 0x32, 0xdc, 0x5e, 0xbc, 0xce, 0x04, 0x35, 0x4f, 0x1c, 0xf3, 0x17, 0xe4,
+	0x75, 0x30, 0x8c, 0x85, 0x89, 0xde, 0xf6, 0x68, 0xc7, 0xe3, 0xd1, 0x24, 0x8e, 0xe8, 0x39, 0x06,
+	0xb7, 0x9f, 0xa4, 0xfd, 0x59, 0xa5, 0x68, 0xff, 0xbc, 0xa5, 0x65, 0xb6, 0xce, 0x7d, 0xd8, 0xd2,
+	0xfa, 0x18, 0xe0, 0xbd, 0x96, 0xc6, 0x3e, 0xa2, 0xd9, 0x69, 0x69, 0x86, 0xf8, 0xa0, 0x06, 0x07,
+	0x5e, 0xed, 0x69, 0x34, 0x91, 0xca, 0x42, 0x14, 0xb3, 0xb0, 0x3b, 0x2d, 0x6d, 0x5c, 0x08, 0xf4,
+	0x36, 0x1c, 0x0f, 0xa9, 0xc4, 0xaf, 0xa2, 0xf0, 0x66, 0xe6, 0xf7, 0x59, 0x30, 0xc0, 0x4a, 0xfd,
+	0xc6, 0x39, 0x15, 0xd2, 0x40, 0xce, 0x97, 0xcb, 0xfc, 0xd8, 0x17, 0x69, 0x08, 0x8a, 0x91, 0x27,
+	0xfa, 0x74, 0x4c, 0x1e, 0x1f, 0xa1, 0x79, 0x3c, 0x8a, 0x6d, 0xa1, 0x06, 0xbc, 0x3b, 0xcd, 0x5f,
+	0x4a, 0xab, 0x6f, 0x83, 0x11, 0x3f, 0xa7, 0xbb, 0x41, 0xba, 0x10, 0x93, 0xd6, 0x8f, 0xd1, 0xb4,
+	0x3e, 0x16, 0x87, 0xe4, 0xa7, 0xc8, 0x9b, 0xd4, 0xb3, 0x45, 0x88, 0xba, 0xc1, 0x7b, 0x2a, 0x9c,
+	0xe5, 0x27, 0x48, 0x32, 0x74, 0xc0, 0x6a, 0x50, 0xf7, 0x68, 0xc6, 0x77, 0x03, 0x77, 0x3e, 0x26,
+	0xe9, 0x09, 0xe2, 0x54, 0x07, 0xc4, 0x6d, 0x9a, 0x93, 0x38, 0x03, 0x39, 0x5e, 0xda, 0x9c, 0x8c,
+	0x74, 0x98, 0x62, 0xef, 0xf0, 0x29, 0x50, 0x24, 0x5e, 0xc7, 0xaf, 0xe5, 0x1b, 0x94, 0xde, 0x04,
+	0xa4, 0x03, 0xb6, 0x9e, 0x80, 0xdd, 0x96, 0x10, 0xef, 0x2b, 0x82, 0x11, 0xfd, 0x1c, 0xf4, 0x5e,
+	0x4b, 0xe3, 0xf7, 0x12, 0x3b, 0x2d, 0x6d, 0xce, 0xff, 0x48, 0x25, 0x4a, 0x8a, 0xf6, 0x81, 0xdb,
+	0x69, 0x69, 0x4f, 0xf8, 0xd2, 0x32, 0x43, 0x62, 0x9d, 0x9d, 0xf9, 0x57, 0x1f, 0x18, 0x0e, 0xf4,
+	0x82, 0x1b, 0xe7, 0xd4, 0xef, 0x82, 0x51, 0xc6, 0x99, 0xe0, 0x07, 0x01, 0x09, 0xdd, 0x63, 0x31,
+	0xe1, 0xb9, 0x3e, 0x1b, 0xc3, 0x22, 0x9d, 0xb2, 0xe8, 0x88, 0x6c, 0x4c, 0xe8, 0xad, 0xb4, 0xfa,
+	0x3e, 0x3b, 0x26, 0x51, 0x36, 0x3d, 0x9c, 0x0d, 0xcf, 0xc7, 0xf0, 0xeb, 0x09, 0xca, 0xaf, 0xc7,
+	0xda, 0xd8, 0xe0, 0x27, 0x62, 0x4b, 0xa1, 0xd1, 0x58, 0x84, 0xe8, 0xe1, 0x2c, 0x79, 0x26, 0xcc,
+	0xbc, 0x29, 0x92, 0x83, 0xe9, 0xac, 0xf8, 0x21, 0x0b, 0x09, 0x65, 0xe0, 0xc3, 0x19, 0xf2, 0x5c,
+	0x0c, 0x27, 0x89, 0x2d, 0x53, 0xe9, 0x6c, 0xf9, 0xb1, 0x02, 0xc6, 0x38, 0x37, 0x83, 0x96, 0x24,
+	0xb0, 0xe4, 0xf1, 0x30, 0x4b, 0x12, 0x0e, 0x3f, 0xfa, 0x93, 0x11, 0x9e, 0x1e, 0x27, 0x31, 0x6a,
+	0x9b, 0x2d, 0x6f, 0x82, 0x43, 0x82, 0xae, 0xa9, 0xcc, 0x39, 0xd5, 0xd6, 0x9c, 0xb6, 0xd4, 0xfd,
+	0x83, 0x4f, 0xdd, 0xe1, 0x90, 0x1d, 0xf7, 0x5a, 0x5a, 0xf0, 0xfb, 0x99, 0x9d, 0x96, 0xb6, 0x18,
+	0xfe, 0xa4, 0x26, 0xca, 0xe6, 0x54, 0x21, 0xdf, 0x69, 0x69, 0x17, 0xc2, 0xaa, 0x64, 0x6a, 0xb7,
+	0x8b, 0xcf, 0xcc, 0x9f, 0xb3, 0x00, 0xf0, 0x93, 0xce, 0xc6, 0x39, 0xb5, 0x4a, 0x37, 0x56, 0x4c,
+	0x6e, 0xfe, 0x0d, 0x40, 0xf4, 0x44, 0x54, 0x8c, 0x3e, 0x4a, 0x5d, 0x13, 0xf9, 0x1b, 0x75, 0x15,
+	0x01, 0x55, 0x62, 0x71, 0x77, 0x60, 0x69, 0xcb, 0x22, 0x07, 0xf3, 0xb3, 0xb3, 0x4e, 0xfd, 0xc3,
+	0x74, 0xed, 0x0e, 0x32, 0x4d, 0x65, 0x8c, 0xc2, 0x79, 0xd4, 0x49, 0xc6, 0xcb, 0xee, 0x10, 0x53,
+	0x16, 0xc7, 0x28, 0xe8, 0x3b, 0xb4, 0x42, 0x11, 0x02, 0x72, 0xc8, 0xb4, 0x15, 0x2a, 0x7a, 0xde,
+	0x4e, 0x57, 0x1e, 0xc5, 0xb2, 0x7e, 0x9b, 0xf6, 0x02, 0x94, 0x6f, 0x1d, 0xd0, 0x4f, 0x24, 0xa1,
+	0xb7, 0x65, 0xd9, 0x4f, 0xa4, 0x02, 0xc9, 0x61, 0xef, 0xb5, 0x34, 0xf1, 0xd1, 0xca, 0x4e, 0x4b,
+	0x7b, 0x46, 0xfa, 0x84, 0xa5, 0x43, 0x89, 0x8c, 0x84, 0x6f, 0xa7, 0xa5, 0x9d, 0x96, 0xc4, 0x13,
+	0x6b, 0x24, 0x17, 0x24, 0x1d, 0x25, 0x3b, 0x2f, 0x07, 0x3a, 0x4a, 0xfe, 0x49, 0x40, 0xe4, 0x54,
+	0x5d, 0x8c, 0x3c, 0x49, 0xcf, 0x1e, 0xf6, 0xa6, 0x2e, 0xd8, 0x51, 0x76, 0x83, 0x94, 0x9a, 0x3a,
+	0x0c, 0x29, 0xae, 0xa3, 0xec, 0x06, 0x2f, 0x15, 0x6f, 0x22, 0x58, 0x81, 0x8e, 0xb2, 0x1b, 0xb8,
+	0xb4, 0xa4, 0x89, 0x20, 0x4a, 0x1d, 0x25, 0xc7, 0x4b, 0xdb, 0x51, 0x46, 0xae, 0x69, 0x52, 0x52,
+	0x86, 0xaf, 0xa5, 0xdc, 0x51, 0x76, 0xc0, 0xd6, 0x13, 0xb0, 0x53, 0x77, 0x94, 0x1c, 0x14, 0x77,
+	0x94, 0x4c, 0x96, 0x76, 0x94, 0x1c, 0xb8, 0x13, 0x5d, 0xc2, 0x81, 0xa3, 0x1d, 0x25, 0x97, 0x4e,
+	0x66, 0x0b, 0x93, 0x9b, 0xf9, 0x28, 0x2b, 0x5e, 0x68, 0xe2, 0x7a, 0x63, 0x89, 0x7a, 0x23, 0xde,
+	0x3b, 0x47, 0xef, 0x61, 0x8a, 0xd1, 0x47, 0xfa, 0xd9, 0x18, 0xc6, 0x1c, 0xa5, 0x8c, 0x19, 0x93,
+	0x81, 0xc5, 0x5b, 0x5c, 0xb5, 0x29, 0x17, 0x9c, 0x2e, 0xd1, 0x2e, 0xc6, 0xb0, 0xe6, 0x24, 0x65,
+	0xcd, 0x78, 0x2c, 0x9a, 0x9f, 0x58, 0xb6, 0xa8, 0x38, 0x5d, 0x62, 0x3e, 0x1d, 0x66, 0xce, 0x63,
+	0x24, 0x87, 0x3a, 0xe1, 0x21, 0xb9, 0xe4, 0x74, 0x09, 0x79, 0x21, 0x86, 0x3d, 0x04, 0x75, 0xaa,
+	0x13, 0xea, 0x77, 0xfc, 0x9a, 0x23, 0x30, 0xd3, 0xe6, 0x70, 0xf4, 0xa6, 0x4f, 0x37, 0x22, 0x04,
+	0x3a, 0x42, 0x9c, 0x4f, 0x58, 0x5a, 0xb9, 0xe8, 0x74, 0x82, 0x3f, 0x91, 0x04, 0xdf, 0x96, 0x43,
+	0x3f, 0xf3, 0x39, 0xe4, 0x7f, 0x18, 0x80, 0xab, 0x0e, 0x97, 0xde, 0x69, 0x69, 0xdf, 0x90, 0x3e,
+	0x9e, 0x88, 0xd2, 0xa8, 0x43, 0x04, 0xc9, 0x5d, 0x87, 0x2f, 0x2f, 0x13, 0x29, 0xde, 0x69, 0xc2,
+	0x24, 0x7e, 0x55, 0x17, 0x60, 0x92, 0x78, 0xff, 0x18, 0xbd, 0xd2, 0x2b, 0x46, 0x1f, 0xa5, 0x66,
+	0x92, 0x78, 0x33, 0x16, 0x64, 0x52, 0x97, 0x68, 0x69, 0x99, 0x24, 0xd0, 0xe2, 0x98, 0xd4, 0x25,
+	0x66, 0x1a, 0x26, 0xc5, 0xe0, 0x05, 0x98, 0xd4, 0x25, 0x64, 0x4a, 0x26, 0xc5, 0xa0, 0x4a, 0x4c,
+	0x12, 0x98, 0x69, 0x99, 0x14, 0xbd, 0x34, 0x4e, 0xc7, 0x24, 0x7f, 0x69, 0x65, 0x26, 0x75, 0x82,
+	0x3f, 0x91, 0x04, 0x9f, 0x9a, 0x49, 0x02, 0x17, 0x33, 0x89, 0x4b, 0x53, 0x26, 0x09, 0xf0, 0x0e,
+	0x4c, 0x8a, 0x46, 0x90, 0x32, 0x49, 0xc8, 0x27, 0x32, 0x49, 0x48, 0x2e, 0x8c, 0x7f, 0xf8, 0x9e,
+	0x96, 0xaf, 0x39, 0x25, 0xb3, 0x56, 0x75, 0x3c, 0x34, 0x77, 0xe1, 0xec, 0x85, 0x99, 0x8f, 0x3f,
+	0x1f, 0x57, 0x3e, 0xfd, 0x7c, 0x5c, 0xf9, 0xf7, 0xe7, 0xe3, 0xca, 0x9a, 0xb2, 0x99, 0x25, 0xff,
+	0x02, 0xf9, 0xe4, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0xf8, 0x0d, 0xeb, 0x70, 0xd0, 0x39, 0x00,
+	0x00,
 }

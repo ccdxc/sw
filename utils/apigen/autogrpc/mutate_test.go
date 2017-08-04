@@ -1,0 +1,193 @@
+package autogrpc
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+
+	_ "github.com/gogo/protobuf/gogoproto"
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
+	_ "github.com/pensando/sw/utils/apigen/annotations"
+)
+
+func TestMutator(t *testing.T) {
+	var req plugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'Nest1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest2'
+				number: 1
+			>
+		>
+		message_type <
+			name: 'testmsg'
+			field <
+				name: 'real_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			field <
+				name: 'leaf_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 3
+			>
+		>
+		service <
+			name: 'hybrid_crudservice'
+			method: <
+				name: 'noncrudsvc'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+			>
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg" [venice.apiRestService]: {Object: "Nest1", Method: [ "put", "post" ], Pattern: "/testpattern"}>
+		>
+		service <
+			name: 'full_crudservice'
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1">
+		>
+		`, `
+		name: 'another.proto'
+		package: 'example'
+		message_type <
+			name: 'Nest2'
+			field <
+				name: 'embedded_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+		>
+		service <
+			name: 'crudservice'
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest2">
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	req.FileToGenerate = []string{"example.proto"}
+	type svccount struct {
+		methodcount int
+		autoCreate  int
+		autoUpdate  int
+		autoDelete  int
+		autoGet     int
+		autoList    int
+		autoWatch   int
+	}
+	type counts struct {
+		msgcount  int
+		autoList  int
+		autoWatch int
+		svcs      map[string]*svccount
+	}
+	expected := make(map[string]*counts)
+
+	expected["example.proto"] = &counts{
+		svcs:      make(map[string]*svccount),
+		msgcount:  6,
+		autoList:  2,
+		autoWatch: 2,
+	}
+	expected["example.proto"].svcs["hybrid_crudservice"] = &svccount{
+		methodcount: 13,
+		autoCreate:  2,
+		autoUpdate:  2,
+		autoDelete:  2,
+		autoGet:     2,
+		autoList:    2,
+		autoWatch:   2,
+	}
+	expected["example.proto"].svcs["full_crudservice"] = &svccount{
+		methodcount: 6,
+		autoCreate:  1,
+		autoUpdate:  1,
+		autoDelete:  1,
+		autoGet:     1,
+		autoList:    1,
+		autoWatch:   1,
+	}
+	expected["another.proto"] = &counts{
+		svcs:      make(map[string]*svccount),
+		msgcount:  1,
+		autoList:  0,
+		autoWatch: 0,
+	}
+	expected["another.proto"].svcs["crudservice"] = &svccount{
+		methodcount: 0,
+		autoCreate:  0,
+		autoUpdate:  0,
+		autoDelete:  0,
+		autoGet:     0,
+		autoList:    0,
+		autoWatch:   0,
+	}
+	AddAutoGrpcEndpoints(&req)
+	found := make(map[string]*counts)
+	found["example.proto"] = &counts{
+		svcs: make(map[string]*svccount),
+	}
+	found["another.proto"] = &counts{
+		svcs: make(map[string]*svccount),
+	}
+	for _, file := range req.ProtoFile {
+		c := found[*file.Name]
+		c.msgcount = len(file.MessageType)
+		for _, msgs := range file.MessageType {
+			if strings.Contains(*msgs.Name, "ListHelper") {
+				c.autoList++
+			}
+			if strings.Contains(*msgs.Name, "WatchHelper") {
+				c.autoWatch++
+			}
+		}
+		for _, svcs := range file.Service {
+			if _, ok := c.svcs[*svcs.Name]; !ok {
+				c.svcs[*svcs.Name] = &svccount{}
+			}
+			s := c.svcs[*svcs.Name]
+			s.methodcount = len(svcs.Method)
+			for _, method := range svcs.Method {
+				if strings.Contains(*method.Name, "AutoAdd") {
+					s.autoCreate++
+				}
+				if strings.Contains(*method.Name, "AutoUpdate") {
+					s.autoUpdate++
+				}
+				if strings.Contains(*method.Name, "AutoGet") {
+					s.autoGet++
+				}
+				if strings.Contains(*method.Name, "AutoDelete") {
+					s.autoDelete++
+				}
+				if strings.Contains(*method.Name, "AutoList") {
+					s.autoList++
+				}
+				if strings.Contains(*method.Name, "AutoWatch") {
+					s.autoWatch++
+				}
+			}
+		}
+	}
+	if !reflect.DeepEqual(expected, found) {
+		t.Fatalf("expected and found do not match")
+	}
+}

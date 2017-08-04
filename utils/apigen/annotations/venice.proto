@@ -11,6 +11,16 @@ message ObjectRln {
   string To = 2;
 }
 
+// RestEndpoint is used by the venice.apiRestservice option to specify REST resources to be exposed.
+message RestEndpoint {
+  // Object for which the endpoint is being defined
+  string Object = 1;
+  // Methods allowed on the resource
+  repeated string Method = 2;
+  // Pattern for the URI
+  string Pattern = 3;
+}
+
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key. 
@@ -24,12 +34,18 @@ extend google.protobuf.ServiceOptions {
   // Prefix is used in how the URI is constructed. For example if the prefix option
   // is specified as storage then the URI would be "/<version>/venice/storage/<URI path specifed for endpoint>
   string apiPrefix= 51251;
+  // crudService is used to specify the messages for which this service provides gRPC CRUD Apis.
+  repeated string apiGrpcCrudService = 51252;
+  // apiRestService is used to specify the REST services offered by the service.
+  repeated RestEndpoint apiRestService = 51253;
 };
 
 // Venice Option extensions applicable to rpc Methods.
 extend google.protobuf.MethodOptions {
   // Valid only for Pure gRPC methods. Specifies the type of KV store operation the method results in.
   string methodOper = 51270;
+  // methodAutoGen is for internal use only
+  bool methodAutoGen = 41291;
 };
 
 // Venice Option extensions applicable to messages
@@ -37,6 +53,8 @@ extend google.protobuf.MessageOptions {
   // Path prefix specification for the KV Store for this message. Needs to be specified for all objects that
   // the api server is to persist in the KV store.
   string objectPrefix = 51290;
+  // objectAutoGen is for internal use only
+  string objectAutoGen = 41291;
 };
 
 extend google.protobuf.FieldOptions {

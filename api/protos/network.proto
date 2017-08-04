@@ -54,32 +54,20 @@ message TenantList {
 // Tenant REST API
 service TenantV1 {
      // Prefix for all resources served by this service.
-     option (venice.apiPrefix) = "tenant";
+     option (venice.apiPrefix) = "tenants";
      // API Version.
      option (venice.apiVersion) = "v1";
-
-     rpc GetTenantList(TenantList) returns(TenantList) {
-         option (google.api.http) = {
-             get: "/tenant"
-         };
-     }
-
-     rpc TenantOper(Tenant) returns(Tenant) {
-         option (google.api.http) = {
-             post: "/tenant/{O.Name}"
-             body: "*"
-             additional_bindings: {
-                 put: "/tenant/{O.Name}"
-                 body: "*"
-             }
-             additional_bindings: {
-                 get: "/tenant/{O.Name}"
-             }
-             additional_bindings: {
-                 delete : "/tenant/{O.Name}"
-             }
-         };
-     }
+     option (venice.apiGrpcCrudService) = "Tenant";
+     option (venice.apiRestService) = {
+         Object: "Tenant"
+         Method: [ "get", "put", "delete" ]
+         Pattern: "/tenants/{O.Name}"
+     };
+     option (venice.apiRestService) = {
+         Object: "Tenant"
+         Method: [ "post", "list" ]
+         Pattern: "/tenants"
+     };
 }
 
 // ----------------------------- Network Object -----------------------------
@@ -105,7 +93,7 @@ message NetworkSpec {
 // status part of network object
 message NetworkStatus {
     // list of all workloads in this network
-    repeated string Workloads = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workloads,omitempty"];
+    repeated string Workloads = 1 [(gogoproto.jsontag) = "workloads,omitempty"];
 }
 
 // Network represents a subnet
@@ -131,31 +119,21 @@ message NetworkList {
 // Network REST API
 service NetworkV1 {
      // Prefix for all resources served by this service.
-     option (venice.apiPrefix) = "network";
+     option (venice.apiPrefix) = "networks";
      // API Version.
      option (venice.apiVersion) = "v1";
 
-     rpc GetNetworkList(NetworkList) returns(NetworkList) {
-         option (google.api.http) = {
-             get: "/network"
-         };
-     }
-     rpc NetworkOper(Network) returns(Network) {
-         option (google.api.http) = {
-             post: "/{O.Tenant}/network/{O.Name}"
-             body: "*"
-             additional_bindings: {
-                 put: "/{O.Tenant}/network/{O.Name}"
-                 body: "*"
-             }
-             additional_bindings: {
-                 get: "/{O.Tenant}/network/{O.Name}"
-              }
-             additional_bindings: {
-                 delete : "/{O.Tenant}/network/{O.Name}"
-              }
-         };
-     }
+     option (venice.apiGrpcCrudService) = "Network";
+     option (venice.apiRestService) = {
+         Object: "Network"
+         Method: [ "get", "put", "delete" ]
+         Pattern: "/{O.Tenant}/networks/{O.Name}"
+     };
+     option (venice.apiRestService) = {
+         Object: "Network"
+         Method: [ "post", "list" ]
+         Pattern: "/{O.Tenant}/networks"
+     };
  }
 
  // ----------------------------- SecurityGroup Object -----------------------------
@@ -167,11 +145,11 @@ message SecurityGroupSpec {
     // map<string, string> ServiceSelector  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-labels,omitempty"];
 
     // Workload selector (list of labels)
-    repeated string WorkloadSelector = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    repeated string WorkloadSelector = 1 [(gogoproto.jsontag) = "workload-labels,omitempty"];
     // Service object selector
-    repeated string ServiceSelector  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-labels,omitempty"];
+    repeated string ServiceSelector  = 2 [(gogoproto.jsontag) = "service-labels,omitempty"];
     // list of CIDRs that are part of this security group
-    repeated string MatchPrefixes      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "match-prefixes,omitempty"];
+    repeated string MatchPrefixes    = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "match-prefixes,omitempty"];
 }
 
 // security group status
@@ -203,32 +181,21 @@ message SecurityGroupList {
 // SecurityGroup REST API
 service SecurityGroupV1 {
   // Prefix for all resources served by this service.
-  option (venice.apiPrefix) = "security-group";
+  option (venice.apiPrefix) = "security-groups";
   // API Version.
   option (venice.apiVersion) = "v1";
 
-  rpc GetSecurityGroupList(SecurityGroupList) returns(SecurityGroupList) {
-      option (google.api.http) = {
-          get: "/security-group"
-      };
-  }
-
-  rpc SecurityGroupOper(SecurityGroup) returns(SecurityGroup) {
-      option (google.api.http) = {
-          post: "/{O.Tenant}/security-group/{O.Name}"
-          body: "*"
-          additional_bindings: {
-              put: "/{O.Tenant}/security-group/{O.Name}"
-              body: "*"
-          }
-          additional_bindings: {
-              get: "/{O.Tenant}/security-group/{O.Name}"
-          }
-          additional_bindings: {
-              delete : "/{O.Tenant}/security-group/{O.Name}"
-          }
-      };
-  }
+  option (venice.apiGrpcCrudService) = "SecurityGroup";
+  option (venice.apiRestService) = {
+    Object: "SecurityGroup"
+    Method: [ "get", "put", "delete" ]
+    Pattern: "/{O.Tenant}/security-groups/{O.Name}"
+  };
+  option (venice.apiRestService) = {
+    Object: "SecurityGroup"
+    Method: [ "post", "list" ]
+    Pattern: "/{O.Tenant}/security-groups"
+  };
 }
 
 // ----------------------------- SgPolicy Object -----------------------------
@@ -284,27 +251,17 @@ service SgpolicyV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    rpc GetSgpolicyList(SgpolicyList) returns(SgpolicyList) {
-        option (google.api.http) = {
-          get: "/sgpolicy"
-        };
-    }
-    rpc SgpolicyOper(Sgpolicy) returns(Sgpolicy) {
-        option (google.api.http) = {
-          post: "/{O.Tenant}/sgpolicy/{O.Name}"
-          body: "*"
-          additional_bindings: {
-              put: "/{O.Tenant}/sgpolicy/{O.Name}"
-              body: "*"
-          }
-          additional_bindings: {
-              get: "/{O.Tenant}/sgpolicy/{O.Name}"
-           }
-          additional_bindings: {
-              delete : "/{O.Tenant}/sgpolicy/{O.Name}"
-           }
-        };
-    }
+    option (venice.apiGrpcCrudService) = "Sgpolicy";
+    option (venice.apiRestService) = {
+    Object: "Sgpolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/sgpolicy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "Sgpolicy"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/sgpolicy"
+    };
 }
 
 
@@ -354,31 +311,21 @@ message ServiceList {
 // Service REST API
 service ServiceV1 {
     // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "service";
+    option (venice.apiPrefix) = "services";
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    rpc GetServiceList(ServiceList) returns(ServiceList) {
-        option (google.api.http) = {
-          get: "/service"
-        };
-    }
-    rpc ServiceOper(Service) returns(Service) {
-        option (google.api.http) = {
-          post: "/{O.Tenant}/service/{O.Name}"
-          body: "*"
-          additional_bindings: {
-              put: "/{O.Tenant}/service/{O.Name}"
-              body: "*"
-          }
-          additional_bindings: {
-              get: "/{O.Tenant}/service/{O.Name}"
-           }
-          additional_bindings: {
-              delete : "/{O.Tenant}/service/{O.Name}"
-           }
-        };
-    }
+    option (venice.apiGrpcCrudService) = "Service";
+    option (venice.apiRestService) = {
+    Object: "Service"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/services/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "Service"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/services"
+    };
 }
 
 // ----------------------------- LbPolicy Object -----------------------------
@@ -439,27 +386,17 @@ service LbPolicyV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    rpc GetLbPolicyList(LbPolicyList) returns(LbPolicyList) {
-        option (google.api.http) = {
-          get: "/lb-policy"
-        };
-    }
-    rpc LbPolicyOper(LbPolicy) returns(LbPolicy) {
-        option (google.api.http) = {
-          post: "/{O.Tenant}/lb-policy/{O.Name}"
-          body: "*"
-          additional_bindings: {
-              put: "/{O.Tenant}/lb-policy/{O.Name}"
-              body: "*"
-          }
-          additional_bindings: {
-              get: "/{O.Tenant}/lb-policy/{O.Name}"
-           }
-          additional_bindings: {
-              delete : "/{O.Tenant}/lb-policy/{O.Name}"
-           }
-        };
-    }
+    option (venice.apiGrpcCrudService) = "LbPolicy";
+    option (venice.apiRestService) = {
+        Object: "LbPolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/lb-policy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "LbPolicy"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/lb-policy"
+    };
 }
 
 // ----------------------------- Endpoint Object -----------------------------
@@ -522,29 +459,19 @@ message EndpointList {
 // endpoint REST API
 service EndpointV1 {
     // Prefix for all resources served by this service.
-    option (venice.apiPrefix) = "endpoint";
+    option (venice.apiPrefix) = "endpoints";
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    rpc GetEndpointList(EndpointList) returns(EndpointList) {
-        option (google.api.http) = {
-          get: "/endpoint"
-        };
-    }
-    rpc EndpointOper(Endpoint) returns(Endpoint) {
-        option (google.api.http) = {
-          post: "/{O.Tenant}/endpoint/{O.Name}"
-          body: "*"
-          additional_bindings: {
-              put: "/{O.Tenant}/endpoint/{O.Name}"
-              body: "*"
-          }
-          additional_bindings: {
-              get: "/{O.Tenant}/endpoint/{O.Name}"
-           }
-          additional_bindings: {
-              delete : "/{O.Tenant}/endpoint/{O.Name}"
-           }
-        };
-    }
+    option (venice.apiGrpcCrudService) = "Endpoint";
+    option (venice.apiRestService) = {
+        Object: "Endpoint"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/endpoints/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "Endpoint"
+        Method: [ "post", "list" ]
+        Pattern: "/{O.Tenant}/endpoints"
+    };
 }

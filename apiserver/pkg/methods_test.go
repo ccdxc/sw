@@ -26,7 +26,7 @@ func (m *fakeMethod) WithRateLimiter() apisrv.Method { return m }
 func (m *fakeMethod) WithPreCommitHook(fn apisrv.PreCommitFunc) apisrv.Method       { return m }
 func (m *fakeMethod) WithPostCommitHook(fn apisrv.PostCommitFunc) apisrv.Method     { return m }
 func (m *fakeMethod) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Method { return m }
-func (m *fakeMethod) WithOper(oper string) apisrv.Method                            { return m }
+func (m *fakeMethod) WithOper(oper apisrv.APIOperType) apisrv.Method                { return m }
 func (m *fakeMethod) WithVersion(ver string) apisrv.Method                          { return m }
 func (m *fakeMethod) GetRequestType() apisrv.Message                                { return nil }
 func (m *fakeMethod) GetResponseType() apisrv.Message                               { return nil }
@@ -38,7 +38,7 @@ func newFakeMethod(skipkv bool) apisrv.Method {
 	return &fakeMethod{skipkv: skipkv}
 }
 
-func (m *fakeMethod) precommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
+func (m *fakeMethod) precommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apisrv.APIOperType, i interface{}) (interface{}, bool, error) {
 	m.pres++
 	if m.skipkv {
 		return i, false, nil
@@ -46,11 +46,11 @@ func (m *fakeMethod) precommitFunc(ctx context.Context, kvs kvstore.Interface, t
 	return i, true, nil
 }
 
-func (m *fakeMethod) postcommitfFunc(ctx context.Context, oper string, i interface{}) {
+func (m *fakeMethod) postcommitfFunc(ctx context.Context, oper apisrv.APIOperType, i interface{}) {
 	m.posts++
 }
 
-func (m *fakeMethod) respWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, o interface{}, oper string) (interface{}, error) {
+func (m *fakeMethod) respWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, o interface{}, oper apisrv.APIOperType) (interface{}, error) {
 	return "TestResponse", nil
 }
 
@@ -67,8 +67,8 @@ func TestMethodWiths(t *testing.T) {
 	m = m.WithPostCommitHook(f.postcommitfFunc).WithPostCommitHook(f.postcommitfFunc).WithResponseWriter(f.respWriterFunc)
 	m = m.WithOper("POST").WithVersion("Vtest")
 	reqmsg := TestType1{}
-	md := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "GET")
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "GET")
 	mhdlr := m.(*MethodHdlr)
 	if mhdlr.version != "Vtest" || mhdlr.oper != "POST" {
 		t.Errorf("Flags not set correction ver[%v] oper[%v]", mhdlr.version, mhdlr.oper)
@@ -125,8 +125,8 @@ func TestMethodKvWrite(t *testing.T) {
 	reqmsg := TestType1{}
 
 	// Set the same version as the apiServer
-	md := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "GET")
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "GET")
 	ctx := metadata.NewContext(context.Background(), md)
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
 		t.Errorf("Expecting err but succeded")
@@ -135,24 +135,24 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Expecting [1] read but found [%v]", req.kvreads)
 	}
 	// Now add the object and check
-	md1 := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "POST")
+	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST")
 	ctx1 := metadata.NewContext(context.Background(), md1)
 	m.HandleInvocation(ctx1, reqmsg)
 	if req.kvwrites != 1 {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
 	// Now modify the object and check
-	md2 := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "PUT")
+	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT")
 	ctx2 := metadata.NewContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
 	if req.kvwrites != 2 {
 		t.Errorf("Expecting [1] kvwrite but found [%v]", req.kvwrites)
 	}
 	// Now delete the object and check
-	md3 := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "DELETE")
+	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "DELETE")
 	ctx3 := metadata.NewContext(context.Background(), md3)
 	span := opentracing.StartSpan("delete")
 	ctx3 = opentracing.ContextWithSpan(ctx3, span)
@@ -164,41 +164,63 @@ func TestMethodKvWrite(t *testing.T) {
 	}
 }
 
+func TestMethodKvList(t *testing.T) {
+	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
+	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
+
+	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	reqmsg := api.ListWatchOptions{}
+
+	// Set the same version as the apiServer
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "LIST")
+	ctx := metadata.NewContext(context.Background(), md)
+	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
+		t.Errorf("Expecting err but succeded")
+	}
+	if resp.kvlists != 1 {
+		t.Errorf("Expecting [1] kvlist but found [%v]", req.kvlists)
+	}
+}
+
 func TestMapOper(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
 
-	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
-	md := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "GET")
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "GET")
 	// Test that the oper method is correct
 	mhdlr := m.(*MethodHdlr)
-	if mhdlr.mapOper(md) != "GET" {
+	if mhdlr.mapOper(md) != apisrv.GetOper {
 		t.Errorf("Found wrong oper type")
 	}
-	md = metadata.Pairs("req-version", "v1")
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1")
 	m.WithOper("create")
-	if mhdlr.mapOper(md) != "POST" {
+	if mhdlr.mapOper(md) != apisrv.CreateOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("update")
-	if mhdlr.mapOper(md) != "PUT" {
+	if mhdlr.mapOper(md) != apisrv.UpdateOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("get")
-	if mhdlr.mapOper(md) != "GET" {
+	if mhdlr.mapOper(md) != apisrv.GetOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("delete")
-	if mhdlr.mapOper(md) != "DELETE" {
+	if mhdlr.mapOper(md) != apisrv.DeleteOper {
+		t.Errorf("Found wrong oper type")
+	}
+	m.WithOper("watch")
+	if mhdlr.mapOper(md) != apisrv.WatchOper {
 		t.Errorf("Found wrong oper type")
 	}
 }
 
 func testTxnPreCommithook(ctx context.Context,
 	kv kvstore.Interface,
-	txn kvstore.Txn, key, oper string,
+	txn kvstore.Txn, key string, oper apisrv.APIOperType,
 	i interface{}) (interface{}, bool, error) {
 
 	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", 0))
@@ -212,16 +234,16 @@ func TestTxn(t *testing.T) {
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
 	reqmsg := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
-	md := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "POST")
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST")
 	ctx := metadata.NewContext(context.Background(), md)
 	m.HandleInvocation(ctx, reqmsg)
 	if req.txnwrites != 1 {
 		t.Fatalf("Txn Write: expecting [1] saw [%d]", req.txnwrites)
 	}
 	// Modify the same object
-	md1 := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "PUT")
+	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT")
 	ctx1 := metadata.NewContext(context.Background(), md1)
 	req.kvpath = txnTestKey
 	m.HandleInvocation(ctx1, reqmsg)
@@ -229,8 +251,8 @@ func TestTxn(t *testing.T) {
 		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.txnwrites)
 	}
 	// Delete the Object
-	md2 := metadata.Pairs("req-version", singletonAPISrv.version,
-		"req-method", "DELETE")
+	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "DELETE")
 	ctx2 := metadata.NewContext(context.Background(), md2)
 	_, err := m.HandleInvocation(ctx2, reqmsg)
 	if err != nil {

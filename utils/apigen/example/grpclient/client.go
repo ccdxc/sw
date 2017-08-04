@@ -5,121 +5,157 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 	"reflect"
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
+	cache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/bookstore"
-	bookstoreclient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"github.com/pensando/sw/api/generated/network"
-	netclient "github.com/pensando/sw/api/generated/network/grpc/client"
 	"github.com/pensando/sw/utils/log"
 )
 
 func main() {
 	var (
-		grpcaddr = flag.String("grpc-server", "localhost:8082", "GRPC Port to listen on")
+		grpcaddr = flag.String("grpc-server", "localhost:8082", "GRPC Port to connect to")
+		watch    = flag.Bool("watch", false, "watch publishers")
 	)
 	flag.Parse()
 
 	ctx := context.Background()
-
-	conn, err := grpc.Dial(*grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
-	if err != nil {
-		fmt.Printf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
-		os.Exit(-1)
-	}
-	defer conn.Close()
-
 	config := log.GetDefaultConfig("GrpcClientExample")
 	l := log.GetNewLogger(config)
-	cl := bookstoreclient.NewBookstoreV1(conn, l)
+	url := *grpcaddr
 
-	// Add a Publisher
-	var pub bookstore.Publisher
-	pub.Name = "SaharaPublishers"
-	var pubspec bookstore.PublisherSpec
-	pubspec.Id = "111"
-	pubspec.Address = "#1 hilane, timbuktoo"
-	pub.Spec = &pubspec
-
-	fmt.Printf("Adding Publisher\n")
-	ret, err := cl.AddPublisher(ctx, pub)
+	apicl, err := cache.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
 	if err != nil {
-		fmt.Printf("failed to create publisher(%s)\n", err)
-		os.Exit(-1)
+		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
+	}
+
+	if *watch {
+		opts := api.ListWatchOptions{}
+		watcher, err := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)
+		if err != nil {
+			l.Fatalf("Failed to start watch (%s)\n", err)
+		}
+		orderWatcher, err := apicl.BookstoreV1().Order().Watch(ctx, &opts)
+		if err != nil {
+			l.Fatalf("Failed to start watch (%s)\n", err)
+		}
+		for {
+			select {
+			case ev, ok := <-watcher.EventChan():
+				if ok {
+					fmt.Printf("recieved Publisher Event [ %+v]\n", ev)
+				} else {
+					fmt.Printf("channel closed!!")
+					return
+				}
+			case ev, ok := <-orderWatcher.EventChan():
+				if ok {
+					fmt.Printf("recieved Order Event [ %+v]\n", ev)
+				} else {
+					fmt.Printf("channel closed!!")
+					return
+				}
+			}
+		}
+	}
+	// Add a Publisher
+	var pub = bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "Sahara",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "111",
+			Address: "#1 hilane, timbuktoo",
+		},
+	}
+	var pub2 = bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "Praire",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "112",
+			Address: "#2 hilane, timbuktoo",
+		},
+	}
+
+	meta := api.ObjectMeta{Name: "Sahara"}
+	// Delete if there is an existing object
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &meta)
+	meta.Name = "Praire"
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &meta)
+
+	// Create
+	ret, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+	if err != nil {
+		l.Fatalf("failed to create publisher(%s)\n", err)
 	}
 	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
-		fmt.Printf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
-		os.Exit(-1)
+		l.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
 	}
-	// Get the object.
-	fmt.Printf("Retrieving Publisher\n")
-	pub.Spec = nil
-	ret, err = cl.GetPublisher(ctx, pub)
+	ret, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub2)
 	if err != nil {
-		fmt.Printf("failed to get publisher(%s)\n", err)
-		os.Exit(-1)
+		l.Fatalf("failed to create publisher2(%s)\n", err)
 	}
-	//pub.Spec = &pubspec
-	if !reflect.DeepEqual(ret.Spec, &pubspec) {
-		fmt.Printf("updated object [GET] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
-		os.Exit(-1)
+
+	meta.Name = "Sahara"
+	ret, err = apicl.BookstoreV1().Publisher().Get(ctx, &meta)
+	if err != nil {
+		l.Infof("Error getting publisher (%s)", err)
+	}
+	l.Infof("Received object %+v\n", *ret)
+	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
+		l.Fatalf("updated object [Add] does not match [%+v] :: [%+v]\n", pub.Spec, ret.Spec)
+	}
+
+	opts := api.ListWatchOptions{}
+	pubs, err := apicl.BookstoreV1().Publisher().List(ctx, &opts)
+	if err != nil {
+		l.Fatalf("List failed %s\n", err)
+	}
+	fmt.Printf("===retrieved list:\n")
+	for k, v := range pubs {
+		fmt.Printf("---->  %d: %+v\n", k, v)
 	}
 
 	// Duplicate add of the object
-	fmt.Printf("Try to Re-add Publisher\n")
-	pub.Spec = &pubspec
-	ret, err = cl.AddPublisher(ctx, pub)
+	l.Infof("Try to Re-add Publisher\n")
+	ret, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub)
 	if err == nil {
-		fmt.Printf("Was able to create duplicate publisher\n")
-		os.Exit(-1)
+		l.Fatalf("Was able to create duplicate publisher\n")
 	}
 
 	// Update the Object
-	fmt.Printf("Update Publisher\n")
-	pubspec.Address = "#2 hilane, timbuktoo"
-	pub.Spec = &pubspec
-	ret, err = cl.UpdatePublisher(ctx, pub)
+	l.Infof("Update Publisher\n")
+	pub.Spec.Address = "#22 hilane, timbuktoo"
+	ret, err = apicl.BookstoreV1().Publisher().Update(ctx, &pub)
 	if err != nil {
-		fmt.Printf("failed to Update publisher(%s)\n", err)
-		os.Exit(-1)
+		l.Fatalf("failed to Update publisher(%s)\n", err)
 	}
 	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
-		fmt.Printf("updated object [UPD] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
-		os.Exit(-1)
-	}
-
-	pub.Spec = nil
-	ret, err = cl.GetPublisher(ctx, pub)
-	if err != nil {
-		fmt.Printf("failed to get publisher(%s)\n", err)
-		os.Exit(-1)
-	}
-	if !reflect.DeepEqual(ret.Spec, &pubspec) {
-		fmt.Printf("updated object[GET2] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
-		os.Exit(-1)
+		l.Fatalf("updated object [UPD] does not match \n\t[%+v]\n\t[%+v]\n", pub, ret)
 	}
 
 	// Delete the Object
-	fmt.Printf("Delete Publisher\n")
-	pub.Spec = nil
-	ret, err = cl.DeletePublisher(ctx, pub)
+	l.Infof("Delete Publisher\n")
+	meta.Name = "Sahara"
+	ret, err = apicl.BookstoreV1().Publisher().Delete(ctx, &meta)
 	if err != nil {
-		fmt.Printf("failed to delete publisher(%s)\n", err)
-		os.Exit(-1)
+		l.Fatalf("failed to delete publisher(%s)\n", err)
 	}
-	if !reflect.DeepEqual(ret.Spec, &pubspec) {
-		fmt.Printf("Deleted object does not match \n\t[%+v]\n\t[%+v]\n", pubspec, ret.Spec)
-		os.Exit(-1)
+	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
+		l.Fatalf("Deleted object does not match \n\t[%+v]\n\t[%+v]\n", pub.Spec, ret.Spec)
 	}
-
-	// tenant API tests
-	tcl := netclient.NewTenantV1(conn, l)
 
 	// Add a tenant
 	tenant := network.Tenant{
@@ -136,11 +172,15 @@ func main() {
 		},
 	}
 
-	// create a new context with this metadata
-	md := metadata.Pairs("req-method", "POST")
-	ctx = metadata.NewContext(ctx, md)
+	l.Infof("adding Tenant Object")
 
-	// perform a POST operation on tenant object
-	tret, err := tcl.TenantOper(ctx, tenant)
-	l.Infof("TenantOper returned: {%+v}, Err: %v", tret, err)
+	meta.Name = "tenant2"
+	// Delete if one exists already
+	_, err = apicl.TenantV1().Tenant().Delete(ctx, &meta)
+
+	// Add now.
+	_, err = apicl.TenantV1().Tenant().Create(ctx, &tenant)
+	if err != nil {
+		l.Errorf("failed to add tenant object")
+	}
 }

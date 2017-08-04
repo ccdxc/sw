@@ -17,10 +17,14 @@
 		ClusterSpec
 		ClusterStatus
 		Cluster
+		AutoMsgNodeWatchHelper
+		AutoMsgNodeListHelper
+		AutoMsgClusterWatchHelper
+		AutoMsgClusterListHelper
 */
 package cmd
 
-import proto "github.com/golang/protobuf/proto"
+import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
@@ -44,7 +48,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 // NodeSpec contains the configuration of the node.
 type NodeSpec struct {
@@ -223,6 +227,90 @@ func (m *Cluster) GetStatus() ClusterStatus {
 	return ClusterStatus{}
 }
 
+type AutoMsgNodeWatchHelper struct {
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Node  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
+func (m *AutoMsgNodeWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgNodeWatchHelper) ProtoMessage()               {}
+func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7} }
+
+func (m *AutoMsgNodeWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgNodeWatchHelper) GetObject() *Node {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgNodeListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgNodeListHelper) Reset()                    { *m = AutoMsgNodeListHelper{} }
+func (m *AutoMsgNodeListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgNodeListHelper) ProtoMessage()               {}
+func (*AutoMsgNodeListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{8} }
+
+func (m *AutoMsgNodeListHelper) GetItems() []*Node {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgClusterWatchHelper struct {
+	Type   string   `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Cluster `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgClusterWatchHelper) Reset()                    { *m = AutoMsgClusterWatchHelper{} }
+func (m *AutoMsgClusterWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgClusterWatchHelper) ProtoMessage()               {}
+func (*AutoMsgClusterWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{9} }
+
+func (m *AutoMsgClusterWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgClusterWatchHelper) GetObject() *Cluster {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgClusterListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgClusterListHelper) Reset()                    { *m = AutoMsgClusterListHelper{} }
+func (m *AutoMsgClusterListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgClusterListHelper) ProtoMessage()               {}
+func (*AutoMsgClusterListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{10} }
+
+func (m *AutoMsgClusterListHelper) GetItems() []*Cluster {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*NodeSpec)(nil), "cmd.NodeSpec")
 	proto.RegisterType((*NodeStatus)(nil), "cmd.NodeStatus")
@@ -231,6 +319,10 @@ func init() {
 	proto.RegisterType((*ClusterSpec)(nil), "cmd.ClusterSpec")
 	proto.RegisterType((*ClusterStatus)(nil), "cmd.ClusterStatus")
 	proto.RegisterType((*Cluster)(nil), "cmd.Cluster")
+	proto.RegisterType((*AutoMsgNodeWatchHelper)(nil), "cmd.AutoMsgNodeWatchHelper")
+	proto.RegisterType((*AutoMsgNodeListHelper)(nil), "cmd.AutoMsgNodeListHelper")
+	proto.RegisterType((*AutoMsgClusterWatchHelper)(nil), "cmd.AutoMsgClusterWatchHelper")
+	proto.RegisterType((*AutoMsgClusterListHelper)(nil), "cmd.AutoMsgClusterListHelper")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -244,9 +336,18 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for CmdV1 service
 
 type CmdV1Client interface {
-	GetNodeList(ctx context.Context, in *NodeList, opts ...grpc.CallOption) (*NodeList, error)
-	NodeOper(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
-	ClusterOper(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNodeListHelper, error)
+	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchNodeClient, error)
+	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error)
+	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchClusterClient, error)
 }
 
 type cmdV1Client struct {
@@ -257,97 +358,401 @@ func NewCmdV1Client(cc *grpc.ClientConn) CmdV1Client {
 	return &cmdV1Client{cc}
 }
 
-func (c *cmdV1Client) GetNodeList(ctx context.Context, in *NodeList, opts ...grpc.CallOption) (*NodeList, error) {
-	out := new(NodeList)
-	err := grpc.Invoke(ctx, "/cmd.CmdV1/GetNodeList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cmdV1Client) NodeOper(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
+func (c *cmdV1Client) AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
-	err := grpc.Invoke(ctx, "/cmd.CmdV1/NodeOper", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoAddNode", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cmdV1Client) ClusterOper(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
-	out := new(Cluster)
-	err := grpc.Invoke(ctx, "/cmd.CmdV1/ClusterOper", in, out, c.cc, opts...)
+func (c *cmdV1Client) AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoUpdateNode", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *cmdV1Client) AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoGetNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoDeleteNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNodeListHelper, error) {
+	out := new(AutoMsgNodeListHelper)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchNodeClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_CmdV1_serviceDesc.Streams[0], c.cc, "/cmd.CmdV1/AutoWatchNode", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cmdV1AutoWatchNodeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CmdV1_AutoWatchNodeClient interface {
+	Recv() (*AutoMsgNodeWatchHelper, error)
+	grpc.ClientStream
+}
+
+type cmdV1AutoWatchNodeClient struct {
+	grpc.ClientStream
+}
+
+func (x *cmdV1AutoWatchNodeClient) Recv() (*AutoMsgNodeWatchHelper, error) {
+	m := new(AutoMsgNodeWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *cmdV1Client) AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
+	out := new(Cluster)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoAddCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
+	out := new(Cluster)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoUpdateCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
+	out := new(Cluster)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoGetCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
+	out := new(Cluster)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoDeleteCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error) {
+	out := new(AutoMsgClusterListHelper)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListCluster", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchClusterClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_CmdV1_serviceDesc.Streams[1], c.cc, "/cmd.CmdV1/AutoWatchCluster", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cmdV1AutoWatchClusterClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CmdV1_AutoWatchClusterClient interface {
+	Recv() (*AutoMsgClusterWatchHelper, error)
+	grpc.ClientStream
+}
+
+type cmdV1AutoWatchClusterClient struct {
+	grpc.ClientStream
+}
+
+func (x *cmdV1AutoWatchClusterClient) Recv() (*AutoMsgClusterWatchHelper, error) {
+	m := new(AutoMsgClusterWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Server API for CmdV1 service
 
 type CmdV1Server interface {
-	GetNodeList(context.Context, *NodeList) (*NodeList, error)
-	NodeOper(context.Context, *Node) (*Node, error)
-	ClusterOper(context.Context, *Cluster) (*Cluster, error)
+	AutoAddNode(context.Context, *Node) (*Node, error)
+	AutoUpdateNode(context.Context, *Node) (*Node, error)
+	AutoGetNode(context.Context, *Node) (*Node, error)
+	AutoDeleteNode(context.Context, *Node) (*Node, error)
+	AutoListNode(context.Context, *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
+	AutoWatchNode(*api.ListWatchOptions, CmdV1_AutoWatchNodeServer) error
+	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
+	AutoListCluster(context.Context, *api.ListWatchOptions) (*AutoMsgClusterListHelper, error)
+	AutoWatchCluster(*api.ListWatchOptions, CmdV1_AutoWatchClusterServer) error
 }
 
 func RegisterCmdV1Server(s *grpc.Server, srv CmdV1Server) {
 	s.RegisterService(&_CmdV1_serviceDesc, srv)
 }
 
-func _CmdV1_GetNodeList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NodeList)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CmdV1Server).GetNodeList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cmd.CmdV1/GetNodeList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CmdV1Server).GetNodeList(ctx, req.(*NodeList))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CmdV1_NodeOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CmdV1_AutoAddNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Node)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CmdV1Server).NodeOper(ctx, in)
+		return srv.(CmdV1Server).AutoAddNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cmd.CmdV1/NodeOper",
+		FullMethod: "/cmd.CmdV1/AutoAddNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CmdV1Server).NodeOper(ctx, req.(*Node))
+		return srv.(CmdV1Server).AutoAddNode(ctx, req.(*Node))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CmdV1_ClusterOper_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CmdV1_AutoUpdateNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Node)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoUpdateNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoUpdateNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoUpdateNode(ctx, req.(*Node))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoGetNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Node)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoGetNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoGetNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoGetNode(ctx, req.(*Node))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoDeleteNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Node)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoDeleteNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoDeleteNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoDeleteNode(ctx, req.(*Node))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoListNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoListNode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoListNode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoListNode(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoWatchNode_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CmdV1Server).AutoWatchNode(m, &cmdV1AutoWatchNodeServer{stream})
+}
+
+type CmdV1_AutoWatchNodeServer interface {
+	Send(*AutoMsgNodeWatchHelper) error
+	grpc.ServerStream
+}
+
+type cmdV1AutoWatchNodeServer struct {
+	grpc.ServerStream
+}
+
+func (x *cmdV1AutoWatchNodeServer) Send(m *AutoMsgNodeWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _CmdV1_AutoAddCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Cluster)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CmdV1Server).ClusterOper(ctx, in)
+		return srv.(CmdV1Server).AutoAddCluster(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cmd.CmdV1/ClusterOper",
+		FullMethod: "/cmd.CmdV1/AutoAddCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CmdV1Server).ClusterOper(ctx, req.(*Cluster))
+		return srv.(CmdV1Server).AutoAddCluster(ctx, req.(*Cluster))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoUpdateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Cluster)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoUpdateCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoUpdateCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoUpdateCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoGetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Cluster)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoGetCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoGetCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoGetCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoDeleteCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Cluster)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoDeleteCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoDeleteCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoDeleteCluster(ctx, req.(*Cluster))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoListCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoListCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoListCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoListCluster(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoWatchCluster_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CmdV1Server).AutoWatchCluster(m, &cmdV1AutoWatchClusterServer{stream})
+}
+
+type CmdV1_AutoWatchClusterServer interface {
+	Send(*AutoMsgClusterWatchHelper) error
+	grpc.ServerStream
+}
+
+type cmdV1AutoWatchClusterServer struct {
+	grpc.ServerStream
+}
+
+func (x *cmdV1AutoWatchClusterServer) Send(m *AutoMsgClusterWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 var _CmdV1_serviceDesc = grpc.ServiceDesc{
@@ -355,19 +760,58 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*CmdV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetNodeList",
-			Handler:    _CmdV1_GetNodeList_Handler,
+			MethodName: "AutoAddNode",
+			Handler:    _CmdV1_AutoAddNode_Handler,
 		},
 		{
-			MethodName: "NodeOper",
-			Handler:    _CmdV1_NodeOper_Handler,
+			MethodName: "AutoUpdateNode",
+			Handler:    _CmdV1_AutoUpdateNode_Handler,
 		},
 		{
-			MethodName: "ClusterOper",
-			Handler:    _CmdV1_ClusterOper_Handler,
+			MethodName: "AutoGetNode",
+			Handler:    _CmdV1_AutoGetNode_Handler,
+		},
+		{
+			MethodName: "AutoDeleteNode",
+			Handler:    _CmdV1_AutoDeleteNode_Handler,
+		},
+		{
+			MethodName: "AutoListNode",
+			Handler:    _CmdV1_AutoListNode_Handler,
+		},
+		{
+			MethodName: "AutoAddCluster",
+			Handler:    _CmdV1_AutoAddCluster_Handler,
+		},
+		{
+			MethodName: "AutoUpdateCluster",
+			Handler:    _CmdV1_AutoUpdateCluster_Handler,
+		},
+		{
+			MethodName: "AutoGetCluster",
+			Handler:    _CmdV1_AutoGetCluster_Handler,
+		},
+		{
+			MethodName: "AutoDeleteCluster",
+			Handler:    _CmdV1_AutoDeleteCluster_Handler,
+		},
+		{
+			MethodName: "AutoListCluster",
+			Handler:    _CmdV1_AutoListCluster_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AutoWatchNode",
+			Handler:       _CmdV1_AutoWatchNode_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchCluster",
+			Handler:       _CmdV1_AutoWatchCluster_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "cmd.proto",
 }
 
@@ -653,6 +1097,166 @@ func (m *Cluster) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AutoMsgNodeWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgNodeWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
+		n11, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+
+func (m *AutoMsgNodeListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgNodeListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n12, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n12
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n13, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n13
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgClusterWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgClusterWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
+		n14, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+
+func (m *AutoMsgClusterListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgClusterListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n15, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n15
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n16, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n16
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64Cmd(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -781,6 +1385,66 @@ func (m *Cluster) Size() (n int) {
 	n += 1 + l + sovCmd(uint64(l))
 	l = m.Status.Size()
 	n += 1 + l + sovCmd(uint64(l))
+	return n
+}
+
+func (m *AutoMsgNodeWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgNodeListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgClusterWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgClusterListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1687,6 +2351,512 @@ func (m *Cluster) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AutoMsgNodeWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgNodeWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgNodeWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Node{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgNodeListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgNodeListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgNodeListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Node{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgClusterWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgClusterWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgClusterWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Cluster{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgClusterListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgClusterListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgClusterListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Cluster{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipCmd(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1795,53 +2965,78 @@ var (
 func init() { proto.RegisterFile("cmd.proto", fileDescriptorCmd) }
 
 var fileDescriptorCmd = []byte{
-	// 764 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x95, 0xcf, 0x4e, 0xdb, 0x4a,
-	0x14, 0xc6, 0x99, 0x24, 0x04, 0x3c, 0xe1, 0xef, 0x84, 0xcb, 0x75, 0xac, 0xab, 0x38, 0xb2, 0x74,
-	0x25, 0x84, 0x68, 0x0c, 0xa9, 0x90, 0x10, 0x14, 0x16, 0x06, 0x09, 0x21, 0x85, 0x84, 0x26, 0x29,
-	0x0b, 0x76, 0x8e, 0x3d, 0x0d, 0xae, 0x6c, 0x8f, 0x6b, 0x8f, 0xa9, 0x50, 0x55, 0xa9, 0x02, 0xb1,
-	0xea, 0xae, 0xdd, 0x54, 0xbc, 0x50, 0x59, 0x22, 0xba, 0xb7, 0x2a, 0xda, 0x55, 0x9e, 0xa0, 0x52,
-	0x37, 0x95, 0xc7, 0x4e, 0xe2, 0x40, 0x91, 0xaa, 0x2e, 0xba, 0x9b, 0xf3, 0xf9, 0xfb, 0xcd, 0x99,
-	0xe3, 0x73, 0xc6, 0x86, 0x9c, 0x66, 0xe9, 0x65, 0xc7, 0x25, 0x94, 0xa0, 0xb4, 0x66, 0xe9, 0xc2,
-	0x7f, 0x1d, 0x42, 0x3a, 0x26, 0x96, 0x55, 0xc7, 0x90, 0x55, 0xdb, 0x26, 0x54, 0xa5, 0x06, 0xb1,
-	0xbd, 0xc8, 0x22, 0x6c, 0x75, 0x0c, 0x7a, 0xec, 0xb7, 0xcb, 0x1a, 0xb1, 0x64, 0x07, 0xdb, 0x9e,
-	0x6a, 0xeb, 0x44, 0xf6, 0x5e, 0xc9, 0x3e, 0x35, 0x4c, 0x2f, 0x64, 0x3a, 0xd8, 0x4e, 0x62, 0xb2,
-	0x61, 0x6b, 0xa6, 0xaf, 0xe3, 0x1e, 0xff, 0x28, 0xc1, 0x77, 0x48, 0x87, 0xc8, 0x4c, 0x6e, 0xfb,
-	0xcf, 0x59, 0xc4, 0x02, 0xb6, 0x8a, 0xed, 0xff, 0x3f, 0x90, 0x2e, 0x3c, 0x9c, 0x85, 0xa9, 0x1a,
-	0xd9, 0xa4, 0x22, 0x1c, 0xaf, 0x11, 0x1d, 0x37, 0x1d, 0xac, 0x21, 0x04, 0x33, 0x35, 0xd5, 0xc2,
-	0x3c, 0x28, 0x81, 0x05, 0xae, 0xc1, 0xd6, 0x52, 0x09, 0x42, 0xf6, 0x9c, 0xaa, 0xd4, 0xf7, 0x7e,
-	0xe9, 0xf8, 0x0e, 0x60, 0x26, 0xb4, 0xa0, 0x65, 0x08, 0x5a, 0xec, 0x49, 0xae, 0x32, 0x59, 0x56,
-	0x1d, 0xa3, 0xdc, 0x3a, 0x75, 0xf0, 0x3e, 0xa6, 0xaa, 0x92, 0xbf, 0x0a, 0xc4, 0x91, 0xeb, 0x40,
-	0x04, 0xdd, 0x40, 0x1c, 0x5b, 0x32, 0x6c, 0xd3, 0xb0, 0x71, 0x03, 0xb4, 0xd0, 0x26, 0x04, 0x75,
-	0x3e, 0xc5, 0x88, 0x69, 0x46, 0xd4, 0xdb, 0x2f, 0xb0, 0x46, 0x19, 0x53, 0x4c, 0x30, 0x28, 0x3c,
-	0xb0, 0xae, 0x52, 0x75, 0x89, 0x58, 0x06, 0xc5, 0x96, 0x43, 0x4f, 0x1b, 0xa0, 0x8e, 0x56, 0x61,
-	0x26, 0x3c, 0x37, 0x9f, 0x8e, 0x73, 0x86, 0xed, 0xe8, 0x15, 0xa3, 0xa0, 0x6e, 0x20, 0x4e, 0x79,
-	0x0e, 0xd6, 0x12, 0x0c, 0xb3, 0xa3, 0x4d, 0x98, 0x8d, 0xca, 0xe1, 0x33, 0x71, 0xea, 0x3e, 0xc8,
-	0x64, 0x65, 0xae, 0x1b, 0x88, 0x33, 0x1e, 0x5b, 0x27, 0xe0, 0x18, 0x5a, 0xe7, 0x6e, 0x2e, 0x0a,
-	0xa3, 0x36, 0xd1, 0xb1, 0x27, 0x5d, 0x82, 0xe8, 0xed, 0x55, 0x0d, 0x8f, 0xfe, 0x41, 0xf9, 0x1b,
-	0x10, 0x54, 0xe3, 0xf2, 0x23, 0x22, 0xdc, 0xe7, 0xf7, 0x8a, 0xaf, 0x22, 0x11, 0x8e, 0xee, 0x51,
-	0x6c, 0x79, 0x7c, 0xba, 0x94, 0x5e, 0xc8, 0x55, 0xb8, 0x7e, 0x11, 0x8d, 0x48, 0x97, 0x7e, 0x00,
-	0x98, 0xdb, 0x36, 0x7d, 0x8f, 0x62, 0x97, 0x95, 0xbd, 0x01, 0x73, 0x4f, 0x7d, 0xe2, 0xfa, 0x56,
-	0x68, 0xf2, 0x78, 0x50, 0x4a, 0x2f, 0x70, 0x4a, 0xa1, 0x1b, 0x88, 0xff, 0xbc, 0x1c, 0xc8, 0x89,
-	0x1c, 0x49, 0x37, 0x5a, 0x85, 0xdc, 0xa1, 0xe1, 0x52, 0x5f, 0x35, 0xf7, 0x0e, 0xd8, 0x91, 0x39,
-	0xe5, 0xdf, 0x6e, 0x20, 0xe6, 0x4f, 0x7a, 0x62, 0x02, 0x1c, 0x38, 0xd1, 0x1a, 0x84, 0xb5, 0xd6,
-	0x41, 0x13, 0xbb, 0x27, 0xd8, 0x8d, 0x4e, 0xca, 0x29, 0x7c, 0x37, 0x10, 0xe7, 0x6c, 0xea, 0xc4,
-	0x6a, 0x02, 0x4c, 0x78, 0xd1, 0x16, 0x9c, 0xd8, 0xa9, 0x35, 0x9b, 0x7e, 0x7b, 0x87, 0x58, 0xaa,
-	0x61, 0xb3, 0x56, 0x71, 0x8a, 0xd0, 0x0d, 0xc4, 0x79, 0xdd, 0xf6, 0xfa, 0x7a, 0x82, 0x1e, 0xf2,
-	0x4b, 0x9b, 0x70, 0xb2, 0x57, 0x7c, 0x34, 0xba, 0x4b, 0x30, 0x5b, 0xc5, 0xaa, 0x8e, 0xdd, 0x68,
-	0x78, 0xa3, 0x26, 0x9b, 0x4c, 0x49, 0x36, 0x39, 0xf2, 0x48, 0xef, 0x52, 0x70, 0x2c, 0xe6, 0xff,
-	0xfe, 0x5c, 0x3f, 0x19, 0x9a, 0xeb, 0x19, 0xd6, 0xd9, 0x44, 0x27, 0x95, 0xf9, 0x70, 0x8b, 0x07,
-	0xc7, 0x7b, 0xe7, 0xce, 0x78, 0xa3, 0x21, 0x3e, 0x9a, 0x70, 0x3e, 0xde, 0xe1, 0xe1, 0x29, 0xcf,
-	0xdd, 0x5c, 0x14, 0xc6, 0xb4, 0x08, 0xaa, 0x7c, 0x4a, 0xc1, 0xd1, 0x6d, 0x4b, 0x3f, 0x5c, 0x09,
-	0x87, 0x68, 0x17, 0xd3, 0xfe, 0xcc, 0x0f, 0xee, 0x5c, 0x18, 0x0a, 0xc3, 0xa1, 0x34, 0x75, 0xf6,
-	0xf9, 0xdb, 0x87, 0xd4, 0x38, 0xca, 0xca, 0xec, 0xba, 0x20, 0x12, 0xdd, 0x96, 0xba, 0x83, 0x5d,
-	0x34, 0x98, 0x57, 0x61, 0xb0, 0x94, 0xf6, 0x19, 0xb1, 0x2b, 0xc5, 0xc4, 0x3a, 0x58, 0x3c, 0x9a,
-	0x13, 0xa6, 0xa3, 0x40, 0x7e, 0x5d, 0x2f, 0x87, 0x1f, 0x9c, 0x37, 0xa1, 0x3a, 0x8b, 0xee, 0xaa,
-	0x47, 0xb3, 0x8b, 0x77, 0x25, 0xf4, 0x76, 0x70, 0x05, 0x58, 0xd2, 0x89, 0xe4, 0xab, 0x10, 0x86,
-	0x22, 0xe9, 0x19, 0x4b, 0x5d, 0x97, 0xc6, 0xe5, 0xb8, 0xea, 0x30, 0xcd, 0xbc, 0x30, 0xdb, 0x0b,
-	0x87, 0xd2, 0xe7, 0xd1, 0x7d, 0xfd, 0x28, 0xbf, 0x78, 0x5f, 0x14, 0x26, 0xdf, 0x9f, 0x17, 0x52,
-	0x27, 0x2b, 0x97, 0xe7, 0x85, 0xf0, 0x17, 0xa1, 0x48, 0x97, 0x67, 0x85, 0x29, 0x93, 0x68, 0xaa,
-	0x79, 0x4c, 0x3c, 0xba, 0xbe, 0xb6, 0xbc, 0x56, 0xb9, 0xba, 0x2d, 0x82, 0xeb, 0xdb, 0x22, 0xf8,
-	0x72, 0x5b, 0x04, 0x1f, 0xbf, 0x16, 0x47, 0x0e, 0x40, 0x3b, 0xcb, 0xbe, 0xcd, 0x8f, 0x7f, 0x06,
-	0x00, 0x00, 0xff, 0xff, 0x3f, 0x3b, 0xef, 0xc9, 0x61, 0x06, 0x00, 0x00,
+	// 1157 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcd, 0x6f, 0xdc, 0xc4,
+	0x1b, 0xce, 0x64, 0x37, 0x9b, 0xec, 0x6c, 0xbe, 0x3a, 0x4d, 0x52, 0xdb, 0xed, 0x6f, 0x9d, 0x9f,
+	0x11, 0x28, 0x09, 0x61, 0x9d, 0x06, 0x55, 0x8a, 0xb6, 0xa4, 0x52, 0xb6, 0x11, 0xa5, 0x22, 0x4d,
+	0xd2, 0x4d, 0x08, 0x08, 0xc1, 0xc1, 0xb1, 0x87, 0x8d, 0x91, 0xbf, 0x58, 0x8f, 0x53, 0x55, 0x88,
+	0x4b, 0x97, 0x9e, 0xb8, 0x20, 0x88, 0x38, 0xe4, 0xd8, 0x63, 0x8e, 0xfc, 0x05, 0x1c, 0x7b, 0xac,
+	0xca, 0x05, 0xf5, 0xb0, 0x42, 0x11, 0xa7, 0x3d, 0x70, 0x46, 0xe2, 0x82, 0xe6, 0xc3, 0x6b, 0xef,
+	0x47, 0x96, 0x08, 0x09, 0x6e, 0xf6, 0xf8, 0x7d, 0x9e, 0xf7, 0x7d, 0xde, 0xf7, 0x99, 0xf1, 0xc0,
+	0xbc, 0xe9, 0x5a, 0xa5, 0xa0, 0xee, 0x13, 0x1f, 0x65, 0x4c, 0xd7, 0x52, 0x6e, 0xd4, 0x7c, 0xbf,
+	0xe6, 0x60, 0xdd, 0x08, 0x6c, 0xdd, 0xf0, 0x3c, 0x9f, 0x18, 0xc4, 0xf6, 0xbd, 0x90, 0x87, 0x28,
+	0x77, 0x6a, 0x36, 0x39, 0x8a, 0x0e, 0x4b, 0xa6, 0xef, 0xea, 0x01, 0xf6, 0x42, 0xc3, 0xb3, 0x7c,
+	0x3d, 0x7c, 0xa4, 0x47, 0xc4, 0x76, 0x42, 0x8a, 0xa9, 0x61, 0x2f, 0x0d, 0xd3, 0x6d, 0xcf, 0x74,
+	0x22, 0x0b, 0xc7, 0xf8, 0xb7, 0x52, 0xf8, 0x9a, 0x5f, 0xf3, 0x75, 0xb6, 0x7c, 0x18, 0x7d, 0xc6,
+	0xde, 0xd8, 0x0b, 0x7b, 0x12, 0xe1, 0xaf, 0x5f, 0x90, 0x8e, 0x16, 0xe7, 0x62, 0x62, 0xf0, 0x30,
+	0xad, 0x08, 0xc7, 0xb6, 0x7d, 0x0b, 0xef, 0x05, 0xd8, 0x44, 0x08, 0x66, 0xb7, 0x0d, 0x17, 0x4b,
+	0x60, 0x1e, 0x2c, 0xe4, 0xab, 0xec, 0x59, 0x9b, 0x87, 0x90, 0x7d, 0x27, 0x06, 0x89, 0xc2, 0xbe,
+	0x11, 0x7f, 0x00, 0x98, 0xa5, 0x21, 0x68, 0x05, 0x82, 0x7d, 0xf6, 0xa5, 0xb0, 0x3a, 0x51, 0x32,
+	0x02, 0xbb, 0xb4, 0xff, 0x38, 0xc0, 0x0f, 0x30, 0x31, 0x2a, 0x57, 0x9f, 0x37, 0xd5, 0xa1, 0x17,
+	0x4d, 0x15, 0xb4, 0x9a, 0xea, 0xe8, 0xb2, 0xed, 0x39, 0xb6, 0x87, 0xab, 0x60, 0x1f, 0xad, 0x43,
+	0xb0, 0x23, 0x0d, 0x33, 0xc4, 0x14, 0x43, 0xec, 0x1c, 0x7e, 0x8e, 0x4d, 0xc2, 0x30, 0xc5, 0x14,
+	0x06, 0xd1, 0x82, 0x2d, 0x83, 0x18, 0xcb, 0xbe, 0x6b, 0x13, 0xec, 0x06, 0xe4, 0x71, 0x15, 0xec,
+	0xa0, 0x5b, 0x30, 0x4b, 0xeb, 0x96, 0x32, 0x22, 0x27, 0x1d, 0x47, 0x2c, 0xa6, 0x82, 0x5a, 0x4d,
+	0x75, 0x32, 0x0c, 0xb0, 0x99, 0xc2, 0xb0, 0x70, 0xb4, 0x0e, 0x73, 0x5c, 0x8e, 0x94, 0x15, 0xa9,
+	0xdb, 0x40, 0xb6, 0x5c, 0x99, 0x69, 0x35, 0xd5, 0xe9, 0x90, 0x3d, 0xa7, 0xc0, 0x02, 0x54, 0xce,
+	0xbf, 0x7c, 0x2a, 0x8f, 0x78, 0xbe, 0x85, 0x43, 0xed, 0x14, 0xf0, 0xee, 0x6d, 0xd9, 0x21, 0xf9,
+	0x07, 0xf2, 0x6f, 0x43, 0xb0, 0x25, 0xe4, 0x73, 0x04, 0xe5, 0xb9, 0x9c, 0xf8, 0x2d, 0xa4, 0xc2,
+	0x91, 0xfb, 0x04, 0xbb, 0xa1, 0x94, 0x99, 0xcf, 0x2c, 0x14, 0x56, 0xf3, 0x6d, 0x11, 0x55, 0xbe,
+	0xae, 0xfd, 0x09, 0x60, 0xe1, 0xae, 0x13, 0x85, 0x04, 0xd7, 0x99, 0xec, 0xdb, 0xb0, 0xf0, 0x30,
+	0xf2, 0xeb, 0x91, 0x4b, 0x83, 0x42, 0x09, 0xcc, 0x67, 0x16, 0xf2, 0x15, 0xb9, 0xd5, 0x54, 0x67,
+	0xbf, 0x48, 0x96, 0x53, 0x39, 0xd2, 0xd1, 0xe8, 0x16, 0xcc, 0x1f, 0xd8, 0x75, 0x12, 0x19, 0xce,
+	0xfd, 0x5d, 0x56, 0x72, 0xbe, 0x72, 0xad, 0xd5, 0x54, 0xaf, 0x1e, 0xc7, 0x8b, 0x29, 0x60, 0x12,
+	0x89, 0xd6, 0x20, 0xdc, 0xde, 0xdf, 0xdd, 0xc3, 0xf5, 0x63, 0x5c, 0xe7, 0x95, 0xe6, 0x2b, 0x52,
+	0xab, 0xa9, 0xce, 0x78, 0x24, 0x10, 0xab, 0x29, 0x60, 0x2a, 0x16, 0xdd, 0x81, 0xe3, 0x9b, 0xdb,
+	0x7b, 0x7b, 0xd1, 0xe1, 0xa6, 0xef, 0x1a, 0xb6, 0xc7, 0x46, 0x95, 0xaf, 0x28, 0xad, 0xa6, 0x3a,
+	0x67, 0x79, 0x61, 0x7b, 0x3d, 0x85, 0xee, 0x88, 0xd7, 0xd6, 0xe1, 0x44, 0x2c, 0x9e, 0x5b, 0x77,
+	0x19, 0xe6, 0xb6, 0xb0, 0x61, 0xe1, 0x3a, 0x37, 0x2f, 0x1f, 0xb2, 0xc3, 0x56, 0xd2, 0x43, 0xe6,
+	0x31, 0xda, 0x37, 0xc3, 0x70, 0x54, 0xe0, 0xff, 0x7b, 0x5f, 0xbf, 0xd3, 0xe1, 0xeb, 0x69, 0x36,
+	0xd9, 0xd4, 0x24, 0x2b, 0x73, 0x94, 0xe2, 0x42, 0x7b, 0x6f, 0x76, 0xd9, 0x1b, 0x75, 0xe0, 0xb9,
+	0xc3, 0x25, 0xc1, 0x70, 0xb1, 0xcb, 0x0b, 0x2f, 0x9f, 0xca, 0xa3, 0x26, 0x07, 0x69, 0x55, 0x38,
+	0xb7, 0x11, 0x11, 0xff, 0x41, 0x58, 0xa3, 0x6e, 0xf8, 0xd0, 0x20, 0xe6, 0xd1, 0x7b, 0xd8, 0x09,
+	0x70, 0x1d, 0x8d, 0xc3, 0x2c, 0xed, 0x06, 0xef, 0x29, 0x92, 0x61, 0x8e, 0x2b, 0x15, 0xe2, 0x13,
+	0x53, 0x96, 0xa7, 0x5e, 0x9d, 0xcc, 0x14, 0x1e, 0x51, 0xe4, 0x11, 0x43, 0x6a, 0xdf, 0x02, 0x38,
+	0x9b, 0x22, 0xa5, 0xd6, 0x17, 0x9c, 0x1a, 0xed, 0xf7, 0x70, 0xbf, 0x7e, 0x8f, 0xc5, 0xbd, 0x43,
+	0x8b, 0x70, 0x2c, 0xde, 0x2c, 0xed, 0xed, 0xdf, 0xb1, 0x83, 0x92, 0x50, 0x29, 0xde, 0x28, 0xd9,
+	0xae, 0x8d, 0x52, 0x9e, 0x7c, 0x75, 0x32, 0x03, 0x1d, 0x3b, 0x24, 0xa2, 0xa4, 0x8f, 0xa0, 0x2c,
+	0x2a, 0x12, 0xdd, 0xba, 0x58, 0xe9, 0x8d, 0x2e, 0xa5, 0xe3, 0xe9, 0x26, 0xf7, 0x8a, 0xfd, 0x01,
+	0x40, 0xa9, 0x93, 0xfa, 0xdf, 0xd3, 0x7b, 0xbd, 0x53, 0x6f, 0x67, 0x65, 0x5d, 0x92, 0x57, 0x7f,
+	0xcf, 0xc3, 0x91, 0xbb, 0xae, 0x75, 0x70, 0x13, 0xbd, 0x0b, 0x0b, 0xb4, 0xc2, 0x0d, 0xcb, 0x62,
+	0x87, 0x79, 0xd2, 0x26, 0x25, 0x79, 0xd4, 0xfe, 0xff, 0xcb, 0xc9, 0x0c, 0xf8, 0xf1, 0x6b, 0x39,
+	0x67, 0xd6, 0xb1, 0x41, 0xf0, 0x93, 0x9f, 0x7f, 0xfb, 0x7e, 0x78, 0x02, 0x0e, 0x95, 0xc1, 0x92,
+	0x96, 0xd3, 0xd9, 0x99, 0x88, 0xaa, 0x70, 0x92, 0xf2, 0x7c, 0x10, 0x58, 0x06, 0xc1, 0x03, 0xa8,
+	0x96, 0x62, 0xaa, 0x88, 0x45, 0x32, 0xaa, 0x39, 0x46, 0xa5, 0x4c, 0x71, 0x2a, 0xfd, 0xcb, 0x9d,
+	0x12, 0xfd, 0xc3, 0x7c, 0x85, 0xde, 0xe7, 0xb5, 0xdd, 0xc3, 0x64, 0x00, 0xe1, 0x1b, 0x82, 0x30,
+	0x53, 0xc3, 0x84, 0xb1, 0xcd, 0xc2, 0xa1, 0xf2, 0x10, 0xea, 0x21, 0x7b, 0xc8, 0x0b, 0xdc, 0xc4,
+	0x0e, 0x1e, 0x58, 0xe0, 0x62, 0x5c, 0xa0, 0xc5, 0x22, 0x13, 0xca, 0xa5, 0x1e, 0x4a, 0x03, 0x8e,
+	0x53, 0x4a, 0x3a, 0x0c, 0x46, 0x38, 0xdb, 0x9e, 0x0d, 0x73, 0xd0, 0x4e, 0xc0, 0x7e, 0xe8, 0x8a,
+	0xc2, 0xc8, 0xfb, 0x9a, 0x5e, 0x2b, 0x8a, 0x6c, 0x59, 0x3a, 0x1c, 0x96, 0x6b, 0x9c, 0x95, 0x1f,
+	0xb7, 0x75, 0x1f, 0x4e, 0x50, 0x20, 0xe3, 0x1b, 0x94, 0xe3, 0x7a, 0x77, 0x8e, 0x94, 0x87, 0xb5,
+	0x09, 0x91, 0x64, 0x84, 0x79, 0x73, 0x05, 0xc4, 0xbd, 0xd8, 0xb0, 0xac, 0xf8, 0xb0, 0xeb, 0xb0,
+	0x8b, 0xd2, 0xf1, 0xa6, 0xbd, 0xd6, 0x67, 0xfa, 0x53, 0x7c, 0xfa, 0x63, 0xba, 0x38, 0x2b, 0xd0,
+	0xa7, 0xf0, 0x4a, 0x32, 0xff, 0xcb, 0xb0, 0x2e, 0xf7, 0x31, 0x82, 0xc4, 0x8d, 0x70, 0x25, 0x66,
+	0x4d, 0x5a, 0x7d, 0xc0, 0x2b, 0xbe, 0x87, 0xc9, 0x65, 0xb8, 0x17, 0xba, 0x3d, 0x71, 0x8d, 0x35,
+	0xb5, 0x0f, 0xef, 0x27, 0xbc, 0x6c, 0xee, 0x8a, 0xcb, 0x50, 0xbf, 0xd9, 0xc7, 0x1e, 0x8c, 0x7d,
+	0xa9, 0x0f, 0xbb, 0x0d, 0xa7, 0x62, 0x83, 0xc4, 0xdc, 0x17, 0xcc, 0xef, 0x7f, 0xe9, 0xf9, 0xf5,
+	0x9c, 0x15, 0xda, 0x7c, 0x8f, 0x4d, 0x26, 0x99, 0xa2, 0xa4, 0xff, 0x1f, 0xc3, 0xe9, 0xb6, 0x51,
+	0xfe, 0x26, 0x57, 0xb1, 0x4f, 0xae, 0x41, 0x76, 0x51, 0x7e, 0x02, 0xdf, 0x35, 0xe4, 0xe1, 0xe3,
+	0x9b, 0xa7, 0x0d, 0x99, 0x5e, 0x78, 0x9f, 0x35, 0x64, 0x76, 0xf3, 0x7b, 0xd6, 0x90, 0xe3, 0x9f,
+	0xe5, 0x59, 0x43, 0x5e, 0x14, 0xd7, 0xc1, 0x4c, 0x10, 0x11, 0x44, 0x1b, 0x8f, 0x44, 0x8b, 0x7a,
+	0xf6, 0xf5, 0x59, 0x43, 0x56, 0x44, 0x70, 0x36, 0xf0, 0x43, 0x82, 0x98, 0x2a, 0x45, 0x58, 0xfe,
+	0xac, 0x21, 0xab, 0xc9, 0x4f, 0x38, 0x1d, 0xd0, 0x16, 0x7b, 0xd6, 0x90, 0x4b, 0x49, 0x48, 0x6f,
+	0xc2, 0xde, 0x49, 0x54, 0x8a, 0xa7, 0x4f, 0xe4, 0x49, 0xc7, 0x37, 0x0d, 0xe7, 0xc8, 0x0f, 0x49,
+	0x79, 0x6d, 0x65, 0x6d, 0xf5, 0xf9, 0x79, 0x11, 0xbc, 0x38, 0x2f, 0x82, 0x5f, 0xcf, 0x8b, 0x60,
+	0x17, 0x1c, 0xe6, 0xd8, 0xc5, 0xf8, 0xed, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x01, 0xa5, 0x0c,
+	0x2f, 0xde, 0x0b, 0x00, 0x00,
 }

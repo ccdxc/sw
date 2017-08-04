@@ -23,6 +23,8 @@ type APIGateway interface {
 	GetService(name string) APIGatewayService
 	// Run starts the API gateway eventloop
 	Run(config Config)
+	// Stop sends stop signal to API gateway
+	Stop()
 }
 
 // Config is all config used to start the API Gateway

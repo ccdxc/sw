@@ -17,6 +17,7 @@
 		ListMeta
 		ObjectMeta
 		ObjectRef
+		ListWatchOptions
 		StatusResult
 		Status
 */

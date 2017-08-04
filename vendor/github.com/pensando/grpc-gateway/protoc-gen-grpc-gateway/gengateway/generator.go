@@ -141,6 +141,7 @@ func (g *generator) GenerateFromTemplates(target *descriptor.File, paths []gen.T
 		"strEq":        testEqualStr,
 		"getFieldName": getFieldName,
 		"getExtension": ext.GetExtension,
+		"hasExtension": ext.HasExtension,
 	}
 
 	for k, v := range ext.FuncMap {

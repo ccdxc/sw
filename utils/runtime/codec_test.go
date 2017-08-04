@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/utils/runtime/test"
 )
 
 type TestObj struct {
@@ -30,7 +30,7 @@ func newCodec(codec string) Codec {
 		s.AddKnownTypes(&TestObj{})
 		return NewJSONCodec(s)
 	case "proto":
-		s.AddKnownTypes(&cmd.Cluster{})
+		s.AddKnownTypes(&runtimetest.TestProtoMessage{})
 		return NewProtoCodec(s)
 	}
 	return nil
@@ -70,7 +70,11 @@ func TestInvalidProtoEncode(t *testing.T) {
 }
 
 func TestProtoEncode(t *testing.T) {
-	test := cmd.Cluster{ObjectMeta: api.ObjectMeta{Name: "testCluster"}}
+	test := runtimetest.TestProtoMessage{
+		TypeMeta:   api.TypeMeta{Kind: "testType"},
+		ObjectMeta: api.ObjectMeta{Name: "TestObject"},
+		Field1:     "Data field",
+	}
 	expectedOut, err := proto.Marshal(&test)
 	if err != nil {
 		t.Fatalf("Failed to marshal proto, error %v", err)
@@ -85,11 +89,12 @@ func TestProtoEncode(t *testing.T) {
 }
 
 func TestProtoDecode(t *testing.T) {
-	expectedObj := cmd.Cluster{
-		TypeMeta:   api.TypeMeta{Kind: "Cluster"},
-		ObjectMeta: api.ObjectMeta{Name: "testCluster"},
+	expectedObj := runtimetest.TestProtoMessage{
+		TypeMeta:   api.TypeMeta{Kind: "TestProtoMessage"},
+		ObjectMeta: api.ObjectMeta{Name: "TestObject"},
+		Field1:     "Data field",
 	}
-	var obj cmd.Cluster
+	var obj runtimetest.TestProtoMessage
 	input, err := proto.Marshal(&expectedObj)
 	if err != nil {
 		t.Fatalf("Failed to marshal proto, error %v", err)

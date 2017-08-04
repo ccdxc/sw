@@ -83,7 +83,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --gofast_out=plugins=grpc,${PROTOSUBST}:${curdir}/generated/${pkg} \
+        --pensando_out=plugins=grpc,logtostderr=false,log_dir=${curdir}/tmp,${PROTOSUBST}:${curdir}/generated/${pkg} \
         ${protofile} || { echo "Protobuf generation failed" ; exit -1; }
         echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .

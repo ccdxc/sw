@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package runtimetest;
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message TestProtoMessage {
+  api.TypeMeta T=1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+  string Field1 = 3;
+}
+

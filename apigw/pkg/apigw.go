@@ -2,6 +2,7 @@ package apigwpkg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -45,7 +46,6 @@ func initAPIGw() {
 // are not allowed and will cause a panic. Each service is expected to serve
 // non overlapping API path prefixes.
 func (a *apiGw) Register(name, path string, svc apigw.APIGatewayService) apigw.APIGatewayService {
-	fmt.Printf("Register for %v\n", name)
 	if svc == nil {
 		panic(fmt.Sprintf("Invalid service registration for %s", name))
 	}
@@ -73,7 +73,7 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 		if len(p) > 1 && p[1] != "" {
 			r.Header.Set(apigw.GrpcMDRequestVersion, p[1])
 		} else {
-			a.logger.Errorf("Could not find Version")
+			a.logger.Errorf("Could not find Version (%s)", r.URL.Path)
 		}
 		if len(p) > 2 {
 			r.Header.Set(apigw.GrpcMDRequestURI, "/"+p[2])
@@ -174,4 +174,8 @@ func (a *apiGw) Run(config apigw.Config) {
 	}()
 
 	a.logger.Infof("exit", <-a.doneCh)
+}
+
+func (a *apiGw) Stop() {
+	a.doneCh <- errors.New("User called stop")
 }

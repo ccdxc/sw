@@ -5,8 +5,14 @@ import (
 	"errors"
 	"testing"
 
+	oldcontext "golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 // fakeMessage is used as a mock object for testing.
@@ -19,9 +25,12 @@ type fakeMessage struct {
 	kvwrites       int
 	kvreads        int
 	kvdels         int
+	kvlists        int
+	kvwatch        int
 	txnwrites      int
 	txngets        int
 	txndels        int
+	objverwrite    int
 }
 
 var txnTestKey = "/txn/testobj"
@@ -36,7 +45,19 @@ func (m *fakeMessage) WithKvDelFunc(fn apisrv.DelFromKvFunc) apisrv.Message     
 func (m *fakeMessage) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Message        { return m }
 func (m *fakeMessage) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Message            { return m }
 func (m *fakeMessage) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message             { return m }
+func (m *fakeMessage) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message                { return m }
+func (m *fakeMessage) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message                  { return m }
+func (m *fakeMessage) WithObjectVersionWriter(fn apisrv.SetObjectVersionFunc) apisrv.Message { return m }
 func (m *fakeMessage) GetKind() string                                                       { return "" }
+func (m *fakeMessage) WriteObjVersion(i interface{}, version string) interface{}             { return i }
+func (m *fakeMessage) ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+	m.kvlists++
+	return nil, nil
+}
+func (m *fakeMessage) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error {
+	m.kvwatch++
+	return nil
+}
 func (m *fakeMessage) DelFromKv(ctx context.Context, key string) (interface{}, error) {
 	m.kvdels++
 	return nil, nil
@@ -126,6 +147,21 @@ func (m *fakeMessage) delFromKvTxnFunc(ctx context.Context, kvstore kvstore.Txn,
 	return nil
 }
 
+func (m *fakeMessage) objVerWrite(i interface{}, version string) interface{} {
+	m.objverwrite++
+	return i
+}
+
+func (m *fakeMessage) kvWatchFunc(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+	m.kvwatch++
+	return nil
+}
+
+func (m *fakeMessage) kvListFunc(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+	m.kvlists++
+	return nil, nil
+}
+
 // TestPrepareMessage
 // Tests the version transform functionality of the message.
 // Tests both when there is a valid transformation and when the
@@ -150,13 +186,36 @@ func TestPrepareMessage(t *testing.T) {
 	}
 }
 
+type fakeGrpcStream struct {
+	ctx oldcontext.Context
+}
+
+func (s fakeGrpcStream) Context() oldcontext.Context {
+	return s.ctx
+}
+func (s fakeGrpcStream) SendMsg(in interface{}) error {
+	return nil
+}
+func (s fakeGrpcStream) RecvMsg(in interface{}) error {
+	return nil
+}
+func (s fakeGrpcStream) SetHeader(_ metadata.MD) error {
+	return nil
+}
+func (s fakeGrpcStream) SendHeader(_ metadata.MD) error {
+	return nil
+}
+func (s fakeGrpcStream) SetTrailer(_ metadata.MD) {
+}
+
 // TestMessageWith
 // Tests the various Hooks for the message
 func TestMessageWith(t *testing.T) {
 	f := newFakeMessage("/test", true).(*fakeMessage)
 	m := NewMessage("TestType1").WithValidate(f.validateFunc).WithDefaulter(f.defaultFunc)
-	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc)
+	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc).WithObjectVersionWriter(f.objVerWrite)
 	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
+	m = m.WithKvWatchFunc(f.kvWatchFunc).WithKvListFunc(f.kvListFunc)
 	m.Validate(nil)
 	if f.validateCalled != 1 {
 		t.Errorf("Expecting validation count of %v found", f.validateCalled)
@@ -188,5 +247,15 @@ func TestMessageWith(t *testing.T) {
 	m.DelFromKvTxn(context.TODO(), nil, "testKey")
 	if f.txndels != 1 {
 		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
+	}
+	ctx := context.TODO()
+	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
+		apisrv.RequestParamMethod, "WATCH")
+	ctx = metadata.NewContext(ctx, md)
+	stream := fakeGrpcStream{ctx: ctx}
+	opts := api.ListWatchOptions{}
+	err := m.WatchFromKv(&opts, stream, "test")
+	if err != nil {
+		t.Errorf("watch returned error (%s)", err)
 	}
 }

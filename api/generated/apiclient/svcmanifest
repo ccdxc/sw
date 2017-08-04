@@ -1,0 +1,71 @@
+{
+  "bookstore": {
+    "Svcs": {
+      "BookstoreV1": {
+        "Version": "v1",
+        "Messages": [
+          "Order",
+          "Book",
+          "Publisher"
+        ]
+      }
+    }
+  },
+  "cmd": {
+    "Svcs": {
+      "CmdV1": {
+        "Version": "v1",
+        "Messages": [
+          "Node",
+          "Cluster"
+        ]
+      }
+    }
+  },
+  "network": {
+    "Svcs": {
+      "EndpointV1": {
+        "Version": "v1",
+        "Messages": [
+          "Endpoint"
+        ]
+      },
+      "LbPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "LbPolicy"
+        ]
+      },
+      "NetworkV1": {
+        "Version": "v1",
+        "Messages": [
+          "Network"
+        ]
+      },
+      "SecurityGroupV1": {
+        "Version": "v1",
+        "Messages": [
+          "SecurityGroup"
+        ]
+      },
+      "ServiceV1": {
+        "Version": "v1",
+        "Messages": [
+          "Service"
+        ]
+      },
+      "SgpolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "Sgpolicy"
+        ]
+      },
+      "TenantV1": {
+        "Version": "v1",
+        "Messages": [
+          "Tenant"
+        ]
+      }
+    }
+  }
+}

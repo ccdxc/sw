@@ -16,7 +16,7 @@ import (
 
 type bookstoreHooks struct {
 	svc     apiserver.Service
-	orderId int64
+	orderID int64
 	logger  log.Logger
 	tracer  opentracing.Tracer
 }
@@ -24,34 +24,33 @@ type bookstoreHooks struct {
 // ServiceHooks
 // Precommit hook to create a unique order ID when a order is created via a post.
 // The same hook can be used to perform other synchronous actions on receiving an API call.
-func (s *bookstoreHooks) createNewOrderId(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
-	s.logger.InfoLog("msg", "Got call to Create New OrderID")
+func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "Got call to Create New orderID")
 	r, ok := i.(bookstore.Order)
 	if !ok {
 		return i, false, errors.New("Invalid input type")
 	}
 
-	if oper == "POST" {
+	if oper == apiserver.CreateOper {
 		// Here we are just using a local ID. This might more typically be calling a distributed
 		// ID generator to reserve an ID.
-		s.orderId++
-		r.Spec.Id = fmt.Sprintf("order-%x", s.orderId)
+		s.orderID++
+		r.Spec.Id = fmt.Sprintf("order-%x", s.orderID)
 		r.Name = r.Spec.Id
 		s.logger.InfoLog("msg", "Created new order ID", "order", r.Spec.Id)
-		status := bookstore.OrderStatus{}
-		status.Status = bookstore.OrderStatus_PROCESSING
-		r.Status = &status
+		r.Status.Status = bookstore.OrderStatus_PROCESSING
 		return r, true, nil
-	} else if oper == "PUT" {
+	} else if oper == apiserver.UpdateOper {
 		// Verify that the current order is actually editable.
-		obj, err := s.svc.GetMethod("OrderOper").GetRequestType().GetFromKv(ctx, key)
+		obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, key)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "precommit hook get key failed")
+			return bookstore.Order{}, false, errors.Wrap(err, "precommit hook get key failed")
 		}
 		cur := obj.(bookstore.Order)
-		if cur.Status != nil && cur.Status.Status > bookstore.OrderStatus_FILLED {
-			return nil, false, errors.New("order status already shipped")
+		if cur.Status.Status > bookstore.OrderStatus_FILLED {
+			return bookstore.Order{}, false, errors.New("order status already shipped")
 		}
+		// Add a comparator for CAS
 		s.logger.Infof("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion)
 		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
 	}
@@ -62,10 +61,10 @@ func (s *bookstoreHooks) createNewOrderId(ctx context.Context, kv kvstore.Interf
 // This hook is used to fixup Orders that already have pending orders for the book
 // that is being removed from the bookstore. This can potentially involve blocking
 // action to clean up and notifiy.
-func (s *bookstoreHooks) processDelBook(ctx context.Context, oper string, i interface{}) {
+func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIOperType, i interface{}) {
 	// This will involve going through the API server cache to retrieve all orders with this bookstore
 	// and updating the order as unfulfillable. TBD for now.
-	if oper == "DELETE" {
+	if oper == apiserver.DeleteOper {
 		book := i.(bookstore.Book)
 		s.logger.InfoLog("msg", "Cleaning up order on delete book", "book", book.Spec.ISBNId)
 	}
@@ -87,12 +86,12 @@ func registerBookstoreHooks(svc apiserver.Service, logger log.Logger) {
 	r.svc = svc
 	r.logger = logger.WithContext("Service", "Bookstore")
 	logger.Log("msg", "registering Hooks")
-	svc.GetMethod("OrderOper").WithPreCommitHook(r.createNewOrderId).GetRequestType().WithValidate(r.validateOrder)
-	svc.GetMethod("DeleteBook").WithPostCommitHook(r.processDelBook)
+	svc.GetCrudService("Order", apiserver.CreateOper).WithPreCommitHook(r.createNeworderID).GetRequestType().WithValidate(r.validateOrder)
+	svc.GetCrudService("Order", apiserver.UpdateOper).WithPreCommitHook(r.createNeworderID).GetRequestType().WithValidate(r.validateOrder)
+	svc.GetCrudService("Book", apiserver.DeleteOper).WithPostCommitHook(r.processDelBook)
 }
 
 func init() {
-	fmt.Printf("registered Hooks")
 	apisrv := apisrvpkg.MustGetAPIServer()
 	apisrv.RegisterHooksCb("bookstore.BookstoreV1", registerBookstoreHooks)
 }

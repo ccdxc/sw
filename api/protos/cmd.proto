@@ -84,44 +84,28 @@ service CmdV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    rpc GetNodeList(NodeList) returns(NodeList) {
-        option (google.api.http) = {
-            get: "/nodes"
-        };
-    }
+    option(venice.apiGrpcCrudService) = "Node";
+    option(venice.apiGrpcCrudService) = "Cluster";
 
-    rpc NodeOper(Node) returns(Node) {
-        option (google.api.http) = {
-            post: "/nodes"
-            body: "*"
-            additional_bindings: {
-                put: "/nodes/{O.Name}"
-                body: "*"
-            }
-            additional_bindings: {
-                get: "/nodes/{O.Name}"
-            }
-            additional_bindings: {
-                delete : "/nodes/{O.Name}"
-            }
-        };
-    }
+    option(venice.apiRestService) = {
+        Object: "Node"
+        Method: ["put", "get", "delete"]
+        Pattern: "/nodes/{O.Name}"
+    };
+    option(venice.apiRestService) = {
+        Object: "Node"
+        Method: ["post", "list"]
+        Pattern: "/nodes"
+    };
 
-
-    rpc ClusterOper(Cluster) returns(Cluster) {
-        option (google.api.http) = {
-            post: "/cluster"
-            body: "*"
-            additional_bindings: {
-                put: "/cluster/{O.Name}"
-                body: "*"
-            }
-            additional_bindings: {
-                get: "/cluster/{O.Name}"
-             }
-            additional_bindings: {
-                delete : "/cluster/{O.Name}"
-             }
-        };
-    }
+    option(venice.apiRestService) = {
+        Object: "Cluster"
+        Method: ["post", "list"]
+        Pattern: "/cluster"
+    };
+    option(venice.apiRestService) = {
+        Object: "Cluster"
+        Method: ["put", "get", "delete"]
+        Pattern: "/cluster/{O.Name}"
+    };
 }

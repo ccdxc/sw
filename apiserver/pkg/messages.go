@@ -4,8 +4,13 @@ import (
 	"context"
 	"errors"
 
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pensando/sw/api"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 
 	apisrv "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
@@ -26,6 +31,8 @@ type MessageHdlr struct {
 	validater apisrv.ValidateFunc
 	// keyFunc is the function that generates the key for this object
 	keyFunc apisrv.KeyGenFunc
+	// objVersionerFunc writes the version in the object.
+	objVersionerFunc apisrv.SetObjectVersionFunc
 	// kvUpdateFunc handles updating the KV store
 	kvUpdateFunc apisrv.UpdateKvFunc
 	// txnUpdateFunc handles updating a KV store transaction.
@@ -36,6 +43,10 @@ type MessageHdlr struct {
 	kvDelFunc apisrv.DelFromKvFunc
 	// txnDelFunc handles deleting the object as part of a KV store transaction.
 	txnDelFunc apisrv.DelFromKvTxnFunc
+	// kvListFunc handles listing objects from KV store.
+	kvListFunc apisrv.ListFromKvFunc
+	// kvWatchFunc handles watches on object (prefixes)
+	kvWatchFunc apisrv.WatchKvFunc
 	// Kind holds the kind of object.
 	Kind string
 }
@@ -106,6 +117,18 @@ func (m *MessageHdlr) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Messag
 	return m
 }
 
+// WithKvListFunc is the function registered to list all objects of a type from the KV store.
+func (m *MessageHdlr) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message {
+	m.kvListFunc = fn
+	return m
+}
+
+// WithKvWatchFunc watches the KV store for changes to object(s)
+func (m *MessageHdlr) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message {
+	m.kvWatchFunc = fn
+	return m
+}
+
 // GetKind returns the Kind of the object.
 func (m *MessageHdlr) GetKind() string {
 	return m.Kind
@@ -160,9 +183,23 @@ func (m *MessageHdlr) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 	return errNotImplemented
 }
 
-// WithKeyGenerator registers a Key Generation function for the omessage.
+// ListFromKv lists all objects of this kind.
+func (m *MessageHdlr) ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+	if m.kvListFunc != nil {
+		return m.kvListFunc(ctx, singletonAPISrv.kv, options, prefix)
+	}
+	return nil, errNotImplemented
+}
+
+// WithKeyGenerator registers a Key Generation function for the message.
 func (m *MessageHdlr) WithKeyGenerator(fn apisrv.KeyGenFunc) apisrv.Message {
 	m.keyFunc = fn
+	return m
+}
+
+// WithObjectVersionWriter is helper function to write the version of the object.
+func (m *MessageHdlr) WithObjectVersionWriter(fn apisrv.SetObjectVersionFunc) apisrv.Message {
+	m.objVersionerFunc = fn
 	return m
 }
 
@@ -173,6 +210,7 @@ func (m *MessageHdlr) PrepareMsg(from, to string, i interface{}) (interface{}, e
 		if fn, ok := v[to]; ok {
 			return fn(from, to, i), nil
 		}
+		i = m.WriteObjVersion(i, to)
 	}
 	return nil, errors.New("unsupported tranformation")
 }
@@ -191,4 +229,46 @@ func (m *MessageHdlr) Validate(i interface{}) error {
 		return m.validater(i)
 	}
 	return nil
+}
+
+// WriteObjVersion updates the version in the object meta.
+func (m *MessageHdlr) WriteObjVersion(i interface{}, version string) interface{} {
+	if m.objVersionerFunc != nil {
+		return m.objVersionerFunc(i, version)
+	}
+	return i
+}
+
+// WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
+func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+	if m.kvWatchFunc != nil {
+		var ver string
+		l := singletonAPISrv.Logger
+		ctx := stream.Context()
+
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			l.ErrorLog("msg", "unable to get metadata from context")
+			return errRequestInfo
+		}
+
+		if v, ok := md[apisrv.RequestParamVersion]; ok {
+			ver = v[0]
+		} else {
+			l.ErrorLog("msg", "unable to get request version from context")
+			return errRequestInfo
+		}
+		var span opentracing.Span
+		span = opentracing.SpanFromContext(ctx)
+		if span != nil {
+			span.SetTag("version", ver)
+			span.SetTag("operation", "watch")
+			if v, ok := md[apisrv.RequestParamMethod]; ok {
+				span.SetTag(apisrv.RequestParamMethod, v[0])
+			}
+			span.LogFields(log.String("event", "calling watch"))
+		}
+		return m.kvWatchFunc(l, options, singletonAPISrv.kv, stream, m.PrepareMsg, ver, svcprefix)
+	}
+	return errNotImplemented
 }

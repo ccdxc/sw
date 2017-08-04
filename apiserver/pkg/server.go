@@ -2,6 +2,7 @@ package apisrvpkg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -151,7 +152,19 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	go func() {
 		a.Logger.Log("Grpc Listen Start", config.GrpcServerPort)
 		a.doneCh <- s.Serve(ln)
+		close(a.doneCh)
 	}()
+	donemsg := <-a.doneCh
+	s.Stop()
+	config.Logger.Log("exit", donemsg)
+}
 
-	config.Logger.Log("exit", <-a.doneCh)
+func (a *apiSrv) Stop() {
+	a.doneCh <- errors.New("Stop called by user")
+	for {
+		if _, ok := <-a.doneCh; !ok {
+			a.Logger.Log("msg", "closing")
+			break
+		}
+	}
 }

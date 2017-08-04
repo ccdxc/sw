@@ -96,40 +96,32 @@ A Service is a collection of a group of API endpoints of the same version. Multi
         // API Version.
         option (venice.apiVersion) = "v1";
 
-        // --- Publisher resource --- //
-        // This is not exposed to the end user and hence there are only gRPC endpoints.
-        rpc AddPublisher(Publisher) returns(Publisher) {
-            // This option is specified to define the flavor of the KV operation needed.
-            // grpc only methods can specify one method_oper per method. oper includes (create, update, delete, get)
-            option (venice.methodOper) = "create";
-        }
+        // The apiGrpcCrudService Option generates CRUD + List, Watch APIs for the specified message.
+        option (venice.apiGrpcCrudService) = "Order";
+        option (venice.apiGrpcCrudService) = "Book";
+        option (venice.apiGrpcCrudService) = "Publisher";
 
-        // --- Order Resource--- //
-        // This resource is exposed to the user for all CRUD operations
-        rpc OrderOper(Order) returns(Order) {
-            option (google.api.http) = {
-            // Create
-            post: "/orders"
-            body: "*"
-            additional_bindings: {
-                // Update
-                put: "/orders/{Spec.Id}"
-            }
-            additional_bindings: {
-                // Delete
-                delete: "/orders/{Spec.Id}"
-            }
-            additional_bindings: {
-                //Read
-                get: "/orders/{Spec.Id}"
-            }
-            };
-        }
+        // REST resources exposed by the service. The Option specifies
+        //   Object  - The resource
+        //   Method  - REST methods allowed on the resource (post, put, get, delete, list)
+        //   Pattern - Pattern for the URI
+        option (venice.apiRestService) = {
+            Object: "Order"
+            Method: [ "put", "get", "delete" ]
+            Pattern: "/orders/{O.Name}"
+        };
+        option (venice.apiRestService) = {
+            Object: "Order"
+            Method: [ "post", "list" ]
+            Pattern: "/orders"
+        };
     }
 
-When a API is exposed externally via REST by the API Gateway, the allowed methods are specified via the (google.api.http) option. The URI for the resource is specified in the option. Any parameters in URL that map to the request object are specified inside "{..}" like the Spec.Id specified in the OrderOper PUT operation for example. This means that anything specified in the URI overwrites the Id field in the OrderSpec.
+Resources can be exposed for CRUD operations by the service either via gRPC and optionally via REST.
 
-All REST endpoints are exposed by the API gateway and all defined APIs (REST and gRPC only) are exposed by the API server.
+Using the "venice.apiGrpcCrudService" option with a message name as a parameter instructs the code generator to generate CRUD apis (Create, Read, Update, Delete, List, Watch). These APIs can then be used via the generated GRPC client code to operate on the objects.
+
+The "venice.apiRestService" options specifies that the API Gateway expose the resource via REST. The option specifies the Object, the methods allowed and the pattern for the URI where the object is to be exposed. Any parameters in URL that map to the request object are specified inside "{..}" like the {O.Name} specified in the example above "put, get, delete" operation for example. This means that anything specified in the URI overwrites the Name filed in the object meta field in the OrderSpec.
 
 All pensando specific options can be found in utils/apigen/annotations/penext.proto
 
@@ -213,3 +205,16 @@ The snippet below shows an example of registering a post commit hook to a method
 
 
 With this the APIs defined in the protobuf should be functional and API call should should be able to perform CRUD operations on the KV store objects. Service controllers would typically watch the config objects in the KV store and take business logic actions.
+
+#Using the generated GRPC client
+The code generator generates a API server client with with CRUD apis for objects tagged with the "venice.apiCrudService" and explicit gRPC endpoints specified in the definition. The snippet below shows a sample CRUD operation on a auto generated object.
+
+        apicl, err := cache.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+        ..
+        ret, err := apicl.BookstoreV1().Publisher().Create(ctx, pub)
+        ..
+        meta := api.ObjectMeta{Name: "Sahara"}
+        ret, err = apicl.BookstoreV1().Publisher().Get(ctx, meta)
+        ..
+        opts := api.ListWatchOptions{}
+        pubs, err := apicl.BookstoreV1().Publisher().List(ctx, opts)
