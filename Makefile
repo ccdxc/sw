@@ -41,7 +41,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
 	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@cp ${PWD}/bin/apigw tools/docker-files/apigw/apigw
 	@cp ${PWD}/bin/apiserver tools/docker-files/apiserver/apiserver
@@ -77,10 +77,10 @@ helper-containers:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.2 .
 
 container-qcompile:
-	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 make qbuild
 
 container-compile:
-	docker run -it --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2
 
 ws-tools:
 	$(info +++ building WS tools)
@@ -153,3 +153,12 @@ node:
 
 dev-clean:
 	scripts/cleanup-dev.sh
+
+test-cluster:
+	scripts/bringup-dev.sh Vagrantfile.e2e
+	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make cluster'
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startAgent.py -nodes $$NAPLES_NODES'
+
+test-clean:
+	scripts/cleanup-dev.sh
+

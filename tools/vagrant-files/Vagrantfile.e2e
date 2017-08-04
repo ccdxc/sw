@@ -1,0 +1,191 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'fileutils'
+
+# VM parameters
+def provider_cfg(node, cpus, memory, numNics)
+    node.vm.provider "virtualbox" do |v|
+        v.cpus = cpus
+        v.memory = memory
+        v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
+
+        # enable 'virtio' on control nics to take benefit of builtin vlan tag
+        v.customize ['modifyvm', :id, '--nictype1', 'virtio']
+	if numNics > 1 then
+            v.customize ['modifyvm', :id, '--nictype2', 'virtio']
+            v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+	end
+	if numNics > 2 then
+            v.customize ['modifyvm', :id, '--nictype3', 'virtio']
+            v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+        end
+	if numNics > 3 then
+            v.customize ['modifyvm', :id, '--nictype4', 'virtio']
+            v.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
+        end
+        v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
+    end
+end
+
+# Configure the guest VM
+def configure_vm(node, node_name)
+      node.vm.provision "shell" do |s|
+          s.inline = <<-EOF
+	    ## setup basic environment for the VM
+	    echo -n "#{node_name}" > /etc/hostname
+	    hostname -F /etc/hostname
+	    # Increase mmap count to support elasticsearch
+	    sysctl -w vm.max_map_count=262144
+	    # stop firewall service and disable selinux
+	    systemctl stop firewalld
+	    setenforce 0
+	    gpasswd -a vagrant root
+	    # Add pensando internal docker registry
+	    echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
+            # Start docker and kubelet services
+            systemctl enable docker && systemctl start docker
+            # populate the master virtual ip
+            echo '192.168.30.10 pen-master' >> /etc/hosts
+          EOF
+      end
+
+      # mount the host directories
+      if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
+          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
+          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+      else
+          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+      end
+end
+
+# Alpine VM specific configuration
+def configure_alpine_vm(node, node_name)
+      node.vm.provision "shell" do |s|
+          s.inline = <<-EOF
+	    ## setup basic environment for the VM
+	    echo -n "#{node_name}" > /etc/hostname
+	    hostname -F /etc/hostname
+            # populate the master virtual ip
+            echo '192.168.30.10 pen-master' >> /etc/hosts
+	    # ssh params
+	    echo "KexAlgorithms diffie-hellman-group-exchange-sha256,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1" >> /etc/ssh/sshd_config
+	    sudo service sshd restart
+	    # bring up interfaces
+	    sudo ifconfig eth2 promisc up
+	    sudo ifconfig eth3 promisc up || echo "ignoring failure"
+          EOF
+      end
+
+      # mount the host directories
+      if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
+          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
+          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+      else
+          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+      end
+end
+
+# Ensure vagrant-alpine plugin is installed
+unless Vagrant.has_plugin?("vagrant-alpine")
+  raise 'vagrant-alpine plugin is not installed!'
+end
+
+# Main configuration
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.ssh.insert_key = false
+
+  num_venice_nodes = 3
+  num_naples_nodes = 3
+  ip_prefix = "192.168.30."
+
+  # Change number of nodes based on env-variable
+  if ENV['VENICE_NODES'] && ENV['VENICE_NODES'] != "" then
+    num_venice_nodes = ENV['VENICE_NODES'].to_i
+  end
+  if ENV['NAPLES_NODES'] && ENV['NAPLES_NODES'] != "" then
+    num_naples_nodes = ENV['NAPLES_NODES'].to_i
+  end
+
+  # Venice VMs
+  num_venice_nodes.times do |n|
+    node_name = "node#{n+1}"
+    node_addr = ip_prefix + "#{n+11}"
+    venice_ips = num_venice_nodes.times.collect { |n| ip_prefix + "#{n+11}" }
+    naples_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+21}" }
+
+    config.vm.define node_name do |node|
+      node.vm.box = "nasuku/centos73"
+      node.vm.box_version = "0.1"
+      # Control Interface
+      node.vm.network :private_network, ip: node_addr
+
+      # configure VM
+      provider_cfg(node, 4, 4096, 2)
+
+      # provision base os
+      configure_vm(node, node_name)
+
+      node.vm.provision "shell" do |s|
+          s.inline = <<-EOF
+	    echo "export PENS_NODES=#{venice_ips.join(",")}" >> /etc/profile.d/env.sh
+	    echo "export NAPLES_NODES=#{naples_ips.join(",")}" >> /etc/profile.d/env.sh
+	    source /etc/profile.d/env.sh
+          EOF
+      end
+      num_venice_nodes.times do |node_id|
+          node.vm.provision "shell" do |s|
+	      s.inline = "echo '#{ip_prefix}#{node_id+11} node#{node_id+1} ' >> /etc/hosts"
+          end
+      end
+    end
+  end
+
+  # Naples VMs
+  num_naples_nodes.times do |n|
+    node_name = "naples#{n+1}"
+    node_addr = ip_prefix + "#{n+21}"
+    host_net  = "host_net#{n+1}"
+    dc_net    = "dc_net"
+
+    config.vm.define node_name do |node|
+      node.vm.box = "Dalee/alpine"
+      # Control Interface
+      node.vm.network :private_network, ip: node_addr
+      # Uplink Interface
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: dc_net, auto_config: false
+      # Hots Interface
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: host_net, auto_config: false
+
+      # configure VM
+      provider_cfg(node, 4, 4096, 4)
+
+      # provision base os
+      configure_alpine_vm(node, node_name)
+
+    end
+  end
+
+  # Host VMs
+  num_naples_nodes.times do |n|
+    node_name = "host#{n+1}"
+    node_addr = ip_prefix + "#{n+121}"
+    host_net  = "host_net#{n+1}"
+
+    config.vm.define node_name do |node|
+      node.vm.box = "Dalee/alpine"
+      # Control Interface
+      node.vm.network :private_network, ip: node_addr
+      # Hots Interface
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: host_net, auto_config: false
+
+      # configure VM
+      provider_cfg(node, 4, 4096, 3)
+
+      # provision base os
+      configure_alpine_vm(node, node_name)
+
+    end
+  end
+end
