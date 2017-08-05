@@ -1,6 +1,6 @@
 ---
 targets:
-  - [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo)" ]
+  - [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo) && obj/lif_manager_test && obj/bm_allocator_test" ]
 image:
   name: "pensando/nic"
   bind_dir: "/hack/saratk/nic"
