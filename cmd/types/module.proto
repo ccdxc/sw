@@ -57,6 +57,9 @@ message ModuleSpec {
 
         // Services contain the list of services supported by the submodule.
         repeated Service Services = 3;
+
+        // Privileged specifies whether this is a privileged submodule.
+        bool Privileged = 4;
     }
 
     // Submodules contains the list of submodules for this module.

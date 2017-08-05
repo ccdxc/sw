@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"strings"
 	"time"
@@ -14,7 +13,8 @@ import (
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/services"
 	"github.com/pensando/sw/cmd/utils"
-	kvstore "github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/kvstore"
+	kstore "github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/quorum"
 	"github.com/pensando/sw/utils/quorum/store"
 	"github.com/pensando/sw/utils/rpckit"
@@ -137,14 +137,21 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 			return nil, fmt.Errorf("KV Store failed to come up in %v seconds", maxIters*sleepBetweenItersMsec/1000)
 		}
 
-		addrs, _ := net.LookupHost(hostname)
-		sConfig := kvstore.Config{
-			Type:    kvstore.KVStoreTypeEtcd,
-			Servers: []string{fmt.Sprintf("http://%s:%s", addrs[0], env.Options.KVStore.ClientPort)},
+		sConfig := kstore.Config{
+			Type:    kstore.KVStoreTypeEtcd,
+			Servers: kvServers,
 			Codec:   runtime.NewJSONCodec(env.Scheme),
 		}
 
-		kv, err := kvstore.New(sConfig)
+		var kv kvstore.Interface
+		ii = 0
+		for ; ii < maxIters; ii++ {
+			kv, err = kstore.New(sConfig)
+			if err == nil {
+				break
+			}
+			time.Sleep(sleepBetweenItersMsec * time.Millisecond)
+		}
 		if err != nil {
 			log.Errorf("Failed to create kvstore, error: %v", err)
 			return nil, err
