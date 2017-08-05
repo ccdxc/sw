@@ -70,7 +70,9 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
 
     key.capri_intrinsic_lif = get_hwlif_id_uplink_if(args->intf);
     inp_prop.vrf = l2seg_pd->hw_id;
-    inp_prop.dir = FLOW_DIR_FROM_UPLINK;
+    inp_prop.dir = 0;
+    /* TO BE FIXED */
+    //inp_prop.dir = FLOW_DIR_FROM_UPLINK;
 
     if (!is_native) {
         // Install one entry

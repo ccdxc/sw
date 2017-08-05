@@ -7,5 +7,5 @@ proto: udp
 
 entries:
     - entry:
-        responder: const/100
-        initiator: const/42000
+        responder: const/128
+        initiator: const/47273

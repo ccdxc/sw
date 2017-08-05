@@ -62,7 +62,7 @@ class LogMsg {
 #define PLOG_CPU(X)  { PLOG_MSG_GLB(X, LogMsg::CPU) }
 #define PLOG_DEBUG(X)  { PLOG_MSG_GLB(X, LogMsg::DEBUG) }
 
-#define PLOG(SCOPE,X) { PLOG_MSG_GLB(X, SCOPE) }
+#define PLOG(SCOPE)(X) { PLOG_MSG_GLB(X, SCOPE) }
 
 #define PLOG_API_MSG(SRC, MSG) { PLOG_MSG(SRC << "_API : " << MSG)  }
 

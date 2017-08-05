@@ -8,11 +8,6 @@ struct phv_             p;
 
 %%
 
-nop:
-  nop.e
-  nop
-
-.align
 set_tm_oport:
   seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
@@ -54,3 +49,10 @@ redirect_to_remote:
   phvwr       p.capri_intrinsic_tm_oport, d.u.redirect_to_remote_d.tm_oport
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oqueue
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index
+
+nop:
+  nop.e
+  nop
+
+.align
+

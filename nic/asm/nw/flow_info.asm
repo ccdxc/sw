@@ -8,11 +8,6 @@ struct phv_        p;
 
 %%
 
-nop:
-  nop.e
-  nop
-
-.align
 flow_info:
   /* egress port/vf */
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
@@ -129,3 +124,9 @@ flow_hit_from_vm_bounce:
 flow_hit_to_vm_bounce:
   nop.e
   nop
+
+nop:
+  nop.e
+  nop
+.align
+
