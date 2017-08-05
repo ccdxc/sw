@@ -1,8 +1,9 @@
 #! /usr/bin/python3
+import pdb
 from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 
-def GetIpv4Ttl(a, b):
+def GetIpv4Ttl(testcase, packet):
     return 129
 
 def GetPacketTemplateByFlow():
@@ -31,14 +32,14 @@ def AddHeaderTCP():
     # dport   : ref://testcase/config/flow/dport
     return
 
-def AddIngressHeadersByFlow(tc, pkt):
+def AddIngressHeadersByFlow(testcase, packet):
     return
 
-def AddEgressHeadersByFlow(tc, pkt):
+def AddEgressHeadersByFlow(testcase, packet):
     return
 
-def GetPacketTemplateByFlow(tc, pkt):
-    flow = tc.config.flow
+def GetPacketTemplateByFlow(testcase, packet):
+    flow = testcase.config.flow
     template = 'ETH'
     if flow.IsIP():
         template += "_%s_%s" % (flow.type, flow.proto)

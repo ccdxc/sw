@@ -60,22 +60,25 @@ class PacketHeaderFields(objects.FrameworkObject):
             return None
         
         if objects.IsReference(data):
+            # This will be resolved in 2nd phase.
             return data
 
         if objects.IsCallback(data):
-            return data.call()
+            # This will be resolved in 2nd phase.
+            return data
 
         return data.get()
 
-    def Build(self, testcase):
+    def Build(self, testcase, packet):
         for key,data in self.__dict__.items():
-            if objects.IsReference(data) == False: continue
-            if data.GetRootID() == defs.ref_roots.TESTCASE:
-                self.__dict__[key] = data.Get(testcase)
-            elif data.GetRootID() == defs.ref_roots.FACTORY:
-                self.__dict__[key] = data.Get(FactoryStore)
+            if objects.IsReference(data):
+                if data.GetRootID() == defs.ref_roots.TESTCASE:
+                    self.__dict__[key] = data.Get(testcase)
+                elif data.GetRootID() == defs.ref_roots.FACTORY:
+                    self.__dict__[key] = data.Get(FactoryStore)
+            elif objects.IsCallback(data):
+                self.__dict__[key] = data.call(testcase, packet)
         return
-
 
 class PacketHeader(objects.FrameworkObject):
     def __init__(self, inst):
@@ -91,8 +94,8 @@ class PacketHeader(objects.FrameworkObject):
         self.fields = PacketHeaderFields(header.fields)
         return
 
-    def Build(self, testcase):
-        self.fields.Build(testcase)
+    def Build(self, testcase, packet):
+        self.fields.Build(testcase, packet)
         return
 
 def IsPacketHeader(obj):
@@ -267,7 +270,7 @@ class Packet(objects.FrameworkObject):
     def __resolve(self, tc):
         for key,hdr in self.headers.__dict__.items():
             if not IsPacketHeader(hdr): continue
-            hdr.Build(tc)
+            hdr.Build(tc, self)
         return
 
     def Build(self, tc):
