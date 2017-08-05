@@ -10,8 +10,8 @@ OBJ_DIR = ../../obj/asm_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .
-CAPAS_BIN = ../../capsim/gen/bin/capas
-CAPSIM_BIN = ../../capsim/gen/bin/capsim
+CAPAS_BIN = ../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 all: deps asm
 

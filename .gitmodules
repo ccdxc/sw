@@ -1,9 +1,9 @@
 [submodule "nic/asic"]
 	path = nic/asic
-	url = https://github.com/pensando/asic
+	url = git@github.com:pensando/asic.git
 [submodule "nic/capsim"]
 	path = nic/capsim
-	url = https://github.com/pensando/capsim
+	url = git@github.com:pensando/capsim.git
 [submodule "nic/p4-hlir"]
 	path = nic/p4-hlir
-	url = https://github.com/pensando/p4-hlir
+	url = git@github.com:pensando/p4-hlir.git

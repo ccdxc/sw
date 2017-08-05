@@ -490,7 +490,7 @@ namespace pknobs{
           }
 
           UniqKnob(const string &n, int64 _lower, int64 _upper) : WLKnob("foo"){
-              init(lower,upper);
+              init(_lower,_upper);
           }
 
 

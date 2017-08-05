@@ -7,10 +7,6 @@ struct phv_                   p;
 
 %%
 
-nop:
-  nop.e
-  nop
-
 .align
 native_ipv4_packet:
   xor         r6, -1, r0
@@ -145,3 +141,9 @@ input_mapping_miss:
 malformed_native_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
+
+nop:
+  nop.e
+  nop
+
+

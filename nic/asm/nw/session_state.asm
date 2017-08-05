@@ -8,11 +8,10 @@ struct phv_               p;
 
 %%
 
-#if 0
 nop:
   nop.e
   nop
-#endif /* 0 */
+
 // Code is written to match the P4 program as much as possible to
 // facilitate changes to assemmbly easily. Once the P4 Program is
 // final and don't anticipate any changes we can optimize the
