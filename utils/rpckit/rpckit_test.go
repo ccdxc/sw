@@ -66,6 +66,9 @@ func stopRPCServerClient(rpcServer *RPCServer, rpcClient *RPCClient) {
 
 // test basic RPC
 func TestRPCBasic(t *testing.T) {
+	// enable tracer middleware during tests
+	EnableTracer = true
+
 	// create an rpc handler object
 	testHandler := &testRPCHandler{
 		reqMsg:  "dummy message",

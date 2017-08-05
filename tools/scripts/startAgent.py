@@ -72,7 +72,15 @@ class Node:
     # Start agent process on vagrant node
     def startAgent(self, args=""):
         ssh_object = self.sshConnect(self.username, self.password)
-        command = "sudo " + self.gopath + "/bin/agent " + args + "> /tmp/pensando-agent.log 2>&1"
+        command = "sudo " + self.gopath + "/bin/k8sagent " + args + "> /tmp/pensando-agent.log 2>&1"
+        self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
+        # npThread.setDaemon(True)
+        self.npThread.start()
+
+    # Start netctrler process on vagrant node
+    def startNetctrler(self, args=""):
+        ssh_object = self.sshConnect(self.username, self.password)
+        command = "sudo " + self.gopath + "/bin/npm " + args + "> /tmp/pensando-netctrler.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)
         self.npThread.start()
@@ -82,7 +90,7 @@ class Node:
 # Create the parser and sub parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
-parser.add_argument("-nodes", required=True, help="list of nodes(comma separated)")
+parser.add_argument("-nodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")
 parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
@@ -90,6 +98,9 @@ parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
 # Parse the args
 args = parser.parse_args()
 addrList = args.nodes.split(",")
+
+if args.nodes == '':
+    addrList = os.environ["PENS_NODES"].split(",")
 
 # Basic error checking
 if len(addrList) < 1:
@@ -108,17 +119,25 @@ for addr in addrList:
 
     # cleanup any old agent instances still running
     node.runCmd("sudo pkill agent")
+    node.runCmd("sudo pkill netctrler")
     node.runCmd("/usr/sbin/ifconfig -a | grep -e vport | awk '{print $1}' | xargs -r -n1 -I{} sudo ip link delete {} type veth")
 
     # Copy conf and binary files for CNI plugin
-    node.runCmd("sudo cp " + node.gopath + "/src/github.com/pensando/sw/agent/plugins/k8s/cni/pensando-net/01-pensando.conf /etc/cni/net.d/")
-    node.runCmd("sudo cp " + node.gopath + "/bin/pensando-net /opt/cni/bin/")
+    node.runCmd("sudo cp " + node.gopath + "/src/github.com/pensando/sw/agent/plugins/k8s/cni/pensandonet/01-pensando.conf /etc/cni/net.d/")
+    node.runCmd("sudo cp " + node.gopath + "/bin/pensandonet /opt/cni/bin/")
 
     # create directory for .sock files and remove any stale .sock files
     node.runCmd("sudo mkdir -p /run/pensando/")
     node.runCmd("sudo rm /run/pensando/pensando-cni.sock")
 
-    # Start pensando agent
+# start netctrler on master node
+nodes[0].startNetctrler()
+
+print "################### Waiting for netctrler to come up ###################"
+time.sleep(5)
+
+# Start pensando agent
+for node in nodes:
     node.startAgent()
 
 print "################### Waiting for agent to come up ###################"

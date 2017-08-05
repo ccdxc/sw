@@ -114,5 +114,7 @@ func (c *CNIPlugin) CmdDel(args *cni.CmdArgs) error {
 		return err
 	}
 
+	log.Infof("Sending delete pod success. result: %s", result.String())
+
 	return nil
 }

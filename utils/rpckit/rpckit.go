@@ -16,6 +16,9 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// EnableTracer is the global variable to enable tracer middleware
+var EnableTracer = false
+
 // Middleware is RPC middleware interface
 type Middleware interface {
 	ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context
@@ -85,7 +88,10 @@ func NewRPCServer(srvName, listenURL, certFile, keyFile, caFile string, middlewa
 	}
 	// add the stats middleware
 	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats)
-	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer)
+	if EnableTracer {
+		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer)
+
+	}
 
 	// start new grpc server
 	if certFile != "" && keyFile != "" && caFile != "" {
@@ -163,7 +169,10 @@ func NewRPCClient(srvName, remoteURL, certFile, keyFile, caFile string, middlewa
 	}
 	// add stats & tracer middleware
 	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)
-	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer)
+	if EnableTracer {
+		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer)
+
+	}
 
 	// Get credentials
 	if certFile != "" {

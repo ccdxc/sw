@@ -308,7 +308,7 @@ func leastUsedSchedFunc(req *rproto.ResourceRequest, providers []*RsrcProvider) 
 		return nil, errors.New("No providers with enough resource")
 	}
 
-	logrus.Infof("leastUsed scheduler assigned provider %s for consumer %s", luProvider.ProviderID, req.ConsumerID)
+	logrus.Debugf("leastUsed scheduler assigned provider %s for consumer %s", luProvider.ProviderID, req.ConsumerID)
 
 	return luProvider, nil
 }

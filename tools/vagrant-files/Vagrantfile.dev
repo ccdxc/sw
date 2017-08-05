@@ -70,7 +70,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
       end
 
+      # populate /etc/hosts entries
       build_etc_hosts(nodeprops, node)
+
+      # populate master hostname
+      node.vm.provision "shell" do |s|
+        s.inline = "echo '#{nodeprops[:node_ips][0]} master.local' >> /etc/hosts"
+      end
 
       # port mappings
       if n == 0 then

@@ -1,0 +1,62 @@
+// network object
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message HealthCheck {
+    uint32   ProbeInterval     = 1;  // probe interval
+    uint32   ProbesPerInterval = 2;  // number of probes
+    string   Protocol          = 3;  // protocol tcp/udp
+    uint32   Port              = 4;  // port number
+}
+
+// service specification
+message ServiceSpec {
+    string VirtualIP  = 1; // VIP for the service
+    string protocol   = 2; // tcp or udp
+    uint32 port       = 3; // port number
+    string SessionAffinity  = 4;  // session affinity
+    string Algorithm        = 5;  // load balancing algorithm
+    HealthCheck HealthCheck = 6;  // health check parameters
+}
+
+// Service Status
+message ServiceStatus {
+    string ServiceStatus = 1;  // current status of the service
+}
+
+// service object
+message Service {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ServiceSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    ServiceStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// backend spec
+message ServiceBackendSpec {
+    string ServiceName   = 1;  // service name this backend is associated to
+    string BackendIPAddr = 2;  // backed PIP
+    uint32 BackendPort   = 3;  // port number
+    uint32 Weight        = 4;  // load balancing weight
+}
+
+// backend status
+message ServiceBackendStatus {
+    string BackendStatus = 1;
+}
+
+// service backend object
+message ServiceBackend {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ServiceBackendSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    ServiceBackendStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

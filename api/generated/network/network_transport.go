@@ -2118,40 +2118,6 @@ func DecodeGrpcRespEndpointList(ctx context.Context, response interface{}) (inte
 	return response, nil
 }
 
-func encodeHTTPAutoMsgNetworkListHelper(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAutoMsgNetworkListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgNetworkListHelper
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAutoMsgNetworkListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgNetworkListHelper)
-	return req, nil
-}
-
-// DecodeGrpcReqAutoMsgNetworkListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgNetworkListHelper)
-	return req, nil
-}
-
-// EncodeGrpcRespAutoMsgNetworkListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAutoMsgNetworkListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPAutoMsgSecurityGroupListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -2353,6 +2319,40 @@ func EncodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interfa
 
 // DecodeGrpcRespAutoMsgTenantListHelper decodes the GRPC response
 func DecodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPAutoMsgNetworkListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPAutoMsgNetworkListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgNetworkListHelper
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqAutoMsgNetworkListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgNetworkListHelper)
+	return req, nil
+}
+
+// DecodeGrpcReqAutoMsgNetworkListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgNetworkListHelper)
+	return req, nil
+}
+
+// EncodeGrpcRespAutoMsgNetworkListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespAutoMsgNetworkListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

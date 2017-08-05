@@ -3,7 +3,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -34,18 +33,18 @@ func (c *fakeCniServer) DelPod(r *http.Request) (interface{}, error) {
 	return &types.Result{}, nil
 }
 
-func startFakeCniServer() (*fakeCniServer, error) {
+func startFakeCniServer(t *testing.T) (*fakeCniServer, error) {
 	fakeServer := &fakeCniServer{}
 	// register handlers for cni
 	router := mux.NewRouter()
-	t := router.Headers("Content-Type", "application/json").Methods("POST").Subrouter()
-	t.HandleFunc(cniServer.AddPodURL, httputils.MakeHTTPHandler(fakeServer.AddPod))
-	t.HandleFunc(cniServer.DelPodURL, httputils.MakeHTTPHandler(fakeServer.DelPod))
+	r := router.Headers("Content-Type", "application/json").Methods("POST").Subrouter()
+	r.HandleFunc(cniServer.AddPodURL, httputils.MakeHTTPHandler(fakeServer.AddPod))
+	r.HandleFunc(cniServer.DelPodURL, httputils.MakeHTTPHandler(fakeServer.DelPod))
 
 	// create a listener
 	l, err := net.ListenUnix("unix", &net.UnixAddr{Name: fakeCniServerURL, Net: "unix"})
 	if err != nil {
-		log.Fatalf("Error listening to %s. Err: %v", fakeCniServerURL, err)
+		t.Fatalf("Error listening to %s. Err: %v", fakeCniServerURL, err)
 	}
 
 	// start serving HTTP requests
@@ -64,7 +63,7 @@ func TestCNIPlugin(t *testing.T) {
 	os.Remove(fakeCniServerURL)
 
 	// start fake CNI server
-	fakeServer, err := startFakeCniServer()
+	fakeServer, err := startFakeCniServer(t)
 	AssertOk(t, err, "creating fake cni server")
 
 	// create a CNI plugin

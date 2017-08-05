@@ -67,3 +67,10 @@ message Status {
   // Reference to the object (optional) for which this status is being sent.
   ObjectRef Ref = 5;
 }
+
+// Watch event types
+enum EventType {
+    CreateEvent   = 0;
+    UpdateEvent   = 1;
+    DeleteEvent   = 2;
+}

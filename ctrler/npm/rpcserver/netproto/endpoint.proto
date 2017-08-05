@@ -1,0 +1,63 @@
+// network object
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// endpoint spec
+message EndpointSpec {
+    string EndpointUUID = 1;
+    string WorkloadUUID = 2;
+    string WorkloadName = 3;
+    string NetworkName  = 4;
+    repeated string WorkloadLabels = 5;
+    repeated string SecurityGroups = 6;
+}
+
+// endpoint status
+message EndpointStatus {
+    string IPv4Address = 1;
+    string IPv4Gateway = 2;
+    string IPv6Address = 3;
+    string IPv6Gateway = 4;
+    string MacAddress  = 5;
+    string HomingHostAddr = 6;
+    string HomingHostName = 7;
+    string NodeUUID       = 8;
+    uint32 UsegVlan       = 9;
+}
+
+// endpoint object
+message Endpoint {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    EndpointSpec   Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    EndpointStatus Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of endpoints
+message EndpointList {
+    repeated Endpoint endpoints = 1;
+}
+
+// endpoint watch event
+message EndpointEvent {
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Endpoint       Endpoint = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoint,omitempty"];
+}
+
+// endpoint controller api
+service EndpointApi {
+    rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
+	rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
+    rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};
+    rpc DeleteEndpoint (Endpoint) returns (Endpoint) {};
+    rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
+}

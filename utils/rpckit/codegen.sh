@@ -4,5 +4,4 @@
 # use it as: codegen.sh ./<your .proto file>
 # Its preferred that you run this from the directory where .proto file is present
 #
-proto=$1
-protoc --go_out=plugins=grpc:. $proto
+protoc --go_out=plugins=grpc:. $@

@@ -11,11 +11,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-// Type for HTTP handler functions
-type HttpApiFunc func(r *http.Request) (interface{}, error)
+// HTTPAPIFunc Type for HTTP handler functions
+type HTTPAPIFunc func(r *http.Request) (interface{}, error)
 
-// Simple Wrapper for http handlers
-func MakeHTTPHandler(handlerFunc HttpApiFunc) http.HandlerFunc {
+// MakeHTTPHandler Simple Wrapper for http handlers
+func MakeHTTPHandler(handlerFunc HTTPAPIFunc) http.HandlerFunc {
 	// Create a closure and return an anonymous function
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Call the handler
@@ -36,7 +36,7 @@ func MakeHTTPHandler(handlerFunc HttpApiFunc) http.HandlerFunc {
 	}
 }
 
-// WriteJSON: writes the value v to the http response stream as json with standard
+// WriteJSON writes the value v to the http response stream as json with standard
 // json encoding.
 func WriteJSON(w http.ResponseWriter, code int, v interface{}) error {
 	// Set content type as json

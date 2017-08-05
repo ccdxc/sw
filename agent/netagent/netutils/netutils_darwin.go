@@ -7,10 +7,12 @@ import (
 	"net"
 )
 
+// CreateVethPair creates veth pair
 func CreateVethPair(name1, name2 string) error {
 	return nil
 }
 
+// DeleteVethPair deletes veths
 func DeleteVethPair(name1, name2 string) error {
 	return nil
 }
@@ -31,4 +33,9 @@ func SetupIntfInNamespace(intfName, nsIntfName, nsPath string, ipv4AddrMask, ipv
 	}
 
 	return fmt.Errorf("Not Implemented")
+}
+
+// SetIntfUp sets interface up
+func SetIntfUp(intfName string) error {
+	return nil
 }

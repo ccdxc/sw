@@ -26,4 +26,7 @@ if ! make test-cluster; then
     die 1 "Make failed"
 fi
 
+# wait for few seconds to confirm cluster formed correctly
+sleep 5
+
 exit 0

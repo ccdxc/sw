@@ -16,7 +16,7 @@ cd $GOPATH/src/github.com/google
 rm -rf protobuf
 git clone https://github.com/google/protobuf.git
 cd protobuf
-./autogen.sh && ./configure && make && make check
+./autogen.sh && ./configure && make
 sudo make install && sudo ldconfig
 
 # Install protoc-gen-go

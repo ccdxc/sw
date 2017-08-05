@@ -2,10 +2,14 @@
 
 EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
-TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... ./apiserver/... ./globals/... ./api/ ./api/hooks/... ./api/listerwatcher/... ./api/cache/... ./api/integration/...
+TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... \
+./apiserver/... ./globals/... ./ctrler/... ./test/... ./api/ ./api/hooks/... \
+./api/listerwatcher/... ./api/cache/... ./api/integration/...
+
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
+GOCMD = /usr/local/go/bin/go
 
 default: build unit-test cover
 
@@ -93,7 +97,7 @@ ws-tools:
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))
-	go test $(TO_BUILD)
+	$(GOCMD) test $(TO_BUILD); \
 
 unit-race-test:
 	$(info +++ go test -race $(TO_BUILD))
@@ -101,7 +105,7 @@ unit-race-test:
 
 unit-test-verbose:
 	$(info +++ go test $(TO_BUILD))
-	go test -v $(TO_BUILD)
+	$(GOCMD) test -v $(TO_BUILD); \
 
 cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))

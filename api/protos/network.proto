@@ -93,7 +93,9 @@ message NetworkSpec {
 // status part of network object
 message NetworkStatus {
     // list of all workloads in this network
-    repeated string Workloads = 1 [(gogoproto.jsontag) = "workloads,omitempty"];
+    repeated string Workloads = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workloads,omitempty"];
+    // allocated IPv4 addresses (bitmap)
+    bytes AllocatedIPv4Addrs = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "allocated-ipv4-addrs,omitempty"];
 }
 
 // Network represents a subnet
@@ -156,6 +158,8 @@ message SecurityGroupSpec {
 message SecurityGroupStatus {
     // list of workloads that are part of this security group
     repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+    // list of all policies attached to this security group
+    repeated string Policies = 2;
 }
 
 // SecurityGroup represents a security zone or domain
@@ -213,9 +217,9 @@ message SgpolicySpec {
     // list of security groups this policy is attached to
     repeated string AttachGroups = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-groups,omitempty"];
     // Incoming rules
-    repeated SGRule InRules      = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "in-rules,omitempty"];
+    repeated SGRule InRules      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "in-rules,omitempty"];
     // Outgoing rules
-    repeated SGRule OutRules     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "out-rules,omitempty"];
+    repeated SGRule OutRules     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "out-rules,omitempty"];
 }
 
 message SgpolicyStatus {
@@ -430,10 +434,18 @@ message EndpointStatus {
     string IPv6Gateway    = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // Mac address of the endpoint
     string MacAddress     = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
+    // homing host's UUID
+    string NodeUUID       = 12;
+    // endpoint FSM state
+    string EndpointState  = 13;
+    // security groups
+    repeated string SecurityGroups = 14;
+    // micro-segment VLAN
+    uint32 MicroSegmentVlan = 15;
     // VM or container attribute/labels
     // FIXME: maps are not working. change this after its fixed
-    // map<string, string> WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
-    repeated string WorkloadAttributes  = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    // map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    repeated string WorkloadAttributes  = 17 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
 }
 
 // Endpoint represents a network endpoint

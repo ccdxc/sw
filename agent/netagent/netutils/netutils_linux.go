@@ -168,3 +168,25 @@ func SetupIntfInNamespace(intfName, nsIntfName, nsPath string, ipv4AddrMask, ipv
 
 	return nil
 }
+
+// SetIntfUp brings up the interface
+func SetIntfUp(intfName string) error {
+	// get the interface handle
+	iface, err := netlink.LinkByName(intfName)
+	if err != nil {
+		return fmt.Errorf("failed to get link by name %q: %v", intfName, err)
+	}
+
+	// up the interface
+	cnt := 0
+	for err = netlink.LinkSetUp(iface); err != nil && cnt < 3; cnt++ {
+		log.Debugf("retrying link setup because of: %v", err)
+		time.Sleep(10 * time.Millisecond)
+		err = netlink.LinkSetUp(iface)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to set link up: %v", err)
+	}
+
+	return nil
+}

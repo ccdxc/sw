@@ -55,10 +55,30 @@ code/binaries that were altered from within the VM
 
 ### Vendoring external packages
 We use govendor for external package management. Please see links below.
+<<<<<<< HEAD
 
 [ Govendor Readme ](https://github.com/kardianos/govendor/blob/master/README.md)
 
 [ Govendor Cheat Sheet ](https://github.com/kardianos/govendor/wiki/Govendor-CheatSheet)
+
+###### Govendor cheatsheet
+
+```
+# To add all new dependencies from local workspace to vendor directory
+govendor add +external
+
+# Build everything in your repository only
+govendor install +local
+
+# Test your repository only
+govendor test +local
+
+# To Update all dependencies
+govendor update +v
+
+# To update single dependency
+govendor update github.com/ardanlabs/kit/...
+```
 
 
 ### Requirements for code submission.
@@ -111,6 +131,7 @@ git push origin <branch-name> --force
 
 
 ### Deploying from Mac (not required anymore)
+
 ##### 1. make deploy to compile and deploy code
 ```
 $ make deploy

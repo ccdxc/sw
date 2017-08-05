@@ -3,46 +3,56 @@
 package cni
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"reflect"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	cniapi "github.com/containernetworking/cni/pkg/skel"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/agent/netagent/netutils/httputils"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/ctrler/npm/statemgr"
 
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"
 )
 
-// Type for HTTP handler functions
-type HttpApiFunc func(r *http.Request) (interface{}, error)
-
-// URL to listen on
+// CniServerListenURL URL to listen on
 const CniServerListenURL = "/run/pensando/pensando-cni.sock"
 
 // URL definitions
-const AddPodURL = "/Pensando/AddPod"
-const DelPodURL = "/Pensando/DelPod"
+const (
+	AddPodURL = "/Pensando/AddPod" // to add a pod
+	DelPodURL = "/Pensando/DelPod" // to delete a pod
+)
+
+// CommonArgs is common to all arg types
+type CommonArgs struct {
+	IgnoreUnknown types.UnmarshallableBool `json:"IgnoreUnknown,omitempty"`
+}
 
 // PodArgs is a struct to parse pod add/delete call arguments
 type PodArgs struct {
-	types.CommonArgs
-	K8S_POD_NAMESPACE          types.UnmarshallableString `json:"K8S_POD_NAMESPACE,omitempty"`
-	K8S_POD_NAME               types.UnmarshallableString `json:"K8S_POD_NAME,omitempty"`
-	K8S_POD_INFRA_CONTAINER_ID types.UnmarshallableString `json:"K8S_POD_INFRA_CONTAINER_ID,omitempty"`
+	CommonArgs
+	K8sPodNamespace      types.UnmarshallableString `json:"K8S_POD_NAMESPACE,omitempty"`
+	K8sPodName           types.UnmarshallableString `json:"K8S_POD_NAME,omitempty"`
+	K8sPodInfraContainer types.UnmarshallableString `json:"K8S_POD_INFRA_CONTAINER_ID,omitempty"`
 }
 
-// CniServer is an instance of CNI http server
-type CniServer struct {
-	listenURL  string               // URL where this server is listening
-	listener   net.Listener         // listener socket
-	kubeclient *KubeClient          // k8s api server client
-	agent      netagent.NetAgentAPI // network agent
+// Server is an instance of CNI http server
+type Server struct {
+	listenURL  string              // URL where this server is listening
+	listener   net.Listener        // listener socket
+	kubeclient *KubeClient         // k8s api server client
+	agent      netagent.PluginIntf // network agent
 }
 
 // Catchall for additional driver functions.
@@ -51,6 +61,64 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 	content, _ := ioutil.ReadAll(r.Body)
 	log.Infof("Body content: %s", string(content))
 	w.WriteHeader(503)
+}
+
+// getKeyField is a helper function to receive Values
+// Values that represent a pointer to a struct
+func getKeyField(keyString string, t reflect.Type, v reflect.Value) reflect.Value {
+	for _, fieldName := range []string{"IgnoreUnknown", "K8sPodNamespace", "K8sPodName"} {
+		field, found := t.Elem().FieldByName(fieldName)
+		if found {
+			// get json annotation for the field
+			jsonTag := strings.Split(field.Tag.Get("json"), ",")[0]
+
+			// see if this is the field we are looking for
+			if jsonTag == keyString {
+				return v.Elem().FieldByName(fieldName)
+			}
+		}
+
+	}
+
+	return reflect.Value{}
+}
+
+// loadArgs parses args from a string in the form "K=V;K2=V2;..."
+func loadArgs(args string, container interface{}) error {
+	if args == "" {
+		return nil
+	}
+
+	containerValue := reflect.ValueOf(container)
+
+	pairs := strings.Split(args, ";")
+	unknownArgs := []string{}
+	for _, pair := range pairs {
+		kv := strings.Split(pair, "=")
+		if len(kv) != 2 {
+			return fmt.Errorf("ARGS: invalid pair %q", pair)
+		}
+		keyString := kv[0]
+		valueString := kv[1]
+		keyField := getKeyField(keyString, reflect.TypeOf(container), containerValue)
+		if !keyField.IsValid() {
+			unknownArgs = append(unknownArgs, pair)
+			continue
+		}
+
+		u := keyField.Addr().Interface().(encoding.TextUnmarshaler)
+		err := u.UnmarshalText([]byte(valueString))
+		if err != nil {
+			return fmt.Errorf("ARGS: error parsing value of pair %q: %v)", pair, err)
+		}
+	}
+
+	isIgnoreUnknown := getKeyField("IgnoreUnknown", reflect.TypeOf(container), containerValue).Bool()
+	if len(unknownArgs) > 0 && !isIgnoreUnknown {
+		return fmt.Errorf("ARGS: unknown args %q", unknownArgs)
+	}
+
+	return nil
 }
 
 // parsePodArgs parses pod args from http req body
@@ -65,20 +133,24 @@ func parsePodArgs(r *http.Request, args *cniapi.CmdArgs, netconf *types.NetConf,
 		return fmt.Errorf("failed to load netconf: %v", err)
 	}
 
+	log.Infof("parsing: %s", args.Args)
+
 	// parse pod args from args
-	if err := types.LoadArgs(args.Args, podArgs); err != nil {
+	if err := loadArgs(args.Args, podArgs); err != nil {
 		return fmt.Errorf("Failed to parse pod args: %v", err)
 	}
+
+	log.Infof("Parsed pod args: %+v", podArgs)
 
 	return nil
 }
 
 // NewCniServer starts the CNI http server and returns the instance
-func NewCniServer(listenURL string, nagent netagent.NetAgentAPI) (*CniServer, error) {
+func NewCniServer(listenURL string, nagent netagent.PluginIntf) (*Server, error) {
 	var err error
 
 	// Create an instance of CNI server
-	cniServer := CniServer{
+	cniServer := Server{
 		listenURL: listenURL,
 		agent:     nagent,
 	}
@@ -119,7 +191,7 @@ func NewCniServer(listenURL string, nagent netagent.NetAgentAPI) (*CniServer, er
 }
 
 // AddPod handles an add Pod call from cni plugin
-func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
+func (c *Server) AddPod(r *http.Request) (interface{}, error) {
 	// parse request args and net conf
 	args := cniapi.CmdArgs{}
 	netconf := types.NetConf{}
@@ -131,25 +203,36 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 	log.Infof("Got AddPod call. Args: {%+v}, NetConf: {%+v}, PodArgs: {%+v}", args, netconf, podArgs)
 
 	// read the Pod spec from api server
-	pod, err := c.kubeclient.GetPod(string(podArgs.K8S_POD_NAMESPACE), string(podArgs.K8S_POD_NAME))
+	pod, err := c.kubeclient.GetPod(string(podArgs.K8sPodNamespace), string(podArgs.K8sPodName))
 	if err != nil {
-		log.Errorf("Failed to read pod info from pod name %s/%s. Err: %v", podArgs.K8S_POD_NAMESPACE, podArgs.K8S_POD_NAME, err)
+		log.Errorf("Failed to read pod info from pod name %s/%s. Err: %v", podArgs.K8sPodNamespace, podArgs.K8sPodName, err)
 		return nil, err
 	}
 
 	log.Infof("Got Pod info: %+v", pod)
 
 	// build endpoint info
-	epinfo := netagent.EndpointInfo{
-		EndpointUUID:  args.ContainerID,
-		ContainerUUID: args.ContainerID,
-		ContainerName: string(podArgs.K8S_POD_NAME),
-		NetworkName:   "default",
-		TenantName:    string(podArgs.K8S_POD_NAMESPACE),
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      args.ContainerID,
+			Namespace: string(podArgs.K8sPodNamespace),
+			Tenant:    "default", // FIXME: where should we get the tenant from?
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: args.ContainerID,
+			WorkloadUUID: args.ContainerID,
+			WorkloadName: string(podArgs.K8sPodName),
+			NetworkName:  "default", // FIXME: get the network name from somewhere
+		},
+		Status: netproto.EndpointStatus{
+			HomingHostAddr: "", // FIXME: get my host name/addr
+			HomingHostName: "",
+		},
 	}
 
 	// Ask network agent to create an endpoint
-	ep, intfInfo, err := c.agent.CreateEndpoint(&epinfo)
+	ep, intfInfo, err := c.agent.EndpointCreateReq(&epinfo)
 	if err != nil {
 		log.Errorf("Error creating the endpoint: {%+v}. Err: %v", epinfo, err)
 		return nil, err
@@ -165,9 +248,10 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 	}
 
 	// create ipv4 address and netmask
+	ipAddr, ipNet, _ := net.ParseCIDR(ep.Status.IPv4Address)
 	ipv4AddrMask := net.IPNet{
-		IP:   ep.IPv4Address,
-		Mask: ep.IPv4Netmask,
+		IP:   ipAddr,
+		Mask: ipNet.Mask,
 	}
 
 	// configure the interface in new namespace
@@ -181,10 +265,10 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 	result := types.Result{
 		IP4: &types.IPConfig{
 			IP: net.IPNet{
-				IP:   ep.IPv4Address,
-				Mask: ep.IPv4Netmask,
+				IP:   ipAddr,
+				Mask: ipNet.Mask,
 			},
-			Gateway: ep.IPv4Gateway,
+			Gateway: net.ParseIP(ep.Status.IPv4Gateway),
 		},
 	}
 
@@ -192,7 +276,7 @@ func (c *CniServer) AddPod(r *http.Request) (interface{}, error) {
 }
 
 // DelPod handles the delete pod call from cni plugin
-func (c *CniServer) DelPod(r *http.Request) (interface{}, error) {
+func (c *Server) DelPod(r *http.Request) (interface{}, error) {
 	// parse request args and net conf
 	args := cniapi.CmdArgs{}
 	netconf := types.NetConf{}
@@ -204,18 +288,29 @@ func (c *CniServer) DelPod(r *http.Request) (interface{}, error) {
 	log.Infof("Got DelPod call. Args: {%+v}, NetConf: {%+v}", args, netconf)
 
 	// build endpoint info
-	epinfo := netagent.EndpointInfo{
-		EndpointUUID:  args.ContainerID,
-		ContainerUUID: args.ContainerID,
-		ContainerName: string(podArgs.K8S_POD_NAME),
-		NetworkName:   "default",
-		TenantName:    string(podArgs.K8S_POD_NAMESPACE),
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      args.ContainerID,
+			Namespace: string(podArgs.K8sPodNamespace),
+			Tenant:    "default", // FIXME: get tenant name?
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: args.ContainerID,
+			WorkloadUUID: args.ContainerID,
+			WorkloadName: string(podArgs.K8sPodName),
+			NetworkName:  "default", // FIXME: get the network name from somewhere
+		},
+		Status: netproto.EndpointStatus{
+			HomingHostAddr: "", // FIXME: get my host name/addr
+			HomingHostName: "",
+		},
 	}
 
 	// Ask network agent to create and endpoint
-	err := c.agent.DeleteEndpoint(&epinfo)
-	if err != nil {
-		log.Errorf("Error creating the endpoint: {%+v}. Err: %v", epinfo, err)
+	err := c.agent.EndpointDeleteReq(&epinfo)
+	if err != nil && !strings.Contains(err.Error(), statemgr.ErrorCoundNotFindEndpoint.Error()) {
+		log.Errorf("Error deleting the endpoint: {%+v}. Err: %v", epinfo, err)
 		return nil, err
 	}
 

@@ -1,0 +1,64 @@
+// network object
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// security rule
+message SecurityRule {
+    string  Direction = 1;  // direction incoming/outgoing
+    string  PeerGroup = 2;  // From/To security group
+    message Service {
+        string protocol = 1;   // IP prootocol (tcp/udp/icmp)
+        uint32 port     = 2;   // port number
+    }
+    // services (port & protocol)
+    repeated Service Services = 3[(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
+    string  Action            = 4;  // action allow/deny/reject
+    bool    Log               = 5;  // logging enabled/disabled
+}
+
+// security group spec
+message SecurityGroupSpec {
+    string SecurityProfile      = 1;  // security profile name
+    // security rules
+    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];  
+}
+
+// security group status
+message SecurityGroupStatus {
+    uint32 SecurityGroupID = 1; // security group id
+}
+
+// security group object
+message SecurityGroup {
+    api.TypeMeta   TypeMeta     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    SecurityGroupSpec    Spec   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    SecurityGroupStatus  Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of security groups
+message SecurityGroupList {
+    repeated SecurityGroup SecurityGroups = 1;
+}
+
+// security group watch event
+message SecurityGroupEvent {
+    api.EventType EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    SecurityGroup SecurityGroup   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-group,omitempty"];
+}
+
+// security group rpc service
+service SecurityApi {
+    rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};
+    rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
+    rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};
+}

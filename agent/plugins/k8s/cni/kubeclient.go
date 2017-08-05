@@ -13,7 +13,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 )
 
-// location of kubelet config file.
+// KubeletConfPath is the location of kubelet config file.
 // We use kubelet config to get Auth certificates to talk to API server
 const KubeletConfPath = "/etc/kubernetes/kubelet.conf"
 

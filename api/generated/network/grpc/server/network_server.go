@@ -519,19 +519,7 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"network.EndpointList":              apisrvpkg.NewMessage("network.EndpointList"),
-		"network.AutoMsgNetworkWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
-		"network.AutoMsgNetworkListHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgNetworkListHelper{}
-			r := network.Network{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"network.EndpointList":                    apisrvpkg.NewMessage("network.EndpointList"),
 		"network.AutoMsgSecurityGroupWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupWatchHelper"),
 		"network.AutoMsgSecurityGroupListHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -597,6 +585,18 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 
 			into := network.AutoMsgTenantListHelper{}
 			r := network.Tenant{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgNetworkWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
+		"network.AutoMsgNetworkListHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgNetworkListHelper{}
+			r := network.Network{}
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

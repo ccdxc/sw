@@ -34,6 +34,11 @@ $GOPATH/bin/example -client -url localhost:9000
 
 We can use https://github.com/golang/mock tool for mocking grpc client/server interfaces.
 
+0. Install gomock tools
+```
+go get github.com/golang/mock/gomock
+go get github.com/golang/mock/mockgen
+```
 
 1. Generate mock grpc interface from protobuf definitions
 

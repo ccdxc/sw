@@ -15,6 +15,8 @@ import (
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/pensando/sw/agent/netagent"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	. "github.com/pensando/sw/utils/testutils"
 	"github.com/prometheus/common/log"
 )
@@ -74,23 +76,26 @@ func httpCall(callURL string, args, result interface{}) error {
 type DummyAgent struct {
 }
 
-func (d *DummyAgent) CreateEndpoint(epinfo *netagent.EndpointInfo) (*netagent.EndpointState, *netagent.IntfInfo, error) {
+func (d *DummyAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *netagent.IntfInfo, error) {
 	// fail the operation if we are supposed to
-	if epinfo.EndpointUUID == "fail" {
+	if epinfo.Spec.EndpointUUID == "fail" {
 		return nil, nil, fmt.Errorf("Endpoint create failure")
 	}
 
 	// create dummy endpoint
-	ep := netagent.EndpointState{
-		EndpointInfo: *epinfo,
-		IPv4Address:  net.ParseIP("10.1.1.1"),
-		IPv4Netmask:  net.IPv4Mask(255, 255, 255, 0),
-		IPv4Gateway:  net.ParseIP("10.1.1.254"),
+	ep := netproto.Endpoint{
+		TypeMeta:   api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: epinfo.ObjectMeta,
+		Spec:       epinfo.Spec,
+		Status: netproto.EndpointStatus{
+			IPv4Address: "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.254",
+		},
 	}
 
 	// container and switch interface names
-	cintf := fmt.Sprintf("cvport-%s", ep.EndpointInfo.EndpointUUID[:8])
-	sintf := fmt.Sprintf("svport-%s", ep.EndpointInfo.EndpointUUID[:8])
+	cintf := fmt.Sprintf("cvport-%s", epinfo.Spec.EndpointUUID[:8])
+	sintf := fmt.Sprintf("svport-%s", epinfo.Spec.EndpointUUID[:8])
 
 	// create an interface info
 	intfInfo := netagent.IntfInfo{
@@ -101,9 +106,9 @@ func (d *DummyAgent) CreateEndpoint(epinfo *netagent.EndpointInfo) (*netagent.En
 	return &ep, &intfInfo, nil
 }
 
-func (d *DummyAgent) DeleteEndpoint(epinfo *netagent.EndpointInfo) error {
+func (d *DummyAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 	// fail the operation if we are supposed to
-	if epinfo.EndpointUUID == "fail" {
+	if epinfo.Spec.EndpointUUID == "fail" {
 		return fmt.Errorf("Endpoint delete failure")
 	}
 
@@ -196,7 +201,6 @@ func TestCNIServerErrors(t *testing.T) {
 	Assert(t, (err != nil), "Invalid pod argument accepted")
 
 	// build bad pod args
-	stdinBytes, _ = json.Marshal(types.NetConf{Name: "pensando", Type: "pensando-net"})
 	addPodArgs = skel.CmdArgs{
 		ContainerID: "testContainerID",
 		Netns:       "/proc/self/ns/net",

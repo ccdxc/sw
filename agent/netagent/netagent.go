@@ -2,44 +2,59 @@
 
 package netagent
 
-import "net"
+import (
+	"fmt"
+	"sync"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/google/uuid"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+)
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	datapath NetDatapathAPI // network datapath
+	sync.Mutex                                          // global lock for the agent
+	NodeUUID         uuid.UUID                          // Node's UUID
+	datapath         NetDatapathAPI                     // network datapath
+	ctrlerif         CtrlerAPI                          // controller object
+	networkDB        map[string]*netproto.Network       // Network object db
+	endpointDB       map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB       map[string]*netproto.SecurityGroup // security group object db
+	currentNetworkID uint32                             // poor man's id allocation FIXME:
+	currentSgID      uint32                             // poor man's id allocation FIXME:
 }
 
 // NewNetAgent returns a new network agent
 func NewNetAgent(dp NetDatapathAPI) (*NetAgent, error) {
+	// create netagent object
 	agent := NetAgent{
-		datapath: dp,
+		NodeUUID:         uuid.New(),
+		datapath:         dp,
+		networkDB:        make(map[string]*netproto.Network),
+		endpointDB:       make(map[string]*netproto.Endpoint),
+		secgroupDB:       make(map[string]*netproto.SecurityGroup),
+		currentNetworkID: 1,
+		currentSgID:      1,
 	}
 
 	return &agent, nil
 }
 
-// CreateEndpoint creates an endpoint
-func (ag *NetAgent) CreateEndpoint(epinfo *EndpointInfo) (*EndpointState, *IntfInfo, error) {
-	// FIXME: create fake endpoint state
-	ep := EndpointState{
-		EndpointInfo: *epinfo,
-		IPv4Address:  net.ParseIP("10.1.1.1"),
-		IPv4Netmask:  net.IPv4Mask(255, 255, 255, 0),
-		IPv4Gateway:  net.ParseIP("10.1.1.254"),
+// RegisterCtrlerIf registers a controller object
+func (ag *NetAgent) RegisterCtrlerIf(ctrlerif CtrlerAPI) error {
+	// ensure two controller plugins dont register
+	if ag.ctrlerif != nil {
+		log.Fatalf("Multiple controllers registers to netagent.")
 	}
 
-	// call the datapath
-	intfInfo, err := ag.datapath.CreateEndpoint(&ep)
-	return &ep, intfInfo, err
+	// add it to controller list
+	ag.ctrlerif = ctrlerif
+
+	return nil
 }
 
-// DeleteEndpoint deletes an endpoint
-func (ag *NetAgent) DeleteEndpoint(epinfo *EndpointInfo) error {
-	// FIXME: create fake endpoint state
-	ep := EndpointState{
-		EndpointInfo: *epinfo,
-	}
-
-	// call the datapath
-	return ag.datapath.DeleteEndpoint(&ep)
+// objectKey returns object key from object meta
+func objectKey(meta api.ObjectMeta) string {
+	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
 }

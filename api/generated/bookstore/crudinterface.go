@@ -15,17 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// OrderInterface exposes the CRUD methods for Order
-type OrderInterface interface {
-	Create(ctx context.Context, in *Order) (*Order, error)
-	Update(ctx context.Context, in *Order) (*Order, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Order, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // BookInterface exposes the CRUD methods for Book
 type BookInterface interface {
 	Create(ctx context.Context, in *Book) (*Book, error)
@@ -44,6 +33,17 @@ type PublisherInterface interface {
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Publisher, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Publisher, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Publisher, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// OrderInterface exposes the CRUD methods for Order
+type OrderInterface interface {
+	Create(ctx context.Context, in *Order) (*Order, error)
+	Update(ctx context.Context, in *Order) (*Order, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Order, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }

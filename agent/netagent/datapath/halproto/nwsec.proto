@@ -1,0 +1,238 @@
+//------------------------------------------------------------------------------
+// protobuf specification for network security objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types/types.proto";
+
+package halproto;
+
+service NwSecurity {
+    rpc SecurityProfileCreate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
+    rpc SecurityProfileUpdate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
+    rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
+    rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
+
+    rpc SecurityGroupCreate (SecurityGroupMsg) returns (SecurityGroupResponseMsg) {}
+    rpc SecurityGroupUpdate (SecurityGroupMsg) returns (SecurityGroupResponseMsg) {}
+    rpc SecurityGroupDelete (SecurityGroupMsg) returns (SecurityGroupResponseMsg) {}
+
+    rpc SecurityPolicyRuleCreate (SecurityPolicyRuleMsg) returns (SecurityPolicyRuleResponseMsg) {}
+    rpc SecurityPolicyRuleUpdate (SecurityPolicyRuleMsg) returns (SecurityPolicyRuleResponseMsg) {}
+    rpc SecurityPolicyRuleDelete (SecurityPolicyRuleMsg) returns (SecurityPolicyRuleResponseMsg) {}
+}
+
+// normalization feature actions upon detecting malformed packets
+enum NormalizationAction {
+  NORM_ACTION_NONE    = 0;
+  NORM_ACTION_ALLOW   = 1;    // allow the packet as is
+  NORM_ACTION_DROP    = 2;    // drop the packet
+  NORM_ACTION_EDIT    = 3;    // reset/trim/fix invalid fields/flags
+}
+
+// SecurityProfileKeyHandle is used to operate on a security profile
+// either by its id or HAL allocated handle
+message SecurityProfileKeyHandle {
+  oneof key_or_handle {
+    uint32     profile_id     = 1;     // App allocated unique security profile id
+    fixed64    profile_handle = 2;     // id of the SecurityProfile returned by HAL
+  }
+}
+
+// SecurityProfileSpec object captures feature knobs that are most likely
+// shareable across L2 segments, tenants, or even interfaces and most of the
+// time operates on defaults. It is possible that there is only object of this
+// kind in the system.
+// NOTE: user is not expected to fill in all the fields explicitly, that job is
+//       done by the agent. Agent will be exposing user visible knobs and fill
+//       in the defaults when interacting with HAL.
+message SecurityProfileSpec {
+  types.ObjectMeta             meta                            = 1;    // common object meta
+  SecurityProfileKeyHandle     key_or_handle                   = 2;
+  bool                         cnxn_tracking_en                = 3;
+  uint32                       session_idle_timeout            = 4;
+  uint32                       tcp_cnxn_setup_timeout          = 5;
+  uint32                       tcp_close_timeout               = 6;
+  uint32                       tcp_close_wait_timeout          = 7;
+
+  bool                         ip_normalization_en             = 8;
+  bool                         tcp_normalization_en            = 9;
+  bool                         icmp_normalization_en           = 10;
+
+  // IP normalization knobs
+  bool                         ip_small_frag_drop              = 11;
+  NormalizationAction          ip_rsvd_flags_action            = 12;
+  NormalizationAction          ip_df_action                    = 13;
+  NormalizationAction          ip_options_action               = 14;
+  NormalizationAction          ip_invalid_len_action           = 15;
+
+  // ICMP/ICMPv6 normalization knobs
+  NormalizationAction          icmp_src_quench_msg_action      = 16;
+  NormalizationAction          icmp_redirect_msg_action        = 17;
+  NormalizationAction          icmp_info_req_msg_action        = 18;
+  NormalizationAction          icmp_addr_req_msg_action        = 19;
+  NormalizationAction          icmp_traceroute_msg_action      = 20;
+  NormalizationAction          icmp_rsvd_type_msg_action       = 21;
+  NormalizationAction          icmp_bad_request_action         = 22;
+  NormalizationAction          icmp_request_response_action    = 23;
+  NormalizationAction          icmp_redirect_action            = 24;
+  NormalizationAction          icmp_code_non_zero_action       = 25;
+  NormalizationAction          ipv4_ping_of_death_drop_action  = 26;
+
+  // TCP normalization knobs
+  bool                         tcp_non_syn_first_pkt_drop      = 27;
+  bool                         tcp_syncookie_en                = 28;
+  bool                         tcp_split_handshake_detect_en   = 29;
+  bool                         tcp_split_handshake_drop        = 30;
+  NormalizationAction          tcp_rsvd_flags_action           = 31;
+  NormalizationAction          tcp_unexpected_mss_action       = 32;
+  NormalizationAction          tcp_unexpected_win_scale_action = 33;
+  NormalizationAction          tcp_urg_ptr_not_set_action      = 34;
+  NormalizationAction          tcp_urg_flag_not_set_action     = 35;
+  NormalizationAction          tcp_urg_payload_missing_action  = 36;
+  NormalizationAction          tcp_rst_with_data_action        = 37;
+  NormalizationAction          tcp_data_len_gt_mss_action      = 38;
+  NormalizationAction          tcp_data_len_gt_win_size_action = 39;
+  NormalizationAction          tcp_unexpected_ts_option_action = 40;
+  NormalizationAction          tcp_ts_not_present_action       = 41;
+  NormalizationAction          tcp_invalid_flags_action        = 42;
+  NormalizationAction          tcp_ack_flag_not_present_action = 43;
+}
+
+// SecurityProfileRequestMsg is batched add or modify profile request
+message SecurityProfileRequestMsg {
+  repeated SecurityProfileSpec    request = 1;    // batched request
+}
+
+// SecurityProfile operational status
+message SecurityProfileStatus {
+  fixed64    profile_handle = 1;    // id of the security profile returned by HAL
+}
+
+// SecurityProfileResponse is response to SecurityProfileSpec
+message SecurityProfileResponse {
+  types.ApiStatus          api_status     = 1;    // API status code
+  SecurityProfileStatus    profile_status = 2;    // SecurityProfile profile operational status
+}
+
+// SecurityProfileResponseMsg is batched response to SecurityProfileRequestMsg
+message SecurityProfileResponseMsg {
+  repeated SecurityProfileResponse    response = 1;    // batched response
+}
+
+// SecurityProfileDeleteRequest is used to delete a SecurityProfile profile
+message SecurityProfileDeleteRequest {
+  types.ObjectMeta            meta          = 1;    // object meta
+  SecurityProfileKeyHandle    key_or_handle = 2;    // SecurityProfile profile being deleted
+}
+
+// SecurityProfileDeleteRequestMsg is used to delete a batch of SecurityProfile profiles
+message SecurityProfileDeleteRequestMsg {
+  repeated SecurityProfileDeleteRequest request = 1;    // batched delete request
+}
+
+// SecurityProfileDeleteResponseMsg is batched response to SecurityProfileDeleteRequestMsg
+message SecurityProfileDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// SecurityProfileGetRequest is used to get information about a L2 Segment
+message SecurityProfileGetRequest {
+  types.ObjectMeta            meta          = 1;    // object meta
+  SecurityProfileKeyHandle    key_or_handle = 2;    // SecurityProfile profile key or handle
+}
+
+// SecurityProfileGetRequestMsg is batched GET request for SecurityProfile profiles
+message SecurityProfileGetRequestMsg {
+  repeated SecurityProfileGetRequest    request = 1;    // batched get request
+}
+
+// SecurityProfileStats is the statistics object for each SecurityProfile profile
+message SecurityProfileStats {
+}
+
+// SecurityProfileGetResponse captures all the information about a SecurityProfile profile
+message SecurityProfileGetResponse {
+  SecurityProfileSpec      spec   = 1;
+  SecurityProfileStatus    status = 2;
+  SecurityProfileStats     stats  = 3;
+}
+
+// SecurityProfileGetResponseMsg is the batched response to SecurityProfileGetRequestMsg
+message SecurityProfileGetResponseMsg {
+  repeated SecurityProfileGetResponse    response = 1;    // batched get response
+}
+
+// SecurityGroupSpec captures the configuration parameters for a security group
+message SecurityGroupSpec {
+  types.ObjectMeta    meta     = 1;    // common object meta
+  fixed32             sg_id    = 2;    // security group id
+}
+
+// SecurityGroupMsg is batched add or modify security group request
+message SecurityGroupMsg {
+  repeated SecurityGroupSpec    request = 1;    // batched request
+}
+
+// security group operational status
+message SecurityGroupStatus {
+  fixed64    sg_handle = 1;    // id of the security group returned by HAL
+}
+
+// SecurityGroupResponse is the response to SecurityGroupSpec
+message SecurityGroupResponse {
+  types.ApiStatus        api_status  = 1;    // API status code
+  SecurityGroupStatus    status      = 2;    // operational status
+}
+
+// SecurityGroupResponseMsg is batched response to SecurityGroupMsg
+message SecurityGroupResponseMsg {
+  repeated SecurityGroupResponse    response = 1;    // batched response
+}
+
+// Service represents an application service defined in terms of protocol and port
+message Service {
+   types.IPProtocol    ip_protocol = 1;    // IP protocol
+   uint32              port        = 2;    // TCP or UDP port, 0 for other protocols
+}
+
+// security policy actions
+enum Action {
+ SECURITY_POLICY_ACTION_NONE   = 0;
+ SECURITY_POLICY_ACTION_ALLOW  = 1;
+ SECURITY_POLICY_ACTION_DENY   = 2;
+ SECURITY_POLICY_ACTION_REJECT = 3;
+}
+
+// SecurityPolicyRule defines a rule between a pair of security groups
+// A rule can contain multiple services to match against
+message SecurityPolicyRuleSpec {
+    types.ObjectMeta    meta         = 1;    // object meta
+    fixed32             src_sg_id    = 2;    // source security group id
+    fixed32             dst_sg_id    = 3;    // destination security group id
+    repeated Service    svc          = 4;    // application service
+    Action              action       = 5;    // action to take
+    bool                rule_log_en  = 6;    // log if this rule is hit
+}
+
+// SecurityPolicyRuleMsg is batched add or modify security policy request
+message SecurityPolicyRuleMsg {
+  repeated SecurityPolicyRuleSpec    request = 1;    // batched request
+}
+
+// SecurityPolicyRuleStatus is the operational state of a rule
+message SecurityPolicyRuleStatus {
+  fixed64    rule_handle = 1;    // id of policy rule returned by HAL
+}
+
+// SecurityPolicyRuleResponse is the response to SecurityPolicyRuleSpec
+message SecurityPolicyRuleResponse {
+  types.ApiStatus             api_status  = 1;    // API status code
+  SecurityPolicyRuleStatus    status      = 2;    // operational status
+}
+
+// SecurityPolicyRuleResponseMsg is batched response to SecurityPolicyRuleMsg
+message SecurityPolicyRuleResponseMsg {
+  repeated SecurityPolicyRuleResponse    response = 1;    // batched response
+}

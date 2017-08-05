@@ -1183,6 +1183,18 @@
 			"revision": "c12348ce28de40eed0136aa2b644d0ee0650e56c"
 		},
 		{
+			"checksumSHA1": "QM7yS13e6/uJGM/+dNYvnzVmAlg=",
+			"path": "github.com/mdlayher/ethernet",
+			"revision": "e72cf8343052938936194daba1914fd1bb33d2fe",
+			"revisionTime": "2017-07-07T21:33:43Z"
+		},
+		{
+			"checksumSHA1": "SuNHX5CVtsOz0lmx2S893ya1c3k=",
+			"path": "github.com/mdlayher/raw",
+			"revision": "477f685db8a98f311907a6f91c6c7803f5213a3c",
+			"revisionTime": "2017-07-24T15:43:06Z"
+		},
+		{
 			"path": "github.com/miekg/dns",
 			"revision": "ca336a1f95a6b89be9c250df26c7a41742eb4a6f"
 		},
@@ -1923,6 +1935,12 @@
 			"comment": "v1.0.4-59-gb13ef79",
 			"path": "google.golang.org/grpc/transport",
 			"revision": "b13ef794997191ec801db90a42c50034df91850a"
+		},
+		{
+			"checksumSHA1": "CEFTYXtWmgSh+3Ik1NmDaJcz4E0=",
+			"path": "gopkg.in/check.v1",
+			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
+			"revisionTime": "2016-12-08T18:13:25Z"
 		},
 		{
 			"checksumSHA1": "7E+wlsgFE3g4oZj0e3y7YPCjfbs=",

@@ -1,0 +1,55 @@
+// network object
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// network spec
+message NetworkSpec {
+    string IPv4Subnet  = 1;   // IPv4 subnet CIDR
+    string IPv4Gateway = 2;   // IPv4 gateway
+    string IPv6Subnet  = 3;   // IPv6 subnet CIDR
+    string IPv6Gateway = 4;   // IPv6 gateway
+    uint32 VlanID      = 5;   // VLAN ID
+    uint32 VxlanVNI    = 6;   // Vxlan VNI
+}
+
+// network status
+message NetworkStatus {
+    uint32 AllocatedVlanID   = 1;  // allocated Vlan ID
+    uint32 AllocatedVxlanVNI = 2;  // Allocated VXLAN VNI
+    uint32 NetworkID         = 3;  // Network identifier
+    uint64 NetworkHandle     = 4;  // datapath handle for the network
+}
+
+// network object
+message Network {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    NetworkSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    NetworkStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// list of networks
+message NetworkList {
+    repeated Network networks = 1;
+}
+
+// network watch event
+message NetworkEvent {
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Network       Network   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "network,omitempty"];
+}
+
+// network controller api
+service NetworkApi {
+	rpc GetNetwork (api.ObjectMeta) returns (Network) {};
+    rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
+    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEvent) {};
+}

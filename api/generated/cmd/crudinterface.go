@@ -15,17 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// ClusterInterface exposes the CRUD methods for Cluster
-type ClusterInterface interface {
-	Create(ctx context.Context, in *Cluster) (*Cluster, error)
-	Update(ctx context.Context, in *Cluster) (*Cluster, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Cluster, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // NodeInterface exposes the CRUD methods for Node
 type NodeInterface interface {
 	Create(ctx context.Context, in *Node) (*Node, error)
@@ -33,6 +22,17 @@ type NodeInterface interface {
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Node, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// ClusterInterface exposes the CRUD methods for Cluster
+type ClusterInterface interface {
+	Create(ctx context.Context, in *Cluster) (*Cluster, error)
+	Update(ctx context.Context, in *Cluster) (*Cluster, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Cluster, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }
