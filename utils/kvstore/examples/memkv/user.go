@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 )
 

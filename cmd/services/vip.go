@@ -3,9 +3,9 @@ package services
 import (
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/utils/log"
 )
 
 // vipService provides ip configuration utilities on ethernet interfaces.

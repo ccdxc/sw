@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"

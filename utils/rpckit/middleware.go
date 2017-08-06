@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

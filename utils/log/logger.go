@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
+	"sync"
 	"syscall"
 )
 
@@ -134,7 +135,16 @@ type kitLogger struct {
 	config Config
 }
 
-var caller = kitlog.Caller(4)
+// Context is pairs of strings used for adding
+// context data to log message
+type Context []string
+
+// stackDepth for displaying caller filename
+const (
+	stackDepth = 6
+)
+
+var caller = kitlog.Caller(stackDepth)
 
 // CtxKey is context key type
 type CtxKey int
@@ -146,9 +156,28 @@ const (
 	PensandoTxnID  CtxKey = 3
 )
 
+// singleton is singleton Instance
+var singleton *kitLogger
+var once sync.Once
+
+// getDefaultInstance returns the default logger instance
+func getDefaultInstance() *kitLogger {
+	once.Do(func() {
+		createSingleton()
+	})
+	return singleton
+}
+
+// Create the default singleton logger
+func createSingleton() {
+	config := GetDefaultConfig("Default")
+	singleton = newLogger(config)
+}
+
 func stackTrace() kitlog.Valuer {
 	return func() interface{} {
-		v := stack.Trace().TrimRuntime().TrimBelow(stack.Caller(4))
+		v := stack.Trace().TrimRuntime().TrimBelow(stack.Caller(stackDepth))
+
 		var r = "["
 		var fmtstr = "[%s:%d %n()]"
 		for _, c := range v {
@@ -172,8 +201,16 @@ func GetDefaultConfig(module string) *Config {
 	}
 }
 
-// GetNewLogger returns a new logger instance
+// GetNewLogger returns a new Logger object
+// This should be called by application that don't
+// want to use the default singleton logger.
 func GetNewLogger(config *Config) Logger {
+	return newLogger(config)
+}
+
+// newLogger is a internal utility function that
+// allocates a new logger object
+func newLogger(config *Config) *kitLogger {
 
 	// Init stdout io writer if enabled
 	var stdoutWr io.Writer
@@ -215,7 +252,7 @@ func GetNewLogger(config *Config) Logger {
 		l = kitlog.NewLogfmtLogger(wr)
 	}
 
-	// Add context data: Timestamp, Module, Pid
+	// Add context data: Timestamp, Module, Pid, Caller
 	if config.Context == true {
 		l = kitlog.With(l,
 			"ts", kitlog.DefaultTimestampUTC,
@@ -255,14 +292,19 @@ func (l *kitLogger) WithContext(pairs ...string) Logger {
 func (l *kitLogger) SetOutput(w io.Writer) Logger {
 	wr := kitlog.NewSyncWriter(w)
 	l.logger = kitlog.NewLogfmtLogger(wr)
+
 	if l.config.Debug {
 		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", stackTrace())
 	}
+
+	// Configure levelled logging
+	l.logger = kitlevel.NewFilter(l.logger, getFilterOption(l.config.Filter))
 	return l
 }
 
 // getFilterOption returns the filter function based on filter type.
 // The filter function returned is used internally by kit logger to
+// implement filtering of log levels.
 // implement filtering of log levels.
 func getFilterOption(filter FilterType) kitlevel.Option {
 
@@ -418,4 +460,146 @@ func SetTraceDebug() {
 			fmt.Printf("=== received SIGQUIT ===\n*** goroutine dump *** \n%s\n*** end\n", buf[:stacklen])
 		}
 	}()
+}
+
+// The following logger APIs uses the underlying
+// default singleton logger instance
+
+// WithContext uses default logger with added context pairs
+func WithContext(pairs ...string) Logger {
+	return getDefaultInstance().WithContext(pairs...)
+}
+
+// SetConfig overrides the default logger with the
+// new logger allocated for the config passed
+func SetConfig(config *Config) Logger {
+	once.Do(func() {
+		createSingleton()
+	})
+	singleton = newLogger(config)
+	return singleton
+}
+
+// SetFilter configures the log filter for the default logger
+func SetFilter(filter FilterType) Logger {
+	singleton.logger = kitlevel.NewFilter(singleton.logger, getFilterOption(filter))
+	return singleton
+}
+
+// Fatal logs error messages with panic for non-recoverable cases
+func Fatal(args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+	panic(fmt.Sprint(args...))
+}
+
+// Fatalf logs error messages with panic for non-recoverable cases
+func Fatalf(format string, args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+	panic(fmt.Sprintf(format, args...))
+}
+
+// Fatalln logs error messages with panic for non-recoverable cases
+func Fatalln(args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+	panic(fmt.Sprint(args...))
+}
+
+// Error logs error messages
+func Error(args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Errorf logs error messages
+func Errorf(format string, args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+// ErrorLog logs error messages
+func ErrorLog(keyvals ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log(keyvals...)
+}
+
+// Errorln logs error messages
+func Errorln(args ...interface{}) {
+	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Warn logs warning messages
+func Warn(args ...interface{}) {
+	kitlevel.Warn(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Warnf logs warning messages
+func Warnf(format string, args ...interface{}) {
+	kitlevel.Warn(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+// WarnLog logs warning messages
+func WarnLog(keyvals ...interface{}) {
+	kitlevel.Warn(getDefaultInstance().logger).Log(keyvals...)
+}
+
+// WarnLn logs warning messages
+func WarnLn(args ...interface{}) {
+	kitlevel.Warn(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Info logs informational messages
+func Info(args ...interface{}) {
+	kitlevel.Info(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Infof logs informational messages
+func Infof(format string, args ...interface{}) {
+	kitlevel.Info(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+// InfoLog logs informational messages
+func InfoLog(keyvals ...interface{}) {
+	kitlevel.Info(getDefaultInstance().logger).Log(keyvals...)
+}
+
+// Infoln logs informational messages
+func Infoln(args ...interface{}) {
+	kitlevel.Info(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Print logs debug messages
+func Print(args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Printf logs debug messages
+func Printf(format string, args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+// Println logs debug messages
+func Println(args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Debug logs debug messages
+func Debug(args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Debugf logs debug messages
+func Debugf(format string, args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprintf(format, args...))
+}
+
+// DebugLog logs debug messages
+func DebugLog(keyvals ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log(keyvals...)
+}
+
+// Debugln logs debug messages
+func Debugln(args ...interface{}) {
+	kitlevel.Debug(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
+}
+
+// Log messages
+func Log(keyvals ...interface{}) error {
+	return getDefaultInstance().logger.Log(keyvals...)
 }

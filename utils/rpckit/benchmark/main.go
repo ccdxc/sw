@@ -9,7 +9,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/utils/rpckit"
@@ -150,8 +150,8 @@ func main() {
 
 	flag.Parse()
 
-	// supress info logs while running benchmark
-	log.SetLevel(log.WarnLevel)
+	// suppress info logs while running benchmark
+	log.SetFilter(log.AllowWarnFilter)
 
 	// set the number of CPUs to use
 	runtime.GOMAXPROCS(cpus)

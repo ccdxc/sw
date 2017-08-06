@@ -1,9 +1,8 @@
 package configs
 
 import (
+	"github.com/pensando/sw/utils/log"
 	"os"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 func removeFiles(files []string) {

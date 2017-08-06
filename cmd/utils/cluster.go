@@ -6,9 +6,8 @@ import (
 	"os"
 	"path"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/cmd/env"
+	"github.com/pensando/sw/utils/log"
 )
 
 // Cluster defines the information stored to disk on a node that belongs to a

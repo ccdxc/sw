@@ -9,11 +9,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/perf/api"
 	"github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 )
 

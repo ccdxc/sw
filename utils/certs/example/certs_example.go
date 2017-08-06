@@ -5,8 +5,8 @@ import (
 	"crypto/rsa"
 	"flag"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/utils/certs"
+	"github.com/pensando/sw/utils/log"
 )
 
 var (

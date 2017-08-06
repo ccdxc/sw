@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
+	"github.com/pensando/sw/utils/log"
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/utils/errors"

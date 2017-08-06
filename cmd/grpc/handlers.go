@@ -8,13 +8,12 @@ import (
 
 	context "golang.org/x/net/context"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/services"
 	"github.com/pensando/sw/cmd/utils"
 	"github.com/pensando/sw/utils/kvstore"
 	kstore "github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/quorum"
 	"github.com/pensando/sw/utils/quorum/store"
 	"github.com/pensando/sw/utils/rpckit"

@@ -12,8 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
-
-	"github.com/Sirupsen/logrus"
+	logger "github.com/pensando/sw/utils/log"
 )
 
 // trace export backend URL
@@ -95,7 +94,7 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role string, meth
 		err := t.tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, mdWriter)
 		if err != nil {
 			clientSpan.LogFields(log.String("event", "Tracer.Inject() failed"), log.Error(err))
-			logrus.Errorf("Tracer.Inject() failed. Err: %v", err)
+			logger.Errorf("Tracer.Inject() failed. Err: %v", err)
 		}
 
 		// log request event
@@ -116,7 +115,7 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role string, meth
 		// get parent span
 		spanContext, err := t.tracer.Extract(opentracing.HTTPHeaders, metadataReaderWriter{md})
 		if err != nil && err != opentracing.ErrSpanContextNotFound {
-			logrus.Errorf("Error getting span context")
+			logger.Errorf("Error getting span context")
 			return ctx
 		}
 
@@ -149,7 +148,7 @@ func (t *tracerMiddleware) RespInterceptor(ctx context.Context, role string, met
 	// get the tracer context
 	trCtx, ok := ctx.Value(tracerCtx{}).(*tracerCtx)
 	if !ok {
-		logrus.Errorf("Error getting tracer context.")
+		logger.Errorf("Error getting tracer context.")
 		return ctx
 	}
 
@@ -171,7 +170,7 @@ func newTracerMiddleware(srvName string) *tracerMiddleware {
 	// create collector.
 	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
 	if err != nil {
-		logrus.Errorf("unable to create Zipkin HTTP collector: %v", err)
+		logger.Errorf("unable to create Zipkin HTTP collector: %v", err)
 		return &tracerMiddleware{}
 	}
 
@@ -181,7 +180,7 @@ func newTracerMiddleware(srvName string) *tracerMiddleware {
 	// create tracer.
 	tracer, err := zipkin.NewTracer(recorder, zipkin.ClientServerSameSpan(false), zipkin.TraceID128Bit(true))
 	if err != nil {
-		logrus.Errorf("unable to create Zipkin tracer: %v", err)
+		logger.Errorf("unable to create Zipkin tracer: %v", err)
 		return &tracerMiddleware{}
 	}
 

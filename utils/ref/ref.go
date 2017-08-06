@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 )
 
 // FInfo represents a field within a nested struct/array

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/go-systemd/dbus"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pkg/errors"
 )
 

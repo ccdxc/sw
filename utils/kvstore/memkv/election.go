@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 const (
@@ -166,7 +166,7 @@ func (el *election) sendEvent(evType kvstore.ElectionEventType, leader string) {
 	}
 
 	if len(el.outCh) == outCount {
-		log.Warningf("Election(%v:%v): number of buffered events hit max count of %v", el.id, el.name, outCount)
+		log.Warnf("Election(%v:%v): number of buffered events hit max count of %v", el.id, el.name, outCount)
 	}
 
 	el.outCh <- e

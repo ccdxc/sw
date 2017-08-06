@@ -4,9 +4,8 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/systemd"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 // systemdService provides interface to start systemd units + watch + Notify on change

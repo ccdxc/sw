@@ -6,9 +6,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/resource/rproto"
 )
 
@@ -74,7 +74,7 @@ func (rm *RsrcMgr) AddProvider(provide *rproto.ResourceProvide) error {
 	_, ok = rlist.Providers[provide.ProviderID]
 	if ok {
 		// TODO: handle this gracefully
-		logrus.Errorf("Provider %s for type: %s already exists", provide.ProviderID, provide.Resource.ResourceType)
+		log.Errorf("Provider %s for type: %s already exists", provide.ProviderID, provide.Resource.ResourceType)
 		return errors.New("Provider Already exists")
 	}
 
@@ -94,7 +94,7 @@ func (rm *RsrcMgr) AddProvider(provide *rproto.ResourceProvide) error {
 		provider.Resource.Scalar.AvailableResource = provider.Resource.Scalar.TotalResource
 	case rproto.ResourceKind_Range:
 		if provider.Resource.Range.End < provider.Resource.Range.Begin {
-			logrus.Errorf("Invalid provider params. Begining higher than end: %+v", provide)
+			log.Errorf("Invalid provider params. Begining higher than end: %+v", provide)
 			return errors.New("Invalid provider params")
 		}
 
@@ -117,7 +117,7 @@ func (rm *RsrcMgr) DelProvider(provide *rproto.ResourceProvide) error {
 	// see if the resource list exists for this type
 	rlist, ok := rm.RsrcDB[provide.Resource.ResourceType]
 	if !ok {
-		logrus.Errorf("No providers for resource type %s", provide.Resource.ResourceType)
+		log.Errorf("No providers for resource type %s", provide.Resource.ResourceType)
 		return errors.New("No providers for resource type")
 	}
 
@@ -128,14 +128,14 @@ func (rm *RsrcMgr) DelProvider(provide *rproto.ResourceProvide) error {
 	// check if the provider exists
 	provider, ok := rlist.Providers[provide.ProviderID]
 	if !ok {
-		logrus.Errorf("Provider %s for type: %s does not exists", provide.ProviderID, provide.Resource.ResourceType)
+		log.Errorf("Provider %s for type: %s does not exists", provide.ProviderID, provide.Resource.ResourceType)
 		return errors.New("Provider does not exists")
 	}
 
 	// TODO: what should we do about existing consumers?
 	// verify consumer list is empty
 	if len(provider.Consumers) > 0 {
-		logrus.Errorf("Provider %s/%s still has consumers", provide.Resource.ResourceType, provide.ProviderID)
+		log.Errorf("Provider %s/%s still has consumers", provide.Resource.ResourceType, provide.ProviderID)
 		return errors.New("Provider still has consumers")
 	}
 
@@ -153,7 +153,7 @@ func (rm *RsrcMgr) RequestResource(req *rproto.ResourceRequest) (*rproto.Resourc
 	// find the resource list from type
 	rlist, ok := rm.RsrcDB[req.ResourceType]
 	if !ok {
-		logrus.Errorf("No providers for resource type %s", req.ResourceType)
+		log.Errorf("No providers for resource type %s", req.ResourceType)
 		return nil, errors.New("No providers for resource type")
 	}
 
@@ -164,11 +164,11 @@ func (rm *RsrcMgr) RequestResource(req *rproto.ResourceRequest) (*rproto.Resourc
 	// apply constraints and make a short list of providers
 	matchedProviders, err := rm.applyConstraints(rlist, req)
 	if err != nil {
-		logrus.Errorf("Error applying constraints from req{%+v}. Err: %v", req, err)
+		log.Errorf("Error applying constraints from req{%+v}. Err: %v", req, err)
 		return nil, err
 	}
 
-	logrus.Debugf("Providers %+v matched constraits for req: %+v", matchedProviders, req)
+	log.Debugf("Providers %+v matched constraits for req: %+v", matchedProviders, req)
 
 	// find the scheduling algorithm to run
 	schedFunc := rm.schedulers[req.Scheduler]
@@ -176,14 +176,14 @@ func (rm *RsrcMgr) RequestResource(req *rproto.ResourceRequest) (*rproto.Resourc
 	// run scheduling algorithm on matched providers
 	provider, err := schedFunc(req, matchedProviders)
 	if err != nil {
-		logrus.Errorf("Scheduler %s returned error: %v", req.Scheduler, err)
+		log.Errorf("Scheduler %s returned error: %v", req.Scheduler, err)
 		return nil, err
 	}
 
 	// consume resource from the provider(i.e, atomically allocate)
 	consumer, err := provider.consumeRsrc(req)
 	if err != nil {
-		logrus.Errorf("Failed to consume resource from provider: %s. Err: %v", provider.ProviderID, err)
+		log.Errorf("Failed to consume resource from provider: %s. Err: %v", provider.ProviderID, err)
 		return nil, err
 	}
 
@@ -201,7 +201,7 @@ func (rm *RsrcMgr) ReleaseResource(consumer *rproto.ResourceConsumer) error {
 	// find the resource list from type
 	rlist, ok := rm.RsrcDB[consumer.ResourceType]
 	if !ok {
-		logrus.Errorf("No providers for resource type %s", consumer.ResourceType)
+		log.Errorf("No providers for resource type %s", consumer.ResourceType)
 		return errors.New("No providers for resource type")
 	}
 
@@ -212,13 +212,13 @@ func (rm *RsrcMgr) ReleaseResource(consumer *rproto.ResourceConsumer) error {
 	// find the provider
 	provider, ok := rlist.Providers[consumer.ProviderID]
 	if !ok {
-		logrus.Errorf("Could not find the provider %s", consumer.ProviderID)
+		log.Errorf("Could not find the provider %s", consumer.ProviderID)
 		return errors.New("Could not find the provider")
 	}
 
 	// make sure the consumer exists, if not ignore the release message to be idempotent
 	if !provider.hasConsumer(consumer.ConsumerID) {
-		logrus.Warnf("Trying to release consumer %s for provider %s", consumer.ConsumerID, consumer.ProviderID)
+		log.Warnf("Trying to release consumer %s for provider %s", consumer.ConsumerID, consumer.ProviderID)
 		return nil
 	}
 
@@ -276,7 +276,7 @@ func (rm *RsrcMgr) applyConstraints(rlist *RsrcList, req *rproto.ResourceRequest
 
 	// if no provider matched the constraits return
 	if len(matchedProviders) == 0 {
-		logrus.Infof("No provider matched the constraints of req: %+v")
+		log.Infof("No provider matched the constraints of req: %+v")
 		return nil, errors.New("No provider matched the constraints")
 	}
 
@@ -308,7 +308,7 @@ func leastUsedSchedFunc(req *rproto.ResourceRequest, providers []*RsrcProvider) 
 		return nil, errors.New("No providers with enough resource")
 	}
 
-	logrus.Debugf("leastUsed scheduler assigned provider %s for consumer %s", luProvider.ProviderID, req.ConsumerID)
+	log.Infof("leastUsed scheduler assigned provider %s for consumer %s", luProvider.ProviderID, req.ConsumerID)
 
 	return luProvider, nil
 }

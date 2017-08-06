@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/env"
@@ -14,6 +13,7 @@ import (
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/errors"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 // constants used by REST interface

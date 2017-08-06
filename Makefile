@@ -145,6 +145,15 @@ docker-test-debug: install_box
 	box box-base.rb
 	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" pensando/sw:dependencies
 
+# Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
+start-kibana:
+	docker run --name kibana -e ELASTICSEARCH_URL=http://192.168.30.10:9200 -e XPACK_SECURITY_ENABLED=false -p 127.0.0.1:5601:5601 -d kibana:5.4.1
+
+# Target to run on Mac to stop kibana docker
+stop-kibana:
+	docker stop kibana
+	docker rm kibana
+
 # Dev environment targets
 dev:
 	scripts/bringup-dev.sh Vagrantfile.dev

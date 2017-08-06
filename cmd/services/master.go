@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 

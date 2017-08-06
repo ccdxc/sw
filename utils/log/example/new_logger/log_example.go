@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"flag"
 	"github.com/pensando/sw/utils/log"
-	pkg1 "github.com/pensando/sw/utils/log/example/pkg1"
-	pkg2 "github.com/pensando/sw/utils/log/example/pkg2"
+	pkg1 "github.com/pensando/sw/utils/log/example/new_logger/pkg1"
+	pkg2 "github.com/pensando/sw/utils/log/example/new_logger/pkg2"
 	"strconv"
 )
 
@@ -19,7 +19,7 @@ func getRandomString() string {
 
 func main() {
 	var (
-		logoutput = flag.String("logfile", "/tmp/logtester.log", "redirect logs to file")
+		logoutput = flag.String("logfile", "/tmp/logtester1.log", "redirect logs to file")
 	)
 
 	flag.Parse()
@@ -31,7 +31,7 @@ func main() {
 	var logger log.Logger
 	{
 		logConfig := &log.Config{
-			Module:      "LogTester",
+			Module:      "LogTester1",
 			Format:      log.LogFmt,
 			Filter:      log.AllowAllFilter,
 			Debug:       false,

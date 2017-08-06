@@ -14,7 +14,7 @@ func NewInstance(logObj log.Logger) *Instance1 {
 
 	// Add more granular package specific context
 	logger := logObj
-	logger = logger.WithContext("svc", "svc1")
+	logger = logger.WithContext("pkg", "pkg1")
 
 	obj := &Instance1{
 		logger,

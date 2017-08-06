@@ -5,9 +5,8 @@ import (
 	"flag"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 )
 

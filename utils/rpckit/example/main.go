@@ -8,11 +8,10 @@ import (
 	"os"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"golang.org/x/net/context"
-
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 	exproto "github.com/pensando/sw/utils/rpckit/example/proto"
+	"golang.org/x/net/context"
 )
 
 // Usage:

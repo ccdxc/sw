@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/utils/kvstore"

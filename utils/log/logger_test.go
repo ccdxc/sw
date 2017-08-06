@@ -5,6 +5,8 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -16,6 +18,7 @@ func TestLoggerToFile(t *testing.T) {
 		Module:      "LogTester",
 		Format:      LogFmt,
 		Debug:       false,
+		Context:     true,
 		LogToStdout: false,
 		LogToFile:   true,
 		FileCfg: FileConfig{
@@ -35,7 +38,16 @@ func TestLoggerToFile(t *testing.T) {
 	}
 
 	str := string(data)
-	if !strings.Contains(str, "msg=testmsg") {
+	_, path, _, ok := runtime.Caller(1)
+	if !ok {
+		t.Errorf("Failed to get runtime caller info")
+	}
+
+	fileName := filepath.Base(path)
+
+	// Test message and caller filename is part for log message
+	if !strings.Contains(str, "msg=testmsg") ||
+		!strings.Contains(str, "caller="+fileName) {
 		t.Errorf("Expecting [%s] got:[%s]", "msg=testmsg", str)
 	}
 
@@ -130,6 +142,97 @@ func TestLevels(t *testing.T) {
 
 	buf.Reset()
 	l.ErrorLog("msg", "testmsg1", "error", "testerror")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=error") ||
+		!strings.Contains(buf.String(), "error=testerror") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=error]", buf.String())
+	}
+}
+
+func TestLevelsWithDefaultLogger(t *testing.T) {
+	t.Parallel()
+	buf := &bytes.Buffer{}
+
+	config := GetDefaultConfig("TestLogger")
+	SetConfig(config)
+	getDefaultInstance().SetOutput(buf)
+
+	Printf("testmsg")
+	if !strings.Contains(buf.String(), "msg=testmsg") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	Print("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	Println("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	Debug("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	Debugf("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	Debugln("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	DebugLog("msg", "testmsg1", "error", "TestError")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") ||
+		!strings.Contains(buf.String(), "error=TestError") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=debug]", buf.String())
+	}
+
+	// info
+	buf.Reset()
+	Infof("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=info") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=info]", buf.String())
+	}
+
+	buf.Reset()
+	Infoln("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=info") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=info]", buf.String())
+	}
+
+	buf.Reset()
+	InfoLog("msg", "testmsg1", "error", "TestError")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=info") ||
+		!strings.Contains(buf.String(), "error=TestError") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=info]", buf.String())
+	}
+
+	// Error
+	buf.Reset()
+	Errorf("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=error") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=error]", buf.String())
+	}
+
+	buf.Reset()
+	Errorln("testmsg1")
+	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=error") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=error]", buf.String())
+	}
+
+	buf.Reset()
+	ErrorLog("msg", "testmsg1", "error", "testerror")
 	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=error") ||
 		!strings.Contains(buf.String(), "error=testerror") {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg[] and [level=error]", buf.String())

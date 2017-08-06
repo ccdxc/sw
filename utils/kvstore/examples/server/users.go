@@ -9,8 +9,8 @@ import (
 	"path"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/utils/kvstore"

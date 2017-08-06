@@ -7,10 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 const (
@@ -180,7 +179,7 @@ func (w *watcher) sendEvent(evType kvstore.WatchEventType, value []byte, version
 	}
 
 	if len(w.outCh) == outCount {
-		log.Warningf("Number of buffered watch events hit max count of %v", outCount)
+		log.Warnf("Number of buffered watch events hit max count of %v", outCount)
 	}
 
 	select {

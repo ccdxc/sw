@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/utils/resource/rproto"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	"github.com/willf/bitset"
 )
 
@@ -88,7 +88,7 @@ func (provider *RsrcProvider) allocRangeResource(req *rproto.ResourceRequest, co
 			// find the next available
 			avlbit, ok := bs.NextClear(0)
 			if !ok || avlbit >= uint(totalItems) {
-				logrus.Errorf("No available resource in the range")
+				log.Errorf("No available resource in the range")
 				return errors.New("No available resource")
 			}
 
@@ -108,14 +108,14 @@ func (provider *RsrcProvider) allocRangeResource(req *rproto.ResourceRequest, co
 		for _, val := range req.Values {
 			// check the requested values
 			if val < provider.Resource.Range.Begin || val > provider.Resource.Range.End {
-				logrus.Errorf("Invalid values requested: %+v", req.Values)
+				log.Errorf("Invalid values requested: %+v", req.Values)
 				return errors.New("Invalid values requested")
 			}
 
 			// check if the bit is available
 			reqBit := val - provider.Resource.Range.Begin
 			if bs.Test(uint(reqBit)) {
-				logrus.Errorf("Request value %v (bit %v)is not available", val, reqBit)
+				log.Errorf("Request value %v (bit %v)is not available", val, reqBit)
 				return errors.New("Requested value not available")
 			}
 
@@ -163,7 +163,7 @@ func (provider *RsrcProvider) allocSetResource(req *rproto.ResourceRequest, cons
 			// find free resource
 			val, err := provider.getNextAvailableSetRsrc(tmpAllocations)
 			if err != nil {
-				logrus.Errorf("Could not find any free resource. Err: %v", err)
+				log.Errorf("Could not find any free resource. Err: %v", err)
 				return err
 			}
 
@@ -182,7 +182,7 @@ func (provider *RsrcProvider) allocSetResource(req *rproto.ResourceRequest, cons
 			// make sure the value is not already allocated
 			_, ok := provider.Resource.Set.AllocatedItems[val]
 			if ok {
-				logrus.Errorf("Requested value %v is already allocated", val)
+				log.Errorf("Requested value %v is already allocated", val)
 				return errors.New("Requested value is not available")
 			}
 
@@ -223,7 +223,7 @@ func (provider *RsrcProvider) consumeRsrc(req *rproto.ResourceRequest) (*rproto.
 
 	// verify we have enough resources
 	if provider.availableRsrc() < req.Quantity {
-		logrus.Errorf("Not enough resources in provider %s. Available: %d req: %d",
+		log.Errorf("Not enough resources in provider %s. Available: %d req: %d",
 			provider.ProviderID, provider.availableRsrc(), req.Quantity)
 		return nil, errors.New("Not enough resources")
 	}
@@ -252,14 +252,14 @@ func (provider *RsrcProvider) consumeRsrc(req *rproto.ResourceRequest) (*rproto.
 		// allocate a range resource
 		err := provider.allocRangeResource(req, &consumer)
 		if err != nil {
-			logrus.Errorf("Error allocating range resource. Err: %v", err)
+			log.Errorf("Error allocating range resource. Err: %v", err)
 			return nil, err
 		}
 	case rproto.ResourceKind_Set:
 		// allocate a set resource
 		err := provider.allocSetResource(req, &consumer)
 		if err != nil {
-			logrus.Errorf("Error allocating set resource. Err: %v", err)
+			log.Errorf("Error allocating set resource. Err: %v", err)
 			return nil, err
 		}
 
@@ -271,7 +271,7 @@ func (provider *RsrcProvider) consumeRsrc(req *rproto.ResourceRequest) (*rproto.
 	// persist this
 	err := provider.storeProvider(false)
 	if err != nil {
-		logrus.Errorf("Error storing the provider. Err: %v", err)
+		log.Errorf("Error storing the provider. Err: %v", err)
 		return nil, err
 	}
 
@@ -303,7 +303,7 @@ func (provider *RsrcProvider) freeRsrc(consumer *rproto.ResourceConsumer) error 
 			// verify the bit was allocated
 			reqBit := val - provider.Resource.Range.Begin
 			if !bs.Test(uint(reqBit)) {
-				logrus.Warnf("Request value %v(bit %v) was not allocated", val, reqBit)
+				log.Warnf("Request value %v(bit %v) was not allocated", val, reqBit)
 			}
 
 			// clear the bit
@@ -322,7 +322,7 @@ func (provider *RsrcProvider) freeRsrc(consumer *rproto.ResourceConsumer) error 
 		for _, val := range consumer.Values {
 			_, ok := provider.Resource.Set.AllocatedItems[val]
 			if !ok {
-				logrus.Warnf("Value %v was never allocated", val)
+				log.Warnf("Value %v was never allocated", val)
 			}
 			delete(provider.Resource.Set.AllocatedItems, val)
 		}

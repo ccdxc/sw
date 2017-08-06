@@ -81,7 +81,7 @@ class Node:
         print "#### Starting pen-base container on " + self.addr
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
         self.runCmd("""bash -c 'for i in /import/bin/tars/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
-        self.runCmd("docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d pen-base")
+        self.runCmd("docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando -d pen-base")
 
     # Start pen base container on each node
     def stopCluster(self, args=""):

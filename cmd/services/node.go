@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/cmd/env"
 	configs "github.com/pensando/sw/cmd/systemd-configs"
 	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/utils/log"
 )
 
 // Services that run on all controller nodes

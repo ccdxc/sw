@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
+	"github.com/pensando/sw/utils/log"
 
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/cmd/env"

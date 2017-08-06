@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/utils/kvstore"
 )
@@ -242,7 +242,7 @@ func (el *election) sendEvent(evType kvstore.ElectionEventType, leader string) {
 	log.Infof("Election(%v:%v): sending event %+v", el.id, el.name, e)
 
 	if len(el.outCh) == outCount {
-		log.Warningf("Election(%v:%v): number of buffered events hit max count of %v", el.id, el.name, outCount)
+		log.Warnf("Election(%v:%v): number of buffered events hit max count of %v", el.id, el.name, outCount)
 	}
 
 	select {

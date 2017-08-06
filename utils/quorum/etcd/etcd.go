@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/quorum"
