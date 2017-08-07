@@ -21,6 +21,7 @@ LIBDIRS = \
 		  hal/pd/utils/met \
 		  hal/pd/utils/tcam \
 		  hal/pd/utils \
+          sknobs_gen/ \
 		  $(NULL)
 
 PGMDIRS = \
@@ -47,16 +48,16 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 include $(TOPDIR)/make/Makefile.inc
 
 shell: build-image
-	docker run -it -v ${PWD}:/hack/saratk/nic pensando/nic bash
+	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash
 
 test: build-image
-	docker run -it -v ${PWD}:/hack/saratk/nic pensando/nic bash -c 'make gtest'
+	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash -c 'make gtest'
 
 build: build-image
-	docker run -it -v ${PWD}:/hack/saratk/nic pensando/nic sh -c 'make -j$$(grep -c processor /proc/cpuinfo)'
+	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic sh -c 'make -j$$(grep -c processor /proc/cpuinfo)'
 
 clean-docker: build-image
-	docker run -it -v ${PWD}:/hack/saratk/nic pensando/nic make clean
+	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic make clean
 
 build-image: install_box
 	docker pull srv1.pensando.io:5000/pensando/nic:dependencies

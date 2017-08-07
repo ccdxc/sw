@@ -34,8 +34,14 @@ int main (void)
     get_next_pkt(opkt, port, cos);
     if (!opkt.size()) {
         std::cout << "NO packet back from model! size: " << opkt.size() << std::endl;
+        exit(1);
     } else {
         std::cout << "Got packet back from model! size: " << opkt.size() << " on port: " << port << " cos: " << cos << std::endl;
+        if (ipkt.size() == opkt.size()) {
+            exit(0);
+        } else {
+            exit(1);
+        }
     }
 
 #if 0

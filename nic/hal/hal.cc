@@ -186,7 +186,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Initializing HAL ...");
 
     char *user = getenv("USER");
-    if (!strcmp(user, "root")) {
+    if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
 

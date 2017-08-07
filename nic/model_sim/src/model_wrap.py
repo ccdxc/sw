@@ -40,7 +40,8 @@ def get_next_pkt ():
     eoffset = 32 + size
     pkt = msg[32:eoffset]
     zmq_close(socket)
-    return (pkt, port, cos)
+    # DOL is 1-based port numbering, model is 0-based.
+    return (pkt, port+1, cos)
     pass
 
 def read_reg (addr):

@@ -22,6 +22,9 @@ PIP3_PACKAGES = %w[
   google-api-python-client
   Tenjin
   enum34
+  protobuf
+  grpcio
+  zmq
 ]
 
 PACKAGES = %w[
@@ -29,11 +32,13 @@ PACKAGES = %w[
   python36u-devel
   python-pip
   python-devel
+  python-yaml
   Judy-devel
   cmake
   git
   gcc
   gcc-c++
+  gdb
   wget
   autoconf
   automake
@@ -159,8 +164,11 @@ tag "pensando/nic:dependencies"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
+run "echo /usr/local/lib >>/etc/ld.so.conf"
+run "ldconfig -v"
+
+after { tag "srv1.pensando.io:5000/pensando/nic:dependencies" }
+
 if getenv("RELEASE") != ""
   flatten
 end
-
-tag "srv1.pensando.io:5000/pensando/nic:dependencies"

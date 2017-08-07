@@ -1,7 +1,9 @@
 ---
 targets:
-  - [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo) && obj/lif_manager_test && obj/bm_allocator_test" ]
+  - [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo) && obj/lif_manager_test && obj/bm_allocator_test && ./run.py" ]
 image:
   name: "pensando/nic"
   bind_dir: "/hack/saratk/nic"
+  extra_binds:
+    /dol: /hack/saratk/dol
 rebase: true

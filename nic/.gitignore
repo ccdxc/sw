@@ -13,3 +13,8 @@ proto/hal_proto
 proto/proto
 proto/types_proto
 asic_gen
+.run.pid
+hal.log
+model.log
+dol.log
+sample_client.log

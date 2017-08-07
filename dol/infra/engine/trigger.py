@@ -31,6 +31,7 @@ scapy_hdr_map = {"IP": "IPV4",
                  "Ether": "ETHERNET",
                  "Dot1Q": "QTAG",
                  "TCP": "TCP",
+                 "UDP": "UDP",
                  "PAYLOAD": "PAYLOAD",
                  "PENDOL": "PENDOL",
                  "CRC": "CRC"}
@@ -379,7 +380,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 descriptor.descriptor.ring.post(descriptor.descriptor.object)
                 ring_set.add(descriptor.descriptor.ring)
 
-            if self._tc_step.trigger.doorbell and self._tc_step.trigger.doorbell.object:
+            if False and self._tc_step.trigger.doorbell and self._tc_step.trigger.doorbell.object:
                 for ring in ring_set:
                     self._logger.info("Posting doorbell %s" %
                                       self._tc_step.trigger.doorbell.object)

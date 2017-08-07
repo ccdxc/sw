@@ -1,0 +1,35 @@
+# Test Spec
+config_filter:
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+    flow        : filter/fwtype=L2
+
+packets:
+    - packet:
+        id          : INP1     # Input Packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     : callback://networking/packets/AddIngressHeadersByFlow
+    - packet:
+        id          : EXP1     # Expected Packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     : callback://networking/packets/AddIngressHeadersByFlow
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=INP1
+            port    : 1
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP1
+            port    : 1
