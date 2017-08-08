@@ -39,6 +39,7 @@ import wring_pb2_grpc       as wring_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 16
 import tcp_proxy_cb_pb2_grpc       as tcpcb_pb2_grpc
+import tls_proxy_cb_pb2_grpc       as tls_pb2_grpc
 
 HalChannel = None
 class HalInterfaceSegmentAssociation:
