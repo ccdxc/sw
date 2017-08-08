@@ -82,6 +82,7 @@ snapshot:
         # E.g. config/rdma/lqpair/sq/qstate
         # This will take a snapshot of  the SendQ QPCB of the Local Qpair
 
+current_step : None # Current step being executed by trigger.
 
 session:
     # List of steps in a session
@@ -133,6 +134,17 @@ session:
                     object      : None  # Expected BUFFER object
                     rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc
                     # actual     : None  # Framework provided empty actualpass
+        received:
+            timeout : None
+            packets:
+                # List of packets
+                - packet: None
+
+            descriptors:
+                # List of descriptors
+                - object  : None
+                  ring    : None
+                    # actual : None  # Framework provided empty actual                           
 
     - step:
         trigger:
@@ -184,6 +196,17 @@ session:
                     object      : None  # Expected BUFFER object
                     rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc
                     # actual     : None  # Framework provided empty actualpass
+        received:
+            timeout : None
+            packets:
+                # List of packets
+                - packet: None
+
+            descriptors:
+                # List of descriptors
+                - object  : None
+                  ring    : None
+                    # actual : None  # Framework provided empty actual                    
 '''
         with open(self._TMP_PKT_FILE, "w") as text_file:
             text_file.write(test_spec)
@@ -246,8 +269,8 @@ ring        : None  #  Ring Object
         self._trigger = trigger
         self._trigger.start()
         time.sleep(0.25)
-        self.assertTrue(self._trigger._scheduler_running())
-        self.assertTrue(self._trigger._receiver_running())
+        self.assertFalse(self._trigger._scheduler_running())
+        self.assertFalse(self._trigger._receiver_running())
         self._tc_input_out_map = defaultdict(lambda: [])
         self._tc_input_out_obj_map = defaultdict(lambda: [])
         self._ring_queue = defaultdict(lambda: [])
@@ -261,11 +284,12 @@ ring        : None  #  Ring Object
             factory_init_done = True
 
     def tearDown(self):
+        # Scheduler should have stopped when test case is completed.
+        self.assertFalse(self._trigger._scheduler_running())
+        self.assertFalse(self._trigger._receiver_running())
         super(DolTriggerTest, self).tearDown()
         self._trigger.stop()
         time.sleep(1)
-        self.assertFalse(self._trigger._scheduler_running())
-        self.assertFalse(self._trigger._receiver_running())
         self.model.stop()
         self._stop_all_patch()
 
@@ -613,11 +637,13 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
 
     @init_trigger_test(steps=1)
     def test_single_packet_flow_with_custom_callback(self):
-        class Callback(object):
-            def call(self, arg1=None, arg2=None):
-                return Callback.custome_callback(arg1)
-            def custome_callback(tc):
-                return False, "Custom Callback Failed."
+
+        def custom_callback():
+            # Make sure step is set
+            self.assertTrue(self._test_case_spec.current_step ==
+                            self._test_case_spec.session[0].step)
+            return defs.status.ERROR
+
         input_output = {"input": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
                                                         "dst": MacAddressBase("0000.9999.0002").get(),
                                                         "type": 0x8100
@@ -647,7 +673,7 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
                         }
         self._add_trigger_expect_packet(
             self._test_case_spec.session[0].step, input_output)
-        self._test_case_spec.session[0].step.expect.callback = Callback()
+        self._test_case_spec.verify_callback = custom_callback
         self.__add_model_input_output(input_output)
         self._trigger.run_test_case(self._test_case_spec)
         self._wait_for_test_case_completion()
@@ -665,8 +691,8 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
             report.details[self._test_case_spec.GID()].session[0].step.result.packets.mismatch == [])
         self.assertTrue(report.details[self._test_case_spec.GID(
         )].session[0].step.result.callback.status == Trigger.TEST_CASE_FAILED)
-        self.assertTrue(report.details[self._test_case_spec.GID(
-        )].session[0].step.result.callback.message == "Custom Callback Failed.")
+        self.assertTrue(
+            len(self._test_case_spec.session[0].step.received.packets) == 1)
 
     @init_trigger_test(steps=1)
     def test_single_packet_2_outputs(self):

@@ -21,6 +21,8 @@ import infra.common.defs as defs
 import infra.common.parser as parser
 from infra.common.objects import FrameworkObject
 from infra.common.utils import convert_object_to_dict
+from infra.factory.testcase import TestCaseTrigExpPacketObject,\
+    TestCaseTrigExpDescriptorObject
 
 PEN_REF = getattr(penscapy, "PENDOL")
 
@@ -366,6 +368,10 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             self._start_ts = time.time()
             self._timeout = self._start_ts + self._step_timeout
             self._logger.info("Running test case step : %s" % self._step_count)
+            # Set in the test case object which step is being executed.
+            self._tc._test_spec.current_step = self._tc_step
+            self._tc._test_spec.current_step.received.packets = []
+            self._tc._test_spec.current_step.received.descriptors = []
 
             for exp_pkt in self._tc_step.expect.packets:
                 assert exp_pkt.packet
@@ -406,12 +412,23 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         self._logger.info("Received packet on port %s, len:%d" %
                           (packet_ctx.port, len(packet_ctx.packet)))
         self._exp_rcv_data[packet_ctx.port].received.append(packet_ctx)
+        # Add to test step received section.
+        tc_pkt = TestCaseTrigExpPacketObject()
+        tc_pkt.packet = packet_ctx.packet
+        tc_pkt.ports = [packet_ctx.port]
+        self._tc._test_spec.current_step.received.packets.append(tc_pkt)
 
     def recv_descriptors(self, ring, descriptors):
         for descr_obj in descriptors:
             self._logger.info(
                 "Received descriptor on ring = %s, descriptor = %s" % (ring, descr_obj))
             self._exp_rcv_descr[ring].received.append(descr_obj)
+            # Add to test step received section.
+            tc_desc = TestCaseTrigExpDescriptorObject()
+            tc_desc.object = descr_obj
+            tc_desc.ring = ring
+            self._tc._test_spec.current_step.received.descriptors.append(
+                tc_desc)
 
     @classmethod
     def _packets_match(cls, expected, actual, partial_match):
@@ -628,11 +645,10 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         result.packets = self.__packets_process_result()
         result.descriptors = self.__descriptors_process_result()
         result.verify_callback = VerifyCallbackStepResult()
-        if hasattr(self._tc_step.expect, "callback") and self._tc_step.expect.callback:
-            cb_result, message = self._tc_step.expect.callback.call(
-                self._tc._test_spec)
-            result.verify_callback.message = message
-            result.verify_callback.status = Trigger.TEST_CASE_PASSED if cb_result else Trigger.TEST_CASE_FAILED
+        if hasattr(self._tc._test_spec, "verify_callback") and self._tc._test_spec.verify_callback:
+            cb_result = self._tc._test_spec.verify_callback()
+            result.verify_callback.status = Trigger.TEST_CASE_PASSED if cb_result == defs.status.SUCCESS \
+                else Trigger.TEST_CASE_FAILED
 
         if result.packets.status == Trigger.TEST_CASE_FAILED or \
                 result.descriptors.status == Trigger.TEST_CASE_FAILED or \
@@ -771,6 +787,7 @@ class Trigger(InfraThreadHandler):
         self.__db_inits()
         self._descriptor_test_case_queue = []
         self._current_descriptor_test_case = None
+        self._connector_started = False
 
     def __db_inits(self):
         self._tc_status_dict = {}
@@ -802,6 +819,7 @@ class Trigger(InfraThreadHandler):
                 self._current_descriptor_test_case = trigger_tc
             self._tc_db[test_case.GID()] = trigger_tc
             logger.debug("Test case ID ", test_case.GID())
+            self._connector_start()
             trigger_tc.run_test_case()
         return
 
@@ -857,19 +875,31 @@ class Trigger(InfraThreadHandler):
             return test_case_id in self._tc_db
 
     def start(self):
-        self._scheduler.startThread()
-        self._receiver.startThread()
         super(Trigger, self).startThread()
         logger.info("Trigger Started.")
-
         parser = TestCaseParser(defs.FACTORY_TEMPLATE_TESTOBJECTS_PATH,
                                 "testcase_output.template")
         TestCaseOutputTemplateObject = parser.parse()
         assert(TestCaseOutputTemplateObject != None)
 
+    def _connector_start(self):
+        if not self._connector_started:
+            self._scheduler.startThread()
+            self._receiver.startThread()
+            # First time start, give it some time.
+            # TODO: May be check in loop for MAX interval and assert if not
+            # started.
+            time.sleep(0.5)
+            self._connector_started = True
+
+    def _connector_stop(self):
+        if self._connector_started:
+            self._scheduler.stopThread()
+            self._receiver.stopThread()
+            self._connector_started = False
+
     def stop(self):
-        self._scheduler.stopThread()
-        self._receiver.stopThread()
+        self._connector_stop()
         super(Trigger, self).stopThread()
         logger.info("Trigger Stopped.")
 
@@ -894,6 +924,9 @@ class Trigger(InfraThreadHandler):
                                 0)
                             self._tc_db[self._current_descriptor_test_case.meta.id] = self._current_descriptor_test_case
                             self._current_descriptor_test_case.run_test_case()
+                        else:
+                            # All test cases completed, stop the connector.
+                            self._connector_stop()
 
     def get_result(self, tc_id):
         if tc_id in self._tc_db:

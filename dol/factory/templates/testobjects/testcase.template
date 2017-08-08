@@ -24,9 +24,10 @@ config:
         rqpair  : filter/any # Remote QPair
         session : filter/any 
 
-packets     : None # Database packet objects for this testcase.
-descriptors : None # Database
-buffers     : None # Database
+packets      : None # Database packet objects for this testcase.
+descriptors  : None # Database
+buffers      : None # Database
+current_step : None # Current step being executed by trigger.
 
 snapshot:
     # List of Object entries
@@ -80,3 +81,14 @@ session:
                     object      : None  # Expected BUFFER object
                     rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc
                     # actual     : None  # Framework provided empty actual
+        received:
+            timeout : None
+            packets:
+                # List of packets
+                - packet: None
+
+            descriptors:
+                # List of descriptors
+                - object  : None
+                  ring    : None
+                    # actual : None  # Framework provided empty actual

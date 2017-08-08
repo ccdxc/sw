@@ -169,3 +169,6 @@ class TestCase(objects.FrameworkObject):
         self.__generate_objects()
         self.__setup_session()
         return defs.status.SUCCESS
+
+    def verify_callback(self):
+        return defs.status.SUCCESS
