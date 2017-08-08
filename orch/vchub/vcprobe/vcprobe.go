@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/pensando/sw/orch/vchub/defs"
+	"github.com/pensando/sw/utils/log"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"

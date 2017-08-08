@@ -3,9 +3,8 @@ package store
 import (
 	"context"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/orch/vchub/defs"
+	"github.com/pensando/sw/utils/log"
 )
 
 // VCHStore maintains information about a store instance

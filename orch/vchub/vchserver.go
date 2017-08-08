@@ -9,7 +9,7 @@ package vchub
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	context "golang.org/x/net/context"
 	"net"
 	"reflect"

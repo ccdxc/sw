@@ -5,12 +5,11 @@ import (
 	"reflect"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
-
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/defs"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 const (

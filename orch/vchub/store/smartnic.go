@@ -4,13 +4,11 @@ import (
 	"context"
 	"reflect"
 
-	log "github.com/Sirupsen/logrus"
-	//"github.com/davecgh/go-spew/spew"
-
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/defs"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 )
 
 const (
