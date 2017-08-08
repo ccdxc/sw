@@ -21,4 +21,3 @@ rcv_tsval   : 0
 ts_recent   : 0
 serq_base   : 0
 tlscb       : None
-
