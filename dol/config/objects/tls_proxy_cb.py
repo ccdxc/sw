@@ -26,7 +26,10 @@ class TlsCbObject(base.ConfigObjectBase):
         self.GID(gid)
         cfglogger.info("  - %s" % self)
         self.tcpcb = tcpcb 
+<<<<<<< HEAD
         self.pre_barco_serq = SwDscrRingHelper.main("SERQ", gid)
+=======
+>>>>>>> 7fdb559... Tls 1st commit
         """
         TODO:
         self.spec = spec_obj
@@ -71,6 +74,7 @@ class TlsCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
+        Store.objects.SetAll(objlist)
         cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
         #halapi.ConfigureTlsCbs(objlist)
         return

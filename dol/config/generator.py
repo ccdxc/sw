@@ -11,6 +11,7 @@ from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
 from config.objects.tcp_proxy_cb     import TcpCbHelper
+from config.objects.tls_proxy_cb     import TlsCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
 
@@ -31,6 +32,9 @@ def process(topospec):
     # Generate all sessions
     SessionHelper.main()
     
+    TcpCbHelper.Configure(TcpCbHelper.objlist) 
+    TlsCbHelper.Configure(TlsCbHelper.objlist) 
+
     return
 
 def main(topofile):
