@@ -920,6 +920,7 @@ func TestGetSvcManifest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not find file")
 	}
+	defer os.Remove("nonexistentfile")
 	manifest, err := genServiceManifest("nonexistentfile", file)
 	if err != nil {
 		t.Errorf("failed to genServiceManifest (%s)", err)
