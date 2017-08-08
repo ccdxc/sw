@@ -71,6 +71,7 @@ class TlsCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
+        Store.objects.SetAll(objlist)
         cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
         #halapi.ConfigureTlsCbs(objlist)
         return
