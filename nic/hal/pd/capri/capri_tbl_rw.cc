@@ -288,7 +288,7 @@ int capri_table_rw_init()
     // Fill up table base address and action-pcs
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
-        capri_program_to_base_addr(progname, &capri_table_asm_base[i]);
+        capri_program_to_base_addr("iris", progname, &capri_table_asm_base[i]);
         for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
             p4pd_get_action_name(i, j, action_name);
             capri_program_label_to_offset(progname, action_name, &capri_action_asm_base[i][j]);

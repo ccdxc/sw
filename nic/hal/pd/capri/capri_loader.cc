@@ -7,15 +7,15 @@
  */
 
 #include "capri_loader.h"
+#include <assert.h>
 #include <lib_model_client.h>
+#include <boost/unordered_map.hpp>
 
 /* TODO: Declaring these as globals for now. Figure out usage and define
  *       these appropriately.
  */
+boost::unordered_map<std::string, capri_loader_ctx_t *> loader_instances;
 
-/* MPU program information  - array and number */
-capri_program_info_t *program_info = NULL;
-int num_programs;
 
 /**
  * read_programs: Read all the programs in a specified directory. For now 
@@ -27,11 +27,22 @@ int num_programs;
  * Return: 0 on success, < 0 on failure
  */
 static int
-read_programs(char *pathname)
+read_programs(const char *handle,
+              char *pathname)
 {
     DIR *dir;
     struct dirent *ent;
     int i = 0;
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
+
+    /* Load context */
+    ctx = loader_instances[handle];
+    if (!ctx) {
+        printf("Invalid handle\n");
+        return -1;
+    }
+    program_info = ctx->program_info;
 
     if ((dir = opendir (pathname)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
@@ -87,7 +98,7 @@ program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params,
  *
  * Return: Index of parameter on success, < 0 on failure
  */
-int
+static int
 param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *val)
 {
     int i;
@@ -120,36 +131,59 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
  * Return: Index of program on success, < 0 on failure
  */
 int
-capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr, 
+capri_load_mpu_programs(const char *handle,
+                        char *pathname, uint64_t hbm_base_addr,
                         capri_prog_param_info_t *prog_param_info, 
                         int num_prog_params)
 {
     int i, j, prog_index;
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
     MpuSymbol *symbol, *param_u, *param_r;
-    uint64_t prog_hbm_base_addr, val;
+    uint64_t val;
     bool rv;
     MpuSymbolTable global_labels;
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
+		printf("Libcapisa initialization failed! \n");
         return -1;
     }
 
-    /* Allocate program info pointer */
-    program_info = new capri_program_info_t[MAX_PROGRAMS];
+    /* Input check */
+    if (!handle || !pathname) {
+        printf("Input error \n");
+        return -1;
+    }
+
+    /* Create a loader instance */
+    ctx = loader_instances[handle];
+    if (ctx) {
+        printf("Programs already loaded!");
+        return -1;
+    }
+
+    /* Allocate context */
+    ctx = new capri_loader_ctx_t;
+    ctx->handle = handle;
+    ctx->program_info = new capri_program_info_t[MAX_PROGRAMS];
+    loader_instances[handle] = ctx;
+    program_info = ctx->program_info;
 
     /* Read all program names */
-    if ((num_programs = read_programs(pathname)) < 0) {
+    if ((ctx->num_programs = read_programs(handle, pathname)) < 0) {
         printf("Cant read programs \n");
         return -1;
     }
-    printf("Num programs %d \n", num_programs);
+    printf("Num programs %d \n", ctx->num_programs);
 
     /* Other initializations */
     std::string path_str = pathname;
-    prog_hbm_base_addr = hbm_base_addr;
-    prog_hbm_base_addr = (prog_hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
-
+    ctx->prog_hbm_base_addr = (hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
+    if ((ctx->prog_hbm_base_addr & 63) != 0) {
+        printf("Invalid HBM base address\n");
+        return -1;
+    }
 
     /* Pass 1: Load all MPU programs into a data structure. Seperate the symbols
      *         in those MPU programs into 3 categories:
@@ -157,7 +191,7 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
      *         2. Resolved parameters (resolved through the input list)
      *         3. Unresolved parameters
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
         /* Load the program from the ELF file and check for errors */
         std::string filename = path_str+ "/" + program_info[i].name;
         if (program_info[i].prog.load_from_elf(filename) < 0) {
@@ -168,7 +202,7 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
         }
 
         /* Save the base address and size */
-        program_info[i].base_addr = prog_hbm_base_addr;
+        program_info[i].base_addr = ctx->prog_hbm_base_addr;
         program_info[i].size = program_info[i].prog.text.size()*sizeof(uint64_t);
         /* Dump program specific info and the symbol table */
         printf("MPU Program file name %s loaded, valid %d, complete %d, "
@@ -236,14 +270,14 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
             }
         }
         /* Increment the running counter of HBM base address */
-        prog_hbm_base_addr += program_info[i].size;
-        prog_hbm_base_addr = (prog_hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
+        ctx->prog_hbm_base_addr += program_info[i].size;
+        ctx->prog_hbm_base_addr = (ctx->prog_hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
     }
 
     /* Pass 2: Resolve all the unresolved parameters based on looking up the
      *         global labels
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
         for (j = 0; j < (int) program_info[i].unresolved_params.size(); j++) {
             /* Get the unresolved parameter by id */
             if ((param_u = program_info[i].unresolved_params.get_byid(j))
@@ -271,7 +305,7 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
     /* Pass 3: Build a copy of the program based on the resolved parameters and 
      *         write it to HBM 
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
        program_info[i].copy = MpuProgram(program_info[i].prog,
                                          program_info[i].resolved_params);
        printf("Prog details: name %s, base address %lx, size %lu, valid %d, "
@@ -321,23 +355,34 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
  * Return: 0 on success, < 0 on failure
  */
 int
-capri_program_label_to_offset(char *prog_name, char *label_name,
+capri_program_label_to_offset(const char *handle,
+                              char *prog_name, char *label_name,
                               uint64_t *offset)
 {
     std::string prog_name_str = prog_name;
     int i;
     MpuSymbol *label;
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
 
     /* Input check */
-    if (!prog_name || !label_name || !offset) {
+    if (!prog_name || !label_name || !offset || !handle) {
         printf("Input error \n");
         return -1;
     }
 
+    /* Load context */
+    ctx = loader_instances[handle];
+    if (!ctx) {
+        printf("Invalid handle \n");
+        return -1;
+    }
+    program_info = ctx->program_info;
+
     /* Iterate through the list of programs and its labels until the label is
      * found 
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog_name_str) {
             if ((label = program_info[i].labels.get_byname(label_name))
                  != NULL) {
@@ -367,23 +412,34 @@ capri_program_label_to_offset(char *prog_name, char *label_name,
  * Return: 0 on success, < 0 on failure
  */
 int
-capri_program_offset_to_label(char *prog_name, uint64_t offset,
+capri_program_offset_to_label(const char *handle,
+                              char *prog_name, uint64_t offset,
                               char *label_name, size_t label_size)
 {
     std::string prog = prog_name;
     int i, j;
     MpuSymbol *label;
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
 
     /* Input check */
-    if (!prog_name || !label_name) {
+    if (!prog_name || !label_name || !handle) {
         printf("Input error \n");
         return -1;
     }
 
+    /* Load context */
+    ctx = loader_instances[handle];
+    if (!ctx) {
+        printf("Invalid handle \n");
+        return -1;
+    }
+    program_info = ctx->program_info;
+
     /* Iterate through the list of programs and all offset associated with its 
      * labels until the offset is found 
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
             for (j = 0; j < (int) program_info[i].labels.size(); j++) {
                 if ((label = program_info[i].labels.get_byid(j)) != NULL) {
@@ -413,21 +469,32 @@ capri_program_offset_to_label(char *prog_name, uint64_t offset,
  * Return: 0 on success, < 0 on failure
  */
 int
-capri_program_to_base_addr(char *prog_name, uint64_t *base_addr)
+capri_program_to_base_addr(const char *handle,
+                           char *prog_name, uint64_t *base_addr)
 {
     std::string prog = prog_name;
     int i;
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
 
     /* Input check */
-    if (!prog_name || !base_addr) {
+    if (!prog_name || !base_addr || !handle) {
         printf("Input error \n");
         return -1;
     }
 
+    /* Load context */
+    ctx = loader_instances[handle];
+    if (!ctx) {
+        printf("Invalid handle\n");
+        return -1;
+    }
+    program_info = ctx->program_info;
+
     /* Iterate through the list of programs and if found, return its 
      * base address
      */
-    for (i = 0; i < num_programs; i++) {
+    for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
             printf("Resolved program name %s to base_addr %lx \n",
                    program_info[i].name.c_str(), program_info[i].base_addr);

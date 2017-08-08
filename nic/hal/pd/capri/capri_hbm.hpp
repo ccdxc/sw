@@ -11,6 +11,8 @@
 
 #define JP4_PRGM                 "p4_program"
 #define JP4_ATOMIC_STATS         "atomic_stats"
+#define JP4PLUS_PRGM             "p4plus_program"
+#define JLIF_QSTATE              "qstate"
 
 #include <base.h>
 
