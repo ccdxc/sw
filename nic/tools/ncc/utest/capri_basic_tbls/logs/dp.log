@@ -1,0 +1,50 @@
+DEBUG::INGRESS,Hdr,#PhvChunks,#Ohi
+DEBUG::INGRESS,capri_intrinsic,2,0
+DEBUG::INGRESS,ethernet,2,1
+DEBUG::INGRESS,ipv6,4,1
+DEBUG::INGRESS,ipv4,6,2
+DEBUG::INGRESS,udp,2,2
+DEBUG::INGRESS,tcp,0,1
+INFO::INGRESS:Deparser Total Headers 6 Total Fields 23
+
+DEBUG::INGRESS:capri_intrinsic Phv 0 
+DEBUG::INGRESS:capri_intrinsic Phv 136 
+DEBUG::INGRESS:ethernet Phv 512 
+DEBUG::INGRESS:ethernet Phv 48 
+DEBUG::INGRESS:ethernet Ohi [0,-1]:(6, 8),
+DEBUG::INGRESS:ipv6 Phv 560 
+DEBUG::INGRESS:ipv6 Phv 32 
+DEBUG::INGRESS:ipv6 Ohi [1,-1]:(4, 20),
+DEBUG::INGRESS:ipv6 Phv 592 
+DEBUG::INGRESS:ipv6 Phv 128 
+DEBUG::INGRESS:ipv4 Phv 720 
+DEBUG::INGRESS:ipv4 Phv 48 
+DEBUG::INGRESS:ipv4 Ohi [1,-1]:(6, 2),
+DEBUG::INGRESS:ipv4 Phv 768 
+DEBUG::INGRESS:ipv4 Phv 8 
+DEBUG::INGRESS:ipv4 Ohi [-1,-1]:(9, 7),
+DEBUG::INGRESS:ipv4 Phv 776 
+DEBUG::INGRESS:ipv4 Phv 32 
+DEBUG::INGRESS:udp Ohi [2,-1]:(0, 2),
+DEBUG::INGRESS:udp Phv 808 
+DEBUG::INGRESS:udp Phv 16 
+DEBUG::INGRESS:udp Ohi [-1,-1]:(4, 4),
+DEBUG::INGRESS:tcp Ohi [2,-1]:(0, 20),
+INFO::INGRESS:DeParser Dpp & Dpr Block Output Generation:
+DEBUG::EGRESS,Hdr,#PhvChunks,#Ohi
+DEBUG::EGRESS,capri_intrinsic,2,0
+DEBUG::EGRESS,ethernet,0,1
+DEBUG::EGRESS,ipv6,0,1
+DEBUG::EGRESS,ipv4,0,1
+DEBUG::EGRESS,udp,0,1
+DEBUG::EGRESS,tcp,0,1
+INFO::EGRESS:Deparser Total Headers 6 Total Fields 7
+
+DEBUG::EGRESS:capri_intrinsic Phv 0 
+DEBUG::EGRESS:capri_intrinsic Phv 136 
+DEBUG::EGRESS:ethernet Ohi [0,-1]:(0, 14),
+DEBUG::EGRESS:ipv6 Ohi [1,-1]:(0, 40),
+DEBUG::EGRESS:ipv4 Ohi [1,-1]:(0, 20),
+DEBUG::EGRESS:udp Ohi [2,-1]:(0, 8),
+DEBUG::EGRESS:tcp Ohi [2,-1]:(0, 20),
+INFO::EGRESS:DeParser Dpp & Dpr Block Output Generation:

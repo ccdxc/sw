@@ -1,0 +1,184 @@
+INFO::INGRESS States: 2
+DEBUG::INGRESS: States ['start', 'parse_ethernet']
+INFO::INGRESS: Total Headers : 2
+INFO::Total Fixed Headers size: 31 Bytes
+DEBUG::Headers: [p4_header_instance.capri_intrinsic, p4_header_instance.ethernet]
+DEBUG::INGRESS:OHI OrderedDict([(p4_header_instance.ethernet, [[-1,-1]:(0, 14),])])
+INFO::INGRESS: Totals extracted fields 21, ohi_fields 3, union_fields 0
+INFO::INGRESS: Total parse paths 1
+INFO::INGRESS: Longest parse path = 2 states
+DEBUG::INGRESS: Longest parse path(2)=[start, parse_ethernet]
+INFO::EGRESS States: 2
+DEBUG::EGRESS: States ['start', 'parse_ethernet']
+INFO::EGRESS: Total Headers : 2
+INFO::Total Fixed Headers size: 31 Bytes
+DEBUG::Headers: [p4_header_instance.capri_intrinsic, p4_header_instance.ethernet]
+DEBUG::EGRESS:OHI OrderedDict([(p4_header_instance.ethernet, [[-1,-1]:(0, 14),])])
+INFO::EGRESS: Totals extracted fields 21, ohi_fields 3, union_fields 0
+INFO::EGRESS: Total parse paths 1
+INFO::EGRESS: Longest parse path = 2 states
+DEBUG::EGRESS: Longest parse path(2)=[start, parse_ethernet]
+DEBUG::INGRESS:OHI OrderedDict([(p4_header_instance.ethernet, [[-1,-1]:(0, 14),])])
+INFO::INGRESS:Max ohi used 1
+DEBUG::Max ohi path [p4_header_instance.capri_intrinsic, p4_header_instance.ethernet]
+DEBUG::INGRESS: OHI allocation OrderedDict([(p4_header_instance.ethernet, [[0,-1]:(0, 14),])])
+DEBUG::EGRESS:OHI OrderedDict([(p4_header_instance.ethernet, [[-1,-1]:(0, 14),])])
+INFO::EGRESS:Max ohi used 1
+DEBUG::Max ohi path [p4_header_instance.capri_intrinsic, p4_header_instance.ethernet]
+DEBUG::EGRESS: OHI allocation OrderedDict([(p4_header_instance.ethernet, [[0,-1]:(0, 14),])])
+DEBUG::INGRESS:parse_ethernet Marked as END
+DEBUG::State: start: key_size 4
+DEBUG::INGRESS:start Build l2p keymap size 4
+DEBUG::INGRESS:start Create key map for __current_x_y koff 0 size 4 phys_off 0 roff 0
+DEBUG::State LKP_FLDS: start: lkp_flds [
+__current_x_y FLD_PKT pkt_off 0 len 4 key_off 0]
+DEBUG::State LKP_REGS: start: lkp_regs [
+type lkp_reg_type.LKP_REG_PKT pkt_off 0, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict([(0, (
+__current_x_y FLD_PKT pkt_off 0 len 4 key_off 0, 0, 4))]), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::INGRESS:start extract_len 17
+DEBUG::State: parse_ethernet: key_size 0
+DEBUG::INGRESS:parse_ethernet Build l2p keymap size 0
+DEBUG::State LKP_FLDS: parse_ethernet: lkp_flds []
+DEBUG::State LKP_REGS: parse_ethernet: lkp_regs [
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::INGRESS:parse_ethernet extract_len 14
+DEBUG::State: __END__: key_size 0
+DEBUG::INGRESS:__END__ Build l2p keymap size 0
+DEBUG::State LKP_FLDS: __END__: lkp_flds []
+DEBUG::State LKP_REGS: __END__: lkp_regs [
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::INGRESS:__END__ extract_len 0
+DEBUG::parse_ethernet:extraction_tuples=[(0, 17, 0)]
+DEBUG::Extract instructions : ['pkt_off 0, bytes 4, phc 0', 'pkt_off 4, bytes 4, phc 4', 'pkt_off 8, bytes 4, phc 8', 'pkt_off 12, bytes 4, phc 12', 'pkt_off 16, bytes 1, phc 16']
+DEBUG::__END__:extraction_tuples=[]
+DEBUG::Extract instructions : []
+DEBUG::EGRESS:parse_ethernet Marked as END
+DEBUG::State: start: key_size 4
+DEBUG::EGRESS:start Build l2p keymap size 4
+DEBUG::EGRESS:start Create key map for __current_x_y koff 0 size 4 phys_off 0 roff 0
+DEBUG::State LKP_FLDS: start: lkp_flds [
+__current_x_y FLD_PKT pkt_off 0 len 4 key_off 0]
+DEBUG::State LKP_REGS: start: lkp_regs [
+type lkp_reg_type.LKP_REG_PKT pkt_off 0, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict([(0, (
+__current_x_y FLD_PKT pkt_off 0 len 4 key_off 0, 0, 4))]), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::EGRESS:start extract_len 17
+DEBUG::State: parse_ethernet: key_size 0
+DEBUG::EGRESS:parse_ethernet Build l2p keymap size 0
+DEBUG::State LKP_FLDS: parse_ethernet: lkp_flds []
+DEBUG::State LKP_REGS: parse_ethernet: lkp_regs [
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::EGRESS:parse_ethernet extract_len 14
+DEBUG::State: __END__: key_size 0
+DEBUG::EGRESS:__END__ Build l2p keymap size 0
+DEBUG::State LKP_FLDS: __END__: lkp_flds []
+DEBUG::State LKP_REGS: __END__: lkp_regs [
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict(), 
+type lkp_reg_type.LKP_REG_NONE pkt_off -1, is_key False, store_en False, expr None, first_pkt_fld None flds OrderedDict()]
+DEBUG::EGRESS:__END__ extract_len 0
+DEBUG::parse_ethernet:extraction_tuples=[(0, 17, 0)]
+DEBUG::Extract instructions : ['pkt_off 0, bytes 4, phc 0', 'pkt_off 4, bytes 4, phc 4', 'pkt_off 8, bytes 4, phc 8', 'pkt_off 12, bytes 4, phc 12', 'pkt_off 16, bytes 1, phc 16']
+DEBUG::__END__:extraction_tuples=[]
+DEBUG::Extract instructions : []
+INFO::INGRESS:Parser Output Generation:
+DEBUG::INGRESS:start[1]->parse_ethernet[2]
+DEBUG::INGRESS:fill_sram_entry for parse_ethernet + start
+DEBUG::parse_ethernet:extraction_tuples=[(0, 17, 0)]
+DEBUG::Extract instructions : ['pkt_off 0, bytes 4, phc 0', 'pkt_off 4, bytes 4, phc 4', 'pkt_off 8, bytes 4, phc 8', 'pkt_off 12, bytes 4, phc 12', 'pkt_off 16, bytes 1, phc 16']
+DEBUG::OHI instruction[0]: off 17, len 14
+DEBUG::INGRESS:parse_ethernet:End State: OHI instruction[1] 48 len 14
+DEBUG::INGRESS:parse_ethernet:Flit # 0
+DEBUG::TCAM-decoder[0] - 
+valid = 1
+x_control(key) = 0, y_control(mask) = 0, x_state = 0x1, y_state = 0x1fe
+x_lkp_val[0] = 0x0, 	y_lkp_val[0] = 0x0
+x_lkp_val[1] = 0x0, 	y_lkp_val[1] = 0x0
+x_lkp_val[2] = 0x0, 	y_lkp_val[2] = 0x0
+
+DEBUG::SRAM-decoder[0] - 
+action = 1, nxt_state = 2, offset_inst: sel 0, mux_sel 0, val 31 
+lkp_val_inst[0] = mux_pkt[0], store_en = 0
+lkp_val_inst[1] = mux_pkt[0], store_en = 0
+lkp_val_inst[2] = mux_pkt[0], store_en = 0
+
+Total lkp_val_inst 3
+extract_inst[0] = pkt(0,4) -> phv(0), extract_inst[1] = pkt(4,4) -> phv(4), extract_inst[2] = pkt(8,4) -> phv(8), extract_inst[3] = pkt(12,4) -> phv(12), extract_inst[4] = pkt(16,1) -> phv(16), extract_inst[5] = pkt(0,0) -> phv(0), extract_inst[6] = pkt(0,0) -> phv(0), extract_inst[7] = pkt(0,0) -> phv(0), extract_inst[8] = pkt(0,0) -> phv(0), extract_inst[9] = pkt(0,0) -> phv(0), extract_inst[10] = pkt(0,0) -> phv(0), extract_inst[11] = pkt(0,0) -> phv(0), extract_inst[12] = pkt(0,0) -> phv(0), extract_inst[13] = pkt(0,0) -> phv(0), extract_inst[14] = pkt(0,0) -> phv(0), extract_inst[15] = pkt(0,0) -> phv(0), 
+Total extract_inst 16
+meta_inst[0]: hv_en 63 |= 3
+meta_inst[1]: hv_en 0 |= 128
+Total meta_inst 2
+ohi_inst[0]: ohi[0] = current_off + 17
+ohi_inst[1]: ohi[48] = current_off + 31
+Total ohi_inst 2
+mux_idx[0] = pkt[current_off + 0]
+mux_idx[1] = pkt[current_off + 0]
+mux_idx[2] = pkt[current_off + 0]
+mux_idx[3] = pkt[current_off + 0]
+Total mux_idx 4
+mux_inst_data[0] = ((mux_pkt[0] & 0) >> 0) - 0
+mux_inst_data[1] = ((mux_pkt[0] & 0) >> 0) - 0
+mux_inst_data[2] = ((mux_pkt[0] & 0) >> 0) - 0
+Total mux_inst 3
+
+DEBUG::Skip transition from parse_ethernet -> __END__, Terminate
+DEBUG::Skip transition from __END__ -> __END__, Terminate
+INFO::INGRESS:Tcam states used 2
+DEBUG::Parser init_profile
+curr_offset = 0, state = 1, lkp_val_pkt_idx0 = 0, lkp_val_pkt_idx1 = 0, lkp_val_pkt_idx2 = 0
+
+INFO::EGRESS:Parser Output Generation:
+DEBUG::EGRESS:start[1]->parse_ethernet[2]
+DEBUG::EGRESS:fill_sram_entry for parse_ethernet + start
+DEBUG::parse_ethernet:extraction_tuples=[(0, 17, 0)]
+DEBUG::Extract instructions : ['pkt_off 0, bytes 4, phc 0', 'pkt_off 4, bytes 4, phc 4', 'pkt_off 8, bytes 4, phc 8', 'pkt_off 12, bytes 4, phc 12', 'pkt_off 16, bytes 1, phc 16']
+DEBUG::OHI instruction[0]: off 17, len 14
+DEBUG::EGRESS:parse_ethernet:End State: OHI instruction[1] 48 len 14
+DEBUG::EGRESS:parse_ethernet:Flit # 0
+DEBUG::TCAM-decoder[0] - 
+valid = 1
+x_control(key) = 0, y_control(mask) = 0, x_state = 0x1, y_state = 0x1fe
+x_lkp_val[0] = 0x0, 	y_lkp_val[0] = 0x0
+x_lkp_val[1] = 0x0, 	y_lkp_val[1] = 0x0
+x_lkp_val[2] = 0x0, 	y_lkp_val[2] = 0x0
+
+DEBUG::SRAM-decoder[0] - 
+action = 1, nxt_state = 2, offset_inst: sel 0, mux_sel 0, val 31 
+lkp_val_inst[0] = mux_pkt[0], store_en = 0
+lkp_val_inst[1] = mux_pkt[0], store_en = 0
+lkp_val_inst[2] = mux_pkt[0], store_en = 0
+
+Total lkp_val_inst 3
+extract_inst[0] = pkt(0,4) -> phv(0), extract_inst[1] = pkt(4,4) -> phv(4), extract_inst[2] = pkt(8,4) -> phv(8), extract_inst[3] = pkt(12,4) -> phv(12), extract_inst[4] = pkt(16,1) -> phv(16), extract_inst[5] = pkt(0,0) -> phv(0), extract_inst[6] = pkt(0,0) -> phv(0), extract_inst[7] = pkt(0,0) -> phv(0), extract_inst[8] = pkt(0,0) -> phv(0), extract_inst[9] = pkt(0,0) -> phv(0), extract_inst[10] = pkt(0,0) -> phv(0), extract_inst[11] = pkt(0,0) -> phv(0), extract_inst[12] = pkt(0,0) -> phv(0), extract_inst[13] = pkt(0,0) -> phv(0), extract_inst[14] = pkt(0,0) -> phv(0), extract_inst[15] = pkt(0,0) -> phv(0), 
+Total extract_inst 16
+meta_inst[0]: hv_en 63 |= 3
+meta_inst[1]: hv_en 0 |= 128
+Total meta_inst 2
+ohi_inst[0]: ohi[0] = current_off + 17
+ohi_inst[1]: ohi[48] = current_off + 31
+Total ohi_inst 2
+mux_idx[0] = pkt[current_off + 0]
+mux_idx[1] = pkt[current_off + 0]
+mux_idx[2] = pkt[current_off + 0]
+mux_idx[3] = pkt[current_off + 0]
+Total mux_idx 4
+mux_inst_data[0] = ((mux_pkt[0] & 0) >> 0) - 0
+mux_inst_data[1] = ((mux_pkt[0] & 0) >> 0) - 0
+mux_inst_data[2] = ((mux_pkt[0] & 0) >> 0) - 0
+Total mux_inst 3
+
+DEBUG::Skip transition from parse_ethernet -> __END__, Terminate
+DEBUG::Skip transition from __END__ -> __END__, Terminate
+INFO::EGRESS:Tcam states used 2
+DEBUG::Parser init_profile
+curr_offset = 0, state = 1, lkp_val_pkt_idx0 = 0, lkp_val_pkt_idx1 = 0, lkp_val_pkt_idx2 = 0
+

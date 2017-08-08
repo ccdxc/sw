@@ -60,12 +60,17 @@ typedef struct if_s {
         } __PACK__;
 
         // uplink interface info
-        // TODO: grouped port and pc together for now !!
         struct {
-            uint32_t      uplink_port_num;           // uplink port number
-            uint32_t      uplink_pc_num;             // uplink port channel number
             l2seg_id_t    native_l2seg;              // native (vlan) on uplink (pc)
             bitmap        *vlans;                    // vlans up on this interface
+            // uplink if
+            struct {
+                uint32_t      uplink_port_num;       // uplink port number
+            } __PACK__;
+            // uplink PC if
+            struct {
+                uint32_t      uplink_pc_num;         // uplink port channel number
+            } __PACK__;
         };
     } __PACK__;
 
@@ -84,6 +89,8 @@ typedef struct if_s {
     ht_ctxt_t           hal_handle_ht_ctxt;          // hal handle based hash table ctxt
     dllist_ctxt_t       ep_list_head;                // endpoints behind this interface
     dllist_ctxt_t       session_list_head;           // session from this
+    dllist_ctxt_t       mbr_if_list_head;            // list of member ports
+    dllist_ctxt_t       pc_lentry;                   // pc list entry 
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;                      
@@ -273,6 +280,9 @@ hal_ret_t enicif_create(intf::InterfaceSpec& spec,
                         intf::InterfaceResponse *rsp,
                         if_t *hal_if);
 hal_ret_t uplinkif_create(intf::InterfaceSpec& spec, 
+                          intf::InterfaceResponse *rsp,
+                          if_t *hal_if);
+hal_ret_t uplinkpc_create(intf::InterfaceSpec& spec, 
                           intf::InterfaceResponse *rsp,
                           if_t *hal_if);
 hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 

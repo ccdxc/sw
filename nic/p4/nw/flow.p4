@@ -99,7 +99,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(lif, multicast_en, p4plus_app_id, flow_steering_only,
+action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
@@ -129,6 +129,7 @@ action flow_info(lif, multicast_en, p4plus_app_id, flow_steering_only,
     /* qid */
     if (qid_en == TRUE) {
         modify_field(control_metadata.qid, tunnel_vnid);
+        modify_field(control_metadata.qtype, qtype);
     }
 
     /* p4plus app id */

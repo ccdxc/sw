@@ -54,6 +54,10 @@ enum ApiStatus {
   API_STATUS_LIF_NOT_FOUND            = 29;    // LIF not found
   API_STATUS_NWSEC_PROFILE_ID_INVALID = 30;    // security profile id invalid
   API_STATUS_NWSEC_PROFILE_NOT_FOUND  = 31;    // security profile not found
+  API_STATUS_TLS_CB_ID_INVALID        = 32;    // invalid TLS CB id
+  API_STATUS_TLS_CB_NOT_FOUND         = 33;    // invalid TLS CB
+  API_STATUS_TCP_CB_ID_INVALID        = 34;    // invalid TCP CB id
+  API_STATUS_TCP_CB_NOT_FOUND         = 35;    // invalid TCP CB
 }
 
 // common meta object that is part of all other top level objects

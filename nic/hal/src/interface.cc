@@ -412,16 +412,13 @@ add_if_to_db (if_t *hal_if)
 hal_ret_t
 interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
-    int                 i;
     hal_ret_t           ret = HAL_RET_OK;
     if_t                *hal_if = NULL;
-    l2seg_id_t          l2seg_id;
-    l2seg_t             *l2seg;
     indexer::status     rs;
     pd::pd_if_args_t    pd_if_args;
 
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("----------------------- Interface API Start ------------------------");
     HAL_TRACE_DEBUG("PI-IF:{}: If Create for id {} Type: {} EnicType: {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id(), spec.type(), 
                     (spec.type() == intf::IF_TYPE_ENIC) ? 
@@ -465,26 +462,9 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             break;
 
         case intf::IF_TYPE_UPLINK_PC:
-            hal_if->uplink_pc_num = spec.if_uplink_pc_info().uplink_pc_num();
-            hal_if->uplink_port_num = HAL_PORT_INVALID;
-            hal_if->native_l2seg = spec.if_uplink_pc_info().native_l2segment_id();
-            hal_if->vlans = bitmap::factory(4096);
-            if (hal_if->vlans == NULL) {
-                ret = HAL_RET_OOM;
-                rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+            ret = uplinkpc_create(spec, rsp, hal_if);
+            if (ret != HAL_RET_OK) {
                 goto end;
-            }
-            for (i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
-                l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
-                l2seg = find_l2seg_by_id(l2seg_id);
-                if (l2seg == NULL) {
-                    ret = HAL_RET_L2SEG_NOT_FOUND;
-                    rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
-                    goto end;
-                }
-                if (l2seg->access_encap.type == types::ENCAP_TYPE_DOT1Q) {
-                    hal_if->vlans->set(l2seg->access_encap.val);
-                }
             }
             break;
 
@@ -546,7 +526,7 @@ end:
     if (ret != HAL_RET_OK && hal_if != NULL) {
         if_free(hal_if);
     }
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    HAL_TRACE_DEBUG("----------------------- Interface API End ------------------------");
     return ret;
 }
 
@@ -710,8 +690,8 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
                         if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    l2seg_id_t          l2seg_id;
-    l2seg_t             *l2seg;
+    // l2seg_id_t          l2seg_id;
+    // l2seg_t             *l2seg;
 
     HAL_TRACE_DEBUG("PI-Uplinkif:{}: Uplinkif Create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
@@ -727,6 +707,10 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
         HAL_TRACE_ERR("PI-Uplinkif:{}: Out of Memory Err: {}", ret);
         goto end;
     }
+#if 0
+    // Deprecated: User will not be able to pass l2segments during uplink
+    //             create or update. There is a different API 
+    //             AddL2SegmentOnUplink to update l2segs on uplink/pc
     for (int i = 0; i < spec.if_uplink_info().l2segment_id_size(); i++) {
         l2seg_id = spec.if_uplink_info().l2segment_id(i);
         l2seg = find_l2seg_by_id(l2seg_id);
@@ -741,11 +725,52 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
             hal_if->vlans->set(l2seg->access_encap.val);
         }
     }
+#endif
 
 end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Uplink PC If Create 
+//------------------------------------------------------------------------------
+hal_ret_t uplinkpc_create(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                            if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    uint64_t            mbr_if_hdl = 0;
+    if_t                *mbr_if = NULL;
+
+    HAL_TRACE_DEBUG("PI-UplinkPC:{}: UplinkPC Create for id {}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+
+    hal_if->uplink_port_num = HAL_PORT_INVALID;
+    hal_if->uplink_pc_num = spec.if_uplink_pc_info().uplink_pc_num();
+    hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
+    hal_if->vlans = bitmap::factory(4096);
+    if (hal_if->vlans == NULL) {
+        ret = HAL_RET_OOM;
+        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+        HAL_TRACE_ERR("PI-UplinkPC:{}: Out of Memory Err: {}", ret);
+        goto end;
+    }
+
+    // Walk through member uplinks
+    utils::dllist_reset(&hal_if->mbr_if_list_head);
+    for (int i = 0; i < spec.if_uplink_pc_info().member_if_handle_size(); i++) {
+        mbr_if_hdl = spec.if_uplink_pc_info().member_if_handle(i);
+        mbr_if = find_if_by_handle(mbr_if_hdl);
+        if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
+            HAL_TRACE_ERR("PI-UplinkPC:{}: Unable to add non-uplinkif. "
+                          "Skipping if id: {}", __FUNCTION__, mbr_if->if_id);
+            continue;
+        }
+        // add uplink if to list
+        utils::dllist_add(&hal_if->mbr_if_list_head, &mbr_if->pc_lentry);
+    }
+end:
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // Get lif handle

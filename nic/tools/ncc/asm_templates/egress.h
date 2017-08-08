@@ -194,10 +194,6 @@ struct ${table}_${actionname}_d {
 //::        if len(pddict['tables'][table]['actions']) > 1:
 struct ${table}_d {
     action_id : 8; /* TBD: Does this need to go after listing all actions? */
-                   /* Answer depends on understanding bit layout/endianess.
-                    * For now assuming action-pc in bitlayout comes before 
-                    * action-data 
-                    */
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action

@@ -1,7 +1,7 @@
 
 TOPDIR = ../../..
 SHAREDLIBRARY = libiris.so
-SYSTEM_LIBRARIES = -lp4pdapi -lp4pd -lcapri
+SYSTEM_LIBRARIES = -lp4pdapi -lp4pd -lcapri -lp4pdtcprx -lp4pdtcptx
 
 LCXXFLAGS = \
 			-fpic \
@@ -16,9 +16,13 @@ LCXXFLAGS = \
 			-I../../../gen/protobuf \
 			-I../../../utils/bitmap \
 			-I../../../gen/iris/include \
+			-I../../../gen/tcp_proxy_rxdma/include \
+			-I../../../gen/tcp_proxy_txdma/include \
 			-I../../../p4/nw/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \
+			-I../../../capsim/lib/libcapisa/include \
+			-I../../../capsim/lib/libmpuobj/include \
 			-g \
 			$(NULL)
 
@@ -33,11 +37,14 @@ SOURCES = \
 		  session_pd.cc \
 		  lif_pd.cc \
 		  uplinkif_pd.cc \
+		  uplinkpc_pd.cc \
 		  enicif_pd.cc \
 		  l2seg_uplink_pd.cc \
 		  if_pd.cc \
 		  endpoint_pd.cc \
 		  if_pd_utils.cc \
+		  tlscb_pd.cc \
+		  tcpcb_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

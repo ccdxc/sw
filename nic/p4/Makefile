@@ -2,7 +2,9 @@
 
 LIBDIRS = \
           nw \
+          proxy \
           $(NULL)
+
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 TOPDIR = ..

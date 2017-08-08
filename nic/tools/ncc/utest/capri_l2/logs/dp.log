@@ -1,0 +1,18 @@
+DEBUG::INGRESS,Hdr,#PhvChunks,#Ohi
+DEBUG::INGRESS,capri_intrinsic,2,0
+DEBUG::INGRESS,ethernet,0,1
+INFO::INGRESS:Deparser Total Headers 2 Total Fields 3
+
+DEBUG::INGRESS:capri_intrinsic Phv 0 
+DEBUG::INGRESS:capri_intrinsic Phv 136 
+DEBUG::INGRESS:ethernet Ohi [0,-1]:(0, 14),
+INFO::INGRESS:DeParser Dpp & Dpr Block Output Generation:
+DEBUG::EGRESS,Hdr,#PhvChunks,#Ohi
+DEBUG::EGRESS,capri_intrinsic,2,0
+DEBUG::EGRESS,ethernet,0,1
+INFO::EGRESS:Deparser Total Headers 2 Total Fields 3
+
+DEBUG::EGRESS:capri_intrinsic Phv 0 
+DEBUG::EGRESS:capri_intrinsic Phv 136 
+DEBUG::EGRESS:ethernet Ohi [0,-1]:(0, 14),
+INFO::EGRESS:DeParser Dpp & Dpr Block Output Generation:

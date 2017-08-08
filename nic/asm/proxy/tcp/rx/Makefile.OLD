@@ -4,9 +4,10 @@ bin = $(src:.s=.bin)
 rundir = ../run
 ctldir = ../ctl
 bindir = bin/
+tcp_p4_inc_dir = tcp_proxy_rxdma/asm_out
 
 LDFLAGS = 
-CFLAGS = -I../include -I../../../common-p4+/assembly/include -I../../../tls-p4+/assembly/include
+CFLAGS = -I../include -I../../../common-p4+/assembly/include -I$(tcp_p4_inc_dir)
 
 all: $(bin)
 	echo $(src)
@@ -26,5 +27,8 @@ run: $(bin)
 clean:
 	rm -f $(bindir)/*
 
-%.bin: %.s
+%.bin: %.s $(tcp_p4_inc_dir)/ingress.h
 	capas $(CFLAGS) $< -o $@
+
+%.h: ../../p4/tcp_proxy_rxdma.p4 ../../../common-p4+/p4/common_rxdma.p4
+	../../../saratk/nic/tools/ncc/capri-ncc.py --p4-plus --asm-out --no-ohi ../../p4/tcp_proxy_rxdma.p4

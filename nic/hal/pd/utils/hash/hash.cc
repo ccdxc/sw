@@ -515,6 +515,9 @@ Hash::program_table_(HashEntry *he, void *hwkey)
         return HAL_RET_INVALID_ARG;
     }
 
+    // Entry trace
+    entry_trace_(he);
+
     // P4-API: Wrihe 
     pd_err = p4pd_entry_write(table_id_, he->get_index(), (uint8_t *)hwkey, 
                               NULL, he->get_data());
@@ -613,4 +616,22 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
         default:
             HAL_ASSERT(0);
     }
+}
+
+// ----------------------------------------------------------------------------
+// Print entry
+// ----------------------------------------------------------------------------
+hal_ret_t
+Hash::entry_trace_(HashEntry *he)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+            he->get_key(), NULL, he->get_data(), buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_TRACE_DEBUG("Index: {} \n {}", he->get_index(), buff);
+
+    return HAL_RET_OK;
 }

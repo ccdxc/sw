@@ -31,6 +31,8 @@
 #include <session_svc.hpp>
 #include <l4lb_svc.hpp>
 #include <nwsec_svc.hpp>
+#include <tlscb_svc.hpp>
+#include <tcpcb_svc.hpp>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -52,6 +54,9 @@ svc_reg (const std::string& server_addr)
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
     ServerBuilder            server_builder;
+    TlsCbServiceImpl         tlscb_svc;
+    TcpCbServiceImpl         tcpcb_svc;
+
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
@@ -67,6 +72,8 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&endpoint_svc);
     server_builder.RegisterService(&l4lb_svc);
     server_builder.RegisterService(&nwsec_svc);
+    server_builder.RegisterService(&tlscb_svc);
+    server_builder.RegisterService(&tcpcb_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 

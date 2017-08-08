@@ -50,9 +50,7 @@ redirect_to_remote:
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oqueue
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index
 
+.align
 nop:
   nop.e
   nop
-
-.align
-

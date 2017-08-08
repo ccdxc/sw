@@ -56,7 +56,7 @@ tcp_retxq_produce:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TCP)
 	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.seqe_fid, TCP_SCHED_RING_SESQ, d.retx_pi)
+	CAPRI_RING_DOORBELL_DATA(0, k.seqe_fid, TCP_SCHED_RING_DATA, d.retx_pi)
 	
 	phvwr		p.dma_cmd1_addr, r4
 	phvwr		p.db_data, r3

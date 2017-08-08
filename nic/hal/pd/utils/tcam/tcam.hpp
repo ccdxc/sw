@@ -111,6 +111,7 @@ private:
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs); 
+    hal_ret_t entry_trace_(TcamEntry *te);
 public:
 
     Tcam(std::string table_name, uint32_t table_id, uint32_t tcam_capacity, 

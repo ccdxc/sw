@@ -247,10 +247,11 @@ message IfUplinkInfo {
 
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
 message IfUplinkPCInfo {
-  uint32           uplink_pc_num         = 1;    // uplink port channel number
-  uint32           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
-  repeated uint32  l2segment_id          = 3;    // user (external) vlans
-  TrafficClassInfo rx_traffic_class_info = 4;    // Info about how to derive traffic class on this interface
+  uint32            uplink_pc_num               = 1;    // uplink port channel number
+  uint32            native_l2segment_id         = 2;    // L2 segment to map the packets to, if they are untagged
+  repeated uint32   l2segment_id                = 3;    // user (external) vlans
+  TrafficClassInfo  rx_traffic_class_info       = 4;    // Info about how to derive traffic class on this interface
+  repeated uint64   member_if_handle            = 5;    // uplink member ports
 }
 
 // InterfaceKeyHandle uniquely identifies a Interface

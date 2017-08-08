@@ -13,7 +13,7 @@ capri_model = {
         'containers': {8: 512} # {size:num} all 8 bit containers
     },
     'match_action': {
-        'num_stages' : 4,
+        'num_stages' : 6,
         'num_tables' : 8,
         'max_ki_size' : 512,
         'max_kd_size' : 512,

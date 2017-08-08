@@ -1,5 +1,6 @@
 -I ../../..
 -I ../../../hal/svc
+-I ../../../hal/pd
 -I ../../../gen
 -I ../../../p4/nw/include
 -I ../../../gen/protobuf

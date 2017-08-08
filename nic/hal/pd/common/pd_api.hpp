@@ -7,6 +7,8 @@
 #include <interface.hpp>
 #include <endpoint.hpp>
 #include <session.hpp>
+#include <tlscb.hpp>
+#include <tcpcb.hpp>
 
 namespace hal {
 namespace pd {
@@ -19,6 +21,8 @@ using hal::lif_t;
 using hal::session_t;
 using hal::flow_key_t;
 using hal::flow_t;
+using hal::tlscb_t;
+using hal::tcpcb_t;
 
 typedef struct pd_tenant_args_s {
     tenant_t           *tenant;
@@ -65,6 +69,14 @@ typedef struct pd_l2seg_uplink_args_s {
     l2seg_t     *l2seg;
     if_t        *intf;
 } __PACK__ pd_l2seg_uplink_args_t;
+
+typedef struct pd_tlscb_args_s {
+    tlscb_t            *tlscb;
+} __PACK__ pd_tlscb_args_t;
+
+typedef struct pd_tcpcb_args_s {
+    tcpcb_t            *tcpcb;
+} __PACK__ pd_tcpcb_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -132,6 +144,19 @@ pd_l2seg_uplinkif_args_init (pd_l2seg_uplink_args_t *args)
     return;
 }
 
+static inline void
+pd_tlscb_args_init (pd_tlscb_args_t *args)
+{
+    args->tlscb = NULL;
+    return;
+}
+
+static inline void
+pd_tcpcb_args_init (pd_tcpcb_args_t *args)
+{
+    args->tcpcb = NULL;
+    return;
+}
 
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
@@ -160,6 +185,15 @@ hal_ret_t pd_session_update(pd_session_args_t *session);
 hal_ret_t pd_session_delete(pd_session_args_t *session);
 
 hal_ret_t pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args);
+
+hal_ret_t pd_tlscb_create(pd_tlscb_args_t *tlscb);
+hal_ret_t pd_tlscb_update(pd_tlscb_args_t *tlscb);
+hal_ret_t pd_tlscb_delete(pd_tlscb_args_t *tlscb);
+
+hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
+hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
+hal_ret_t pd_tcpcb_delete(pd_tcpcb_args_t *tcpcb);
+
 }    // namespace pd
 }    // namespace hal
 

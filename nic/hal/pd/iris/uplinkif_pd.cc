@@ -5,6 +5,7 @@
 #include <if_pd.hpp>
 #include <uplinkif_pd.hpp>
 #include "capri_tm_rw.hpp"
+#include "p4pd_api.hpp"
 
 namespace hal {
 namespace pd {
@@ -18,7 +19,7 @@ pd_uplinkif_create(pd_if_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_uplinkif_t        *pd_upif;
 
-    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Creating pd state for : {}", 
+    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Creating pd state for if_id: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create lif PD
@@ -35,7 +36,7 @@ pd_uplinkif_create(pd_if_args_t *args)
     ret = uplinkif_pd_alloc_res(pd_upif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to alloc. resources for : {}",
+        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to alloc. resources for if_id: {}",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -102,15 +103,22 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     indexer::status      rs = indexer::SUCCESS;
 
     // Allocate lif hwid
-    rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_upif->hw_lif_id);
+    rs = g_hal_state_pd->lif_hwid_idxr()->
+        alloc((uint32_t *)&pd_upif->hw_lif_id);
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-UPIF::{}: Programmed for UpIf HW-ID: {}",
-                    __FUNCTION__, pd_upif->hw_lif_id);
-
     HAL_TRACE_DEBUG("PD-Uplinkif:{}: Allocated hw_lif_id: {}", 
                     __FUNCTION__, pd_upif->hw_lif_id);
+
+    rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
+        alloc((uint32_t *)&pd_upif->up_ifpc_id);
+    if (rs != indexer::SUCCESS) {
+        return HAL_RET_NO_RESOURCE;
+    }
+    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Allocated Uplink ifpc_id: {}", 
+                    __FUNCTION__, pd_upif->up_ifpc_id);
+
     return ret;
 }
 
@@ -146,11 +154,13 @@ uplinkif_pd_pgm_tm_register(pd_uplinkif_t *pd_upif)
 
     ret = capri_tm_uplink_lif_set(tm_oport, pd_upif->hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to program for : {}",
+        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to program for if_id: {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for : {}",
-                __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
+        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for if_id: {} "
+                        "iport:{} => hwlif: {}",
+                        __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if),
+                        tm_oport, pd_upif->hw_lif_id);
     }
 
     return ret;
@@ -167,6 +177,8 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     uint8_t                     tm_oport = 0;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
+    char                        buff[4096] = {0};
+    p4pd_error_t                p4_err;
 
     memset(&data, 0, sizeof(data));
 
@@ -187,11 +199,17 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
 
     ret = dm_omap->insert_withid(&data, pd_upif->hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to program for : {}",
+        HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to program for if_id: {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for : {}",
+        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for if_id: {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
+        p4_err = p4pd_table_ds_decoded_string_get(P4TBL_ID_OUTPUT_MAPPING, 
+                                                NULL, NULL, &data, buff, 
+                                                sizeof(buff));
+        HAL_ASSERT(p4_err == P4PD_SUCCESS);
+        HAL_TRACE_DEBUG("Index: {} \n {}", pd_upif->hw_lif_id, buff);
+
     }
     return ret;
 }

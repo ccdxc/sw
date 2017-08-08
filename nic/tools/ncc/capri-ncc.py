@@ -55,6 +55,9 @@ def get_parser():
     parser.add_argument('--no-te-bit2byte', dest='no_te_bit2byte', action='store_true',
                         help='Do not convert K and I bit extractions to byte',
                         default=False, required=False)
+    parser.add_argument('--two-byte-profile', dest='two_byte_profile', action='store_true',
+                        help='Use Two-Byte-Mode for km_profiles',
+                        default=False, required=False)
     parser.add_argument('--gen-dir', dest='gen_dir', action='store',
                         help='Directory for all Compiler generated code',
                         default='.', required=False)
@@ -102,16 +105,31 @@ class capri_backend:
 
         capri_model_dbg_output(self, dbg_info)
 
+def setup_p4_plus_hw_parameters(capri_model):
+    capri_model['phv']['num_flits'] = 12
+    max_phv_bits = 12*512
+    capri_model['phv']['max_size'] = max_phv_bits
+    max_phv_bytes = max_phv_bits / 8
+    capri_model['phv']['containers'] = {8: max_phv_bytes} # {size:num} all 8 bit containers
+    capri_model['match_action']['num_stages'] = 8
+    # set up parser params as well..code uses parser flits for phv allocation
+    capri_model['parser']['parser_num_flits'] = capri_model['phv']['num_flits'] / 2
+    
+
 def main():
     args = get_parser().parse_args()
     prog_name = os.path.split(args.sources[0])
     prog_name = prog_name[1].replace('.p4', '')
-    capri_logging.logger_init(log_dir=args.gen_dir, prog_name=prog_name, loglevel=args.loglevel, floglevel=args.floglevel)
+    capri_logging.logger_init(log_dir=args.gen_dir, prog_name=prog_name, 
+                                loglevel=args.loglevel, floglevel=args.floglevel)
 
     # TBD - Insert toplevel try-except block
     h = HLIR(*args.sources)
     if not h.build():
         sys.exit(1)
+
+    if args.p4_plus:
+        setup_p4_plus_hw_parameters(capri_model)
 
     capri_be = capri_backend(h, capri_model, args)
 
@@ -153,6 +171,13 @@ def main():
 
     capri_be.tables.update_table_config()
     capri_be.tables.program_tables()
+
+    # remove old capri.bin
+    cfg_out_dir = os.path.join(capri_be.args.gen_dir +
+                               '/%s/cfg_out' % capri_be.prog_name)
+    cfg_out_fname = os.path.join(cfg_out_dir, 'capri.bin')
+    if os.path.exists(cfg_out_fname):
+        os.unlink(cfg_out_fname)
 
     # Generate various outputs
     for d in xgress:

@@ -63,15 +63,19 @@ validate_tunneled_packet2_ipv6:
   seq         c1, k.inner_ipv6_valid, 1
   bcf         [!c1], validate_tunneled_packet2_exit
   nop.!c1.e
-  seq         c1, k.inner_ipv6_dstAddr[127:64], 0
-  seq         c2, k.inner_ipv6_dstAddr[63:0], 0
-  seq         c3, k.inner_ipv6_dstAddr[63:0], 1
+  add         r1, r0, 1
+  seq         c1, k.inner_ipv6_dstAddr[127:64], r0
+  seq         c2, k.inner_ipv6_dstAddr[63:0], r0
+  seq         c3, k.inner_ipv6_dstAddr[63:0], r1
   andcf       c1, [c2|c3]
-  seq         c2, k.{inner_ipv6_srcAddr_sbit0_ebit31,inner_ipv6_srcAddr_sbit32_ebit63}, 0
-  seq         c3, k.inner_ipv6_srcAddr_sbit64_ebit127, 1
-  seq         c4, k.inner_ipv6_srcAddr_sbit0_ebit31[31:24], 0xff
-  seq         c5, k.{inner_ipv6_srcAddr_sbit0_ebit31,inner_ipv6_srcAddr_sbit32_ebit63}, k.inner_ipv6_dstAddr[127:64]
-  seq         c6, k.inner_ipv6_srcAddr_sbit64_ebit127, k.inner_ipv6_dstAddr[63:0]
+  // inner_srcAddr => r2(hi) r3(lo)
+  add         r2, r0, k.{inner_ipv6_srcAddr_sbit0_ebit31,inner_ipv6_srcAddr_sbit32_ebit63}
+  or          r3, k.inner_ipv6_srcAddr_sbit120_ebit127, k.inner_ipv6_srcAddr_sbit64_ebit119, 8
+  seq         c2, r2, r0
+  seq         c3, r3, r1
+  seq         c4, r2[63:56], 0xff
+  seq         c5, r2, k.inner_ipv6_dstAddr[127:64]
+  seq         c6, r3, k.inner_ipv6_dstAddr[63:0]
   bcf         [c1|c2|c3|c4|c5|c6], malformed_tunneled_packet
   nop
   nop.e

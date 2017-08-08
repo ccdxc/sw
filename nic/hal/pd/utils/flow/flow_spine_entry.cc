@@ -109,6 +109,11 @@ FlowSpineEntry::program_table()
 
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
         HAL_TRACE_DEBUG("FSE::{}: P4 FT Write: {}", __FUNCTION__, ft_index);
+
+        // Entry trace
+        entry_trace(table_id, ft_index, (void *)anchor_entry_->get_key(), 
+                    (void *)&action_data);
+
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t*)hwkey, NULL,
                                   (void *)&action_data);
@@ -135,6 +140,11 @@ FlowSpineEntry::program_table()
                  sizeof(flow_hash_info1));
         HAL_TRACE_DEBUG("FSE::{}: P4 FHCT Write: {}", 
                         __FUNCTION__, fhct_index_);
+
+        // Entry trace
+        entry_trace(oflow_table_id, fhct_index_, NULL,
+                    (void *)&action_data);
+
 		// P4-API: Oflow Table Write
         pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL, 
                                   (void *)&oflow_act_data);
@@ -168,12 +178,20 @@ FlowSpineEntry::deprogram_table()
         memset(hw_key, 0, hw_key_len);
         memset(&action_data, 0, sizeof(action_data));
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
+
+        // Entry trace
+        entry_trace(table_id, ft_index, NULL, NULL);
+
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t *)hw_key, NULL, 
                                   (void *)&action_data);
         ::operator delete(hw_key);
     } else {
         memset(&oflow_act_data, 0, sizeof(oflow_act_data));
+
+        // Entry trace
+        entry_trace(oflow_table_id, fhct_index_, NULL, NULL);
+
 		// P4-API: Oflow Table Write
         pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL, 
                                   (void *)&oflow_act_data);
@@ -305,4 +323,24 @@ void
 FlowSpineEntry::set_ft_entry(FlowTableEntry *ft_entry)
 {
     ft_entry_ = ft_entry;
+}
+
+hal_ret_t
+FlowSpineEntry::entry_trace(uint32_t table_id, uint32_t index, 
+                             void *key, void *data)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id, key, NULL, 
+                                              data, buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    if (!key && !data) {
+        HAL_TRACE_DEBUG("Clearing entry at Index: {}", index);
+    } else {
+        HAL_TRACE_DEBUG("Index: {} \n {}", index, buff);
+    }
+
+    return HAL_RET_OK;
 }

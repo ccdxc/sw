@@ -71,6 +71,16 @@ public:
     ht *session_id_ht(void) const { return session_id_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
 
+    // get APIs for TLS CB state
+    slab *tlscb_slab(void) const { return tlscb_slab_; }
+    ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
+    ht *tlscb_hal_handle_ht(void) const { return tlscb_hal_handle_ht_; }
+
+    // get APIs for TCP CB state
+    slab *tcpcb_slab(void) const { return tcpcb_slab_; }
+    ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
+    ht *tcpcb_hal_handle_ht(void) const { return tcpcb_hal_handle_ht_; }
+
 private:
     bool init(void);
     hal_state();
@@ -131,6 +141,20 @@ private:
         ht         *flow_ht_;
         ht         *session_id_ht_;
         ht         *session_hal_handle_ht_;
+    } __PACK__;
+    
+    // TLS CB related state
+    struct {
+        slab       *tlscb_slab_;
+        ht         *tlscb_id_ht_;
+        ht         *tlscb_hal_handle_ht_;
+    } __PACK__;
+
+    // TLS CB related state
+    struct {
+        slab       *tcpcb_slab_;
+        ht         *tcpcb_id_ht_;
+        ht         *tcpcb_hal_handle_ht_;
     } __PACK__;
 };
 

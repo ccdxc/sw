@@ -14,10 +14,9 @@ typedef uint32_t    nwsec_profile_hw_id_t;
 
 // security profile pd state
 struct pd_nwsec_profile_s {
-    void                     *nwsec_profile;    // PI security profile
+    void                    *nwsec_profile;    // PI security profile
 
-    // operational state of security profile pd
-    nwsec_profile_hw_id_t    hw_id;             // hw id for this segment
+    nwsec_profile_hw_id_t   nwsec_hw_id;       // hw id for this segment
 } __PACK__;
 
 hal_ret_t pd_nwsec_profile_create (pd_nwsec_profile_args_t *args);

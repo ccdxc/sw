@@ -136,6 +136,8 @@ private:
         RETRIEVE
     };
     void stats_update(api ap, hal_ret_t rs); 
+    // Entry Trace
+    hal_ret_t entry_trace_(HashEntry *he);
 
 public:
 

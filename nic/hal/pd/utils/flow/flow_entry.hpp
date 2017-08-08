@@ -57,6 +57,9 @@ public:
     hal_ret_t program_table_non_anchor_entry(FlowEntry *next_fe);
     hal_ret_t deprogram_table_non_anchor_entry();
     hal_ret_t form_hw_key(uint32_t table_id, void *hwkey);
+    hal_ret_t entry_trace(uint32_t table_id, uint32_t index, 
+                          void *data);
+
 
     // Getters & Setters
     void *get_key() { return key_; }

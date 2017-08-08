@@ -26,6 +26,8 @@ LDFLAGS +=	-lhal \
 			-lperiodic \
 			-lp4pdapi \
 			-lp4pd \
+			-lp4pdtcprx \
+			-lp4pdtcptx \
 			-lcapricsr \
 			-lcapri \
 			-lslab \
@@ -48,6 +50,8 @@ SRC_FILES :=	hal.cc \
 				svc/session_svc.cc \
 				svc/nwsec_svc.cc \
 				svc/l4lb_svc.cc \
+				svc/tlscb_svc.cc \
+				svc/tcpcb_svc.cc \
 				src/utils.cc \
 				src/tenant.cc \
 				src/interface.cc \
@@ -55,6 +59,8 @@ SRC_FILES :=	hal.cc \
 				src/endpoint.cc \
 				src/session.cc \
 				src/nwsec.cc \
+				src/tlscb.cc \
+				src/tcpcb.cc \
 				src/interface_api.cc \
 				src/l2segment_api.cc \
 				src/endpoint_api.cc \
@@ -83,7 +89,12 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/endpoint.pb.o \
 				$(OBJ_DIR)/endpoint.o \
 				$(OBJ_DIR)/l4lb.pb.o \
-				$(OBJ_DIR)/qos.pb.o
+				$(OBJ_DIR)/qos.pb.o \
+				$(OBJ_DIR)/tls_proxy_cb.pb.o \
+				$(OBJ_DIR)/tlscb.o \
+				$(OBJ_DIR)/tcp_proxy_cb.pb.o \
+				$(OBJ_DIR)/tcpcb.o \
+	
 
 HAL_OBJS := 	$(OBJ_DIR)/tenant.grpc.pb.o \
 				$(OBJ_DIR)/interface.grpc.pb.o \
@@ -93,6 +104,8 @@ HAL_OBJS := 	$(OBJ_DIR)/tenant.grpc.pb.o \
 				$(OBJ_DIR)/endpoint.grpc.pb.o \
 				$(OBJ_DIR)/l4lb.grpc.pb.o \
 				$(OBJ_DIR)/qos.grpc.pb.o \
+				$(OBJ_DIR)/tls_proxy_cb.grpc.pb.o \
+				$(OBJ_DIR)/tcp_proxy_cb.grpc.pb.o \
 				$(OBJ_DIR)/tenant_svc.o \
 				$(OBJ_DIR)/interface_svc.o \
 				$(OBJ_DIR)/l2segment_svc.o \
@@ -100,6 +113,8 @@ HAL_OBJS := 	$(OBJ_DIR)/tenant.grpc.pb.o \
 				$(OBJ_DIR)/endpoint_svc.o \
 				$(OBJ_DIR)/l4lb_svc.o \
 				$(OBJ_DIR)/nwsec_svc.o \
+				$(OBJ_DIR)/tlscb_svc.o \
+				$(OBJ_DIR)/tcpcb_svc.o \
 				$(OBJ_DIR)/main.o 
 
 OBJ_FILES := $(patsubst %.cc, %.o, $(SRC_FILES))

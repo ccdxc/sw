@@ -125,8 +125,8 @@ flow_hit_to_vm_bounce:
   nop.e
   nop
 
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
   nop.e
   nop
-.align
-

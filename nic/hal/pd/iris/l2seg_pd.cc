@@ -3,6 +3,7 @@
 #include <l2seg_pd.hpp>
 #include <pd.hpp>
 #include <hal_state_pd.hpp>
+#include "if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
@@ -70,6 +71,21 @@ cleanup:
         l2seg_pd_free(l2seg_pd);
     }
     return ret;
+}
+
+uint32_t
+pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg)
+{
+    l2seg_t         *pi_l2seg = NULL;
+    tenant_t        *pi_tenant = NULL;
+
+    pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
+    HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
+
+    pi_tenant = l2seg_get_pi_tenant(pi_l2seg);
+    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+
+    return ten_get_nwsec_prof_hw_id(pi_tenant);
 }
 
 }    // namespace pd

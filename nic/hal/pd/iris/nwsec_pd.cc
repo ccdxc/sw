@@ -81,13 +81,13 @@ p4pd_program_l4_profile_table (pd_nwsec_profile_t *pd_nw)
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_flags_nonsyn_noack_drop =
         profile->tcp_flags_nonsyn_noack_drop;
 
-    ret = dm->insert(&data, (uint32_t *)&pd_nw->hw_id);
+    ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-Nwsec::{}: Unable to program L4 Profile: ret: {}",
                 __FUNCTION__, ret);
     } else {
         HAL_TRACE_DEBUG("PD-Nwsec::{}: Programmed L4 Profile at {}",
-                __FUNCTION__, pd_nw->hw_id);
+                __FUNCTION__, pd_nw->nwsec_hw_id);
     }
 
     return HAL_RET_OK;
@@ -180,7 +180,9 @@ hal_ret_t
 pd_nwsec_alloc_res(pd_nwsec_profile_t *pd_nw)
 {
     return HAL_RET_OK;
+
 #if 0
+    // Clean up. Id will be allocated inside DirectMap library
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
 

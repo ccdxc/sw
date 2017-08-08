@@ -25,8 +25,11 @@
         write_seq                       : SEQ_NUMBER_WIDTH      ;\
         tso_seq                         : SEQ_NUMBER_WIDTH      ;\
         snd_cwnd                        : WINDOW_WIDTH          ;\
-
-#define TCB_RX2TX_SHARED_EXTRA_STATE \
+	snd_wscale			: 4	                ;\
+	rcv_mss_shft			: 4	                ;\
+        rcv_mss                         : 8                     ;\
+	rto				: 8	                ;\
+	ca_state			: 8	                ;\
 	pending_challenge_ack_send	: 1	                ;\
 	pending_ack_send		: 1	                ;\
 	pending_sync_mss		: 1	                ;\
@@ -43,23 +46,21 @@
         pending		                : 3                     ;\
 	ack_blocked			: 1	                ;\
 	ack_pending			: 3	                ;\
-	snd_wscale			: 4	                ;\
-	rcv_mss_shft			: 4	                ;\
-        rcv_mss                         : 8                     ;\
-	rto				: 8	                ;\
-	ca_state			: 8	                ;\
 	ato_deadline			: TS_WIDTH              ;\
 	rto_deadline			: TS_WIDTH	        ;\
 	retx_head_ts			: TS_WIDTH	        ;\
 	srtt_us				: TS_WIDTH              ;\
-	rcv_wnd				: WINDOW_WIDTH          ;\
-        rx2tx_shared_extra_pad1         : WINDOW_WIDTH          ;\
+	rcv_wnd				: WINDOW_WIDTH          ;
+
+#define TCB_RX2TX_SHARED_EXTRA_STATE \
 	prior_ssthresh			: WINDOW_WIDTH	        ;\
 	high_seq			: SEQ_NUMBER_WIDTH	;\
+        shared_pad3                     : SEQ_NUMBER_WIDTH      ;\
 	sacked_out			: COUNTER16	        ;\
 	lost_out			: COUNTER8	        ;\
 	retrans_out			: COUNTER8	        ;\
 	fackets_out			: COUNTER16	        ;\
+        shared_pad1                     : COUNTER16             ;\
 	ooo_datalen			: COUNTER16 	        ;\
 	quick				: 4	                ;\
 	pingpong			: 1                     ;\
@@ -69,6 +70,7 @@
 	reordering			: COUNTER32	        ;\
 	undo_marker			: SEQ_NUMBER_WIDTH	;\
 	undo_retrans			: SEQ_NUMBER_WIDTH	;\
+	shared_pad2			: SEQ_NUMBER_WIDTH	;\
         snd_ssthresh			: WINDOW_WIDTH	        ;\
 	loss_cwnd			: WINDOW_WIDTH	        ;\
 	ecn_flags			: 8	                ;

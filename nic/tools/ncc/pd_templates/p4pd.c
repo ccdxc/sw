@@ -2,6 +2,18 @@
 //:: from collections import OrderedDict
 //:: pddict = _context['pddict']
 
+//:: if pddict['p4plus']:
+//::    p4prog = pddict['p4program'] + '_'
+//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
+//::    prefix = 'p4pd_' + pddict['p4program']
+//:: else:
+//::    p4prog = ''
+//::    caps_p4prog = ''
+//::    prefix = 'p4pd'
+//:: #endif
+
+
+
 //:: #define here any constants needed.
 //:: ACTION_PC_LEN = 8 # in bits
 /*
@@ -43,7 +55,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "p4pd.h"
+#include "${p4prog}p4pd.h"
 
 #define P4PD_LOG_TABLE_UPDATES  /* Disable this once no more table writes logging is needed */
 
@@ -59,9 +71,9 @@
                                      */
 #define P4PD_TCAM_WORD_CHUNK_LEN (16) /* Tcam word chunk */
 
-char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
-uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
-uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
+char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
+uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
+uint16_t ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_TBLMAX];
 
 extern int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,
@@ -122,6 +134,11 @@ static void p4pd_copy_into_hwentry(uint8_t *dest,
                                    uint16_t src_start_bit,
                                    uint16_t num_bits)
 {
+
+
+    (void)p4pd_copy_into_hwentry;
+
+
     uint8_t src_byte, dest_byte, dest_byte_mask;
     uint8_t bits_in_src_byte1, bits_in_src_byte2;
 
@@ -181,6 +198,8 @@ static void p4pd_copy_into_p4field(uint8_t *dest,
                                    uint16_t src_start_bit,
                                    uint16_t num_bits)
 {
+    (void)p4pd_copy_into_p4field;
+
     uint8_t src_byte, dest_byte, dest_byte_mask;
     uint8_t bits_in_dest_byte1, bits_in_dest_byte2;
 
@@ -229,6 +248,8 @@ static void p4pd_copy_actiondata_be_order(uint8_t *dest,
                                 uint16_t src_start_bit,
                                 uint16_t num_bits)
 {
+    (void)p4pd_copy_actiondata_be_order;
+
     if (!num_bits || src == NULL) {
         return;
     }
@@ -251,6 +272,8 @@ static void p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
                                 uint16_t src_start_bit,
                                 uint16_t num_bits)
 {
+    (void)p4pd_place_key_and_actiondata_in_byte;
+
     if (!num_bits || src == NULL) {
         return;
     }
@@ -271,6 +294,8 @@ static void p4pd_place_actiondata_bit7_to_bit0_order(uint8_t *dest,
                                 uint16_t src_start_bit,
                                 uint16_t num_bits)
 {
+    (void)p4pd_place_actiondata_bit7_to_bit0_order;
+
     if (!num_bits || src == NULL) {
         return;
     }
@@ -294,6 +319,8 @@ static void p4pd_copy_multibyte(uint8_t *dest,
                                 uint16_t src_start_bit,
                                 uint16_t num_bits)
 {
+    (void)p4pd_copy_multibyte;
+
     if (!num_bits || src == NULL) {
         return;
     }
@@ -330,6 +357,8 @@ static void p4pd_copy_multibyte(uint8_t *dest,
 static void p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len) 
 {
 
+    (void)p4pd_swizzle_bytes;
+
     uint16_t entry_byte_len = hwentry_bit_len;
     entry_byte_len += (hwentry_bit_len % 16) ?  (16 - (hwentry_bit_len % 16)) : 0;
     entry_byte_len >>= 3;
@@ -353,6 +382,8 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                                             uint8_t *packed_actiondata_after_matchkey,
                                             uint16_t actiondata_after_matchkey_len)
 {
+    (void)p4pd_hash_table_entry_prepare;
+
     uint16_t dest_start_bit = 0;
 
     p4pd_copy_multibyte(hwentry,
@@ -426,6 +457,8 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
                                            uint8_t *packed_actiondata,
                                            uint16_t actiondata_len)
 {
+    (void)p4pd_p4table_entry_prepare;
+
     uint16_t dest_start_bit = 0;
 
     p4pd_copy_multibyte(hwentry,
@@ -479,7 +512,6 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
         return (dest_start_bit);
     }
 }
-
 
 
 /* ------ Per table Functions  ------- */
@@ -2750,6 +2782,12 @@ static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
 
 //::    if len(tabledict):
 
+//::        if pddict['p4plus']:
+//::            api_prefix = 'p4pd_' + pddict['p4program']
+//::        else:
+//::            api_prefix = 'p4pd'
+//::        #endif
+
 
 /* Query key details for p4-table
  *
@@ -2770,7 +2808,7 @@ static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
  * Return Value: 
  *  None
  */
-void p4pd_hwentry_query(uint32_t tableid, 
+void ${api_prefix}_hwentry_query(uint32_t tableid, 
                         uint32_t *hwkey_len, 
                         uint32_t *hwkeymask_len, 
                         uint32_t *hwactiondata_len)
@@ -2778,7 +2816,7 @@ void p4pd_hwentry_query(uint32_t tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             (void)hwkey_len;
             (void)hwkeymask_len;
@@ -2838,7 +2876,7 @@ void p4pd_hwentry_query(uint32_t tableid,
  * Return Value 
  *  pd_error_t                  : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
+p4pd_error_t ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
                                  void       *swkey, 
                                  void       *swkey_mask, 
                                  uint8_t    *hw_key, 
@@ -2863,7 +2901,7 @@ p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (P4PD_SUCCESS); /* No hardwre key for index based lookup tables. */
 //::            #endif
@@ -2922,7 +2960,7 @@ p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_entry_write(uint32_t tableid,
+p4pd_error_t ${api_prefix}_entry_write(uint32_t tableid,
                               uint32_t index,
                               uint8_t *hwkey, 
                               uint8_t *hwkey_y,
@@ -3007,7 +3045,7 @@ p4pd_error_t p4pd_entry_write(uint32_t tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_write(tableid, index, 
                                          (${table}_actiondata*)actiondata));
@@ -3068,7 +3106,7 @@ p4pd_error_t p4pd_entry_write(uint32_t tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_entry_read(uint32_t   tableid,
+p4pd_error_t ${api_prefix}_entry_read(uint32_t   tableid,
                              uint32_t   index,
                              void       *swkey, 
                              void       *swkey_mask,
@@ -3077,7 +3115,7 @@ p4pd_error_t p4pd_entry_read(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_read(tableid, index, 
                             (${table}_actiondata*) actiondata));
@@ -3131,7 +3169,7 @@ p4pd_error_t p4pd_entry_read(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_entry_create(uint32_t   tableid,
+p4pd_error_t ${api_prefix}_entry_create(uint32_t   tableid,
                                void       *swkey, 
                                void       *swkey_mask,
                                void       *actiondata,
@@ -3140,7 +3178,7 @@ p4pd_error_t p4pd_entry_create(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_hwentry_create(tableid,
                     (${table}_actiondata*)actiondata, hwentry));
@@ -3185,7 +3223,7 @@ p4pd_error_t p4pd_entry_create(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
+p4pd_error_t ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                                                  uint32_t   index,
                                                  uint8_t*   hwentry,
                                                  /* Valid only in case of TCAM;
@@ -3228,7 +3266,7 @@ p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
         {
             b = snprintf(buf, blen, "Table: %s, Index %d\n", "P4TBL_ID_${caps_tablename}", index);
             buf += b;
@@ -3779,7 +3817,7 @@ p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
+p4pd_error_t ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                                               void*      sw_key,
                                               /* Valid only in case of TCAM;
                                                * Otherwise can be NULL) 
@@ -3812,7 +3850,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
-        case P4TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
         {
             b = snprintf(buf, blen, "Table: %s\n", "P4TBL_ID_${caps_tablename}");
             buf += b;

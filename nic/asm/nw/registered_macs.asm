@@ -12,6 +12,7 @@ nop:
   nop.e
   nop
 
+.align
 registered_macs_miss:
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   smeqb       c2, k.control_metadata_lif_filter, LIF_FILTER_ALL_MULTICAST, LIF_FILTER_ALL_MULTICAST

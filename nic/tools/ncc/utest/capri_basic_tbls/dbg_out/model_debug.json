@@ -1,0 +1,4610 @@
+{
+    "PHV": {
+        "INGRESS": {
+            "field_map": {
+                "capri_intrinsic.tm_iport": {
+                    "phv_bit": "0",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_oport": {
+                    "phv_bit": "4",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_iq": {
+                    "phv_bit": "8",
+                    "width": "5"
+                },
+                "capri_intrinsic.lif": {
+                    "phv_bit": "13",
+                    "width": "11"
+                },
+                "capri_intrinsic.timestamp": {
+                    "phv_bit": "24",
+                    "width": "48"
+                },
+                "capri_intrinsic.tm_span_session": {
+                    "phv_bit": "72",
+                    "width": "8"
+                },
+                "capri_intrinsic.error_bits": {
+                    "phv_bit": "80",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_instance_type": {
+                    "phv_bit": "84",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_replicate_ptr": {
+                    "phv_bit": "88",
+                    "width": "16"
+                },
+                "capri_intrinsic.bypass": {
+                    "phv_bit": "104",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_replicate_en": {
+                    "phv_bit": "105",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_q_depth": {
+                    "phv_bit": "106",
+                    "width": "14"
+                },
+                "capri_intrinsic.drop": {
+                    "phv_bit": "120",
+                    "width": "1"
+                },
+                "capri_intrinsic.hw_error": {
+                    "phv_bit": "121",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_cpu": {
+                    "phv_bit": "122",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_oq": {
+                    "phv_bit": "123",
+                    "width": "5"
+                },
+                "capri_intrinsic.debug_trace": {
+                    "phv_bit": "128",
+                    "width": "1"
+                },
+                "capri_intrinsic._padding": {
+                    "phv_bit": "129",
+                    "width": "7"
+                },
+                "capri_p4_intrinsic.no_data": {
+                    "phv_bit": "136",
+                    "width": "1"
+                },
+                "capri_p4_intrinsic.recirc": {
+                    "phv_bit": "137",
+                    "width": "1"
+                },
+                "capri_p4_intrinsic.frame_size": {
+                    "phv_bit": "138",
+                    "width": "14"
+                },
+                "capri_p4_intrinsic.recirc_count": {
+                    "phv_bit": "152",
+                    "width": "3"
+                },
+                "capri_p4_intrinsic._padding": {
+                    "phv_bit": "155",
+                    "width": "5"
+                },
+                "pad_before_hv_224_": {
+                    "phv_bit": "160",
+                    "width": "224"
+                },
+                "flit_0_hv_0": {
+                    "phv_bit": "384",
+                    "width": "1"
+                },
+                "flit_0_hv_1": {
+                    "phv_bit": "385",
+                    "width": "1"
+                },
+                "flit_0_hv_2": {
+                    "phv_bit": "386",
+                    "width": "1"
+                },
+                "flit_0_hv_3": {
+                    "phv_bit": "387",
+                    "width": "1"
+                },
+                "flit_0_hv_4": {
+                    "phv_bit": "388",
+                    "width": "1"
+                },
+                "flit_0_hv_5": {
+                    "phv_bit": "389",
+                    "width": "1"
+                },
+                "flit_0_hv_6": {
+                    "phv_bit": "390",
+                    "width": "1"
+                },
+                "flit_0_hv_7": {
+                    "phv_bit": "391",
+                    "width": "1"
+                },
+                "flit_0_hv_8": {
+                    "phv_bit": "392",
+                    "width": "1"
+                },
+                "flit_0_hv_9": {
+                    "phv_bit": "393",
+                    "width": "1"
+                },
+                "flit_0_hv_10": {
+                    "phv_bit": "394",
+                    "width": "1"
+                },
+                "flit_0_hv_11": {
+                    "phv_bit": "395",
+                    "width": "1"
+                },
+                "flit_0_hv_12": {
+                    "phv_bit": "396",
+                    "width": "1"
+                },
+                "flit_0_hv_13": {
+                    "phv_bit": "397",
+                    "width": "1"
+                },
+                "flit_0_hv_14": {
+                    "phv_bit": "398",
+                    "width": "1"
+                },
+                "flit_0_hv_15": {
+                    "phv_bit": "399",
+                    "width": "1"
+                },
+                "flit_0_hv_16": {
+                    "phv_bit": "400",
+                    "width": "1"
+                },
+                "flit_0_hv_17": {
+                    "phv_bit": "401",
+                    "width": "1"
+                },
+                "flit_0_hv_18": {
+                    "phv_bit": "402",
+                    "width": "1"
+                },
+                "flit_0_hv_19": {
+                    "phv_bit": "403",
+                    "width": "1"
+                },
+                "flit_0_hv_20": {
+                    "phv_bit": "404",
+                    "width": "1"
+                },
+                "flit_0_hv_21": {
+                    "phv_bit": "405",
+                    "width": "1"
+                },
+                "flit_0_hv_22": {
+                    "phv_bit": "406",
+                    "width": "1"
+                },
+                "flit_0_hv_23": {
+                    "phv_bit": "407",
+                    "width": "1"
+                },
+                "flit_0_hv_24": {
+                    "phv_bit": "408",
+                    "width": "1"
+                },
+                "flit_0_hv_25": {
+                    "phv_bit": "409",
+                    "width": "1"
+                },
+                "flit_0_hv_26": {
+                    "phv_bit": "410",
+                    "width": "1"
+                },
+                "flit_0_hv_27": {
+                    "phv_bit": "411",
+                    "width": "1"
+                },
+                "flit_0_hv_28": {
+                    "phv_bit": "412",
+                    "width": "1"
+                },
+                "flit_0_hv_29": {
+                    "phv_bit": "413",
+                    "width": "1"
+                },
+                "flit_0_hv_30": {
+                    "phv_bit": "414",
+                    "width": "1"
+                },
+                "flit_0_hv_31": {
+                    "phv_bit": "415",
+                    "width": "1"
+                },
+                "flit_0_hv_32": {
+                    "phv_bit": "416",
+                    "width": "1"
+                },
+                "flit_0_hv_33": {
+                    "phv_bit": "417",
+                    "width": "1"
+                },
+                "flit_0_hv_34": {
+                    "phv_bit": "418",
+                    "width": "1"
+                },
+                "flit_0_hv_35": {
+                    "phv_bit": "419",
+                    "width": "1"
+                },
+                "flit_0_hv_36": {
+                    "phv_bit": "420",
+                    "width": "1"
+                },
+                "flit_0_hv_37": {
+                    "phv_bit": "421",
+                    "width": "1"
+                },
+                "flit_0_hv_38": {
+                    "phv_bit": "422",
+                    "width": "1"
+                },
+                "flit_0_hv_39": {
+                    "phv_bit": "423",
+                    "width": "1"
+                },
+                "flit_0_hv_40": {
+                    "phv_bit": "424",
+                    "width": "1"
+                },
+                "flit_0_hv_41": {
+                    "phv_bit": "425",
+                    "width": "1"
+                },
+                "flit_0_hv_42": {
+                    "phv_bit": "426",
+                    "width": "1"
+                },
+                "flit_0_hv_43": {
+                    "phv_bit": "427",
+                    "width": "1"
+                },
+                "flit_0_hv_44": {
+                    "phv_bit": "428",
+                    "width": "1"
+                },
+                "flit_0_hv_45": {
+                    "phv_bit": "429",
+                    "width": "1"
+                },
+                "flit_0_hv_46": {
+                    "phv_bit": "430",
+                    "width": "1"
+                },
+                "flit_0_hv_47": {
+                    "phv_bit": "431",
+                    "width": "1"
+                },
+                "flit_0_hv_48": {
+                    "phv_bit": "432",
+                    "width": "1"
+                },
+                "flit_0_hv_49": {
+                    "phv_bit": "433",
+                    "width": "1"
+                },
+                "flit_0_hv_50": {
+                    "phv_bit": "434",
+                    "width": "1"
+                },
+                "flit_0_hv_51": {
+                    "phv_bit": "435",
+                    "width": "1"
+                },
+                "flit_0_hv_52": {
+                    "phv_bit": "436",
+                    "width": "1"
+                },
+                "flit_0_hv_53": {
+                    "phv_bit": "437",
+                    "width": "1"
+                },
+                "flit_0_hv_54": {
+                    "phv_bit": "438",
+                    "width": "1"
+                },
+                "flit_0_hv_55": {
+                    "phv_bit": "439",
+                    "width": "1"
+                },
+                "flit_0_hv_56": {
+                    "phv_bit": "440",
+                    "width": "1"
+                },
+                "flit_0_hv_57": {
+                    "phv_bit": "441",
+                    "width": "1"
+                },
+                "flit_0_hv_58": {
+                    "phv_bit": "442",
+                    "width": "1"
+                },
+                "flit_0_hv_59": {
+                    "phv_bit": "443",
+                    "width": "1"
+                },
+                "flit_0_hv_60": {
+                    "phv_bit": "444",
+                    "width": "1"
+                },
+                "flit_0_hv_61": {
+                    "phv_bit": "445",
+                    "width": "1"
+                },
+                "flit_0_hv_62": {
+                    "phv_bit": "446",
+                    "width": "1"
+                },
+                "flit_0_hv_63": {
+                    "phv_bit": "447",
+                    "width": "1"
+                },
+                "flit_0_hv_64": {
+                    "phv_bit": "448",
+                    "width": "1"
+                },
+                "flit_0_hv_65": {
+                    "phv_bit": "449",
+                    "width": "1"
+                },
+                "flit_0_hv_66": {
+                    "phv_bit": "450",
+                    "width": "1"
+                },
+                "flit_0_hv_67": {
+                    "phv_bit": "451",
+                    "width": "1"
+                },
+                "flit_0_hv_68": {
+                    "phv_bit": "452",
+                    "width": "1"
+                },
+                "flit_0_hv_69": {
+                    "phv_bit": "453",
+                    "width": "1"
+                },
+                "flit_0_hv_70": {
+                    "phv_bit": "454",
+                    "width": "1"
+                },
+                "flit_0_hv_71": {
+                    "phv_bit": "455",
+                    "width": "1"
+                },
+                "flit_0_hv_72": {
+                    "phv_bit": "456",
+                    "width": "1"
+                },
+                "flit_0_hv_73": {
+                    "phv_bit": "457",
+                    "width": "1"
+                },
+                "flit_0_hv_74": {
+                    "phv_bit": "458",
+                    "width": "1"
+                },
+                "flit_0_hv_75": {
+                    "phv_bit": "459",
+                    "width": "1"
+                },
+                "flit_0_hv_76": {
+                    "phv_bit": "460",
+                    "width": "1"
+                },
+                "flit_0_hv_77": {
+                    "phv_bit": "461",
+                    "width": "1"
+                },
+                "flit_0_hv_78": {
+                    "phv_bit": "462",
+                    "width": "1"
+                },
+                "flit_0_hv_79": {
+                    "phv_bit": "463",
+                    "width": "1"
+                },
+                "flit_0_hv_80": {
+                    "phv_bit": "464",
+                    "width": "1"
+                },
+                "flit_0_hv_81": {
+                    "phv_bit": "465",
+                    "width": "1"
+                },
+                "flit_0_hv_82": {
+                    "phv_bit": "466",
+                    "width": "1"
+                },
+                "flit_0_hv_83": {
+                    "phv_bit": "467",
+                    "width": "1"
+                },
+                "flit_0_hv_84": {
+                    "phv_bit": "468",
+                    "width": "1"
+                },
+                "flit_0_hv_85": {
+                    "phv_bit": "469",
+                    "width": "1"
+                },
+                "flit_0_hv_86": {
+                    "phv_bit": "470",
+                    "width": "1"
+                },
+                "flit_0_hv_87": {
+                    "phv_bit": "471",
+                    "width": "1"
+                },
+                "flit_0_hv_88": {
+                    "phv_bit": "472",
+                    "width": "1"
+                },
+                "flit_0_hv_89": {
+                    "phv_bit": "473",
+                    "width": "1"
+                },
+                "flit_0_hv_90": {
+                    "phv_bit": "474",
+                    "width": "1"
+                },
+                "flit_0_hv_91": {
+                    "phv_bit": "475",
+                    "width": "1"
+                },
+                "flit_0_hv_92": {
+                    "phv_bit": "476",
+                    "width": "1"
+                },
+                "flit_0_hv_93": {
+                    "phv_bit": "477",
+                    "width": "1"
+                },
+                "flit_0_hv_94": {
+                    "phv_bit": "478",
+                    "width": "1"
+                },
+                "flit_0_hv_95": {
+                    "phv_bit": "479",
+                    "width": "1"
+                },
+                "flit_0_hv_96": {
+                    "phv_bit": "480",
+                    "width": "1"
+                },
+                "flit_0_hv_97": {
+                    "phv_bit": "481",
+                    "width": "1"
+                },
+                "flit_0_hv_98": {
+                    "phv_bit": "482",
+                    "width": "1"
+                },
+                "flit_0_hv_99": {
+                    "phv_bit": "483",
+                    "width": "1"
+                },
+                "flit_0_hv_100": {
+                    "phv_bit": "484",
+                    "width": "1"
+                },
+                "flit_0_hv_101": {
+                    "phv_bit": "485",
+                    "width": "1"
+                },
+                "flit_0_hv_102": {
+                    "phv_bit": "486",
+                    "width": "1"
+                },
+                "flit_0_hv_103": {
+                    "phv_bit": "487",
+                    "width": "1"
+                },
+                "flit_0_hv_104": {
+                    "phv_bit": "488",
+                    "width": "1"
+                },
+                "flit_0_hv_105": {
+                    "phv_bit": "489",
+                    "width": "1"
+                },
+                "flit_0_hv_106": {
+                    "phv_bit": "490",
+                    "width": "1"
+                },
+                "flit_0_hv_107": {
+                    "phv_bit": "491",
+                    "width": "1"
+                },
+                "flit_0_hv_108": {
+                    "phv_bit": "492",
+                    "width": "1"
+                },
+                "flit_0_hv_109": {
+                    "phv_bit": "493",
+                    "width": "1"
+                },
+                "flit_0_hv_110": {
+                    "phv_bit": "494",
+                    "width": "1"
+                },
+                "flit_0_hv_111": {
+                    "phv_bit": "495",
+                    "width": "1"
+                },
+                "flit_0_hv_112": {
+                    "phv_bit": "496",
+                    "width": "1"
+                },
+                "flit_0_hv_113": {
+                    "phv_bit": "497",
+                    "width": "1"
+                },
+                "flit_0_hv_114": {
+                    "phv_bit": "498",
+                    "width": "1"
+                },
+                "flit_0_hv_115": {
+                    "phv_bit": "499",
+                    "width": "1"
+                },
+                "flit_0_hv_116": {
+                    "phv_bit": "500",
+                    "width": "1"
+                },
+                "flit_0_hv_117": {
+                    "phv_bit": "501",
+                    "width": "1"
+                },
+                "flit_0_hv_118": {
+                    "phv_bit": "502",
+                    "width": "1"
+                },
+                "flit_0_hv_119": {
+                    "phv_bit": "503",
+                    "width": "1"
+                },
+                "flit_0_hv_120": {
+                    "phv_bit": "504",
+                    "width": "1"
+                },
+                "flit_0_hv_121": {
+                    "phv_bit": "505",
+                    "width": "1"
+                },
+                "tcp.valid": {
+                    "phv_bit": "506",
+                    "width": "1"
+                },
+                "udp.valid": {
+                    "phv_bit": "507",
+                    "width": "1"
+                },
+                "ipv4.valid": {
+                    "phv_bit": "508",
+                    "width": "1"
+                },
+                "ipv6.valid": {
+                    "phv_bit": "509",
+                    "width": "1"
+                },
+                "ethernet.valid": {
+                    "phv_bit": "510",
+                    "width": "1"
+                },
+                "capri_intrinsic.valid": {
+                    "phv_bit": "511",
+                    "width": "1"
+                },
+                "ethernet.dstAddr": {
+                    "phv_bit": "512",
+                    "width": "48"
+                },
+                "ipv6.version": {
+                    "phv_bit": "560",
+                    "width": "4"
+                },
+                "ipv6.trafficClass": {
+                    "phv_bit": "564",
+                    "width": "8"
+                },
+                "ipv6.flowLabel": {
+                    "phv_bit": "572",
+                    "width": "20"
+                },
+                "ipv6.dstAddr": {
+                    "phv_bit": "592",
+                    "width": "128"
+                },
+                "ipv4.version": {
+                    "phv_bit": "720",
+                    "width": "4"
+                },
+                "ipv4.ihl": {
+                    "phv_bit": "724",
+                    "width": "4"
+                },
+                "ipv4.diffserv": {
+                    "phv_bit": "728",
+                    "width": "8"
+                },
+                "ipv4.totalLen": {
+                    "phv_bit": "736",
+                    "width": "16"
+                },
+                "ipv4.identification": {
+                    "phv_bit": "752",
+                    "width": "16"
+                },
+                "ipv4.ttl": {
+                    "phv_bit": "768",
+                    "width": "8"
+                },
+                "ipv4.dstAddr": {
+                    "phv_bit": "776",
+                    "width": "32"
+                },
+                "udp.dstPort": {
+                    "phv_bit": "808",
+                    "width": "16"
+                },
+                "_flit_0_pad__200": {
+                    "phv_bit": "824",
+                    "width": "200"
+                }
+            },
+            "phc_map": {
+                "0": {
+                    "capri_intrinsic.tm_iport": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "capri_intrinsic.tm_oport": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "1": {
+                    "capri_intrinsic.tm_iq": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 5
+                    },
+                    "capri_intrinsic.lif": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 3
+                    }
+                },
+                "2": {
+                    "capri_intrinsic.lif": {
+                        "c_start": 0,
+                        "f_start": 3,
+                        "f_size": 8
+                    }
+                },
+                "3": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "4": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "5": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "6": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "7": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "8": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "9": {
+                    "capri_intrinsic.tm_span_session": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "10": {
+                    "capri_intrinsic.error_bits": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "capri_intrinsic.tm_instance_type": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "11": {
+                    "capri_intrinsic.tm_replicate_ptr": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "12": {
+                    "capri_intrinsic.tm_replicate_ptr": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "13": {
+                    "capri_intrinsic.bypass": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_replicate_en": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_q_depth": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 6
+                    }
+                },
+                "14": {
+                    "capri_intrinsic.tm_q_depth": {
+                        "c_start": 0,
+                        "f_start": 6,
+                        "f_size": 8
+                    }
+                },
+                "15": {
+                    "capri_intrinsic.drop": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.hw_error": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_cpu": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_oq": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 5
+                    }
+                },
+                "16": {
+                    "capri_intrinsic.debug_trace": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic._padding": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 7
+                    }
+                },
+                "17": {
+                    "capri_p4_intrinsic.no_data": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_p4_intrinsic.recirc": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_p4_intrinsic.frame_size": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 6
+                    }
+                },
+                "18": {
+                    "capri_p4_intrinsic.frame_size": {
+                        "c_start": 0,
+                        "f_start": 6,
+                        "f_size": 8
+                    }
+                },
+                "19": {
+                    "capri_p4_intrinsic.recirc_count": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 3
+                    },
+                    "capri_p4_intrinsic._padding": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 5
+                    }
+                },
+                "20": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "21": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "22": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "23": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "24": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "25": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "26": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 48,
+                        "f_size": 8
+                    }
+                },
+                "27": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 56,
+                        "f_size": 8
+                    }
+                },
+                "28": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 64,
+                        "f_size": 8
+                    }
+                },
+                "29": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 72,
+                        "f_size": 8
+                    }
+                },
+                "30": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 80,
+                        "f_size": 8
+                    }
+                },
+                "31": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 88,
+                        "f_size": 8
+                    }
+                },
+                "32": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 96,
+                        "f_size": 8
+                    }
+                },
+                "33": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 104,
+                        "f_size": 8
+                    }
+                },
+                "34": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 112,
+                        "f_size": 8
+                    }
+                },
+                "35": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 120,
+                        "f_size": 8
+                    }
+                },
+                "36": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 128,
+                        "f_size": 8
+                    }
+                },
+                "37": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 136,
+                        "f_size": 8
+                    }
+                },
+                "38": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 144,
+                        "f_size": 8
+                    }
+                },
+                "39": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 152,
+                        "f_size": 8
+                    }
+                },
+                "40": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 160,
+                        "f_size": 8
+                    }
+                },
+                "41": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 168,
+                        "f_size": 8
+                    }
+                },
+                "42": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 176,
+                        "f_size": 8
+                    }
+                },
+                "43": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 184,
+                        "f_size": 8
+                    }
+                },
+                "44": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 192,
+                        "f_size": 8
+                    }
+                },
+                "45": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 200,
+                        "f_size": 8
+                    }
+                },
+                "46": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 208,
+                        "f_size": 8
+                    }
+                },
+                "47": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 216,
+                        "f_size": 8
+                    }
+                },
+                "48": {
+                    "flit_0_hv_0": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_1": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_2": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_3": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_4": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_5": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_6": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_7": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "49": {
+                    "flit_0_hv_8": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_9": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_10": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_11": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_12": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_13": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_14": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_15": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "50": {
+                    "flit_0_hv_16": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_17": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_18": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_19": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_20": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_21": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_22": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_23": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "51": {
+                    "flit_0_hv_24": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_25": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_26": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_27": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_28": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_29": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_30": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_31": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "52": {
+                    "flit_0_hv_32": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_33": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_34": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_35": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_36": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_37": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_38": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_39": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "53": {
+                    "flit_0_hv_40": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_41": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_42": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_43": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_44": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_45": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_46": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_47": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "54": {
+                    "flit_0_hv_48": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_49": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_50": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_51": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_52": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_53": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_54": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_55": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "55": {
+                    "flit_0_hv_56": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_57": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_58": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_59": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_60": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_61": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_62": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_63": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "56": {
+                    "flit_0_hv_64": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_65": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_66": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_67": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_68": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_69": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_70": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_71": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "57": {
+                    "flit_0_hv_72": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_73": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_74": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_75": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_76": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_77": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_78": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_79": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "58": {
+                    "flit_0_hv_80": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_81": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_82": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_83": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_84": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_85": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_86": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_87": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "59": {
+                    "flit_0_hv_88": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_89": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_90": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_91": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_92": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_93": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_94": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_95": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "60": {
+                    "flit_0_hv_96": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_97": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_98": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_99": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_100": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_101": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_102": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_103": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "61": {
+                    "flit_0_hv_104": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_105": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_106": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_107": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_108": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_109": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_110": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_111": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "62": {
+                    "flit_0_hv_112": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_113": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_114": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_115": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_116": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_117": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_118": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_119": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "63": {
+                    "flit_0_hv_120": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_121": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "tcp.valid": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "udp.valid": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ipv4.valid": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ipv6.valid": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ethernet.valid": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.valid": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "64": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "65": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "66": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "67": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "68": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "69": {
+                    "ethernet.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "70": {
+                    "ipv6.version": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "ipv6.trafficClass": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "71": {
+                    "ipv6.trafficClass": {
+                        "c_start": 0,
+                        "f_start": 4,
+                        "f_size": 4
+                    },
+                    "ipv6.flowLabel": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "72": {
+                    "ipv6.flowLabel": {
+                        "c_start": 0,
+                        "f_start": 4,
+                        "f_size": 8
+                    }
+                },
+                "73": {
+                    "ipv6.flowLabel": {
+                        "c_start": 0,
+                        "f_start": 12,
+                        "f_size": 8
+                    }
+                },
+                "74": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "75": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "76": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "77": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "78": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "79": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "80": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 48,
+                        "f_size": 8
+                    }
+                },
+                "81": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 56,
+                        "f_size": 8
+                    }
+                },
+                "82": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 64,
+                        "f_size": 8
+                    }
+                },
+                "83": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 72,
+                        "f_size": 8
+                    }
+                },
+                "84": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 80,
+                        "f_size": 8
+                    }
+                },
+                "85": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 88,
+                        "f_size": 8
+                    }
+                },
+                "86": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 96,
+                        "f_size": 8
+                    }
+                },
+                "87": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 104,
+                        "f_size": 8
+                    }
+                },
+                "88": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 112,
+                        "f_size": 8
+                    }
+                },
+                "89": {
+                    "ipv6.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 120,
+                        "f_size": 8
+                    }
+                },
+                "90": {
+                    "ipv4.version": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "ipv4.ihl": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "91": {
+                    "ipv4.diffserv": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "92": {
+                    "ipv4.totalLen": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "93": {
+                    "ipv4.totalLen": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "94": {
+                    "ipv4.identification": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "95": {
+                    "ipv4.identification": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "96": {
+                    "ipv4.ttl": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "97": {
+                    "ipv4.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "98": {
+                    "ipv4.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "99": {
+                    "ipv4.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "100": {
+                    "ipv4.dstAddr": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "101": {
+                    "udp.dstPort": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "102": {
+                    "udp.dstPort": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "103": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "104": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "105": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "106": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "107": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "108": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "109": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 48,
+                        "f_size": 8
+                    }
+                },
+                "110": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 56,
+                        "f_size": 8
+                    }
+                },
+                "111": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 64,
+                        "f_size": 8
+                    }
+                },
+                "112": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 72,
+                        "f_size": 8
+                    }
+                },
+                "113": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 80,
+                        "f_size": 8
+                    }
+                },
+                "114": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 88,
+                        "f_size": 8
+                    }
+                },
+                "115": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 96,
+                        "f_size": 8
+                    }
+                },
+                "116": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 104,
+                        "f_size": 8
+                    }
+                },
+                "117": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 112,
+                        "f_size": 8
+                    }
+                },
+                "118": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 120,
+                        "f_size": 8
+                    }
+                },
+                "119": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 128,
+                        "f_size": 8
+                    }
+                },
+                "120": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 136,
+                        "f_size": 8
+                    }
+                },
+                "121": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 144,
+                        "f_size": 8
+                    }
+                },
+                "122": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 152,
+                        "f_size": 8
+                    }
+                },
+                "123": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 160,
+                        "f_size": 8
+                    }
+                },
+                "124": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 168,
+                        "f_size": 8
+                    }
+                },
+                "125": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 176,
+                        "f_size": 8
+                    }
+                },
+                "126": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 184,
+                        "f_size": 8
+                    }
+                },
+                "127": {
+                    "_flit_0_pad__200": {
+                        "c_start": 0,
+                        "f_start": 192,
+                        "f_size": 8
+                    }
+                }
+            }
+        },
+        "EGRESS": {
+            "field_map": {
+                "capri_intrinsic.tm_iport": {
+                    "phv_bit": "0",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_oport": {
+                    "phv_bit": "4",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_iq": {
+                    "phv_bit": "8",
+                    "width": "5"
+                },
+                "capri_intrinsic.lif": {
+                    "phv_bit": "13",
+                    "width": "11"
+                },
+                "capri_intrinsic.timestamp": {
+                    "phv_bit": "24",
+                    "width": "48"
+                },
+                "capri_intrinsic.tm_span_session": {
+                    "phv_bit": "72",
+                    "width": "8"
+                },
+                "capri_intrinsic.error_bits": {
+                    "phv_bit": "80",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_instance_type": {
+                    "phv_bit": "84",
+                    "width": "4"
+                },
+                "capri_intrinsic.tm_replicate_ptr": {
+                    "phv_bit": "88",
+                    "width": "16"
+                },
+                "capri_intrinsic.bypass": {
+                    "phv_bit": "104",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_replicate_en": {
+                    "phv_bit": "105",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_q_depth": {
+                    "phv_bit": "106",
+                    "width": "14"
+                },
+                "capri_intrinsic.drop": {
+                    "phv_bit": "120",
+                    "width": "1"
+                },
+                "capri_intrinsic.hw_error": {
+                    "phv_bit": "121",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_cpu": {
+                    "phv_bit": "122",
+                    "width": "1"
+                },
+                "capri_intrinsic.tm_oq": {
+                    "phv_bit": "123",
+                    "width": "5"
+                },
+                "capri_intrinsic.debug_trace": {
+                    "phv_bit": "128",
+                    "width": "1"
+                },
+                "capri_intrinsic._padding": {
+                    "phv_bit": "129",
+                    "width": "7"
+                },
+                "capri_p4_intrinsic.no_data": {
+                    "phv_bit": "136",
+                    "width": "1"
+                },
+                "capri_p4_intrinsic.recirc": {
+                    "phv_bit": "137",
+                    "width": "1"
+                },
+                "capri_p4_intrinsic.frame_size": {
+                    "phv_bit": "138",
+                    "width": "14"
+                },
+                "capri_p4_intrinsic.recirc_count": {
+                    "phv_bit": "152",
+                    "width": "3"
+                },
+                "capri_p4_intrinsic._padding": {
+                    "phv_bit": "155",
+                    "width": "5"
+                },
+                "pad_before_hv_224_": {
+                    "phv_bit": "160",
+                    "width": "224"
+                },
+                "flit_0_hv_0": {
+                    "phv_bit": "384",
+                    "width": "1"
+                },
+                "flit_0_hv_1": {
+                    "phv_bit": "385",
+                    "width": "1"
+                },
+                "flit_0_hv_2": {
+                    "phv_bit": "386",
+                    "width": "1"
+                },
+                "flit_0_hv_3": {
+                    "phv_bit": "387",
+                    "width": "1"
+                },
+                "flit_0_hv_4": {
+                    "phv_bit": "388",
+                    "width": "1"
+                },
+                "flit_0_hv_5": {
+                    "phv_bit": "389",
+                    "width": "1"
+                },
+                "flit_0_hv_6": {
+                    "phv_bit": "390",
+                    "width": "1"
+                },
+                "flit_0_hv_7": {
+                    "phv_bit": "391",
+                    "width": "1"
+                },
+                "flit_0_hv_8": {
+                    "phv_bit": "392",
+                    "width": "1"
+                },
+                "flit_0_hv_9": {
+                    "phv_bit": "393",
+                    "width": "1"
+                },
+                "flit_0_hv_10": {
+                    "phv_bit": "394",
+                    "width": "1"
+                },
+                "flit_0_hv_11": {
+                    "phv_bit": "395",
+                    "width": "1"
+                },
+                "flit_0_hv_12": {
+                    "phv_bit": "396",
+                    "width": "1"
+                },
+                "flit_0_hv_13": {
+                    "phv_bit": "397",
+                    "width": "1"
+                },
+                "flit_0_hv_14": {
+                    "phv_bit": "398",
+                    "width": "1"
+                },
+                "flit_0_hv_15": {
+                    "phv_bit": "399",
+                    "width": "1"
+                },
+                "flit_0_hv_16": {
+                    "phv_bit": "400",
+                    "width": "1"
+                },
+                "flit_0_hv_17": {
+                    "phv_bit": "401",
+                    "width": "1"
+                },
+                "flit_0_hv_18": {
+                    "phv_bit": "402",
+                    "width": "1"
+                },
+                "flit_0_hv_19": {
+                    "phv_bit": "403",
+                    "width": "1"
+                },
+                "flit_0_hv_20": {
+                    "phv_bit": "404",
+                    "width": "1"
+                },
+                "flit_0_hv_21": {
+                    "phv_bit": "405",
+                    "width": "1"
+                },
+                "flit_0_hv_22": {
+                    "phv_bit": "406",
+                    "width": "1"
+                },
+                "flit_0_hv_23": {
+                    "phv_bit": "407",
+                    "width": "1"
+                },
+                "flit_0_hv_24": {
+                    "phv_bit": "408",
+                    "width": "1"
+                },
+                "flit_0_hv_25": {
+                    "phv_bit": "409",
+                    "width": "1"
+                },
+                "flit_0_hv_26": {
+                    "phv_bit": "410",
+                    "width": "1"
+                },
+                "flit_0_hv_27": {
+                    "phv_bit": "411",
+                    "width": "1"
+                },
+                "flit_0_hv_28": {
+                    "phv_bit": "412",
+                    "width": "1"
+                },
+                "flit_0_hv_29": {
+                    "phv_bit": "413",
+                    "width": "1"
+                },
+                "flit_0_hv_30": {
+                    "phv_bit": "414",
+                    "width": "1"
+                },
+                "flit_0_hv_31": {
+                    "phv_bit": "415",
+                    "width": "1"
+                },
+                "flit_0_hv_32": {
+                    "phv_bit": "416",
+                    "width": "1"
+                },
+                "flit_0_hv_33": {
+                    "phv_bit": "417",
+                    "width": "1"
+                },
+                "flit_0_hv_34": {
+                    "phv_bit": "418",
+                    "width": "1"
+                },
+                "flit_0_hv_35": {
+                    "phv_bit": "419",
+                    "width": "1"
+                },
+                "flit_0_hv_36": {
+                    "phv_bit": "420",
+                    "width": "1"
+                },
+                "flit_0_hv_37": {
+                    "phv_bit": "421",
+                    "width": "1"
+                },
+                "flit_0_hv_38": {
+                    "phv_bit": "422",
+                    "width": "1"
+                },
+                "flit_0_hv_39": {
+                    "phv_bit": "423",
+                    "width": "1"
+                },
+                "flit_0_hv_40": {
+                    "phv_bit": "424",
+                    "width": "1"
+                },
+                "flit_0_hv_41": {
+                    "phv_bit": "425",
+                    "width": "1"
+                },
+                "flit_0_hv_42": {
+                    "phv_bit": "426",
+                    "width": "1"
+                },
+                "flit_0_hv_43": {
+                    "phv_bit": "427",
+                    "width": "1"
+                },
+                "flit_0_hv_44": {
+                    "phv_bit": "428",
+                    "width": "1"
+                },
+                "flit_0_hv_45": {
+                    "phv_bit": "429",
+                    "width": "1"
+                },
+                "flit_0_hv_46": {
+                    "phv_bit": "430",
+                    "width": "1"
+                },
+                "flit_0_hv_47": {
+                    "phv_bit": "431",
+                    "width": "1"
+                },
+                "flit_0_hv_48": {
+                    "phv_bit": "432",
+                    "width": "1"
+                },
+                "flit_0_hv_49": {
+                    "phv_bit": "433",
+                    "width": "1"
+                },
+                "flit_0_hv_50": {
+                    "phv_bit": "434",
+                    "width": "1"
+                },
+                "flit_0_hv_51": {
+                    "phv_bit": "435",
+                    "width": "1"
+                },
+                "flit_0_hv_52": {
+                    "phv_bit": "436",
+                    "width": "1"
+                },
+                "flit_0_hv_53": {
+                    "phv_bit": "437",
+                    "width": "1"
+                },
+                "flit_0_hv_54": {
+                    "phv_bit": "438",
+                    "width": "1"
+                },
+                "flit_0_hv_55": {
+                    "phv_bit": "439",
+                    "width": "1"
+                },
+                "flit_0_hv_56": {
+                    "phv_bit": "440",
+                    "width": "1"
+                },
+                "flit_0_hv_57": {
+                    "phv_bit": "441",
+                    "width": "1"
+                },
+                "flit_0_hv_58": {
+                    "phv_bit": "442",
+                    "width": "1"
+                },
+                "flit_0_hv_59": {
+                    "phv_bit": "443",
+                    "width": "1"
+                },
+                "flit_0_hv_60": {
+                    "phv_bit": "444",
+                    "width": "1"
+                },
+                "flit_0_hv_61": {
+                    "phv_bit": "445",
+                    "width": "1"
+                },
+                "flit_0_hv_62": {
+                    "phv_bit": "446",
+                    "width": "1"
+                },
+                "flit_0_hv_63": {
+                    "phv_bit": "447",
+                    "width": "1"
+                },
+                "flit_0_hv_64": {
+                    "phv_bit": "448",
+                    "width": "1"
+                },
+                "flit_0_hv_65": {
+                    "phv_bit": "449",
+                    "width": "1"
+                },
+                "flit_0_hv_66": {
+                    "phv_bit": "450",
+                    "width": "1"
+                },
+                "flit_0_hv_67": {
+                    "phv_bit": "451",
+                    "width": "1"
+                },
+                "flit_0_hv_68": {
+                    "phv_bit": "452",
+                    "width": "1"
+                },
+                "flit_0_hv_69": {
+                    "phv_bit": "453",
+                    "width": "1"
+                },
+                "flit_0_hv_70": {
+                    "phv_bit": "454",
+                    "width": "1"
+                },
+                "flit_0_hv_71": {
+                    "phv_bit": "455",
+                    "width": "1"
+                },
+                "flit_0_hv_72": {
+                    "phv_bit": "456",
+                    "width": "1"
+                },
+                "flit_0_hv_73": {
+                    "phv_bit": "457",
+                    "width": "1"
+                },
+                "flit_0_hv_74": {
+                    "phv_bit": "458",
+                    "width": "1"
+                },
+                "flit_0_hv_75": {
+                    "phv_bit": "459",
+                    "width": "1"
+                },
+                "flit_0_hv_76": {
+                    "phv_bit": "460",
+                    "width": "1"
+                },
+                "flit_0_hv_77": {
+                    "phv_bit": "461",
+                    "width": "1"
+                },
+                "flit_0_hv_78": {
+                    "phv_bit": "462",
+                    "width": "1"
+                },
+                "flit_0_hv_79": {
+                    "phv_bit": "463",
+                    "width": "1"
+                },
+                "flit_0_hv_80": {
+                    "phv_bit": "464",
+                    "width": "1"
+                },
+                "flit_0_hv_81": {
+                    "phv_bit": "465",
+                    "width": "1"
+                },
+                "flit_0_hv_82": {
+                    "phv_bit": "466",
+                    "width": "1"
+                },
+                "flit_0_hv_83": {
+                    "phv_bit": "467",
+                    "width": "1"
+                },
+                "flit_0_hv_84": {
+                    "phv_bit": "468",
+                    "width": "1"
+                },
+                "flit_0_hv_85": {
+                    "phv_bit": "469",
+                    "width": "1"
+                },
+                "flit_0_hv_86": {
+                    "phv_bit": "470",
+                    "width": "1"
+                },
+                "flit_0_hv_87": {
+                    "phv_bit": "471",
+                    "width": "1"
+                },
+                "flit_0_hv_88": {
+                    "phv_bit": "472",
+                    "width": "1"
+                },
+                "flit_0_hv_89": {
+                    "phv_bit": "473",
+                    "width": "1"
+                },
+                "flit_0_hv_90": {
+                    "phv_bit": "474",
+                    "width": "1"
+                },
+                "flit_0_hv_91": {
+                    "phv_bit": "475",
+                    "width": "1"
+                },
+                "flit_0_hv_92": {
+                    "phv_bit": "476",
+                    "width": "1"
+                },
+                "flit_0_hv_93": {
+                    "phv_bit": "477",
+                    "width": "1"
+                },
+                "flit_0_hv_94": {
+                    "phv_bit": "478",
+                    "width": "1"
+                },
+                "flit_0_hv_95": {
+                    "phv_bit": "479",
+                    "width": "1"
+                },
+                "flit_0_hv_96": {
+                    "phv_bit": "480",
+                    "width": "1"
+                },
+                "flit_0_hv_97": {
+                    "phv_bit": "481",
+                    "width": "1"
+                },
+                "flit_0_hv_98": {
+                    "phv_bit": "482",
+                    "width": "1"
+                },
+                "flit_0_hv_99": {
+                    "phv_bit": "483",
+                    "width": "1"
+                },
+                "flit_0_hv_100": {
+                    "phv_bit": "484",
+                    "width": "1"
+                },
+                "flit_0_hv_101": {
+                    "phv_bit": "485",
+                    "width": "1"
+                },
+                "flit_0_hv_102": {
+                    "phv_bit": "486",
+                    "width": "1"
+                },
+                "flit_0_hv_103": {
+                    "phv_bit": "487",
+                    "width": "1"
+                },
+                "flit_0_hv_104": {
+                    "phv_bit": "488",
+                    "width": "1"
+                },
+                "flit_0_hv_105": {
+                    "phv_bit": "489",
+                    "width": "1"
+                },
+                "flit_0_hv_106": {
+                    "phv_bit": "490",
+                    "width": "1"
+                },
+                "flit_0_hv_107": {
+                    "phv_bit": "491",
+                    "width": "1"
+                },
+                "flit_0_hv_108": {
+                    "phv_bit": "492",
+                    "width": "1"
+                },
+                "flit_0_hv_109": {
+                    "phv_bit": "493",
+                    "width": "1"
+                },
+                "flit_0_hv_110": {
+                    "phv_bit": "494",
+                    "width": "1"
+                },
+                "flit_0_hv_111": {
+                    "phv_bit": "495",
+                    "width": "1"
+                },
+                "flit_0_hv_112": {
+                    "phv_bit": "496",
+                    "width": "1"
+                },
+                "flit_0_hv_113": {
+                    "phv_bit": "497",
+                    "width": "1"
+                },
+                "flit_0_hv_114": {
+                    "phv_bit": "498",
+                    "width": "1"
+                },
+                "flit_0_hv_115": {
+                    "phv_bit": "499",
+                    "width": "1"
+                },
+                "flit_0_hv_116": {
+                    "phv_bit": "500",
+                    "width": "1"
+                },
+                "flit_0_hv_117": {
+                    "phv_bit": "501",
+                    "width": "1"
+                },
+                "flit_0_hv_118": {
+                    "phv_bit": "502",
+                    "width": "1"
+                },
+                "flit_0_hv_119": {
+                    "phv_bit": "503",
+                    "width": "1"
+                },
+                "flit_0_hv_120": {
+                    "phv_bit": "504",
+                    "width": "1"
+                },
+                "flit_0_hv_121": {
+                    "phv_bit": "505",
+                    "width": "1"
+                },
+                "tcp.valid": {
+                    "phv_bit": "506",
+                    "width": "1"
+                },
+                "udp.valid": {
+                    "phv_bit": "507",
+                    "width": "1"
+                },
+                "ipv4.valid": {
+                    "phv_bit": "508",
+                    "width": "1"
+                },
+                "ipv6.valid": {
+                    "phv_bit": "509",
+                    "width": "1"
+                },
+                "ethernet.valid": {
+                    "phv_bit": "510",
+                    "width": "1"
+                },
+                "capri_intrinsic.valid": {
+                    "phv_bit": "511",
+                    "width": "1"
+                },
+                "_flit_0_pad__512": {
+                    "phv_bit": "512",
+                    "width": "512"
+                }
+            },
+            "phc_map": {
+                "0": {
+                    "capri_intrinsic.tm_iport": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "capri_intrinsic.tm_oport": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "1": {
+                    "capri_intrinsic.tm_iq": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 5
+                    },
+                    "capri_intrinsic.lif": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 3
+                    }
+                },
+                "2": {
+                    "capri_intrinsic.lif": {
+                        "c_start": 0,
+                        "f_start": 3,
+                        "f_size": 8
+                    }
+                },
+                "3": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "4": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "5": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "6": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "7": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "8": {
+                    "capri_intrinsic.timestamp": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "9": {
+                    "capri_intrinsic.tm_span_session": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "10": {
+                    "capri_intrinsic.error_bits": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 4
+                    },
+                    "capri_intrinsic.tm_instance_type": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 4
+                    }
+                },
+                "11": {
+                    "capri_intrinsic.tm_replicate_ptr": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "12": {
+                    "capri_intrinsic.tm_replicate_ptr": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "13": {
+                    "capri_intrinsic.bypass": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_replicate_en": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_q_depth": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 6
+                    }
+                },
+                "14": {
+                    "capri_intrinsic.tm_q_depth": {
+                        "c_start": 0,
+                        "f_start": 6,
+                        "f_size": 8
+                    }
+                },
+                "15": {
+                    "capri_intrinsic.drop": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.hw_error": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_cpu": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.tm_oq": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 5
+                    }
+                },
+                "16": {
+                    "capri_intrinsic.debug_trace": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic._padding": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 7
+                    }
+                },
+                "17": {
+                    "capri_p4_intrinsic.no_data": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_p4_intrinsic.recirc": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_p4_intrinsic.frame_size": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 6
+                    }
+                },
+                "18": {
+                    "capri_p4_intrinsic.frame_size": {
+                        "c_start": 0,
+                        "f_start": 6,
+                        "f_size": 8
+                    }
+                },
+                "19": {
+                    "capri_p4_intrinsic.recirc_count": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 3
+                    },
+                    "capri_p4_intrinsic._padding": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 5
+                    }
+                },
+                "20": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "21": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "22": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "23": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "24": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "25": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "26": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 48,
+                        "f_size": 8
+                    }
+                },
+                "27": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 56,
+                        "f_size": 8
+                    }
+                },
+                "28": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 64,
+                        "f_size": 8
+                    }
+                },
+                "29": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 72,
+                        "f_size": 8
+                    }
+                },
+                "30": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 80,
+                        "f_size": 8
+                    }
+                },
+                "31": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 88,
+                        "f_size": 8
+                    }
+                },
+                "32": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 96,
+                        "f_size": 8
+                    }
+                },
+                "33": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 104,
+                        "f_size": 8
+                    }
+                },
+                "34": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 112,
+                        "f_size": 8
+                    }
+                },
+                "35": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 120,
+                        "f_size": 8
+                    }
+                },
+                "36": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 128,
+                        "f_size": 8
+                    }
+                },
+                "37": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 136,
+                        "f_size": 8
+                    }
+                },
+                "38": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 144,
+                        "f_size": 8
+                    }
+                },
+                "39": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 152,
+                        "f_size": 8
+                    }
+                },
+                "40": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 160,
+                        "f_size": 8
+                    }
+                },
+                "41": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 168,
+                        "f_size": 8
+                    }
+                },
+                "42": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 176,
+                        "f_size": 8
+                    }
+                },
+                "43": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 184,
+                        "f_size": 8
+                    }
+                },
+                "44": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 192,
+                        "f_size": 8
+                    }
+                },
+                "45": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 200,
+                        "f_size": 8
+                    }
+                },
+                "46": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 208,
+                        "f_size": 8
+                    }
+                },
+                "47": {
+                    "pad_before_hv_224_": {
+                        "c_start": 0,
+                        "f_start": 216,
+                        "f_size": 8
+                    }
+                },
+                "48": {
+                    "flit_0_hv_0": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_1": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_2": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_3": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_4": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_5": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_6": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_7": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "49": {
+                    "flit_0_hv_8": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_9": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_10": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_11": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_12": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_13": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_14": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_15": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "50": {
+                    "flit_0_hv_16": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_17": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_18": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_19": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_20": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_21": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_22": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_23": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "51": {
+                    "flit_0_hv_24": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_25": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_26": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_27": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_28": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_29": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_30": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_31": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "52": {
+                    "flit_0_hv_32": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_33": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_34": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_35": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_36": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_37": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_38": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_39": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "53": {
+                    "flit_0_hv_40": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_41": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_42": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_43": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_44": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_45": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_46": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_47": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "54": {
+                    "flit_0_hv_48": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_49": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_50": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_51": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_52": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_53": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_54": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_55": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "55": {
+                    "flit_0_hv_56": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_57": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_58": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_59": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_60": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_61": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_62": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_63": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "56": {
+                    "flit_0_hv_64": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_65": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_66": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_67": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_68": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_69": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_70": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_71": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "57": {
+                    "flit_0_hv_72": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_73": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_74": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_75": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_76": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_77": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_78": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_79": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "58": {
+                    "flit_0_hv_80": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_81": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_82": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_83": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_84": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_85": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_86": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_87": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "59": {
+                    "flit_0_hv_88": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_89": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_90": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_91": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_92": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_93": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_94": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_95": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "60": {
+                    "flit_0_hv_96": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_97": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_98": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_99": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_100": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_101": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_102": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_103": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "61": {
+                    "flit_0_hv_104": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_105": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_106": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_107": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_108": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_109": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_110": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_111": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "62": {
+                    "flit_0_hv_112": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_113": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_114": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_115": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_116": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_117": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_118": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_119": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "63": {
+                    "flit_0_hv_120": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "flit_0_hv_121": {
+                        "c_start": 1,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "tcp.valid": {
+                        "c_start": 2,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "udp.valid": {
+                        "c_start": 3,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ipv4.valid": {
+                        "c_start": 4,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ipv6.valid": {
+                        "c_start": 5,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "ethernet.valid": {
+                        "c_start": 6,
+                        "f_start": 0,
+                        "f_size": 1
+                    },
+                    "capri_intrinsic.valid": {
+                        "c_start": 7,
+                        "f_start": 0,
+                        "f_size": 1
+                    }
+                },
+                "64": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 0,
+                        "f_size": 8
+                    }
+                },
+                "65": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 8,
+                        "f_size": 8
+                    }
+                },
+                "66": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 16,
+                        "f_size": 8
+                    }
+                },
+                "67": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 24,
+                        "f_size": 8
+                    }
+                },
+                "68": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 32,
+                        "f_size": 8
+                    }
+                },
+                "69": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 40,
+                        "f_size": 8
+                    }
+                },
+                "70": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 48,
+                        "f_size": 8
+                    }
+                },
+                "71": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 56,
+                        "f_size": 8
+                    }
+                },
+                "72": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 64,
+                        "f_size": 8
+                    }
+                },
+                "73": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 72,
+                        "f_size": 8
+                    }
+                },
+                "74": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 80,
+                        "f_size": 8
+                    }
+                },
+                "75": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 88,
+                        "f_size": 8
+                    }
+                },
+                "76": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 96,
+                        "f_size": 8
+                    }
+                },
+                "77": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 104,
+                        "f_size": 8
+                    }
+                },
+                "78": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 112,
+                        "f_size": 8
+                    }
+                },
+                "79": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 120,
+                        "f_size": 8
+                    }
+                },
+                "80": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 128,
+                        "f_size": 8
+                    }
+                },
+                "81": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 136,
+                        "f_size": 8
+                    }
+                },
+                "82": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 144,
+                        "f_size": 8
+                    }
+                },
+                "83": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 152,
+                        "f_size": 8
+                    }
+                },
+                "84": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 160,
+                        "f_size": 8
+                    }
+                },
+                "85": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 168,
+                        "f_size": 8
+                    }
+                },
+                "86": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 176,
+                        "f_size": 8
+                    }
+                },
+                "87": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 184,
+                        "f_size": 8
+                    }
+                },
+                "88": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 192,
+                        "f_size": 8
+                    }
+                },
+                "89": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 200,
+                        "f_size": 8
+                    }
+                },
+                "90": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 208,
+                        "f_size": 8
+                    }
+                },
+                "91": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 216,
+                        "f_size": 8
+                    }
+                },
+                "92": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 224,
+                        "f_size": 8
+                    }
+                },
+                "93": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 232,
+                        "f_size": 8
+                    }
+                },
+                "94": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 240,
+                        "f_size": 8
+                    }
+                },
+                "95": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 248,
+                        "f_size": 8
+                    }
+                },
+                "96": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 256,
+                        "f_size": 8
+                    }
+                },
+                "97": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 264,
+                        "f_size": 8
+                    }
+                },
+                "98": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 272,
+                        "f_size": 8
+                    }
+                },
+                "99": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 280,
+                        "f_size": 8
+                    }
+                },
+                "100": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 288,
+                        "f_size": 8
+                    }
+                },
+                "101": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 296,
+                        "f_size": 8
+                    }
+                },
+                "102": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 304,
+                        "f_size": 8
+                    }
+                },
+                "103": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 312,
+                        "f_size": 8
+                    }
+                },
+                "104": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 320,
+                        "f_size": 8
+                    }
+                },
+                "105": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 328,
+                        "f_size": 8
+                    }
+                },
+                "106": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 336,
+                        "f_size": 8
+                    }
+                },
+                "107": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 344,
+                        "f_size": 8
+                    }
+                },
+                "108": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 352,
+                        "f_size": 8
+                    }
+                },
+                "109": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 360,
+                        "f_size": 8
+                    }
+                },
+                "110": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 368,
+                        "f_size": 8
+                    }
+                },
+                "111": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 376,
+                        "f_size": 8
+                    }
+                },
+                "112": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 384,
+                        "f_size": 8
+                    }
+                },
+                "113": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 392,
+                        "f_size": 8
+                    }
+                },
+                "114": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 400,
+                        "f_size": 8
+                    }
+                },
+                "115": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 408,
+                        "f_size": 8
+                    }
+                },
+                "116": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 416,
+                        "f_size": 8
+                    }
+                },
+                "117": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 424,
+                        "f_size": 8
+                    }
+                },
+                "118": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 432,
+                        "f_size": 8
+                    }
+                },
+                "119": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 440,
+                        "f_size": 8
+                    }
+                },
+                "120": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 448,
+                        "f_size": 8
+                    }
+                },
+                "121": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 456,
+                        "f_size": 8
+                    }
+                },
+                "122": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 464,
+                        "f_size": 8
+                    }
+                },
+                "123": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 472,
+                        "f_size": 8
+                    }
+                },
+                "124": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 480,
+                        "f_size": 8
+                    }
+                },
+                "125": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 488,
+                        "f_size": 8
+                    }
+                },
+                "126": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 496,
+                        "f_size": 8
+                    }
+                },
+                "127": {
+                    "_flit_0_pad__512": {
+                        "c_start": 0,
+                        "f_start": 504,
+                        "f_size": 8
+                    }
+                }
+            }
+        }
+    },
+    "Parser": {
+        "INGRESS": {
+            "1": "start",
+            "2": "parse_ethernet",
+            "3": "parse_ipv6",
+            "4": "parse_ipv4",
+            "5": "parse_udp",
+            "6": "parse_tcp",
+            "7": "__END__"
+        },
+        "EGRESS": {
+            "1": "start",
+            "2": "parse_ethernet",
+            "3": "parse_ipv6",
+            "4": "parse_ipv4",
+            "5": "parse_udp",
+            "6": "parse_tcp",
+            "7": "__END__"
+        }
+    },
+    "TableEngine": {
+        "INGRESS": {
+            "stage0": {
+                "Tables": {
+                    "1": {
+                        "name": "D_mpu_only",
+                        "type": "MPU_ONLY",
+                        "start_key_off": -1,
+                        "end_key_off": -1,
+                        "key_maker0": {
+                            "hw_id": "0",
+                            "key_maker_bytes": {},
+                            "km_profile_hw_id": "-1"
+                        }
+                    },
+                    "2": {
+                        "name": "C_idx",
+                        "type": "EXACT_IDX",
+                        "start_key_off": 8,
+                        "end_key_off": 16,
+                        "key_maker0": {
+                            "hw_id": "1",
+                            "key_maker_bytes": {
+                                "0": "UNUSED",
+                                "1": {
+                                    "ipv4.ttl[0:7]": "K",
+                                    "phv_byte": "96"
+                                },
+                                "2": "UNUSED",
+                                "3": "UNUSED",
+                                "4": "UNUSED",
+                                "5": "UNUSED",
+                                "6": "UNUSED",
+                                "7": "UNUSED",
+                                "8": "UNUSED",
+                                "9": "UNUSED",
+                                "10": "UNUSED",
+                                "11": "UNUSED",
+                                "12": "UNUSED",
+                                "13": "UNUSED",
+                                "14": "UNUSED",
+                                "15": "UNUSED",
+                                "16": "UNUSED",
+                                "17": "UNUSED",
+                                "18": "UNUSED",
+                                "19": "UNUSED",
+                                "20": "UNUSED",
+                                "21": "UNUSED",
+                                "22": "UNUSED",
+                                "23": "UNUSED",
+                                "24": "UNUSED",
+                                "25": "UNUSED",
+                                "26": "UNUSED",
+                                "27": "UNUSED",
+                                "28": "UNUSED",
+                                "29": "UNUSED",
+                                "30": "UNUSED",
+                                "31": "UNUSED"
+                            },
+                            "km_profile_hw_id": "0",
+                            "key_maker_bits": {}
+                        }
+                    },
+                    "3": {
+                        "name": "B_tcam",
+                        "type": "TERNARY",
+                        "start_key_off": 0,
+                        "end_key_off": 162,
+                        "key_maker0": {
+                            "hw_id": "0",
+                            "key_maker_bytes": {
+                                "0": {
+                                    "ipv6.dstAddr[0:7]": "K",
+                                    "phv_byte": "74"
+                                },
+                                "1": {
+                                    "ipv6.dstAddr[8:15]": "K",
+                                    "phv_byte": "75"
+                                },
+                                "2": {
+                                    "ipv6.dstAddr[16:23]": "K",
+                                    "phv_byte": "76"
+                                },
+                                "3": {
+                                    "ipv6.dstAddr[24:31]": "K",
+                                    "phv_byte": "77"
+                                },
+                                "4": {
+                                    "ipv6.dstAddr[32:39]": "K",
+                                    "phv_byte": "78"
+                                },
+                                "5": {
+                                    "ipv6.dstAddr[40:47]": "K",
+                                    "phv_byte": "79"
+                                },
+                                "6": {
+                                    "ipv6.dstAddr[48:55]": "K",
+                                    "phv_byte": "80"
+                                },
+                                "7": {
+                                    "ipv6.dstAddr[56:63]": "K",
+                                    "phv_byte": "81"
+                                },
+                                "8": {
+                                    "ipv6.dstAddr[64:71]": "K",
+                                    "phv_byte": "82"
+                                },
+                                "9": {
+                                    "ipv6.dstAddr[72:79]": "K",
+                                    "phv_byte": "83"
+                                },
+                                "10": {
+                                    "ipv6.dstAddr[80:87]": "K",
+                                    "phv_byte": "84"
+                                },
+                                "11": {
+                                    "ipv6.dstAddr[88:95]": "K",
+                                    "phv_byte": "85"
+                                },
+                                "12": {
+                                    "ipv6.dstAddr[96:103]": "K",
+                                    "phv_byte": "86"
+                                },
+                                "13": {
+                                    "ipv6.dstAddr[104:111]": "K",
+                                    "phv_byte": "87"
+                                },
+                                "14": {
+                                    "ipv6.dstAddr[112:119]": "K",
+                                    "phv_byte": "88"
+                                },
+                                "15": {
+                                    "ipv6.dstAddr[120:127]": "K",
+                                    "phv_byte": "89"
+                                },
+                                "16": {
+                                    "ipv4.dstAddr[0:7]": "K",
+                                    "phv_byte": "97"
+                                },
+                                "17": {
+                                    "ipv4.dstAddr[8:15]": "K",
+                                    "phv_byte": "98"
+                                },
+                                "18": {
+                                    "ipv4.dstAddr[16:23]": "K",
+                                    "phv_byte": "99"
+                                },
+                                "19": {
+                                    "ipv4.dstAddr[24:31]": "K",
+                                    "phv_byte": "100"
+                                },
+                                "20": "BIT_EXTRACTION_0",
+                                "21": "UNUSED",
+                                "22": "UNUSED",
+                                "23": "UNUSED",
+                                "24": "UNUSED",
+                                "25": "UNUSED",
+                                "26": "UNUSED",
+                                "27": "UNUSED",
+                                "28": "UNUSED",
+                                "29": "UNUSED",
+                                "30": "UNUSED",
+                                "31": "UNUSED"
+                            },
+                            "km_profile_hw_id": "1",
+                            "key_maker_bits": {
+                                "0": {
+                                    "ipv4.valid[0:0]": "K",
+                                    "phv_bit": "508"
+                                },
+                                "1": {
+                                    "ipv6.valid[0:0]": "K",
+                                    "phv_bit": "509"
+                                }
+                            }
+                        }
+                    },
+                    "4": {
+                        "name": "A_hash",
+                        "type": "EXACT_HASH",
+                        "start_key_off": 0,
+                        "end_key_off": 64,
+                        "key_maker0": {
+                            "hw_id": "2",
+                            "key_maker_bytes": {
+                                "0": {
+                                    "ethernet.dstAddr[0:7]": "K",
+                                    "phv_byte": "64"
+                                },
+                                "1": {
+                                    "ethernet.dstAddr[8:15]": "K",
+                                    "phv_byte": "65"
+                                },
+                                "2": {
+                                    "ethernet.dstAddr[16:23]": "K",
+                                    "phv_byte": "66"
+                                },
+                                "3": {
+                                    "ethernet.dstAddr[24:31]": "K",
+                                    "phv_byte": "67"
+                                },
+                                "4": {
+                                    "ethernet.dstAddr[32:39]": "K",
+                                    "phv_byte": "68"
+                                },
+                                "5": {
+                                    "ethernet.dstAddr[40:47]": "K",
+                                    "phv_byte": "69"
+                                },
+                                "6": {
+                                    "udp.dstPort[0:7]": "K",
+                                    "phv_byte": "101"
+                                },
+                                "7": {
+                                    "udp.dstPort[8:15]": "K",
+                                    "phv_byte": "102"
+                                },
+                                "8": "UNUSED",
+                                "9": "UNUSED",
+                                "10": "UNUSED",
+                                "11": "UNUSED",
+                                "12": "UNUSED",
+                                "13": "UNUSED",
+                                "14": "UNUSED",
+                                "15": "UNUSED",
+                                "16": "UNUSED",
+                                "17": "UNUSED",
+                                "18": "UNUSED",
+                                "19": "UNUSED",
+                                "20": "UNUSED",
+                                "21": "UNUSED",
+                                "22": "UNUSED",
+                                "23": "UNUSED",
+                                "24": "UNUSED",
+                                "25": "UNUSED",
+                                "26": "UNUSED",
+                                "27": "UNUSED",
+                                "28": "UNUSED",
+                                "29": "UNUSED",
+                                "30": "UNUSED",
+                                "31": "UNUSED"
+                            },
+                            "km_profile_hw_id": "2",
+                            "key_maker_bits": {}
+                        }
+                    }
+                }
+            }
+        },
+        "EGRESS": {}
+    }
+}

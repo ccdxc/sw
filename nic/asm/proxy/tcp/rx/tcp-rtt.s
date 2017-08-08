@@ -3,73 +3,21 @@
  */
 
 #include "tcp-constants.h"
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
-	
- /* d is the data returned by lookup result */
-struct d_struct {
-	/* State needed by RX and TX pipelines
-	 * This has to be at the beginning.
-	 * Each of these fields will be written by Rx only or Tx only
-	 */
-
-	srtt_us				: TS_WIDTH              ;\
-	rto				: 8	                ;\
-	backoff				: 4                     ;\
-	
-	/* State needed only by RTT stage */
-	seq_rtt_us			: TS_WIDTH ;
-	ca_rtt_us			: TS_WIDTH ;
-	curr_ts				: TS_WIDTH ;
-	rtt_min				: TS_WIDTH ;
-	rttvar_us			: TS_WIDTH ;
-	mdev_us				: TS_WIDTH ;
-	mdev_max_us			: TS_WIDTH ;
-	rtt_seq				: SEQ_NUMBER_WIDTH ;
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	syn				: 1 ;
-	ece				: 1 ;
-	cwr				: 1 ;
-	ooo_rcv				: 1 ;
-	rsvd				: 4 ;
-	ca_event			: 4 ;
-	num_sacks			: 8 ;
-	sack_off			: 8 ;
-	d_off				: 8 ;
-	ts_off				: 8 ;
-	ip_dsfield			: 8 ;
-	pkts_acked			: 8  ;
-	seq				: SEQ_NUMBER_WIDTH ;
-	end_seq				: SEQ_NUMBER_WIDTH ;
-	ack_seq				: SEQ_NUMBER_WIDTH ;
-	rcv_tsecr			: TS_WIDTH ;
-	window				: WINDOW_WIDTH ;
-	process_ack_flag		: 16  ;
-	descr_idx			: RING_INDEX_WIDTH ;
-	page_idx			: RING_INDEX_WIDTH ;
-	descr				: ADDRESS_WIDTH ;
-	page				: ADDRESS_WIDTH ;
-
-	snd_una				: SEQ_NUMBER_WIDTH	;\
-	snd_nxt				: SEQ_NUMBER_WIDTH	;\
-
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
+struct phv_ p;
+struct tcp_rx_tcp_rtt_k k;
+struct tcp_rx_tcp_rtt_tcp_rtt_d d;
 
 	
 %%
+        .param          tcp_rx_fra_stage3_start
 	
-flow_rtt_process_start:
+tcp_rx_rtt_stage2_start:
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 	/* Prefer RTT measured from ACK's timing to TS-ECR. This is because
@@ -89,10 +37,10 @@ flow_rtt_process_start:
 	 *   seq_rtt_us = ca_rtt_us = jiffies_to_usecs(tcp_time_stamp -
 	 *				      tp->rx_opt.rcv_tsecr);
 	 */
-	add		r1, k.process_ack_flag, r0
+	add		r1, k.common_phv_process_ack_flag, r0
 	smeqh		c1, r1, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
 
-	sub		r1, d.curr_ts, k.rcv_tsecr
+	sub		r1, d.curr_ts, k.common_phv_rcv_tsecr
 	tblwr.c1	d.seq_rtt_us, r1
 	tblwr.c1	d.ca_rtt_us, r1
 
@@ -205,13 +153,13 @@ m_ge_0_done:
 	/*
 	 * if (after(tp->tx.snd_una, tp->rtt.rtt_seq)) {
 	 */
-	slt		c1, k.snd_una, d.rtt_seq
+	slt		c1, k.common_phv_snd_una, d.rtt_seq
 	slt.c1		c2, d.mdev_max_us, d.rttvar_us
 	sub.c2		r4, d.rttvar_us, d.mdev_max_us
 	srl.c2		r4, r4,2
 	sub.c2		r5, d.rttvar_us, r4
 	tblwr		d.rttvar_us, r5
-	tblwr.c1	d.rtt_seq, k.snd_nxt
+	tblwr.c1	d.rtt_seq, k.to_s2_snd_nxt
 	addi.c1		r4, r0, TCP_RTO_MIN
 	tblwr.c1	d.mdev_max_us, r4
 	
@@ -235,7 +183,7 @@ first_rtt_measure:
 	tblwr		d.mdev_max_us, d.rttvar_us
 	
 	/* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
-	tblwr		d.rtt_seq, k.snd_nxt
+	tblwr		d.rtt_seq, k.to_s2_snd_nxt
 first_rtt_measure_done:
 	/* tp->rtt.srtt_us = max(1U, srtt) */
 	addi		r5,r0,1
@@ -265,9 +213,9 @@ tcp_set_rto:
 flow_rtt_process_done:
 	
 table_read_FC:
-	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_fra_process,
+	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fra_stage3_start,
 	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_FRA_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
+	                    TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 

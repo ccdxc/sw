@@ -16,6 +16,7 @@ _log_modules = {
     'PA': 'pa.log',
     'TM': 'tm.log',  # Table Manager
     'DP': 'dp.log',
+    'P4PD': 'p4pd.log',
     'TableMapper': 'tblmapper.log'
 }
 

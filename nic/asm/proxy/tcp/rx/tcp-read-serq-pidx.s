@@ -7,27 +7,17 @@
 	      - SERQ producer idx
  */
 
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 
- /* d is the data returned by lookup result */
-struct d_struct {
-	serq_pidx			: 8    ;
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	semaphore_addr			: ADDRESS_WIDTH ;
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
+struct phv_ p;
+struct tcp_rx_read_serq_read_serq_d d;
 	
 %%
 	
-flow_read_serq_pidx:
-	phvwr.e		p.serq_pidx, d.serq_pidx
+tcp_rx_read_serq_pidx_stage2_start:
+	phvwr.e		p.to_s6_serq_pidx, d.serq_pidx
 	nop.e

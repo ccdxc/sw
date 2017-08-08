@@ -47,7 +47,6 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
                      rewrite_metadata.entropy_hash);
     }
 
-
     if (vlan_tag_in_skb == TRUE) {
         if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
             if (vlan_tag.valid == TRUE) {

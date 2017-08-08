@@ -349,8 +349,8 @@ class capri_table:
 
         match_type_name = self.match_type.name if not self.is_raw else "RAW_TABLE"
 
-        pstr = '%s,%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d' % \
-            (self.d.name, self.stage, self.p4_table.name, match_type_name, n,
+        pstr = '%s,%d,%s,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d' % \
+            (self.d.name, self.stage, self.p4_table.name, self.tbl_id, match_type_name, n,
              self.final_key_size, self.final_key_size+self.i_phv_size, self.d_size,
              kd_size, sram_size, tcam_size,
              sum([i[1] for i in self.i1_phv_chunks]),
@@ -642,13 +642,11 @@ class capri_table:
             flit = k[0].phv_bit / flit_size
             if flit not in self.flits_used:
                 self.flits_used.append(flit)
-            kf = self.km_flits[flit]
 
         for k in self.input_fields:
             flit = k.phv_bit / flit_size
             if flit not in self.flits_used:
                 self.flits_used.append(flit)
-            kf = self.km_flits[flit]
 
         if len(self.flits_used):
             self.flits_used = sorted(self.flits_used)
@@ -792,7 +790,6 @@ class capri_table:
         flit_k_phv_chunks = {f:[] for f in range(num_flits)}
         flit_i_phv_chunks = {f:[] for f in range(num_flits)}
 
-        #if self.p4_table.name == 'input_mapping_tunneled': pdb.set_trace()
         for cs, cw in k_phv_chunks:
             start_fid = cs/flit_size
             end_fid = (cs+cw-1)/flit_size
@@ -928,17 +925,6 @@ class capri_table:
                 #self.i_in_key = i_in_key # for printing (for analysis)
             kf.k_phv_chunks = k_phv_chunks # [(phv_bit, width)]
 
-        for i,kf in enumerate(self.km_flits):
-            # XXX - remove
-            if self.p4_table.name == 'input_mapping_tunneled':
-                self.gtm.tm.logger.debug("%s[%d]:" % (self.p4_table.name, i))
-                if len(kf.k_phv_chunks):
-                    self.gtm.tm.logger.debug("k_chunks = %s" % (kf.k_phv_chunks))
-                if len(kf.i1_phv_chunks) or len(kf.i2_phv_chunks):
-                    self.gtm.tm.logger.debug("i1_chunks = %s,i2_chunks = %s,i_bits = %s" % \
-                        (kf.i1_phv_chunks, kf.i2_phv_chunks, kf.i_bit_ext))
-
-        #if self.p4_table.name == 'input_mapping_tunneled': pdb.set_trace()
         # Add info from different flits into a common place
         self.ct_build_tbl_ki_info_from_flits()
         if self.ct_align_table_k_i_bits():
@@ -1023,7 +1009,7 @@ class capri_table:
         #   +-------+--------+--+-----+ +---------+--------+
         # 
         # when KM profiles are shared between hash/idx and TCAM, K bytes/bits are considered
-        # only from has/idx table, as they need to be contiguous
+        # only from hash/idx table, as they need to be contiguous
 
         assert self.num_km <= 2 # max km_per_key
         if self.num_km == 0:
@@ -1043,8 +1029,6 @@ class capri_table:
             km = capri_key_maker(self, [self])
             km.km_id = i
             self.key_makers.append(km)
-            for fid in range(self.flits_used[0], self.flits_used[-1]+1):
-                km.flits_used.append(fid)
 
         if self.num_km < 2:
             # only one key-maker, copy all info from table
@@ -1054,9 +1038,10 @@ class capri_table:
             km.has_key = True
             for fid,kf in enumerate(self.km_flits):
                 km.flit_km_profiles[fid] = copy.deepcopy(kf.km_profile)
+            for fid in range(self.flits_used[0], self.flits_used[-1]+1):
+                km.flits_used.append(fid)
             return
 
-        #if self.p4_table.name == 'input_mapping_native': pdb.set_trace()
         #pdb.set_trace()
         # multiple kms
         # check how to split
@@ -1210,17 +1195,23 @@ class capri_table:
                 km1.has_key = True
             else:
                 # place key in km0
-                # if i1 can move to km1, move it and move rest of the i2 evenly
+                # if entire i1 can move to km1, move it and move rest of the i2 evenly
                 # if i1 cannot be completely moved to km1, then divide i1+i2 evenly
-                self.gtm.tm.logger.debug("%s:%s:Split key_makers I > max_km" % \
+                self.gtm.tm.logger.debug("%s:%s:Split key_makers k < max_km" % \
                     (self.gtm.d.name, self.p4_table.name))
                 keep_free = (km0_free + km1_free - total_kB - total_iB) / 2
                 km0_profile.k_byte_sel += self.combined_profile.k_byte_sel
                 assert num_kbits < max_km_bits, pdb.set_trace() # XXX TBD
                 km0_profile.k_bit_sel += self.combined_profile.k_bit_sel
                 km0_free -= total_kB
+                num_byte_sel = len(self.combined_profile.k_byte_sel) + \
+                                len(self.combined_profile.i1_byte_sel) + \
+                                len(self.combined_profile.i2_byte_sel)
 
-                if num_ibits > max_km_bits:
+                byte_avail = (self.num_km * max_kmB) - num_byte_sel
+                byte_avail -= ((num_kbits+7)/8)
+
+                if num_ibits > max_km_bits or (byte_avail < (num_ibits+7)/8):
                     km_free_bits = (max_km_bits + max_km_bits - num_kbits - num_ibits)/2
                     km0_bits = max_km_bits - km_free_bits
                     km0_bits = min(km0_bits, num_ibits)
@@ -1233,23 +1224,39 @@ class capri_table:
                 else:
                     # move all i bits to km1
                     km1_profile.i_bit_sel += self.combined_profile.i_bit_sel
+                    km1_free -= ((len(self.combined_profile.i_bit_sel)+7)/8)
 
                 km0_iB = km0_free-keep_free
-                if km0_iB < total_i1B:
-                    km0_i1B = min(km0_iB, total_i1B)
-                    for b in range(km0_i1B):
-                        km0_profile.i1_byte_sel.append(self.combined_profile.i1_byte_sel[b])
-                    # rest of the i1 is moved to km1 as i2
-                    for b in range(km0_i1B, total_i1B):
-                        km1_profile.i2_byte_sel.append(self.combined_profile.i1_byte_sel[b])
-                    km1_profile.i2_byte_sel += self.combined_profile.i2_byte_sel
-                else:
-                    km0_profile.i1_byte_sel += self.combined_profile.i1_byte_sel
-                    km0_iB -= total_i1B
-                    for b in range(km0_iB):
-                        km0_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[b])
-                    for b in range(km0_iB, total_i2B):
-                        km1_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[b])
+                km1_iB = km1_free-keep_free
+
+                i = -1
+                # copy i1 bytes to km1 (as much as allowed)
+                # XXX check if we can avoid breaking up a field
+                for i in range(min(km1_iB, total_i1B)):
+                    km1_profile.i2_byte_sel.append(self.combined_profile.i1_byte_sel[i])
+                    km1_free -= 1
+                    km1_iB -= 1
+
+                for b in range(i+1, total_i1B):
+                    km0_profile.i1_byte_sel.append(self.combined_profile.i1_byte_sel[b])
+                    km0_free -= 1
+                    km0_iB -= 1
+
+                i = -1
+                # copy i2B in remaining space in km1 and km0
+                for i in range(min(km1_iB, total_i2B)):
+                    km1_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[i])
+                    km1_free -= 1
+                    km1_iB -= 1
+
+                for b in range(i+1, total_i2B):
+                    km0_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[b])
+                    km0_free -= 1
+                    km0_iB -= 1
+
+                km0_profile.i1_byte_sel = sorted(km0_profile.i1_byte_sel)
+                km0_profile.i2_byte_sel = sorted(km0_profile.i2_byte_sel)
+                km1_profile.i2_byte_sel = sorted(km1_profile.i2_byte_sel)
 
                 km0_profile.byte_sel = (km0_profile.i1_byte_sel + km0_profile.k_byte_sel + \
                     km0_profile.i2_byte_sel)
@@ -1312,7 +1319,15 @@ class capri_table:
 
                 km0.flit_km_profiles[fid] = km0_flit_profile
                 km1.flit_km_profiles[fid] = km1_flit_profile
-            #pdb.set_trace()
+        km0_start_fid = -1; km1_start_fid = -1
+        for fid in range(self.flits_used[0], self.flits_used[-1]+1):
+            if km0_start_fid >= 0 or km0.flit_km_profiles[fid].km_prof_size():
+                km0.flits_used.append(fid)
+                km0_start_fid = fid
+            if km1_start_fid >= 0 or km1.flit_km_profiles[fid].km_prof_size():
+                km1.flits_used.append(fid)
+                km1_start_fid = fid
+
         # validate that all bytes are covered
         total_k_bytes = sum([len(km.combined_profile.k_byte_sel) for km in self.key_makers])
         total_i1_bytes = sum([len(km.combined_profile.i1_byte_sel) for km in self.key_makers])
@@ -1325,6 +1340,9 @@ class capri_table:
                                 len(self.combined_profile.i2_byte_sel), pdb.set_trace()
         assert total_k_bits == len(self.combined_profile.k_bit_sel), pdb.set_trace()
         assert total_i_bits == len(self.combined_profile.i_bit_sel), pdb.set_trace()
+
+        self.gtm.tm.logger.debug("%s:%s:Split Profiles km0:%s, km1%s" % \
+                    (self.gtm.d.name, self.p4_table.name, km0_profile, km1_profile))
 
     def ct_update_key_offsets(self):
         # XXX for tables that do not share key-makers this is already computed - merge the two
@@ -1641,7 +1659,7 @@ class capri_table:
                     self.start_key_off += 8
                     self.end_key_off += 8
                     km_prof.bit_loc += 1
-                    if km_prof.bit_loc != -1:
+                    if km_prof.bit_loc1 != -1:
                         km_prof.bit_loc1 += 1
                     self.gtm.tm.logger.debug("%s:%s:Fixed index location (add pad at bit_loc) to %d:%d" % \
                         (self.gtm.d.name, self.p4_table.name, self.start_key_off, self.end_key_off))
@@ -1906,10 +1924,16 @@ class capri_key_maker:
                     base_table = ct
                     break
         else:
+            # for tcam, base table does not matter, if keys of the two tables are
+            # intertwined
+            pass
+            '''
+            # Following code cause flit order violation - not useful - will be removed/fixed
             # for tcam tables, use table with smaller key as base table, otherwise
             # tcam width can increase
             key_sorted_tbls = sorted(self.ctables, key=lambda k:k.key_phv_size)
             base_table = key_sorted_tbls[0]
+            '''
 
         if base_table:
             self.stage.gtm.tm.logger.debug("km_merge: use %s - %s as main table" % \
@@ -1968,9 +1992,9 @@ class capri_key_maker:
                             i2_byte_sel.append(b)
                     i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
                     # XXX update the k, i1, i2 in the flit?? May cause problems in other code
-                    self.combined_profile.i1_byte_sel += i1_byte_sel
-                    self.combined_profile.i2_byte_sel += i2_byte_sel
-                    self.combined_profile.k_byte_sel += k_byte_sel
+                    self.combined_profile.i1_byte_sel += sorted(i1_byte_sel)
+                    self.combined_profile.i2_byte_sel += sorted(i2_byte_sel)
+                    self.combined_profile.k_byte_sel += sorted(k_byte_sel)
                     self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
                     self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
                     continue
@@ -2145,6 +2169,7 @@ class capri_km_profile:
     def __init__(self, gtm):
         self.gtm = gtm
         self.hw_id = -1
+        self.mode = 0   # 0=Normal, 1=2B_Lo, 2=2B_high XXX
         self.i1_byte_sel = []
         self.k_byte_sel = []
         self.i2_byte_sel = []
@@ -2282,6 +2307,25 @@ class capri_km_profile:
 
         return new_obj
 
+    def create_2B_profile(self, km_prof, use_low = True):
+        km_prof_size = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        km_sizeB = km_prof_size/8
+        km_size2B = km_sizeB/2
+
+        if use_low:
+            assert len(self.byte_sel) == 0, pdb.set_trace() # low portion is already used
+        else:
+            assert len(self.byte_sel) == km_size2B, pdb.set_trace() # low portion is already used
+            b = -2
+        # append to exsting byte_sel.. if lo half is already added, it is also padded upto half size
+        for b in range(0, len(km_prof.byte_sel), 2):
+            self.byte_sel.append(km_prof.byte_sel[b])
+        # for odd len.. last byte is already added in the loop above
+        b += 2
+        # fill the rest of the half profile with un-used (km_sizeB is used since step is 2
+        for _ in range(b, km_sizeB, 2):
+            self.byte_sel.append(-1)
+
     def km_prof_size(self):
         return len(self.byte_sel) + ((len(self.bit_sel)+7)/8)
 
@@ -2320,24 +2364,6 @@ class capri_km_profile:
             if num_bytes > 1:
                 self.bit_loc1 = bit_loc + 1
 
-            '''
-
-            if len(self.k_byte_sel):
-                last_k_byte = self.k_byte_sel[-1]
-                self.bit_loc = self.byte_sel.index(last_k_byte) + 1
-                last_k_idx = self.bit_loc
-            else:
-                self.bit_loc = 0
-                last_k_idx = 0
-            # insert req.d bytes into the byte_sel list
-            if len(self.bit_sel) < 8:
-                self.byte_sel.insert(last_k_idx, -1)
-            else:
-                # insert 2 bytes
-                self.byte_sel.insert(last_k_idx, -1)
-                self.byte_sel.insert(last_k_idx, -1)
-            '''
-
         # this code does not handle any key_offsets needed due to bit2byte conversion
         # that is handled per ctable and in not visible to this code
         if self.start_key_off == -1:
@@ -2362,16 +2388,20 @@ class capri_km_profile:
                 pass
 
     def km_profile_validate(self):
-        bytes_used = {}
+        if self.mode:
+            # validation for 2B mode - TBD
+            pass
+
         bits_used = {}
+        bytes_sel = [[] for _ in range(self.gtm.tm.be.hw_model['phv']['num_flits'])]
+        flit_sz = self.gtm.tm.be.hw_model['phv']['flit_size']
+        flit_szB = flit_sz/8
+        # check duplicates
         for b in self.byte_sel:
             if b < 0:
                 continue
-            assert b not in bytes_used, pdb.set_trace()
-            if b not in bytes_used:
-                bytes_used[b] = 1
-            else:
-                bytes_used[b] += 1
+            assert b not in bytes_sel, pdb.set_trace()
+            bytes_sel[b/flit_szB].append(b)
 
         for b in self.bit_sel:
             if b < 0:
@@ -2379,9 +2409,14 @@ class capri_km_profile:
             assert b not in bits_used, pdb.set_trace()
             if b not in bits_used:
                 bits_used[b] = 1
-            else:
-                bits_used[b] += 1
-                
+
+        # Banyon network violation
+        for fb_sel in bytes_sel:
+            if len(fb_sel) == 0:
+                continue
+            assert sorted(fb_sel) == fb_sel, pdb.set_trace()
+            pass
+
     def __repr__(self):
         if len(self.byte_sel) or len(self.bit_sel):
             return '[%d] : byte_sel %s :\t\tbit_sel %s' % (self.hw_id, self.byte_sel, self.bit_sel)
@@ -2440,23 +2475,7 @@ class capri_stage:
                 self.gtm.tm.logger.debug("hash_key %s, tcam_key %s" % \
                     (h_profile.k_byte_sel, t_profile.k_byte_sel))
                 return False
-            '''
-            if hk_start == hk_end:
-                # only k byte in this flit
-                if hk_start == h_key_first and b > hk_start:
-                    # b falls after h-key start
-                    continue
-                elif hk_end == h_key_last and b < hk_end:
-                    # b falls after h-key end
-                    continue
-                else:
-                    # this is a middle k-byte for hash table, cannot share
-                    pdb.set_trace()
-                    self.gtm.tm.logger.debug("Cannot share km as tcam key falls within hash key")
-                    self.gtm.tm.logger.debug("hash_key %s, tcam_key %s" % \
-                        (h_profile.k_byte_sel, t_profile.k_byte_sel))
-                    return False
-            '''
+
             if b > hk_end and len(h_profile.k_bit_sel):
                 # must keep the k bits next to K byte for hash table
                 # XXX I think this can be allowed for tcam table
@@ -2487,7 +2506,6 @@ class capri_stage:
         km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         km_max_bits = self.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
 
-        #if ct.p4_table.name == 'input_mapping_native': pdb.set_trace()
         # XXX merging TCAM tables can create in-efficiency when tcam key width is increased
         # as a result of merging.. merge tables based on largest common set of fields TBD
 
@@ -2498,16 +2516,19 @@ class capri_stage:
             if kt == ct:
                 continue
 
-            self.gtm.tm.logger.debug("Find shareable km for %s:%d with %s" % \
-                (ct.p4_table.name, new_km.km_id, kt.p4_table.name))
+            self.gtm.tm.logger.debug("Flit %d:Find shareable km for %s:km %d with %s" % \
+                (fid, ct.p4_table.name, new_km.km_id, kt.p4_table.name))
             km_found = None
             km_profile = None
             for km in kt.key_makers:
                 km_profile = km.combined_profile
                 if km.is_shared:
-                    # XXX multi-way sharing... need to check and operate on shared key-maker
-                    self.gtm.tm.logger.debug("km is already shared with another table")
-                    continue
+                    if not ct.is_raw:
+                        # XXX multi-way sharing... need to check and operate on shared key-maker
+                        self.gtm.tm.logger.debug("km is already shared with another table")
+                        continue
+                    # allow multi-way sharing for raw tables
+                    km_profile = km.shared_km.combined_profile
 
                 u_byte_sel = set(km_profile.byte_sel) | ct_byte_sel
                 # remove the bytes reserved for bit_sel
@@ -2518,9 +2539,10 @@ class capri_stage:
                     continue
                 if (len(u_byte_sel) + (len(u_bit_sel)+7)/8) > (km_width/8):
                     #pdb.set_trace()
-                    self.gtm.tm.logger.debug("u_bytes+u_bits exceed km_width:%s:%s\nBytes[%d]:%s, Bits[%d]:%s" % \
-                    (ct.p4_table.name, kt.p4_table.name, len(u_byte_sel), u_byte_sel,
-                    len(u_bit_sel), u_bit_sel))
+                    self.gtm.tm.logger.debug(\
+                        "u_bytes+u_bits exceed km_width:%s:%s\nNeed Bytes %d Bits %d" % \
+                        (ct.p4_table.name, kt.p4_table.name, len(u_byte_sel),
+                        len(u_bit_sel)))
                     continue
                 if km.shared_km:
                     km_found = km.shared_km
@@ -2565,14 +2587,14 @@ class capri_stage:
             
             if kt.is_hash_table():
                 assert ct.is_tcam_table(), pdb.set_trace()
-                if not self._can_share_hash_tcam_km(km, new_km):
+                if not self._can_share_hash_tcam_km(km_found, new_km):
                     self.gtm.tm.logger.debug("Cannot merge %s into %s" % \
                         (ct.p4_table.name, kt.p4_table.name))
                     continue
 
             if ct.is_hash_table():
                 assert kt.is_tcam_table(), pdb.set_trace()
-                if not self._can_share_hash_tcam_km(new_km, km):
+                if not self._can_share_hash_tcam_km(new_km, km_found):
                     self.gtm.tm.logger.debug("Cannot merge %s into %s" % \
                         (kt.p4_table.name, ct.p4_table.name))
                     continue
@@ -2580,7 +2602,7 @@ class capri_stage:
             self.gtm.tm.logger.debug( \
                 "%s:%d:Merge key makers %d for tables %s(size %d) and %s(size %d) flit %d" % \
                 (self.gtm.d.name, self.id,
-                km.km_id, kt.p4_table.name, km_profile.km_prof_size(),
+                km_found.km_id, kt.p4_table.name, km_profile.km_prof_size(),
                 ct.p4_table.name, new_km_profile.km_prof_size(), fid))
 
             # XXX
@@ -2590,22 +2612,28 @@ class capri_stage:
             # combining two profiles: Need to keep the order within the byte selects within a
             # a flit
 
-            shared_km = capri_key_maker(self, [])
+            if km_found.is_shared:
+                shared_km = km_found
+            else:
+                shared_km = capri_key_maker(self, [])
             # XXX does it matter in which order things are added ???
             if kt.is_hash_table():
                 # add kt before ct
-                shared_km._merge(km)
+                if shared_km != km_found:
+                    shared_km._merge(km_found)
                 shared_km._merge(new_km)
             elif ct.is_hash_table():
                 shared_km._merge(new_km)
-                shared_km._merge(km)
+                if shared_km != km_found:
+                    shared_km._merge(km_found)
             else:
                 # no hash table involved, merging TCAM<-->SRAM
                 shared_km._merge(new_km)
-                shared_km._merge(km)
+                if shared_km != km_found:
+                    shared_km._merge(km_found)
 
-            assert km.hw_id != -1
-            shared_km.hw_id = km.hw_id
+            assert km_found.hw_id != -1
+            shared_km.hw_id = km_found.hw_id
             km.hw_id = -1
             new_km.hw_id = -1
             new_km.is_shared = True
@@ -2628,7 +2656,10 @@ class capri_stage:
             ct.key_makers[0].hw_id = 0
             return True
         total_km_allocated = 0
-        km_used = [-1 for _ in ct.key_makers]
+        # record already assigned hw_ids. hw_id used for one km of a table should not be
+        # used for the other km
+        km_used = [_km.get_hw_id() for _km in ct.key_makers]
+
         for c_km in ct.key_makers:
             if fid not in c_km.flits_used:
                 total_km_allocated += 1
@@ -2664,7 +2695,7 @@ class capri_stage:
                     for f in new_km.flits_used:
                         self.km_allocator[f][new_km.hw_id] = new_km
                         self.gtm.tm.logger.debug("%s:[flit %d] reuse key_maker[%d] %d" % \
-                            (ct.p4_table.name, f, km.km_id, km.hw_id))
+                            (ct.p4_table.name, f, c_km.km_id, km.hw_id))
                     km.ctables.append(ct)
                     km_allocated += 1
                     total_km_allocated += 1
@@ -2701,6 +2732,46 @@ class capri_stage:
 
         assert total_km_allocated == ct.num_km, pdb.set_trace()
         return True
+
+    def get_2B_mode(self, km_prof, ct):
+        # return 0: no 2B mode allowed, 1 : 2B mode odd byte, 2: 2B mode even byte
+        if len(km_prof.bit_sel):
+            # XXX checking with asic team on constraints, not allowed till then
+            return 0
+
+        if not ct.is_raw:
+            # TBD - support other table types
+            return 0
+
+        max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        max_kmB = max_km_width/8
+        # Use 2B mode if -
+        #   - all byte sels are in pairs
+        # If key-maker is not full, then additional bytes can be selected depending on
+        # on table type, but need to adjust the key masks etc.. TBD
+        _2B_ok = True
+        for i in range(len(km_prof.byte_sel)/2):
+            b = i*2
+            if km_prof.byte_sel[b+1] != km_prof.byte_sel[b]+1:
+                _2B_ok = False
+                break
+        if _2B_ok:
+            return 2    # even bytes in key_maker, 0, 2, 4, ... 
+
+        if len(km_prof.byte_sel) > (max_kmB - 2):
+            return 0    # will need extra bytes in key_maker for two ends
+
+        pdb.set_trace() # un-tested code
+        _2B_ok = True
+        for i in range(0, (len(km_prof.byte_sel)/2) - 1):
+            b = (i*2) + 1
+            if km_prof.byte_sel[i+1] != km_prof.byte_sel[i]+1:
+                _2B_ok = False
+                break
+        if _2B_ok:
+            return 1    # combine odd bytes: 1, 3, 5, ...
+
+        return 0
 
     def program_tables(self):
         num_flits = self.gtm.tm.be.hw_model['phv']['num_flits']
@@ -2739,7 +2810,7 @@ class capri_stage:
                 if len(ct.flits_used) == 0:
                     # dummy table, no K+I only D and action execution
                     continue
-                for fid in range(ct.flits_used[0], ct.flits_used[-1]+1):
+                for fid in km.flits_used:
                     per_flit_kms[fid].append(km)
                     if ct not in per_flit_tables[fid]:
                         # multiple kms per table can cause duplicate addition
@@ -2749,7 +2820,7 @@ class capri_stage:
         # Tables that are mutually exlusive can share a key-maker
         # Exclusivity is decided by disjoint flits used by tables and/or predicates
         # for each table, find a list of mutually exclusive tables based on predicates
-        # this is done by elimination - start will all tables added to exclusive list and remove
+        # this is done by elimination - start with all tables added to exclusive list and remove
         # tables that are applied together
         p_excl_tbls = OrderedDict()
         for ct in self.ct_list:
@@ -2777,6 +2848,9 @@ class capri_stage:
                                 fid_excl_tables[fid].append(et2)
 
         #pdb.set_trace()
+
+        for fid, ctg in enumerate(per_flit_tables):
+            self.gtm.tm.logger.debug("Per Flit Tables[%d] = %s" % (fid, ctg))
 
         for fid, ctg in enumerate(per_flit_tables):
             num_km = sum(ct.num_km for ct in ctg if ct not in fid_excl_tables[fid])
@@ -2834,8 +2908,7 @@ class capri_stage:
             ct.ct_update_key_offsets()
             if ct.is_index_table():
                 ct._fix_idx_table_km_profile()
-            #if ct.is_hbm and ct.is_hash_table() and ct.num_actions() > 1:
-            if ct.is_hash_table() and ct.num_actions() > 1:
+            if ct.is_hbm and ct.is_hash_table() and ct.num_actions() > 1:
                 ct._fix_hbm_hash_table_km_profile()
             if ct.is_tcam_table() and ct.final_key_size > ct.key_phv_size:
                 ct._fix_tcam_table_km_profile()
@@ -2847,9 +2920,71 @@ class capri_stage:
             if not ct.is_index_table():
                 ct.ct_update_key_offsets()
             
-        # allocate hardware km_profiles for each table
-        km_profiles_used = 0
-        self.gtm.tm.logger.debug("KM_PROF:Direction,Stage,km_profile,Table,Type,start_key_off,end_key_off,profile_used")
+        max_km_profiles = self.gtm.tm.be.hw_model['match_action']['num_km_profiles']
+        km_prof_normal = []
+        km_prof_2B = []
+        # use km_profiles in 2Byte mode for raw tables - 
+        for ct in self.ct_list:
+            for km in ct.key_makers:
+                if km.shared_km:
+                    km_prof = km.shared_km.combined_profile
+                else:
+                    km_prof = km.combined_profile
+                if not km_prof:
+                    continue # key-less mpu only table
+
+                if km_prof in km_prof_normal or km_prof in km_prof_2B:
+                    # already accounted for - shared
+                    continue
+
+                Two_B_mode = 0
+                if self.gtm.tm.be.args.two_byte_profile:
+                    Two_B_mode = self.get_2B_mode(km_prof, ct)
+                if not Two_B_mode:
+                    km_prof_normal.append(km_prof)
+                else:
+                    self.gtm.tm.logger.debug("%s:%s:km %d can use 2B profile" % \
+                        (self.gtm.d.name, ct.p4_table.name, km.km_id))
+                    km_prof_2B.append(km_prof)
+
+        num_profiles_2B = (len(km_prof_2B) + 1) / 2
+        km_profiles_used = num_profiles_2B + len(km_prof_normal)
+        if km_profiles_used > max_km_profiles:
+            # "Not enough km_profiles"
+            assert 0, pdb.set_trace()
+
+        # assign hw_ids to km_profiles
+        # need to create final hw_profiles with correct byte_sels
+        hw_id = 0
+        for km_prof in km_prof_normal:
+            #pdb.set_trace()
+            km_prof.hw_id = hw_id
+            km_prof.mode = 0 # normal
+            hw_id += 1
+            self.hw_km_profiles[km_prof.hw_id] = km_prof
+
+        i = 0
+        hw_prof2B = None
+        for i, km_prof in enumerate(km_prof_2B):
+            #pdb.set_trace()
+            km_prof.hw_id = hw_id
+            if hw_prof2B == None:
+                hw_prof2B = capri_km_profile(self.gtm)
+                hw_prof2B.hw_id = hw_id
+                km_prof.mode = 1 # use lower half
+                hw_prof2B.create_2B_profile(km_prof, True)
+                self.hw_km_profiles[km_prof.hw_id] = hw_prof2B
+            else:
+                km_prof.mode = 2 # use upper half
+                hw_prof2B.create_2B_profile(km_prof, False)
+
+            if (i%2):
+                hw_id += 1
+                hw_prof2B = None
+
+        # debug printing
+        self.gtm.tm.logger.debug(\
+            "KM_PROF:Direction,Stage,hw_id,Mode,Table,Type,start_key_off,end_key_off,profile_size")
         for ct in self.ct_list:
             for km in ct.key_makers:
                 # most times all flit will use the same profile
@@ -2859,16 +2994,11 @@ class capri_stage:
                     km_prof = km.combined_profile
                 if not km_prof:
                     continue # key-less mpu only table
+
                 assert len(km_prof.byte_sel) <= max_kmB, pdb.set_trace()
-                if km_prof.hw_id == -1:
-                    # XXX see if any existing profile can be re-used
-                    assert self.hw_km_profiles.count(None), pdb.set_trace()
-                    km_prof.hw_id = self.hw_km_profiles.index(None)
-                    km_profiles_used += 1
 
-                    self.hw_km_profiles[km_prof.hw_id] = km_prof
-
-                pstr = 'KM_PROF:%s,%d,%d,' % (self.gtm.d.name, self.id, km_prof.hw_id)
+                pstr = 'KM_PROF:%s,%d,%d,%d,' % \
+                    (self.gtm.d.name, self.id, km_prof.hw_id, km_prof.mode)
                 pstr += '%s,%s,%d,%d,%d' % \
                         (ct.p4_table.name, ct.match_type.name, ct.start_key_off,
                         ct.end_key_off,len(km_prof.byte_sel))
@@ -2905,7 +3035,9 @@ class capri_stage:
         num_flits = self.gtm.tm.be.hw_model['phv']['num_flits']
         flit_launch_tbls = [[] for _ in range(num_flits)]
         launch_any_time = []
-        # create list of tables launched per flit for 
+        flits_used = [None for _ in range(num_flits)]
+        last_flit_used = 0
+        # create list of tables launched per flit for given active tables
         for ct in ctg:
             if ct.is_otcam:
                 continue
@@ -2915,18 +3047,34 @@ class capri_stage:
                 launch_any_time.append(ct)
                 continue
             flit_launch_tbls[ct.launch_flit].append(ct)
+            for fid in ct.flits_used:
+                flits_used[fid] = True
+                if fid > last_flit_used:
+                    last_flit_used = fid
 
         launch_seq = [capri_te_cycle() for _ in range(max_cycles)]
         cycle = 0
-
-        for fid in range(num_flits):
+        
+        for fid in range(last_flit_used+1):
+            assert cycle < max_cycles, pdb.set_trace()
+            
             if len(flit_launch_tbls[fid]) == 0:
-                launch_seq[cycle].is_used = True
+                if flits_used[fid]:
+                    launch_seq[cycle].is_used = True
+                else:
+                    launch_seq[cycle].is_used = False
                 launch_seq[cycle].adv_flit = True
                 launch_seq[cycle].fid = fid
                 if len(launch_any_time):
                     ct = launch_any_time.pop(0)
                     launch_seq[cycle].tbl = ct
+                cycle += 1
+                continue
+
+            if not flits_used[fid]:
+                launch_seq[cycle].is_used = False
+                launch_seq[cycle].adv_flit = True
+                launch_seq[cycle].fid = fid
                 cycle += 1
                 continue
 
@@ -2938,6 +3086,9 @@ class capri_stage:
                 cycle += 1
                 continue
 
+            # more than 1 table is ready
+            # if a key_maker for a table is not used on the following cycle, keep it as 
+            # last table to launch
             last_ct = None
             if fid < (num_flits -1):
                 for ct in flit_launch_tbls[fid]:
@@ -2945,15 +3096,11 @@ class capri_stage:
                         last_ct = ct
                         break
 
-            first_ct = True
             for ct in flit_launch_tbls[fid]:
+                # launch all tables w/o advancing the flit on each successive cyc
                 if ct == last_ct:
                     continue
                 launch_seq[cycle].tbl = ct
-                if first_ct:
-                    launch_seq[cycle].is_bubble = False
-                else:
-                    launch_seq[cycle].is_bubble = True
                 launch_seq[cycle].adv_flit = False
                 launch_seq[cycle].is_used = True
                 launch_seq[cycle].fid = fid
@@ -2962,16 +3109,15 @@ class capri_stage:
             if last_ct:
                 # this table's key maker is not reused on the following flit
                 launch_seq[cycle].tbl = last_ct
-                launch_seq[cycle].is_bubble = True
                 launch_seq[cycle].adv_flit = True
                 launch_seq[cycle].is_used = True
                 launch_seq[cycle].fid = fid
                 cycle += 1
+            else:
+                #launch_seq[cycle-1].adv_flit = True
+                # keep adv_flit = False, it is updated at the end
+                pass
             
-        # XXX it is possible to remove a bubble slot on the last_ct if last_ct does not
-        # share km with any table in the following flit and no other table is ready in the
-        # following flit - TBD
-
         if len(launch_any_time):
             pdb.set_trace() # Need test case
             launch_seq[cycle-1].adv_flit = False
@@ -2980,7 +3126,6 @@ class capri_stage:
             # still some key-less mpu-only tables need to be launched 
             assert cycle < max_cycles
             launch_seq[cycle].tbl = ct
-            launch_seq[cycle].is_bubble = True
             launch_seq[cycle].adv_flit = False
             launch_seq[cycle].is_used = True
             launch_seq[cycle].fid = fid
@@ -2990,17 +3135,24 @@ class capri_stage:
         assert cycle <= max_cycles, pdb.set_trace()
         launch_seq[cycle-1].adv_flit = True
         self.table_sequencer[prof_id] = launch_seq
-        self.gtm.tm.logger.debug("%s:Stage: %d:profile %d:Table sequencer -" % \
-            (self.gtm.d.name, self.id, prof_id))
+        # set last cycle
         last_cyc_used = 0
         for cyc, te_cycle in enumerate(launch_seq):
-            self.gtm.tm.logger.debug("(%s,%d,%d):%d:%s" % \
-                (self.gtm.d.name, self.id, prof_id, cyc, te_cycle))
             if te_cycle.tbl:
                 last_cyc_used = cyc
         self.table_sequencer[prof_id][last_cyc_used].is_last = True
         self.gtm.tm.logger.debug("%s:stage %d: profile %d:Last cycle used = %d" % \
             (self.gtm.d.name, self.id, prof_id, last_cyc_used))
+
+        self.gtm.tm.logger.debug("%s:Stage: %d:profile %d:Table sequencer -" % \
+            (self.gtm.d.name, self.id, prof_id))
+
+        for cyc, te_cycle in enumerate(launch_seq):
+            self.gtm.tm.logger.debug("(%s,%d,%d):%d:%s" % \
+                (self.gtm.d.name, self.id, prof_id, cyc, te_cycle))
+            if te_cycle.is_last:
+                break
+
         #pdb.set_trace()
 
     def stg_get_tbl_profile_key(self):
@@ -3038,6 +3190,7 @@ class capri_stage:
         cf_val_mask = OrderedDict() # {cf: (val, mask, flag[False = cannot be X]}
 
         #pdb.set_trace()
+        invalid_condition = False
         for c in self.active_predicates:
             #cond_tcam_entry = []
             cp = self.gtm.table_predicates[c]
@@ -3048,7 +3201,9 @@ class capri_stage:
                 for cf, v in cp.cfield_vals:
                     if cf in cf_val_mask:
                         # check for conflicting conditions... XXX
-                        pass
+                        if cf_val_mask[cf][1] != 0 and v != cf_val_mask[cf][0]:
+                            invalid_condition = True
+                            break
                     cf_val_mask[cf] = (v, ((1<<cf.width) - 1))
             else:
                 for cf, v in cp.cfield_vals:
@@ -3062,6 +3217,8 @@ class capri_stage:
                             cf_val_mask[cf] = (0, 0)
 
         # build the tcam val, mask
+        if invalid_condition:
+            return []
         tcam_val = 0
         tcam_mask = 0
         for cf in cf_list:
@@ -3176,14 +3333,13 @@ class capri_stage:
 class capri_te_cycle:
     is_used = False
     tbl = None
-    is_bubble = False
     adv_flit = True
     is_last = False
     fid = -1
 
     def __repr__(self):
-        pstr = '(tbl: %s\t\t\t, bubble: %s, adv_flit: %s, used: %s, is_last: %s, fid %d)' % \
-            (self.tbl, self.is_bubble, self.adv_flit, self.is_used, self.is_last, self.fid)
+        pstr = '(tbl: %s\t, adv_flit: %s, used: %s, is_last: %s, fid %d)\n' % \
+            (self.tbl, self.adv_flit, self.is_used, self.is_last, self.fid)
         return pstr
 
 class capri_gress_tm:
@@ -3228,7 +3384,7 @@ class capri_gress_tm:
 
     def print_table_info(self, table_name=None):
         self.tm.logger.debug("====== Table Information =====")
-        self.tm.logger.debug("Direction,Stage,Name,Type,#Entries,K,(K+I),D,(K+D),SRAM size(b),TCAM size(b),i1(b),i2(b),i_in_key")
+        self.tm.logger.debug("Direction,Stage,Name,Id,Type,#Entries,K,(K+I),D,(K+D),SRAM size(b),TCAM size(b),i1(b),i2(b),i_in_key")
         for tbl in self.tables.values():
             if table_name and tbl.name == table_name:
                 self.tm.logger.debug(tbl.ct_print_table_parameters())
@@ -3434,7 +3590,8 @@ class capri_gress_tm:
 
                     ctable.d_size = data_size
                     if ctable.num_actions() > 1:
-                        ctable.d_size += action_id_size
+                        if not ctable.is_raw:
+                            ctable.d_size += action_id_size
 
                     if len(ctable.p4_table.attached_meters):
                         if ctable.d_size != 0:
@@ -4190,7 +4347,6 @@ class capri_table_manager:
                             profile['log2bkts']['value'] = str(0)
                         else:
                             profile['log2bkts']['value'] = "0x%x" % log2(num_bkts)
-
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
                         if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:

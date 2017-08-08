@@ -373,5 +373,32 @@ p4pd_error_t p4pd_table_entry_decoded_string_get(uint32_t   tableid,
                                                  uint16_t   buf_len);
 
 
+/* Return Log string of decoded P4 table structure (key, actiondata structures).
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid       : Table Id that identifies
+ *                                 P4 table. This id is obtained
+ *                                 from p4pd_table_id_enum.
+ *  IN  : (void*)  swkey         : Table key structure.
+ *  IN  : (void*)  swkey_mask    : Table key mask structure.
+ *                                 In non TCAM case, NULL.
+ *  IN  : (void*)  actiondata    : Table actiondata
+ *  IN  : uint16_t buf_len       : Size of buffer into which decoded log
+ *                                 string is copied.
+ *  OUT:  char*    buffer        : Printable/Loggable bufffer with p4field 
+ *                                 name and value.
+ * Return Value: 
+ *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
+ */
+p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
+                                              void*      sw_key,
+                                              /* Valid only in case of TCAM;
+                                               * Otherwise can be NULL) 
+                                               */
+                                              void*      sw_key_mask,
+                                              void*      action_data,
+                                              char*      buffer,
+                                              uint16_t   buf_len);
 
 #endif

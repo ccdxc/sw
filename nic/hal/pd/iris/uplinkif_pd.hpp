@@ -9,6 +9,7 @@ namespace pd {
 
 struct pd_uplinkif_s {
     uint32_t    hw_lif_id;
+    uint32_t    up_ifpc_id;
 
     // pi ptr
     void        *pi_if;

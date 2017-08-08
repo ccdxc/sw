@@ -59,13 +59,17 @@ DirectMap::~DirectMap()
 hal_ret_t
 DirectMap::insert(void *data, uint32_t *index)
 {
-    hal_ret_t rs = HAL_RET_OK;
-    p4pd_error_t pd_err = P4PD_SUCCESS;
+    hal_ret_t       rs = HAL_RET_OK;
+    p4pd_error_t    pd_err = P4PD_SUCCESS;
 
     rs = alloc_index_(index);
     if (rs != HAL_RET_OK) {
         goto end;
     }
+
+    // Print entry
+    entry_trace_(data, *index);
+
 
     // P4-API: Write API
     pd_err = p4pd_entry_write(table_id_, *index, NULL, NULL, data); 
@@ -92,6 +96,9 @@ DirectMap::insert_withid(void *data, uint32_t index)
     if (rs != HAL_RET_OK) {
         goto end;
     }
+
+    // Print entry
+    entry_trace_(data, index);
 
     // P4-API: Write API
     pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, data); 
@@ -122,6 +129,9 @@ DirectMap::update(uint32_t index, void *data)
         rs = HAL_RET_ENTRY_NOT_FOUND;
         goto end;
     }
+
+    // Print entry
+    entry_trace_(data, index);
 
     // P4-API: Write API
     pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, data); 
@@ -157,6 +167,9 @@ DirectMap::remove(uint32_t index)
     tmp_data = ::operator new(hwdata_len_);
     memset(tmp_data, 0, hwdata_len_);
     HAL_TRACE_DEBUG("DirectMap::{}:hwdata_len_: {}", __FUNCTION__, hwdata_len_); 
+
+    // Print entry
+    entry_trace_(tmp_data, index);
 
     // P4-API: Write API
     pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, tmp_data); 
@@ -378,4 +391,18 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
 }
 
 
+hal_ret_t
+DirectMap::entry_trace_(void *data, uint32_t index)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+            NULL, NULL, data, buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_TRACE_DEBUG("Index: {} \n {}", index, buff);
+
+    return HAL_RET_OK;
+}
 

@@ -16,10 +16,13 @@
 // Flit 0:  511b  - 0b (INTRINSIC DATA)
 
 #define TCP_PHV_DB_DATA_START       432
+#define TCP_PHV_DB_DATA_END         560
 #define TCP_PHV_DB_DATA_SIZE        64
 #define TCP_PHV_AOL_START           512
+#define TCP_PHV_AOL_END             640
 #define TCP_PHV_AOL_SIZE            64
 #define TCP_PHV_AOL_DESC_START      640
+#define TCP_PHV_AOL_DESC_END        768
 
 
 #define TCP_PHV_ETH_SIZE            112  //14B
@@ -35,6 +38,7 @@
 
 #define TCP_PHV_RX2TX_SHARED_START  2064 /* 3088 - 1024 */
 #define TCP_PHV_RX2TX_SHARED_SIZE   512
+#define TCP_PHV_RX2TX_SHARED_END    2576 /* 3088 - 1024 */
 #define TCP_PHV_TX2RX_SHARED_START  2576 /* 3088 - 512 */
 #define TCP_PHV_TX2RX_SHARED_SIZE   512
 
@@ -65,9 +69,8 @@ struct p_struct {
         dma_cmd1_cmd                     :  8;
         dma_cmd1_size                    :  16;
         dma_cmd1_pad                     :  40;
-        pad11                            :  40;
         dma_cmd1_addr                    :  64;
-
+        pad11                            :  64;
         dma_cmd2_cmd                     :  8;
         dma_cmd2_size                    :  16;
         dma_cmd2_pad                     :  40;

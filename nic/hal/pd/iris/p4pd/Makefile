@@ -33,4 +33,6 @@ SOURCES = \
 include $(TOPDIR)/make/Makefile.inc
 
 p4pdmake:
-	cp Makefile.p4pd ../../../../gen/iris/src/Makefile
+	cp Makefile.p4pd ../../../../gen/iris/src/Makefile	
+	cp Makefile.tcp_rxdma ../../../../gen/tcp_proxy_rxdma/src/Makefile
+	cp Makefile.tcp_txdma ../../../../gen/tcp_proxy_txdma/src/Makefile

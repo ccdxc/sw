@@ -3,8 +3,19 @@
 
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
-#ifndef __P4PD_H__
-#define __P4PD_H__
+
+
+//:: if pddict['p4plus']:
+//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
+//::    prefix = 'p4pd_' + pddict['p4program']
+//:: else:
+//::    caps_p4prog = ''
+//::    prefix = 'p4pd'
+//:: #endif
+
+#ifndef __P4PD${caps_p4prog}_H__
+#define __P4PD${caps_p4prog}_H__
+
 
 #include <string.h>
 #include <hal_pd_error.hpp>
@@ -351,58 +362,59 @@ typedef struct __attribute__((__packed__)) __${table}_actiondata {
  *   p4pd_entry_write()
  *   p4pd_entry_read()
  */
-typedef enum p4pd_table_ids_ {
-    P4TBL_ID_HASH_MIN = ${hash_min},
-    P4TBL_ID_HASH_MAX = ${hash_max},
-    P4TBL_ID_HASH_OTCAM_MIN = ${hash_otcam_min},
-    P4TBL_ID_HASH_OTCAM_MAX = ${hash_otcam_max},
-    P4TBL_ID_TCAM_MIN = ${tcam_min},
-    P4TBL_ID_TCAM_MAX = ${tcam_max},
-    P4TBL_ID_INDEX_MIN = ${index_min},
-    P4TBL_ID_INDEX_MAX = ${index_max},
-    P4TBL_ID_MPU_MIN = ${mpu_min},
-    P4TBL_ID_MPU_MAX = ${mpu_max},
-    P4TBL_ID_TBLMIN = 1,
+typedef enum ${prefix}_table_ids_ {
+    P4${caps_p4prog}TBL_ID_HASH_MIN = ${hash_min},
+    P4${caps_p4prog}TBL_ID_HASH_MAX = ${hash_max},
+    P4${caps_p4prog}TBL_ID_HASH_OTCAM_MIN = ${hash_otcam_min},
+    P4${caps_p4prog}TBL_ID_HASH_OTCAM_MAX = ${hash_otcam_max},
+    P4${caps_p4prog}TBL_ID_TCAM_MIN = ${tcam_min},
+    P4${caps_p4prog}TBL_ID_TCAM_MAX = ${tcam_max},
+    P4${caps_p4prog}TBL_ID_INDEX_MIN = ${index_min},
+    P4${caps_p4prog}TBL_ID_INDEX_MAX = ${index_max},
+    P4${caps_p4prog}TBL_ID_MPU_MIN = ${mpu_min},
+    P4${caps_p4prog}TBL_ID_MPU_MAX = ${mpu_max},
+    P4${caps_p4prog}TBL_ID_TBLMIN = 1,
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
-    P4TBL_ID_${caps_tblname} = ${tabledict[tblname]},
+    P4${caps_p4prog}TBL_ID_${caps_tblname} = ${tabledict[tblname]},
 //::        #endfor
-    P4TBL_ID_TBLMAX = ${tblid_max}
-} p4pd_table_id;
+    P4${caps_p4prog}TBL_ID_TBLMAX = ${tblid_max}
+} ${prefix}_table_id;
 
-#define P4TBL_NAME_MAX_LEN 80 /* p4 table name will be truncated to 80 characters */
 
-extern char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
-extern uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
+#define P4${caps_p4prog}TBL_NAME_MAX_LEN 80 /* p4 table name will be truncated to 80 characters */
 
-inline void p4pd_prep_p4tbl_names()
+extern char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
+extern uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
+extern uint16_t ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_TBLMAX];
+
+inline void ${prefix}_prep_p4tbl_names()
 {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
-    strncpy(p4pd_tbl_names[P4TBL_ID_${caps_tblname}], "${tblname}", strlen("${tblname}"));
+    strncpy(${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_${caps_tblname}], "${tblname}", strlen("${tblname}"));
 //::        #endfor
 }
 
-inline void p4pd_prep_p4tbl_sw_struct_sizes()
+inline void ${prefix}_prep_p4tbl_sw_struct_sizes()
 {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
 //::        if pddict['tables'][tblname]['type'] != 'Index':
-    p4pd_tbl_swkey_size[P4TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
+    ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
 //::        #endif
-    p4pd_tbl_sw_action_data_size[P4TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
+    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
 //::        #endfor
 }
 
 //::    #endif
 
-inline int p4pd_get_max_action_id(uint32_t tableid)
+inline int ${prefix}_get_max_action_id(uint32_t tableid)
 {
     switch(tableid) {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
-        case P4TBL_ID_${caps_tblname}:
+        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
             return (${caps_tblname}_MAX_ID);
         break;
 //::        #endfor
@@ -411,12 +423,12 @@ inline int p4pd_get_max_action_id(uint32_t tableid)
     return (0);
 }
 
-inline void p4pd_get_action_name(uint32_t tableid, int actionid, char *action_name)
+inline void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *action_name)
 {
     switch(tableid) {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
-        case P4TBL_ID_${caps_tblname}:
+        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
 //::            if len(pddict['tables'][tblname]['actions']):
             switch(actionid) {
 //::                for action in pddict['tables'][tblname]['actions']:

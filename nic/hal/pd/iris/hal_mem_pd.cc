@@ -5,6 +5,7 @@
 #include <lif_pd.hpp>
 #include <endpoint_pd.hpp>
 #include <uplinkif_pd.hpp>
+#include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
 #include <session_pd.hpp>
 #include <pd.hpp>
@@ -73,6 +74,15 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((uplinkif_pd_slab_ != NULL), false);
 
+    // initialize Uplink PC PD related data structures
+    uplinkpc_pd_slab_ = slab::factory("UPLINKPC_PD", HAL_SLAB_UPLINKPC_PD,
+                                 sizeof(hal::pd::pd_uplinkpc_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((uplinkpc_pd_slab_ != NULL), false);
+
+    uplinkifpc_idxr_ = new hal::utils::indexer(HAL_MAX_UPLINK_IF_PCS);
+    HAL_ASSERT_RETURN((uplinkifpc_idxr_ != NULL), false);
+
     // initialize ENIC If PD related data structures
     enicif_pd_slab_ = slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
                                  sizeof(hal::pd::pd_enicif_t), 8,
@@ -92,7 +102,7 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((ep_pd_ip_entry_slab_ != NULL), false);
 
     rw_table_idxr_ = new hal::utils::indexer(HAL_RW_TABLE_SIZE);
-    HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
+    HAL_ASSERT_RETURN((rw_table_idxr_ != NULL), false);
 
     // initialize nwsec PD related data structures
     nwsec_pd_slab_ = slab::factory("NWSEC_PD", HAL_SLAB_SECURITY_PROFILE_PD,
@@ -134,6 +144,8 @@ hal_state_pd::hal_state_pd()
     lif_hwid_idxr_ = NULL;
 
     uplinkif_pd_slab_ = NULL;
+    uplinkpc_pd_slab_ = NULL;
+    uplinkifpc_idxr_ = NULL;
 
     enicif_pd_slab_ = NULL;
 
@@ -164,6 +176,10 @@ hal_state_pd::~hal_state_pd()
 
     lif_pd_slab_ ? delete lif_pd_slab_ : HAL_NOP;
     lif_hwid_idxr_ ? delete lif_hwid_idxr_ : HAL_NOP;
+
+    uplinkif_pd_slab_ ? delete uplinkif_pd_slab_ : HAL_NOP;
+    uplinkpc_pd_slab_ ? delete uplinkpc_pd_slab_ : HAL_NOP;
+    uplinkifpc_idxr_ ? delete uplinkifpc_idxr_ : HAL_NOP;
 
     nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
 
@@ -467,6 +483,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_UPLINKIF_PD:
         g_hal_state_pd->uplinkif_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_UPLINKPC_PD:
+        g_hal_state_pd->uplinkpc_pd_slab()->free_(elem);
         break;
 
     case HAL_SLAB_EP_PD:

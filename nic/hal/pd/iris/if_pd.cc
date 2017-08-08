@@ -3,6 +3,7 @@
 #include <interface_api.hpp>
 #include <if_pd.hpp>
 #include <uplinkif_pd.hpp>
+#include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
 
 namespace hal {
@@ -26,6 +27,7 @@ pd_if_create (pd_if_args_t *args)
             ret = pd_uplinkif_create(args);
             break;
         case intf::IF_TYPE_UPLINK_PC:
+            ret = pd_uplinkpc_create(args);
             break;
         case intf::IF_TYPE_TUNNEL:
             break;

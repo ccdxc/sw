@@ -64,9 +64,18 @@
 #define ASQ_PRODUCER_IDX               0xba00ba70
 #define ASQ_CONSUMER_IDX               0xba00ba78
 
-
-
 #define TABLE_TYPE_RAW                 0
+#define TABLE_LOCK_DIS                 0
+#define TABLE_LOCK_EN                  1
+
+#define TABLE_SIZE_8_BITS              1
+#define TABLE_SIZE_16_BITS             2
+#define TABLE_SIZE_32_BITS             3
+#define TABLE_SIZE_64_BITS             4
+#define TABLE_SIZE_128_BITS            5
+#define TABLE_SIZE_256_BITS            6
+#define TABLE_SIZE_512_BITS            7
+
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400
 #define flow_sack4_process             0x00010800

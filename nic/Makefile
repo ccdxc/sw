@@ -6,13 +6,15 @@ LIBDIRS = \
 		  fte \
 		  hal/pd/capri/csr \
 		  proto gen/protobuf \
-		  p4/nw \
+		  p4 \
 		  capsim \
 		  asm/nw \
 		  model_sim/build \
 		  hal/periodic \
 		  hal/pd/iris/p4pd \
 		  gen/iris/src \
+		  gen/tcp_proxy_rxdma/src \
+		  gen/tcp_proxy_txdma/src \
 		  hal/pd/iris \
 		  hal/pd/capri \
 		  hal/pd/utils/directmap\
@@ -21,7 +23,7 @@ LIBDIRS = \
 		  hal/pd/utils/met \
 		  hal/pd/utils/tcam \
 		  hal/pd/utils \
-          sknobs_gen/ \
+		  sknobs_gen/ \
 		  $(NULL)
 
 PGMDIRS = \

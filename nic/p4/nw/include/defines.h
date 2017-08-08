@@ -11,13 +11,6 @@
 #define ASM_INSTRUCTION_OFFSET_MAX     (8 * 256)
 
 /*****************************************************************************/
-/* P4+ header size constants                                                 */
-/*****************************************************************************/
-#define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
-#define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
-#define P4PLUS_ROCE_HDR_SZ             19
-
-/*****************************************************************************/
 /* Default defines for any feature disable/enable knobs                      */
 /*****************************************************************************/
 #define P4_FEATURE_DISABLED            0
@@ -87,7 +80,6 @@
 #define UDP_PORT_GENV                  6081
 
 /*****************************************************************************/
-/*****************************************************************************/
 /* GRE services                                                              */
 /*****************************************************************************/
 #define GRE_PROTO_NVGRE                0x20006558
@@ -125,7 +117,7 @@
 #define TM_PORT_UPLINK_5               5
 #define TM_PORT_UPLINK_6               6
 #define TM_PORT_UPLINK_7               7
-#define TM_PORT_NCSI                   8 
+#define TM_PORT_NCSI                   8
 #define TM_PORT_DMA                    9 /* Tx and Rx DMA */
 #define TM_PORT_EGRESS                 10
 #define TM_PORT_INGRESS                11
@@ -333,7 +325,6 @@
 #define IP_FLAGS_DF_MASK               2
 #define IP_FLAGS_MF_MASK               4
 
-
 // Different types of DDoS attacks that can be configured.
 #define DDOS_TYPE_ANY                  1
 #define DDOS_TYPE_SYN                  2
@@ -353,16 +344,27 @@
 #define DDOS_TYPE_MASK_UDP             (1 << (DDOS_TYPE_UDP - 1))
 #define DDOS_TYPE_MASK_IP_FRAG         (1 << (DDOS_TYPE_IP_FRAG - 1))
 
-#define P4PLUS_APP_TYPE_IPSEC 1
-#define P4PLUS_APP_TYPE_TCP_PROXY 2
-#define P4PLUS_APP_TYPE_L7_PROXY 3
-#define P4PLUS_APP_TYPE_ROCEV2  4
+/*****************************************************************************/
+/* P4+ app types                                                             */
+/*****************************************************************************/
+#define P4PLUS_APP_TYPE_IPSEC          1
+#define P4PLUS_APP_TYPE_TCP_PROXY      2
+#define P4PLUS_APP_TYPE_L7_PROXY       3
+#define P4PLUS_APP_TYPE_ROCEV2         4
 
-#define IPSEC_MODE_TUNNEL     1
-#define IPSEC_MODE_TRANSPORT  2
+/*****************************************************************************/
+/* P4+ header size constants                                                 */
+/*****************************************************************************/
+#define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+#define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
+#define P4PLUS_ROCE_HDR_SZ             19
+#define P4PLUS_TCP_PROXY_HDR_SZ        61
 
-#define IPSEC_ENCAP_TYPE_AH     1
-#define IPSEC_ENCAP_TYPE_ESP    2
-#define IPSEC_ENCAP_TYPE_AH_ESP 3
+#define IPSEC_MODE_TUNNEL              1
+#define IPSEC_MODE_TRANSPORT           2
 
-#define IPSEC_L3_PROTOCOL_IPV4 1
+#define IPSEC_ENCAP_TYPE_AH            1
+#define IPSEC_ENCAP_TYPE_ESP           2
+#define IPSEC_ENCAP_TYPE_AH_ESP        3
+
+#define IPSEC_L3_PROTOCOL_IPV4         1

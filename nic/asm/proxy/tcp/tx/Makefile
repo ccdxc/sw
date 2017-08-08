@@ -1,21 +1,26 @@
 
 TOPDIR = ../../../..
-CUSTOM = all
-CUSTOM_CLEAN = clean
+CUSTOM = my_all
+CUSTOM_CLEAN = my_clean
 
 include $(TOPDIR)/make/Makefile.inc
 
-PROJ = proxy
+PROJ = tcp_proxy_txdma
 OBJ_DIR = $(TOPDIR)/obj/asm_bin
-ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../include
+GEN_DIR = $(TOPDIR)/gen
+ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
+P4_DIR = $(TOPDIR)/p4/proxy
+COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include
 SRC_DIR = .
-CAPAS_BIN = $(TOPDIR)/capsim/gen/bin/capas
-CAPSIM_BIN = $(TOPDIR)/capsim/gen/bin/capsim
+CAPAS_BIN = $(TOPDIR)/gen/bin/capas
+CAPSIM_BIN = $(TOPDIR)/gen/bin/capsim
+NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
+NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
-all: deps asm
+my_all: deps asm
 
-deps:
+deps: $(ASM_HDR_DIR)/ingress.h
 
 SRC_FILES := \
     $(SRC_DIR)/tcp-fast-timer.s \
@@ -38,8 +43,11 @@ $(BIN_FILES): %.bin: %.s
 	@mkdir -p $(OBJ_DIR)
 	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
-asm: $(BIN_FILES)
+%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
+	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
+	
 
+asm: $(BIN_FILES)
 
 #TEST_FILES := $(patsubst %.s, %.ctl, $(SRC_FILES))
 TEST_FILES := \
@@ -49,10 +57,9 @@ TEST_FILES := \
     $(SRC_DIR)/ctl/tcp-tso.ctl \
     $(SRC_DIR)/ctl/tcp-tx.ctl
 
-
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 
-tcp-rx_ARGS := 
+tcp-rx_ARGS :=
 tcp-write-serq_ARGS :=
 tcp-cc_ARGS :=
 tcp-rtt_ARGS :=
@@ -73,6 +80,5 @@ run: $(BIN_FILES)
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-tso.ctl $(OBJ_DIR)/tcp-tso.bin > $(SRC_DIR)/run/tcp-tso.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-tx.ctl $(OBJ_DIR)/tcp-tx.bin > $(SRC_DIR)/run/tcp-tx.run
 
-clean:
+my_clean:
 	@rm -fR $(OBJ_DIR)/*.bin
-

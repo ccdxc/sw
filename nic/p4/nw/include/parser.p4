@@ -132,29 +132,29 @@ header p4_to_p4plus_roce_header_t p4_to_p4plus_roce;
 
 // Synthetic header definition using fld unions
 @pragma synthetic_header
-@pragma pa_field_union egress p4_to_p4plus_tcp.srcPort		    tcp.srcPort
-@pragma pa_field_union egress p4_to_p4plus_tcp.dstPort		    tcp.dstPort
-@pragma pa_field_union egress p4_to_p4plus_tcp.seqNo		    tcp.seqNo
-@pragma pa_field_union egress p4_to_p4plus_tcp.ackNo		    tcp.ackNo
-@pragma pa_field_union egress p4_to_p4plus_tcp.dataOffset		tcp.dataOffset
-@pragma pa_field_union egress p4_to_p4plus_tcp.res		        tcp.res
-@pragma pa_field_union egress p4_to_p4plus_tcp.flags		    tcp.flags
-@pragma pa_field_union egress p4_to_p4plus_tcp.window		    tcp.window
-@pragma pa_field_union egress p4_to_p4plus_tcp.urgentPtr		tcp.urgentPtr
-@pragma pa_field_union egress p4_to_p4plus_tcp.ts		        tcp_option_timestamp.ts
-@pragma pa_field_union egress p4_to_p4plus_tcp.prev_echo_ts		tcp_option_timestamp.prev_echo_ts
-header p4_to_p4plus_tcp_proxy_base_header_t p4_to_p4plus_tcp;
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.srcPort      tcp.srcPort
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.dstPort      tcp.dstPort
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.seqNo        tcp.seqNo
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.ackNo        tcp.ackNo
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.dataOffset   tcp.dataOffset
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.res          tcp.res
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.flags        tcp.flags
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.window       tcp.window
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.urgentPtr    tcp.urgentPtr
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.ts           tcp_option_timestamp.ts
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy.prev_echo_ts tcp_option_timestamp.prev_echo_ts
+header p4_to_p4plus_tcp_proxy_base_header_t p4_to_p4plus_tcp_proxy;
 
 @pragma synthetic_header
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.start_seq0	tcp_option_four_sack.first_le
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.end_seq0	tcp_option_four_sack.first_re
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.start_seq1	tcp_option_four_sack.second_le
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.end_seq1	tcp_option_four_sack.second_re
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.start_seq2	tcp_option_four_sack.third_le
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.end_seq2	tcp_option_four_sack.third_re
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.start_seq3	tcp_option_four_sack.fourth_le
-@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack_header.end_seq3	tcp_option_four_sack.fourth_re
-header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack_header;
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq0 tcp_option_four_sack.first_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq0   tcp_option_four_sack.first_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq1 tcp_option_four_sack.second_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq1   tcp_option_four_sack.second_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq2 tcp_option_four_sack.third_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq2   tcp_option_four_sack.third_re
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.start_seq3 tcp_option_four_sack.fourth_le
+@pragma pa_field_union egress p4_to_p4plus_tcp_proxy_sack.end_seq3   tcp_option_four_sack.fourth_re
+header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack;
 
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_header.tcp_flags        tcp.flags
@@ -218,11 +218,8 @@ parser deparse_rxdma {
     extract(p4_to_p4plus_header);
     extract(p4_to_p4plus_roce);
     extract(p4_to_p4plus_ipsec);
-    extract(p4_to_p4plus_tcp);
-    extract(p4_to_p4plus_tcp_proxy_sack_header);
-    // header ordring problem... since other header flds are used in synth headers
-    // these headers are placed at the end... do we plan to deparse other headers when
-    // packet is sent to rxdma ???
+    extract(p4_to_p4plus_tcp_proxy);
+    extract(p4_to_p4plus_tcp_proxy_sack);
     return parse_ethernet;
 }
 

@@ -1,0 +1,20 @@
+
+TOPDIR = ../../..
+SHAREDLIBRARY = libp4pdtcprx.so
+
+LCFLAGS = \
+		  -fpic \
+		  -I../include \
+		  -I../../../hal/pd \
+		  -I/usr/local/include \
+		  -Wno-maybe-uninitialized \
+		  -Wno-uninitialized \
+		  -g \
+		  $(NULL)
+
+SOURCES = \
+		  tcp_proxy_rxdma_p4pd.c \
+		  $(NULL)
+
+include $(TOPDIR)/make/Makefile.inc
+CC = g++

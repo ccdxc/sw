@@ -25,11 +25,11 @@ struct pd_l2seg_s {
     // meta data maintained for l2seg pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 
-    // [Uplink Port Num] -> Input Properties(Hash Index). 
+    // [Uplink ifpc_id] -> Input Properties(Hash Index). 
     // If L2Seg is native on an uplink, it will have two entries. 
     // (Vlan_v: 1, Vlan: 0; Vlan_v: 0, Vlan: 0);
-    uint32_t           inp_prop_tbl_idx[HAL_MAX_UPLINK_IFS];
-    uint32_t           inp_prop_tbl_idx_pri[HAL_MAX_UPLINK_IFS];
+    uint32_t           inp_prop_tbl_idx[HAL_MAX_UPLINK_IF_PCS];
+    uint32_t           inp_prop_tbl_idx_pri[HAL_MAX_UPLINK_IF_PCS];
 } __PACK__;
 
 // allocate a l2seg pd instance
@@ -94,6 +94,8 @@ find_l2seg_by_hwid (l2seg_hw_id_t hwid)
 extern void *l2seg_pd_get_hw_key_func(void *entry);
 extern uint32_t l2seg_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool l2seg_pd_compare_hw_key_func(void *key1, void *key2);
+
+uint32_t pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg);
 
 }   // namespace pd
 }   // namespace hal

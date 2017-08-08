@@ -1,5 +1,6 @@
 #! /bin/bash
-export NIC_DIR=`dirname $0`
+cd `dirname $0`
+export NIC_DIR=$PWD
 echo "NIC_DIR = $NIC_DIR"
 export ASIC_SRC=$NIC_DIR/asic
 export ASIC_GEN=$NIC_DIR/asic_gen

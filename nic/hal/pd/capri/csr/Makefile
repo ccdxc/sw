@@ -58,8 +58,8 @@ SOURCES = \
     cap_pxc_csr.cc \
     cap_dppmem_csr.cc \
     LogMsg.cc \
-	cpu.cc \
-	cpu_hal_if.cc \
+    cpu.cc \
+    cpu_hal_if.cc \
     $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

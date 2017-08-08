@@ -2,7 +2,9 @@
 #include <interface.pb.h>
 #include <l2segment.pb.h>
 #include <tenant.pb.h>
+#include <nwsec.pb.h>
 #include <hal.hpp>
+#include <nwsec.hpp>
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +18,8 @@ using tenant::TenantSpec;
 using tenant::TenantResponse;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
+using nwsec::SecurityProfileSpec;
+using nwsec::SecurityProfileResponse;
 
 void
 hal_initialize()
@@ -139,12 +143,20 @@ TEST_F(uplinkif_test, test3)
     TenantResponse                  ten_rsp;
     InterfaceL2SegmentSpec          if_l2seg_spec;
     InterfaceL2SegmentResponse      if_l2seg_rsp;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
-
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -173,24 +185,6 @@ TEST_F(uplinkif_test, test3)
     // free spec.release_if_uplink_info();
 }
 
-#if 0
-// ----------------------------------------------------------------------------
-// Test 1:
-//      - Create indexer
-//      - Alloc index.
-//      - Free index.
-// ----------------------------------------------------------------------------
-TEST_F(indexer_test, test1) {
-    indexer ind = indexer(100);
-
-    uint32_t i;
-    indexer::status rs  = ind.alloc(&i);
-    ASSERT_TRUE(rs == indexer::SUCCESS);
-
-    rs = ind.free(i);
-    ASSERT_TRUE(rs == indexer::SUCCESS);
-}
-#endif
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

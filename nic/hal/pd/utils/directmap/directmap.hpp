@@ -89,6 +89,8 @@ private:
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs); 
+    // Entry Trace
+    hal_ret_t entry_trace_(void *data, uint32_t index);
 
 public:
     DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, bool thread_safe = true);

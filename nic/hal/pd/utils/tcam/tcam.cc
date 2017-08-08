@@ -362,6 +362,9 @@ Tcam::program_table_(TcamEntry *te)
 
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
+    // Entry trace
+    entry_trace_(te);
+
     // P4-API: write
     pd_err = p4pd_entry_write(table_id_, te->get_index(), (uint8_t *)hwkey, 
                               (uint8_t *)hwkeymask, te->get_data());
@@ -534,4 +537,23 @@ Tcam::stats_update(Tcam::api ap, hal_ret_t rs)
         default:
             HAL_ASSERT(0);
     }
+}
+
+// ----------------------------------------------------------------------------
+// Print entry
+// ----------------------------------------------------------------------------
+hal_ret_t
+Tcam::entry_trace_(TcamEntry *te)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+            te->get_key(), te->get_key_mask(), te->get_data(), 
+            buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_TRACE_DEBUG("Index: {} \n {}", te->get_index(), buff);
+
+    return HAL_RET_OK;
 }

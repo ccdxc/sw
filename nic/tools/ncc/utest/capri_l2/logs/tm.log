@@ -1,0 +1,102 @@
+INFO::INGRESS Tables 1, Tables-Predicates 0
+Tables:
+abc, 
+
+INFO::Table-Predicates:
+
+
+INFO::EGRESS Tables 0, Tables-Predicates 0
+Tables:
+
+
+INFO::Table-Predicates:
+
+
+DEBUG::INGRESS:0: ['abc']
+DEBUG::INGRESS:abc:EXACT_HASH:Initial K,I: K:[(138, 14)]
+I:[]
+DEBUG::INGRESS:abc:EXACT_HASH:bit2byte changes to K,I
+DEBUG::INGRESS:abc:(k,I) new:(16, 0) old:(14,0)
+INFO::abc k_size changed 14 -> 16
+DEBUG::INGRESS:abc:EXACT_HASH:Final K,I: K:[(136, 16)], K-bits:[]
+I1:[], I2:[], I-bits[]
+DEBUG::Table predication values (False =0, True=1 X=don't care)
+DEBUG::INGRESS:Stage 0: Active Conditions []
+INFO::INGRESS:Stage 0: Execute all tables
+DEBUG::INGRESS:Stage 0: X : ['abc']
+DEBUG::Table predication values (False =0, True=1 X=don't care)
+DEBUG::INGRESS:abc:Table-Logical-Profile: [-1] : byte_sel [17, 18] :		bit_sel []
+DEBUG::INGRESS:Create 1 key_makers for abc
+DEBUG::Per Flit Tables[0] = [abc]
+DEBUG::Per Flit Tables[1] = []
+DEBUG::Per Flit Tables[2] = []
+DEBUG::Per Flit Tables[3] = []
+DEBUG::Per Flit Tables[4] = []
+DEBUG::Per Flit Tables[5] = []
+DEBUG::Per Flit Tables[6] = []
+DEBUG::Per Flit Tables[7] = []
+DEBUG::INGRESS:start km allocation for all tables - [[abc], [], [], [], [], [], [], []]
+DEBUG::Start _allocate_km[0] for abc flit 0
+DEBUG::INGRESS:0:abc:[flit 0] Assign key_maker[0] 0
+DEBUG::INGRESS:stage 0: profile 0:Last cycle used = 0
+DEBUG::INGRESS:Stage: 0:profile 0:Table sequencer -
+DEBUG::(INGRESS,0,0):0:(tbl: abc	, adv_flit: True, used: True, is_last: True, fid 0)
+
+DEBUG::abc:Using km0 byte_location 16 as k-end
+DEBUG::abc:start_key_off 2 end_key_off 16, key_size 14
+DEBUG::abc:Using km0 byte_location 16 as k-end
+DEBUG::abc:start_key_off 2 end_key_off 16, key_size 14
+DEBUG::KM_PROF:Direction,Stage,hw_id,Mode,Table,Type,start_key_off,end_key_off,profile_size
+DEBUG::KM_PROF:INGRESS,0,0,0,abc,EXACT_HASH,2,16,2
+DEBUG::Program Table Info:-----
+DEBUG::abc:km=0 
+INFO::INGRESS:Stage 0: Total Key Maker used 1, Km_profiles used 1
+DEBUG::====== Table Information =====
+DEBUG::Direction,Stage,Name,Id,Type,#Entries,K,(K+I),D,(K+D),SRAM size(b),TCAM size(b),i1(b),i2(b),i_in_key
+DEBUG::INGRESS,0,abc,1,EXACT_HASH,1,14,14,0,14,14,0,0,0,0
+DEBUG::Table K-I Info(per-flit): abc
+DEBUG::k_phvs[0]: [(136, 16)]
+DEBUG::keys: [(([138]:capri_p4_intrinsic.frame_size d=INGRESS w=14 ohi=False union=False hv=False meta=True internal=False flit_pad=False relo=False)
+, P4_MATCH_EXACT, None)]
+DEBUG::input: []
+DEBUG::----- Table Flit Information (INGRESS) -----
+DEBUG::Table,stage,flit_0,flit_1,flit_2,flit_3,flit_4,flit_5,flit_6,flit_7
+DEBUG::abc,0,Y, , , , , , , ,
+DEBUG::----- Table KM Information (INGRESS) -----
+DEBUG::abc:km=0 
+DEBUG::abc:Keys (1) = [(([138]:capri_p4_intrinsic.frame_size d=INGRESS w=14 ohi=False union=False hv=False meta=True internal=False flit_pad=False relo=False)
+, P4_MATCH_EXACT, None)]
+
+DEBUG::abc:Input flds []
+
+DEBUG::====== Table Information =====
+DEBUG::Direction,Stage,Name,Id,Type,#Entries,K,(K+I),D,(K+D),SRAM size(b),TCAM size(b),i1(b),i2(b),i_in_key
+DEBUG::----- Table Flit Information (EGRESS) -----
+DEBUG::Table,stage,flit_0,flit_1,flit_2,flit_3,flit_4,flit_5,flit_6,flit_7
+DEBUG::----- Table KM Information (EGRESS) -----
+INFO::INGRESS:====== Table Engine Output Generation: stage 0 ======
+DEBUG::INGRESS:0:Program km_profile[0]:
+DEBUG::byte_sel[0] ['17', '18', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF', '0x3FF']
+bit_sel[0] ['0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF', '0x1FFF']
+bit_locs [0]-, [1]-
+DEBUG::INGRESS:Stage 0:Table profile TCAM[0]:(val 0, mask 0): prof_val 0, [abc], mpu_res 1
+DEBUG::INGRESS:Stage[0]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[0]:
+	km_mode0 = 0, 	km_profile0 = 0, 	km_new_key0 = 1
+	km_mode1 = -1, 	km_profile1 = -1, 	km_new_key1 = -1
+	km_mode2 = -1, 	km_profile2 = -1, 	km_new_key2 = -1
+	km_mode3 = -1, 	km_profile3 = -1, 	km_new_key3 = -1
+	tableid = 1, 	hash_sel = 0, 	lkup = 2, 	adv_phv_flit = 1, 	done = 1
+
+DEBUG::INGRESS:Stage[0]:Table abc:cap_te_csr_cfg_table_property[1]:
+	axi = 1
+	key_mask_hi = 510, 	key_mask_lo = 496
+	fullkey_km_sel0 = 0x0, 	fullkey_km_sel1 = 0, 
+	lock_en = 0
+	mpu_pc_dyn = 0, 	mpu_pc_loc = 0, 	mpu_pc = 0x2FEED00, 	mpu_pc_raw = 0
+	mpu_pc_ofst_err = 0, 	mpu_vec = 0xF
+	addr_base = 0, 	addr_sz = 0, 	addr_shift = 0
+	lg2_entry_size = 0
+	addr_vf_id_en = 0, 	addr_vf_id_loc = 0
+	chain_shift = 0
+
+INFO::Generating cap pics ...

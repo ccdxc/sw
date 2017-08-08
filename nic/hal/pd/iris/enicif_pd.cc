@@ -226,13 +226,13 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
     inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
     inp_prop_mac_vlan_data.src_lif = 0;
+    inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
 
     // TODO: Fill these fields eventually
 #if 0
     inp_prop_mac_vlan_data.flow_miss_action    
     inp_prop_mac_vlan_data.flow_miss_idx    
     inp_prop_mac_vlan_data.dscp    
-    inp_prop_mac_vlan_data.l4_profile_idx
     inp_prop_mac_vlan_data.dst_lif    
     inp_prop_mac_vlan_data.filter    
 #endif
@@ -289,6 +289,20 @@ end:
     return ret;
 }
 
+uint32_t
+pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif)
+{
+    if_t        *pi_if = NULL;
+    tenant_t    *pi_tenant = NULL;
+
+    pi_if = (if_t *)pd_enicif->pi_if;
+    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+
+    pi_tenant = if_get_pi_tenant(pi_if);
+    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+
+    return ten_get_nwsec_prof_hw_id(pi_tenant);
+}
 
 }    // namespace pd
 }    // namespace hal

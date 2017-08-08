@@ -89,86 +89,27 @@
  */
 
 
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
 #include "tcp-constants.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
- /* d is the data returned by lookup result */
-struct d_struct {
-	/* State needed only by FAST RETX ALERT stage */
-	do_lost				: 1  ;
-	fast_rexmit			: 2  ;
-	ack_flag			: 16 ;
-	pkts_acked			: 8  ;
-	curr_ts				: TS_WIDTH ;
-	/* State needed by RX and TX pipelines
-	 * This has to be at the beginning.
-	 * Each of these fields will be written by Rx only or Tx only
-	 */
-
-        snd_ssthresh			: WINDOW_WIDTH	        ;\
-	fackets_out			: COUNTER16	        ;\
-	reordering			: COUNTER32	        ;\
-	prior_ssthresh			: WINDOW_WIDTH	        ;\
-	ca_state			: 8	                ;\
-	retx_head_ts			: TS_WIDTH	        ;\
-	high_seq			: SEQ_NUMBER_WIDTH	;\
-	undo_marker			: SEQ_NUMBER_WIDTH	;\
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	syn				: 1 ;
-	ece				: 1 ;
-	cwr				: 1 ;
-	ooo_rcv				: 1 ;
-	is_dupack			: 1 ;
-	rsvd				: 3 ;
-	ca_event			: 4 ;
-	num_sacks			: 8 ;
-	sack_off			: 8 ;
-	d_off				: 8 ;
-	ts_off				: 8 ;
-	ip_dsfield			: 8 ;
-	pkts_acked			: 8  ;
-	rcv_tsecr			: TS_WIDTH ;
-	window				: WINDOW_WIDTH ;
-	process_ack_flag		: 16  ;
-	descr_idx			: RING_INDEX_WIDTH ;
-	page_idx			: RING_INDEX_WIDTH ;
-	descr				: ADDRESS_WIDTH ;
-	page				: ADDRESS_WIDTH ;
-
-	packets_out			: COUNTER16	        ;\
-	sacked_out			: COUNTER16	        ;\
-	srtt_us				: TS_WIDTH              ;\
-	rto_deadline			: TS_WIDTH	        ;\
-	lost_out			: COUNTER8	        ;\
-	snd_una				: SEQ_NUMBER_WIDTH	;\
-	snd_wnd				: SEQ_NUMBER_WIDTH	;\
-	undo_retrans			: SEQ_NUMBER_WIDTH	;\
-        snd_cwnd                        : WINDOW_WIDTH          ;\
-	loss_cwnd			: WINDOW_WIDTH	        ;\
-	ecn_flags			: 8	                ;\
-
-
-};
-
-struct p_struct p;
-struct k_struct k;
-struct d_struct d;
+struct phv_ p;
+struct tcp_rx_tcp_fra_k k;
+struct tcp_rx_tcp_fra_tcp_fra_d d;
 
 %%
+        .param          tcp_rx_cc_stage4_start
 	
-flow_fra_process_start:
+tcp_rx_fra_stage3_start:
+
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 
-	tblwr		d.ack_flag, k.process_ack_flag
-	tblwr		d.pkts_acked, k.pkts_acked
+	tblwr		d.ack_flag, k.common_phv_process_ack_flag
+	tblwr		d.pkts_acked, k.common_phv_pkts_acked
 
 	
 
@@ -197,7 +138,7 @@ tcp_fastretrans_alert:
 	/* c2 = !(tcp_fackets_out(tp) > tp->sack.reordering) */
 	slt		c2, d.fackets_out, d.reordering
 	/* c3 = !is_dupack */
-	seq		c3, k.is_dupack, r0
+	seq		c3, k.common_phv_is_dupack, r0
 	tblwr		d.do_lost, r0
 	setcf		c4, [c1 | c2]
 	andcf		c4, [c3 & c4]
@@ -206,17 +147,17 @@ tcp_fastretrans_alert:
 	tblwr		d.do_lost,1	
 no_do_lost:
 	/* c1 = tp->tx.packets_out */
-	sne		c1, k.packets_out, r0
+	sne		c1, k.to_s3_packets_out, r0
 	/* c2 = !tp->sack.sacked_out */
-	seq		c2, k.sacked_out, r0
+	seq		c2, k.to_s3_sacked_out, r0
 	/* if (tp->tx.packets_out || !tp->sack.sacked_out) */
 	bcf		[c1 | c2], no_clear_sacked_out
 	nop
 	/* tp->sack.sacked_out = 0 */
-	phvwr		p.sacked_out, r0
+	 phvwr		p.s4_s2s_sacked_out, r0
 no_clear_sacked_out:
 	/* c1 = tp->tx.sacked_out */
-	sne		c1, k.sacked_out, r0
+	sne		c1, k.to_s3_sacked_out, r0
 	/* c2 = !tp->sack.fackets_out */
 	seq		c2, d.fackets_out, r0
 	/* if (tp->tx.sacked_out || !tp->sack.fackets_out) */
@@ -261,7 +202,7 @@ tcp_check_sack_reneging:
 			      usecs_to_jiffies(TCP_DELACK_MAX));
 	 */
 
-	add		r1, k.srtt_us, r0
+	add		r1, k.to_s3_srtt_us, r0
 	srl		r1, r1, 4
 	addi		r2, r0, TCP_DELACK_MAX
 	slt		c1, r1, r2
@@ -272,7 +213,7 @@ tcp_check_sack_reneging:
 	add.c1		r1, r2, r0
 	/* r1 = max(delay, TCP_RTO_MAX) */
 	add		r2, d.curr_ts, r1
-	phvwr		p.rto_deadline, r2
+	phvwr		p.rx2tx_rto_deadline, r2
 	bcf		[c1], flow_fra_process_done
 	nop
 tcp_check_sack_reneging_done:	
@@ -280,8 +221,8 @@ tcp_check_sack_reneging_done:
 	/* C. Check consistency of the current state. */
 	/* tcp_verify_left_out(tp);*/
 tcp_verify_left_out:
-	add		r1, k.sacked_out, k.lost_out
-	slt		c1, k.packets_out, r1
+	add		r1, k.to_s3_sacked_out, k.to_s3_lost_out
+	slt		c1, k.to_s3_packets_out, r1
 	/* c1 = k.packets_out < (k.sacked_out + k.lost_out)
 	 * c1 should be false
 	 */
@@ -318,7 +259,7 @@ tcp_verify_left_out:
 		}
 	   }
 	*/
-	slt		c1, k.snd_una, d.high_seq
+	slt		c1, k.common_phv_snd_una, d.high_seq
 	bcf		[c1], check_E
 	nop
 	sne		c1, d.ca_state, TCP_CA_CWR
@@ -332,7 +273,7 @@ tcp_ca_cwr_case:
 	      tcp_set_ca_state(tp, TCP_CA_Open);
 	    }
 	  */
-	seq		c1, k.snd_una, d.high_seq
+	seq		c1, k.common_phv_snd_una, d.high_seq
 	bcf		[c1],check_E
 	nop
 
@@ -354,7 +295,7 @@ tcp_may_undo:
 }
 	 */
 	seq		c1, d.undo_marker, r0
-	sne		c2, k.undo_retrans, r0
+	sne		c2, k.to_s3_undo_retrans, r0
 	/* Nothing was retransmitted or returned timestamp is
 	 * less than timestamp of the first retransmission.
 	 *
@@ -372,7 +313,7 @@ tcp_may_undo:
 	          before(tp->rx_opt.rcv_tsecr, when) ;
 	}
 	*/
-	slt		c4, d.retx_head_ts, k.rcv_tsecr
+	slt		c4, d.retx_head_ts, k.common_phv_rcv_tsecr
 	setcf		c5, [c2 & c3 & c4]
 	setcf		c5, [c1 | c5]
 	bcf		[c5], tcp_undo_cwnd_reduction
@@ -395,9 +336,9 @@ tcp_undo_cwnd_reduction:
 	}
 
 	*/
-	slt		c1, k.snd_cwnd, k.loss_cwnd
-	add.c1		r1, k.loss_cwnd, r0
-	phvwr.c1	p.snd_cwnd, r1
+	slt		c1, d.snd_cwnd, d.loss_cwnd
+	add.c1		r1, d.loss_cwnd, r0
+	phvwr.c1	p.to_s4_snd_cwnd, r1
 
 	/* if (tp->cc.prior_ssthresh > tp->cc.snd_ssthresh) { */
 	slt		c1, d.prior_ssthresh, d.snd_ssthresh
@@ -412,9 +353,9 @@ tcp_undo_cwnd_reduction:
 	     tp->rx_opt.ecn_flags &= ~TCP_ECN_DEMAND_CWR ;
            }
 	 */
-	add		r1, k.ecn_flags, r0
+	add		r1, k.common_phv_ecn_flags, r0
 	andi		r1, r1, ~TCP_ECN_DEMAND_CWR
-	phvwr		p.ecn_flags, r1
+	phvwr		p.common_phv_ecn_flags, r1
 clear_undo_marker:	
 	/* tp->sack.undo_marker = 0 ; */
 	tblwr		d.undo_marker, r0
@@ -431,12 +372,13 @@ switch_done_1:
 check_E:	
 	
 flow_fra_process_done:
-	phvwr		p.snd_ssthresh, d.snd_ssthresh
+	phvwr		p.to_s4_snd_ssthresh, d.snd_ssthresh
 	
 table_read_CC:
-	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_cc_process,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_CC_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
+	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+                    tcp_rx_cc_stage4_start, TCP_TCB_TABLE_BASE,
+                    TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_CC_OFFSET,
+                    TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 

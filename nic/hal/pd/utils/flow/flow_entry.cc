@@ -519,6 +519,9 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}", 
                     __FUNCTION__, oflow_table_id, fhct_index_);
     // FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
+
+    entry_trace(oflow_table_id, fhct_index_, (void *)&oflow_act_data);
+
     // P4-API: Oflow Table Write
     pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL,
                               (void *)&oflow_act_data);
@@ -541,6 +544,8 @@ FlowEntry::deprogram_table_non_anchor_entry()
     memset(&oflow_act_data, 0, sizeof(oflow_act_data));
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
+
+    entry_trace(oflow_table_id, fhct_index_, (void *)&oflow_act_data);
 
     // P4-API: Oflow Table Write
     pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL,
@@ -655,3 +660,18 @@ FlowEntry::form_hw_key(uint32_t table_id, void *hwkey)
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }
 
+hal_ret_t
+FlowEntry::entry_trace(uint32_t table_id, uint32_t index, 
+                             void *data)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id, NULL, NULL, 
+                                              data, buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_TRACE_DEBUG("Index: {} \n {}", index, buff);
+
+    return HAL_RET_OK;
+}

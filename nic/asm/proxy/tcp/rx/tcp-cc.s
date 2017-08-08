@@ -3,105 +3,33 @@
  */
 
 
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
 #include "tcp-constants.h"	
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
-/* bic congestion control algorithm state */
-struct bictcp {
-	cnt				: COUNTER32 	;
-	last_max_cwnd			: WINDOW_WIDTH	;
-	loss_cwnd			: WINDOW_WIDTH	;
-	last_cwnd			: WINDOW_WIDTH	;
-	last_time			: TS_WIDTH	;
-	epoch_start			: TS_WIDTH	;
-	delayed_ack			: TS_WIDTH	;
-};
-
- /* d is the data returned by lookup result */
-struct d_struct {
-	/* State needed by RX and TX pipelines
-	 * This has to be at the beginning.
-	 * Each of these fields will be written by Rx only or Tx only
-	 */
-
-        snd_cwnd                        : WINDOW_WIDTH          ;\
-
-	snd_wnd_clamp			: WINDOW_WIDTH	;
-	snd_cwnd_clamp			: WINDOW_WIDTH	;
-	prior_cwnd			: WINDOW_WIDTH	;
-	snd_cwnd_cnt			: COUNTER32	;
-	prr_delivered			: COUNTER32	;
-
-
-
-	is_cwnd_limited			: 8	;
-	max_packets_out			: 8	;
-	sack_reordering                 : 8     ;
-	tune_reordering                 : 8     ;
-	curr_ts				: TS_WIDTH	;
-//	bic				: struct bictcp;
-	cnt				: COUNTER32 	;
-	last_max_cwnd			: WINDOW_WIDTH	;
-
-	last_cwnd			: WINDOW_WIDTH	;
-	last_time			: TS_WIDTH	;
-	epoch_start			: TS_WIDTH	;
-	delayed_ack			: TS_WIDTH	;
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	syn				: 1 ;
-	ece				: 1 ;
-	cwr				: 1 ;
-	ooo_rcv				: 1 ;
-	rsvd				: 4 ;
-	ca_event			: 4 ;
-	num_sacks			: 8 ;
-	sack_off			: 8 ;
-	d_off				: 8 ;
-	ts_off				: 8 ;
-	ip_dsfield			: 8 ;
-	pkts_acked			: 8  ;
-	seq				: SEQ_NUMBER_WIDTH ;
-	end_seq				: SEQ_NUMBER_WIDTH ;
-	ack_seq				: SEQ_NUMBER_WIDTH ;
-	window				: WINDOW_WIDTH ;
-	process_ack_flag		: 16  ;
-
-	ca_state			: 8	                ;\
-	packets_out			: COUNTER16	        ;\
-	retrans_out			: COUNTER8	        ;\
-	sacked_out			: COUNTER16	        ;\
-	lost_out			: COUNTER8	        ;\
-        snd_ssthresh			: WINDOW_WIDTH	        ;\
-        prr_out				: COUNTER32	        ;\
-
-};
-
-struct p_struct p;
-struct k_struct k;
-struct d_struct d;
+struct phv_ p;
+struct tcp_rx_tcp_cc_k k;
+struct tcp_rx_tcp_cc_tcp_cc_d d;
 	
 %%
+        .param          tcp_rx_fc_stage5_start
 	
-flow_cc_process_start:
+tcp_rx_cc_stage4_start:
 	/* Fall Thru */
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 tcp_cong_control:
 	/* Check if we are in congestion window reduction state */
-	smeqb 		c1, k.ca_state, TCPF_CA_CWR | TCPF_CA_Recovery, TCPF_CA_CWR | TCPF_CA_Recovery
+	smeqb 		c1, k.to_s4_ca_state, TCPF_CA_CWR | TCPF_CA_Recovery, TCPF_CA_CWR | TCPF_CA_Recovery
 	bcf 		[c1],tcp_cwnd_reduction
 	nop
 
 	/* Decide whether to run the increase function of congestion control. */
 	slt  		c2, d.tune_reordering, d.sack_reordering
-	add		r5, k.process_ack_flag, r0
+	add		r5, k.common_phv_process_ack_flag, r0
 	smeqh.c2   	c3, r5, FLAG_FORWARD_PROGRESS, FLAG_FORWARD_PROGRESS
 	smeqh.!c2	c3, r5, FLAG_DATA_ACKED, FLAG_DATA_ACKED
 
@@ -111,16 +39,16 @@ tcp_cong_control:
 
 tcp_cwnd_reduction:
 	/* r1 = newly_acked_sacked */
-	add		r1, k.pkts_acked, r0
+	add		r1, k.common_phv_pkts_acked, r0
 	/* r2 = flag */
-	add		r2, k.process_ack_flag, r0
+	add		r2, k.common_phv_process_ack_flag, r0
 
-	add 		r3, k.packets_out, k.retrans_out
-	add		r4, k.sacked_out, k.lost_out
+	add 		r3, k.s4_s2s_packets_out, k.to_s4_retrans_out
+	add		r4, k.s4_s2s_sacked_out, k.s4_s2s_lost_out
 	/* r6 = tcp_packets_in_flight = packets_out + retrans_out - (sacked_out + lost_out) */
 	sub		r6, r3, r4
 	/* r3 = delta = ssthresh - packets_in_flight */
-	sub		r3, k.snd_ssthresh, r6
+	sub		r3, k.to_s4_snd_ssthresh, r6
 	sle		c1, r1, r0
 	bcf		[c1], tcp_cwnd_reduction_done
 	nop
@@ -131,7 +59,7 @@ tcp_cwnd_reduction:
 	tbladd		d.prr_delivered, r1
 
 	slt		c1, r3, 0
-	add.c1		r4, k.snd_ssthresh, d.prr_delivered
+	add.c1		r4, k.to_s4_snd_ssthresh, d.prr_delivered
 
 	addi		r5, r0, 1
 	sub.c1		r5, d.prior_cwnd, r5
@@ -142,14 +70,14 @@ tcp_cwnd_reduction:
 	div.c1		r5, r4, d.prior_cwnd
 	/* r5 = sndcnt = dividend / prior_cwnd - prr_out */
 	bcf		[c1], update_sndcnt
-	sub.c1		r5, r5, k.prr_out
+	sub.c1		r5, r5, k.to_s4_prr_out
 
 	
-	add		r4, k.process_ack_flag, r0
+	add		r4, k.common_phv_process_ack_flag, r0
 	smeqh		c2, r4, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
 	smeqh		c3, r4, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
 	bcf		[c2 | !c3], sndcnt_retx_data_acked_not_lost_retrans
-	sub		r4, d.prr_delivered, k.prr_out
+	sub		r4, d.prr_delivered, k.to_s4_prr_out
 	/* sndcnt = min(delta, newly_acked_sacked); */
 
 	slt		c2, r3, r1
@@ -179,7 +107,7 @@ sndcnt_retx_data_acked_not_lost_retrans:
 	
 	/* Force a fast retransmit upon entering fast recovery */
 update_sndcnt:
-	sne		c2, k.prr_out, r0
+	sne		c2, k.to_s4_prr_out, r0
 	add.c2		r4, r0, r0
 	addi.!c2	r4, r0, 1
 	/* r4 = (prr_out ? 0 : 1) */
@@ -198,7 +126,7 @@ tcp_cong_avoid:
 	/* Check if cwnd is limited */
 tcp_is_cwnd_limited:
 	/* Check in slow start */
-	slt		c1, d.snd_cwnd,k.snd_ssthresh
+	slt		c1, d.snd_cwnd,k.to_s4_snd_ssthresh
 
 	/* In slow start check */
 	add		r2, d.max_packets_out, r0
@@ -328,9 +256,9 @@ tcp_cong_avoid_ai:
 	slt		c2, d.snd_cwnd_clamp, d.snd_cwnd
 	tblwr.c2	d.snd_cwnd, d.snd_cwnd_clamp
 table_read_FC:
-	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_fc_process,
+	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fc_stage5_start,
 	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_FC_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
+	                    TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 
@@ -358,7 +286,7 @@ tcp_slow_start:
 	/* r3 = tp->cc.snd_cwnd + acked */
 	add		r3, d.snd_cwnd, r2
 	/* r4 = tp->cc.snd_ssthresh */
-	add		r4, k.snd_ssthresh, r0
+	add		r4, k.to_s4_snd_ssthresh, r0
 	slt		c1, r4, r3
 	add.!c1		r4, r3, r0
 	/* r4 = cwnd = min(r3, r4) */

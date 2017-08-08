@@ -24,10 +24,11 @@ namespace hal {
 namespace pd {
 
 // LIF HW ID Space for SB LIFs, Uplink Ifs/PCs
-#define HAL_MAX_HW_LIFS     1025        
-#define HAL_MAX_UPLINK_IFS  16
+#define HAL_MAX_HW_LIFS         1025        
+#define HAL_MAX_UPLINK_IFS      16
+#define HAL_MAX_UPLINK_IF_PCS   32      // Both Uplink IFs and PCs combined
 
-#define HAL_RW_TABLE_SIZE 4096
+#define HAL_RW_TABLE_SIZE       4096
 
 //-----------------------------------------------------------------------------
 // class hal_state_pd
@@ -59,6 +60,10 @@ public:
 
     // get APIs for Uplinkif  related state
     slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
+    indexer *uplinkifpc_hwid_idxr(void) const { return uplinkifpc_idxr_; }
+
+    // get APIs for uplinkpc related state
+    slab *uplinkpc_pd_slab(void) const { return uplinkpc_pd_slab_; }
 
     // get APIs for enicif  related state
     slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
@@ -73,6 +78,14 @@ public:
 
     // get APIs for session related state
     slab *session_slab(void) const { return session_slab_; }
+
+    // get APIs for TLS CB related state
+    slab *tlscb_slab(void) const { return tlscb_slab_; }
+    ht *tlscb_hwid_ht(void) const { return tlscb_hwid_ht_; }
+
+    // get APIs for TCP CB related state
+    slab *tcpcb_slab(void) const { return tcpcb_slab_; }
+    ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
 
     hal_ret_t init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
@@ -136,6 +149,8 @@ private:
     // Uplink IF related state
     struct {
         slab       *uplinkif_pd_slab_;
+        slab       *uplinkpc_pd_slab_;
+        indexer    *uplinkifpc_idxr_;       // User for both Uplink IF/PCs
     } __PACK__;
 
     // Enic IF related state
@@ -158,6 +173,18 @@ private:
     // session related state
     struct {
         slab       *session_slab_;
+    } __PACK__;
+
+    // tlscb related state
+    struct {
+        slab       *tlscb_slab_;
+        ht         *tlscb_hwid_ht_;
+    } __PACK__;
+
+    // tcpcb related state
+    struct {
+        slab       *tcpcb_slab_;
+        ht         *tcpcb_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

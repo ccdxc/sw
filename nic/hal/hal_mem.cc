@@ -6,7 +6,9 @@
 #include <endpoint.hpp>
 #include <session.hpp>
 #include <nwsec.hpp>
-
+#include <tlscb.hpp>
+#include <tcpcb.hpp>
+ 
 namespace hal {
 
 class hal_state    *g_hal_state;
@@ -189,6 +191,42 @@ hal_state::init(void)
                                         sizeof(hal::nwsec_profile_t), 4, false,
                                         false, true, true);
     HAL_ASSERT_RETURN((nwsec_profile_slab_ != NULL), false);
+
+    // initialize TLS CB related data structures
+    tlscb_slab_ = slab::factory("tlscb", HAL_SLAB_TLSCB,
+                                sizeof(hal::tlscb_t), 16,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((tlscb_slab_ != NULL), false);
+
+    tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
+                               hal::tlscb_get_key_func,
+                               hal::tlscb_compute_hash_func,
+                               hal::tlscb_compare_key_func);
+    HAL_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
+
+    tlscb_hal_handle_ht_ = ht::factory(HAL_MAX_TLSCB,
+                                       hal::tlscb_get_handle_key_func,
+                                       hal::tlscb_compute_handle_hash_func,
+                                       hal::tlscb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((tlscb_hal_handle_ht_ != NULL), false);
+
+    // initialize TCB CB related data structures
+    tcpcb_slab_ = slab::factory("tcpcb", HAL_SLAB_TCPCB,
+                                sizeof(hal::tcpcb_t), 16,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((tcpcb_slab_ != NULL), false);
+
+    tcpcb_id_ht_ = ht::factory(HAL_MAX_TCPCB,
+                               hal::tcpcb_get_key_func,
+                               hal::tcpcb_compute_hash_func,
+                               hal::tcpcb_compare_key_func);
+    HAL_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
+
+    tcpcb_hal_handle_ht_ = ht::factory(HAL_MAX_TCPCB,
+                                       hal::tcpcb_get_handle_key_func,
+                                       hal::tcpcb_compute_handle_hash_func,
+                                       hal::tcpcb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((tcpcb_hal_handle_ht_ != NULL), false);
 
     return true;
 }

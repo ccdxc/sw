@@ -7,6 +7,7 @@
 
 #include "l4.p4"
 #include "nat.p4"
+#include "apps.p4"
 #include "copp.p4"
 #include "ddos.p4"
 #include "flow.p4"
@@ -37,6 +38,7 @@ header_type control_metadata_t {
     fields {
         drop_reason                    : 32;
         qid                            : 24;
+        qtype                          : 8;
         packet_len                     : 16;
         flow_miss_idx                  : 16;
         egress_mirror_session_id       : 8;

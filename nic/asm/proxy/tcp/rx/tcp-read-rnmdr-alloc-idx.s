@@ -4,33 +4,25 @@
 	      - RNMDR alloc idx
  */
 
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 
- /* d is the data returned by lookup result */
-struct d_struct {
-	RNMDR_alloc_idx			: 8    ;
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	semaphore_addr			: ADDRESS_WIDTH ;
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
+struct phv_ p;
+struct tcp_rx_read_rnmdr_read_rnmdr_d d;
 	
 %%
+        .param          tcp_rx_rdesc_alloc_stage3_start
 	
-flow_read_rnmdr_alloc_idx:
-	phvwr		p.RNMDR_alloc_idx, d.RNMDR_alloc_idx
+tcp_rx_read_rnmdr_stage2_start:
+	phvwr		p.s3_t1_s2s_rnmdr_pidx, d.rnmdr_pidx
 
 table_read_RNMDR_DESC:
-	TCP_NEXT_TABLE_READ(d.RNMDR_alloc_idx, TABLE_TYPE_RAW, flow_rdesc_alloc_process,
-	                    RNMDR_TABLE_BASE, RNMDR_TABLE_ENTRY_SIZE_SHFT,
-	                    0, RNMDR_TABLE_ENTRY_SIZE)
+	//TODO: TCP_NEXT_TABLE1_READ(d.rnmdr_pidx, TABLE_LOCK_EN,
+                            // tcp_rx_rdesc_alloc_stage3_start,
+	                    //RNMDR_TABLE_BASE, RNMDR_TABLE_ENTRY_SIZE_SHFT,
+	                    //0, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

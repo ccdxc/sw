@@ -34,7 +34,7 @@ tenjin_prefix = "//::"
 
 CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
 
-def make_templates_outfiles(template_dir, output_h_dir, output_c_dir):
+def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, prog_name):
     # file-names in template_dir will be used
     # to generate corresponding .c or .h files and 
     # output to output_dir
@@ -47,17 +47,22 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir):
             output_dir = output_c_dir
         else:
             output_dir = output_h_dir
+        if prog_name != '':
+            genf = prog_name + '_' + f
+        else:
+            genf = f
+            
         pdoutfiles.append((os.path.join(template_dir, f), \
-                           os.path.join(output_dir, f)))
+                           os.path.join(output_dir, genf)))
     return pdoutfiles
 
 
-def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir):
+def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, prog_name):
     if output_h_dir and not os.path.exists(output_h_dir):
         os.mkdir(output_h_dir)
     if output_c_dir and not os.path.exists(output_c_dir):
         os.mkdir(output_c_dir)
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir)
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, prog_name)
     for templatefile, outfile in templates_outfiles:
         outputfile_path = os.path.dirname(outfile)
         pdd = {}
@@ -635,6 +640,7 @@ class capri_p4pd:
                 km_cprofile = table_km_cprofile
 
             nbytes = (len(km_cprofile.bit_sel) + 7) / 8
+
             for km_byte_pos in range(len(km_cprofile.byte_sel)):
                 phv_byte = km_cprofile.byte_sel[km_byte_pos]
                 phv_byte_found = False
@@ -645,6 +651,7 @@ class capri_p4pd:
                         # PAD unused byte
                         ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
                         continue
+
 
                     # This KM byte holds bit. When there are more 
                     # than a 8 bits extracted all bits in bit_sel is processed.
@@ -677,6 +684,13 @@ class capri_p4pd:
                                         break
                             if phv_bit_found:
                                 break
+
+                        if phv_bit_found:
+                            # There can be cases where cf bit is both key and input. For such cases
+                            # continue to next KM field bit.
+                            kbit += 1
+                            continue
+
                         for _cf in ctable.keys:
                             cf = _cf[0]
                             if phv_bit <= cf.phv_bit + cf.width:
@@ -695,15 +709,25 @@ class capri_p4pd:
                                         break
                             if phv_bit_found:
                                 break
-                        if not phv_bit_found and not kd and is_tcam:
+                        if not phv_bit_found and is_tcam:
+                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+                        elif not phv_bit_found and not kd:
+                            # In case of KI, pad unused bit; However in case of KD
+                            # unused bit when packing as KD will be used by D bit
+                            # in entry packing.
                             ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
 
                         kbit += 1
+
                     if kbit % 8 > 0:
                         # IF bit extractor does not completely fill 8 bits
-                        if not kd and is_tcam:
+                        # In case of KD unfilled bits (trailing or leading)
+                        # will be used by data.
+                        if not kd or is_tcam:
                             ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8 - kbit % 8, "P")]
+                        
                 elif phv_byte != -1 and len(self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields) == 1:
+                    phv_byte_found = False
                     for cf in ctable.input_fields:
                         if phv_byte in cf.phcs:
                             phv_byte_found = True
@@ -752,21 +776,25 @@ class capri_p4pd:
                                             phv_byte_found = False
                                     else:
                                         ki_or_kd_to_cf_map[kbit].append((cf, cf_startbit, min(8, cf.width), "K"))
-                    if not phv_byte_found and not kd and is_tcam:
+                    if not phv_byte_found and is_tcam:
+                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
+                    elif not phv_byte_found and not kd:
                         ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
                 elif phv_byte != -1:
                     fields_of_same_header_in_byte_i = {}
                     fields_of_same_header_in_byte_k = {}
                     fields_of_same_header_in_byte_other = {}
+
+                    total_p4_fld_width = 0
                     for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
                         field_found = False
                         for cf in ctable.input_fields:
                             if cf.hfname == k:
+                                field_found = True
                                 if not is_tcam and kd:
                                     continue
                                 if is_tcam and kd and not key_encountered:
                                     continue
-                                field_found = True
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
                                 cf_hname = cf_get_hname(cf)
@@ -775,11 +803,19 @@ class capri_p4pd:
                                 cs = fields_of_same_header_in_byte_i[cf_hname]
                                 if kbit+cs not in ki_or_kd_to_cf_map.keys():
                                     ki_or_kd_to_cf_map[kbit+cs] = [(cf, cf_startbit, width, "I")]
+                                    total_p4_fld_width += width
                                 else:
                                     # Incase of field union, 2 action input sub-bits can map
                                     # same km sub-bit position. 
                                     if (cf, cf_startbit, width, "I") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "I"))
+                                        total_p4_fld_width += width
+                                    
+
+                        if field_found:
+                            # There can be cases where cf is both key and input. For such cases
+                            # continue to next KM field.
+                            continue
 
                         for _cf in ctable.keys:
                             cf = _cf[0]
@@ -795,13 +831,20 @@ class capri_p4pd:
                                 cs = fields_of_same_header_in_byte_k[cf_hname]
                                 if kbit+cs not in ki_or_kd_to_cf_map.keys():
                                     ki_or_kd_to_cf_map[kbit+cs] = [(cf, cf_startbit, width, "K")]
+                                    total_p4_fld_width += width
                                 else:
                                     # Incase of field union, 2 key sub-bits can map
                                     # same km sub-bit position. 
-                                    if (cf, cf_startbit, width, "K") not in ki_or_kd_to_cf_map[kbit]:
+                                    if (cf, cf_startbit, width, "K") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "K"))
+                                        total_p4_fld_width += width
 
-                        if not field_found and not kd and is_tcam:
+                        put_pad = False
+                        if not field_found and is_tcam:
+                            put_pad = True
+                        elif not field_found and not kd:
+                            put_pad = True
+                        if put_pad:
                             containerstart, cf_startbit, width = v
                             cf_hname = "__Other"
                             if cf_hname not in fields_of_same_header_in_byte_other.keys():
@@ -809,12 +852,31 @@ class capri_p4pd:
                                 cs = fields_of_same_header_in_byte_other[cf_hname]
                             else:
                                 cs = containerstart
-                            # When KM byte is loaded with table-key or another-table key
-                            # cs can be same for both. In such cases check for existence
-                            # of such key byte before reset to None CF
                             if kbit+cs not in ki_or_kd_to_cf_map.keys():
-                                ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+containerstart, width, "P")]
-                        
+                                #if ctable.p4_table.name == 'tunnel_encap_update_inner':
+                                #    pdb.set_trace()
+                                if cs >= total_p4_fld_width:
+                                    ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+containerstart, width, "P")]
+                                    total_p4_fld_width += width
+
+                    # Since a list of p4fields shared same phv byte, get max field width and 
+                    # if it is less than 8 bits, then pad remaining bits
+                    if total_p4_fld_width < 8:
+                        put_pad = False
+                        if is_tcam or not kd:
+                            put_pad = True
+                        if put_pad:
+                            cs = total_p4_fld_width # Set container start bit from where padding is needed
+                            if kbit+cs not in ki_or_kd_to_cf_map.keys():
+                                ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+cs, (8 - total_p4_fld_width), "P")]
+
+            # Pad each KM instance so as to cover unused bytes
+            for km_byte_pos in range(len(km_cprofile.byte_sel), 32):
+                kbit_ = (km_inst * (km_width/8) + km_byte_pos) * 8
+                if is_tcam:
+                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P")]
+                elif not kd:
+                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P")]
 
         return ki_or_kd_to_cf_map
 
@@ -1016,6 +1078,12 @@ class capri_p4pd:
             alltables[table_name] = tdict
 
         self.pddict['tables'] = alltables
+        self.pddict['p4plus'] = 1 if self.be.args.p4_plus else 0
+        if self.be.args.p4_plus:
+            self.pddict['p4plus'] = 1
+            self.pddict['p4program'] = self.be.prog_name
+        else:
+            self.pddict['p4plus'] = 0
 
     
     def verify_table_ki(self):
@@ -1122,8 +1190,12 @@ class capri_p4pd:
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'pd_templates/')
-        #if not self.be.args.p4_plus:
-        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir)
+        if self.be.args.p4_plus:
+            prog_name = self.be.prog_name
+        else:
+            prog_name = ''
+
+        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, prog_name)
 
         outputdir = gen_dir + '/%s/asm_out' % (self.be.prog_name)
         if not os.path.exists(outputdir):
@@ -1131,7 +1203,7 @@ class capri_p4pd:
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'asm_templates/')
-        p4pd_generate_code(self.pddict, templatedir, outputdir, None)
+        p4pd_generate_code(self.pddict, templatedir, outputdir, None, '')
 
     def generate_cli(self):
         capri_p4pd_cli_create_makefile(self.be)

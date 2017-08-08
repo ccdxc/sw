@@ -58,6 +58,8 @@ public:
     FlowEntry *get_next_flow_entry(FlowEntry *fe);
    
 	void replace_fhg(FlowHintGroup *fhg, FlowHintGroup *new_fhg);
+    hal_ret_t entry_trace(uint32_t table_id, uint32_t index, 
+                          void *key, void *data);
 
     // Getters & Setters
     FlowEntry *get_anchor_entry() { return anchor_entry_; }

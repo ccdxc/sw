@@ -50,6 +50,7 @@ SRC_FILES := \
     $(SRC_DIR)/mirror.asm \
     $(SRC_DIR)/nacl.asm \
     $(SRC_DIR)/output_mapping.asm \
+    $(SRC_DIR)/p4plus_app.asm \
     $(SRC_DIR)/registered_macs.asm \
     $(SRC_DIR)/registered_macs_otcam.asm \
     $(SRC_DIR)/replica.asm \
@@ -90,6 +91,7 @@ input_properties_mac_vlan_ARGS := -r input_properties_mac_vlan
 ipsg_ARGS := -r ipsg_hit
 mirror_ARGS := -r erspan_mirror
 output_mapping_ARGS := -r set_tm_oport
+p4plus_app_ARGS := -r p4plus_app_tcp_proxy
 registered_macs_ARGS := -r registered_macs_hit
 registered_macs_otcam_ARGS := -r registered_macs_otcam_hit
 rewrite_ARGS := -r l3_rewrite
