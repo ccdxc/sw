@@ -9,6 +9,7 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 from config.store               import Store
+from    config.objects.tcp_proxy_cb     import TcpCbHelper
 
 class QueueObject(objects.FrameworkObject):
     def __init__(self, spec, parent):
@@ -20,6 +21,7 @@ class QueueObject(objects.FrameworkObject):
         self.type   = haldefs.interface.LifQType.Value(qtypename)
 
         self.parent = parent
+        TcpCbHelper.main(self)
         return
 
     def configure(self, req_spec):
