@@ -16,7 +16,7 @@ const (
 	kubeletCfgFile        = "/etc/kubernetes/kubelet.conf"
 	kubeletSystemdCfgFile = "kubelet.conf"
 
-	kubeletCgroupDriver = "systemd"
+	kubeletCgroupDriver = "cgroupfs"
 
 	// Environment variables
 	kubeletAddressVar    = "KUBELET_ADDRESS"

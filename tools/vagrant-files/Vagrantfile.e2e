@@ -41,9 +41,10 @@ def configure_vm(node, node_name)
 	    systemctl stop firewalld
 	    setenforce 0
 	    gpasswd -a vagrant root
+        gpasswd -a vagrant docker
 	    # Add pensando internal docker registry
 	    echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
-            # Start docker and kubelet services
+            # Start docker
             systemctl enable docker && systemctl start docker
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
@@ -117,7 +118,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.define node_name do |node|
       node.vm.box = "nasuku/centos73"
-      node.vm.box_version = "0.1"
+      node.vm.box_version = "0.2"
       # Control Interface
       node.vm.network :private_network, ip: node_addr
 

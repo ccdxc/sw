@@ -54,11 +54,14 @@ def preamble_script(postamble)
     # stop firewall service and disable selinux
     systemctl stop firewalld && systemctl disable firewalld
     systemctl stop chronyd && systemctl disable chronyd
+    systemctl stop kubelet && systemctl disable kubelet
     setenforce 0
     gpasswd -a vagrant root
+    gpasswd -a vagrant docker
     # curl -sSL box-builder.sh | bash
 
     # Add pensando internal docker registry
+    mkdir -p /etc/docker
     echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
     #{postamble}
   BASIC_SCRIPT

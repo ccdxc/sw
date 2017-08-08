@@ -2,12 +2,13 @@
 # vi: set ft=ruby :
 
 require 'fileutils'
-load 'tools/vagrant-files/Vagrantfile.include'
+dir = File.dirname(File.expand_path(__FILE__))
+load "#{dir}/tools/vagrant-files/Vagrantfile.include"
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "nasuku/centos73"
-  config.vm.box_version = "0.1"
+  config.vm.box_version = "0.2"
   config.ssh.insert_key = false
 
   nodeprops = build_nodes(3, "192.168.30.")
@@ -23,9 +24,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
 
       node.vm.provider "virtualbox" do |v|
-          if n < 3
+          if n == 0
               v.cpus = 2
               v.memory = 3072
+          elsif n < 3
+              v.cpus = 2
+              v.memory = 2500
           else
               v.cpus = 1
               v.memory = 1024
@@ -54,7 +58,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           s.inline = preamble_script <<-EOF
             # Start docker and kubelet services
             systemctl enable docker && systemctl start docker
-            systemctl enable kubelet && systemctl start kubelet
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
           EOF
