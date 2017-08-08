@@ -24,6 +24,9 @@ session:
                 - descriptor:
                     object  : None # TBD 
         result:
+            callback:
+                status: None # True or False
+                message: None #Custom message
             packets:
                 missing:
                     - packet:

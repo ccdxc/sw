@@ -51,6 +51,7 @@ trigger:
             port    : 1
 
 expect:
+    callback: None
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1

@@ -1,4 +1,5 @@
 import time
+import pdb
 import copy
 import pickle
 import mock
@@ -111,6 +112,7 @@ session:
                     object  : None
                     ring    : None
                     # actual : None  # Framework provided empty actual
+            callback: None #Custom callback
 
             snapshots:
                 - entry:
@@ -160,6 +162,8 @@ session:
                     object  : None
                     ring    : None
                     # actual : None  # Framework provided empty actual
+            callback: None #Custom callback
+                
 
             snapshots:
                 # List of
@@ -606,6 +610,63 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
             report.details[self._test_case_spec.GID()].session[0].step.result.packets.extra == [])
         self.assertTrue(
             report.details[self._test_case_spec.GID()].session[0].step.result.packets.mismatch == [])
+
+    @init_trigger_test(steps=1)
+    def test_single_packet_flow_with_custom_callback(self):
+        class Callback(object):
+            def call(self, arg1=None, arg2=None):
+                return Callback.custome_callback(arg1)
+            def custome_callback(tc):
+                return False, "Custom Callback Failed."
+        input_output = {"input": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                        "dst": MacAddressBase("0000.9999.0002").get(),
+                                                        "type": 0x8100
+                                                        },
+                                              "Dot1Q": {"vlan": 12},
+                                              "IP": {"src": "10.0.0.64",
+                                                     "dst": "10.0.0.65",
+                                                     "proto": 6},
+                                              "TCP": {"sport": 100, "dport": 200}},
+                                   "ports": [1],
+                                   "count": 1,
+                                   "id": 1
+                                   }],
+                        "output": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                         "dst": MacAddressBase("0000.9999.0002").get(),
+                                                         "type": 0x8100
+                                                         },
+                                               "Dot1Q": {"vlan": 12},
+                                               "IP": {"src": "10.0.0.64",
+                                                      "dst": "10.0.0.65",
+                                                      "proto": 6},
+                                               "TCP": {"sport": 100, "dport": 200}},
+                                    "ports": [1],
+                                    "count": 1,
+                                    "id": 1}
+                                   ]
+                        }
+        self._add_trigger_expect_packet(
+            self._test_case_spec.session[0].step, input_output)
+        self._test_case_spec.session[0].step.expect.callback = Callback()
+        self.__add_model_input_output(input_output)
+        self._trigger.run_test_case(self._test_case_spec)
+        self._wait_for_test_case_completion()
+        report = self._trigger.get_run_report()
+        self.assertTrue(report and report.passed_count == 0 and
+                        report.details[self._test_case_spec.GID()].id == self._test_case_spec.GID() and
+                        report.details[self._test_case_spec.GID()].steps_passed == 0)
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.matched[0].packet.port == 1)
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.missing == [])
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.extra == [])
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.mismatch == [])
+        self.assertTrue(report.details[self._test_case_spec.GID(
+        )].session[0].step.result.callback.status == Trigger.TEST_CASE_FAILED)
+        self.assertTrue(report.details[self._test_case_spec.GID(
+        )].session[0].step.result.callback.message == "Custom Callback Failed.")
 
     @init_trigger_test(steps=1)
     def test_single_packet_2_outputs(self):
@@ -2437,5 +2498,5 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     # logger.add_stdout()
     suite.addTest(DolTriggerTestWithUTModel(
-        'test_single_packet_flow_better_mismatch_packets_headers_2'))
+        'test_single_packet_flow_with_custom_callback'))
     unittest.TextTestRunner(verbosity=2).run(suite)

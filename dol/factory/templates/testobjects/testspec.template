@@ -73,6 +73,7 @@ session:
                     incr    : None
 
         expect:
+            callback: callback://networking/packets/verify_callback
             packets:
                 - packet:
                     object        : None

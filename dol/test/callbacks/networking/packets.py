@@ -46,3 +46,6 @@ def GetPacketTemplateByFlow(testcase, packet):
     else:
         assert(0)
     return infra_api.GetPacketTemplate(template)
+
+def verify_callback(tc):
+    return True, "Passed"

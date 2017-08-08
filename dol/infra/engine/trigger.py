@@ -82,6 +82,14 @@ class TestStepResult():
         self.result = None
         self.packets = None
         self.descriptors = None
+        self.verify_callback = None
+
+
+class VerifyCallbackStepResult(objects.FrameworkObject):
+    def __init__(self):
+        super().__init__()
+        self.status = None
+        self.message = None
 
 
 class ObjectsTestStepResult(objects.FrameworkObject):
@@ -328,11 +336,12 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             self.expected = []
             self.received = []
 
-    def __init__(self, connector, test_step_spec, step_count, logger):
+    def __init__(self, test_case, test_step_spec, step_count, logger):
         super().__init__()
+        self._tc = test_case
         self._tc_step = test_step_spec
         self._tc_step_status = self.STATUS_QUEUED
-        self._connector = connector
+        self._connector = self._tc._connector
         self._start_ts = None
         self._logger = logger
         self._step_timeout = getattr(
@@ -610,13 +619,24 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         result._set_status()
         return result
 
+    def __verify_callback_process_result(self):
+        pass
+
     def __process_result(self):
         self._logger.info("Processing test step result")
         result = TestStepResult()
         result.packets = self.__packets_process_result()
         result.descriptors = self.__descriptors_process_result()
+        result.verify_callback = VerifyCallbackStepResult()
+        if hasattr(self._tc_step.expect, "callback") and self._tc_step.expect.callback:
+            cb_result, message = self._tc_step.expect.callback.call(
+                self._tc._test_spec)
+            result.verify_callback.message = message
+            result.verify_callback.status = Trigger.TEST_CASE_PASSED if cb_result else Trigger.TEST_CASE_FAILED
+
         if result.packets.status == Trigger.TEST_CASE_FAILED or \
-                result.descriptors.status == Trigger.TEST_CASE_FAILED:
+                result.descriptors.status == Trigger.TEST_CASE_FAILED or \
+                result.verify_callback.status == Trigger.TEST_CASE_FAILED:
             return Trigger.TEST_CASE_FAILED, result
         else:
             return Trigger.TEST_CASE_PASSED, result
@@ -650,7 +670,7 @@ class TriggerTestCase(objects.FrameworkObject):
         self._logger = logger
         for i, step in enumerate(test_case_spec.session, 1):
             self._test_steps.append(
-                TriggerTestCaseStep(connector, step.step, i, logger))
+                TriggerTestCaseStep(self, step.step, i, logger))
         self._tc_status = self.STATUS_QUEUED
         self._current_tc_step = None
         self._step_results = []
@@ -914,6 +934,8 @@ class Trigger(InfraThreadHandler):
             result = getattr(details, obj_type)
             for section in["matched", "missing", "mismatch", "extra"]:
                 __gen_copy_packet_result_section_(result,  obj_type, section)
+        dst_step.step.result.callback.status = details.verify_callback.status
+        dst_step.step.result.callback.message = details.verify_callback.message
 
     def __gen_test_report(self, tc_id):
         test_case_out = copy.deepcopy(TestCaseOutputTemplateObject)

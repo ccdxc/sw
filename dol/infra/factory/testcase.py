@@ -143,6 +143,9 @@ class TestCase(objects.FrameworkObject):
                              spec_ssn_step.expect)
         self.__setup_descriptors(tc_ssn_step.expect,
                                  spec_ssn_step.expect)
+        if hasattr(spec_ssn_step.expect, "callback"):
+            assert(objects.IsCallback(spec_ssn_step.expect.callback))
+            tc_ssn_step.expect.callback = spec_ssn_step.expect.callback
         return defs.status.SUCCESS
 
     def __setup_session(self):
