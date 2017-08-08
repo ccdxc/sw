@@ -10,6 +10,7 @@ from config.objects.uplinkpc            import UplinkPcHelper
 from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
+from config.objects.tcp_proxy_cb     import TcpCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
 
