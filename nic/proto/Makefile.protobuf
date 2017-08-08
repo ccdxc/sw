@@ -1,6 +1,6 @@
 
 TOPDIR = ../..
-SHAREDLIBRARY = libproto.so
+SHAREDLIBRARY = libhalproto.so
 
 LCXXFLAGS = \
 			-I/usr/local/include \

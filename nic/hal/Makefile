@@ -19,6 +19,7 @@ GEN_TEST_RESULTS_DIR = ../gen/test_results
 
 INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -Isvc -Isrc -I../utils/ -Ipd/common -I../include -Ipd \
 		-I$(GTEST_ROOT)/include -I../third-party/spdlog/include
+LCXXFLAGS = $(INC_DIRS)
 LDFLAGS = -L/usr/local/lib -L../model_sim/build -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lzmq
 
 LDFLAGS +=	-lhal \
@@ -38,33 +39,15 @@ LDFLAGS +=	-lhal \
 			-ltrace \
 			-lprint \
 			-lthread \
-			-lzmq 
+			-lzmq \
+			-lsvc \
+			-lhalproto \
+			-lpdcommon
 
 SRC_FILES :=	hal.cc \
 				hal_mem.cc \
-				pd/hal_pd.cc \
-				svc/tenant_svc.cc \
-				svc/interface_svc.cc \
-				svc/l2segment_svc.cc \
-				svc/endpoint_svc.cc \
-				svc/session_svc.cc \
-				svc/nwsec_svc.cc \
-				svc/l4lb_svc.cc \
-				svc/tlscb_svc.cc \
-				svc/tcpcb_svc.cc \
-				src/utils.cc \
-				src/tenant.cc \
-				src/interface.cc \
-				src/l2segment.cc \
-				src/endpoint.cc \
-				src/session.cc \
-				src/nwsec.cc \
-				src/tlscb.cc \
-				src/tcpcb.cc \
-				src/interface_api.cc \
-				src/l2segment_api.cc \
-				src/endpoint_api.cc \
-				src/nwsec_api.cc
+				main.cc \
+				$(NULL)
 
 SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/hal.o \
@@ -96,38 +79,22 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/tcpcb.o \
 	
 
-HAL_OBJS := 	$(OBJ_DIR)/tenant.grpc.pb.o \
-				$(OBJ_DIR)/interface.grpc.pb.o \
-				$(OBJ_DIR)/l2segment.grpc.pb.o \
-				$(OBJ_DIR)/session.grpc.pb.o \
-				$(OBJ_DIR)/nwsec.grpc.pb.o \
-				$(OBJ_DIR)/endpoint.grpc.pb.o \
-				$(OBJ_DIR)/l4lb.grpc.pb.o \
-				$(OBJ_DIR)/qos.grpc.pb.o \
-				$(OBJ_DIR)/tls_proxy_cb.grpc.pb.o \
-				$(OBJ_DIR)/tcp_proxy_cb.grpc.pb.o \
-				$(OBJ_DIR)/tenant_svc.o \
-				$(OBJ_DIR)/interface_svc.o \
-				$(OBJ_DIR)/l2segment_svc.o \
-				$(OBJ_DIR)/session_svc.o \
-				$(OBJ_DIR)/endpoint_svc.o \
-				$(OBJ_DIR)/l4lb_svc.o \
-				$(OBJ_DIR)/nwsec_svc.o \
-				$(OBJ_DIR)/tlscb_svc.o \
-				$(OBJ_DIR)/tcpcb_svc.o \
-				$(OBJ_DIR)/main.o 
+HAL_OBJS := $(OBJ_DIR)/main.o 
 
-OBJ_FILES := $(patsubst %.cc, %.o, $(SRC_FILES))
+#OBJ_FILES := $(patsubst %.cc, %.o, $(SRC_FILES))
+OBJ_FILES := $(basename $(SRC_FILES))
+OBJ_FILES := $(OBJ_FILES:%=$(GENDIR)/%.o)
 
-$(OBJ_FILES): %.o: %.cc | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.cc
 	@echo Compiling $@
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -fpic $< -o $(OBJ_DIR)/$(shell basename $@)
 
 all: $(OBJ_FILES)
-	@echo $(OBJ_FILES)
-	$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
+	@#@echo $(OBJ_FILES)
+	@#$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
 	$(CXX) -g -shared -o $(SHARED_OBJS)
 	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal
 	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub
+
 clean:
-	rm -rf $(OBJ_DIR)/*hal*.o $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
+	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_mem.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub

@@ -12,7 +12,7 @@ INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -I$(TOPDIR)/hal/svc -I$(TOPDIR
 		-I$(GTEST_ROOT)/include -I$(TOPDIR)/third-party/spdlog/include
 LDFLAGS = -L/usr/local/lib -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lzmq
 
-LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/enicif_test $(OBJ_DIR)/session_test
+LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/uplinkpc_test $(OBJ_DIR)/enicif_test $(OBJ_DIR)/session_test
 
 CUS_SOURCES = $(wildcard *.cc)
 CUS_PFXES := $(basename $(CUS_SOURCES))

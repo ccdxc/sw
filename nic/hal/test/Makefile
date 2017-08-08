@@ -14,7 +14,7 @@ GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
-LDFLAGS = -L/usr/local/lib -L../../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lproto -lprotobuf -lpthread -ldl
+LDFLAGS = -L/usr/local/lib -L../../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lhalproto -lprotobuf -lpthread -ldl
 
 all:
 	$(CXX) $(CPPFLAGS) -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -c -o $(OBJ_DIR)/hal_test.o hal_test.cc

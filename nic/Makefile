@@ -10,11 +10,14 @@ LIBDIRS = \
 		  capsim \
 		  asm/nw \
 		  model_sim/build \
+		  hal/svc \
+		  hal/src \
 		  hal/periodic \
 		  hal/pd/iris/p4pd \
 		  gen/iris/src \
 		  gen/tcp_proxy_rxdma/src \
 		  gen/tcp_proxy_txdma/src \
+		  hal/pd/common \
 		  hal/pd/iris \
 		  hal/pd/capri \
 		  hal/pd/utils/directmap\
