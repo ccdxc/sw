@@ -42,6 +42,10 @@ public:
     hal_ret_t add_replication(void *data);
     hal_ret_t del_replication(void *data);
     hal_ret_t get_repl_table_entry(ReplTableEntry **rte);
+    hal_ret_t process_del_repl_tbl_entry(ReplTableEntry *rte);
+    hal_ret_t de_program_repl_table_entry (uint32_t index);
+
+    hal_ret_t trace_repl_list();
 };
 
 

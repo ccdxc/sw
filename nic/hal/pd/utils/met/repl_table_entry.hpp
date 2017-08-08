@@ -46,6 +46,7 @@ public:
     ReplTableEntry *get_next() { return next_; }
     void set_prev(ReplTableEntry *prev) { prev_ = prev; }
     void set_next(ReplTableEntry *next) { next_ = next; }
+    void set_repl_table_index(uint32_t rte_idx) { repl_table_index_ = rte_idx; }
     
 
 
@@ -54,6 +55,7 @@ public:
     hal_ret_t del_replication(void *data);
     hal_ret_t program_table();
     hal_ret_t deprogram_table();
+    hal_ret_t trace_repl_tbl_entry();
 };
 
 }   // utils

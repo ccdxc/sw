@@ -53,17 +53,22 @@ TEST_F(met_test, test1) {
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     memset(&entry, 0, sizeof(entry));
+
+    HAL_TRACE_DEBUG("Creating Repl list.");
     rs = test_met.create_repl_list(&repl_list_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
 	entry.lif = 10;
 	entry.encap_id = 100;
+    HAL_TRACE_DEBUG("Adding Repl entry.");
     rs = test_met.add_replication(repl_list_idx, &entry);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
+    HAL_TRACE_DEBUG("Deleting Repl entry.");
     rs = test_met.del_replication(repl_list_idx, &entry);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
+    HAL_TRACE_DEBUG("Deleting Repl list.");
 	rs = test_met.delete_repl_list(repl_list_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
@@ -201,11 +206,13 @@ TEST_F(met_test, test5) {
 	entry.lif = 10;
 	entry.encap_id = 100;
     for (int i = 0; i < 100; i++) {
+        HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
         rs = test_met.add_replication(repl_list_idx, &entry);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
     for (int i = 0; i < 100; i++) {
+        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
         rs = test_met.del_replication(repl_list_idx, &entry);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
@@ -250,6 +257,104 @@ TEST_F(met_test, test6) {
 
     rs = test_met.del_replication(repl_list_idx + 1, &entry);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
+
+	rs = test_met.delete_repl_list(repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+/* ---------------------------------------------------------------------------
+ *
+ * Test Case 7:
+ *      - Test Case to verify deletion of middle replications
+ */
+TEST_F(met_test, test7) {
+
+    hal_ret_t rs = HAL_RET_OK;
+    uint32_t repl_list_idx;
+    std::string table_name = "Test_Table";
+	hal_pd_replication_tbl_mbr_entry_t entry;
+
+    memset(&entry, 0, sizeof(entry));
+    Met test_met = Met(table_name, (uint32_t)1, 64000, 6, 
+                       sizeof(hal_pd_replication_tbl_mbr_entry_t));
+
+    test_met.create_repl_list(&repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+	entry.lif = 10;
+	entry.encap_id = 100;
+    for (int i = 0; i < 100; i++) {
+        HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
+        rs = test_met.add_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+        entry.encap_id++;
+    }
+
+    rs = test_met.del_replication(repl_list_idx, &entry);
+    HAL_TRACE_DEBUG("ret: {}", rs);
+    ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
+
+    entry.encap_id--;
+    for (int i = 0; i < 100; i++) {
+        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
+        rs = test_met.del_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+        entry.encap_id--;
+    }
+
+	rs = test_met.delete_repl_list(repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+/* ---------------------------------------------------------------------------
+ *
+ * Test Case 8:
+ *      - Test Case to verify deletion of middle replications
+ */
+TEST_F(met_test, test8) {
+
+    hal_ret_t rs = HAL_RET_OK;
+    uint32_t repl_list_idx;
+    std::string table_name = "Test_Table";
+	hal_pd_replication_tbl_mbr_entry_t entry;
+
+    memset(&entry, 0, sizeof(entry));
+    Met test_met = Met(table_name, (uint32_t)1, 64000, 6, 
+                       sizeof(hal_pd_replication_tbl_mbr_entry_t));
+
+    test_met.create_repl_list(&repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+	entry.lif = 10;
+	entry.encap_id = 100;
+    for (int i = 0; i < 100; i++) {
+        HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
+        rs = test_met.add_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+        entry.encap_id++;
+    }
+
+    rs = test_met.del_replication(repl_list_idx, &entry);
+    HAL_TRACE_DEBUG("ret: {}", rs);
+    ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
+
+    // Delete of 150 - 199
+    entry.encap_id = 150;
+    for (int i = 0; i < 50; i++) {
+        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
+        rs = test_met.del_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+        entry.encap_id++;
+    }
+
+    // Delete of 149 - 100
+    entry.encap_id = 149;
+    for (int i = 0; i < 50; i++) {
+        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
+        rs = test_met.del_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+        entry.encap_id--;
+    }
 
 	rs = test_met.delete_repl_list(repl_list_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);

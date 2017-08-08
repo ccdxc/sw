@@ -42,6 +42,9 @@ ReplList::add_replication(void *data)
     ReplEntry *repl_entry = NULL;
     ReplTableEntry *repl_te = NULL;
 
+    HAL_TRACE_DEBUG("{}: Adding replication entry to repl_list: {}",
+            __FUNCTION__, repl_tbl_index_);
+
     repl_entry = new ReplEntry(data, met_->get_repl_entry_data_len());
 
     // Check if we have to create ReplTableEntry
@@ -65,8 +68,11 @@ end:
 hal_ret_t
 ReplList::del_replication(void *data)
 {
-    hal_ret_t rs = HAL_RET_OK;
+    hal_ret_t rs = HAL_RET_ENTRY_NOT_FOUND;
     ReplTableEntry *repl_te = NULL;
+
+    HAL_TRACE_DEBUG("{}: Deleting replication entry from repl_list: {}",
+            __FUNCTION__, repl_tbl_index_);
 
     repl_te = first_repl_tbl_entry_;
     while (repl_te) {
@@ -74,29 +80,14 @@ ReplList::del_replication(void *data)
         if (rs == HAL_RET_OK) { // deletion happened
             // Check if repl. table entry has to be removed.
             if (!repl_te->get_num_repl_entries()) {
-                if (repl_te->get_prev() == NULL) {
-                    first_repl_tbl_entry_ = repl_te->get_next();
-                    if (repl_te->get_next()) {
-                        repl_te->get_next()->set_prev(NULL);
-                    }
-                } else if (repl_te->get_next() == NULL) {
-                    last_repl_tbl_entry_ = repl_te->get_prev();
-                    if (repl_te->get_prev()) {
-                        repl_te->get_prev()->set_next(NULL);
-                    }
-                } else {
-                    repl_te->get_prev()->set_next(repl_te->get_next());
-                    repl_te->get_next()->set_prev(repl_te->get_prev());
-                }
 
-                HAL_TRACE_DEBUG("ReplList::{}: Delete RTE: {}", __FUNCTION__, 
-                                repl_te->get_repl_table_index());
-                // if the repl table entry being removed has index different than 
-                // the first one ... then we can free up the index.
+                // Repl List will have the first entry till its deleted.
                 if (repl_te->get_repl_table_index() != repl_tbl_index_) {
-                    rs = met_->free_repl_table_index(repl_te->get_repl_table_index());
+                    rs = met_->free_repl_table_index(
+                            repl_te->get_repl_table_index());
                     HAL_ASSERT(rs == HAL_RET_OK);
                 }
+
                 delete repl_te;
                 num_repl_tbl_entries_--;
             }
@@ -111,6 +102,101 @@ end:
 }
 
 
+// ----------------------------------------------------------------------------
+// Replication Table Entry getting deleted ... Process it
+// - Have to be called only when there are no replication entry in rte
+//
+// - First RTE
+//     - if next_rte:
+//         - Save next rte's index.
+//         - Change next rte's index to first rte's index 
+//         - Move next rte to first.
+//         - Set prev of new first rte to NULL.
+//         - Program first rte
+//         - De-program saved rte's index in first step.
+//     - else:
+//         - De-program at rte's index.
+// - Middle RTE
+//     - Change previous RTE's next to rte's next
+//     - Program previous RTE.
+//     - De-program at rte's index.
+// - Last RTE
+//     - Change previous RTE's next to rte's next
+//     - Program previous RTE.
+//     - De-program at rte's index.
+// ----------------------------------------------------------------------------
+hal_ret_t
+ReplList::process_del_repl_tbl_entry(ReplTableEntry *rte)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    uint32_t        tmp_rte_idx = 0, free_rte_idx = 0;
+    ReplTableEntry  *next_rte = NULL;
+
+    // Check if repl. table entry has to be removed.
+    if (!rte->get_num_repl_entries()) {
+        if (rte->get_prev() == NULL) {
+            // First RTE
+            if (rte->get_next()) {
+                next_rte = rte->get_next();
+                // Save next rte's index
+                tmp_rte_idx = next_rte->get_repl_table_index();
+
+                // Change next rte's index to first rte's index
+                next_rte->set_repl_table_index(rte->get_repl_table_index());
+
+                // Move next rte to first
+                first_repl_tbl_entry_ = next_rte;
+
+                // Set prev of new first rte to NULL.
+                first_repl_tbl_entry_->set_prev(NULL);
+
+                // Program first rte
+                first_repl_tbl_entry_->program_table();
+
+                // De-program saved rte's index in first step
+                free_rte_idx = tmp_rte_idx;
+                de_program_repl_table_entry(free_rte_idx);
+
+                // This will be freed in del_replication
+                rte->set_repl_table_index(free_rte_idx);
+            } else {
+                // De-program at rte's index.
+                free_rte_idx = rte->get_repl_table_index();
+                de_program_repl_table_entry(free_rte_idx);
+
+                // This will be freed in del_replication
+                rte->set_repl_table_index(free_rte_idx);
+
+                // Update first and last as the only RTE is going away
+                first_repl_tbl_entry_ = NULL;
+                last_repl_tbl_entry_ = NULL;
+            }
+        } else {
+            // Middle RTE/Last RTE
+            // Change prev and next nodes
+            rte->get_prev()->set_next(rte->get_next());
+            if (rte->get_next()) {
+                rte->get_next()->set_prev(rte->get_prev());
+            }
+
+            // Program previous RTE
+            rte->get_prev()->program_table();
+            // De-program RTE
+            free_rte_idx = rte->get_repl_table_index();
+            de_program_repl_table_entry(free_rte_idx);
+
+            // This will be freed in del_replication
+            rte->set_repl_table_index(free_rte_idx);
+
+            // If rte is last, update last as rte will eventually be removed
+            if (rte->get_next() == NULL) {
+                last_repl_tbl_entry_ = rte->get_prev();
+            }
+        }
+    }
+
+    return ret;
+}
 
 hal_ret_t 
 ReplList::get_repl_table_entry(ReplTableEntry **rte) 
@@ -164,3 +250,34 @@ end:
 
 }
 
+hal_ret_t 
+ReplList::de_program_repl_table_entry (uint32_t index)
+{
+    hal_ret_t rs = HAL_RET_OK;
+
+    // TODO: zerout the entry at index
+    return rs;
+}
+
+// ----------------------------------------------------------------------------
+// Trace Replication List
+// ----------------------------------------------------------------------------
+hal_ret_t
+ReplList::trace_repl_list()
+{
+    hal_ret_t rs = HAL_RET_OK;
+    ReplTableEntry *repl_te = NULL;
+
+    HAL_TRACE_DEBUG("Repl List: {} Num_of_Repl_Tbl_Entries: {}", 
+                    repl_tbl_index_, num_repl_tbl_entries_);
+
+    repl_te = first_repl_tbl_entry_;
+    while (repl_te) {
+
+        repl_te->trace_repl_tbl_entry();
+
+        repl_te = repl_te->get_next();
+    }
+
+    return rs;
+}

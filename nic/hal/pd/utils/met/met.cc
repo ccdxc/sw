@@ -47,6 +47,8 @@ Met::create_repl_list(uint32_t *repl_list_idx)
 
     repl_list_map_[*repl_list_idx] = repl_list;
 
+    // TODO: Only for debugging
+    trace_met();
 end:
     return rs;
 }
@@ -71,6 +73,8 @@ Met::delete_repl_list(uint32_t repl_list_idx)
     repl_list_map_.erase(repl_list_idx);
     rs = free_repl_table_index(repl_list_idx);
 
+    // TODO: Only for debugging
+    trace_met();
 end:
     return rs;
 
@@ -86,6 +90,9 @@ Met::add_replication(uint32_t repl_list_idx, void *data)
     ReplListMap::iterator   itr; 
     ReplList                *repl_list;
 
+    HAL_TRACE_DEBUG("{}: Adding replication entry to : {}",
+                    __FUNCTION__, repl_list_idx);
+
     // Get Repl. List
     itr = repl_list_map_.find(repl_list_idx);
     if (itr == repl_list_map_.end()) {
@@ -96,6 +103,8 @@ Met::add_replication(uint32_t repl_list_idx, void *data)
     repl_list = itr->second;
     repl_list->add_replication(data);
 
+    // TODO: Only for debugging
+    trace_met();
 end:
     return rs;
 }
@@ -119,8 +128,10 @@ Met::del_replication(uint32_t repl_list_idx, void *data)
     }
 
     repl_list = itr->second;
-    repl_list->del_replication(data);
+    rs = repl_list->del_replication(data);
 
+    // TODO: Only for debugging
+    trace_met();
 end:
     return rs;
 }
@@ -140,7 +151,7 @@ Met::alloc_repl_table_index(uint32_t *idx)
         return HAL_RET_NO_RESOURCE;
     }
 
-    HAL_TRACE_DEBUG("Met:{}: Alloc table id: {}", __FUNCTION__, *idx);
+    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}", __FUNCTION__, *idx);
     return rs;
 }
 
@@ -152,7 +163,7 @@ Met::free_repl_table_index(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("Met:{}: Freeing table id: {}", __FUNCTION__, idx);
+    HAL_TRACE_DEBUG("Met:{}: Freeing repl table id: {}", __FUNCTION__, idx);
     indexer::status irs = repl_table_indexer_->free(idx);
     if (irs == indexer::DUPLICATE_FREE) {
         return HAL_RET_DUP_FREE;
@@ -163,3 +174,28 @@ Met::free_repl_table_index(uint32_t idx)
 
     return rs;
 }
+
+// ----------------------------------------------------------------------------
+// Trace Met
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::trace_met()
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    ReplList        *tmp_repl_list = NULL;
+
+    HAL_TRACE_DEBUG("------------------------------------------------------");
+    HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
+
+    for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin(); 
+            it != repl_list_map_.end(); ++it) {
+
+        tmp_repl_list = it->second;
+
+        tmp_repl_list->trace_repl_list();
+    }
+    HAL_TRACE_DEBUG("------------------------------------------------------");
+
+    return ret;
+}
+

@@ -25,7 +25,7 @@ private:
 
 public:
     ReplEntry(void *data, uint32_t data_len);
-    ~ReplEntry(){}
+    ~ReplEntry();
 
     // Getters & Setters
     void *get_data() { return data_; }
@@ -39,6 +39,7 @@ public:
     void set_next(ReplEntry *next) { next_ = next; }
 
     // Methods:
+    hal_ret_t trace_repl_entry();
 
 };
 

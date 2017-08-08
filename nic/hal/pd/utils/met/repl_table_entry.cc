@@ -34,13 +34,11 @@ hal_ret_t
 ReplTableEntry::add_replication(ReplEntry *re)
 {
     hal_ret_t rs = HAL_RET_OK;
-#if 0
-    HAL_TRACE_DEBUG("RTE:{}: num_repl_entries_: {}, max_repl_entries: {}",
-            __FUNCTION__, num_repl_entries_, 
-            repl_list_->get_met()->get_num_repl_entries());
-#endif
     HAL_ASSERT_GOTO(num_repl_entries_ < 
             repl_list_->get_met()->get_max_num_repls_per_entry(), end);
+
+    HAL_TRACE_DEBUG("{}: Adding replication entry to repl_table_entry: {}",
+                    __FUNCTION__, repl_table_index_);
 
     // Add replication entry
     if (first_repl_entry_ == NULL) {
@@ -64,14 +62,18 @@ end:
 hal_ret_t
 ReplTableEntry::del_replication(void *data)
 {
-    hal_ret_t rs = HAL_RET_ENTRY_NOT_FOUND;
-    ReplEntry *re = NULL;
+    hal_ret_t       rs = HAL_RET_ENTRY_NOT_FOUND;
+    ReplEntry       *re = NULL;
 
     HAL_ASSERT_GOTO(num_repl_entries_ != 0, end);
+
+    HAL_TRACE_DEBUG("{}: Deleting replication entry from repl_table_entry: {}",
+                    __FUNCTION__, repl_table_index_);
     re = first_repl_entry_;
     while(re) {
 
         if (!memcmp(data, re->get_data(), re->get_data_len())) {
+            HAL_TRACE_DEBUG("{}: Match", __FUNCTION__);
             // match
             if (re->get_prev() == NULL) {
                 first_repl_entry_ = re->get_next();
@@ -87,8 +89,16 @@ ReplTableEntry::del_replication(void *data)
                 re->get_prev()->set_next(re->get_next());
                 re->get_next()->set_prev(re->get_prev());
             }
+
             num_repl_entries_--;
-            program_table();
+
+            if (!num_repl_entries_) {
+                // Process previous
+                repl_list_->process_del_repl_tbl_entry(this);
+            } else {
+                program_table();
+            }
+
             delete re;
             rs = HAL_RET_OK;
             goto end;
@@ -96,8 +106,6 @@ ReplTableEntry::del_replication(void *data)
 
         re = re->get_next();
     }
-
-    
 
 end:
     return rs;
@@ -128,3 +136,30 @@ ReplTableEntry::deprogram_table()
     // TODO: zerout the entry at repl_table_index_
     return rs;
 }
+
+// ----------------------------------------------------------------------------
+// Trace Replication Table Entry
+// ----------------------------------------------------------------------------
+hal_ret_t
+ReplTableEntry::trace_repl_tbl_entry()
+{
+    hal_ret_t       rs = HAL_RET_ENTRY_NOT_FOUND;
+    ReplEntry       *re = NULL;
+
+    HAL_TRACE_DEBUG("Repl_Tbl_Entry: {} Num_of_Repl_Entries: {}",
+                    repl_table_index_, num_repl_entries_);
+    HAL_TRACE_DEBUG("Next_RTE: {}", 
+            next_ ? next_->get_repl_table_index() : -1);
+
+    re = first_repl_entry_;
+    while(re) {
+
+        re->trace_repl_entry();
+
+        re = re->get_next();
+    }
+
+    return rs;
+}
+
+
