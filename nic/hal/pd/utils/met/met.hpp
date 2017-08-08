@@ -66,6 +66,7 @@ public:
 
     hal_ret_t alloc_repl_table_index(uint32_t *idx);
     hal_ret_t free_repl_table_index(uint32_t idx);
+    hal_ret_t trace_met();
 };
 
 } // utils
