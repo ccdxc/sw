@@ -12,16 +12,16 @@ from infra.common.logging       import cfglogger
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
-class TcpProxyCbObject(base.ConfigObjectBase):
+class TcpCbObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('TCP_PROXY_CB'))
+        self.Clone(Store.templates.Get('TCPCB'))
         return
         
     #def Init(self, spec_obj):
-    def Init(self):
-        self.id = resmgr.TcpProxyCbIdAllocator.get()
-        gid = "TcpProxyCb%04d" % self.id
+    def Init(self, queue):
+        self.id = resmgr.TcpCbIdAllocator.get()
+        gid = "TcpCb%04d" % self.id
         self.GID(gid)
         # self.spec = spec_obj
         # cfglogger.info("  - %s" % self)
@@ -32,15 +32,18 @@ class TcpProxyCbObject(base.ConfigObjectBase):
             # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
 
         # assert(len(self.uplinks) > 0)
+        cfglogger.info("  - %s" % self)
+        self.queue = queue
+        return
 
 
-    def PrepareHALRequestSpec(self, reqspec):
-        reqspec.meta.id             = self.id
-        reqspec.key_or_handle.id    = self.id
+    def PrepareHALRequestSpec(self, req_spec):
+        #req_spec.meta.tcpcb_id             = self.id
+        req_spec.key_or_handle.tcpcb_id    = self.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - TcpProxyCb %s = %s" %\
+        cfglogger.info("  - TcpCb %s = %s" %\
                        (self.name, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
@@ -56,43 +59,34 @@ class TcpProxyCbObject(base.ConfigObjectBase):
 
 
 
-# Helper Class to Generate/Configure/Manage TcpProxyCb Objects.
-class TcpProxyCbObjectHelper:
+# Helper Class to Generate/Configure/Manage TcpCb Objects.
+class TcpCbObjectHelper:
     def __init__(self):
+        self.objlist = []
         return
 
     def Configure(self, objlist = None):
         if objlist == None:
-            objlist = Store.objects.GetAllByClass(TcpProxyCbObject)
-        cfglogger.info("Configuring %d TcpProxyCbs." % len(objlist)) 
-        halapi.ConfigureTcpProxyCbs(objlist)
+            objlist = Store.objects.GetAllByClass(TcpCbObject)
+        Store.objects.SetAll(objlist)
+        cfglogger.info("Configuring %d TcpCbs." % len(objlist)) 
+        #halapi.ConfigureTcpCbs(objlist)
         return
         
-    def __gen_one(self, topospec, tenant_spec):
-        """
-        TODO : figure out how to use spec object
-        spec_obj = tenant_spec.spec.Get(Store)
-        cfglogger.info("Creating %d TcpProxyCbs" % tenant_spec.count)
-        objlist = []
-        for c in range(tenant_spec.count):
-            tenant_obj = TenantObject()
-            tenant_obj.Init(spec_obj)
-        objlist.append(tenant_obj)
-        """
-        for c in range(100):
-            tcp_proxy_cb_obj = TcpProxyCbObject()
-            tcp_proxy_cb_obj.Init()
-        objlist.append(tenant_obj)
+    def __gen_one(self, queue):
+        cfglogger.info("Creating TcpCb")
+        tcpcb_obj = TcpCbObject()
+        tcpcb_obj.Init(queue)
+        return tcpcb_obj
+
+    def Generate(self, queue):
+        self.objlist.append(self.__gen_one(queue))
+        return self.objlist 
+
+    def main(self, queue):
+        objlist = self.Generate(queue)
+        #self.Configure(self.tcpcbs)
+        #Store.objects.SetAll(objlist)
         return objlist
 
-    def Generate(self, topospec):
-        objlist = []
-        for tenant_spec in topospec.tenants:
-            objlist += self.__gen_one(topospec, tenant_spec)
-        return objlist
-
-    def main(self, topospec):
-        objlist = self.Generate(topospec)
-        self.Configure(objlist)
-        Store.objects.SetAll(objlist)
-        return objlist
+TcpCbHelper = TcpCbObjectHelper()

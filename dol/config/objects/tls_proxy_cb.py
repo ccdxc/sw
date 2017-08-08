@@ -12,7 +12,7 @@ from infra.common.logging       import cfglogger
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
-class TlsProxyCbObject(base.ConfigObjectBase):
+class TlsCbObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(Store.templates.Get('TLS_PROXY_CB'))
@@ -20,8 +20,8 @@ class TlsProxyCbObject(base.ConfigObjectBase):
         
     # def Init(self, spec_obj):
     def Init(self):
-        self.id = resmgr.TlsProxyCbIdAllocator.get()
-        gid = "TlsProxyCb%04d" % self.id
+        self.id = resmgr.TlsCbIdAllocator.get()
+        gid = "TlsCb%04d" % self.id
         self.GID(gid)
 """
 TODO:
@@ -42,7 +42,7 @@ TODO:
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - TlsProxyCb %s = %s" %\
+        cfglogger.info("  - TlsCb %s = %s" %\
                        (self.name, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
@@ -58,41 +58,41 @@ TODO:
 
 
 
-# Helper Class to Generate/Configure/Manage TlsProxyCb Objects.
-class TlsProxyCbObjectHelper:
+# Helper Class to Generate/Configure/Manage TlsCb Objects.
+class TlsCbObjectHelper:
     def __init__(self):
         return
 
     def Configure(self, objlist = None):
         if objlist == None:
-            objlist = Store.objects.GetAllByClass(TlsProxyCbObject)
-        cfglogger.info("Configuring %d TlsProxyCbs." % len(objlist)) 
-        halapi.ConfigureTlsProxyCbs(objlist)
+            objlist = Store.objects.GetAllByClass(TlsCbObject)
+        cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
+        halapi.ConfigureTlsCbs(objlist)
         return
         
-    def __gen_one(self, topospec, tcp_tls_proxy_spec):
+    def __gen_one(self, topospec, tcp_tlsspec):
         """
         TODO : figure out how to use spec object
         spec_obj = tenant_spec.spec.Get(Store)
-        cfglogger.info("Creating %d TcpProxyCbs" % tenant_spec.count)
+        cfglogger.info("Creating %d TcpCbs" % tenant_spec.count)
         objlist = []
         for c in range(tenant_spec.count):
             tenant_obj = TenantObject()
             tenant_obj.Init(spec_obj)
         objlist.append(tenant_obj)
         """
-        cfglogger.info("Creating %d TlsProxyCbs" % tcp_tls_proxy_spec.count)
+        cfglogger.info("Creating %d TlsCbs" % tcp_tlsspec.count)
         objlist = []
         for c in range(1..100):
-            tls_proxy_obj = TlsProxyCbObject()
-            tls_proxy_obj.Init()
-        objlist.append(tls_proxy_obj)
+            tlsobj = TlsCbObject()
+            tlsobj.Init()
+        objlist.append(tlsobj)
         return objlist
 
     def Generate(self, topospec):
         objlist = []
-        for tcp_tls_proxy_spec in topospec.tcp_tls_proxys:
-            objlist += self.__gen_one(topospec, tcp_tls_proxy_spec)
+        for tcp_tlsspec in topospec.tcp_tls_proxys:
+            objlist += self.__gen_one(topospec, tcp_tlsspec)
         return objlist
 
     def main(self, topospec):

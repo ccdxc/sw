@@ -19,6 +19,7 @@ import session_pb2          as session_pb2
 import nwsec_pb2            as nwsec_pb2
 import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
+import tcp_proxy_cb_pb2            as tcpcb_pb2
 
 import endpoint_pb2_grpc    as endpoint_pb2_grpc
 import l2segment_pb2_grpc   as l2segment_pb2_grpc
@@ -30,6 +31,7 @@ import nw_pb2_grpc          as nw_pb2_grpc
 import telemetry_pb2_grpc   as telemetry_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 16
+import tcp_proxy_cb_pb2_grpc       as tcpcb_pb2_grpc
 
 HalChannel = None
 class HalInterfaceSegmentAssociation:
@@ -139,6 +141,13 @@ def ConfigureTenants(objlist):
     stub = tenant_pb2_grpc.TenantStub(HalChannel)
     __config(objlist, tenant_pb2.TenantRequestMsg,
              stub.TenantCreate)
+    return
+
+def ConfigureTcpCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
+    __config(objlist, tcpcb_pb2.TcpCbRequestMsg,
+             stub.TcpCbCreate)
     return
 
 def ConfigureSegments(objlist):

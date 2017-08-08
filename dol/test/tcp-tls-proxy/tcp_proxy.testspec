@@ -1,0 +1,47 @@
+# TCP Proxy RX Inorder Sample TestSpec file.
+config_filter:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any # Local QPair
+    dst:
+        tenant  : filter/any
+        segment : filter/any
+        endpoint: filter/any
+        qpair   : filter/any 
+    flow        : filter/sip=64.0.0.2,dip=64.0.0.1,proto=TCP,dport=80
+    #flow        : filter/proto=TCP,dport=80
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+    - packet:
+        id          : PKT1
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        payloadsize : 128
+        headers     :
+            eth:
+                smac : ref://testcase/config/src/endpoint/macaddr
+                dmac : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                sip : ref://testcase/config/flow/sip
+                dip : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : callback://tcpcb/tcpcb/mycallback 
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1
+
+expect:
+    callback:  callback://tcpcb/tcpcb/mycallback_verify
