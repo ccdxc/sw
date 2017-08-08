@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/writer"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	"github.com/willf/bitset"
 )
@@ -67,7 +67,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	// parse the subnet
 	baseAddr, ipnet, err := net.ParseCIDR(ns.Spec.IPv4Subnet)
 	if err != nil {
-		logrus.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
 		return "", err
 	}
 
@@ -82,7 +82,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	if reqAddr != "" {
 		// verify requested address is in this subnet
 		if !ipnet.Contains(net.ParseIP(reqAddr)) {
-			logrus.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
+			log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
 			return "", fmt.Errorf("requested address not in subnet")
 		}
 
@@ -91,7 +91,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 		// check if address is already allocated
 		if bs.Test(uint(addrBit)) {
-			logrus.Errorf("Address %s is already allocated", reqAddr)
+			log.Errorf("Address %s is already allocated", reqAddr)
 			return "", fmt.Errorf("Requested address not available")
 		}
 
@@ -99,19 +99,19 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 		bs.Set(uint(addrBit))
 		allocatedAddr = reqAddr
 
-		logrus.Infof("Allocating requested addr: %v, bit: %d", allocatedAddr, addrBit)
+		log.Infof("Allocating requested addr: %v, bit: %d", allocatedAddr, addrBit)
 	} else {
 		// allocate next available address
 		addrBit, ok := bs.NextClear(0)
 		if !ok || addrBit >= uint(subnetSize) {
-			logrus.Errorf("Could not find a free bit in bitset")
+			log.Errorf("Could not find a free bit in bitset")
 			return "", fmt.Errorf("Could not find a free addr")
 		}
 
 		bs.Set(uint(addrBit))
 		allocatedAddr = int2ipv4(uint32(uint(ipv42int(baseAddr)) + addrBit)).String()
 
-		logrus.Infof("Allocating addr: %v, bit: %d", allocatedAddr, addrBit)
+		log.Infof("Allocating addr: %v, bit: %d", allocatedAddr, addrBit)
 	}
 
 	// save the bitset back
@@ -123,24 +123,24 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 // freeIPv4Addr free the address
 func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
-	logrus.Infof("Freeing IPv4 address: %v", reqAddr)
+	log.Infof("Freeing IPv4 address: %v", reqAddr)
 
 	reqIP, _, err := net.ParseCIDR(reqAddr)
 	if err != nil {
-		logrus.Errorf("Error parsing ip address: %v. Err: %v", reqAddr, err)
+		log.Errorf("Error parsing ip address: %v. Err: %v", reqAddr, err)
 		return err
 	}
 
 	// parse the subnet
 	baseAddr, ipnet, err := net.ParseCIDR(ns.Spec.IPv4Subnet)
 	if err != nil {
-		logrus.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
 		return err
 	}
 
 	// verify the address is in subnet
 	if !ipnet.Contains(reqIP) {
-		logrus.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
+		log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
 		return fmt.Errorf("requested address not in subnet")
 	}
 
@@ -156,7 +156,7 @@ func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
 
 	// verify the address is still allocated
 	if !bs.Test(uint(addrBit)) {
-		logrus.Errorf("Address %s was not allocated", reqAddr)
+		log.Errorf("Address %s was not allocated", reqAddr)
 		return fmt.Errorf("Requested address was not allocated")
 	}
 
@@ -194,14 +194,14 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	// see if we already have this endpoint
 	oldEps, ok := ns.FindEndpoint(epinfo.ObjectMeta.Name)
 	if ok {
-		logrus.Errorf("Endpoint {%+v} already exists {%+v} in network %v", epinfo, oldEps, ns.ObjectMeta.Name)
+		log.Errorf("Endpoint {%+v} already exists {%+v} in network %v", epinfo, oldEps, ns.ObjectMeta.Name)
 		return nil, fmt.Errorf("Endpoint already exists")
 	}
 
 	// allocate an IP address
 	ipv4Addr, err := ns.allocIPv4Addr("")
 	if err != nil {
-		logrus.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
+		log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
 		return nil, err
 	}
 
@@ -222,7 +222,7 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	// create a new endpoint instance
 	eps, err := NewEndpointState(epi, ns.stateMgr)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint state from spec{%+v}, Err: %v", epinfo, err)
+		log.Errorf("Error creating endpoint state from spec{%+v}, Err: %v", epinfo, err)
 		return nil, err
 	}
 
@@ -233,7 +233,7 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	// write the modified network state to api server
 	err = ns.Write()
 	if err != nil {
-		logrus.Errorf("Error writing the network object. Err: %v", err)
+		log.Errorf("Error writing the network object. Err: %v", err)
 		return nil, err
 	}
 
@@ -245,20 +245,20 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 	// see if we have the dnpoint
 	eps, ok := ns.FindEndpoint(epmeta.Name)
 	if !ok {
-		logrus.Errorf("could not find the endpoint %+v", epmeta)
+		log.Errorf("could not find the endpoint %+v", epmeta)
 		return nil, ErrorCoundNotFindEndpoint
 	}
 
 	// free the IPv4 address
 	err := ns.freeIPv4Addr(eps.Status.IPv4Address)
 	if err != nil {
-		logrus.Errorf("Error freeing the endpoint address. Err: %v", err)
+		log.Errorf("Error freeing the endpoint address. Err: %v", err)
 	}
 
 	// delete the endpoint
 	err = eps.Delete()
 	if err != nil {
-		logrus.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
+		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
 	}
 
 	// remove it from the database
@@ -268,7 +268,7 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 	// write the modified network state to api server
 	err = ns.Write()
 	if err != nil {
-		logrus.Errorf("Error writing the network object. Err: %v", err)
+		log.Errorf("Error writing the network object. Err: %v", err)
 	}
 
 	return eps, nil
@@ -283,7 +283,7 @@ func (ns *NetworkState) Write() error {
 func (ns *NetworkState) Delete() error {
 	// check if network still has endpoints
 	if len(ns.endpointDB) != 0 {
-		logrus.Errorf("Can not delete the network, still has endpoints {%+v}", ns)
+		log.Errorf("Can not delete the network, still has endpoints {%+v}", ns)
 		return fmt.Errorf("Network still has endpoints")
 	}
 
@@ -295,7 +295,7 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 	// parse the subnet
 	_, ipnet, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 	if err != nil {
-		logrus.Errorf("Error parsing subnet %v. Err: %v", nw.Spec.IPv4Subnet, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", nw.Spec.IPv4Subnet, err)
 		return nil, err
 	}
 
@@ -324,17 +324,17 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 	// mark gateway addr as used
 	allocAddr, err := ns.allocIPv4Addr(nw.Spec.IPv4Gateway)
 	if err != nil {
-		logrus.Errorf("Error allocating gw address. Err: %v", err)
+		log.Errorf("Error allocating gw address. Err: %v", err)
 		return nil, err
 	} else if allocAddr != nw.Spec.IPv4Gateway {
-		logrus.Errorf("Error allocating gw address(req: %v, alloc: %v)", nw.Spec.IPv4Gateway, allocAddr)
+		log.Errorf("Error allocating gw address(req: %v, alloc: %v)", nw.Spec.IPv4Gateway, allocAddr)
 		return nil, fmt.Errorf("Error allocating gw addr")
 	}
 
 	// save it to api server
 	err = ns.Write()
 	if err != nil {
-		logrus.Errorf("Error writing the network state to api server. Err: %v", err)
+		log.Errorf("Error writing the network state to api server. Err: %v", err)
 		return nil, err
 	}
 
@@ -375,18 +375,18 @@ func (sm *Statemgr) CreateNetwork(nw *network.Network) error {
 	ens, err := sm.FindObject("Network", nw.ObjectMeta.Tenant, nw.ObjectMeta.Name)
 	if err == nil {
 		// FIXME: how do we handle an existing network object changing?
-		logrus.Errorf("Can not change existing network {%+v}. New state: {%+v}", ens, nw)
+		log.Errorf("Can not change existing network {%+v}. New state: {%+v}", ens, nw)
 		return fmt.Errorf("Can not change network after its created")
 	}
 
 	// create new network state
 	ns, err := NewNetworkState(nw, sm)
 	if err != nil {
-		logrus.Errorf("Error creating new network state. Err: %v", err)
+		log.Errorf("Error creating new network state. Err: %v", err)
 		return err
 	}
 
-	logrus.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.ObjectMeta, ns.Spec)
+	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.ObjectMeta, ns.Spec)
 
 	// store it in local DB
 	sm.memDB.AddObject(ns)
@@ -399,7 +399,7 @@ func (sm *Statemgr) DeleteNetwork(tenant, network string) error {
 	// see if we already have it
 	nso, err := sm.FindObject("Network", tenant, network)
 	if err != nil {
-		logrus.Errorf("Can not find the network %s|%s", tenant, network)
+		log.Errorf("Can not find the network %s|%s", tenant, network)
 		return fmt.Errorf("Network not found")
 	}
 
@@ -412,7 +412,7 @@ func (sm *Statemgr) DeleteNetwork(tenant, network string) error {
 	// cleanup network state
 	err = ns.Delete()
 	if err != nil {
-		logrus.Errorf("Error deleting the network {%+v}. Err: %v", ns, err)
+		log.Errorf("Error deleting the network {%+v}. Err: %v", ns, err)
 		return err
 	}
 

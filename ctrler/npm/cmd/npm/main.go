@@ -3,14 +3,40 @@
 package main
 
 import (
-	"log"
-
+	"flag"
 	"github.com/pensando/sw/ctrler/npm"
 	"github.com/pensando/sw/ctrler/npm/rpcserver"
+	"github.com/pensando/sw/utils/log"
 )
 
 // main function of network controller
 func main() {
+
+	var (
+		debugflag = flag.Bool("debug", false, "Enable debug mode")
+		logToFile = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
+	)
+
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      "NPM",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       *debugflag,
+		Context:     true,
+		LogToStdout: true,
+		LogToFile:   true,
+		FileCfg: log.FileConfig{
+			Filename:   *logToFile,
+			MaxSize:    10, // TODO: These needs to be part of Service Config Object
+			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
+			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+		},
+	}
+
+	// Initialize logger config
+	log.SetConfig(logConfig)
+
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 

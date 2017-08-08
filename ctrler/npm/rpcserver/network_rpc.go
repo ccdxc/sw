@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	"golang.org/x/net/context"
 )
@@ -24,7 +24,7 @@ func (n *NetworkRPCServer) GetNetwork(ctx context.Context, ometa *api.ObjectMeta
 	// find the network
 	nw, err := n.stateMgr.FindNetwork(ometa.Tenant, ometa.Name)
 	if err != nil {
-		logrus.Errorf("Could not find the network %s|%s", ometa.Tenant, ometa.Name)
+		log.Errorf("Could not find the network %s|%s", ometa.Tenant, ometa.Name)
 		return nil, fmt.Errorf("Could not find the network")
 	}
 
@@ -77,7 +77,7 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 	// first get a list of all networks
 	networks, err := n.ListNetworks(context.Background(), sel)
 	if err != nil {
-		logrus.Errorf("Error getting a list of networks. Err: %v", err)
+		log.Errorf("Error getting a list of networks. Err: %v", err)
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}
@@ -100,7 +100,7 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 		// read from channel
 		case evt, ok := <-watchChan:
 			if !ok {
-				logrus.Errorf("Error reading from channel. Closing watch")
+				log.Errorf("Error reading from channel. Closing watch")
 				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
@@ -139,7 +139,7 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 
 			err = stream.Send(&watchEvt)
 			if err != nil {
-				logrus.Errorf("Error sending stream. Err: %v", err)
+				log.Errorf("Error sending stream. Err: %v", err)
 				close(watchChan)
 				return err
 			}

@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	"golang.org/x/net/context"
 )
@@ -64,7 +64,7 @@ func convertAllRules(stateMgr *statemgr.Statemgr, sgs *statemgr.SecurityGroupSta
 				rules = append(rules, nrule)
 			}
 		} else {
-			logrus.Errorf("Error finding sg policy %s. Err: %v", pname, err)
+			log.Errorf("Error finding sg policy %s. Err: %v", pname, err)
 		}
 	}
 
@@ -76,7 +76,7 @@ func (srs *SecurityRPCServer) GetSecurityGroup(ctx context.Context, ometa *api.O
 	// find the sg
 	sgs, err := srs.stateMgr.FindSecurityGroup(ometa.Tenant, ometa.Name)
 	if err != nil {
-		logrus.Errorf("Could not find the sg %s|%s", ometa.Tenant, ometa.Name)
+		log.Errorf("Could not find the sg %s|%s", ometa.Tenant, ometa.Name)
 		return nil, fmt.Errorf("Could not find the sg")
 	}
 
@@ -107,7 +107,7 @@ func (srs *SecurityRPCServer) ListSecurityGroups(context.Context, *api.ObjectMet
 		// build rule list by walking all attached sgpolicies
 		rules, err := convertAllRules(srs.stateMgr, sgs)
 		if err != nil {
-			logrus.Errorf("Error converting rules. Err: %v", err)
+			log.Errorf("Error converting rules. Err: %v", err)
 			return nil, err
 		}
 
@@ -135,7 +135,7 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 	// first get a list of all networks
 	sgl, err := srs.ListSecurityGroups(context.Background(), sel)
 	if err != nil {
-		logrus.Errorf("Error getting a list of sgs. Err: %v", err)
+		log.Errorf("Error getting a list of sgs. Err: %v", err)
 		return err
 	}
 
@@ -147,7 +147,7 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}
@@ -158,7 +158,7 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 		// read from channel
 		case evt, ok := <-watchChan:
 			if !ok {
-				logrus.Errorf("Error reading from channel. Closing watch")
+				log.Errorf("Error reading from channel. Closing watch")
 				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
@@ -183,7 +183,7 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 			// build rule list by walking all attached sgpolicies
 			rules, err := convertAllRules(srs.stateMgr, sgs)
 			if err != nil {
-				logrus.Errorf("Error converting rules. Err: %v", err)
+				log.Errorf("Error converting rules. Err: %v", err)
 				continue
 			}
 
@@ -202,7 +202,7 @@ func (srs *SecurityRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream ne
 
 			err = stream.Send(&watchEvt)
 			if err != nil {
-				logrus.Errorf("Error sending stream. Err: %v", err)
+				log.Errorf("Error sending stream. Err: %v", err)
 				close(watchChan)
 				return err
 			}

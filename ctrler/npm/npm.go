@@ -30,10 +30,10 @@
 package npm
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/ctrler/npm/rpcserver"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
 	"github.com/pensando/sw/ctrler/npm/watcher"
+	"github.com/pensando/sw/utils/log"
 )
 
 // Netctrler is a netctrler instance

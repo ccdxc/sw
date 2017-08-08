@@ -3,10 +3,9 @@
 package rpcserver
 
 import (
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 )
 

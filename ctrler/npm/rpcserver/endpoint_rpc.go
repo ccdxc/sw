@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	"golang.org/x/net/context"
 )
@@ -22,12 +22,12 @@ type EndpointRPCHandler struct {
 
 // CreateEndpoint creates endpoint
 func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	logrus.Infof("Received CreateEndpoint: {%+v}", epinfo)
+	log.Infof("Received CreateEndpoint: {%+v}", epinfo)
 
 	// find the network
 	nw, err := ep.stateMgr.FindNetwork(epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
 	if err != nil {
-		logrus.Errorf("Could not find network %s|%s", epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
+		log.Errorf("Could not find network %s|%s", epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
 		return nil, fmt.Errorf("Could not find the network")
 	}
 
@@ -48,7 +48,7 @@ func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netpro
 	// create the endpoint
 	eps, err := nw.CreateEndpoint(&epp)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint {%+v}. Err: %v", epinfo, err)
+		log.Errorf("Error creating endpoint {%+v}. Err: %v", epinfo, err)
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netpro
 func (ep *EndpointRPCHandler) GetEndpoint(ctx context.Context, objmeta *api.ObjectMeta) (*netproto.Endpoint, error) {
 	eps, err := ep.stateMgr.FindEndpoint(objmeta.Tenant, objmeta.Name)
 	if err != nil {
-		logrus.Errorf("Endpoint %+v not found. Err: %v", objmeta, err)
+		log.Errorf("Endpoint %+v not found. Err: %v", objmeta, err)
 		return nil, err
 	}
 
@@ -168,7 +168,7 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 	// get a list of all endpoints
 	endpoints, err := ep.ListEndpoints(context.Background(), ometa)
 	if err != nil {
-		logrus.Errorf("Error getting a list of endpoints. Err: %v", err)
+		log.Errorf("Error getting a list of endpoints. Err: %v", err)
 		return err
 	}
 
@@ -180,7 +180,7 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending endpoint to stream. Err: %v", err)
+			log.Errorf("Error sending endpoint to stream. Err: %v", err)
 			return err
 		}
 	}
@@ -191,7 +191,7 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 		// read from channel
 		case evt, ok := <-watchChan:
 			if !ok {
-				logrus.Errorf("Error reading from channel. Closing watch")
+				log.Errorf("Error reading from channel. Closing watch")
 				close(watchChan)
 				return errors.New("Error reading from channel")
 			}
@@ -244,7 +244,7 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 			// streaming send
 			err = stream.Send(&watchEvt)
 			if err != nil {
-				logrus.Errorf("Error sending endpoint to stream. Err: %v", err)
+				log.Errorf("Error sending endpoint to stream. Err: %v", err)
 				return err
 			}
 		}
@@ -255,19 +255,19 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 
 // DeleteEndpoint deletes an endpoint
 func (ep *EndpointRPCHandler) DeleteEndpoint(ctx context.Context, epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
-	logrus.Infof("Received DeleteEndpoint: {%+v}", epinfo)
+	log.Infof("Received DeleteEndpoint: {%+v}", epinfo)
 
 	// find the network
 	nw, err := ep.stateMgr.FindNetwork(epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
 	if err != nil {
-		logrus.Errorf("Could not find network %s|%s", epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
+		log.Errorf("Could not find network %s|%s", epinfo.ObjectMeta.Tenant, epinfo.Spec.NetworkName)
 		return nil, fmt.Errorf("Could not find the network")
 	}
 
 	// delete the endpoint
 	eps, err := nw.DeleteEndpoint(&epinfo.ObjectMeta)
 	if err != nil {
-		logrus.Errorf("Error deleting endpoint {%+v}. Err: %v", epinfo, err)
+		log.Errorf("Error deleting endpoint {%+v}. Err: %v", epinfo, err)
 		return nil, err
 	}
 

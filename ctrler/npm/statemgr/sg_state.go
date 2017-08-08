@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/writer"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
 
@@ -29,7 +29,7 @@ func (sg *SecurityGroupState) Write() error {
 func (sg *SecurityGroupState) Delete() error {
 	// check if sg still has policies
 	if len(sg.policies) != 0 {
-		logrus.Errorf("Can not delete the sg, still has policies attached {%+v}", sg)
+		log.Errorf("Can not delete the sg, still has policies attached {%+v}", sg)
 		return fmt.Errorf("Security group still has policies")
 	}
 
@@ -41,7 +41,7 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 	// get a list of all endpoints
 	eps, err := sg.stateMgr.ListEndpoints()
 	if err != nil {
-		logrus.Errorf("Error getting endpoint list. Err: %v", err)
+		log.Errorf("Error getting endpoint list. Err: %v", err)
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 			if ep.MatchAttributes(sg.Spec.WorkloadSelector) {
 				err = ep.AddSecurityGroup(sg)
 				if err != nil {
-					logrus.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Name, sg.Name, err)
+					log.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Name, sg.Name, err)
 					return err
 				}
 
@@ -169,25 +169,25 @@ func (sm *Statemgr) CreateSecurityGroup(sg *network.SecurityGroup) error {
 	esg, err := sm.FindObject("SecurityGroup", sg.ObjectMeta.Tenant, sg.ObjectMeta.Name)
 	if err == nil {
 		// FIXME: how do we handle an existing sg object changing?
-		logrus.Errorf("Can not change existing sg {%+v}. New state: {%+v}", esg, sg)
+		log.Errorf("Can not change existing sg {%+v}. New state: {%+v}", esg, sg)
 		return fmt.Errorf("Can not change sg after its created")
 	}
 
 	// create new sg state
 	sgs, err := NewSecurityGroupState(sg, sm)
 	if err != nil {
-		logrus.Errorf("Error creating new sg state. Err: %v", err)
+		log.Errorf("Error creating new sg state. Err: %v", err)
 		return err
 	}
 
 	// attach all matching endpoints
 	err = sgs.attachEndpoints()
 	if err != nil {
-		logrus.Errorf("Error attaching endpoints to security group %s. Err: %v", sgs.Name, err)
+		log.Errorf("Error attaching endpoints to security group %s. Err: %v", sgs.Name, err)
 		return err
 	}
 
-	logrus.Infof("Created Security Group state {%+v}", sgs)
+	log.Infof("Created Security Group state {%+v}", sgs)
 
 	// store it in local DB
 	return sm.memDB.AddObject(sgs)
@@ -198,7 +198,7 @@ func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
 	// see if we already have it
 	sgo, err := sm.FindObject("SecurityGroup", tenant, sgname)
 	if err != nil {
-		logrus.Errorf("Can not find the sg %s|%s", tenant, sgname)
+		log.Errorf("Can not find the sg %s|%s", tenant, sgname)
 		return fmt.Errorf("SecurityGroup not found")
 	}
 
@@ -212,14 +212,14 @@ func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
 	for _, ep := range sg.endpoints {
 		err = ep.DelSecurityGroup(sg)
 		if err != nil {
-			logrus.Errorf("Error removing security group %s from endpoint %s. Err: %v", sg.Name, ep.Name, err)
+			log.Errorf("Error removing security group %s from endpoint %s. Err: %v", sg.Name, ep.Name, err)
 		}
 	}
 
 	// cleanup sg state
 	err = sg.Delete()
 	if err != nil {
-		logrus.Errorf("Error deleting the sg {%+v}. Err: %v", sg, err)
+		log.Errorf("Error deleting the sg {%+v}. Err: %v", sg, err)
 		return err
 	}
 

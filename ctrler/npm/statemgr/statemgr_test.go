@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	. "github.com/pensando/sw/utils/testutils"
 )
@@ -119,7 +119,7 @@ func TestNetworkListWatch(t *testing.T) {
 	case wnt, ok := <-watchChan:
 		Assert(t, ok, "Error reading from channel", wnt)
 		Assert(t, (wnt.Obj.GetObjectMeta().Name == "default"), "Received invalid network", wnt)
-		logrus.Infof("Received network watch {%+v}", wnt)
+		log.Infof("Received network watch {%+v}", wnt)
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out while waiting for channel event")
 	}
@@ -343,7 +343,7 @@ func TestEndpointListWatch(t *testing.T) {
 		Assert(t, ok, "Error reading from channel", wep)
 		Assert(t, (wep.Obj.GetObjectKind() == "Endpoint"), "Watch rcvd invalid object kind", wep)
 		Assert(t, (wep.Obj.GetObjectMeta().Name == eps.Endpoint.Name), "Received invalid endpoint", wep)
-		logrus.Infof("Received endpoint watch {%+v}", wep)
+		log.Infof("Received endpoint watch {%+v}", wep)
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out while waiting for channel event")
 	}

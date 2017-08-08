@@ -5,9 +5,9 @@ package statemgr
 import (
 	"errors"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/writer"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
 
@@ -85,7 +85,7 @@ func (eps *EndpointState) attachSecurityGroups() error {
 	// get a list of security groups
 	sgs, err := eps.stateMgr.ListSecurityGroups()
 	if err != nil {
-		logrus.Errorf("Error getting the list of security groups. Err: %v", err)
+		log.Errorf("Error getting the list of security groups. Err: %v", err)
 		return err
 	}
 
@@ -94,7 +94,7 @@ func (eps *EndpointState) attachSecurityGroups() error {
 		if eps.MatchAttributes(sg.Spec.WorkloadSelector) {
 			err = sg.AddEndpoint(eps)
 			if err != nil {
-				logrus.Errorf("Error adding ep %s to sg %s. Err: %v", eps.Name, sg.Name, err)
+				log.Errorf("Error adding ep %s to sg %s. Err: %v", eps.Name, sg.Name, err)
 				return err
 			}
 
@@ -118,7 +118,7 @@ func (eps *EndpointState) Delete() error {
 	for _, sg := range eps.groups {
 		err := sg.DelEndpoint(eps)
 		if err != nil {
-			logrus.Errorf("Error removing endpoint from sg. Err: %v", err)
+			log.Errorf("Error removing endpoint from sg. Err: %v", err)
 		}
 	}
 
@@ -137,14 +137,14 @@ func NewEndpointState(epinfo network.Endpoint, stateMgr *Statemgr) (*EndpointSta
 	// attach security groups
 	err := eps.attachSecurityGroups()
 	if err != nil {
-		logrus.Errorf("Error attaching security groups to ep %v. Err: %v", eps.Name, err)
+		log.Errorf("Error attaching security groups to ep %v. Err: %v", eps.Name, err)
 		return nil, err
 	}
 
 	// save it to api server
 	err = eps.Write()
 	if err != nil {
-		logrus.Errorf("Error writing the endpoint state to api server. Err: %v", err)
+		log.Errorf("Error writing the endpoint state to api server. Err: %v", err)
 		return nil, err
 	}
 

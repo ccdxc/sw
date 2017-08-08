@@ -3,10 +3,10 @@
 package watcher
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 )
 
@@ -46,7 +46,7 @@ func (w *Watcher) handleNetworkEvent(et EventType, nw *network.Network) {
 		// ask statemgr to create the network
 		err := w.statemgr.CreateNetwork(nw)
 		if err != nil {
-			logrus.Errorf("Error creating network {%+v}. Err: %v", nw, err)
+			log.Errorf("Error creating network {%+v}. Err: %v", nw, err)
 			return
 		}
 	case UpdateEvent:
@@ -55,7 +55,7 @@ func (w *Watcher) handleNetworkEvent(et EventType, nw *network.Network) {
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteNetwork(nw.Tenant, nw.Name)
 		if err != nil {
-			logrus.Errorf("Error deleting network {%+v}. Err: %v", nw, err)
+			log.Errorf("Error deleting network {%+v}. Err: %v", nw, err)
 			return
 		}
 	}
@@ -66,7 +66,7 @@ func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
 	// find the network
 	nw, err := w.statemgr.FindNetwork(ep.ObjectMeta.Tenant, ep.Status.Network)
 	if err != nil {
-		logrus.Errorf("Could not find network %s|%s", ep.ObjectMeta.Tenant, ep.Status.Network)
+		log.Errorf("Could not find network %s|%s", ep.ObjectMeta.Tenant, ep.Status.Network)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
 		// ask statemgr to create the endpoint
 		_, err = nw.CreateEndpoint(ep)
 		if err != nil {
-			logrus.Errorf("Error creating endpoint {%+v}. Err: %v", ep, err)
+			log.Errorf("Error creating endpoint {%+v}. Err: %v", ep, err)
 			return
 		}
 	case UpdateEvent:
@@ -85,7 +85,7 @@ func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
 		// ask statemgr to delete the endpoint
 		_, err := nw.DeleteEndpoint(&ep.ObjectMeta)
 		if err != nil {
-			logrus.Errorf("Error deleting endpoint {%+v}. Err: %v", ep, err)
+			log.Errorf("Error deleting endpoint {%+v}. Err: %v", ep, err)
 			return
 		}
 	}
@@ -98,7 +98,7 @@ func (w *Watcher) handleSgEvent(et EventType, sg *network.SecurityGroup) {
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSecurityGroup(sg)
 		if err != nil {
-			logrus.Errorf("Error creating sg {%+v}. Err: %v", sg, err)
+			log.Errorf("Error creating sg {%+v}. Err: %v", sg, err)
 			return
 		}
 	case UpdateEvent:
@@ -107,7 +107,7 @@ func (w *Watcher) handleSgEvent(et EventType, sg *network.SecurityGroup) {
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSecurityGroup(sg.Tenant, sg.Name)
 		if err != nil {
-			logrus.Errorf("Error deleting sg {%+v}. Err: %v", sg, err)
+			log.Errorf("Error deleting sg {%+v}. Err: %v", sg, err)
 			return
 		}
 	}
@@ -120,7 +120,7 @@ func (w *Watcher) handleSgPolicyEvent(et EventType, sgp *network.Sgpolicy) {
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSgpolicy(sgp)
 		if err != nil {
-			logrus.Errorf("Error creating sg policy {%+v}. Err: %v", sgp, err)
+			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp, err)
 			return
 		}
 	case UpdateEvent:
@@ -129,7 +129,7 @@ func (w *Watcher) handleSgPolicyEvent(et EventType, sgp *network.Sgpolicy) {
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSgpolicy(sgp.Tenant, sgp.Name)
 		if err != nil {
-			logrus.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp, err)
+			log.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp, err)
 			return
 		}
 	}
@@ -137,7 +137,7 @@ func (w *Watcher) handleSgPolicyEvent(et EventType, sgp *network.Sgpolicy) {
 
 // runNetwatcher watches on a channel for changes from api server
 func (w *Watcher) runNetwatcher() {
-	logrus.Infof("Network watcher running")
+	log.Infof("Network watcher running")
 
 	// loop till channel is closed
 	for {
@@ -145,7 +145,7 @@ func (w *Watcher) runNetwatcher() {
 		case evt, ok := <-w.netWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				logrus.Infof("Exiting network watcher(channel closed)")
+				log.Infof("Exiting network watcher(channel closed)")
 				return
 			}
 
@@ -155,11 +155,11 @@ func (w *Watcher) runNetwatcher() {
 			case *network.Network:
 				nw = evt.Object.(*network.Network)
 			default:
-				logrus.Fatalf("network watcher Found object of invalid type: %v", tp)
+				log.Fatalf("network watcher Found object of invalid type: %v", tp)
 				return
 			}
 
-			logrus.Infof("Watcher: Got network watch event: {%+v}", nw)
+			log.Infof("Watcher: Got network watch event: {%+v}", nw)
 
 			// process each event in its own go routine
 			go w.handleNetworkEvent(evt.EventType, nw)
@@ -169,7 +169,7 @@ func (w *Watcher) runNetwatcher() {
 
 // runVmmEpwatcher watches on a channel for changes from VMM mgr
 func (w *Watcher) runVmmEpwatcher() {
-	logrus.Infof("VMM watcher watcher running")
+	log.Infof("VMM watcher watcher running")
 
 	// loop till channel is closed
 	for {
@@ -177,7 +177,7 @@ func (w *Watcher) runVmmEpwatcher() {
 		case evt, ok := <-w.vmmEpWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				logrus.Infof("Exiting network watcher(channel closed)")
+				log.Infof("Exiting network watcher(channel closed)")
 				return
 			}
 
@@ -187,11 +187,11 @@ func (w *Watcher) runVmmEpwatcher() {
 			case *network.Endpoint:
 				ep = evt.Object.(*network.Endpoint)
 			default:
-				logrus.Fatalf("vmm watcher Found object of invalid type: %v", tp)
+				log.Fatalf("vmm watcher Found object of invalid type: %v", tp)
 				return
 			}
 
-			logrus.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.EventType, ep)
+			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.EventType, ep)
 
 			// process each event in its own go routine
 			go w.handleEndpointEvent(evt.EventType, ep)
@@ -201,7 +201,7 @@ func (w *Watcher) runVmmEpwatcher() {
 
 // runSgwatcher watches on a channel for changes from api server
 func (w *Watcher) runSgwatcher() {
-	logrus.Infof("SecurityGroup watcher running")
+	log.Infof("SecurityGroup watcher running")
 
 	// loop till channel is closed
 	for {
@@ -209,7 +209,7 @@ func (w *Watcher) runSgwatcher() {
 		case evt, ok := <-w.sgWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				logrus.Infof("Exiting sg watcher(channel closed)")
+				log.Infof("Exiting sg watcher(channel closed)")
 				return
 			}
 
@@ -219,11 +219,11 @@ func (w *Watcher) runSgwatcher() {
 			case *network.SecurityGroup:
 				ep = evt.Object.(*network.SecurityGroup)
 			default:
-				logrus.Fatalf("sg watcher Found object of invalid type: %v", tp)
+				log.Fatalf("sg watcher Found object of invalid type: %v", tp)
 				return
 			}
 
-			logrus.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.EventType, ep)
+			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.EventType, ep)
 
 			// process each event in its own go routine
 			go w.handleSgEvent(evt.EventType, ep)
@@ -233,7 +233,7 @@ func (w *Watcher) runSgwatcher() {
 
 // runSgPolicyWatcher watches on a channel for changes from api server
 func (w *Watcher) runSgPolicyWatcher() {
-	logrus.Infof("SgPolicy watcher running")
+	log.Infof("SgPolicy watcher running")
 
 	// loop till channel is closed
 	for {
@@ -241,7 +241,7 @@ func (w *Watcher) runSgPolicyWatcher() {
 		case evt, ok := <-w.sgPolicyWatcher:
 			// if channel has error, we are done..
 			if !ok {
-				logrus.Infof("Exiting sg policy watcher(channel closed)")
+				log.Infof("Exiting sg policy watcher(channel closed)")
 				return
 			}
 
@@ -251,11 +251,11 @@ func (w *Watcher) runSgPolicyWatcher() {
 			case *network.Sgpolicy:
 				sgp = evt.Object.(*network.Sgpolicy)
 			default:
-				logrus.Fatalf("sg policy watcher Found object of invalid type: %v", tp)
+				log.Fatalf("sg policy watcher Found object of invalid type: %v", tp)
 				return
 			}
 
-			logrus.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.EventType, sgp)
+			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.EventType, sgp)
 
 			// process each event in its own go routine
 			go w.handleSgPolicyEvent(evt.EventType, sgp)
@@ -396,7 +396,7 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 	// inject the object into the network watcher
 	w.vmmEpWatcher <- evt
 
-	logrus.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.EventType, epInfo)
+	log.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.EventType, epInfo)
 
 	return nil
 }

@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/writer"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
 
@@ -30,7 +30,7 @@ func (sgp *SgpolicyState) Delete() error {
 	for _, sg := range sgp.groups {
 		err := sg.DeletePolicy(sgp)
 		if err != nil {
-			logrus.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.Name, sg.Name, err)
+			log.Errorf("Error deleting policy %s from sg %s. Err: %v", sgp.Name, sg.Name, err)
 		}
 	}
 
@@ -43,14 +43,14 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 	for _, sgname := range sgp.Spec.AttachGroups {
 		sgs, err := sgp.stateMgr.FindSecurityGroup(sgp.Tenant, sgname)
 		if err != nil {
-			logrus.Errorf("Could not find the security group %s. Err: %v", sgname, err)
+			log.Errorf("Could not find the security group %s. Err: %v", sgname, err)
 			return err
 		}
 
 		// add the policy to sg
 		err = sgs.AddPolicy(sgp)
 		if err != nil {
-			logrus.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.Name, sgname, err)
+			log.Errorf("Error adding policy %s to sg %s. Err: %v", sgp.Name, sgname, err)
 			return err
 		}
 
@@ -118,32 +118,32 @@ func (sm *Statemgr) CreateSgpolicy(sgp *network.Sgpolicy) error {
 	esgp, err := sm.FindObject("Sgpolicy", sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
 	if err == nil {
 		// FIXME: how do we handle an existing sg object changing?
-		logrus.Errorf("Can not change existing sg policy {%+v}. New state: {%+v}", esgp, sgp)
+		log.Errorf("Can not change existing sg policy {%+v}. New state: {%+v}", esgp, sgp)
 		return fmt.Errorf("Can not change sg policy after its created")
 	}
 
 	// create new sg state
 	sgps, err := NewSgpolicyState(sgp, sm)
 	if err != nil {
-		logrus.Errorf("Error creating new sg policy state. Err: %v", err)
+		log.Errorf("Error creating new sg policy state. Err: %v", err)
 		return err
 	}
 
 	// store it in local DB
 	err = sm.memDB.AddObject(sgps)
 	if err != nil {
-		logrus.Errorf("Error storing the sg policy in memdb. Err: %v", err)
+		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
 	}
 
 	// make sure the attached security group exists
 	err = sgps.updateAttachedSgs()
 	if err != nil {
-		logrus.Errorf("Error attching policy to sgs. Err: %v", err)
+		log.Errorf("Error attching policy to sgs. Err: %v", err)
 		return err
 	}
 
-	logrus.Infof("Created Sgpolicy state {%+v}", sgps)
+	log.Infof("Created Sgpolicy state {%+v}", sgps)
 
 	return nil
 }
@@ -153,7 +153,7 @@ func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	// see if we already have it
 	sgo, err := sm.FindObject("Sgpolicy", tenant, sgname)
 	if err != nil {
-		logrus.Errorf("Can not find the sg policy %s|%s", tenant, sgname)
+		log.Errorf("Can not find the sg policy %s|%s", tenant, sgname)
 		return fmt.Errorf("Sgpolicy not found")
 	}
 
@@ -166,7 +166,7 @@ func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	// cleanup sg state
 	err = sg.Delete()
 	if err != nil {
-		logrus.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg, err)
+		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg, err)
 		return err
 	}
 
