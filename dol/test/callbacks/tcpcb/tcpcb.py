@@ -8,15 +8,8 @@ import infra.common.defs as defs
 
 def mycallback (tc, pkt):
     return 999
-    #tc.fwdata.CfgObjectStore.objects.db["TcpCb0001"].rcv_nxt
-    #return defs.status.SUCCESS
-
-
-def mycallback2 (tc, pkt):
-    logger.info("mycallback2!!!");
-    return 0
 
 def mycallback_verify (tc, dummy):
-    logger.info("mycallback_verify!!!");
+    logger.info("mycallback_verify!!!")
     return True, "Passed"
 

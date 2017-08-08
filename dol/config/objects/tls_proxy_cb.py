@@ -15,16 +15,18 @@ import config.hal.api           as halapi
 class TlsCbObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('TLS_PROXY_CB'))
+        self.Clone(Store.templates.Get('TLSCB'))
         return
         
     # def Init(self, spec_obj):
-    def Init(self):
+    def Init(self ,tcpcb):
         self.id = resmgr.TlsCbIdAllocator.get()
         gid = "TlsCb%04d" % self.id
         self.GID(gid)
-"""
-TODO:
+        cfglogger.info("  - %s" % self)
+        self.tcpcb = tcpcb 
+        """
+        TODO:
         self.spec = spec_obj
         cfglogger.info("  - %s" % self)
 
@@ -61,42 +63,31 @@ TODO:
 # Helper Class to Generate/Configure/Manage TlsCb Objects.
 class TlsCbObjectHelper:
     def __init__(self):
+        self.objlist = []
         return
 
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
+        Store.objects.SetAll(objlist)
         cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
-        halapi.ConfigureTlsCbs(objlist)
+        #halapi.ConfigureTlsCbs(objlist)
         return
         
-    def __gen_one(self, topospec, tcp_tlsspec):
-        """
-        TODO : figure out how to use spec object
-        spec_obj = tenant_spec.spec.Get(Store)
-        cfglogger.info("Creating %d TcpCbs" % tenant_spec.count)
-        objlist = []
-        for c in range(tenant_spec.count):
-            tenant_obj = TenantObject()
-            tenant_obj.Init(spec_obj)
-        objlist.append(tenant_obj)
-        """
-        cfglogger.info("Creating %d TlsCbs" % tcp_tlsspec.count)
-        objlist = []
-        for c in range(1..100):
-            tlsobj = TlsCbObject()
-            tlsobj.Init()
-        objlist.append(tlsobj)
+    def __gen_one(self, tcpcb):
+        cfglogger.info("Creating TlsCb")
+        tlscb_obj = TlsCbObject()
+        tlscb_obj.Init(tcpcb)
+        return tlscb_obj
+
+    def Generate(self, tcpcb):
+        self.objlist.append(self.__gen_one(tcpcb))
+        return self.objlist
+
+    def main(self, tcpcb):
+        objlist = self.Generate(tcpcb)
+        #self.Configure(objlist)
+        #Store.objects.SetAll(objlist)
         return objlist
 
-    def Generate(self, topospec):
-        objlist = []
-        for tcp_tlsspec in topospec.tcp_tls_proxys:
-            objlist += self.__gen_one(topospec, tcp_tlsspec)
-        return objlist
-
-    def main(self, topospec):
-        objlist = self.Generate(topospec)
-        self.Configure(objlist)
-        Store.objects.SetAll(objlist)
-        return objlist
+TlsCbHelper = TlsCbObjectHelper()

@@ -8,6 +8,7 @@ import config.resmgr            as resmgr
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from config.objects.tls_proxy_cb     import TlsCbHelper
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -34,6 +35,8 @@ class TcpCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
         self.queue = queue
+        self.tlscb = TlsCbHelper.main(self)
+
         return
 
 

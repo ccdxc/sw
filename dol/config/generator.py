@@ -11,6 +11,7 @@ from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
 from config.objects.tcp_proxy_cb     import TcpCbHelper
+from config.objects.tls_proxy_cb     import TlsCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
 
@@ -32,11 +33,7 @@ def process(topospec):
     SessionHelper.main()
     
     TcpCbHelper.Configure(TcpCbHelper.objlist) 
-    # Generate and Configure TCP and TLS Proxy CBs
-    #tcp_proxy_cb_helper = tcp_proxy_cb.TenantObjectHelper()
-    #tcp_proxy_cb_objlist = tcp_proxy_cb_helper.main(topospec)
-    #tls_proxy_cb_helper = tls_proxy_cb.TenantObjectHelper()
-    #tls_proxy_cb_objlist = tls_proxy_cb_helper.main(topospec)
+    TlsCbHelper.Configure(TlsCbHelper.objlist) 
 
     return
 
