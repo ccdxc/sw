@@ -24,4 +24,3 @@ tcp_rx_stage0:
 eth_rx_stage0:
    nop.e
    nop
-
