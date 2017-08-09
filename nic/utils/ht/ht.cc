@@ -156,6 +156,7 @@ ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
     }
     if (ht_bucket->ht_ctxt) {
         ht_ctxt->next = ht_bucket->ht_ctxt->next;
+        ht_bucket->ht_ctxt->prev = ht_ctxt;
     }
     ht_ctxt->entry = entry;
     ht_bucket->ht_ctxt = ht_ctxt;
@@ -264,7 +265,9 @@ ht::remove(void *key)
             if (curr_ctxt == ht_bucket->ht_ctxt) {
                 // removing the first entry
                 ht_bucket->ht_ctxt = curr_ctxt->next;
-                ht_bucket->ht_ctxt->prev = NULL;
+                if (ht_bucket->ht_ctxt) {
+                    ht_bucket->ht_ctxt->prev = NULL;
+                }
             } else if (curr_ctxt->next == NULL) {
                 prev_ctxt->next = NULL;
             } else {

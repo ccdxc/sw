@@ -16,7 +16,7 @@ bitmap::init(uint32_t size, bool thread_safe)
     }
 
     // round up size to nearest multiple of 32
-    size = (size + 31) + ~31;
+    size = (size + 31) & ~31;
     num_words_ = size >> 5;
 
     // allocate the memory
@@ -104,7 +104,7 @@ bitmap::is_set(uint32_t posn)
         return HAL_RET_ERR;
     }
 
-    return (bits_[word] &= (1 << off));
+    return (bits_[word] & (1 << off));
 }
 
 //------------------------------------------------------------------------------
@@ -129,6 +129,57 @@ bitmap::clear(uint32_t posn)
     }
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+bitmap::first_set_(uint32_t posn, uint32_t *first_set_p)
+{
+    uint32_t    start_word = posn >> 5;
+    uint8_t     start_off = posn % 32;
+    uint32_t    word;
+    uint8_t     off;
+
+    for (word = start_word; 
+         !bits_[word] && (word < num_words_); 
+         word++);
+
+    if (word >= num_words_) {
+        return HAL_RET_ERR;
+    }
+
+    if (word != start_word) {
+        start_off = 0;
+    }
+
+    for (off = start_off; off < 32; off++) {
+        /* TODO:Lazy search. Could be optimized with gcc builtins
+         * or lookup tables
+         */
+        if (bits_[word] & (1<<off)) {
+            *first_set_p = (word << 5) | off;
+            return HAL_RET_OK;
+        }
+    }
+    // Shouldn't come here 
+    return HAL_RET_ERR;
+}
+
+//------------------------------------------------------------------------------
+// find the first bit set
+//------------------------------------------------------------------------------
+hal_ret_t
+bitmap::first_set(uint32_t *first_set_p)
+{
+    return first_set_(0, first_set_p);
+}
+
+//------------------------------------------------------------------------------
+// find the next bit set after posn
+//------------------------------------------------------------------------------
+hal_ret_t
+bitmap::next_set(uint32_t posn, uint32_t *set_p) 
+{
+    return first_set_(posn+1, set_p);
 }
 
 }    // namespace utils

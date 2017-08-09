@@ -33,6 +33,7 @@
 #include <nwsec_svc.hpp>
 #include <tlscb_svc.hpp>
 #include <tcpcb_svc.hpp>
+#include <qos_svc.hpp>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -53,6 +54,7 @@ svc_reg (const std::string& server_addr)
     EndpointServiceImpl      endpoint_svc;
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
+    QOSServiceImpl           qos_svc;
     ServerBuilder            server_builder;
     TlsCbServiceImpl         tlscb_svc;
     TcpCbServiceImpl         tcpcb_svc;
@@ -74,6 +76,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&nwsec_svc);
     server_builder.RegisterService(&tlscb_svc);
     server_builder.RegisterService(&tcpcb_svc);
+    server_builder.RegisterService(&qos_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 

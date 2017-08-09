@@ -58,6 +58,14 @@ enum ApiStatus {
   API_STATUS_TLS_CB_NOT_FOUND         = 33;    // invalid TLS CB
   API_STATUS_TCP_CB_ID_INVALID        = 34;    // invalid TCP CB id
   API_STATUS_TCP_CB_NOT_FOUND         = 35;    // invalid TCP CB
+  API_STATUS_BUF_POOL_ID_INVALID      = 36;    // invalid BUF_POOL id
+  API_STATUS_BUF_POOL_NOT_FOUND       = 37;    // BUF_POOL not found
+  API_STATUS_BUF_POOL_COS_MAP_EXISTS  = 38;    // COS to Buf pool mapping already exists
+  API_STATUS_QUEUE_ID_INVALID         = 39;    // invalid QUEUE id
+  API_STATUS_QUEUE_COUNT_INVALID      = 40;    // Invalid number of queue and l1 nodes
+  API_STATUS_QUEUE_NOT_FOUND          = 41;    // QUEUE not found
+  API_STATUS_POLICER_ID_INVALID       = 42;    // invalid POLICER id
+  API_STATUS_POLICER_NOT_FOUND        = 43;    // POLICER not found
 }
 
 // common meta object that is part of all other top level objects

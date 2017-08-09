@@ -20,6 +20,7 @@ LCXXFLAGS = \
 			-I../../../gen/iris/include \
 			-I../../../p4/nw/include \
 			-I../../../hal/pd \
+			-I../../../hal/src \
 			$(CAPINC) \
 			-g \
 			-Wno-maybe-uninitialized \

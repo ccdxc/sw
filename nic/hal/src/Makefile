@@ -19,10 +19,12 @@ SOURCES = \
 		  nwsec.cc \
 		  tlscb.cc \
 		  tcpcb.cc \
+		  qos.cc \
 		  interface_api.cc \
 		  l2segment_api.cc \
 		  endpoint_api.cc \
 		  nwsec_api.cc \
+		  qos_api.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

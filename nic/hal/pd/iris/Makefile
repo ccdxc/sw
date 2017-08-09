@@ -42,6 +42,9 @@ SOURCES = \
 		  l2seg_uplink_pd.cc \
 		  if_pd.cc \
 		  endpoint_pd.cc \
+		  buf_pool_pd.cc \
+		  queue_pd.cc \
+		  policer_pd.cc \
 		  if_pd_utils.cc \
 		  tlscb_pd.cc \
 		  tcpcb_pd.cc \

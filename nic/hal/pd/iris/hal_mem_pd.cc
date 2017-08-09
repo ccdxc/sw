@@ -8,6 +8,9 @@
 #include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
 #include <session_pd.hpp>
+#include <buf_pool_pd.hpp>
+#include <queue_pd.hpp>
+#include <policer_pd.hpp>
 #include <pd.hpp>
 #include <p4pd_api.hpp>
 #include <p4pd.h>
@@ -25,6 +28,8 @@ class hal_state_pd *g_hal_state_pd;
 bool
 hal_state_pd::init(void)
 {
+    uint32_t p, n;
+
     // initialize tenant related data structures
     tenant_slab_ = slab::factory("Tenant PD", HAL_SLAB_LIF_PD,
                                  sizeof(hal::pd::pd_tenant_t), 8,
@@ -116,6 +121,43 @@ hal_state_pd::init(void)
                                   true, true, true, true);
     HAL_ASSERT_RETURN((session_slab_ != NULL), false);
 
+    // initialize Buf-Pool PD related data structures
+    buf_pool_pd_slab_ = slab::factory("BUF_POOL_PD", HAL_SLAB_BUF_POOL_PD,
+                                      sizeof(hal::pd::pd_buf_pool_t), 8,
+                                      false, true, true, true);
+    HAL_ASSERT_RETURN((buf_pool_pd_slab_ != NULL), false);
+
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        buf_pool_hwid_idxr_[p] = new hal::utils::indexer(HAL_MAX_HW_BUF_POOLS_PER_PORT);
+        HAL_ASSERT_RETURN((buf_pool_hwid_idxr_[p] != NULL), false);
+    }
+
+    // initialize Queue PD related data structures
+    queue_pd_slab_ = slab::factory("QUEUE_PD", HAL_SLAB_QUEUE_PD,
+                                   sizeof(hal::pd::pd_queue_t), 8,
+                                   false, true, true, true);
+    HAL_ASSERT_RETURN((queue_pd_slab_ != NULL), false);
+
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
+            queue_hwid_idxr_[p][n] = 
+                new hal::utils::indexer(queue_count_by_node_type(p, (queue_node_type_e)n));
+            HAL_ASSERT_RETURN((queue_hwid_idxr_[p][n] != NULL), false);
+        }
+    }
+
+    // initialize Policer PD related data structures
+    policer_pd_slab_ = slab::factory("POLICER_PD", HAL_SLAB_POLICER_PD,
+                                     sizeof(hal::pd::pd_policer_t), 8,
+                                     false, true, true, true);
+    HAL_ASSERT_RETURN((policer_pd_slab_ != NULL), false);
+
+    ingress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_INGRESS_POLICERS);
+    HAL_ASSERT_RETURN((ingress_policer_hwid_idxr_ != NULL), false);
+
+    egress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_EGRESS_POLICERS);
+    HAL_ASSERT_RETURN((egress_policer_hwid_idxr_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -130,6 +172,8 @@ hal_state_pd::init(void)
 //------------------------------------------------------------------------------
 hal_state_pd::hal_state_pd()
 {
+    uint32_t p, n;
+
     tenant_slab_ = NULL;
     tenant_hwid_idxr_ = NULL;
     tenant_hwid_ht_ = NULL;
@@ -155,6 +199,24 @@ hal_state_pd::hal_state_pd()
     nwsec_pd_slab_ = NULL;
 
     session_slab_ = NULL;
+
+    buf_pool_pd_slab_ = NULL;
+
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        buf_pool_hwid_idxr_[p] = NULL;
+    }
+
+    queue_pd_slab_ = NULL;
+    
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
+            queue_hwid_idxr_[p][n] = NULL;
+        }
+    }
+
+    policer_pd_slab_ = NULL;
+    ingress_policer_hwid_idxr_ = NULL;
+    egress_policer_hwid_idxr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -163,6 +225,7 @@ hal_state_pd::hal_state_pd()
 hal_state_pd::~hal_state_pd()
 {
     uint32_t    tid;
+    uint32_t    p, n;
 
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     tenant_hwid_idxr_ ? delete tenant_hwid_idxr_ : HAL_NOP;
@@ -184,6 +247,22 @@ hal_state_pd::~hal_state_pd()
     nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
 
     session_slab_ ? delete session_slab_ : HAL_NOP;
+
+    buf_pool_pd_slab_ ? delete buf_pool_pd_slab_ : HAL_NOP;
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        buf_pool_hwid_idxr_[p] ? delete buf_pool_hwid_idxr_[p] : HAL_NOP;
+    }
+
+    queue_pd_slab_ ? delete queue_pd_slab_ : HAL_NOP;
+    for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
+        for (n = 0; n < HAL_HW_OQUEUE_NODE_TYPES; n++) {
+            queue_hwid_idxr_[p][n] ? delete queue_hwid_idxr_[p][n] : HAL_NOP;
+        }
+    }
+
+    policer_pd_slab_ ? delete policer_pd_slab_ : HAL_NOP;
+    ingress_policer_hwid_idxr_ ? delete ingress_policer_hwid_idxr_ : HAL_NOP;
+    egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -495,6 +574,18 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SESSION_PD:
         g_hal_state_pd->session_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_BUF_POOL_PD:
+        g_hal_state_pd->buf_pool_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_QUEUE_PD:
+        g_hal_state_pd->queue_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_POLICER_PD:
+        g_hal_state_pd->policer_pd_slab()->free_(elem);
         break;
 
     default:

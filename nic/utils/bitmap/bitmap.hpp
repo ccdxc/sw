@@ -17,6 +17,9 @@ public:
     bool is_set(uint32_t posn);
     hal_ret_t clear(uint32_t posn);
     uint32_t num_set(void) const { return num_set_; }
+    // Get the first set index
+    hal_ret_t first_set(uint32_t *first_set_p);
+    hal_ret_t next_set(uint32_t posn, uint32_t *set_p);
 
 private:
     hal_spinlock_t    slock_;          // lock for thread safety
@@ -28,6 +31,7 @@ private:
 private:
     bitmap() {};
     hal_ret_t init(uint32_t size, bool thread_safe);
+    hal_ret_t first_set_(uint32_t posn, uint32_t *first_set_p);
 };
 
 }    // namespace utils

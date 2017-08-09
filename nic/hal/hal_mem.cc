@@ -8,6 +8,7 @@
 #include <nwsec.hpp>
 #include <tlscb.hpp>
 #include <tcpcb.hpp>
+#include <qos.hpp>
  
 namespace hal {
 
@@ -228,6 +229,78 @@ hal_state::init(void)
                                        hal::tcpcb_compare_handle_key_func);
     HAL_ASSERT_RETURN((tcpcb_hal_handle_ht_ != NULL), false);
 
+    // initialize Buf-Pool related data structures
+    buf_pool_slab_ = slab::factory("BufPool", HAL_SLAB_BUF_POOL,
+                              sizeof(hal::buf_pool_t), 8,
+                             false, true, true, true);
+    HAL_ASSERT_RETURN((buf_pool_slab_ != NULL), false);
+
+    buf_pool_id_ht_ = ht::factory(HAL_MAX_BUF_POOLS,
+                             hal::buf_pool_get_key_func,
+                             hal::buf_pool_compute_hash_func,
+                             hal::buf_pool_compare_key_func);
+    HAL_ASSERT_RETURN((buf_pool_id_ht_ != NULL), false);
+
+    buf_pool_hal_handle_ht_ = ht::factory(HAL_MAX_BUF_POOLS,
+                                     hal::buf_pool_get_handle_key_func,
+                                     hal::buf_pool_compute_handle_hash_func,
+                                     hal::buf_pool_compare_handle_key_func);
+    HAL_ASSERT_RETURN((buf_pool_hal_handle_ht_ != NULL), false);
+
+    for (uint32_t port = 0; port < HAL_MAX_TM_PORTS; port++) {
+        cos_in_use_bmp_[port] = bitmap::factory(HAL_MAX_COSES,
+                                                true);
+        HAL_ASSERT_RETURN((cos_in_use_bmp_[port] != NULL), false);
+    }
+
+    // initialize Queue related data structures
+    queue_slab_ = slab::factory("Queue", HAL_SLAB_QUEUE,
+                              sizeof(hal::queue_t), 8,
+                             false, true, true, true);
+    HAL_ASSERT_RETURN((queue_slab_ != NULL), false);
+
+    queue_id_ht_ = ht::factory(HAL_MAX_QUEUE_NODES,
+                             hal::queue_get_key_func,
+                             hal::queue_compute_hash_func,
+                             hal::queue_compare_key_func);
+    HAL_ASSERT_RETURN((queue_id_ht_ != NULL), false);
+
+    queue_hal_handle_ht_ = ht::factory(HAL_MAX_QUEUE_NODES,
+                                     hal::queue_get_handle_key_func,
+                                     hal::queue_compute_handle_hash_func,
+                                     hal::queue_compare_handle_key_func);
+    HAL_ASSERT_RETURN((queue_hal_handle_ht_ != NULL), false);
+
+    // initialize Policer related data structures
+    policer_slab_ = slab::factory("Policer", HAL_SLAB_POLICER,
+                              sizeof(hal::policer_t), 8,
+                             false, true, true, true);
+    HAL_ASSERT_RETURN((policer_slab_ != NULL), false);
+
+    ingress_policer_id_ht_ = ht::factory(HAL_MAX_POLICERS,
+                                         hal::policer_get_key_func,
+                                         hal::policer_compute_hash_func,
+                                         hal::policer_compare_key_func);
+    HAL_ASSERT_RETURN((ingress_policer_id_ht_ != NULL), false);
+
+    ingress_policer_hal_handle_ht_ = ht::factory(HAL_MAX_POLICERS,
+                                                 hal::policer_get_handle_key_func,
+                                                 hal::policer_compute_handle_hash_func,
+                                                 hal::policer_compare_handle_key_func);
+    HAL_ASSERT_RETURN((ingress_policer_hal_handle_ht_ != NULL), false);
+
+    egress_policer_id_ht_ = ht::factory(HAL_MAX_POLICERS,
+                                         hal::policer_get_key_func,
+                                         hal::policer_compute_hash_func,
+                                         hal::policer_compare_key_func);
+    HAL_ASSERT_RETURN((egress_policer_id_ht_ != NULL), false);
+
+    egress_policer_hal_handle_ht_ = ht::factory(HAL_MAX_POLICERS,
+                                                 hal::policer_get_handle_key_func,
+                                                 hal::policer_compute_handle_hash_func,
+                                                 hal::policer_compare_handle_key_func);
+    HAL_ASSERT_RETURN((egress_policer_hal_handle_ht_ != NULL), false);
+
     return true;
 }
 
@@ -274,6 +347,20 @@ hal_state::hal_state()
     nwsec_profile_slab_ = NULL;
     nwsec_profile_id_ht_ = NULL;
     nwsec_profile_hal_handle_ht_ = NULL;
+
+    buf_pool_slab_ = NULL;
+    buf_pool_id_ht_ = NULL;
+    buf_pool_hal_handle_ht_ = NULL;
+
+    queue_slab_ = NULL;
+    queue_id_ht_ = NULL;
+    queue_hal_handle_ht_ = NULL;
+
+    policer_slab_ = NULL;
+    ingress_policer_id_ht_ = NULL;
+    ingress_policer_hal_handle_ht_ = NULL;
+    egress_policer_id_ht_ = NULL;
+    egress_policer_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -319,6 +406,21 @@ hal_state::~hal_state()
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
     nwsec_profile_id_ht_ ? delete nwsec_profile_id_ht_ : HAL_NOP;
     nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;
+
+    buf_pool_slab_ ? delete buf_pool_slab_ : HAL_NOP;
+    buf_pool_id_ht_ ? delete buf_pool_id_ht_ : HAL_NOP;
+    buf_pool_hal_handle_ht_ ? delete buf_pool_hal_handle_ht_ : HAL_NOP;
+
+    queue_slab_ ? delete queue_slab_ : HAL_NOP;
+    queue_id_ht_ ? delete queue_id_ht_ : HAL_NOP;
+    queue_hal_handle_ht_ ? delete queue_hal_handle_ht_ : HAL_NOP;
+
+    policer_slab_ ? delete policer_slab_ : HAL_NOP;
+    ingress_policer_id_ht_ ? delete ingress_policer_id_ht_ : HAL_NOP;
+    ingress_policer_hal_handle_ht_ ? delete ingress_policer_hal_handle_ht_ : HAL_NOP;
+    egress_policer_id_ht_ ? delete egress_policer_id_ht_ : HAL_NOP;
+    egress_policer_hal_handle_ht_ ? delete egress_policer_hal_handle_ht_ : HAL_NOP;
+
 }
 
 //------------------------------------------------------------------------------
@@ -399,6 +501,18 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SECURITY_PROFILE:
         g_hal_state->nwsec_profile_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_BUF_POOL:
+        g_hal_state->buf_pool_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_QUEUE:
+        g_hal_state->queue_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_POLICER:
+        g_hal_state->policer_slab()->free_(elem);
         break;
 
     default:

@@ -21,6 +21,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_SECURITY_PROFILE,
     HAL_SLAB_TLSCB,
     HAL_SLAB_TCPCB,
+    HAL_SLAB_BUF_POOL,
+    HAL_SLAB_QUEUE,
+    HAL_SLAB_POLICER,
     HAL_SLAB_PI_MAX,                 // NOTE: MUST be last PI slab id
 
     // PD Slabs
@@ -36,6 +39,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_SESSION_PD,
     HAL_SLAB_TLSCB_PD,
     HAL_SLAB_TCPCB_PD,
+    HAL_SLAB_BUF_POOL_PD,
+    HAL_SLAB_QUEUE_PD,
+    HAL_SLAB_POLICER_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
     HAL_SLAB_RSVD,    // all non-delay delete slabs can use this
@@ -57,6 +63,7 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_L4LB,
     HAL_MEM_ALLOC_FLOW,
     HAL_MEM_ALLOC_PD,
+    HAL_MEM_ALLOC_QOS,
     HAL_MEM_ALLOC_OTHER,
 } hal_mem_alloc_t;
 

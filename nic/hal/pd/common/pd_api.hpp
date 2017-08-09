@@ -9,6 +9,7 @@
 #include <session.hpp>
 #include <tlscb.hpp>
 #include <tcpcb.hpp>
+#include <qos.hpp>
 
 namespace hal {
 namespace pd {
@@ -23,6 +24,9 @@ using hal::flow_key_t;
 using hal::flow_t;
 using hal::tlscb_t;
 using hal::tcpcb_t;
+using hal::buf_pool_t;
+using hal::queue_t;
+using hal::policer_t;
 
 typedef struct pd_tenant_args_s {
     tenant_t           *tenant;
@@ -194,8 +198,56 @@ hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_delete(pd_tcpcb_args_t *tcpcb);
 
+typedef struct pd_buf_pool_args_s {
+    buf_pool_t    *buf_pool;
+} __PACK__ pd_buf_pool_args_t;
+
+static inline void
+pd_buf_pool_args_init (pd_buf_pool_args_t *args)
+{
+    args->buf_pool = NULL;
+    return;
+}
+
+hal_ret_t pd_buf_pool_create(pd_buf_pool_args_t *buf_pool);
+
+typedef struct pd_queue_args_s {
+    uint32_t    cnt_l0;
+    queue_t    **l0_nodes;
+    uint32_t    cnt_l1;
+    queue_t    **l1_nodes;
+    uint32_t    cnt_l2;
+    queue_t    **l2_nodes;
+} __PACK__ pd_queue_args_t;
+
+static inline void
+pd_queue_args_init (pd_queue_args_t *args)
+{
+    args->cnt_l0 = 0;
+    args->cnt_l1 = 0;
+    args->cnt_l2 = 0;
+    args->l0_nodes = NULL;
+    args->l1_nodes = NULL;
+    args->l2_nodes = NULL;
+    return;
+}
+
+hal_ret_t pd_queue_create(pd_queue_args_t *queue);
+
+typedef struct pd_policer_args_s {
+    policer_t    *policer;
+} __PACK__ pd_policer_args_t;
+
+static inline void
+pd_policer_args_init (pd_policer_args_t *args)
+{
+    args->policer = NULL;
+    return;
+}
+
+hal_ret_t pd_policer_create(pd_policer_args_t *policer);
+
 }    // namespace pd
 }    // namespace hal
 
 #endif    // __HAL_PD_API_HPP__
-

@@ -295,7 +295,7 @@ message InterfaceSpec {
     IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
     IfTunnelInfo     if_tunnel_info    = 9;
   }
-  qos.QOSActions     tx_qos_actions    = 10;     // QOS actions for packets transmitted from this interface
+  qos.QOSActions     tx_qos_actions    = 10;    // QOS actions for packets transmitted from this interface
   qos.QOSActions     rx_qos_actions    = 11;    // QOS actions for packets received on this interface
 }
 

@@ -64,14 +64,16 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/session.o \
 				$(OBJ_DIR)/nwsec.pb.o \
 				$(OBJ_DIR)/nwsec.o \
+				$(OBJ_DIR)/qos.pb.o \
+				$(OBJ_DIR)/qos.o \
 				$(OBJ_DIR)/interface_api.o \
 				$(OBJ_DIR)/l2segment_api.o \
 				$(OBJ_DIR)/endpoint_api.o \
 				$(OBJ_DIR)/nwsec_api.o \
+				$(OBJ_DIR)/qos_api.o \
 				$(OBJ_DIR)/endpoint.pb.o \
 				$(OBJ_DIR)/endpoint.o \
 				$(OBJ_DIR)/l4lb.pb.o \
-				$(OBJ_DIR)/qos.pb.o \
 				$(OBJ_DIR)/tls_proxy_cb.pb.o \
 				$(OBJ_DIR)/tlscb.o \
 				$(OBJ_DIR)/tcp_proxy_cb.pb.o \

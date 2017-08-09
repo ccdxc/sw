@@ -18,6 +18,9 @@ typedef struct pd_flow_s pd_flow_t;
 typedef struct pd_session_s pd_session_t;
 typedef struct pd_tlscb_s pd_tlscb_t;
 typedef struct pd_tcpcb_s pd_tcpcb_t;
+typedef struct pd_buf_pool_s pd_buf_pool_t;
+typedef struct pd_queue_s pd_queue_t;
+typedef struct pd_policer_s pd_policer_t;
 
 }    // namespace pd
 }    // namespace hal

@@ -30,6 +30,13 @@ namespace pd {
 
 #define HAL_RW_TABLE_SIZE       4096
 
+#define HAL_MAX_HW_TM_PORTS             12
+#define HAL_MAX_HW_BUF_POOLS_PER_PORT   32
+#define HAL_MAX_HW_OQUEUES_PER_PORT     32
+#define HAL_HW_OQUEUE_NODE_TYPES        3
+#define HAL_MAX_HW_INGRESS_POLICERS     2048
+#define HAL_MAX_HW_EGRESS_POLICERS      2048
+
 //-----------------------------------------------------------------------------
 // class hal_state_pd
 //  
@@ -86,6 +93,19 @@ public:
     // get APIs for TCP CB related state
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
+
+    // get APIs for buf-pool related state
+    slab *buf_pool_pd_slab(void) const { return buf_pool_pd_slab_; }
+    indexer *buf_pool_hwid_idxr(uint32_t port_num) const { return buf_pool_hwid_idxr_[port_num]; }
+
+    // get APIs for Queue related state
+    slab *queue_pd_slab(void) const { return queue_pd_slab_; }
+    indexer *queue_hwid_idxr(uint32_t port_num, uint32_t node_type) const { return queue_hwid_idxr_[port_num][node_type]; }
+ 
+    // get APIs for Policer related state
+    slab *policer_pd_slab(void) const { return policer_pd_slab_; }
+    indexer *ingress_policer_hwid_idxr(void) const { return ingress_policer_hwid_idxr_; }
+    indexer *egress_policer_hwid_idxr(void) const { return egress_policer_hwid_idxr_; }
 
     hal_ret_t init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
@@ -185,6 +205,25 @@ private:
     struct {
         slab       *tcpcb_slab_;
         ht         *tcpcb_hwid_ht_;
+    } __PACK__;
+
+    // Buf-Pool related state
+    struct {
+        slab       *buf_pool_pd_slab_;
+        indexer    *buf_pool_hwid_idxr_[HAL_MAX_HW_TM_PORTS];
+    } __PACK__;
+
+    // Queue related state
+    struct {
+        slab       *queue_pd_slab_;
+        indexer    *queue_hwid_idxr_[HAL_MAX_HW_TM_PORTS][HAL_HW_OQUEUE_NODE_TYPES];
+    } __PACK__;
+
+    // Policer related state
+    struct {
+        slab       *policer_pd_slab_;
+        indexer    *ingress_policer_hwid_idxr_;
+        indexer    *egress_policer_hwid_idxr_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

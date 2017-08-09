@@ -4,14 +4,17 @@
 #include <slab.hpp>
 #include <indexer.hpp>
 #include <ht.hpp>
+#include <bitmap.hpp>
 
 namespace hal {
 
 using hal::utils::slab;
 using hal::utils::indexer;
 using hal::utils::ht;
+using hal::utils::bitmap;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
+#define HAL_MAX_TM_PORTS                             12
 
 //------------------------------------------------------------------------------
 // hal_state class contains all the HAL state (well, most of it) including all
@@ -80,6 +83,24 @@ public:
     slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     ht *tcpcb_id_ht(void) const { return tcpcb_id_ht_; }
     ht *tcpcb_hal_handle_ht(void) const { return tcpcb_hal_handle_ht_; }
+
+    // get APIs for buf-pool state
+    slab *buf_pool_slab(void) const { return buf_pool_slab_; }
+    ht *buf_pool_id_ht(void) const { return buf_pool_id_ht_; }
+    ht *buf_pool_hal_handle_ht(void) const { return buf_pool_hal_handle_ht_; }
+    bitmap *buf_pool_cos_usage_bmp(uint32_t port_num) const { return cos_in_use_bmp_[port_num]; }
+
+    // get APIs for queue state
+    slab *queue_slab(void) const { return queue_slab_; }
+    ht *queue_id_ht(void) const { return queue_id_ht_; }
+    ht *queue_hal_handle_ht(void) const { return queue_hal_handle_ht_; }
+
+    // get APIs for policer state
+    slab *policer_slab(void) const { return policer_slab_; }
+    ht *ingress_policer_id_ht(void) const { return ingress_policer_id_ht_; }
+    ht *ingress_policer_hal_handle_ht(void) const { return ingress_policer_hal_handle_ht_; }
+    ht *egress_policer_id_ht(void) const { return egress_policer_id_ht_; }
+    ht *egress_policer_hal_handle_ht(void) const { return egress_policer_hal_handle_ht_; }
 
 private:
     bool init(void);
@@ -156,6 +177,33 @@ private:
         ht         *tcpcb_id_ht_;
         ht         *tcpcb_hal_handle_ht_;
     } __PACK__;
+
+    // buf-pool related state
+    struct {
+        slab       *buf_pool_slab_;
+        ht         *buf_pool_id_ht_;
+        ht         *buf_pool_hal_handle_ht_;
+        bitmap     *cos_in_use_bmp_[HAL_MAX_TM_PORTS];
+                    // bitmap indicating if the cos is already assigned to a
+                    // buffer pool
+    } __PACK__;
+
+    // queue related state
+    struct {
+        slab                      *queue_slab_;
+        ht                        *queue_id_ht_;
+        ht                        *queue_hal_handle_ht_;
+    } __PACK__;
+
+    // policer related state
+    struct {
+        slab       *policer_slab_;
+        ht         *ingress_policer_id_ht_;
+        ht         *ingress_policer_hal_handle_ht_;
+        ht         *egress_policer_id_ht_;
+        ht         *egress_policer_hal_handle_ht_;
+    } __PACK__;
+
 };
 
 extern class hal_state    *g_hal_state;
