@@ -14,83 +14,79 @@ import config.hal.api           as halapi
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
-class SwDscrObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx, parent = None):
+class NMDObject(base.ConfigObjectBase):
+    def __init__(self, ringname, nmdidx):
         super().__init__()
-        self.Clone(Store.templates.Get("DSCR"))
-        self.GID("%s_DESC%04d" % (ringname, swdreidx))
-        cfglogger.info("SwDscrObject:%s"  % self.ID())
+        self.Clone(Store.templates.Get('NMD'))
+        self.GID("%s_DESC%04d" % (ringname, nmdidx))
         # TODO: Populate the descriptor state from HAL
         return
 
-class SwDscrRingEntryObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx, type, parent = None):
+class NMDREntryObject(base.ConfigObjectBase):
+    def __init__(self, ringname, nmdidx):
         super().__init__()
-        self.Clone(Store.templates.Get(type))
-        self.GID("%s_ENTRY%04d" % (ringname, swdreidx))
-        self.swdscr = SwDscrObject(ringname, swdreidx, parent)
-        Store.objects.Add(self.swdscr)
+        self.Clone(Store.templates.Get('NMDR_ENTRY'))
+        self.GID("%s_ENTRY%04d" % (ringname, nmdidx))
+        self.nmd = NMDObject(ringname, nmdidx)
+        Store.objects.Add(self.nmd)
         # TODO: Populate the entry state from HAL
         return
 
     def Show(self):
-        cfglogger.info("SwDscrRingEntry: %s SwDscrObject: %s" % (self.ID(), self.swdscr.ID()))
+        cfglogger.info("NMDREntry: %s NMDObject: %s" % (self.ID(), self.nmd.ID()))
         return
 
-class SwDscrRingObject(base.ConfigObjectBase):
-    def __init__(self, swdr_name, swdr_type, count, parent = None):
+class NMDRObject(base.ConfigObjectBase):
+    def __init__(self, nmdr_type, count):
         super().__init__()
-        self.Clone(Store.templates.Get(swdr_type))
-        self.swdr_name = swdr_name
-        self.swdr_type = swdr_type
+        self.Clone(Store.templates.Get('NMDR'))
+        self.nmdr_type = nmdr_type
         self.count = count
-        self.swdre_list = []
-        if (parent != None):
-            self.GID("%s_%s" % (parent.upper(), self.swdr_name))
-        else:
-            self.GID("%s" % (self.swdr_name))
+        self.nmde_list = []
+        self.GID("%01sNMDR" % self.nmdr_type)
         return
 
-    def Init(self, parent = None):
-        for swdreidx in range(self.count):
-            swdre = SwDscrRingEntryObject(self.ID(), swdreidx, self.swdr_type, parent)
-            self.swdre_list.append(swdre)
-            Store.objects.Add(swdre)
+    def Init(self):
+        for nmdidx in range(self.count):
+            nmde = NMDREntryObject(self.ID(), nmdidx)
+            self.nmde_list.append(nmde)
+        Store.objects.SetAll(self.nmde_list)
         return
 
     def Show(self):
-        cfglogger.info("SWDSCR List for %s" % self.ID())
-        for swdre in self.swdre_list:
-            swdre.Show()
+        cfglogger.info("NMD List for %s" % self.ID())
+        for nmde in self.nmde_list:
+            nmde.Show()
         return
 
 
-class SwDscrRingObjectHelper:
+class NMDRObjectHelper:
     def __init__(self):
-        self.swdr_list = []
+        self.nmdr_list = []
         return
 
-    def Configure(self, type):
-        cfglogger.info("Configuring %s." % type)
+    def Configure(self):
+        cfglogger.info("Configuring NMDR.")
         return
 
-    def Generate(self, type, parent = None):
-        spec = Store.specs.Get(type)
-        for swdrt in spec.entries:
-            swdr = SwDscrRingObject(swdrt.entry.name, swdrt.entry.type, swdrt.entry.count, parent)
-            swdr.Init(parent)
-            self.swdr_list.append(swdr)
-            Store.objects.Add(swdr)
+    def Generate(self):
+        spec = Store.specs.Get('NMDR')
+        for nmdrt in spec.types:
+            nmdr = NMDRObject(nmdrt.entry.type, nmdrt.entry.count)
+            nmdr.Init()
+            self.nmdr_list.append(nmdr)
+        Store.objects.SetAll(self.nmdr_list)
         return
 
     def Show(self):
-        for swdr in self.swdr_list:
-            swdr.Show()
+        for nmdr in self.nmdr_list:
+            nmdr.Show()
         return
 
-    def main(self, type, parent = None):
-        self.Generate(type, parent)
+    def main(self):
+        self.Generate()
+        self.Configure()
         self.Show()
 
 
-SwDscrRingHelper = SwDscrRingObjectHelper()
+NMDRHelper = NMDRObjectHelper()
