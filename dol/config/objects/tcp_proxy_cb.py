@@ -71,7 +71,6 @@ class TcpCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TcpCbObject)
-        Store.objects.SetAll(objlist)
         cfglogger.info("Configuring %d TcpCbs." % len(objlist)) 
         #halapi.ConfigureTcpCbs(objlist)
         return
@@ -80,6 +79,7 @@ class TcpCbObjectHelper:
         cfglogger.info("Creating TcpCb")
         tcpcb_obj = TcpCbObject()
         tcpcb_obj.Init(queue)
+        Store.objects.Add(tcpcb_obj)
         return tcpcb_obj
 
     def Generate(self, queue):

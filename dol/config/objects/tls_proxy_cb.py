@@ -71,7 +71,6 @@ class TlsCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
-        Store.objects.SetAll(objlist)
         cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
         #halapi.ConfigureTlsCbs(objlist)
         return
@@ -80,6 +79,7 @@ class TlsCbObjectHelper:
         cfglogger.info("Creating TlsCb")
         tlscb_obj = TlsCbObject()
         tlscb_obj.Init(tcpcb)
+        Store.objects.Add(tlscb_obj)
         return tlscb_obj
 
     def Generate(self, tcpcb):
@@ -88,8 +88,6 @@ class TlsCbObjectHelper:
 
     def main(self, tcpcb):
         objlist = self.Generate(tcpcb)
-        #self.Configure(objlist)
-        #Store.objects.SetAll(objlist)
         return objlist
 
 TlsCbHelper = TlsCbObjectHelper()
