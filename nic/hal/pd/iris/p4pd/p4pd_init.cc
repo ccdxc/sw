@@ -503,6 +503,7 @@ p4pd_p4plus_app_init (void)
     for (int i = P4PLUS_APP_TYPE_MIN; i <= P4PLUS_APP_TYPE_MAX; i++) {
         switch(i) {
             case P4PLUS_APPTYPE_CLASSIC_NIC:
+                data.actionid = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
                 break;
             case P4PLUS_APPTYPE_RDMA:
                 break;

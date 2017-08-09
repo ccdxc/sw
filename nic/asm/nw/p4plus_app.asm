@@ -13,6 +13,18 @@ nop:
   nop
 
 .align
+p4plus_app_classic_nic:
+  phvwr       p.p4_to_p4plus_header_valid, TRUE
+  phvwr       p.p4_to_p4plus_tcp_proxy_p4plus_app_id, k.control_metadata_p4plus_app_id
+
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+              P4PLUS_CLASSIC_NIC_HDR_SZ)
+  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+
+
+.align
 p4plus_app_tcp_proxy:
   phvwr       p.ethernet_valid, FALSE
   phvwr       p.ipv4_valid, FALSE

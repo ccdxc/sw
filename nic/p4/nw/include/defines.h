@@ -364,6 +364,7 @@
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
 #define P4PLUS_ROCE_HDR_SZ             19
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
+#define P4PLUS_CLASSIC_NIC_HDR_SZ      134
 
 #define IPSEC_MODE_TUNNEL              1
 #define IPSEC_MODE_TRANSPORT           2
