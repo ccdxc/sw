@@ -1,29 +1,24 @@
 //:: import os, pdb
 //:: from collections import OrderedDict
+
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
-//:: if pddict['p4plus']:
-//::     caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::     p4prog = pddict['p4program']
-//::     prefix = 'p4pd_' + pddict['p4program']
+
 /*
- * ${p4prog}_p4plus_ingress.h
+ * p4_plus_ingress.h
  * Mahesh Shirshyad (Pensando Systems)
  */
+
 /* This file contains action data bit field data structures for p4+
  * programs to update table actiond data. The data structure generated
  * here will match with ASM _d structures.
  *
  */
+
 /*
  * This file is generated from P4+ program. Any changes made to this file will
  * be lost.
  */
-
-#ifndef _${caps_p4prog}P4PLUS_INGRESS_H__
-#define _${caps_p4prog}P4PLUS_INGRESS_H__
-
-#include <inttypes.h>
 
 //::     for table in pddict['tables']:
 //::        if pddict['tables'][table]['direction'] == "EGRESS":
@@ -46,7 +41,7 @@ struct __attribute__((__packed__)) ${table}_${actionname}_d {
 //::                    else:
     uint8_t ${actionfldname}[${actionfldwidth}/8]; // bitwidth = ${actionfldwidth}
 //::                    #endif
-//::                    kd_size += actionfldwidth 
+//::                    kd_size += actionfldwidth
 //::                #endfor
 };
 //::            #endif
@@ -84,7 +79,8 @@ struct __attribute__((__packed__)) ${table}_d {
 };
 //::            #endif
 //::        #endif
+
+
 //::     #endfor
 
-#endif
-//:: #endif
+
