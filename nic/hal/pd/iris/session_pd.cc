@@ -486,9 +486,7 @@ p4pd_add_flow_hash_table_entry (flow_t *flow, pd_l2seg_t *l2seg_pd,
     }
     key.flow_lkp_metadata_lkp_vrf = l2seg_pd->hw_id;
     key.flow_lkp_metadata_lkp_proto = flow->key.proto;
-    /* TO BE FIXED */
-    key.flow_lkp_metadata_lkp_dir = 0;
-    //key.flow_lkp_metadata_lkp_dir = flow->key.dir;
+    key.flow_lkp_metadata_lkp_dir = flow->key.dir;
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = FALSE;    // TODO: when analytics APIs are ready,

@@ -288,13 +288,13 @@ static void p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
                            1);
 }
 
-static void p4pd_place_actiondata_bit7_to_bit0_order(uint8_t *dest,
+static void p4pd_copy_bit7_to_bit0_order(uint8_t *dest,
                                 uint16_t dest_start_bit,
                                 uint8_t *src,
                                 uint16_t src_start_bit,
                                 uint16_t num_bits)
 {
-    (void)p4pd_place_actiondata_bit7_to_bit0_order;
+    (void)p4pd_copy_bit7_to_bit0_order;
 
     if (!num_bits || src == NULL) {
         return;
@@ -341,12 +341,13 @@ static void p4pd_copy_multibyte(uint8_t *dest,
         dest++;
     }
     // Remaning bits  (less than 8) need to be copied.
-    // TODO : Optimize this.
+    // They need to be copied from MS bit to LSB
+    uint8_t *_src = src + ((src_start_bit) / 8);
     for (int k = 0; k < to_copy_bits; k++) {
         p4pd_copy_into_p4field(dest,
-                               dest_start_bit,
-                               src,
-                               src_start_bit,
+                               7 - (dest_start_bit % 8),
+                               _src,
+                               7 - (src_start_bit % 8),
                                1);
         dest_start_bit++;
         src_start_bit++;
@@ -430,11 +431,11 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
 
     // TODO : Optimize this... For now copying 1 bit at a time.
     for (int k = 0; k < actiondata_after_matchkey_len - key_byte_shared_bits; k++) {
-        p4pd_place_actiondata_bit7_to_bit0_order(hwentry,
-                                             dest_start_bit + k,
-                                             packed_actiondata_after_matchkey,
-                                             actiondata_startbit++,
-                                             1);
+        p4pd_copy_bit7_to_bit0_order(hwentry,
+                                     dest_start_bit + k,
+                                     packed_actiondata_after_matchkey,
+                                     actiondata_startbit++,
+                                     1);
     }
 
     dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
@@ -494,11 +495,11 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
     dest_start_bit +=  key_byte_shared_bits;
 
     for (int k = 0; k < actiondata_len - key_byte_shared_bits; k++) {
-        p4pd_place_actiondata_bit7_to_bit0_order(hwentry,
-                                             dest_start_bit + k,
-                                             packed_actiondata,
-                                             actiondata_startbit++,
-                                             1);
+        p4pd_copy_bit7_to_bit0_order(hwentry,
+                                     dest_start_bit + k,
+                                     packed_actiondata,
+                                     actiondata_startbit++,
+                                     1);
     }
 
     dest_start_bit += (actiondata_len - key_byte_shared_bits);

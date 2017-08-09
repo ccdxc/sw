@@ -74,9 +74,7 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
 
     // Data
     inp_prop.vrf = l2seg_pd->hw_id;
-    /* TO BE FIXED */
-    //inp_prop.dir = FLOW_DIR_FROM_UPLINK;
-    inp_prop.dir = 0;
+    inp_prop.dir = FLOW_DIR_FROM_UPLINK;
     inp_prop.l4_profile_idx = pd_l2seg_get_l4_prof_idx(l2seg_pd);
 
     if (!is_native) {
