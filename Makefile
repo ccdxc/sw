@@ -138,11 +138,11 @@ update-grpc: clean-grpc
 	fi
 
 docker-test: install_box
-	box box.rb
-	docker run -it --rm pensando/sw
+	NO_COPY=1 box box.rb
+	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" --rm pensando/sw
 
-docker-test-debug: install_box
-	box box-base.rb
+test-debug: install_box
+	NO_COPY=1 box box-base.rb
 	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" pensando/sw:dependencies
 
 # Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster

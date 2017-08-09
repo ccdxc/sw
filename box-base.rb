@@ -5,11 +5,12 @@ DIR     = "/go/src/#{PACKAGE}"
 
 run "apt-get update && apt-get install rsync libpcap-dev -y"
 
-copy ".", DIR, ignore_list: [ ".git", "box.rb" ]
+if getenv("NO_COPY") == ""
+  copy ".", DIR, ignore_list: [ ".git", "box.rb" ]
+end
 
+run "mkdir -p '#{DIR}'"
 workdir DIR
-
-run "make ws-tools"
 
 entrypoint []
 cmd %w[/bin/bash]
