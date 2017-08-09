@@ -398,6 +398,14 @@ hal_state::hal_state()
     acl_slab_ = NULL;
     acl_id_ht_ = NULL;
     acl_hal_handle_ht_ = NULL;
+    
+    tlscb_slab_ = NULL;
+    tlscb_id_ht_ = NULL;
+    tlscb_hal_handle_ht_ = NULL;
+ 
+    tcpcb_slab_ = NULL;
+    tcpcb_id_ht_ = NULL;
+    tcpcb_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -462,6 +470,13 @@ hal_state::~hal_state()
     acl_id_ht_ ? delete acl_id_ht_ : HAL_NOP;
     acl_hal_handle_ht_ ? delete acl_hal_handle_ht_ : HAL_NOP;
 
+    tlscb_slab_ ? delete tlscb_slab_ : HAL_NOP;
+    tlscb_id_ht_ ? delete tlscb_id_ht_ : HAL_NOP;
+    tlscb_hal_handle_ht_ ? delete tlscb_hal_handle_ht_ : HAL_NOP;
+ 
+    tcpcb_slab_ ? delete tcpcb_slab_ : HAL_NOP;
+    tcpcb_id_ht_ ? delete tcpcb_id_ht_ : HAL_NOP;
+    tcpcb_hal_handle_ht_ ? delete tcpcb_hal_handle_ht_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -542,6 +557,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SECURITY_PROFILE:
         g_hal_state->nwsec_profile_slab()->free_(elem);
+        break;
+ 
+    case HAL_SLAB_TLSCB:
+        g_hal_state->tlscb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_TCPCB:
+        g_hal_state->tcpcb_slab()->free_(elem);
         break;
 
     case HAL_SLAB_BUF_POOL:

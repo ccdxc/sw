@@ -11,7 +11,7 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 CXX = g++
-CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror
+CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
 OBJ_DIR = ../obj
 GEN_DIR = ../gen
 GTEST_DIR = test

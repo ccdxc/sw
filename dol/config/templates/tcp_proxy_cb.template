@@ -14,7 +14,7 @@ meta:
 
 id          : None # TCP Proxy CB Local ID
 spec        : None # (REF) TCP Proxy CB Spec from Base Config.
-rcv_nxt     : None
+rcv_nxt     : 0
 snd_nxt     : None
 snd_una     : None
 queue       : None

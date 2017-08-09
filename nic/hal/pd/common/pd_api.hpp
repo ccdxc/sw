@@ -208,6 +208,7 @@ hal_ret_t pd_tlscb_delete(pd_tlscb_args_t *tlscb);
 hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_delete(pd_tcpcb_args_t *tcpcb);
+hal_ret_t pd_tcpcb_get(pd_tcpcb_args_t *tcpcb);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;

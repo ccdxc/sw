@@ -43,11 +43,12 @@ class TcpCbObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         #req_spec.meta.tcpcb_id             = self.id
         req_spec.key_or_handle.tcpcb_id    = self.id
+        req_spec.rcv_nxt                   = self.rcv_nxt
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("  - TcpCb %s = %s" %\
-                       (self.name, \
+                       (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
 
@@ -72,7 +73,7 @@ class TcpCbObjectHelper:
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TcpCbObject)
         cfglogger.info("Configuring %d TcpCbs." % len(objlist)) 
-        #halapi.ConfigureTcpCbs(objlist)
+        halapi.ConfigureTcpCbs(objlist)
         return
         
     def __gen_one(self, queue):

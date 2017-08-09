@@ -135,14 +135,17 @@ slab::alloc(void)
 {
     void            *elem = NULL;
     slab_block_t    *block;
-
+    HAL_TRACE_DEBUG("A1");
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&slock_);
     }
+    HAL_TRACE_DEBUG("A2");
+
     block = this->block_head_;
     while (block && block->free_head_  == NULL) {
         block = block->next_;
     }
+    HAL_TRACE_DEBUG("A3");
 
     // allocate a new block if all blocks are fully utilized
     if (block == NULL) {
@@ -159,6 +162,7 @@ slab::alloc(void)
             goto cleanup;
         }
     }
+    HAL_TRACE_DEBUG("A4");
 
     elem = block->free_head_;
     block->free_head_ = *(uint32_t **)elem;
@@ -168,6 +172,7 @@ slab::alloc(void)
     if (thread_safe_) {
         HAL_SPINLOCK_UNLOCK(&slock_);
     }
+    HAL_TRACE_DEBUG("A5");
 
     if (this->zero_on_alloc_) {
         memset(elem, 0, this->elem_sz_);

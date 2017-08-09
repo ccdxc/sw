@@ -26,11 +26,10 @@ message TcpCbKeyHandle {
 
 // TcpCbSpec captures all the tcp_cb level configuration
 message TcpCbSpec {
-  types.ObjectMeta      meta                       = 1;    // common object meta
-  TcpCbKeyHandle        key_or_handle              = 2;    // tcp_cb being created/updated
-  uint32                rcv_nxt                    = 3;
-  uint32                snd_nxt                    = 4;
-  uint32                snd_una                    = 5;
+  TcpCbKeyHandle        key_or_handle              = 1;    // tcp_cb being created/updated
+  uint32                rcv_nxt                    = 2;
+  uint32                snd_nxt                    = 3;
+  uint32                snd_una                    = 4;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

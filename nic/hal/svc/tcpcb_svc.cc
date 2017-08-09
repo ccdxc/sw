@@ -19,7 +19,6 @@ TcpCbServiceImpl::TcpCbCreate(ServerContext *context,
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
-
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);

@@ -31,18 +31,6 @@ tlscb_pd_compare_hw_key_func (void *key1, void *key2)
     return false;
 }
 
-static hal_ret_t
-pd_tlscb_set_hw_id(pd_tlscb_t* tlscb_pd)
-{
-    HAL_ASSERT(NULL != tlscb_pd);
-    HAL_ASSERT(NULL != tlscb_pd->tlscb);
-
-    tlscb_pd->hw_id = P4PD_HBM_TLS_CB_START_ADDR + \
-        ((tlscb_pd->tlscb->cb_id * P4PD_HBM_TLS_CB_ENTRY_SIZE) / 8);
-    return HAL_RET_OK;
-}
-
-
 hal_ret_t
 p4pd_add_tlscb_entry(pd_tlscb_t* tlscb_pd) 
 {
@@ -65,6 +53,23 @@ p4pd_add_tlscb_entry(pd_tlscb_t* tlscb_pd)
     return ret;
 }
 
+tlscb_hw_id_t
+pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
+{
+    HAL_ASSERT(NULL != tlscb_pd);
+    HAL_ASSERT(NULL != tlscb_pd->tlscb);
+    
+    /*
+    char tcpcb_reg[10] = "tcpcb";
+    return get_start_offset(tcpcb_reg) + \
+        (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
+    */
+    return 0xbbbb + \
+        (tlscb_pd->tlscb->cb_id * P4PD_HBM_TLS_CB_ENTRY_SIZE);
+
+}
+
+
 
 hal_ret_t
 pd_tlscb_create (pd_tlscb_args_t *args)
@@ -79,14 +84,12 @@ pd_tlscb_create (pd_tlscb_args_t *args)
     if (tlscb_pd == NULL) {
         return HAL_RET_OOM;
     }
+    HAL_TRACE_DEBUG("Alloc done");
     tlscb_pd->tlscb = args->tlscb;
 
     // get hw-id for this TLSCB
-    ret = pd_tlscb_set_hw_id(tlscb_pd);
-    if (ret != HAL_RET_OK) {
-        g_hal_state_pd->tlscb_slab()->free(tlscb_pd);
-        return HAL_RET_NO_RESOURCE;
-    }
+    tlscb_pd->hw_id = pd_tlscb_get_base_hw_index(tlscb_pd);
+    HAL_TRACE_DEBUG("Received hw-id");
 
     // program tlscb
     ret = p4pd_add_tlscb_entry(tlscb_pd);
@@ -99,6 +102,7 @@ pd_tlscb_create (pd_tlscb_args_t *args)
     if (ret != HAL_RET_OK) {
        goto cleanup;
     }
+    HAL_TRACE_DEBUG("DB add done");
     args->tlscb->pd = tlscb_pd;
 
     return HAL_RET_OK;
