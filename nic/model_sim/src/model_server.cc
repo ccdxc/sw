@@ -1,7 +1,6 @@
 #include <Python.h>
 #include "scapy_pkt_gen.h"
 #include "cap_env_base.h"
-#include "sknobs.h"
 #include "cpu.h"
 #include <iomanip>
 #include <zmq.h>
@@ -47,7 +46,7 @@ static void dumpHBM (void) {
 void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
     switch (buff->type) {
         case BUFF_TYPE_STEP_PKT:
-        {    
+        {
             std::vector<unsigned char> pkt_vector(buff->data, buff->data + buff->size);
             uint32_t port;
             uint32_t cos;
@@ -161,37 +160,30 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
 
 int main (int argc, char ** argv)
 {
-    //auto cpu_if = new cpu_bus_stub_if("cpu", "all");
-    //cpu::access()->add_if("cpu_if", cpu_if);
-    //cpu::access()->set_cur_if_name("cpu_if");
     std::vector<uint8_t> out_pkt;
     char tmpdir[100];
     char zmqsockstr[100];
     struct stat st = {0};
     buffer_hdr_t *buff;
-    
+
     sknobs_init(argc, argv);
-    //sknobs_dump();
-    //auto env = new cap_env_base("cap_model_top");
     auto env = new cap_env_base(0);
     env->init();
-    //env->SAM_mode();
-    env->load_cfg();
     env->load_debug();
-    
+
     const char* user_str = std::getenv("USER");
     snprintf(tmpdir, 100, "/tmp/%s", user_str);
     if (stat(tmpdir, &st) == -1) {
         mkdir(tmpdir, 0700);
     }
     snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", tmpdir);
-    
+
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
     int rc = zmq_bind(responder, zmqsockstr);
     assert (rc == 0);
-    
+
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
         char recv_buff[4096];

@@ -1,0 +1,54 @@
+#include <base.h>
+#include "capri_config.hpp"
+#include "lib_model_client.h"
+
+#include <stdint.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+
+typedef struct addr_data_ {
+    uint32_t   addr;
+    uint32_t   data;
+} addr_data_t;
+
+hal_ret_t
+capri_load_config(char *config_dir)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    DIR                *dirp;
+    struct dirent      *file;
+    int                fd;
+    addr_data_t        buff[512];
+    uint16_t           readsz, nelems;
+    std::string        cfg_fname;
+
+    dirp = opendir(config_dir);
+    if (dirp == NULL) {
+        HAL_TRACE_ERR("{} not_present/no_read_permissions", config_dir);
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+    while ((file = readdir(dirp))) {
+        if (!strcmp(file->d_name,".") || !strcmp(file->d_name, "..")) {
+            continue;
+        }
+
+        HAL_TRACE_DEBUG("Processing config file {}", file->d_name);
+        cfg_fname = std::string(config_dir) + "/" + std::string(file->d_name);
+        fd = open(cfg_fname.c_str(), O_RDONLY);
+        if (fd == -1) {
+            continue;
+        }
+
+        while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
+            nelems = readsz / sizeof(addr_data_t);
+            for (int i = 0; i < nelems; i++) {
+                write_reg(buff[i].addr, buff[i].data);
+            }
+        }
+    }
+
+    closedir(dirp);
+
+    return ret;
+}

@@ -154,11 +154,6 @@ bool write_reg (uint64_t addr, uint32_t data)
     memcpy(buff->data, &data, sizeof(uint32_t));
     zmq_send(__zmq_sock, buffer, 4096, 0);
     zmq_recv(__zmq_sock, buffer, 4096, 0);
-    
-    uint32_t odata;
-    read_reg(addr, odata);
-    if (data != odata)
-        assert(0);
 
     return true;
 }
@@ -168,7 +163,7 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
     char buffer[4096] = {0};
     buffer_hdr_t *buff;
-    
+
     if (__lmodel_env)
         return true;
     if (size > 4096)

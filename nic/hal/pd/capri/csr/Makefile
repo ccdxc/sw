@@ -10,6 +10,7 @@ VPATH = $(subst ' ',:, $(CAPMODS))
 CAPINC = $(patsubst %,-I%,$(subst :, ,$(VPATH)))
 
 LCXXFLAGS = \
+			-DEXCLUDE_PER_FIELD_CNTRL \
 			-L../../../../obj \
 			-L../../../../model_sim/build \
 			-I. \

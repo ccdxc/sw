@@ -61,6 +61,9 @@ def get_parser():
     parser.add_argument('--gen-dir', dest='gen_dir', action='store',
                         help='Directory for all Compiler generated code',
                         default='.', required=False)
+    parser.add_argument('--cfg-dir', dest='cfg_dir', action='store',
+                        help='Directory for compiler generated configuration',
+                        default=None, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -171,13 +174,6 @@ def main():
 
     capri_be.tables.update_table_config()
     capri_be.tables.program_tables()
-
-    # remove old capri.bin
-    cfg_out_dir = os.path.join(capri_be.args.gen_dir +
-                               '/%s/cfg_out' % capri_be.prog_name)
-    cfg_out_fname = os.path.join(cfg_out_dir, 'capri.bin')
-    if os.path.exists(cfg_out_fname):
-        os.unlink(cfg_out_fname)
 
     # Generate various outputs
     for d in xgress:

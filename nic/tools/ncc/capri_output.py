@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import pdb
+import struct
 import logging
 import copy
 import pprint
@@ -879,13 +880,15 @@ def capri_deparser_cfg_output(deparser):
                 dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     dpp_cfg_file_reg.close()
     cap_inst = 1 if (deparser.d == xgress.INGRESS) else 0
-    capri_dump_registers(cfg_out_dir, 'cap_dpp', cap_inst,
+    capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+                         'cap_dpp', cap_inst,
                          dpp_json['cap_dpp']['registers'], None)
 
     json.dump(dpr_json['cap_dpr']['registers'],
                 dpr_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     dpr_cfg_file_reg.close()
-    capri_dump_registers(cfg_out_dir, 'cap_dpr', cap_inst,
+    capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+                         'cap_dpr', cap_inst,
                          dpr_json['cap_dpr']['registers'], None)
 
 def capri_model_dbg_output(be, dbg_info):
@@ -1418,24 +1421,6 @@ def capri_parser_output_decoders(parser):
     idx = 0
     max_tcam_entries = parser.be.hw_model['parser']['num_states']
 
-    profile_dname = None
-    '''
-    init_profile, profile_dname = _create_template(ppa_json, ppa_decoder_json, 
-                        'cap_ppa_csr_cfg_init_profile[0]')
-    '''
-    init_profile = copy.deepcopy(ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_init_profile[0]'])
-    init_profile['curr_offset']['value'] = str(0)
-    init_profile['state']['value'] = str(parser.start_state.id)
-    for r, reg in enumerate(parser.start_state.lkp_regs):
-        if reg.pkt_off >= 0:
-            #init_profile['mux_sel%d' % r]['value'] =  str(r)
-            #init_profile['mux_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
-            init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
-        else:
-            #init_profile['mux_sel%d' % r]['value'] =  str(r)
-            #init_profile['mux_sel%d' % r]['value'] =  str(0)
-            init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(0)
-
     tcam_t, tcam_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
                             'cap_ppa_csr_dhs_bndl0_state_lkp_tcam_entry[0]')
     sram_t, sram_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
@@ -1514,17 +1499,26 @@ def capri_parser_output_decoders(parser):
     # change this when we optimize for separate start state
     num_profiles = parser.be.hw_model['parser']['num_init_profiles']
     for i in range(num_profiles):
-        ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_init_profile[%d]'%i] = init_profile
-        if profile_dname:
-            ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_init_profile[%d]'%i] \
-                ['decoder'] = profile_dname
+        init_profile = ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_init_profile[%d]'%i]
+        init_profile['curr_offset']['value'] = str(0)
+        init_profile['state']['value'] = str(parser.start_state.id)
+        for r, reg in enumerate(parser.start_state.lkp_regs):
+            if reg.pkt_off >= 0:
+                #init_profile['mux_sel%d' % r]['value'] =  str(r)
+                #init_profile['mux_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
+                init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
+            else:
+                #init_profile['mux_sel%d' % r]['value'] =  str(r)
+                #init_profile['mux_sel%d' % r]['value'] =  str(0)
+                init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(0)
     parser.logger.debug("%s" % _parser_init_profile_print(parser, init_profile))
     json.dump(ppa_json['cap_ppa']['registers'],
                 ppa_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     ppa_cfg_file_mem.close()
     ppa_cfg_file_reg.close()
     cap_inst = 1 if (parser.d == xgress.INGRESS) else 0
-    capri_dump_registers(cfg_out_dir, 'cap_ppa', cap_inst,
+    capri_dump_registers(parser.be.args.cfg_dir, parser.be.prog_name,
+                         'cap_ppa', cap_inst,
                          ppa_json['cap_ppa']['registers'],
                          ppa_json['cap_ppa']['memories'],)
 
@@ -1688,11 +1682,6 @@ def capri_te_cfg_output(stage):
     max_hw_flits = stage.gtm.tm.be.hw_model['phv']['max_hw_flits']
     json_tbl_prof_key = json_regs['cap_te_csr_cfg_table_profile_key']
     
-    tcam_t, tcam_dname = _create_template(json_regs, None,
-                            'cap_te_csr_cfg_table_profile_cam[0]')
-    sram_t, sram_dname = _create_template(json_regs, None,
-                            'cap_te_csr_dhs_table_profile_ctrl_sram_entry[0]')
-
     # XXX TCAM programming can be handled in a loop for all predicate values
     # need to set unused entries to map to DO-NOTHING
     run_all_tables = False
@@ -1751,11 +1740,10 @@ def capri_te_cfg_output(stage):
                 continue
 
             tcam_entries[(val, mask)] = ctg
-            te = copy.deepcopy(tcam_t)
+            te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
             te['valid']['value'] = str(1)
             te['value']['value'] = "0x%x" % val
             te['mask']['value'] = "0x%x" % mask
-            json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx] = te
 
         te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx] # for printing
         # do use overflow tcam when programming
@@ -1790,7 +1778,7 @@ def capri_te_cfg_output(stage):
         for cyc in range(num_cycles):
             # fill control_sram entry
             sidx = sidx_base + cyc
-            se = copy.deepcopy(sram_t)
+            se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
 
             if not stage.table_sequencer[prof_val][cyc].is_used:
                 # no need to do much, key-maker values can be modified as they are not used anymore
@@ -1844,7 +1832,6 @@ def capri_te_cfg_output(stage):
             else:
                 json_sram_ext['done']['value'] = str(0)
 
-            json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx] = se
             if not cyc_done:
                 stage.gtm.tm.logger.debug(\
                     "%s:Stage[%d]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
@@ -1854,7 +1841,7 @@ def capri_te_cfg_output(stage):
                 cyc_done = True
 
         prof_idx += 1
-            
+
     for ct in stage.ct_list:
         if ct.is_otcam:
             continue
@@ -1958,17 +1945,19 @@ def _decode_mem(entry, result):
             _decode_mem(field, result)
     elif isinstance(entry, dict):
         if 'value' in entry and 'size' in entry:
-            result[0] |= int(entry['value'], 16) << result[1]
-            result[1] += int(entry['size'])
+            result[0] |= int(entry['value'], 0) << result[1]
+            result[1] += int(entry['size'], 0)
         else:
             for field, attrib in entry.iteritems():
                 _decode_mem(attrib, result)
 
-def capri_dump_registers(cfg_out_dir, cap_mod, cap_inst, regs, mems):
+def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
+    if cfg_out_dir is None:
+        return
     if not os.path.exists(cfg_out_dir):
         os.makedirs(cfg_out_dir)
-    cfg_out_fname = os.path.join(cfg_out_dir, 'capri.bin')
-    cfg_out_fp = open(cfg_out_fname, 'a')
+    cfg_out_fname = os.path.join(cfg_out_dir, '%s_%s_%d.bin' % (prog_name, cap_mod, cap_inst))
+    cfg_out_fp = open(cfg_out_fname, 'wb')
 
     # fetch base address
     cur_path = os.path.abspath(__file__)
@@ -1983,22 +1972,34 @@ def capri_dump_registers(cfg_out_dir, cap_mod, cap_inst, regs, mems):
     for name, conf in regs.iteritems():
         addr_offset = int(conf['addr_offset'], 16) + base_addr
         word_size = int(conf['word_size'], 16)
-        is_array = conf['is_array']
+        is_array = int(conf['is_array'])
         if is_array == 1:
             addr_offset += word_size * 4
         data = 0
         width = 0
+        skip = True
+
         if 'decoder' in conf:
+            skip = False
             m = re.search('(\w+)_entry\[(\d+)\]', name)
             decoder = m.group(1)
             idx = int(m.group(2))
             if idx > (len(mems[decoder]['entries']) - 1):
                 pass
             else:
-                result = [data, width]
+                result = [data, 0]
                 _decode_mem(mems[decoder]['entries'][int(idx)], result)
                 data = result[0]
-                width = result[1]
+
+            # find the correct width of the entry
+            for field, attrib in conf.iteritems():
+                if ((field == 'word_size') or (field == 'inst_name') or
+                    (field == 'addr_offset') or (field == 'decoder') or
+                    (field == 'is_array')):
+                    continue
+                lsb  = int(attrib['field_lsb'])
+                msb  = int(attrib['field_msb'])
+                width += msb - lsb + 1
         else:
             for field, attrib in conf.iteritems():
                 if ((field == 'word_size') or (field == 'inst_name') or
@@ -2008,14 +2009,21 @@ def capri_dump_registers(cfg_out_dir, cap_mod, cap_inst, regs, mems):
                 lsb  = int(attrib['field_lsb'])
                 msb  = int(attrib['field_msb'])
                 mask = int(attrib['field_mask'], 16)
-                val  = int(attrib['value'], 16)
+                val  = int(attrib['value'], 0)
+                if val == -1:
+                    val = 0
+                else:
+                    skip = False
                 width += msb - lsb + 1
-                data = data | ((val & mask) << lsb)
+#               data = data | ((val & mask) << lsb)
+                data = data | (val << lsb)
+        if skip == True:
+            continue
+
         while width > 0:
-#            cfg_out_fp.write('0x%08x 0x%08x %s\n' % \
-#                             (addr_offset, data & 0xFFFFFFFF, name))
-            cfg_out_fp.write('0x%08x 0x%08x\n' % \
-                             (addr_offset, data & 0xFFFFFFFF))
+#           print '0x%08x 0x%08x %s\n' % \
+#                       (addr_offset, data & 0xFFFFFFFF, name)
+            cfg_out_fp.write(struct.pack('II', addr_offset, data & 0xFFFFFFFF))
             data = data >> 32
             width -= 32
             addr_offset += 4
@@ -2118,7 +2126,7 @@ def capri_pic_csr_output(be, out_pic):
                         cap_mod = 'cap_sgi_te'
                     else:
                         cap_mod = 'cap_sge_te'
-                    capri_dump_registers(out_dir, cap_mod, stage,
+                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, stage,
                                          out_pic[mem_type][direction][stage], None)
             else:
                 name = 'cap_pics_' if mem_type == 'sram' else 'cap_pict_'
@@ -2131,14 +2139,14 @@ def capri_pic_csr_output(be, out_pic):
                         cap_mod = 'cap_ssi_pics'
                     else:
                         cap_mod = 'cap_sse_pics'
-                    capri_dump_registers(out_dir, cap_mod, 0,
+                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, 0,
                         out_pic[mem_type][direction]['cap_pics']['registers'], None)
                 else:
                     if (direction == xgress_to_string(xgress.INGRESS)):
                         cap_mod = 'cap_tsi_pict'
                     else:
                         cap_mod = 'cap_tse_pict'
-                    capri_dump_registers(out_dir, cap_mod, 0,
+                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, 0,
                         out_pic[mem_type][direction]['cap_pict']['registers'], None)
 
 def capri_p4_table_spec_output(be, out_dict):
