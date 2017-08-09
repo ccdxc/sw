@@ -102,7 +102,6 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     // validate the request message
     ret = validate_tcpcb_create(spec, rsp);
-    
     // instantiate TCP CB
     tcpcb = tcpcb_alloc_init();
     if (tcpcb == NULL) {

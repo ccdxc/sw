@@ -31,6 +31,7 @@ tcpcb_pd_alloc (void)
 {
     pd_tcpcb_t    *tcpcb_pd;
 
+    HAL_TRACE_DEBUG("Alok90");
     tcpcb_pd = (pd_tcpcb_t *)g_hal_state_pd->tcpcb_slab()->alloc();
     if (tcpcb_pd == NULL) {
         return NULL;
@@ -47,6 +48,7 @@ tcpcb_pd_init (pd_tcpcb_t *tcpcb_pd)
         return NULL;
     }
     tcpcb_pd->tcpcb = NULL;
+    HAL_TRACE_DEBUG("Alok91");
 
     // initialize meta information
     tcpcb_pd->hw_ht_ctxt.reset();
