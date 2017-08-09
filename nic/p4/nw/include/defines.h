@@ -347,10 +347,15 @@
 /*****************************************************************************/
 /* P4+ app types                                                             */
 /*****************************************************************************/
-#define P4PLUS_APP_TYPE_IPSEC          1
-#define P4PLUS_APP_TYPE_TCP_PROXY      2
-#define P4PLUS_APP_TYPE_L7_PROXY       3
-#define P4PLUS_APP_TYPE_ROCEV2         4
+#define P4PLUS_APPTYPE_CLASSIC_NIC  1
+#define P4PLUS_APPTYPE_RDMA         2
+#define P4PLUS_APPTYPE_TCPTLS       3
+#define P4PLUS_APPTYPE_IPSEC        4
+#define P4PLUS_APPTYPE_NDE          5
+#define P4PLUS_APPTYPE_STORAGE      6
+#define P4PLUS_APPTYPE_TELEMETRY    7
+#define P4PLUS_APP_TYPE_MIN         P4PLUS_APPTYPE_CLASSIC_NIC
+#define P4PLUS_APP_TYPE_MAX         P4PLUS_APPTYPE_TELEMETRY
 
 /*****************************************************************************/
 /* P4+ header size constants                                                 */
