@@ -46,9 +46,11 @@ const (
 	testIf2ID    = "53256758-eecc-79bb-1590-899861348cfd:4004"
 	waitTO       = 2 * time.Second
 	pollInterval = 10 * time.Millisecond
+	vchURL       = ":" + globals.VCHubAPIPort
 )
 
 type TestSuite struct {
+	vch         *VchServer
 	cc          *grpc.ClientConn
 	vcHubClient orch.OrchApiClient
 	cluster     *integration.ClusterV3
@@ -58,7 +60,11 @@ type TestSuite struct {
 }
 
 func (ts *TestSuite) setup(t *testing.T, fake bool) {
-	StartVCHServer()
+	vch, err := StartVCHServer(vchURL)
+	if err != nil {
+		t.Errorf("VCHServer start failed %v", err)
+	}
+	ts.vch = vch
 	// setup store and server
 	if fake {
 		s, err := store.Init("", kvs.KVStoreTypeMemkv)
@@ -170,7 +176,7 @@ func (ts *TestSuite) teardown(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 		ts.cluster.Terminate(t)
 	}
-	StopVCHServer()
+	ts.vch.StopServer()
 	sim.TearDown()
 	time.Sleep(200 * time.Millisecond)
 }

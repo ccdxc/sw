@@ -15,7 +15,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/store"
 	"github.com/pensando/sw/utils/kvstore"
@@ -28,23 +27,25 @@ const (
 	reconnectDelay = 2 * time.Second
 )
 
-// server is used to implement vchub.apiserver
-type vchServer struct {
-	name     string
-	listener net.Listener
-	stats    orch.Stats
+// VchServer implements vchub.apiserver
+type VchServer struct {
+	name      string
+	listener  net.Listener
+	stats     orch.Stats
+	listenURL string
+	errCh     chan error
 }
 
-var asInstance *vchServer
+var asInstance *VchServer
 
 // ListSmartNICs implements the RPC
-func (as *vchServer) ListSmartNICs(c context.Context, f *orch.Filter) (*orch.SmartNICList, error) {
+func (as *VchServer) ListSmartNICs(c context.Context, f *orch.Filter) (*orch.SmartNICList, error) {
 	// TODO: support filter
 	return store.SmartNICList(c)
 }
 
 // WatchSmartNICs implements the watch RPC
-func (as *vchServer) WatchSmartNICs(ws *orch.WatchSpec, stream orch.OrchApi_WatchSmartNICsServer) error {
+func (as *VchServer) WatchSmartNICs(ws *orch.WatchSpec, stream orch.OrchApi_WatchSmartNICsServer) error {
 	watchVer := ws.GetRefversion()
 	// ignore filter for now - tbd
 	for {
@@ -116,13 +117,13 @@ func (as *vchServer) WatchSmartNICs(ws *orch.WatchSpec, stream orch.OrchApi_Watc
 }
 
 // ListNwIFs implements the RPC
-func (as *vchServer) ListNwIFs(c context.Context, f *orch.Filter) (*orch.NwIFList, error) {
+func (as *VchServer) ListNwIFs(c context.Context, f *orch.Filter) (*orch.NwIFList, error) {
 	// ignore filter for now - tbd
 	return store.NwIFList(c)
 }
 
 // WatchNwIFs implements the watch RPC
-func (as *vchServer) WatchNwIFs(ws *orch.WatchSpec, stream orch.OrchApi_WatchNwIFsServer) error {
+func (as *VchServer) WatchNwIFs(ws *orch.WatchSpec, stream orch.OrchApi_WatchNwIFsServer) error {
 	// ignore filter for now - TODO
 	watchVer := ws.GetRefversion()
 	for {
@@ -196,41 +197,54 @@ func (as *vchServer) WatchNwIFs(ws *orch.WatchSpec, stream orch.OrchApi_WatchNwI
 }
 
 //WatchNwIFMigration implements the RPC for migration notifications
-func (as *vchServer) WatchNwIFMigration(f *orch.Filter, stream orch.OrchApi_WatchNwIFMigrationServer) error {
+func (as *VchServer) WatchNwIFMigration(f *orch.Filter, stream orch.OrchApi_WatchNwIFMigrationServer) error {
 	return nil // stub for now.
 }
 
 // Inspect returns server statistics
-func (as *vchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, error) {
+func (as *VchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, error) {
 	return &as.stats, nil
 }
 
 // StartVCHServer starts the vchub api server
-func StartVCHServer() {
-	lis, err := net.Listen("tcp", ":"+globals.VCHubAPIPort)
+func StartVCHServer(listenURL string) (*VchServer, error) {
+	lis, err := net.Listen("tcp", listenURL)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Infof("failed to listen: %v", err)
+		return nil, err
 	}
+	errCh := make(chan error)
 	s := grpc.NewServer()
-	asInstance = &vchServer{
-		name:     "VCHub-API",
-		listener: lis,
+	asInstance = &VchServer{
+		name:      "VCHub-API",
+		listener:  lis,
+		listenURL: listenURL,
+		errCh:     errCh,
 	}
 	orch.RegisterOrchApiServer(s, asInstance)
 	go func() {
 		err := s.Serve(lis)
 		if asInstance.listener != nil {
-			log.Fatalf("Server exited %v", err)
+			errCh <- err
 		}
+
+		close(errCh)
 	}()
-	log.Infof("VCHub API server started")
+	log.Infof("VCHub API server started at %s", listenURL)
+	return asInstance, nil
 }
 
-// StopVCHServer stops the vchub api server
-func StopVCHServer() {
-	if asInstance != nil && asInstance.listener != nil {
-		asInstance.listener.Close()
-		asInstance.listener = nil
-		log.Infof("VCHub API server stopped")
+// ErrOut returns a channel that gives an error indication
+func (as *VchServer) ErrOut() <-chan error {
+	return as.errCh
+}
+
+// StopServer stops the vchub api server
+func (as *VchServer) StopServer() {
+	if as.listener != nil {
+		l := as.listener
+		as.listener = nil
+		l.Close()
+		log.Infof("VCHub API server at %s stopped", as.listenURL)
 	}
 }
