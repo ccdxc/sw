@@ -1,4 +1,4 @@
-#! /usr/bin
+#! /usr/bin/python3
 
 import pdb
 
@@ -14,216 +14,79 @@ import config.hal.api           as halapi
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
-'''
-AOL Type descriptor object support
-'''
-class SwDscrAolObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx):
+class NMDObject(base.ConfigObjectBase):
+    def __init__(self, ringname, nmdidx):
         super().__init__()
-        self.idx = swdreidx
-        self.Clone(Store.templates.Get("DESCR_AOL_VIA_REF"))
-        self.GID("%s_DESC%04d" % (ringname, swdreidx))
+        self.Clone(Store.templates.Get('NMD'))
+        self.GID("%s_DESC%04d" % (ringname, nmdidx))
+        # TODO: Populate the descriptor state from HAL
         return
+
+class NMDREntryObject(base.ConfigObjectBase):
+    def __init__(self, ringname, nmdidx):
+        super().__init__()
+        self.Clone(Store.templates.Get('NMDR_ENTRY'))
+        self.GID("%s_ENTRY%04d" % (ringname, nmdidx))
+        self.nmd = NMDObject(ringname, nmdidx)
+        Store.objects.Add(self.nmd)
+        # TODO: Populate the entry state from HAL
+        return
+
     def Show(self):
-        cfglogger.info("SwDscrAol: %s" % (self.ID()))
-        return
-    def PrepareHALRequestSpec(self, reqspec):
-        # FIXME, this should really be an index into the ring
-        reqspec.descr_aol_handle = self.DescAddr
-        return
-    def ProcessHALResponse(self, req_spec, resp_spec):
-        self.DescAddr   = resp_spec.descr_aol_handle
-        self.Addr1      = resp_spec.Address1
-        self.Offset1    = resp_spec.Offset1
-        self.Len1       = resp_spec.Length1
-        self.Addr2      = resp_spec.Address2
-        self.Offset2    = resp_spec.Offset2
-        self.Len2       = resp_spec.Length2
-        self.Addr3      = resp_spec.Address3
-        self.Offset3    = resp_spec.Offset3
-        self.Len3       = resp_spec.Length3
-        cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
-        return
-    def SetHandle(self, handle):
-        self.DescAddr = handle
-        return
-    def GetHandle(self):
-        return self.DescAddr
-
-class SwDscrAolObjectHelper:
-    def __init__(self):
-        return
-    def Generate(self, ringname, swdreidx):
-        return SwDscrAolObject(ringname, swdreidx)
-    def Configure(self, swdre_list):
-        halapi.GetDscrAolObjectState(swdre_list)
+        cfglogger.info("NMDREntry: %s NMDObject: %s" % (self.ID(), self.nmd.ID()))
         return
 
-'''
-Page Type object support
-'''
-class SwDscrPageObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx):
+class NMDRObject(base.ConfigObjectBase):
+    def __init__(self, nmdr_type, count):
         super().__init__()
-        self.idx = swdreidx
-        self.Clone(Store.templates.Get("PAGE_VIA_REF"))
-        self.GID("%s_PAGE%04d" % (ringname, swdreidx))
-        return
-    def Show(self):
-        cfglogger.info("SwPage: %s" % (self.ID()))
-        return
-    def PrepareHALRequestSpec(self, reqspec):
-        # FIXME, query address of the page
-        return
-    def ProcessHALResponse(self, req_spec, resp_spec):
-        return
-    def SetHandle(self, handle):
-        self.pageaddr = handle
-        return
-
-class SwPageObjectHelper:
-    def __init__(self):
-        return
-    def Generate(self, ringname, swdreidx):
-        return SwDscrPageObject(ringname, swdreidx)
-    def Configure(self, swdre_list):
-        # Nothing to be done for now
-        return
-
-HelperDB = {}
-HelperDB["DESCR_AOL_VIA_REF"] = SwDscrAolObjectHelper()
-HelperDB["PAGE_VIA_REF"] = SwPageObjectHelper()
-
-
-class SwDscrRingEntry(base.ConfigObjectBase):
-    def __init__(self, ringname, entryidx, entrytype, ringidx = None):
-        super().__init__()
-        self.handle = None
-        self.idx = entryidx
-        self.type = entrytype
-        if (ringidx != None):
-            self.ringidx = ringidx
-        else:
-            self.ringidx = None
-        self.GID("%s_ENTRY%04d" % (ringname, entryidx))
-        return
-    def Show(self):
-        cfglogger.info("Entry : %s" % (self.ID()))
-        return
-    def PrepareHALRequestSpec(self, reqspec):
-        if (self.ringidx != None):
-            reqspec.key_or_handle.wring_id = self.ringidx
-        reqspec.type = self.type
-        reqspec.index = self.idx
-        return
-    def ProcessHALResponse(self, req_spec, resp_spec):
-        #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
-        if (resp_spec.spec.type != req_spec.type):
-            assert(0)
-        if (resp_spec.index != req_spec.index):
-            assert(0)
-
-        self.handle = resp_spec.value
-        cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
-        return
-    def GetHandle(self):
-        return self.handle
-
-
-class SwDscrRingObject(base.ConfigObjectBase):
-    def __init__(self, ring_def, parent = None, ringidx = None):
-        super().__init__()
-        self.Clone(Store.templates.Get("RING"))
-        self.swdr_name = ring_def.name
-        self.haltype = ring_def.haltype
-        self.swdr_type = ring_def.type
-        self.count = ring_def.count 
-        self.ringentries = []
-        self.swdre_list = []
-        if (parent != None):
-            self.GID("%s_%s" % (parent.upper(), self.swdr_name))
-        else:
-            self.GID("%s" % (self.swdr_name))
-
-        if (ringidx != None):
-            self.ringidx = ringidx
-        else:
-            self.ringidx = None
-
+        self.Clone(Store.templates.Get('NMDR'))
+        self.nmdr_type = nmdr_type
+        self.count = count
+        self.nmde_list = []
+        self.GID("%01sNMDR" % self.nmdr_type)
         return
 
     def Init(self):
-        for swdreidx in range(self.count):
-            # Generic ring entry information
-            ringentry = SwDscrRingEntry(self.ID(), swdreidx, self.haltype, self.ringidx)
-            self.ringentries.append(ringentry)
-            Store.objects.Add(ringentry)
-
-            # Ring entry specific information
-            RingEntryHelper = HelperDB[self.swdr_type]
-            swdre = RingEntryHelper.Generate(self.ID(), swdreidx)
-            self.swdre_list.append(swdre)
-            Store.objects.Add(swdre)
+        for nmdidx in range(self.count):
+            nmde = NMDREntryObject(self.ID(), nmdidx)
+            self.nmde_list.append(nmde)
+        Store.objects.SetAll(self.nmde_list)
         return
 
     def Show(self):
-        cfglogger.info("SWDSCR List for %s" % self.ID())
-        for swdre in self.swdre_list:
-            swdre.Show()
-        return
-
-    def GetEntry(self, index):
-        if (index < 0) or (index >= self.count):
-            assert(0)
-        return self.swdre_list[index]
-
-    def Configure(self):
-        # Configure generic ring entries
-        halapi.GetRingEntries(self.ringentries)
-
-        # Setup handles
-        obj_count = len(self.ringentries)
-        for idx in range(obj_count):
-            handle = self.ringentries[idx].GetHandle()
-            self.swdre_list[idx].SetHandle(handle)
-
-        # Configure entry specific information
-        RingEntryHelper = HelperDB[self.swdr_type]
-        RingEntryHelper.Configure(self.swdre_list)
+        cfglogger.info("NMD List for %s" % self.ID())
+        for nmde in self.nmde_list:
+            nmde.Show()
         return
 
 
-class SwDscrRingObjectHelper:
+class NMDRObjectHelper:
     def __init__(self):
-        self.swdr_list = []
+        self.nmdr_list = []
         return
 
     def Configure(self):
-        for swdr in self.swdr_list:
-            swdr.Configure()
+        cfglogger.info("Configuring NMDR.")
         return
 
-    def Generate(self, type, parent = None, ringidx = None):
-        spec = Store.specs.Get(type)
-        for swdrt in spec.entries:
-            swdr = SwDscrRingObject(swdrt.entry, parent, ringidx)
-            swdr.Init()
-            self.swdr_list.append(swdr)
-            Store.objects.Add(swdr)
+    def Generate(self):
+        spec = Store.specs.Get('NMDR')
+        for nmdrt in spec.types:
+            nmdr = NMDRObject(nmdrt.entry.type, nmdrt.entry.count)
+            nmdr.Init()
+            self.nmdr_list.append(nmdr)
+        Store.objects.SetAll(self.nmdr_list)
         return
 
     def Show(self):
-        for swdr in self.swdr_list:
-            swdr.Show()
+        for nmdr in self.nmdr_list:
+            nmdr.Show()
         return
 
-    def main(self, type, parent = None, ringidx = None):
-        self.Generate(type, parent, ringidx)
+    def main(self):
+        self.Generate()
         self.Configure()
         self.Show()
 
 
-SwDscrRingHelper = SwDscrRingObjectHelper()
+NMDRHelper = NMDRObjectHelper()
