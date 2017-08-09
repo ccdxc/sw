@@ -126,6 +126,9 @@ class SessionObjectHelper:
         flowep1 = flowep.FlowEndpointObject(ep = ep1)
         flowep2 = flowep.FlowEndpointObject(ep = ep2)
 
+        if tenant.spec.sessions == None:
+            return
+
         if tenant.spec.sessions.unidest.ipv4:
             entries = tenant.spec.sessions.unidest.ipv4
             self.__process_ipv4(flowep1, flowep2, entries)

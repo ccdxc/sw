@@ -1,14 +1,13 @@
 # Configuration Template.
 meta:
-    id: TENANT_ALL_ENICS
+    id: TENANT_DEFAULT
 
 type    : tenant
-overlay : None
+overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_MDST_FWD
       count : 2
-
     #- spec  : ref://store/specs/id=SEGMENT_MDST_DROP
     #  count : 2
 
@@ -26,13 +25,10 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_BASIC
             - ref://store/specs/id=SESSION_UDP_BASIC
             - ref://store/specs/id=SESSION_ICMP_BASIC
-            - ref://store/specs/id=SESSION_TCP_PROXY_BASIC
-
         ipv6:
             - ref://store/specs/id=SESSION_TCP_BASIC
             - ref://store/specs/id=SESSION_UDP_BASIC
             - ref://store/specs/id=SESSION_ICMPV6_BASIC
-            - ref://store/specs/id=SESSION_TCP_PROXY_BASIC
         l2:
             - ref://store/specs/id=SESSION_MAC_BASIC
 

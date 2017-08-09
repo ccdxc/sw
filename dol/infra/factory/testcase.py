@@ -40,7 +40,7 @@ class TestCaseSessionEntryObject:
         self.step = None
         return
 
-class TestCaseSessionStepTriggerExpectObject:
+class TestCaseSessionStepTriggerExpectReceivedObject:
     def __init__(self):
         self.packets        = []
         self.descriptors    = []
@@ -48,8 +48,9 @@ class TestCaseSessionStepTriggerExpectObject:
 
 class TestCaseSessionStepObject:
     def __init__(self):
-        self.trigger = TestCaseSessionStepTriggerExpectObject()
-        self.expect  = TestCaseSessionStepTriggerExpectObject()
+        self.trigger = TestCaseSessionStepTriggerExpectReceivedObject()
+        self.expect  = TestCaseSessionStepTriggerExpectReceivedObject()
+        self.received = TestCaseSessionStepTriggerExpectReceivedObject()
         return
 
 class TestCase(objects.FrameworkObject):

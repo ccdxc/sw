@@ -31,12 +31,8 @@ int lib_model_connect ()
         return 0;
     
     printf ("Connecting to ASIC model....\n");
-    const char* user_str = std::getenv("USER");
-    snprintf(tmpdir, 100, "/tmp/%s", user_str);
-    if (stat(tmpdir, &st) == -1) {
-        mkdir(tmpdir, 0700);
-    }
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", tmpdir);
+    const char* user_str = std::getenv("PWD");
+    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
     __zmq_context = zmq_ctx_new ();
     __zmq_sock = zmq_socket (__zmq_context, ZMQ_REQ);
     int rc = zmq_connect ((__zmq_sock), zmqsockstr);

@@ -3,7 +3,7 @@ meta:
     id: INFRA
 
 type    : infra
-overlay : None
+overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_INFRA
@@ -21,4 +21,4 @@ sessions:
 
 lif:
     spec        : ref://store/specs/id=LIF_ETH
-    count       : 16
+    count       : 8

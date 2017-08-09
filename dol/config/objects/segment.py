@@ -14,7 +14,6 @@ import config.hal.defs           as haldefs
 from infra.common.logging       import cfglogger
 from config.store               import Store
 
-OVERLAY_VXLAN = 'vxlan'
 class SegmentObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -35,7 +34,7 @@ class SegmentObject(base.ConfigObjectBase):
         if self.IsInfraSegment():
             self.subnet     = resmgr.TepIpSubnetAllocator.get()
             self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
-        elif self.IsTenantSegment():
+        elif self.IsTenantSegment() or self.IsSpanSegment():
             self.subnet     = resmgr.IpSubnetAllocator.get()
             self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
         else:
@@ -66,6 +65,8 @@ class SegmentObject(base.ConfigObjectBase):
         return self.type == 'TENANT'
     def IsInfraSegment(self):
         return self.type == 'INFRA'
+    def IsSpanSegment(self):
+        return self.type == 'SPAN'
 
     def Show(self, detail = False):
         cfglogger.info("- Segment = %s(%d)" % (self.GID(), self.id))
@@ -91,6 +92,10 @@ class SegmentObject(base.ConfigObjectBase):
         return self.obj_helper_enic.useg
     def GetEps(self):
         return self.obj_helper_ep.eps
+    def GetLocalEps(self):
+        return self.obj_helper_ep.local
+    def GetRemoteEps(self):
+        return self.obj_helper_ep.remote
 
     def ConfigureEndpoints(self):
         return self.obj_helper_ep.Configure()
@@ -101,7 +106,7 @@ class SegmentObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id
-        if self.IsTenantSegment():
+        if self.IsTenantSegment() or self.IsSpanSegment():
             req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_TENANT
         elif self.IsInfraSegment():
             req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_INFRA
@@ -110,7 +115,7 @@ class SegmentObject(base.ConfigObjectBase):
         
         req_spec.access_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
         req_spec.access_encap.encap_value   = self.vlan_id
-        if self.tenant.spec.overlay == OVERLAY_VXLAN:
+        if self.tenant.IsOverlayVxlan():
             req_spec.fabric_encap.encap_type    = haldefs.common.ENCAP_TYPE_VXLAN
             req_spec.fabric_encap.encap_value   = self.vxlan_id
         else:
@@ -159,4 +164,16 @@ class SegmentObjectHelper:
         eps = []
         for seg in self.segs:
             eps += seg.GetEps()
+        return eps
+
+    def GetLocalEps(self):
+        eps = []
+        for seg in self.segs:
+            eps += seg.GetLocalEps()
+        return eps
+
+    def GetRemoteEps(self):
+        eps = []
+        for seg in self.segs:
+            eps += seg.GetRemoteEps()
         return eps

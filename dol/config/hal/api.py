@@ -17,6 +17,7 @@ import l2segment_pb2        as l2segment_pb2
 import endpoint_pb2         as endpoint_pb2
 import session_pb2          as session_pb2
 import nwsec_pb2            as nwsec_pb2
+import telemetry_pb2        as telemetry_pb2
 
 import endpoint_pb2_grpc    as endpoint_pb2_grpc
 import l2segment_pb2_grpc   as l2segment_pb2_grpc
@@ -24,6 +25,7 @@ import tenant_pb2_grpc      as tenant_pb2_grpc
 import interface_pb2_grpc   as interface_pb2_grpc
 import session_pb2_grpc     as session_pb2_grpc
 import nwsec_pb2_grpc       as nwsec_pb2_grpc
+import telemetry_pb2_grpc   as telemetry_pb2_grpc
 
 HalChannel = None
 class HalInterfaceSegmentAssociation:
@@ -168,4 +170,11 @@ def ConfigureSecurityProfiles(objlist):
     stub = nwsec_pb2_grpc.NwSecurityStub(HalChannel)
     __config(objlist, nwsec_pb2.SecurityProfileRequestMsg,
              stub.SecurityProfileCreate)
+    return
+
+def ConfigureSpanSessions(objlist):
+    if IsHalDisabled(): return
+    stub = telemetry_pb2_grpc.TelemetryStub(HalChannel)
+    __config(objlist, telemetry_pb2.MirrorSessionConfigMsg,
+             stub.MirrorSessionCreate)
     return

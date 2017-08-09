@@ -7,14 +7,8 @@ def zmq_connect ():
     context = zmq.Context()
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)
-    user_str = os.environ['USER']
-    tmpdir = '/tmp/' + user_str
-    # Check if dir exists, if not create it
-    try:
-        os.stat(tmpdir)
-    except:
-        os.mkdir(tmpdir)
-    zmqsockstr = 'ipc:///' + tmpdir + '/zmqsock'
+    user_str = os.environ['PWD']
+    zmqsockstr = 'ipc:///' + user_str + '/zmqsock'
     socket.connect(zmqsockstr)
     return socket
 

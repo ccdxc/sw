@@ -41,7 +41,7 @@ def process(topospec):
 def main(topofile):
     halapi.init()
     cfglogger.info("Generating Config Objects for Topology = %s" % topofile)
-    topospec = parser.ParseFile('topology/', topofile)
+    topospec = parser.ParseFile('config/topology/', topofile)
     process(topospec)
     return
 

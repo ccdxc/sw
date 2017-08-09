@@ -3,7 +3,7 @@ meta:
     id: TENANT_FP
 
 type    : tenant
-overlay : None
+overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_REMOTE

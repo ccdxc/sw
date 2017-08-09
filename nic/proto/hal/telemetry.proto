@@ -227,19 +227,20 @@ message MirrorSessionStatus {
 
 // MirrorSession is a container of the configuration and the operational status for mirror sessions.
 message MirrorSession {
-  MirrorSessionSpec     spec    = 1;
-  MirrorSessionStatus   status  = 2;
+  types.ApiStatus       api_status  = 1;
+  MirrorSessionSpec     spec        = 2;
+  MirrorSessionStatus   status      = 3;
 }
 
 // MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
 message  MirrorSessionConfigMsg {
-  repeated MirrorSessionSpec mirror_sessions = 1;
+  repeated MirrorSessionSpec request = 1;
 }
 
 // MirrorSessionResponseMsg is used as responses to the MirrorSession configuration APIs
 message MirrorSessionResponseMsg {
   types.ApiStatus               status    = 1; // Response status of the API
-  repeated MirrorSession	sessions  = 2; // Operational status of the mirror session
+  repeated MirrorSession	response  = 2; // Operational status of the mirror session
 }
 
 service Telemetry {

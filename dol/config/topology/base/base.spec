@@ -45,10 +45,15 @@ uplinkpc:
             - ref://store/objects/id=Uplink2
 
 tenants:
+    -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
+        count   : 1
+        lifns   : range/93/96
+    #-   spec    : ref://store/specs/id=TENANT_SPAN_VXLAN
+    #    count   : 1
+    #    lifns   : range/97/100
     -   spec    : ref://store/specs/id=INFRA
         count   : 1
         lifns   : range/101/128
-
-    -   spec    : ref://store/specs/id=TENANT_ALL_ENICS
+    -   spec    : ref://store/specs/id=TENANT_DEFAULT
         count   : 1
         lifns   : range/129/256

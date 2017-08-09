@@ -12,6 +12,7 @@ SegVlanAllocator        = objects.TemplateFieldObject("range/2/4095")
 EncapVlanAllocator      = objects.TemplateFieldObject("range/3001/4000")
 SegVxlanAllocator       = objects.TemplateFieldObject("range/0xFF0000/0xFFFFFF")
 
+SpanSessionIdAllocator  = objects.TemplateFieldObject("range/1/8")
 EpIdAllocator           = objects.TemplateFieldObject("range/1/4096")
 SessionIdAllocator      = objects.TemplateFieldObject("range/1/65535")
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")

@@ -128,7 +128,8 @@ def run_dol():
     os.chdir(dol_dir)
 
     log = open(dol_log, "w")
-    p = Popen(["./main.py", "-t", "fp/fp.spec", "--config-only"], stdout=log, stderr=log)
+    p = Popen(["./main.py", "-t", "fp/fp.spec"])
+    #p = Popen(["./main.py", "-t", "fp/fp.spec"], stdout=log, stderr=log)
     #p = Popen(["./main.py", "--config-only"], stdout=log, stderr=log)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
@@ -145,7 +146,7 @@ def run_dol():
 #    log.close()
 
 # Sample Client
-
+'''
 def run_sample_client():
     sample_client_dir = nic_dir + "/model_sim/build"
     os.chdir(sample_client_dir)
@@ -165,7 +166,7 @@ def run_sample_client():
     return p.returncode 
 
 #    log.close()
-
+'''
 
 # find_port()
 
@@ -242,7 +243,6 @@ def main():
         run_model()
         run_hal()
         status = run_dol()
-        status = run_sample_client()
         cleanup(keep_logs = True)
         sys.exit(status)
     else:

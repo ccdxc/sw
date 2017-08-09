@@ -9,6 +9,7 @@ import config.resmgr            as resmgr
 import config.objects.segment   as segment
 import config.objects.lif       as lif
 import config.objects.tunnel    as tunnel
+import config.objects.span      as span
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -29,6 +30,7 @@ class TenantObject(base.ConfigObjectBase):
 
         self.spec = spec
         self.type = spec.type.upper()
+        self.overlay = spec.overlay.upper()
         #self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
             self.subnet             = resmgr.TepIpSubnetAllocator.get()
@@ -48,6 +50,11 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsInfra():
             self.obj_helper_tunnel = tunnel.TunnelObjectHelper()
             self.__create_tunnels()
+
+        # Process Span Sessions
+        if self.IsSpan():
+            self.obj_helper_span = span.SpanSessionObjectHelper()
+            self.__create_span_sessions()
         return
 
     def Show(self):
@@ -60,6 +67,14 @@ class TenantObject(base.ConfigObjectBase):
     def IsInfra(self):
         return self.type == 'INFRA'
 
+    def IsSpan(self):
+        return self.type == 'SPAN'
+    
+    def IsOverlayVxlan(self):
+        return self.overlay == 'VXLAN'
+    def IsOverlayVlan(self):
+        return self.overlay == None
+    
     def __create_segments(self):
         for entry in self.spec.segments:
             spec = entry.spec.Get(Store)
@@ -81,6 +96,10 @@ class TenantObject(base.ConfigObjectBase):
         self.obj_helper_tunnel.AddToStore()
         return
 
+    def __create_span_sessions(self):
+        self.obj_helper_span.main(self, self.spec)
+        return 
+
     def AllocLif(self):
         return self.obj_helper_lif.Alloc()
 
@@ -91,9 +110,21 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsInfra():
             self.obj_helper_tunnel.Configure()
         return
+    
+    def GetSegments(self):
+        return self.obj_helper_segment.segs
+    def GetSpanSegment(self):
+        for seg in self.obj_helper_segment.segs:
+            if seg.IsSpanSegment():
+                return seg
+        return None
 
     def GetEps(self):
         return self.obj_helper_segment.GetEps()
+    def GetRemoteEps(self):
+        return self.obj_helper_segment.GetRemoteEps()
+    def GetLocalEps(self):
+        return self.obj_helper_segment.GetLocalEps()
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id

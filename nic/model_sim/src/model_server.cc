@@ -171,13 +171,8 @@ int main (int argc, char ** argv)
     env->init();
     env->load_debug();
 
-    const char* user_str = std::getenv("USER");
-    snprintf(tmpdir, 100, "/tmp/%s", user_str);
-    if (stat(tmpdir, &st) == -1) {
-        mkdir(tmpdir, 0700);
-    }
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", tmpdir);
-
+    const char* user_str = std::getenv("PWD");
+    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
