@@ -8,6 +8,7 @@ import config.resmgr            as resmgr
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -25,6 +26,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.GID(gid)
         cfglogger.info("  - %s" % self)
         self.tcpcb = tcpcb 
+        self.pre_barco_serq = SwDscrRingHelper.main("SERQ", gid)
         """
         TODO:
         self.spec = spec_obj
