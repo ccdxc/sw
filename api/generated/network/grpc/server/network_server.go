@@ -519,31 +519,7 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"network.EndpointList":                    apisrvpkg.NewMessage("network.EndpointList"),
-		"network.AutoMsgSecurityGroupWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupWatchHelper"),
-		"network.AutoMsgSecurityGroupListHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgSecurityGroupListHelper{}
-			r := network.SecurityGroup{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"network.AutoMsgSgpolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyWatchHelper"),
-		"network.AutoMsgSgpolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgSgpolicyListHelper{}
-			r := network.Sgpolicy{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"network.EndpointList":              apisrvpkg.NewMessage("network.EndpointList"),
 		"network.AutoMsgServiceWatchHelper": apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
 		"network.AutoMsgServiceListHelper": apisrvpkg.NewMessage("network.AutoMsgServiceListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -597,6 +573,30 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 
 			into := network.AutoMsgNetworkListHelper{}
 			r := network.Network{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgSecurityGroupWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupWatchHelper"),
+		"network.AutoMsgSecurityGroupListHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgSecurityGroupListHelper{}
+			r := network.SecurityGroup{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgSgpolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyWatchHelper"),
+		"network.AutoMsgSgpolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgSgpolicyListHelper{}
+			r := network.Sgpolicy{}
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

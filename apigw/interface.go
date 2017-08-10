@@ -2,6 +2,7 @@ package apigw
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"github.com/pensando/sw/utils/log"
@@ -25,6 +26,13 @@ type APIGateway interface {
 	Run(config Config)
 	// Stop sends stop signal to API gateway
 	Stop()
+	// GetApiServerAddr gets the API server address to connect to
+	GetAPIServerAddr(svcaddr string) string
+	// WaitRunning blocks till the API gateway is completely initialized
+	WaitRunning()
+	// GetAddr returns the address at which the API gateway is listening
+	//   returns error if the API gateway is not initialized
+	GetAddr() (net.Addr, error)
 }
 
 // Config is all config used to start the API Gateway
@@ -32,7 +40,7 @@ type Config struct {
 	// HTTPAddr to start the Service on.
 	HTTPAddr string
 	// GrpcServerPort on which to start listening to the external GRPC requests.
-	GrpcServerPort string
+	APIServerOverride string
 	// DebugMode enables verbose logging and stack trace dump support.
 	DebugMode bool
 	// Logger to be used for logging.

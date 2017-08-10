@@ -112,9 +112,11 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux) error {
+	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 
 	grpcaddr := "localhost:8082"
+	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
 	codec := gogocodec.New(codecSize)
 	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))

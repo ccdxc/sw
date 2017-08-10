@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"context"
+	"net"
 
 	"google.golang.org/grpc"
 
@@ -61,6 +62,11 @@ type Server interface {
 	Run(config Config)
 	// Stop sends a stop signal to the API server
 	Stop()
+	// WaitRunning blocks till the API server is completely initialized
+	WaitRunning()
+	// GetAddr returns the address at which the API server is listening
+	//   returns error if the API server is not initialized
+	GetAddr() (net.Addr, error)
 }
 
 // Config holds config for the API Server.

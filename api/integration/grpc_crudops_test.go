@@ -40,7 +40,7 @@ func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kv
 }
 
 func TestGrpcCrudOps(t *testing.T) {
-	apiserverAddr := "localhost:8082"
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
 
 	ctx := context.Background()
 	// gRPC client
@@ -50,7 +50,7 @@ func TestGrpcCrudOps(t *testing.T) {
 	}
 
 	// REST Client
-	restcl, err := apiclient.NewRestAPIClient("http://localhost:9000")
+	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
@@ -127,6 +127,7 @@ func TestGrpcCrudOps(t *testing.T) {
 	wg.Add(1)
 
 	// ========= TEST gRPC CRUD Operations ========= //
+	t.Logf("test GRPC crud operations")
 	{ // --- Create resource via gRPC --- //
 		if ret, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub); err != nil {
 			t.Fatalf("failed to create publisher(%s)", err)
@@ -155,7 +156,7 @@ func TestGrpcCrudOps(t *testing.T) {
 		meta := api.ObjectMeta{Name: "Sahara"}
 		ret, err := apicl.BookstoreV1().Publisher().Get(ctx, &meta)
 		if err != nil {
-			t.Errorf("Error getting publisher (%s)", err)
+			t.Fatalf("Error getting publisher (%s)", err)
 		}
 
 		t.Logf("Received object %+v", *ret)
@@ -265,10 +266,11 @@ func TestGrpcCrudOps(t *testing.T) {
 		}
 	}
 
+	t.Logf("test REST crud operations")
 	{ // ---  POST of the object via REST --- //
 		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order1)
 		if err != nil {
-			t.Errorf("Create of Order failed (%s)", err)
+			t.Fatalf("Create of Order failed (%s)", err)
 		}
 		if !reflect.DeepEqual(retorder.Spec, order1.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
@@ -280,7 +282,7 @@ func TestGrpcCrudOps(t *testing.T) {
 	{ // ---  POST second  object via REST --- //
 		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order2)
 		if err != nil {
-			t.Errorf("Create of Order failed (%s)", err)
+			t.Fatalf("Create of Order failed (%s)", err)
 		}
 		if !reflect.DeepEqual(retorder.Spec, order2.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)

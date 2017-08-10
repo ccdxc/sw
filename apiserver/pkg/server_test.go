@@ -152,7 +152,28 @@ func TestRunApiSrv(t *testing.T) {
 		t.Errorf("Was expecting [2] hooks found [%d]", len(a.hookregs))
 	}
 	go a.Run(config)
-	err := errors.New("Testing Exit for Api Server")
+	a.WaitRunning()
+	_, err := a.GetAddr()
+	if err != nil {
+		t.Fatalf("failed to get API gateway address")
+	}
+	// Try again
+	doneCh := make(chan bool)
+	go func() {
+		a.WaitRunning()
+		_, err = a.GetAddr()
+		if err != nil {
+			t.Fatalf("failed to get API gateway address")
+		}
+		doneCh <- true
+	}()
+	select {
+	case <-doneCh:
+		// Good
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Timeout waiting on lock")
+	}
+	err = errors.New("Testing Exit for Api Server")
 	a.doneCh <- err
 	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "Testing Exit for Api Server") {

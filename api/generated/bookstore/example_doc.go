@@ -16,12 +16,12 @@ The following Messages are defined.
   OrderSpec
   OrderItem
   OrderStatus
+  AutoMsgPublisherWatchHelper
+  AutoMsgPublisherListHelper
   AutoMsgOrderWatchHelper
   AutoMsgOrderListHelper
   AutoMsgBookWatchHelper
   AutoMsgBookListHelper
-  AutoMsgPublisherWatchHelper
-  AutoMsgPublisherListHelper
 
 The following Services and Methods are defined.
 

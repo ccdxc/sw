@@ -35,6 +35,12 @@ type apiSrv struct {
 	kv kvstore.Interface
 	// doneCh is a error chan used to signal the apiSrv about async errors and exit
 	doneCh chan error
+	// runstate is set when the API server is ready to serve requests
+	runstate struct {
+		cond    *sync.Cond
+		running bool
+		addr    net.Addr
+	}
 }
 
 // singletonAPISrv is the singleton instance of the API server. This is
@@ -49,6 +55,7 @@ func initAPIServer() {
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
 	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
 	singletonAPISrv.doneCh = make(chan error)
+	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 
 }
 
@@ -117,7 +124,9 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	if err != nil {
 		panic(fmt.Sprintf("could not start a listener on port %v", config.GrpcServerPort))
 	}
-	a.Logger.Log("msg", "Started Listener", "Port", config.GrpcServerPort)
+	a.runstate.addr = ln.Addr()
+	a.Logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
+
 	// Create the GRPC connection for the server.
 	var s *grpc.Server
 	{
@@ -150,7 +159,12 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 
 	go func() {
-		a.Logger.Log("Grpc Listen Start", config.GrpcServerPort)
+		a.runstate.cond.L.Lock()
+		a.Logger.Log("Grpc Listen Start", a.runstate.addr)
+		a.runstate.running = true
+		a.runstate.cond.L.Unlock()
+		a.runstate.cond.Broadcast()
+
 		a.doneCh <- s.Serve(ln)
 		close(a.doneCh)
 	}()
@@ -167,4 +181,21 @@ func (a *apiSrv) Stop() {
 			break
 		}
 	}
+}
+
+func (a *apiSrv) WaitRunning() {
+	a.runstate.cond.L.Lock()
+	for !a.runstate.running {
+		a.runstate.cond.Wait()
+	}
+	a.runstate.cond.L.Unlock()
+}
+
+func (a *apiSrv) GetAddr() (net.Addr, error) {
+	a.runstate.cond.L.Lock()
+	defer a.runstate.cond.L.Unlock()
+	if a.runstate.running {
+		return a.runstate.addr, nil
+	}
+	return nil, fmt.Errorf("not running")
 }

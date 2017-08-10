@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"strings"
@@ -22,6 +23,13 @@ type apiGw struct {
 	svcname map[string]string
 	logger  log.Logger
 	doneCh  chan error
+	// runstate is set when the API server is ready to serve requests
+	runstate struct {
+		cond    *sync.Cond
+		running bool
+		addr    net.Addr
+	}
+	apiSrvOverride string
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -40,6 +48,7 @@ func initAPIGw() {
 	sinletonAPIGw.svcmap = make(map[string]apigw.APIGatewayService)
 	sinletonAPIGw.svcname = make(map[string]string)
 	sinletonAPIGw.doneCh = make(chan error)
+	sinletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 }
 
 // Register a service with the APi Gateway service. Duplicate registrations
@@ -138,12 +147,20 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	a.logger = config.Logger
+	a.apiSrvOverride = config.APIServerOverride
 
 	// Http Connection
 	m := http.NewServeMux()
 
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
+
+	ln, err := net.Listen("tcp", config.HTTPAddr)
+	if err != nil {
+		panic(fmt.Sprintf("could not start a listener on port %v", config.HTTPAddr))
+	}
+	a.runstate.addr = ln.Addr()
+	a.logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
 
 	// Let all the services complete registration. All services serveed by this
 	// gateway should have registered themselves via their init().
@@ -156,7 +173,6 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	// Now RUN!
-
 	if config.DebugMode {
 		m.Handle("/_debug/pprof/", http.HandlerFunc(pprof.Index))
 		m.Handle("/_debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
@@ -169,8 +185,13 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	go func() {
+		a.runstate.cond.L.Lock()
 		a.logger.InfoLog("msg", "Http Listen Start", "address", config.HTTPAddr)
-		a.doneCh <- http.ListenAndServe(config.HTTPAddr, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
+		a.runstate.running = true
+		a.runstate.cond.Broadcast()
+		a.runstate.cond.L.Unlock()
+
+		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.allowCORS(a.tracerMiddleware(m))))
 	}()
 
 	a.logger.Infof("exit", <-a.doneCh)
@@ -178,4 +199,34 @@ func (a *apiGw) Run(config apigw.Config) {
 
 func (a *apiGw) Stop() {
 	a.doneCh <- errors.New("User called stop")
+}
+
+// WaitRunning blocks till the API gateway is completely initialized
+func (a *apiGw) WaitRunning() {
+	a.runstate.cond.L.Lock()
+	for !a.runstate.running {
+		a.runstate.cond.Wait()
+	}
+	a.runstate.cond.L.Unlock()
+}
+
+// GetAddr returns the address at which the API gateway is listening
+//   returns error if the API gateway is not initialized
+func (a *apiGw) GetAddr() (net.Addr, error) {
+	a.runstate.cond.L.Lock()
+	defer a.runstate.cond.L.Unlock()
+	if a.runstate.running {
+		return a.runstate.addr, nil
+	}
+	return nil, fmt.Errorf("not running")
+}
+
+// GetApiServerAddr gets the API gateway address to connect to
+func (a *apiGw) GetAPIServerAddr(addr string) string {
+	// Currently this is only used to override the API server address.
+	//  returns the override address if set or return the original address
+	if a.apiSrvOverride != "" {
+		return a.apiSrvOverride
+	}
+	return addr
 }

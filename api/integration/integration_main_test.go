@@ -2,7 +2,7 @@ package integration
 
 import (
 	"bytes"
-	"fmt"
+	"net"
 	"os"
 	"testing"
 
@@ -23,14 +23,16 @@ import (
 )
 
 type tInfo struct {
-	l log.Logger
+	l             log.Logger
+	apiserverport string
+	apigwport     string
 }
 
 var tinfo tInfo
 
 func TestMain(m *testing.M) {
 	// Start the API server
-	apiserverAddress := ":8082"
+	apiserverAddress := ":0"
 	buf := &bytes.Buffer{}
 	config := log.GetDefaultConfig("GrpcClientExample")
 	l := log.GetNewLogger(config).SetOutput(buf)
@@ -51,22 +53,39 @@ func TestMain(m *testing.M) {
 	trace.Init("ApiServer")
 	srv := apiserverpkg.MustGetAPIServer()
 	go srv.Run(srvconfig)
+	srv.WaitRunning()
+	addr, err := srv.GetAddr()
+	if err != nil {
+		os.Exit(-1)
+	}
+	_, port, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		os.Exit(-1)
+	}
 
+	tinfo.apiserverport = port
 	// Start the API Gateway
 	gwconfig := apigw.Config{
-		HTTPAddr:  ":9000",
-		DebugMode: true,
-		Logger:    l,
+		HTTPAddr:          ":0",
+		DebugMode:         true,
+		Logger:            l,
+		APIServerOverride: "localhost:" + port,
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)
+	gw.WaitRunning()
+	addr, err = gw.GetAddr()
+	if err != nil {
+		os.Exit(-1)
+	}
+	_, port, err = net.SplitHostPort(addr.String())
+	if err != nil {
+		os.Exit(-1)
+	}
+	tinfo.apigwport = port
 
 	rcode := m.Run()
-
 	srv.Stop()
 	gw.Stop()
-	if rcode != 0 || testing.Verbose() {
-		fmt.Printf("======= Test Logs ============ (%d)\n %s", rcode, buf.String())
-	}
 	os.Exit(rcode)
 }

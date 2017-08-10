@@ -219,4 +219,25 @@ func TestRunApiGw(t *testing.T) {
 	if !strings.Contains(buf.String(), "Testing Exit for ApiGateway") {
 		t.Errorf("APiGateway Run did not close on error")
 	}
+	a.WaitRunning()
+	_, err = a.GetAddr()
+	if err != nil {
+		t.Fatalf("failed to get API gateway address")
+	}
+	// Try again
+	doneCh := make(chan bool)
+	go func() {
+		a.WaitRunning()
+		_, err = a.GetAddr()
+		if err != nil {
+			t.Fatalf("failed to get API gateway address")
+		}
+		doneCh <- true
+	}()
+	select {
+	case <-doneCh:
+		// Good
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Timeout waiting on lock")
+	}
 }
