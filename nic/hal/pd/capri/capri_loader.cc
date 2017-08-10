@@ -50,6 +50,7 @@ read_programs(const char *handle,
                 printf ("%s\n", ent->d_name);
                 program_info[i].name = ent->d_name;
                 i++;
+                assert(i < MAX_PROGRAMS);
             }
         }
         closedir (dir);

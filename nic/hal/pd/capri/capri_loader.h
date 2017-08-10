@@ -27,8 +27,8 @@
 /* Definition of maximum number of programs and parameters. 
  * TODO: Remove these artificial limits.
  */
-#define MAX_PROGRAMS	64
-#define MAX_PARAMS	64
+#define MAX_PROGRAMS	512
+#define MAX_PARAMS	512
 
 /* Capri loader's MPU program information structure */
 typedef struct {
