@@ -17,7 +17,7 @@ from infra.common.logging       import cfglogger
 class SwDscrObject(base.ConfigObjectBase):
     def __init__(self, ringname, swdreidx, parent):
         super().__init__()
-        self.Clone(Store.templates.Get("DSCR"))
+        self.Clone(Store.templates.Get("DESCR_AOL"))
         self.GID("%s_DESC%04d" % (ringname, swdreidx))
         # TODO: Populate the descriptor state from HAL
         return
