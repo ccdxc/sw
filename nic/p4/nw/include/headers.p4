@@ -420,23 +420,6 @@ header_type genv_t {
     }
 }
 
-header_type fabric_header_t {
-    fields {
-        bypass : 1;
-        reserved : 7;
-        ingressPort: 16;
-        ingressIfindex : 16;
-        ingressBd : 16;
-        reasonCode : 16;
-    }
-}
-
-header_type fabric_payload_header_t {
-    fields {
-        etherType : 16;
-    }
-}
-
 header_type roce_bth_t {
     fields {
         opCode : 8;

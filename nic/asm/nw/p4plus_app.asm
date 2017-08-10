@@ -17,6 +17,8 @@ p4plus_app_classic_nic:
   phvwr       p.p4_to_p4plus_header_valid, TRUE
   phvwr       p.p4_to_p4plus_tcp_proxy_p4plus_app_id, k.control_metadata_p4plus_app_id
 
+  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CLASSIC_NIC_HDR_SZ)
@@ -42,6 +44,8 @@ p4plus_app_tcp_proxy:
   indexn      r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
   phvwr       p.p4_to_p4plus_tcp_proxy_num_sack_blocks, r2
 
+  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_TCP_PROXY_HDR_SZ)

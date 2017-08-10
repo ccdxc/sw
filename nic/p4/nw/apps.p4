@@ -24,6 +24,8 @@ action p4plus_app_tcp_proxy() {
         modify_field(p4_to_p4plus_tcp_proxy.num_sack_blocks, 4);
     }
 
+    add_header(capri_rxdma_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_TCP_PROXY_HDR_SZ));
@@ -35,6 +37,8 @@ action p4plus_app_classic_nic() {
     add_header(p4_to_p4plus_header);
     modify_field(p4_to_p4plus_header.p4plus_app_id, control_metadata.p4plus_app_id);
 
+    add_header(capri_rxdma_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));

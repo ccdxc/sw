@@ -49,11 +49,18 @@ metadata parser_metadata_t parser_metadata;
 
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
-header recirc_header_t recirc_header;
+
+@pragma synthetic_header
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.no_data       capri_p4_intrinsic.no_data
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.recirc        capri_p4_intrinsic.recirc
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.frame_size    capri_p4_intrinsic.frame_size
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.packet_len    capri_p4_intrinsic.packet_len
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.recirc_count  capri_p4_intrinsic.recirc_count
+@pragma pa_field_union egress capri_rxdma_p4_intrisic.p4_pad        capri_p4_intrinsic.p4_pad
+header cap_phv_intr_p4_t  capri_rxdma_p4_intrinsic;
 
 header ethernet_t ethernet;
-header fabric_header_t fabric_header;
-header fabric_payload_header_t fabric_payload_header;
+header recirc_header_t recirc_header;
 header llc_header_t llc_header;
 header snap_header_t snap_header;
 header vlan_tag_t vlan_tag;
@@ -130,7 +137,6 @@ header capri_i2e_metadata_t capri_i2e_metadata;
 header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
 header p4_to_p4plus_roce_header_t p4_to_p4plus_roce;
 
-// Synthetic header definition using fld unions
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_tcp_proxy.srcPort      tcp.srcPort
 @pragma pa_field_union egress p4_to_p4plus_tcp_proxy.dstPort      tcp.dstPort
@@ -214,6 +220,7 @@ parser parse_i2e_metadata {
 
 @pragma deparse_only
 parser deparse_rxdma {
+    extract(capri_rxdma_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_header);
     extract(p4_to_p4plus_roce);
@@ -1102,19 +1109,5 @@ parser parse_inner_ethernet {
         ETHERTYPE_IPV4 : parse_inner_ipv4;
         ETHERTYPE_IPV6 : parse_inner_ipv6;
         default: ingress;
-    }
-}
-
-parser parse_fabric_header {
-    extract(fabric_header);
-    return parse_fabric_payload_header;
-}
-
-parser parse_fabric_payload_header {
-    extract(fabric_payload_header);
-    return select(latest.etherType) {
-        0 mask 0xfe00: parse_llc_header;
-        0 mask 0xfa00: parse_llc_header;
-        PARSE_ETHERTYPE;
     }
 }
