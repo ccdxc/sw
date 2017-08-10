@@ -104,6 +104,7 @@ class RandomNumGenerator(FrameworkFieldObject):
         return
 
     def get(self):
+        random.seed(0)
         return random.randint(self.start, self.end)
 
 
@@ -475,7 +476,7 @@ class FilterField(FrameworkFieldObject):
                 self.filters.append(('any', None))
                 return
             params = key_value_str.split('=')
-            assert(len(params) >= 1)
+            assert(len(params) == 2)
             self.filters.append((params[0], params[1]))
         return
 

@@ -523,8 +523,8 @@ class IP(Packet, IPTools):
 
 class TCP(Packet):
     name = "TCP"
-    fields_desc = [ShortEnumField("sport", 20, TCP_SERVICES),
-                   ShortEnumField("dport", 80, TCP_SERVICES),
+    fields_desc = [ShortField("sport", 20),
+                   ShortField("dport", 80),
                    IntField("seq", 0),
                    IntField("ack", 0),
                    BitField("dataofs", None, 4),
@@ -589,8 +589,8 @@ class TCP(Packet):
 
 class UDP(Packet):
     name = "UDP"
-    fields_desc = [ShortEnumField("sport", 53, UDP_SERVICES),
-                   ShortEnumField("dport", 53, UDP_SERVICES),
+    fields_desc = [ShortField("sport", 53),
+                   ShortField("dport", 53),
                    ShortField("len", None),
                    XShortField("chksum", None), ]
 

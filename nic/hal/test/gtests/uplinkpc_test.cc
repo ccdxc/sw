@@ -127,7 +127,7 @@ TEST_F(uplinkpc_test, test2)
     InterfaceSpec       pc_spec;
     InterfaceResponse   pc_rsp;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 1; i <= 8; i++) {
         spec.set_type(intf::IF_TYPE_UPLINK);
 
         spec.mutable_key_or_handle()->set_interface_id(i);

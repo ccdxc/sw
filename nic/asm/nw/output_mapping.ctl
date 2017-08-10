@@ -7,7 +7,7 @@ struct output_mapping_d d;
 struct phv_             p;
 
 d = {
-  u.set_tm_oport_d.nports = 0;
+  u.set_tm_oport_d.nports = 1;
   u.set_tm_oport_d.egress_port1 = TM_PORT_DMA;
   u.set_tm_oport_d.egress_port2 = TM_PORT_UPLINK_0;
   u.set_tm_oport_d.egress_port3 = TM_PORT_UPLINK_1;

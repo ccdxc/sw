@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import pdb
+import sys
 
 import infra.engine.modmgr as modmgr
 import infra.factory.factory as factory
@@ -58,6 +59,12 @@ def main():
         status = module.main(fwdata)
         module = modDB.getnext()
 
-    if not GlobalOptions.standalone:
-        report = TrigExpEngine.get_run_report(20)
-        report.show()
+    if GlobalOptions.standalone == True:
+        sys.exit(0)
+    
+    report = TrigExpEngine.get_run_report(20)
+    report.show()
+    if report.failed_count != 0:
+        sys.exit(1)
+        pdb.set_trace()
+    sys.exit(0)

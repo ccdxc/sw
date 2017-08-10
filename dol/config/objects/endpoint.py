@@ -3,6 +3,7 @@ import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
+import infra.config.base        as base
 
 import config.resmgr            as resmgr
 import config.objects.enic      as enic
@@ -13,7 +14,7 @@ import config.hal.defs          as haldefs
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
-class EndpointObject(objects.FrameworkObject):
+class EndpointObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(Store.templates.Get('ENDPOINT'))
@@ -101,6 +102,9 @@ class EndpointObject(objects.FrameworkObject):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle))
         return
+
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 # Helper Class to Generate/Configure/Manage Endpoint Objects.
 class EndpointObjectHelper:

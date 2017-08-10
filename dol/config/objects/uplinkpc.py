@@ -27,6 +27,7 @@ class UplinkPcObject(objects.FrameworkObject):
         self.mode   = spec.mode
 
         self.members = []
+        self.ports = []
 
         cfglogger.info("Creating UplinkPC = %s Port=%d" %\
                        (self.GID(), self.port))
@@ -34,6 +35,7 @@ class UplinkPcObject(objects.FrameworkObject):
         for mbr in spec.members:
             mbrobj = mbr.Get(Store)
             self.members.append(mbrobj)
+            self.ports.append(mbrobj.port)
         return
 
     def IsTrunkPort(self):

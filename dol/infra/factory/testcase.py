@@ -26,7 +26,7 @@ class TestCaseParser(parser.ParserBase):
 class TestCaseTrigExpPacketObject:
     def __init__(self):
         self.packet = None
-        self.ports  = [ 1 ]
+        self.ports  = None
         return
 
 class TestCaseTrigExpDescriptorObject:
@@ -115,7 +115,9 @@ class TestCase(objects.FrameworkObject):
             if spec_pkt.packet.object == None: continue
             tc_pkt = TestCaseTrigExpPacketObject()
             tc_pkt.packet = spec_pkt.packet.object.Get(self)
+            tc_pkt.ports = spec_pkt.packet.port.Get(self)
             self.info("    - Adding Packet: %s" % tc_pkt.packet.GID())
+            self.info("    -        Ports :", tc_pkt.ports)
             tc_section.packets.append(tc_pkt)
         return
 

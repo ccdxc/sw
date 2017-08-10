@@ -26,6 +26,7 @@ class UplinkObject(objects.FrameworkObject):
         self.status = haldefs.interface.IF_STATUS_UP
         self.sriov  = spec.sriov
         self.mode   = spec.mode
+        self.ports  = [ spec.port ]
 
         cfglogger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))

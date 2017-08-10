@@ -168,4 +168,25 @@ class FlowObject(base.ConfigObjectBase):
         return string
 
     def IsFilterMatch(self, config_filter):
-        return super().IsFilterMatch(config_filter.flow.filters)
+        # Match Source Tenant
+        match = self.sten.IsFilterMatch(config_filter.src.tenant)
+        if match == False: return match
+        # Match Destination Tenant
+        match = self.dten.IsFilterMatch(config_filter.dst.tenant)
+        if match == False: return match
+        # Match Source Segment
+        match = self.sseg.IsFilterMatch(config_filter.src.segment)
+        if match == False: return match
+        # Match Destination Segment
+        match = self.dseg.IsFilterMatch(config_filter.dst.segment)
+        if match == False: return match
+        # Match Source Endpoint
+        match = self.sep.IsFilterMatch(config_filter.src.endpoint)
+        if match == False: return match
+        # Match Destination Endpoint
+        match = self.dep.IsFilterMatch(config_filter.dst.endpoint)
+        if match == False: return match
+        # Match Flow
+        match = super().IsFilterMatch(config_filter.flow.filters)
+        if match == False: return match
+        return True

@@ -35,6 +35,8 @@ class ConfigObjectBase(objects.FrameworkObject):
             
             if value.isdigit():
                 value = int(value)
+            if value == 'None':
+                value = None
             cfglogger.verbose("  - %s: object" % attr, fvalue,
                               "filter:", value)
             if fvalue != value:

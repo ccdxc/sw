@@ -10,3 +10,6 @@ export PATH=$ASIC_SRC/common/tools/bin/:$PATH
 echo $PATH
 cd $ASIC_SRC/capri/model/cap_top
 gen_rtl -n -v
+
+$NIC_DIR/model_sim/cp_asic_bins.sh
+

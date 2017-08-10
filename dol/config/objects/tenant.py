@@ -73,7 +73,7 @@ class TenantObject(base.ConfigObjectBase):
     def IsOverlayVxlan(self):
         return self.overlay == 'VXLAN'
     def IsOverlayVlan(self):
-        return self.overlay == None
+        return self.overlay == 'VLAN'
     
     def __create_segments(self):
         for entry in self.spec.segments:

@@ -15,6 +15,7 @@ set_tm_oport:
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
   sll         r7, r7, 4
+  sub         r7, 28, r7, 4
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue 

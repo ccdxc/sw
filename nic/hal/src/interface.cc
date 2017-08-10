@@ -711,7 +711,7 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
                     spec.key_or_handle().interface_id());
 
     // TODO: for a member port, we can have valid pc#
-    hal_if->uplink_port_num = spec.if_uplink_info().port_num();
+    hal_if->uplink_port_num = spec.if_uplink_info().port_num() - 1;
     hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->vlans = bitmap::factory(4096);

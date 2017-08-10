@@ -132,6 +132,9 @@ class SegmentObject(base.ConfigObjectBase):
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.l2segment_status.l2segment_handle
         return
+    
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 # Helper Class to Generate/Configure/Manage Segment Objects.
 class SegmentObjectHelper:

@@ -128,7 +128,7 @@ def run_dol():
     os.chdir(dol_dir)
 
     log = open(dol_log, "w")
-    p = Popen(["./main.py", "-t", "fp/fp.spec"])
+    p = Popen(["./main.py"])
     #p = Popen(["./main.py", "-t", "fp/fp.spec"], stdout=log, stderr=log)
     #p = Popen(["./main.py", "--config-only"], stdout=log, stderr=log)
     print "* Starting DOL pid (" + str(p.pid) + ")"
