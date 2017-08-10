@@ -6,6 +6,7 @@
 #include <ht.hpp>
 #include <ip.h>
 #include <l2segment.hpp>
+#include <endpoint.hpp>
 #include <session.pb.h>
 #include <pd.hpp>
 
@@ -89,26 +90,28 @@ typedef struct flow_key_s {
     } __PACK__;
 } __PACK__ flow_key_t;
 
-// flow state
-struct flow_s {
-    hal_spinlock_t    slock;               // lock to protect this structure
+// flow config
+typedef struct flow_cfg_s {
     flow_key_t        key;                 // flow's key
     uint16_t          state:4;             // flow state
     uint16_t          action:3;            // flow action(s)
     uint16_t          role:1;              // flow role (initiator or responder)
     uint16_t          nat_type:3;          // type of NAT
-    uint64_t          create_ts;           // flow create timestamp
-    uint64_t          last_pkt_ts;         // last packet timestamp
-    uint64_t          packets;             // packet count on this flow
-    uint64_t          bytes;               // byte count on this flow
-    uint32_t          exception_bmap;      // exceptions seen on this flow
-    flow_t            *reverse_flow;       // reverse flow data
-    session_t         *session;            // session this flow belongs to, if any
+    uint16_t          mac_sa_rewrite:1;    // rewrite src mac
+    uint16_t          mac_da_rewrite:1;    // rewrite dst mac
     ip_addr_t         nat_sip;             // source NAT IP, if any
     ip_addr_t         nat_dip;             // destination NAT IP, if any
     uint16_t          nat_sport;           // NAT source port
     uint16_t          nat_dport;           // NAT destination port
     intf::LifQType    lif_qtype;           // qtype per flow
+} __PACK__ flow_cfg_t;
+
+// flow state
+struct flow_s {
+    hal_spinlock_t    slock;               // lock to protect this structure
+    flow_cfg_t       config;              // flow config
+    flow_t            *reverse_flow;       // reverse flow data
+    session_t         *session;            // session this flow belongs to, if any
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state
@@ -117,19 +120,41 @@ struct flow_s {
     ht_ctxt_t         flow_key_ht_ctxt;    // flow key based hash table context
 } __PACK__;
 
-typedef struct flow_tcp_state_s {
+typedef struct flow_state_s {
+    uint64_t        create_ts;           // flow create timestamp
+    uint64_t        last_pkt_ts;         // last packet timestamp
+    uint64_t        packets;             // packet count on this flow
+    uint64_t        bytes;               // byte count on this flow
+    uint32_t        exception_bmap;      // exceptions seen on this flow
     uint32_t        tcp_seq_num;
     uint32_t        tcp_ack_num;
     uint32_t        tcp_win_sz;
     uint8_t         tcp_win_scale;
     uint16_t        tcp_mss;
-} __PACK__ flow_tcp_state_t;
+} __PACK__ flow_state_t;
 
-typedef struct tcp_state_s {
+typedef struct session_state_s {
     uint8_t             tcp_ts_option:1;
-    flow_tcp_state_t    iflow_state;
-    flow_tcp_state_t    rflow_state;
-} __PACK__ tcp_state_t;
+    flow_state_t        iflow_state;
+    flow_state_t        rflow_state;
+} __PACK__ session_state_t;
+
+typedef struct session_args_s {
+    session_id_t        session_id;               // unique session id
+    uint16_t            conn_track_en:1;          // enable connection tracking
+    int32_t             syn_ack_delta;            // ACK delta of iflow
+    flow_cfg_t         *iflow;                    // initiator flow
+    flow_cfg_t         *rflow;                    // responder flow
+    session_state_t    *session_state;            // connection tracking state
+    tenant_t           *tenant;                   // tenant
+    ep_t               *sep;                      // spurce ep
+    ep_t               *dep;                      // dest ep
+    if_t               *sif;                      // source interface
+    if_t               *dif;                      // dest interface
+    l2seg_t            *sl2seg;                   // source l2seg
+    l2seg_t            *dl2seg;                   // dest l2seg
+} __PACK__ session_args_t;
+
 
 //------------------------------------------------------------------------------
 // A session consists of a initiator flow and responder flow
@@ -141,11 +166,11 @@ typedef struct tcp_state_s {
 struct session_s {
     hal_spinlock_t      slock;                    // lock to protect this structure
     session_id_t        session_id;               // unique session id
+    uint16_t            conn_track_en:1;          // enable connection tracking
     app_session_t       *app_session;             // app session this L4 session is part of, if any
     int32_t             syn_ack_delta;            // ACK delta of iflow
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
-    tcp_state_t         *tcp_state;               // TCP state of the session
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -194,6 +219,8 @@ extern uint32_t flow_compute_hash_func(void *key, uint32_t ht_size);
 extern bool flow_compare_key_func(void *key1, void *key2);
 
 extern hal_ret_t session_release(session_t *session);
+
+hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
 
 hal_ret_t session_create(session::SessionSpec& spec,
                          session::SessionResponse *rsp);

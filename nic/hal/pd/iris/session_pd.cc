@@ -119,7 +119,8 @@ p4pd_del_flow_stats_table_entries (pd_session_t *session_pd)
 //------------------------------------------------------------------------------
 hal_ret_t
 p4pd_add_session_state_table_entry (pd_session_t *session_pd,
-                                 nwsec_profile_t *nwsec_profile)
+                                    session_state_t *session_state,
+                                    nwsec_profile_t *nwsec_profile)
 {
     hal_ret_t                ret;
     DirectMap                *dm;
@@ -138,37 +139,41 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     // populate the action information
     d.actionid = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
 
-    // responder flow specific information
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
-        session->tcp_state->iflow_state.tcp_seq_num;
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
-        session->tcp_state->iflow_state.tcp_ack_num;
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_sz =
-        session->tcp_state->iflow_state.tcp_win_sz;
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_scale =
-        session->tcp_state->iflow_state.tcp_win_scale;
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
-        session->tcp_state->iflow_state.tcp_mss;
     d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
-        iflow->state;
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
-        iflow->exception_bmap;
-
-    // responder flow specific information
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
-        session->tcp_state->rflow_state.tcp_seq_num;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
-        session->tcp_state->rflow_state.tcp_ack_num;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_sz =
-        session->tcp_state->rflow_state.tcp_win_sz;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_scale =
-        session->tcp_state->rflow_state.tcp_win_scale;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_mss =
-        session->tcp_state->rflow_state.tcp_mss;
+        iflow->config.state;
     d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_state =
-        rflow->state;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
-        rflow->exception_bmap;
+        rflow->config.state;
+
+    if (session_state) {
+        // initiator flow specific information
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
+            session_state->iflow_state.tcp_seq_num;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
+            session_state->iflow_state.tcp_ack_num;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_sz =
+            session_state->iflow_state.tcp_win_sz;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_scale =
+            session_state->iflow_state.tcp_win_scale;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
+            session_state->iflow_state.tcp_mss;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
+            session_state->iflow_state.exception_bmap;
+
+        // responder flow specific information
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
+            session_state->rflow_state.tcp_seq_num;
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
+            session_state->rflow_state.tcp_ack_num;
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_sz =
+            session_state->rflow_state.tcp_win_sz;
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_scale =
+            session_state->rflow_state.tcp_win_scale;
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_mss =
+            session_state->rflow_state.tcp_mss;
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
+            session_state->rflow_state.exception_bmap;
+    }
+    
 
     // session level information
     d.session_state_action_u.session_state_tcp_session_state_info.syn_cookie_delta =
@@ -251,17 +256,13 @@ hal_ret_t
 p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
                                 l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                                 nwsec_profile_t *nwsec_profile,
-                                flow_t *flow, pd_flow_t *flow_pd,
+                                flow_cfg_t *flow, pd_flow_t *flow_pd,
                                 if_t *sif, if_t *dif, ep_t *sep, ep_t *dep,
                                 bool mcast)
 {
     hal_ret_t                ret;
     DirectMap                *dm;
     flow_info_actiondata     d = { 0};
-    ep_t                     *dst_ep;
-    l2seg_t                  *dst_l2seg;
-    if_t                     *dst_if;
-    bool                     routing = false;
     timespec_t               ts;
 
     HAL_ASSERT(dep != NULL);
@@ -271,35 +272,9 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     // populate the action information
     d.actionid = FLOW_INFO_FLOW_INFO_ID;
 
-    // re-derive dst L2 segment if we are going to do NAT as the destination is
-    // going to change
-    if (flow->nat_type == NAT_TYPE_DNAT ||
-        flow->nat_type == NAT_TYPE_TWICE_NAT) {
-        if (flow->nat_dip.af == IP_AF_IPV4) {
-            dst_ep = find_ep_by_v4_key(tenant->tenant_id,
-                                       flow->nat_dip.addr.v4_addr);
-        } else {
-            dst_ep = find_ep_by_v6_key(tenant->tenant_id, &flow->nat_dip);
-        }
-        HAL_ASSERT(dst_ep != NULL);
-        dst_l2seg = find_l2seg_by_handle(dst_ep->l2seg_handle);
-        HAL_ASSERT(dst_l2seg != NULL);
-        dst_if = find_if_by_handle(dst_ep->if_handle);
-        HAL_ASSERT(dst_if != NULL);
-    } else {
-        dst_ep = dep;
-        dst_l2seg = l2seg_d;
-        dst_if = dif;
-    }
-
-    // check to see if routing needs to be done
-    if (l2seg_s != dst_l2seg) {
-        routing = true;
-    }
-
     if (!mcast) {
         d.flow_info_action_u.flow_info_flow_info.lif =
-            ep_pd_get_hw_lif_id(dst_ep);
+            ep_pd_get_hw_lif_id(dep);
     } else {
     }
 
@@ -319,13 +294,13 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
         //ep_get_rewrite_index(dst_ep);
         //ep_pd_get_rw_tbl_idx_from_pi_ep(dst_ep, REWRITE_L3_REWRITE_ID);
     //d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = 0;
-    if (is_l2seg_fabric_encap_vxlan(dst_l2seg)) {
+    if (is_l2seg_fabric_encap_vxlan(l2seg_d)) {
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid =
-            dst_l2seg->fabric_encap.val;
+            l2seg_d->fabric_encap.val;
     }
 
     // there is no transit case for us, so this is always FALSE
-    if (is_if_type_tunnel(dst_if) && (sif->if_type != dif->if_type)) {
+    if (is_if_type_tunnel(dif) && (sif->if_type != dif->if_type)) {
         d.flow_info_action_u.flow_info_flow_info.tunnel_originate = TRUE;
     } else {
         d.flow_info_action_u.flow_info_flow_info.tunnel_originate = FALSE;
@@ -370,7 +345,7 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
-    session_pd_fill_queue_info(dst_ep,
+    session_pd_fill_queue_info(dep,
                                flow->lif_qtype,
                                &d.flow_info_action_u.flow_info_flow_info.qid_en,
                                &d.flow_info_action_u.flow_info_flow_info.qtype,
@@ -380,18 +355,16 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;
 
-    d.flow_info_action_u.flow_info_flow_info.mac_sa_rewrite =
-        routing ? TRUE : FALSE;
-    d.flow_info_action_u.flow_info_flow_info.mac_da_rewrite =
-        (dep != dst_ep) ? TRUE : FALSE;
+    d.flow_info_action_u.flow_info_flow_info.mac_sa_rewrite = flow->mac_sa_rewrite;
+    d.flow_info_action_u.flow_info_flow_info.mac_da_rewrite = flow->mac_da_rewrite;
+
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.ttl_dec = FALSE;
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track =
-        session->tcp_state ? TRUE : FALSE;
+    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
-        session->tcp_state ? flow_pd->session_state_hw_id : 0;
+        session->conn_track_en ? flow_pd->session_state_hw_id : 0;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 
@@ -463,7 +436,7 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
                                          args->l2seg_s, args->l2seg_d,
                                          args->nwsec_prof,
-                                         args->session->iflow,
+                                         &args->session->iflow->config,
                                          &session_pd->iflow,
                                          args->sif, args->dif,
                                          args->sep, args->dep,
@@ -477,7 +450,7 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
         ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
                                              args->l2seg_d, args->l2seg_s,
                                              args->nwsec_prof,
-                                             args->session->rflow,
+                                             &args->session->rflow->config,
                                              &session_pd->rflow,
                                              args->dif, args->sif,
                                              args->dep, args->sep,
@@ -495,7 +468,7 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_hash_table_entry (flow_t *flow, pd_l2seg_t *l2seg_pd,
+p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
                                 pd_flow_t *flow_pd)
 {
     hal_ret_t                ret;
@@ -562,7 +535,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     hal_ret_t               ret;
     session_t               *session = (session_t *)session_pd->session;
 
-    ret = p4pd_add_flow_hash_table_entry(session->iflow,
+    ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
                                          (pd_l2seg_t *)args->l2seg_s->pd,
                                          &session_pd->iflow);
     if (ret != HAL_RET_OK) {
@@ -570,7 +543,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     }
 
     if (session_pd->rflow_valid) {
-        ret = p4pd_add_flow_hash_table_entry(session->rflow,
+        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config,
                                              (pd_l2seg_t *)args->l2seg_d->pd,
                                              &session_pd->rflow);
         if (ret != HAL_RET_OK) {
@@ -611,9 +584,9 @@ pd_session_create (pd_session_args_t *args)
     }
 
     // if connection tracking is on, add flow state entry for this session
-    if (args->session->tcp_state) {
+    if (args->session->conn_track_en) {
         session_pd->conn_track_en = TRUE;
-        ret = p4pd_add_session_state_table_entry(session_pd, args->nwsec_prof);
+        ret = p4pd_add_session_state_table_entry(session_pd, args->session_state, args->nwsec_prof);
         if (ret != HAL_RET_OK) {
             goto cleanup;
         }
@@ -638,7 +611,7 @@ cleanup:
 
     if (session_pd) {
         p4pd_del_flow_stats_table_entries(session_pd);
-        p4pd_del_flow_stats_table_entry(session_pd->session_state_idx);
+        p4pd_del_session_state_table_entry(session_pd->session_state_idx);
         p4pd_del_flow_info_table_entries(session_pd);
         session_pd_free(session_pd);
         args->session->pd = NULL;

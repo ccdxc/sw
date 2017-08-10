@@ -165,11 +165,6 @@ hal_state::init(void)
                                true, true, true, true);
     HAL_ASSERT_RETURN((flow_slab_ != NULL), false);
 
-    tcp_state_slab_ = slab::factory("TCP state", HAL_SLAB_TCP_STATE,
-                                    sizeof(hal::tcp_state_t), 128,
-                                    true, true, true, true);
-    HAL_ASSERT_RETURN((tcp_state_slab_ != NULL), false);
-
     session_slab_ = slab::factory("Session", HAL_SLAB_SESSION,
                                   sizeof(hal::session_t), 128,
                                   true, true, true, true);
@@ -345,7 +340,6 @@ hal_state::hal_state()
 
     flow_slab_ = NULL;
     session_slab_ = NULL;
-    tcp_state_slab_ = NULL;
     flow_ht_ = NULL;
     session_id_ht_ = NULL;
     session_hal_handle_ht_ = NULL;
@@ -404,7 +398,6 @@ hal_state::~hal_state()
     ep_l3_entry_ht_ ? delete ep_l3_entry_ht_ : HAL_NOP;
 
     flow_slab_ ? delete flow_slab_ : HAL_NOP;
-    tcp_state_slab_ ? delete tcp_state_slab_ : HAL_NOP;
     session_slab_ ? delete session_slab_ : HAL_NOP;
     flow_ht_ ? delete flow_ht_ : HAL_NOP;
     session_id_ht_ ? delete session_id_ht_ : HAL_NOP;
@@ -504,10 +497,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SESSION:
         g_hal_state->session_slab()->free_(elem);
-        break;
-
-    case HAL_SLAB_TCP_STATE:
-        g_hal_state->tcp_state_slab()->free_(elem);
         break;
 
     case HAL_SLAB_SECURITY_PROFILE:

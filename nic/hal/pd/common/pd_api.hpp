@@ -67,6 +67,7 @@ typedef struct pd_sessoin_args_s {
     ep_t               *sep;
     ep_t               *dep;
     session_t          *session;
+    session_state_t    *session_state;
 } __PACK__ pd_session_args_t;
 
 typedef struct pd_l2seg_uplink_args_s {
@@ -136,6 +137,7 @@ pd_session_args_init (pd_session_args_t *args)
     args->sif = args->dif = NULL;
     args->sep = args->dep = NULL;
     args->session = NULL;
+    args->session_state = NULL;
     return;
 }
 

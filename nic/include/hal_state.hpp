@@ -71,7 +71,6 @@ public:
     // get APIs for flow/session state
     slab *flow_slab(void) const { return flow_slab_; }
     slab *session_slab(void) const { return session_slab_; }
-    slab *tcp_state_slab(void) const { return tcp_state_slab_; }
     ht *session_id_ht(void) const { return session_id_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
 
@@ -159,7 +158,6 @@ private:
     // flow/session related state
     struct {
         slab       *flow_slab_;
-        slab       *tcp_state_slab_;
         slab       *session_slab_;
         ht         *flow_ht_;
         ht         *session_id_ht_;
