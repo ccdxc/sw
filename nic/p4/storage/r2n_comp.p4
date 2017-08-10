@@ -61,7 +61,8 @@ action qcheck(idx, state, c_ndx, p_ndx, p_ndx_db, c_ndx_db, base_addr,
  *         figure out actions for next stage.
  *****************************************************************************/
 
-action qpop(time_us, be_status, is_q0, rsvd, cmd_handle, nvme_status) {
+action qpop(time_us, be_status, is_q0, rsvd, cmd_handle,
+            nvme_sta_lo, nvme_sta_cid, nvme_sta_w7) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(nvme_be_resp.time_us, time_us);
@@ -69,7 +70,7 @@ action qpop(time_us, be_status, is_q0, rsvd, cmd_handle, nvme_status) {
   modify_field(nvme_be_resp.is_q0, is_q0);
   modify_field(nvme_be_resp.rsvd, rsvd);
   modify_field(nvme_be_resp.cmd_handle, cmd_handle);
-  modify_field(nvme_be_resp.nvme_status, nvme_status);
+  COPY_NVME_STATUS(nvme_be_resp)
 
   // Save ROCE buffer header address in a special place for offset computation
   modify_field(r2n.rbuf_hdr_addr, cmd_handle);

@@ -10,25 +10,24 @@
 #include "INGRESS_p.h"
 
 
-struct ssd_saved_cmds2_k k;
-struct ssd_saved_cmds2_release_d d;
+struct ssd_cmds_k k;
+struct ssd_cmds_release_d d;
 struct phv_ p;
 
 %%
+   .param	nvme_be_cq_entry_push_start
 
 ssd_saved_cmd_release_start:
-   // Save the entire d vector to PHV
-   phvwr	p.{ssd_cmds_bitmap}, d.{bitmap}
 
    // Clear the bit corresponding to the cmd_index in the table
-   add		r5, r0, k.nvme_be_cmd_index
+   add		r5, r0, k.nvme_tgt_kivec0_cmd_index
    sllv		r4, 1, r5
    xor		r4, r4, -1
    tbland	d.bitmap, r4
 
    // Set the table and program address 
-   LOAD_TABLE_FBASE_IDX(NVME_BE_CQ_CTX_TABLE_BASE, k.scq_ctx_idx, Q_CTX_SIZE,
-                        Q_CTX_SIZE, nvme_be_cq_entry_push)
+   LOAD_TABLE_FBASE_IDX(NVME_BE_CQ_CTX_TABLE_BASE, k.nvme_tgt_kivec0_paired_q_idx, Q_CTX_SIZE,
+                        Q_CTX_SIZE, nvme_be_cq_entry_push_start)
 
 exit:
    nop.e

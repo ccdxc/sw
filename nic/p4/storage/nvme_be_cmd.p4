@@ -86,6 +86,7 @@ action skip() {
  *****************************************************************************/
 
 action load() {
+
   // Store to scratch metadata to get the I part of the K vector
   NVME_TGT_KIVEC0_USE(storage_scratch, nvme_tgt_kivec0)
   NVME_TGT_KIVEC1_USE(storage_scratch, nvme_tgt_kivec1)
@@ -161,11 +162,12 @@ action wrr(lo_weight, med_weight, hi_weight, lo_running,
  *****************************************************************************/
 
 action copy(src_queue_id, ssd_handle, io_priority, is_read, cmd_handle) {
+
   // Carry forward state information in the PHV
   COPY_NVME_CMD1(nvme_be_cmd_p)
 
   // Set key to load the second part of NVME command in next stage.
-  CAPRI_LOAD_TABLE_OFFSET(common_te0_phv, common_te0_phv.table_pc, 
+  CAPRI_LOAD_TABLE_OFFSET(common_te0_phv, common_te0_phv.table_addr, 
                           R2N_NVME_CMD_OFFSET, R2N_NVME_CMD_SIZE,
                           nvme_be_sq_entry_pop)
 }

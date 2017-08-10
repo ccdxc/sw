@@ -37,11 +37,15 @@
   modify_field(be_cmd.cmd_handle, cmd_handle);				\
   modify_field(be_cmd.pad, 0);						\
 
-
 #define COPY_NVME_CMD2(be_cmd)						\
   modify_field(be_cmd.nvme_cmd_w0, nvme_cmd_w0);			\
   modify_field(be_cmd.nvme_cmd_cid, nvme_cmd_cid);			\
   modify_field(be_cmd.nvme_cmd_hi, nvme_cmd_hi);			\
+
+#define COPY_NVME_STATUS(be_sta)					\
+  modify_field(be_sta.nvme_sta_lo, nvme_sta_lo);			\
+  modify_field(be_sta.nvme_sta_cid, nvme_sta_cid);			\
+  modify_field(be_sta.nvme_sta_w7, nvme_sta_w7);			\
 
 // Macros to save the SSD information into PHV
 #define COPY_SSD_INFO(ssd_info)						\
@@ -129,7 +133,9 @@ header_type nvme_be_resp_t {
     is_q0        : 8;      // Is queue 0 (admin queue)
     rsvd         : 16;     // Padding for 64 bit alignment
     cmd_handle   : 64;     // Pointer to the ROCE buffer
-    nvme_status  : 128;    // NVME status
+    nvme_sta_lo  : 96;     // First 12 bytes of NVME status
+    nvme_sta_cid : 16;     // Next 16 bits of NVME status (command id)
+    nvme_sta_w7  : 16;     // Final 16 bits of NVME status
   }
 }
 

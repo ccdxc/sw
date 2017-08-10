@@ -27,5 +27,5 @@ clean:
 	rm -rf $(shell basename $(CURDIR))
 
 %.bin: %.s
-	../../../capsim/gen/bin/capas -I../../../p4/storage/common/ -I../include -I./include $< -o $@
+	../../../asic/capri/model/capsim-gen/bin/capas -I../../../p4/storage/common/ -I../include -I./include $< -o $@
 

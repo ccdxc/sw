@@ -32,8 +32,6 @@ header_type storage_scratch_metadata_t {
     io_priority     : 8;      // I/O priority to select queue
     cmd_index       : 8;      // Saved command index
     qp_index        : 32;     // queue pair index
-    nvme_cmd_w0  : 16;     // First 16 bits of actual NVME command
-    nvme_cmd_cid : 16;     // Next 16 bits of actual NVME command (command id)
     rbuf_hdr_addr   : 64;     // Address of the ROCE buffer header
     is_read         : 8;      // If NVME command is a read
     desc_size       : 16;     // The size of desc. at the end.
@@ -42,7 +40,7 @@ header_type storage_scratch_metadata_t {
     tbl_entry_addr  : 64;     // Table entry address
     tbl_entry_db    : 64;     // Table entry address doorbell
     is_last         : 1;      // Last entry in this sequence.
-    prp_assist   : 1;      // Download additional PRP entries (upto 16)
+    prp_assist      : 1;      // Download additional PRP entries (upto 16)
   }
 }
 

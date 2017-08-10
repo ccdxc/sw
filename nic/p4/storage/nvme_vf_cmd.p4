@@ -7,6 +7,10 @@
 
 #include "common/dummy.p4"
 
+#define tx_table_s0_t0 nvme_vf_sq_ctx
+#define tx_table_s1_t0 nvme_vf_sq_entry
+#define tx_table_s2_t0 pvm_vf_sq_ctx
+
 #define tx_table_s0_t0_action qcheck
 #define tx_table_s1_t0_action qpop
 #define tx_table_s2_t0_action qpush

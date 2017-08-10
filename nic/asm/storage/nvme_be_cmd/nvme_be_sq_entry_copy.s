@@ -24,6 +24,6 @@ foo:
 
    // Set the table and program address
    // TODO: FIXME on the bitwise split of table_pc
-   LOAD_TABLE_CBASE_OFFSET(k.common_te0_phv_table_pc_sbit4_ebit27, 
+   LOAD_TABLE_CBASE_OFFSET(k.common_te0_phv_table_addr, 
                            R2N_NVME_CMD_OFFSET,
                            R2N_NVME_CMD_SIZE, nvme_be_sq_entry_pop_start)

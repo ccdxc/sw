@@ -9,8 +9,8 @@
 #include "INGRESS_p.h"
 
 
-struct tx_table_s1_t0_k k;
-struct tx_table_s1_t0_qpop_d d;
+struct pvm_vf_cq_entry_k k;
+struct pvm_vf_cq_entry_qpop_d d;
 struct phv_ p;
 
 %%

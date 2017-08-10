@@ -8,12 +8,13 @@
 #include "INGRESS_p.h"
 
 
-struct tx_table_s0_t0_k k;
-struct tx_table_s0_t0_qcheck_d d;
+struct nvme_vf_sq_ctx_k k;
+struct nvme_vf_sq_ctx_qcheck_d d;
 struct phv_ p;
 
 %%
    .param	nvme_vf_sq_entry_pop_start
+
 nvme_vf_sq_ctx_check_start:
    // Save relevant parts of the d vector to PHV
    phvwr	p.nvme_init_kivec0_idx, d.idx

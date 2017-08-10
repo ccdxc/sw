@@ -292,10 +292,11 @@
 #define SSD_INFO_UPDATE_AND_LOAD(_pri_vec, _pri_val, _pri_ctr, 		\
                                  _global_ctr, _decr_val, _branch_instr,	\
                                  _stage_entry)				\
-   bnei         _pri_vec, _pri_val, _branch_instr;			\
-   nop;									\
-   tblsub       _pri_ctr, _decr_val;					\
-   tblsub       _global_ctr, _decr_val;					\
+   add		r4, r0, _pri_vec;					\
+   bnei         r4, _pri_val, _branch_instr;				\
+   addi		r5, r0, _decr_val;					\
+   tblsub       _pri_ctr, r5;						\
+   tblsub       _global_ctr, r5;					\
    LOAD_NO_TABLE(_stage_entry);						\
 
 // Check if PRP assist can be done based on command parameters like opcode,

@@ -8,8 +8,8 @@
 #include "INGRESS_p.h"
 
 
-struct tx_table_s0_t1_k k;
-struct tx_table_s0_t0_qcheck_d d;
+struct pvm_vf_cq_ctx_k k;
+struct pvm_vf_cq_ctx_qcheck_d d;
 struct phv_ p;
 
 %%

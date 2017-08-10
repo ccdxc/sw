@@ -55,7 +55,7 @@
 #define PVM_ERRQ_DEFAULT_IDX			0
 
 // Offset and size (in bytes) of NVME command in ROCE CQ entry
-#define R2N_NVME_HDR_SIZE			16  
+#define R2N_NVME_HDR_SIZE			64	// With flit padding
 #define R2N_NVME_CMD_OFFSET			R2N_NVME_HDR_SIZE  
 #define R2N_NVME_CMD_SIZE			64  
 #define NVME_BE_SQ_ENTRY_SIZE	       		(R2N_NVME_HDR_SIZE + R2N_NVME_CMD_SIZE)

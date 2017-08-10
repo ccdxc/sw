@@ -10,8 +10,9 @@
 struct phv_ p;
 
 %%
+   .param	ssd_saved_cmd_tbl_addr_load_start
 
 ssd_saved_cmd_skip_stage_start:
    // Move the next (skip) stage without loading a table. This is done to
    // line up the stages.
-   LOAD_NO_TABLE(ssd_saved_cmd_tbl_addr_load)
+   LOAD_NO_TABLE(ssd_saved_cmd_tbl_addr_load_start)
