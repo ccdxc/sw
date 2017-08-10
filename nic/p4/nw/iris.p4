@@ -82,6 +82,8 @@ header_type scratch_metadata_t {
         force_flow_hit             : 1;
         qid_en                     : 1;
         log_en                     : 1;
+        ingress_mirror_en          : 1;
+        egress_mirror_en           : 1;
         entry_valid                : 1;
         oport_en                   : 1;
         stats_idx                  : 5;
