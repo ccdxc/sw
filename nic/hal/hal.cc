@@ -7,6 +7,7 @@
 #include <hal.hpp>
 #include <hal_pd.hpp>
 #include <periodic/periodic.hpp>
+#include <lif_manager.hpp>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 
@@ -15,6 +16,7 @@ namespace hal {
 thread    *g_hal_threads[HAL_THREAD_ID_MAX];
 uint64_t  hal_handle = 1;
 bool      gl_super_user = false;
+LIFManager *g_lif_manager = nullptr;
 
 thread_local thread *t_curr_thread;
 
@@ -200,6 +202,8 @@ hal_init (hal_cfg_t *hal_cfg)
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
+
+    g_lif_manager = new LIFManager();
 
     return HAL_RET_OK;
 }

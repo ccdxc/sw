@@ -10,23 +10,28 @@
 
 namespace hal {
 
-class LIFToQstateParams {
- public:
-  uint32_t lif_id;
-  struct PerTypeEntry {
-    uint8_t entries:8,
+const static uint32_t kNumQTypes = 8;
+
+// Parameters for the InitLIFToQstate call.
+struct LIFQStateParams {
+  struct {
+    uint8_t entries:5,
             size:3;
-  } per_type_ent[8];
+  } type[kNumQTypes];
+};
 
-  // In future we can also add a user specific handle here.
-
-  LIFToQstateParams() {
-    bzero(this, sizeof(*this));
-  }
-
- private:
-  uint64_t impl_handle_;  // Implementation specific handle.
-  friend class LIFManagerBase;
+// Per LIF queue state managed by the LIF Manager.
+struct LIFQState {
+  uint32_t lif_id;
+  uint32_t allocation_size;   // Amount of HBM allocated.
+  uint64_t hbm_address;       // Use uint64_t to support tests.
+  LIFQStateParams params_in;  // A copy of user input.
+  struct {                    // Per type data.
+    uint32_t hbm_offset;
+    uint32_t qsize;
+    uint32_t rsvd;
+    uint32_t num_queues;
+  } type[kNumQTypes];
 };
 
 class LIFManagerBase {
@@ -45,41 +50,71 @@ class LIFManagerBase {
   // qstates with each LIF.
   // void LIFRangeDelete(uint32_t start, uint32_t count);
 
-  // Callers are not suppose to allocate LIFToQstateParams.
-  // They should call this function to retrieve the pointer,
-  // initialize the params and then call InitLIFToQstate().
-  // Returns a pointer to params upon success and nullptr in case
-  // of failure (invalid LIF ID, LIF not alloced).
-  LIFToQstateParams *GetLIFToQstateParams(uint32_t lif_id);
 
   // Initialize the LIF to Qstate Map in hw and allocate any
   // metadata.
   // Returns
   //   0 -      In case of success.
   //   -errno - In case of failure.
-  int32_t InitLIFToQstate(LIFToQstateParams *params);
+  int32_t InitLIFQState(uint32_t lif_id, LIFQStateParams *params);
+
+  // Get the qstate address for a LIF, type and qid.
+  // Returns:
+  //   Positive address in case of success.
+  //   -errno in case of failure.
+  int32_t GetLIFQStateAddr(uint32_t lif_id, uint32_t type, uint32_t qid);
+
+  // Return QState for a LIF/Type/QID. The user must pass in the buffer
+  // to read the state in. Its ok to pass a buffer of smaller size (> 0).
+  // If the passed in buffer is larger than the queue size, only queue size
+  // worth of data will be read.
+  // Returns:
+  //   0     - success.
+  //   -errno- failure.
+  int32_t ReadQState(uint32_t lif_id, uint32_t type, uint32_t qid,
+                     uint8_t *buf, uint32_t bufsize);
+ 
+  // Set QState for a LIF/Type/QID. The user must pass in the buffer
+  // to write the state. Its ok to pass a buffer of smaller size (> 0).
+  // If the passed in buffer is larger than the queue size, the call will
+  // fail. 
+  // Returns:
+  //   0     - success.
+  //   -errno- failure.
+  int32_t WriteQState(uint32_t lif_id, uint32_t type, uint32_t qid,
+                      uint8_t *buf, uint32_t bufsize);
+
+  // GetPCOffset for a specific P4+ program.
+  virtual int32_t GetPCOffset(
+      char *prog_name, char *label, uint8_t *offset) = 0;
 
   // Implement later
   // void DestroyLIFToQstate(uint32_t lif_id);
 
  protected:
-  // Implementation specific
-  // Initialize the LIF to Qstate Map in hw and allocate any
-  // metadata. The implementation can return a uint64_t to
-  // be stored along with the map. This will be passed to future
-  // calls to the implementation.
+  // Interactions with Model/HW.
+  // Initialize the LIF Qstate in hw and allocate any memory.
   // Returns
   //   0 -      In case of success.
   //   -errno - In case of failure.
-  virtual int32_t InitLIFToQstateImpl(LIFToQstateParams *params,
-                                      uint64_t *ret_handle) = 0;
+  virtual int32_t InitLIFQStateImpl(LIFQState *qstate) = 0;
+
+  virtual int32_t ReadQStateImpl(
+      uint32_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
+  virtual int32_t WriteQStateImpl(
+      uint32_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
 
  private:
   const uint32_t kNumMaxLIFs = 2048;
 
+  LIFQState *GetLIFQState(uint32_t lif_id);
+
   std::mutex lk_;
   BMAllocator lif_allocator_;
-  std::map<uint32_t, LIFToQstateParams> alloced_lifs_;
+  std::map<uint32_t, LIFQState> alloced_lifs_;
+
+  // Test only
+  friend class MockLIFManager;
 };
 
 }  // namespace hal

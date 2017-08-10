@@ -4,6 +4,7 @@ SHAREDLIBRARY = libhalpi.so
 
 LCXXFLAGS = \
 			-I. \
+			-I.. \
 			-I../svc \
 			-I../../gen/protobuf \
 			-I../../include \
@@ -25,6 +26,9 @@ SOURCES = \
 		  endpoint_api.cc \
 		  nwsec_api.cc \
 		  qos_api.cc \
+		  bm_allocator.cc \
+		  lif_manager_base.cc \
+		  lif_manager.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

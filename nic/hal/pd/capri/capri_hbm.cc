@@ -85,7 +85,7 @@ capri_hbm_parse()
 }
 
 uint32_t
-get_start_offset(char *reg_name)
+get_start_offset(const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
@@ -100,7 +100,7 @@ get_start_offset(char *reg_name)
 }
 
 uint32_t
-get_size_kb(char *reg_name)
+get_size_kb(const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 

@@ -7,6 +7,9 @@
 
 namespace hal {
 
+class LIFManager;
+extern LIFManager *g_lif_manager;
+
 using utils::thread;
 
 //------------------------------------------------------------------------------

@@ -11,6 +11,7 @@ LCXXFLAGS = \
 			-I. \
 			-I./csr \
 			-I../.. \
+			-I../../src \
 			-I../../../include \
 			-I../../../third-party/spdlog/include \
 			-I/usr/local/include \
@@ -37,6 +38,7 @@ SOURCES = \
 		  capri_tbl_rw.cc \
 		  capri_hbm.cc \
 		  capri_tm_rw.cc \
+		  capri_qstate.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

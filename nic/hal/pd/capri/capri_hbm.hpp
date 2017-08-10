@@ -11,6 +11,8 @@
 
 #define JP4_PRGM                 "p4_program"
 
+#include <base.h>
+
 typedef struct capri_hbm_region_s {
     char        mem_reg_name[CAPRI_HBM_MEM_REG_NAME_MAX_LEN];
     uint32_t    size_kb;
@@ -18,6 +20,6 @@ typedef struct capri_hbm_region_s {
 } capri_hbm_region_t;
 
 hal_ret_t capri_hbm_parse();
-uint32_t get_start_offset(char *reg_name);
-uint32_t get_size_kb(char *reg_name);
+uint32_t get_start_offset(const char *reg_name);
+uint32_t get_size_kb(const char *reg_name);
 #endif    // __CAPRI_HPP__

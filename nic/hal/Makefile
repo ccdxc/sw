@@ -17,7 +17,7 @@ GTEST_DIR = test
 GTEST_ROOT = ../third-party/googletest-release-1.8.0/googletest
 GEN_TEST_RESULTS_DIR = ../gen/test_results
 
-INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -Isvc -Isrc -I../utils/ -Ipd/common -I../include -Ipd \
+INC_DIRS = -I../ -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -Isvc -Isrc -I../utils/ -Ipd/common -I../include -Ipd \
 		-I$(GTEST_ROOT)/include -I../third-party/spdlog/include
 LCXXFLAGS = $(INC_DIRS)
 LDFLAGS = -L/usr/local/lib -L../model_sim/build -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lhalproto -lprotobuf -lpthread -ldl -lzmq
@@ -74,6 +74,9 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/endpoint.pb.o \
 				$(OBJ_DIR)/endpoint.o \
 				$(OBJ_DIR)/l4lb.pb.o \
+				$(OBJ_DIR)/bm_allocator.o \
+				$(OBJ_DIR)/lif_manager_base.o \
+				$(OBJ_DIR)/lif_manager.o \
 				$(OBJ_DIR)/tls_proxy_cb.pb.o \
 				$(OBJ_DIR)/tlscb.o \
 				$(OBJ_DIR)/tcp_proxy_cb.pb.o \
