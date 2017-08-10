@@ -146,6 +146,8 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     hal_ret_t            ret;
     lif_t                *lif = NULL;
     pd::pd_lif_args_t    pd_lif_args;
+    uint32_t             qoff = 0;
+    lif_queue_t          *lif_q = NULL;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: Lif Create for id {}", __FUNCTION__, 
@@ -188,6 +190,18 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     lif->hal_handle = hal_alloc_handle();
     lif->vlan_strip_en = spec.vlan_strip_en();
     lif->allmulti = spec.allmulti();
+
+    // consume queues
+    utils::dllist_reset(&lif->qlist_head);
+    for (int i = 0; i < spec.queues_size(); i++,qoff++) {
+        lif_q = lif_queue_alloc_init();
+        lif_q->queue_type = spec.queues(i).qtype();
+        lif_q->queue_id  = spec.queues(i).queue_id();
+        lif_q->queue_offset = qoff;
+
+        // add queue to list
+        utils::dllist_add(&lif->qlist_head, &lif_q->qlist_entry);
+    }
 
     // allocate all PD resources and finish programming, if any
     pd::pd_lif_args_init(&pd_lif_args);

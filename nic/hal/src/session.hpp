@@ -108,6 +108,7 @@ struct flow_s {
     ip_addr_t         nat_dip;             // destination NAT IP, if any
     uint16_t          nat_sport;           // NAT source port
     uint16_t          nat_dport;           // NAT destination port
+    intf::LifQType    lif_qtype;           // qtype per flow
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state

@@ -170,6 +170,7 @@ do {                                                       \
     ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 27, "qsecurity profile not found") \
     ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           28, "TLS CB not found") \
     ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           29, "TCP CB not found") \
+    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            30,"interface not found") \
                                                                         \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

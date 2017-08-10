@@ -237,6 +237,8 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.filter    
 #endif
 
+    HAL_TRACE_DEBUG("Vlan: {}", key.vlan_tag_vid);
+
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_host));
     if (ret != HAL_RET_OK) {
@@ -244,7 +246,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));
         goto end;
     } else {
-        HAL_TRACE_ERR("PD-ENICIF::{}: Programmed for Host traffic (EnicIf): {} TcamIdx: {}",
+        HAL_TRACE_DEBUG("PD-ENICIF::{}: Programmed for Host traffic (EnicIf): {} TcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_host);
     }
@@ -273,6 +275,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.src_lif_check_en = 1;
     inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
 
+    HAL_TRACE_DEBUG("Vlan: {}", key.vlan_tag_vid);
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_upl));
     if (ret != HAL_RET_OK) {

@@ -196,6 +196,7 @@ extract_flow_info_from_spec (flow_t *flow, bool is_initiator_flow,
                             flow_spec.flow_data().flow_info().nat_dip());
     flow->nat_sport = flow_spec.flow_data().flow_info().nat_sport();
     flow->nat_dport = flow_spec.flow_data().flow_info().nat_dport();
+    flow->lif_qtype = flow_spec.flow_data().flow_info().queue_type();
 
     if (flow_spec.flow_data().has_conn_track_info()) {
         flow->create_ts =
@@ -371,8 +372,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-Session:{}: Session Create in Tenant id {}", __FUNCTION__, 
-                    spec.meta().tenant_id());
+    HAL_TRACE_DEBUG("PI-Session:{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
+                    spec.session_id(), spec.meta().tenant_id());
 
     // do basic validation
     ret = validate_session_create(spec, rsp);
@@ -404,6 +405,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+    session->session_id = spec.session_id();
     session->app_session = NULL;
     session->iflow = session->rflow = NULL;
     session->tcp_state = NULL;

@@ -5,10 +5,12 @@
 #include <hal_lock.hpp>
 #include <p4pd.h>
 #include <pd_api.hpp>
+#include <if_pd_utils.hpp>
 #include <l2seg_pd.hpp>
 #include <session_pd.hpp>
 #include <interface.hpp>
 #include <endpoint.hpp>
+#include <endpoint_api.hpp>
 #include <endpoint_pd.hpp>
 #include <hal_state_pd.hpp>
 #include <defines.h>
@@ -202,7 +204,41 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 
     return dm->remove(session_state_idx);
 }
+hal_ret_t
+session_pd_fill_queue_info(ep_t *dst_ep,
+                           intf::LifQType qtype,
+                           uint8_t *qid_en,
+                           uint8_t *q_off,
+                           uint32_t *qid)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    intf::IfType    if_type = intf::IF_TYPE_NONE;
+    if_t            *pi_if;
 
+    if_type = ep_pd_get_if_type(dst_ep);
+
+    *qid_en = *q_off = *qid = 0;
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            pi_if = ep_find_if_by_handle(dst_ep);
+            HAL_ASSERT(pi_if != NULL);
+
+            ret = if_get_qid_qoff(pi_if, qtype, q_off, qid);
+            if (ret == HAL_RET_OK) {
+               *qid_en = 1; 
+            }
+            break;
+        case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_UPLINK_PC:
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return ret;
+}
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
 // allocate an index and return that
@@ -334,6 +370,12 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
+    session_pd_fill_queue_info(dst_ep,
+                               flow->lif_qtype,
+                               &d.flow_info_action_u.flow_info_flow_info.qid_en,
+                               &d.flow_info_action_u.flow_info_flow_info.qtype,
+                               &d.flow_info_action_u.flow_info_flow_info.tunnel_vnid);
+
 
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;

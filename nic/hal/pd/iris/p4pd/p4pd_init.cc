@@ -496,7 +496,7 @@ p4pd_flow_stats_init (void)
 static hal_ret_t
 p4pd_p4plus_app_init (void)
 {
-    hal_ret_t                ret;
+    hal_ret_t                ret = HAL_RET_OK;
     DirectMap                *dm;
     p4plus_app_actiondata data = { 0 };
 

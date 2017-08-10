@@ -49,6 +49,7 @@ public:
 
     // get APIs for LIF state
     slab *lif_slab(void) const { return lif_slab_; }
+    slab *lif_queue_slab(void) const { return lif_queue_slab_; }
     ht *lif_id_ht(void) const { return lif_id_ht_; }
     ht *lif_hal_handle_ht(void) const { return lif_hal_handle_ht_; }
 
@@ -131,6 +132,7 @@ private:
     // LIF related state
     struct {
         slab       *lif_slab_;
+        slab       *lif_queue_slab_;
         ht         *lif_id_ht_;
         ht         *lif_hal_handle_ht_;
     } __PACK__;

@@ -463,6 +463,17 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
     return 0;
 }
 
+intf::IfType
+ep_pd_get_if_type(ep_t *pi_ep) 
+{
+    if_t            *pi_if;
+
+    pi_if = ep_find_if_by_handle(pi_ep);
+    HAL_ASSERT(pi_if != NULL);
+
+    return intf_get_if_type(pi_if);
+}
+
 uint32_t 
 ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, rewrite_actions_en rw_act)
 {

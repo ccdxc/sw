@@ -37,6 +37,7 @@ hal_ret_t ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep);
 hal_ret_t ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, 
                                      pd_ep_ip_entry_t *pd_ip_entry);
 uint32_t ep_pd_get_hw_lif_id(ep_t *pi_ep);
+intf::IfType ep_pd_get_if_type(ep_t *pi_ep);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
                                          rewrite_actions_en rw_act);
 uint32_t ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act);

@@ -20,6 +20,15 @@ typedef uint16_t if_hw_id_t;
 typedef uint64_t if_id_t;
 typedef uint32_t lif_id_t;
 
+typedef struct lif_queue_s {
+    intf::LifQType  queue_type;                     // queue type
+    uint32_t        queue_id;                       // relative qid in qtype
+    uint32_t        queue_offset;                   // 0 - 7 offset
+
+    dllist_ctxt_t   qlist_entry;                    // list entry
+} __PACK__ lif_queue_t;
+
+
 // LIF structure
 // TODO: capture Q information etc.
 typedef struct lif_s {
@@ -37,6 +46,7 @@ typedef struct lif_s {
     ht_ctxt_t           ht_ctxt;                     // lif id based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;          // hal handle based hash table ctxt
     dllist_ctxt_t       if_list_head;                // interfaces behind this lif
+    dllist_ctxt_t       qlist_head;                  // list of queues
 
     void                *pd_lif;
 } __PACK__ lif_t;
@@ -128,6 +138,7 @@ lif_init (lif_t *lif)
     lif->ht_ctxt.reset();
     lif->hal_handle_ht_ctxt.reset();
     utils::dllist_reset(&lif->if_list_head);
+    utils::dllist_reset(&lif->qlist_head);
 
     return lif;
 }
@@ -144,6 +155,48 @@ lif_free (lif_t *lif)
 {
     HAL_SPINLOCK_DESTROY(&lif->slock);
     g_hal_state->lif_slab()->free(lif);
+    return HAL_RET_OK;
+}
+
+// allocate a LIF queue instance
+static inline lif_queue_t *
+lif_queue_alloc (void)
+{
+    lif_queue_t    *lifq;
+
+    lifq = (lif_queue_t *)g_hal_state->lif_queue_slab()->alloc();
+    if (lifq == NULL) {
+        return NULL;
+    }
+    return lifq;
+}
+
+// initialize a LIF queue instance
+static inline lif_queue_t *
+lif_queue_init (lif_queue_t *lifq)
+{
+    if (!lifq) {
+        return NULL;
+    }
+    // initialize the operational state
+
+    // initialize meta information
+    utils::dllist_reset(&lifq->qlist_entry);
+
+    return lifq;
+}
+
+// allocate and initialize a interface instance
+static inline lif_queue_t *
+lif_queue_alloc_init (void)
+{
+    return lif_queue_init(lif_queue_alloc());
+}
+
+static inline hal_ret_t
+lif_queue_free (lif_queue_t *lifq)
+{
+    g_hal_state->lif_queue_slab()->free(lifq);
     return HAL_RET_OK;
 }
 
