@@ -879,17 +879,19 @@ def capri_deparser_cfg_output(deparser):
     json.dump(dpp_json['cap_dpp']['registers'],
                 dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     dpp_cfg_file_reg.close()
-    cap_inst = 1 if (deparser.d == xgress.INGRESS) else 0
-    capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
-                         'cap_dpp', cap_inst,
-                         dpp_json['cap_dpp']['registers'], None)
-
     json.dump(dpr_json['cap_dpr']['registers'],
                 dpr_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     dpr_cfg_file_reg.close()
-    capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
-                         'cap_dpr', cap_inst,
-                         dpr_json['cap_dpr']['registers'], None)
+
+    if not deparser.be.args.p4_plus:
+        cap_inst = 1 if (deparser.d == xgress.INGRESS) else 0
+        capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+                             'cap_dpp', cap_inst,
+                             dpp_json['cap_dpp']['registers'], None)
+
+        capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+                             'cap_dpr', cap_inst,
+                             dpr_json['cap_dpr']['registers'], None)
 
 def capri_model_dbg_output(be, dbg_info):
     gen_dir = be.args.gen_dir
@@ -1516,11 +1518,12 @@ def capri_parser_output_decoders(parser):
                 ppa_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     ppa_cfg_file_mem.close()
     ppa_cfg_file_reg.close()
-    cap_inst = 1 if (parser.d == xgress.INGRESS) else 0
-    capri_dump_registers(parser.be.args.cfg_dir, parser.be.prog_name,
-                         'cap_ppa', cap_inst,
-                         ppa_json['cap_ppa']['registers'],
-                         ppa_json['cap_ppa']['memories'],)
+    if not parser.be.args.p4_plus:
+        cap_inst = 1 if (parser.d == xgress.INGRESS) else 0
+        capri_dump_registers(parser.be.args.cfg_dir, parser.be.prog_name,
+                             'cap_ppa', cap_inst,
+                             ppa_json['cap_ppa']['registers'],
+                             ppa_json['cap_ppa']['memories'],)
 
 def _fill_te_tcam_catch_all_run(tcam_t):
     # create an entry that will always be a 'hit'
@@ -1952,7 +1955,7 @@ def _decode_mem(entry, result):
                 _decode_mem(attrib, result)
 
 def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
-    if cfg_out_dir is None:
+    if cfg_out_dir is None or cap_mod is None or prog_name is None:
         return
     if not os.path.exists(cfg_out_dir):
         os.makedirs(cfg_out_dir)
@@ -2122,11 +2125,23 @@ def capri_pic_csr_output(be, out_pic):
                     with open(out_file, "w") as of:
                         json.dump(out_pic[mem_type][direction][stage], of, indent=2, sort_keys=True)
                         of.close()
-                    if (direction == xgress_to_string(xgress.INGRESS)):
-                        cap_mod = 'cap_sgi_te'
+
+                    prog_name = None
+                    if not be.args.p4_plus:
+                        prog_name = be.prog_name
+                        if (direction == xgress_to_string(xgress.INGRESS)):
+                            cap_mod = 'cap_sgi_te'
+                        else:
+                            cap_mod = 'cap_sge_te'
                     else:
-                        cap_mod = 'cap_sge_te'
-                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, stage,
+                        prog_name = be.args.p4_plus_module
+                        if be.args.p4_plus_module == 'rxdma':
+                            cap_mod = 'cap_pcr_te'
+                        elif be.args.p4_plus_module == 'txdma':
+                            cap_mod = 'cap_pct_te'
+                        else:
+                            cap_mod = None
+                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, stage,
                                          out_pic[mem_type][direction][stage], None)
             else:
                 name = 'cap_pics_' if mem_type == 'sram' else 'cap_pict_'
@@ -2135,18 +2150,40 @@ def capri_pic_csr_output(be, out_pic):
                     json.dump(out_pic[mem_type][direction], of, indent=2, sort_keys=True)
                     of.close()
                 if (mem_type == 'sram'):
-                    if (direction == xgress_to_string(xgress.INGRESS)):
-                        cap_mod = 'cap_ssi_pics'
+                    prog_name = None
+                    if not be.args.p4_plus:
+                        prog_name = be.prog_name
+                        if (direction == xgress_to_string(xgress.INGRESS)):
+                            cap_mod = 'cap_ssi_pics'
+                        else:
+                            cap_mod = 'cap_sse_pics'
                     else:
-                        cap_mod = 'cap_sse_pics'
-                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, 0,
+                        prog_name = be.args.p4_plus_module
+                        if be.args.p4_plus_module == 'rxdma':
+                            cap_mod = 'cap_rpc_pics'
+                        elif be.args.p4_plus_module == 'txdma':
+                            cap_mod = 'cap_tpc_pics'
+                        else:
+                            cap_mod = None
+                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, 0,
                         out_pic[mem_type][direction]['cap_pics']['registers'], None)
                 else:
-                    if (direction == xgress_to_string(xgress.INGRESS)):
-                        cap_mod = 'cap_tsi_pict'
+                    prog_name = None
+                    if not be.args.p4_plus:
+                        prog_name = be.prog_name
+                        if (direction == xgress_to_string(xgress.INGRESS)):
+                            cap_mod = 'cap_tsi_pict'
+                        else:
+                            cap_mod = 'cap_tse_pict'
                     else:
-                        cap_mod = 'cap_tse_pict'
-                    capri_dump_registers(be.args.cfg_dir, be.prog_name, cap_mod, 0,
+                        prog_name = be.args.p4_plus_module
+                        if be.args.p4_plus_module == 'rxdma':
+                            cap_mod = 'cap_rpc_pict'
+                        elif be.args.p4_plus_module == 'txdma':
+                            cap_mod = 'cap_tpc_pict'
+                        else:
+                            cap_mod = None
+                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, 0,
                         out_pic[mem_type][direction]['cap_pict']['registers'], None)
 
 def capri_p4_table_spec_output(be, out_dict):

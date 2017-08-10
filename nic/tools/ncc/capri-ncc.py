@@ -46,6 +46,10 @@ def get_parser():
     parser.add_argument('--p4-plus', dest='p4_plus', action='store_true',
                         help='Compile P4+ program',
                         default=False, required=False)
+    parser.add_argument('--p4-plus-module', dest='p4_plus_module', action='store',
+                        help='Generate configuration for P4+ program',
+                        choices=['rxdma', 'txdma'],
+                        default=None, required=False)
     parser.add_argument('--i2e-user', dest='i2e_user', action='store_true',
                         help='Use i2e metadata specified by the user',
                         default=False, required=False)

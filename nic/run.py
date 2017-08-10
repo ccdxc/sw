@@ -69,7 +69,7 @@ def run_model():
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
-    p = Popen(["./cap_model", "-f", "../../sknobs_gen/output.sknobs", "+plog=info +model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
+    p = Popen(["./cap_model", "+plog=info", "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 

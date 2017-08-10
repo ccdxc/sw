@@ -2,6 +2,7 @@
 
 LIBDIRS = \
           nw \
+          common-p4+ \
           proxy \
           $(NULL)
 
