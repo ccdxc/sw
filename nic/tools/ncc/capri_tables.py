@@ -138,7 +138,7 @@ def table_topo_sort(root_node):
             marker[node] = 2
             sorted_list.insert(0, node)
 
-    marker = {}
+    marker = OrderedDict()
     sorted_list = []
     has_cycles = _visit(root_node, marker, sorted_list)
     return has_cycles, sorted_list
@@ -269,7 +269,7 @@ class capri_table:
         self.keys = []  # (hdr/capri_field, match_type, mask) => k{}
         self.input_fields = [] # combined list of input fields used by all actions => i{}
         # action data => d{} is union of all action data
-        self.action_data = {}  # {action_name : [(name, size)]}
+        self.action_data = OrderedDict()  # {action_name : [(name, size)]}
         self.action_output = [] # not kept per action.. so for no use for this - TBD
         self.meta_fields = [] # all metadata fields used as key and input
         self.key_size = -1
@@ -1548,7 +1548,6 @@ class capri_table:
             else:
                 fix_km_prof.i_bit_sel.remove(b)
 
-
         def _fix_bit_loc(fix_km_prof, max_kmB, right_justify):
             # since this km_prof is not shared with anyone, arrange the bytes and bits
             # as needed, fix the bit_loc and start/end_key_off
@@ -1639,16 +1638,28 @@ class capri_table:
         if len(self.combined_profile.k_bit_sel):
             #pdb.set_trace()
             num_k_bits = len(km_prof.k_bit_sel)
+            # since k bits are at the start, use bit_loc0 to compute start offset
+            k_bit_start_off = (km_prof.bit_loc * 8)
+            k_bit_end_off = k_bit_start_off + num_k_bits    # no -1, it is one after the end bit
+
             # if km is shared with another index table, it may have k_bytes
             # reverse i and k bits and fill up unused bits with -1
             km_prof.bit_sel = km_prof.i_bit_sel + km_prof.k_bit_sel
+
 
             num_bytes = (len(km_prof.bit_sel)+7) / 8
             num_bits = num_bytes * 8
 
             # pad bit_sel with -1
+            pad_bits = 0
             for i in range(num_bits-len(km_prof.bit_sel)):
                 km_prof.bit_sel.insert(0, -1)
+                pad_bits += 1
+
+            if self.start_key_off == k_bit_start_off:
+                self.start_key_off += pad_bits
+            if self.end_key_off == k_bit_end_off:
+                self.end_key_off += pad_bits
 
             bit_end = (km_prof.bit_loc+num_bytes) * 8
 
@@ -2903,8 +2914,13 @@ class capri_stage:
                     # pdb.set_trace()
                     km.shared_km._assign_bit_loc()
 
+        # update key offsets so that all offsets are initialized before sorting and fixing 
+        # km_profiles based on hardware constraints
+        for ct in ct_list:
+            ct.ct_update_key_offsets()
         ct_list = sorted(self.ct_list, key=lambda c: c.start_key_off)
         for ct in ct_list:
+            # do it again in case other shared table moved the bytes in km_profile
             ct.ct_update_key_offsets()
             if ct.is_index_table():
                 ct._fix_idx_table_km_profile()
@@ -3427,7 +3443,7 @@ class capri_gress_tm:
             else:
                 self.stages[stg].p4_table_list += table_list
 
-            for i,t in enumerate(table_list):
+            for i,t in enumerate(sorted(table_list, key=lambda k:k.name)):
                 if isinstance(t, p4.p4_conditional_node):
                     self.table_predicates[t.name] = capri_predicate(self, t)
                 elif isinstance(t, p4.p4_table):
@@ -3541,7 +3557,9 @@ class capri_gress_tm:
                     else:
                         ctable.match_type = match_type.MPU_ONLY
 
-                    input_flds, out_flds = t.retrieve_action_fields()
+                    _input_flds, _out_flds = t.retrieve_action_fields()
+                    input_flds = sorted(_input_flds, key=lambda k: k.name)
+                    out_flds = sorted(_out_flds, key=lambda k: k.name)
                     for f in input_flds:
                         # can be p4_field or p4_pseudo_field(.valid)
                         hf_name = get_hfname(f)
@@ -3620,7 +3638,7 @@ class capri_gress_tm:
         self.update_table_predicates()
 
     def update_table_predicates(self):
-        table_paths = {}
+        table_paths = OrderedDict()
         all_tables = []
         for stg in self.stages.keys():
             all_tables += self.stages[stg].p4_table_list
@@ -3792,14 +3810,14 @@ class capri_table_mapper:
     def __init__(self, tmgr):
         self.be = tmgr.be
         self.tmgr = tmgr
-        self.tables = {}
-        self.memory = {}
+        self.tables = OrderedDict()
+        self.memory = OrderedDict()
         self.logger = logging.getLogger('TableMapper')
         spec = self.tmgr.table_memory_spec
         for mem_type, regions in spec.iteritems():
-            self.memory[mem_type] = {}
+            self.memory[mem_type] = OrderedDict()
             for region, value in regions.iteritems():
-                self.memory[mem_type][region] = {}
+                self.memory[mem_type][region] = OrderedDict()
                 self.memory[mem_type][region]['space'] = []
                 self.memory[mem_type][region]['depth'] = spec[mem_type][region]['depth']
                 self.memory[mem_type][region]['blk_d'] = spec[mem_type][region]['depth']
@@ -3892,7 +3910,7 @@ class capri_table_mapper:
                         else:
                             break
 
-        return {}
+        return OrderedDict()
 
     def insert_table(self, type, region, table):
         tables = self.tables[type][region]
@@ -3917,7 +3935,7 @@ class capri_table_mapper:
                                                             'stage':tspec['stage'],
                                                             'width':width,
                                                             'depth':depth,
-                                                            'layout':{}})
+                                                            'layout':OrderedDict()})
             if 'sram' in tspec.keys():
                 if tspec['overflow_parent']:
                     continue # Overflow SRAMs are appended to their parent SRAMs.
@@ -3931,7 +3949,7 @@ class capri_table_mapper:
                                                                'stage':tspec['stage'],
                                                                'width':width,
                                                                'depth':depth,
-                                                               'layout':{}})
+                                                               'layout':OrderedDict()})
             if 'hbm' in tspec.keys():
                 width = pad_to_power2(tspec['hbm']['width'])
                 width = table_width_to_allocation_units('hbm', width)
@@ -3939,7 +3957,7 @@ class capri_table_mapper:
                                                               'stage':tspec['stage'],
                                                               'width':width,
                                                               'depth':tspec['num_entries'],
-                                                              'layout':{}})
+                                                              'layout':OrderedDict()})
 
     def place_tcam_table(self, region, start, i, req_width, req_depth, available_width, available_depth):
 
