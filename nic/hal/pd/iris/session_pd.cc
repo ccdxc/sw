@@ -177,7 +177,7 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
 
     // session level information
     d.session_state_action_u.session_state_tcp_session_state_info.syn_cookie_delta =
-        session->syn_ack_delta;
+        session->config.syn_ack_delta;
     d.session_state_action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
@@ -360,11 +360,11 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.ttl_dec = FALSE;
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
+    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
-        session->conn_track_en ? flow_pd->session_state_hw_id : 0;
+        session->config.conn_track_en ? flow_pd->session_state_hw_id : 0;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 
@@ -584,7 +584,7 @@ pd_session_create (pd_session_args_t *args)
     }
 
     // if connection tracking is on, add flow state entry for this session
-    if (args->session->conn_track_en) {
+    if (args->session->config.conn_track_en) {
         session_pd->conn_track_en = TRUE;
         ret = p4pd_add_session_state_table_entry(session_pd, args->session_state, args->nwsec_prof);
         if (ret != HAL_RET_OK) {

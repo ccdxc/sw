@@ -139,10 +139,14 @@ typedef struct session_state_s {
     flow_state_t        rflow_state;
 } __PACK__ session_state_t;
 
-typedef struct session_args_s {
+typedef struct session_cfg_s {
     session_id_t        session_id;               // unique session id
     uint16_t            conn_track_en:1;          // enable connection tracking
     int32_t             syn_ack_delta;            // ACK delta of iflow
+} __PACK__ session_cfg_t;
+
+typedef struct session_args_s {
+    session_cfg_t      *session;                  // session config
     flow_cfg_t         *iflow;                    // initiator flow
     flow_cfg_t         *rflow;                    // responder flow
     session_state_t    *session_state;            // connection tracking state
@@ -165,12 +169,10 @@ typedef struct session_args_s {
 //------------------------------------------------------------------------------
 struct session_s {
     hal_spinlock_t      slock;                    // lock to protect this structure
-    session_id_t        session_id;               // unique session id
-    uint16_t            conn_track_en:1;          // enable connection tracking
-    app_session_t       *app_session;             // app session this L4 session is part of, if any
-    int32_t             syn_ack_delta;            // ACK delta of iflow
+    session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
+    app_session_t       *app_session;             // app session this L4 session is part of, if any
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state

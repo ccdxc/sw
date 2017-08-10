@@ -14,7 +14,7 @@ void *
 session_get_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((session_t *)entry)->session_id);
+    return (void *)&(((session_t *)entry)->config.session_id);
 }
 
 uint32_t
@@ -449,10 +449,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
         goto end;
     }
     *session = {};
-    session->session_id = args->session_id;
-    session->conn_track_en = args->conn_track_en;
-    session->syn_ack_delta = args->syn_ack_delta;
-
+    session->config = *args->session;
 
     // fetch the security profile, if any
     if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -529,6 +526,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     tenant_id_t             tid;
     hal_handle_t            session_handle;
     session_args_t          args = {};
+    session_cfg_t           session = {};
     flow_cfg_t              iflow = {};
     flow_cfg_t              rflow = {};
     session_state_t      session_state = {};
@@ -543,7 +541,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         return ret;
     }
 
-    args.session_id = spec.session_id();
+    args.session = &session;
+    session.session_id = spec.session_id();
 
     // fetch the tenant information
     tid = spec.meta().tenant_id();
@@ -576,13 +575,13 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     extract_flow_key_from_spec(tid, args.sep->ep_flags & EP_FLAGS_LOCAL,
                                &args.iflow->key, spec.initiator_flow());
     extract_flow_info_from_spec(args.iflow, TRUE, spec.initiator_flow());
-    args.conn_track_en = spec.conn_track_en();
-    if (args.conn_track_en) {
+    session.conn_track_en = spec.conn_track_en();
+    if (session.conn_track_en) {
         args.session_state = &session_state;
         args.session_state->tcp_ts_option = spec.tcp_ts_option();
         extract_session_state_from_spec(args.session_state, TRUE,
                           spec.initiator_flow().flow_data().conn_track_info());
-        args.syn_ack_delta = spec.iflow_syn_ack_delta();
+        session.syn_ack_delta = spec.iflow_syn_ack_delta();
     }
 
     // extract responder's flow key and data from flow spec
@@ -590,7 +589,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         extract_flow_key_from_spec(tid, args.dep->ep_flags & EP_FLAGS_LOCAL,
                                    &args.rflow->key, spec.responder_flow());
         extract_flow_info_from_spec(args.rflow, FALSE, spec.responder_flow());
-        if (args.conn_track_en) {
+        if (session.conn_track_en) {
             extract_session_state_from_spec(args.session_state, FALSE,
                           spec.responder_flow().flow_data().conn_track_info());
         }
