@@ -43,7 +43,23 @@ ipv4addr2str (ipv4_addr_t v4_addr)
 char *
 ipv6addr2str (ipv6_addr_t v6_addr)
 {
-    return "NOT-NOW";
+    static thread_local char       ipaddr_str[4][40];
+    static thread_local uint8_t    ipaddr_str_next = 0;
+    char                           *buf;
+
+    buf = ipaddr_str[ipaddr_str_next++ & 0x3];
+    sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:"
+                 "%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+                 v6_addr.addr8[0], v6_addr.addr8[1],
+                 v6_addr.addr8[2], v6_addr.addr8[3],
+                 v6_addr.addr8[4], v6_addr.addr8[5],
+                 v6_addr.addr8[6], v6_addr.addr8[7],
+                 v6_addr.addr8[8], v6_addr.addr8[9],
+                 v6_addr.addr8[10], v6_addr.addr8[11],
+                 v6_addr.addr8[12], v6_addr.addr8[13],
+                 v6_addr.addr8[14], v6_addr.addr8[15]);
+
+    return buf;
 }
 
 //------------------------------------------------------------------------------

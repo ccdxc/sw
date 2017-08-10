@@ -135,6 +135,10 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
         flow_key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
         MAC_UINT64_TO_ADDR(flow_key->smac, flow_spec_key.l2_key().smac());
         MAC_UINT64_TO_ADDR(flow_key->dmac, flow_spec_key.l2_key().dmac());
+
+        HAL_TRACE_DEBUG("Flow Info: tid:{}; smac: {}; dmac: {})",
+                tid, macaddr2str(flow_key->smac),
+                macaddr2str(flow_key->dmac));
     } else if (flow_spec_key.has_v4_key()) {
         flow_key->flow_type = FLOW_TYPE_V4;
         flow_key->tenant_id = tid;
@@ -152,6 +156,13 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
         } else {
             flow_key->sport = flow_key->dport = 0;
         }
+        HAL_TRACE_DEBUG("Flow Info: tid:{}; sip: {}; dip: {}; "
+                "proto: {}; sport: {}; dport: {}; "
+                "icmp_type: {}; icmp_code: {}; icmp_id: {})",
+                tid, ipv4addr2str(flow_key->sip.v4_addr),
+                ipv4addr2str(flow_key->dip.v4_addr),
+                flow_key->proto, flow_key->sport, flow_key->dport,
+                flow_key->icmp_type, flow_key->icmp_code, flow_key->icmp_id);
     } else if (flow_spec_key.has_v6_key()) {
         flow_key->flow_type = FLOW_TYPE_V6;
         flow_key->tenant_id = tid;
@@ -173,6 +184,13 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
         } else {
             flow_key->sport = flow_key->dport = 0;
         }
+        HAL_TRACE_DEBUG("Flow Info: tid:{}; sip: {}; dip: {}; "
+                "proto: {}; sport: {}; dport: {}; "
+                "icmp_type: {}; icmp_code: {}; icmp_id: {})",
+                tid, ipv6addr2str(flow_key->sip.v6_addr),
+                ipv6addr2str(flow_key->dip.v6_addr),
+                flow_key->proto, flow_key->sport, flow_key->dport,
+                flow_key->icmp_type, flow_key->icmp_code, flow_key->icmp_id);
     }
 
     return HAL_RET_OK;
@@ -247,11 +265,15 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
     ip_addr_t     ip_addr;
 
     *sep = *dep = NULL;
+    HAL_TRACE_DEBUG("has_l2_key: {}; has_v4_key: {}; has_v6_key: {}",
+            flow_key.has_l2_key(), flow_key.has_v4_key(), flow_key.has_v6_key());
     if (flow_key.has_l2_key()) {
         MAC_UINT64_TO_ADDR(mac_addr, flow_key.l2_key().smac());
         *sep = find_ep_by_l2_key(flow_key.l2_key().l2_segment_id(),
                                  mac_addr);
         if (*sep == NULL) {
+            HAL_TRACE_ERR("Src EP with key ({}, {}) not found",
+                          tid, macaddr2str(mac_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
 
@@ -259,14 +281,17 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
         *dep = find_ep_by_l2_key(flow_key.l2_key().l2_segment_id(),
                                  mac_addr);
         if (*dep == NULL) {
+            HAL_TRACE_ERR("Dst EP with key ({}, {}) not found",
+                          tid, macaddr2str(mac_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
         return HAL_RET_OK;
     } else if (flow_key.has_v4_key()) {
+
         *sep = find_ep_by_v4_key(tid, flow_key.v4_key().sip());
         if (*sep == NULL) {
             HAL_TRACE_ERR("Src EP with key ({}, {}) not found",
-                          tid, ipv4addr2str(flow_key.v4_key().dip()));
+                          tid, ipv4addr2str(flow_key.v4_key().sip()));
             return HAL_RET_EP_NOT_FOUND;
         }
 
@@ -280,12 +305,16 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
         ip_addr_spec_to_ip_addr(&ip_addr, flow_key.v6_key().sip());
         *sep = find_ep_by_v6_key(tid, &ip_addr);
         if (*sep == NULL) {
+            HAL_TRACE_ERR("Src EP with key ({}, {}) not found",
+                          tid, ipaddr2str(&ip_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
 
         ip_addr_spec_to_ip_addr(&ip_addr, flow_key.v6_key().dip());
         *dep = find_ep_by_v6_key(tid, &ip_addr);
         if (*dep == NULL) {
+            HAL_TRACE_ERR("Dst EP with key ({}, {}) not found",
+                          tid, ipaddr2str(&ip_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
     }
