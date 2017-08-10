@@ -15,8 +15,8 @@ LCXXFLAGS = \
 			-I../../../include \
 			-I../../../third-party/spdlog/include \
 			-I/usr/local/include \
-			-I../../../capsim/lib/libmpuobj/include \
-			-I../../../capsim/lib/libcapisa/include \
+			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
+			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
 			-I../../../model_sim/include \
 			-I../../../gen/iris/include \
 			-I../../../p4/nw/include \
@@ -28,7 +28,7 @@ LCXXFLAGS = \
 			$(NULL)
 
 SLFLAGS = \
-		  -Wl,--whole-archive $(TOPDIR)/capsim/gen/lib/libmpuobj.a $(TOPDIR)/capsim/gen/lib/libcapisa.a $(TOPDIR)/capsim/gen/lib/libisa.a \
+		  -Wl,--whole-archive $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.a $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.a $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 		  -Wl,--no-whole-archive -L$(TOPDIR)/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
 SOURCES = \
 		  capri_init.cc \

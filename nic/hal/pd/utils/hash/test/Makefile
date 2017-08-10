@@ -3,9 +3,9 @@ TOPDIR = ../../../../..
 PROGRAM = hash_test
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
 LIBS = \
-	   $(TOPDIR)/capsim/gen/lib/libmpuobj.a \
-	   $(TOPDIR)/capsim/gen/lib/libcapisa.a \
-	   $(TOPDIR)/capsim/gen/lib/libisa.a \
+	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.a \
+	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.a \
+	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 	   $(GTEST_ROOT)/make/gtest.a \
 	   $(NULL)
 SYSTEM_LIBRARIES = $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpdutils_stub -lpthread -lmodelclient -lzmq -lthread -lcapri -lhalmock -lcapricsr -lp4pd -lindexer -ltrace

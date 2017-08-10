@@ -21,8 +21,8 @@ LCXXFLAGS = \
 			-I../../../p4/nw/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \
-			-I../../../capsim/lib/libcapisa/include \
-			-I../../../capsim/lib/libmpuobj/include \
+			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
+			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
 			-g \
 			$(NULL)
 
