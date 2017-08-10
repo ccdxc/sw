@@ -5,8 +5,8 @@ package netagent
 import (
 	"errors"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
@@ -18,7 +18,7 @@ var ErrEndpointNotFound = errors.New("Endpoint not found")
 // EndpointCreateReq creates an endpoint
 func (ag *NetAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) {
 	// make an RPC call to controller
-	epinfo.Status.NodeUUID = ag.NodeUUID.String()
+	epinfo.Status.NodeUUID = ag.NodeUUID
 	ep, err := ag.ctrlerif.EndpointCreateReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
@@ -86,7 +86,7 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// call the datapath
 	var intfInfo *IntfInfo
-	if ep.Status.NodeUUID == ag.NodeUUID.String() {
+	if ep.Status.NodeUUID == ag.NodeUUID {
 		intfInfo, err = ag.datapath.CreateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
@@ -147,7 +147,7 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	if ep.Status.NodeUUID == ag.NodeUUID.String() {
+	if ep.Status.NodeUUID == ag.NodeUUID {
 		err = ag.datapath.UpdateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
@@ -183,7 +183,7 @@ func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 
 	// call the datapath
 	var err error
-	if ep.Status.NodeUUID == ag.NodeUUID.String() {
+	if ep.Status.NodeUUID == ag.NodeUUID {
 		err = ag.datapath.DeleteLocalEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)

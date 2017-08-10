@@ -415,7 +415,7 @@ message EndpointStatus {
     // endpoint UUID
     string EndpointUUID   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint-uuid,omitempty"];
     // VM or container UUID
-    string WorkloadUUID   = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "qorkload-uuid,omitempty"];
+    string WorkloadUUID   = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-uuid,omitempty"];
     // VM or container name
     string WorkloadName   = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
     // network this endpoint belogs to
@@ -435,13 +435,13 @@ message EndpointStatus {
     // Mac address of the endpoint
     string MacAddress     = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
     // homing host's UUID
-    string NodeUUID       = 12;
+    string NodeUUID       = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
     // endpoint FSM state
     string EndpointState  = 13;
     // security groups
     repeated string SecurityGroups = 14;
     // micro-segment VLAN
-    uint32 MicroSegmentVlan = 15;
+    uint32 MicroSegmentVlan = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
     // VM or container attribute/labels
     // FIXME: maps are not working. change this after its fixed
     // map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];

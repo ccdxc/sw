@@ -199,7 +199,7 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	}
 
 	// allocate an IP address
-	ipv4Addr, err := ns.allocIPv4Addr("")
+	ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
 	if err != nil {
 		log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
 		return nil, err
@@ -217,7 +217,11 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	epi := *epinfo
 	epi.Status.IPv4Address = ipv4Addr
 	epi.Status.IPv4Gateway = ns.Spec.IPv4Gateway
-	epi.Status.MacAddress = macAddr.String()
+
+	// assign new mac address if we dont have one
+	if epi.Status.MacAddress == "" {
+		epi.Status.MacAddress = macAddr.String()
+	}
 
 	// create a new endpoint instance
 	eps, err := NewEndpointState(epi, ns.stateMgr)

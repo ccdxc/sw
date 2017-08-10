@@ -17,6 +17,11 @@ type mockDatapath struct {
 	sgdb  map[string]*netproto.SecurityGroup
 }
 
+// SetAgent registers agent with datapath
+func (dp *mockDatapath) SetAgent(ag DatapathIntf) error {
+	return nil
+}
+
 func (dp *mockDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) {
 	key := objectKey(ep.ObjectMeta)
 	dp.epdb[key] = ep
@@ -129,7 +134,7 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp)
+	nagent, err := NewNetAgent(dp, "some-unique-id")
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)
 		return nil, nil, nil

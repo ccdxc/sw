@@ -4,52 +4,62 @@ package veniceinteg
 
 import (
 	"flag"
+	"fmt"
 	"testing"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"google.golang.org/grpc"
+
+	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/apigw"
 	apigwpkg "github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/apiserver"
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/ctrler/npm"
 	"github.com/pensando/sw/utils/kvstore/store"
-	plog "github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 
+	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/generated/network/gateway"
+	_ "github.com/pensando/sw/api/hooks"
+
+	. "github.com/pensando/sw/utils/testutils"
 	. "gopkg.in/check.v1"
 )
 
 // integ test suite parameters
 const (
 	numIntegTestAgents = 3
-	integTestNpmURL    = "localhost:9595"
-	integTestApisrvURL = "localhost:9082"
+	integTestNpmURL    = "localhost:9495"
+	integTestApisrvURL = "localhost:8082"
 	integTestAPIGWURL  = "localhost:9092"
 )
 
 // veniceIntegSuite is the state of integ test
 type veniceIntegSuite struct {
-	apiSrv    apiserver.Server
-	apiGw     apigw.APIGateway
-	ctrler    *npm.Netctrler
-	agents    []*agent.Agent
-	datapaths []*datapath.MockHalDatapath
-	numAgents int
+	apiSrv       apiserver.Server
+	apiGw        apigw.APIGateway
+	ctrler       *npm.Netctrler
+	agents       []*agent.Agent
+	datapaths    []*datapath.MockHalDatapath
+	numAgents    int
+	restClient   apiclient.Services
+	apisrvClient apiclient.Services
 }
 
 // test args
 var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
 
-// integ test suite
-var sts = &veniceIntegSuite{}
-
-var _ = Suite(sts)
-
 // Hook up gocheck into the "go test" runner.
-func TestInteg(t *testing.T) {
+func TestVeniceInteg(t *testing.T) {
+	// integ test suite
+	var sts = &veniceIntegSuite{}
+
+	var _ = Suite(sts)
 	TestingT(t)
 }
 
@@ -57,7 +67,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
 
-	logger := plog.GetNewLogger(plog.GetDefaultConfig("venice_integ"))
+	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 
 	// api server config
 	sch := runtime.NewScheme()
@@ -72,10 +82,11 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 			Codec:   runtime.NewJSONCodec(sch),
 		},
 	}
+
 	// create api server
 	it.apiSrv = apisrvpkg.MustGetAPIServer()
 	go it.apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 100)
 
 	// api gw config
 	apigwConfig := apigw.Config{
@@ -88,7 +99,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiGw.Run(apigwConfig)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL)
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestApisrvURL, "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
@@ -97,16 +108,31 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
 		// mock datapath
-		dp, err := datapath.NewMockHalDatapath()
-		c.Assert(err, IsNil)
+		dp, aerr := datapath.NewMockHalDatapath()
+		c.Assert(aerr, IsNil)
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, err := agent.NewAgent(dp, integTestNpmURL)
-		c.Assert(err, IsNil)
+		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL)
+		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
 
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient(integTestAPIGWURL)
+	if err != nil {
+		c.Fatalf("cannot create REST client. Err: %v", err)
+	}
+	it.restClient = restcl
+
+	// create api server client
+	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
+	apicl, err := apiclient.NewGrpcAPIClient(integTestApisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	if err != nil {
+		c.Fatalf("cannot create grpc client")
+	}
+	it.apisrvClient = apicl
+	time.Sleep(time.Millisecond * 100)
 }
 
 func (it *veniceIntegSuite) SetUpTest(c *C) {
@@ -129,6 +155,29 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 
 // basic test to make sure all components come up
 func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
-	// if we reached here, everything must be up
-	time.Sleep(time.Millisecond * 10)
+	// expect a network create/delete call in data path
+	for _, dp := range it.datapaths {
+		dp.Netclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Netclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+	}
+
+	// create a network using REST api
+	nw, err := it.createNetwork("default", "test", "10.1.1.0/24", "10.1.1.254")
+	AssertOk(c, err, "Error creating network")
+
+	// verify network gets created in agent
+	AssertEventually(c, func() bool {
+		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
+		return (cerr == nil)
+	}, "Network not found in agent")
+
+	// delete the network
+	_, err = it.deleteNetwork("default", "test")
+	AssertOk(c, err, "Error deleting network")
+
+	// verify network is removed from agent
+	AssertEventually(c, func() bool {
+		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
+		return (cerr != nil)
+	}, "Network still found in agent")
 }

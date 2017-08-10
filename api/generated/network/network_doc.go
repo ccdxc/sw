@@ -37,6 +37,8 @@ The following Messages are defined.
   EndpointStatus
   Endpoint
   EndpointList
+  AutoMsgSgpolicyWatchHelper
+  AutoMsgSgpolicyListHelper
   AutoMsgServiceWatchHelper
   AutoMsgServiceListHelper
   AutoMsgLbPolicyWatchHelper
@@ -49,8 +51,6 @@ The following Messages are defined.
   AutoMsgNetworkListHelper
   AutoMsgSecurityGroupWatchHelper
   AutoMsgSecurityGroupListHelper
-  AutoMsgSgpolicyWatchHelper
-  AutoMsgSgpolicyListHelper
 
 The following Services and Methods are defined.
 

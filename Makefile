@@ -45,7 +45,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
 	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@cp ${PWD}/bin/apigw tools/docker-files/apigw/apigw
 	@cp ${PWD}/bin/apiserver tools/docker-files/apiserver/apiserver
@@ -78,13 +78,13 @@ clean: c-stop
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t srv1.pensando.io:5000/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t srv1.pensando.io:5000/pens-base:v0.1 .
-	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.2 .
+	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.3 .
 
 container-qcompile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
 
 container-compile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.2
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
 
 ws-tools:
 	$(info +++ building WS tools)
@@ -97,7 +97,7 @@ ws-tools:
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))
-	$(GOCMD) test $(TO_BUILD); \
+	$(GOCMD) test -p 1 $(TO_BUILD); \
 
 unit-race-test:
 	$(info +++ go test -race $(TO_BUILD))
@@ -105,7 +105,7 @@ unit-race-test:
 
 unit-test-verbose:
 	$(info +++ go test $(TO_BUILD))
-	$(GOCMD) test -v $(TO_BUILD); \
+	$(GOCMD) test -v -p 1 $(TO_BUILD); \
 
 cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))
@@ -174,4 +174,3 @@ test-cluster:
 
 test-clean:
 	scripts/cleanup-dev.sh
-

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netns"
 )
@@ -189,4 +189,15 @@ func SetIntfUp(intfName string) error {
 	}
 
 	return nil
+}
+
+// GetIntfMac returns interface's mac address
+func GetIntfMac(intfName string) (net.HardwareAddr, error) {
+	// get the interface handle
+	iface, err := netlink.LinkByName(intfName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get link by name %q: %v", intfName, err)
+	}
+
+	return iface.Attrs().HardwareAddr, nil
 }

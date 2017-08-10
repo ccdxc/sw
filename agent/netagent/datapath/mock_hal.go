@@ -11,13 +11,13 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/agent/netagent/datapath/halproto/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 )
 
 // MockHalDatapath contains mock hal clients
@@ -63,12 +63,12 @@ func NewMockHalDatapath() (*MockHalDatapath, error) {
 
 // Errorf for satisfying gomock
 func (hd *MockHalDatapath) Errorf(format string, args ...interface{}) {
-	logrus.Errorf(format, args...)
+	log.Errorf(format, args...)
 }
 
 // Fatalf for satisfying gomock
 func (hd *MockHalDatapath) Fatalf(format string, args ...interface{}) {
-	logrus.Fatalf(format, args...)
+	log.Fatalf(format, args...)
 }
 
 // objectKey returns object key from meta
@@ -83,6 +83,11 @@ func ipv42int(ip net.IP) uint32 {
 	}
 
 	return binary.BigEndian.Uint32(ip)
+}
+
+// SetAgent sets the agent for this datapath
+func (hd *MockHalDatapath) SetAgent(ag netagent.DatapathIntf) error {
+	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
@@ -133,7 +138,7 @@ func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	// FIXME: handle response
 	_, err := hd.Epclient.EndpointCreate(context.Background(), &epReq)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error creating endpoint. Err: %v", err)
 		return nil, err
 	}
 
@@ -191,7 +196,7 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	// FIXME: handle response
 	_, err := hd.Epclient.EndpointCreate(context.Background(), &epReq)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
 	}
 
@@ -249,7 +254,7 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	// FIXME: handle response
 	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epReq)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
 	}
 
@@ -307,7 +312,7 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	// FIXME: handle response
 	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epReq)
 	if err != nil {
-		logrus.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
 	}
 
@@ -321,7 +326,7 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
-	logrus.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
+	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
 	v4Addr := types.IPAddress{
 		IpAf: types.IPAddressFamily_IP_AF_INET,
 		V4OrV6: &types.IPAddress_V4Addr{
@@ -352,7 +357,7 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// delete it from hal
 	_, err = hd.Epclient.EndpointDelete(context.Background(), &delReq)
 	if err != nil {
-		logrus.Errorf("Error deleting endpoint. Err: %v", err)
+		log.Errorf("Error deleting endpoint. Err: %v", err)
 		return err
 	}
 
@@ -367,7 +372,7 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
-	logrus.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
+	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
 	v4Addr := types.IPAddress{
 		IpAf: types.IPAddressFamily_IP_AF_INET,
 		V4OrV6: &types.IPAddress_V4Addr{
@@ -398,7 +403,7 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	// delete it from hal
 	_, err = hd.Epclient.EndpointDelete(context.Background(), &delReq)
 	if err != nil {
-		logrus.Errorf("Error deleting endpoint. Err: %v", err)
+		log.Errorf("Error deleting endpoint. Err: %v", err)
 		return err
 	}
 
@@ -439,7 +444,7 @@ func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
 	// create the l2 segment
 	_, err := hd.Netclient.L2SegmentCreate(context.Background(), &segReq)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -476,7 +481,7 @@ func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
 	// update the l2 segment
 	_, err := hd.Netclient.L2SegmentUpdate(context.Background(), &segReq)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -501,7 +506,7 @@ func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 	// delete the l2 segment
 	_, err := hd.Netclient.L2SegmentDelete(context.Background(), &segReq)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -522,7 +527,7 @@ func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error
 	// add security group
 	_, err := hd.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -546,7 +551,7 @@ func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error
 	// update security group
 	_, err := hd.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -570,7 +575,7 @@ func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error
 	// delete security group
 	_, err := hd.Sgclient.SecurityGroupDelete(context.Background(), &sgmsg)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -592,7 +597,7 @@ func (hd *MockHalDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *net
 	case "Reject":
 		act = halproto.Action_SECURITY_POLICY_ACTION_REJECT
 	default:
-		logrus.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
+		log.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
 		return errors.New("Unknown action")
 	}
 
@@ -608,7 +613,7 @@ func (hd *MockHalDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *net
 		case "icmp":
 			proto = types.IPProtocol_IP_PROTO_ICMP
 		default:
-			logrus.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
+			log.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
 			return errors.New("Unknown protocol")
 		}
 
@@ -630,7 +635,7 @@ func (hd *MockHalDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *net
 		dstSgID = peersg.Status.SecurityGroupID
 		srcSgID = sg.Status.SecurityGroupID
 	default:
-		logrus.Errorf("Unknown direction %s", rule.Direction)
+		log.Errorf("Unknown direction %s", rule.Direction)
 		return errors.New("Unknown direction")
 	}
 
@@ -648,7 +653,7 @@ func (hd *MockHalDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *net
 	}
 	_, err := hd.Sgclient.SecurityPolicyRuleCreate(context.Background(), &rulemsg)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
@@ -670,7 +675,7 @@ func (hd *MockHalDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *
 	case "Reject":
 		act = halproto.Action_SECURITY_POLICY_ACTION_REJECT
 	default:
-		logrus.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
+		log.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
 		return errors.New("Unknown action")
 	}
 
@@ -686,7 +691,7 @@ func (hd *MockHalDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *
 		case "icmp":
 			proto = types.IPProtocol_IP_PROTO_ICMP
 		default:
-			logrus.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
+			log.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
 			return errors.New("Unknown protocol")
 		}
 
@@ -708,7 +713,7 @@ func (hd *MockHalDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *
 		dstSgID = peersg.Status.SecurityGroupID
 		srcSgID = sg.Status.SecurityGroupID
 	default:
-		logrus.Errorf("Unknown direction %s", rule.Direction)
+		log.Errorf("Unknown direction %s", rule.Direction)
 		return errors.New("Unknown direction")
 	}
 
@@ -728,14 +733,14 @@ func (hd *MockHalDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *
 	// delete the security rule
 	_, err := hd.Sgclient.SecurityPolicyRuleDelete(context.Background(), &rulemsg)
 	if err != nil {
-		logrus.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error creating network. Err: %v", err)
 		return err
 	}
 
 	// verify we had the rule
 	_, ok := hd.SgRule[rl.String()]
 	if !ok {
-		logrus.Errorf("Rule %s was not present in db", rl.String())
+		log.Errorf("Rule %s was not present in db", rl.String())
 	}
 
 	// delete from rule db

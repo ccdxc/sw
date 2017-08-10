@@ -3,7 +3,7 @@ from "golang:1.8.3"
 PACKAGE = "github.com/pensando/sw"
 DIR     = "/go/src/#{PACKAGE}"
 
-run "apt-get update && apt-get install rsync -y"
+run "apt-get update && apt-get install rsync libpcap-dev -y"
 
 copy ".", DIR, ignore_list: [ ".git", "box.rb" ]
 

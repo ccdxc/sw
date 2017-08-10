@@ -178,7 +178,7 @@ func (ts *TestSuite) teardown(t *testing.T) {
 	}
 	ts.vch.StopServer()
 	sim.TearDown()
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
@@ -395,6 +395,7 @@ func TestWatchSmartNICs(t *testing.T) {
 	ackCh = make(chan int, 4)
 	go watchSmartNICs(rcvCtx, t, rcvMap, eventMap, ackCh)
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
+	rcvCancel()
 
 	// Verify the event count
 	if eventMap[orch.WatchEvent_Create] != 2 {
@@ -702,6 +703,7 @@ func TestWatchNwIFs(t *testing.T) {
 	ackCh = make(chan int, 4)
 	go watchNwIFs(rcvCtx, t, rcvMap, eventMap, ackCh)
 	verifyWatch(t, sndMap, rcvMap, ackCh, 2)
+	rcvCancel()
 
 	// Verify the event count
 	if eventMap[orch.WatchEvent_Create] != 2 {

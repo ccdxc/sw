@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 )
 
 // HTTPAPIFunc Type for HTTP handler functions

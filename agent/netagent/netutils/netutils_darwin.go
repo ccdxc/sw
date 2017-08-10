@@ -39,3 +39,8 @@ func SetupIntfInNamespace(intfName, nsIntfName, nsPath string, ipv4AddrMask, ipv
 func SetIntfUp(intfName string) error {
 	return nil
 }
+
+// GetIntfMac returns interface mac addr
+func GetIntfMac(intfName string) (net.HardwareAddr, error) {
+	return nil, nil
+}

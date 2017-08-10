@@ -10,10 +10,10 @@ import (
 	"net"
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
 	cni "github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
 	cniServer "github.com/pensando/sw/agent/plugins/k8s/cni"
+	"github.com/pensando/sw/utils/log"
 )
 
 // CNIPlugin is the cni plugin instance

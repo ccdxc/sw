@@ -80,7 +80,14 @@ type SecurityGroupAPI interface {
 
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
+	SetAgent(ag DatapathIntf) error
 	EndpointAPI
 	NetworkAPI
 	SecurityGroupAPI
+}
+
+// DatapathIntf is the API provided by the netagent to datapaths
+type DatapathIntf interface {
+	EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) // Creates an endpoint
+	EndpointDeleteReq(epinfo *netproto.Endpoint) error                                  // deletes an endpoint
 }

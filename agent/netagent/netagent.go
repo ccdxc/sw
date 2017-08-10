@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/google/uuid"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 )
 
 // NetAgent is the network agent instance
 type NetAgent struct {
 	sync.Mutex                                          // global lock for the agent
-	NodeUUID         uuid.UUID                          // Node's UUID
+	NodeUUID         string                             // Node's UUID
 	datapath         NetDatapathAPI                     // network datapath
 	ctrlerif         CtrlerAPI                          // controller object
 	networkDB        map[string]*netproto.Network       // Network object db
@@ -26,16 +25,22 @@ type NetAgent struct {
 }
 
 // NewNetAgent returns a new network agent
-func NewNetAgent(dp NetDatapathAPI) (*NetAgent, error) {
+func NewNetAgent(dp NetDatapathAPI, nodeUUID string) (*NetAgent, error) {
 	// create netagent object
 	agent := NetAgent{
-		NodeUUID:         uuid.New(),
+		NodeUUID:         nodeUUID,
 		datapath:         dp,
 		networkDB:        make(map[string]*netproto.Network),
 		endpointDB:       make(map[string]*netproto.Endpoint),
 		secgroupDB:       make(map[string]*netproto.SecurityGroup),
 		currentNetworkID: 1,
 		currentSgID:      1,
+	}
+
+	// register the agent with datapath
+	err := dp.SetAgent(&agent)
+	if err != nil {
+		return nil, err
 	}
 
 	return &agent, nil

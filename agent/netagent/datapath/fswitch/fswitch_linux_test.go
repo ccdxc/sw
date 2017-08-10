@@ -9,15 +9,23 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 	. "github.com/pensando/sw/utils/testutils"
 )
+
+// dummy struct for the test
+type dpi struct {
+	// empty
+}
+
+func (d *dpi) EndpointLearnNotif(ep *netproto.Endpoint) error {
+	return nil
+}
 
 func TestFswitch(t *testing.T) {
 	if os.Getuid() != 0 {
@@ -25,7 +33,7 @@ func TestFswitch(t *testing.T) {
 	}
 
 	// create fswitch
-	fs, err := NewFswitch("datapath")
+	fs, err := NewFswitch(&dpi{}, "datapath")
 	AssertOk(t, err, "error creating the fswitch")
 
 	// create a veth pair
@@ -155,9 +163,9 @@ func createSetup(t *testing.T) *fsetup {
 	setup.vethPairs["uplink2"] = "uplink1"
 
 	// create switches
-	fs1, err := NewFswitch("uplink1")
+	fs1, err := NewFswitch(&setup, "uplink1")
 	AssertOk(t, err, "Error creating the switch1")
-	fs2, err := NewFswitch("uplink2")
+	fs2, err := NewFswitch(&setup, "uplink2")
 	AssertOk(t, err, "Error creating the switch2")
 	setup.switches[0] = fs1
 	setup.switches[1] = fs2
@@ -219,6 +227,10 @@ func createSetup(t *testing.T) *fsetup {
 	AssertOk(t, err, "Error creating sockets")
 
 	return &setup
+}
+
+func (st *fsetup) EndpointLearnNotif(ep *netproto.Endpoint) error {
+	return nil
 }
 
 func (st *fsetup) sendMessage(port string, frame *ethernet.Frame) error {

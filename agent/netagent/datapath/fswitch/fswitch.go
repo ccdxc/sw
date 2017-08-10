@@ -8,8 +8,10 @@ import (
 	"net"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -20,6 +22,14 @@ const (
 	DefaultVlan = 0
 	DefaultVRF  = "default"
 )
+
+// EthTypeAll is an alias to syscall.ETH_P_ALL
+const EthTypeAll = 0x3
+
+// DpIntf is the interface provided by the creator
+type DpIntf interface {
+	EndpointLearnNotif(ep *netproto.Endpoint) error
+}
 
 // FwdEntry forwarding lookup entry
 type FwdEntry struct {
@@ -34,46 +44,15 @@ type FwdEntry struct {
 // Fswitch is a switch instance
 type Fswitch struct {
 	sync.Mutex                                    // lock the switch for map writes
+	dpi             DpIntf                        // interface provided by the creator
 	uplink          string                        // uplink interface
 	ports           map[string]string             // workload facing ports
-	ipSocks         map[string]*raw.Conn          // IP listeners
-	arpSocks        map[string]*raw.Conn          // ARP listeners
+	socks           map[string]*raw.Conn          // ARP listeners
+	pcapHandles     map[string]*pcap.Handle       // Pcap handles
 	localEndpoints  map[string]*netproto.Endpoint // local endpoints
 	remoteEndpoints map[string]*netproto.Endpoint // remote endpoints
 	macaddrTable    map[string]*FwdEntry          // forwarding table indexed by mac addr, vlan
 	ipaddrTable     map[string]*FwdEntry          // forwarding table indexed by ip addr, vrf
-}
-
-// main listener loop for a socket
-func (fs *Fswitch) listnerLoop(conn *raw.Conn, port string, mtu int) {
-	// Accept frames up to interface's MTU in size.
-	b := make([]byte, mtu)
-	var f ethernet.Frame
-
-	defer conn.Close()
-
-	for {
-		n, addr, err := conn.ReadFrom(b)
-		if err != nil {
-			log.Errorf("failed to receive message: %v", err)
-			return
-		}
-
-		// Unpack Ethernet frame into Go representation.
-		err = (&f).UnmarshalBinary(b[:n])
-		if err != nil {
-			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
-		}
-
-		// Display source of message and message itself.
-		log.Debugf("Switch Received Ethernet frame [%s->%s] 0x%x: %v", addr.String(), f.Destination.String(), uint(f.EtherType), f.Payload)
-
-		// process the frame
-		err = fs.processFrame(port, &f)
-		if err != nil {
-			log.Errorf("Error processing frame. Err: %v", err)
-		}
-	}
 }
 
 // runListener loops forever and receives messages
@@ -86,25 +65,66 @@ func (fs *Fswitch) runListener(port string) error {
 	}
 
 	// Open a raw socket for EtherType
-	arpSock, err := raw.ListenPacket(ifi, 0x0806)
-	if err != nil {
-		log.Errorf("failed to listen: %v", err)
-		return err
-	}
-
-	ipSock, err := raw.ListenPacket(ifi, 0x0800)
+	sock, err := raw.ListenPacket(ifi, EthTypeAll)
 	if err != nil {
 		log.Errorf("failed to listen: %v", err)
 		return err
 	}
 
 	// save it in db
-	fs.ipSocks[port] = ipSock
-	fs.arpSocks[port] = arpSock
+	fs.socks[port] = sock
 
 	// Keep reading frames.
-	go fs.listnerLoop(ipSock, port, ifi.MTU)
-	go fs.listnerLoop(arpSock, port, ifi.MTU)
+	return fs.runPcapListener(port)
+}
+
+func (fs *Fswitch) runPcapListener(port string) error {
+	var f ethernet.Frame
+
+	// start a pcap listener on the port
+	inactive, err := pcap.NewInactiveHandle(port)
+	if err != nil {
+		log.Fatalf("could not create: %v", err)
+	}
+
+	// create pcap handle
+	handle, err := inactive.Activate()
+	if err != nil {
+		log.Fatal("PCAP Activate error:", err)
+	}
+	fs.pcapHandles[port] = handle
+
+	// find the pcap decoder
+	dec, ok := gopacket.DecodersByLayerName["Ethernet"]
+	if !ok {
+		log.Fatalln("No decoder found")
+	}
+
+	// create packet source
+	source := gopacket.NewPacketSource(handle, dec)
+	source.NoCopy = true
+	source.DecodeStreamsAsDatagrams = true
+
+	// loop forever
+	go func() {
+		for packet := range source.Packets() {
+
+			// Unpack Ethernet frame into Go representation.
+			err = (&f).UnmarshalBinary(packet.Data())
+			if err != nil {
+				log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+			}
+
+			// Display source of message and message itself.
+			log.Infof("Switch Received Ethernet frame [%s->%s] vlan {%+v} etype 0x%x: %v", f.Source.String(), f.Destination.String(), f.VLAN, uint(f.EtherType), f.Payload)
+
+			// process the frame
+			err = fs.processFrame(port, &f)
+			if err != nil {
+				log.Errorf("Error processing frame. Err: %v", err)
+			}
+		}
+	}()
 
 	return nil
 }
@@ -152,7 +172,7 @@ func (fs *Fswitch) DelPort(port string) error {
 func (fs *Fswitch) SendFrame(port string, frame *ethernet.Frame) error {
 	// find the socket by name
 	fs.Lock()
-	conn, ok := fs.arpSocks[port]
+	conn, ok := fs.socks[port]
 	fs.Unlock()
 	if !ok {
 		log.Errorf("Could not find the connection for port %s", port)
@@ -281,13 +301,14 @@ func (fs *Fswitch) DelRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // NewFswitch creates a new switch instance and returns
-func NewFswitch(uplink string) (*Fswitch, error) {
+func NewFswitch(dpi DpIntf, uplink string) (*Fswitch, error) {
 	// create a switch instance
 	fs := Fswitch{
+		dpi:             dpi,
 		uplink:          uplink,
 		ports:           make(map[string]string),
-		ipSocks:         make(map[string]*raw.Conn),
-		arpSocks:        make(map[string]*raw.Conn),
+		socks:           make(map[string]*raw.Conn),
+		pcapHandles:     make(map[string]*pcap.Handle),
 		localEndpoints:  make(map[string]*netproto.Endpoint),
 		remoteEndpoints: make(map[string]*netproto.Endpoint),
 		macaddrTable:    make(map[string]*FwdEntry),

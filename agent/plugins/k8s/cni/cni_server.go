@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	cniapi "github.com/containernetworking/cni/pkg/skel"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/netutils"
@@ -20,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"

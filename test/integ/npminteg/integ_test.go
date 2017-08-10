@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"testing"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
@@ -14,6 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm"
 
+	. "github.com/pensando/sw/utils/testutils"
 	. "gopkg.in/check.v1"
 )
 
@@ -33,13 +33,12 @@ type integTestSuite struct {
 // test args
 var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
 
-// integ test suite
-var sts = &integTestSuite{}
-
-var _ = Suite(sts)
-
 // Hook up gocheck into the "go test" runner.
-func TestInteg(t *testing.T) {
+func TestNpmInteg(t *testing.T) {
+	// integ test suite
+	var sts = &integTestSuite{}
+
+	var _ = Suite(sts)
 	TestingT(t)
 }
 
@@ -48,7 +47,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.numAgents = *numAgents
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL)
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, "", "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
@@ -56,7 +55,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(integTestRPCURL)
+		agent, err := CreateAgent(fmt.Sprintf("dummy-uuid-%d", i), integTestRPCURL)
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -91,15 +90,17 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
-	c.Assert(err, IsNil)
+	AssertOk(c, err, "error creating network")
 
 	// verify agent receives the network
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			return (nerr == nil)
+		}, "Network not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 		nt, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
-		c.Assert(nerr, IsNil)
-		log.Infof("Found network {%+v} on agent", nt)
-		c.Assert(nt.Spec.IPv4Subnet, Equals, "10.1.1.0/24")
+		AssertOk(c, nerr, "error finding network")
+		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
 	}
 
 	// delete the network
@@ -107,10 +108,11 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	c.Assert(err, IsNil)
 
 	// verify network is removed from all agents
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 	for _, ag := range it.agents {
-		_, err := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
-		c.Assert(err, NotNil)
+		AssertEventually(c, func() bool {
+			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			return (nerr != nil)
+		}, "Network still found on agent", "100ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
 	}
 }
 
@@ -127,7 +129,10 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * 5 * time.Duration(it.numAgents))
+	AssertEventually(c, func() bool {
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		return (nerr == nil)
+	}, "Network not found in statemgr")
 
 	// create one endpoint from each agent
 	for i, ag := range it.agents {
@@ -145,9 +150,10 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.EndpointDB), Equals, it.numAgents)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == it.numAgents)
+		}, "Endpoints not found on agent", "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
 		for i := range it.agents {
 			epname := fmt.Sprintf("testEndpoint-%d", i)
 			c.Assert(len(ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", epname)].Request), Equals, 1)
@@ -166,10 +172,18 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 		// verify endpoint was added to datapath
 		c.Assert(len(ag.datapath.EndpointDelDB[objKey(ep.ObjectMeta)].Request), Equals, 1)
 	}
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+
+	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == 0)
+		}, "Endpoints still found on agent", "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
+	}
 
 	// delete the network
 	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	AssertEventually(c, func() bool {
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		return (nerr != nil)
+	}, "Network still found in statemgr")
 }

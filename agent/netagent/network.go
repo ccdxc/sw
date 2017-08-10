@@ -5,10 +5,10 @@ package netagent
 import (
 	"errors"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 )
 
 // CreateNetwork creates a network
@@ -19,11 +19,11 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	if ok {
 		// check if network contents are same
 		if !proto.Equal(oldNt, nt) {
-			logrus.Errorf("Network %+v already exists", oldNt)
+			log.Errorf("Network %+v already exists", oldNt)
 			return errors.New("Network already exists")
 		}
 
-		logrus.Infof("Received duplicate network create for ep {%+v}", nt)
+		log.Infof("Received duplicate network create for ep {%+v}", nt)
 		return nil
 	}
 
@@ -34,7 +34,7 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	// create it in datapath
 	err := ag.datapath.CreateNetwork(nt)
 	if err != nil {
-		logrus.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
+		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
 	}
 
@@ -68,14 +68,14 @@ func (ag *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	key := objectKey(nt.ObjectMeta)
 	nw, ok := ag.networkDB[key]
 	if !ok {
-		logrus.Errorf("Network %+v not found", nt.ObjectMeta)
+		log.Errorf("Network %+v not found", nt.ObjectMeta)
 		return errors.New("Network not found")
 	}
 
 	// delete the network in datapath
 	err := ag.datapath.DeleteNetwork(nw)
 	if err != nil {
-		logrus.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
+		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
 	}
 
 	// delete from db

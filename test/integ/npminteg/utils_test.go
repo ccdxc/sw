@@ -24,7 +24,7 @@ type Dpagent struct {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(srvURL string) (*Dpagent, error) {
+func CreateAgent(nodeUUID, srvURL string) (*Dpagent, error) {
 	// mock datapath
 	dp, err := datapath.NewMockHalDatapath()
 	if err != nil {
@@ -33,7 +33,7 @@ func CreateAgent(srvURL string) (*Dpagent, error) {
 	}
 
 	// create new network agent
-	nagent, err := agent.NewAgent(dp, srvURL)
+	nagent, err := agent.NewAgent(dp, nodeUUID, srvURL)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err

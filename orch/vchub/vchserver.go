@@ -9,15 +9,16 @@ package vchub
 
 import (
 	"fmt"
-	"github.com/pensando/sw/utils/log"
-	context "golang.org/x/net/context"
 	"net"
 	"reflect"
 	"time"
 
+	context "golang.org/x/net/context"
+
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/store"
 	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/utils/log"
 	"google.golang.org/grpc"
 )
 

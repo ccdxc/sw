@@ -5,11 +5,11 @@ package datapath
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/datapath/fswitch"
 	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 )
 
 // FakeDatapath has the fake datapath for testing purposes
@@ -18,21 +18,29 @@ type FakeDatapath struct {
 }
 
 // NewFakeDatapath returns a new fake datapath
-func NewFakeDatapath() (*FakeDatapath, error) {
+func NewFakeDatapath(uplinkIntf string) (*FakeDatapath, error) {
+	// create new fake datapath
+	fdp := FakeDatapath{}
+
 	// create new fswitch
-	// FIXME: dont hardcode the uplink port name
-	fs, err := fswitch.NewFswitch("datapath")
+	fs, err := fswitch.NewFswitch(&fdp, uplinkIntf)
 	if err != nil {
-		logrus.Errorf("Error creating fswitch. Err: %v", err)
+		log.Errorf("Error creating fswitch. Err: %v", err)
 		return nil, err
 	}
-
-	// create new fake datapath
-	fdp := FakeDatapath{
-		fSwitch: fs,
-	}
+	fdp.fSwitch = fs
 
 	return &fdp, nil
+}
+
+// SetAgent sets the agent for this datapath
+func (fdp *FakeDatapath) SetAgent(ag netagent.DatapathIntf) error {
+	return nil
+}
+
+// EndpointLearnNotif learn the endpoints from datapath
+func (fdp *FakeDatapath) EndpointLearnNotif(ep *netproto.Endpoint) error {
+	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
@@ -47,7 +55,7 @@ func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto
 	// create Veth pairs
 	err := netutils.CreateVethPair(cintf, sintf)
 	if err != nil {
-		logrus.Errorf("Error creating veth pair: %s/%s. Err: %v", cintf, sintf, err)
+		log.Errorf("Error creating veth pair: %s/%s. Err: %v", cintf, sintf, err)
 		return nil, err
 	}
 
@@ -66,7 +74,7 @@ func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto
 	// add the local endpoint
 	err = fdp.fSwitch.AddLocalEndpoint(sintf, ep)
 	if err != nil {
-		logrus.Errorf("Error adding endpoint to fswitch. Err: %v", err)
+		log.Errorf("Error adding endpoint to fswitch. Err: %v", err)
 		return nil, err
 	}
 
@@ -105,13 +113,13 @@ func (fdp *FakeDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// remove the port from fswitch
 	err := fdp.fSwitch.DelPort(sintf)
 	if err != nil {
-		logrus.Errorf("Error deleting port %s from fswitch. Err: %v", sintf, err)
+		log.Errorf("Error deleting port %s from fswitch. Err: %v", sintf, err)
 	}
 
 	// delete endpoint from fswitch
 	err = fdp.fSwitch.DelLocalEndpoint(sintf, ep)
 	if err != nil {
-		logrus.Errorf("Error deleting endpoint from fswitch. Err: %v", err)
+		log.Errorf("Error deleting endpoint from fswitch. Err: %v", err)
 	}
 
 	// delete veth pair

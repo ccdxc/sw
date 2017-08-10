@@ -8,10 +8,10 @@ import (
 
 	context "golang.org/x/net/context"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 	. "github.com/pensando/sw/utils/testutils"
 )
@@ -144,7 +144,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 		// send create event
 		err := stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -152,7 +152,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 		watchEvt.EventType = api.EventType_UpdateEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -160,7 +160,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 		watchEvt.EventType = api.EventType_DeleteEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}
@@ -196,7 +196,7 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 		// send create event
 		err := stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -204,7 +204,7 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 		watchEvt.EventType = api.EventType_UpdateEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -212,7 +212,7 @@ func (srv *fakeRPCServer) WatchEndpoints(meta *api.ObjectMeta, stream netproto.E
 		watchEvt.EventType = api.EventType_DeleteEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}
@@ -240,7 +240,7 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 		// send create event
 		err := stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -248,7 +248,7 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 		watchEvt.EventType = api.EventType_UpdateEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 
@@ -256,7 +256,7 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 		watchEvt.EventType = api.EventType_DeleteEvent
 		err = stream.Send(&watchEvt)
 		if err != nil {
-			logrus.Errorf("Error sending stream. Err: %v", err)
+			log.Errorf("Error sending stream. Err: %v", err)
 			return err
 		}
 	}

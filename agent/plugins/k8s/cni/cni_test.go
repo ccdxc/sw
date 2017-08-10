@@ -17,8 +17,8 @@ import (
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 	. "github.com/pensando/sw/utils/testutils"
-	"github.com/prometheus/common/log"
 )
 
 const fakeCniServerURL = "/tmp/fake-cni.sock"

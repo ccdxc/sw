@@ -5,24 +5,32 @@
 package main
 
 import (
-	"os"
-
-	log "github.com/Sirupsen/logrus"
 	"github.com/appc/cni/pkg/version"
 	cni "github.com/containernetworking/cni/pkg/skel"
 	cniServer "github.com/pensando/sw/agent/plugins/k8s/cni"
+	"github.com/pensando/sw/utils/log"
 )
 
 func main() {
-	// Open a logfile
-	f, err := os.OpenFile("/tmp/pensandonet-plugin.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      "K8sAgent",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		Context:     true,
+		LogToStdout: true,
+		LogToFile:   true,
+		FileCfg: log.FileConfig{
+			Filename:   "/tmp/pensandonet-plugin.log",
+			MaxSize:    10, // TODO: These needs to be part of Service Config Object
+			MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
+			MaxAge:     7,  // TODO: These needs to be part of Service Config Object
+		},
 	}
-	defer f.Close()
 
-	// set the log file as the default log output
-	log.SetOutput(f)
+	// Initialize logger config
+	log.SetConfig(logConfig)
 
 	versionInfo := version.PluginSupports("0.1.0")
 

@@ -5,10 +5,10 @@ package netagent
 import (
 	"errors"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/log"
 )
 
 // addSgRules adds sg rules
@@ -21,7 +21,7 @@ func (ag *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
 		if rule.PeerGroup != "" {
 			peersg, err = ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
 			if err != nil {
-				logrus.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
+				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err
 			}
 		}
@@ -29,7 +29,7 @@ func (ag *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
 		// add rule
 		err = ag.datapath.AddSecurityRule(sg, &rule, peersg)
 		if err != nil {
-			logrus.Errorf("Error adding rule in datapath. Rule{%+v}, Err: %v", rule, err)
+			log.Errorf("Error adding rule in datapath. Rule{%+v}, Err: %v", rule, err)
 			return err
 		}
 	}
@@ -48,7 +48,7 @@ func (ag *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 		if rule.PeerGroup != "" {
 			peersg, err = ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
 			if err != nil {
-				logrus.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
+				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err
 			}
 		}
@@ -56,7 +56,7 @@ func (ag *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 		// delete rule
 		err = ag.datapath.DeleteSecurityRule(sg, &rule, peersg)
 		if err != nil {
-			logrus.Errorf("Error deleting the rule. rule {%+v} err: %v", rule, err)
+			log.Errorf("Error deleting the rule. rule {%+v} err: %v", rule, err)
 		}
 	}
 
@@ -71,11 +71,11 @@ func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	if ok {
 		// check if sg contents are same
 		if !proto.Equal(oldSg, sg) {
-			logrus.Errorf("Security group %+v already exists", oldSg)
+			log.Errorf("Security group %+v already exists", oldSg)
 			return errors.New("Security group already exists")
 		}
 
-		logrus.Infof("Received duplicate sg create {%+v}", sg)
+		log.Infof("Received duplicate sg create {%+v}", sg)
 		return nil
 	}
 
@@ -86,14 +86,14 @@ func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// create it in datapath
 	err := ag.datapath.CreateSecurityGroup(sg)
 	if err != nil {
-		logrus.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg, err)
+		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg, err)
 		return err
 	}
 
 	// add rules
 	err = ag.addSgRules(sg)
 	if err != nil {
-		logrus.Errorf("Error adding sg rules. Err: %v", err)
+		log.Errorf("Error adding sg rules. Err: %v", err)
 		return err
 	}
 
@@ -120,7 +120,7 @@ func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	key := objectKey(sg.ObjectMeta)
 	esg, ok := ag.secgroupDB[key]
 	if !ok {
-		logrus.Errorf("Security group %+v not found", sg.ObjectMeta)
+		log.Errorf("Security group %+v not found", sg.ObjectMeta)
 		return errors.New("Security group not found")
 	}
 
@@ -130,7 +130,7 @@ func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// update sg in datapath
 	err := ag.datapath.UpdateSecurityGroup(sg)
 	if err != nil {
-		logrus.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg, err)
+		log.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg, err)
 		return err
 	}
 
@@ -138,14 +138,14 @@ func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// remove old rules
 	err = ag.delSgRules(esg)
 	if err != nil {
-		logrus.Errorf("Error removing sg rules. Err: %v", err)
+		log.Errorf("Error removing sg rules. Err: %v", err)
 		return err
 	}
 
 	// add new rules
 	err = ag.addSgRules(sg)
 	if err != nil {
-		logrus.Errorf("Error adding sg rules. Err: %v", err)
+		log.Errorf("Error adding sg rules. Err: %v", err)
 		return err
 	}
 
@@ -161,20 +161,20 @@ func (ag *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	key := objectKey(sg.ObjectMeta)
 	sgrp, ok := ag.secgroupDB[key]
 	if !ok {
-		logrus.Errorf("Security group %+v not found", sg.ObjectMeta)
+		log.Errorf("Security group %+v not found", sg.ObjectMeta)
 		return errors.New("Security group not found")
 	}
 
 	// delete the sg in datapath
 	err := ag.datapath.DeleteSecurityGroup(sgrp)
 	if err != nil {
-		logrus.Errorf("Error deleting network {%+v}. Err: %v", sgrp, err)
+		log.Errorf("Error deleting network {%+v}. Err: %v", sgrp, err)
 	}
 
 	// remove all rules
 	err = ag.delSgRules(sg)
 	if err != nil {
-		logrus.Errorf("Error removing sg rules. Err: %v", err)
+		log.Errorf("Error removing sg rules. Err: %v", err)
 		return err
 	}
 

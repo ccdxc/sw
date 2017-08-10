@@ -6,52 +6,36 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
+	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/runtime"
 )
 
 // length of watcher channel
 const watcherQueueLen = 1000
 
-// EventType watch event types
-type EventType string
-
-// defined event types
-const (
-	CreateEvent EventType = "Create"
-	UpdateEvent EventType = "Update"
-	DeleteEvent EventType = "Delete"
-)
-
-// WatchEvent is the watch event message
-type WatchEvent struct {
-	EventType EventType // type of the event
-	runtime.Object
-}
-
 // Watcher watches api server for changes
 type Watcher struct {
-	statemgr        *statemgr.Statemgr // reference to network manager
-	netWatcher      chan WatchEvent    // network object watcher
-	vmmEpWatcher    chan WatchEvent    // vmm endpoint watcher
-	sgWatcher       chan WatchEvent    // sg object watcher
-	sgPolicyWatcher chan WatchEvent    // sg object watcher
+	statemgr        *statemgr.Statemgr      // reference to network manager
+	netWatcher      chan kvstore.WatchEvent // network object watcher
+	vmmEpWatcher    chan kvstore.WatchEvent // vmm endpoint watcher
+	sgWatcher       chan kvstore.WatchEvent // sg object watcher
+	sgPolicyWatcher chan kvstore.WatchEvent // sg object watcher
 
 }
 
 // handleNetworkEvent handles network event
-func (w *Watcher) handleNetworkEvent(et EventType, nw *network.Network) {
+func (w *Watcher) handleNetworkEvent(et kvstore.WatchEventType, nw *network.Network) {
 	switch et {
-	case CreateEvent:
+	case kvstore.Created:
 		// ask statemgr to create the network
 		err := w.statemgr.CreateNetwork(nw)
 		if err != nil {
 			log.Errorf("Error creating network {%+v}. Err: %v", nw, err)
 			return
 		}
-	case UpdateEvent:
+	case kvstore.Updated:
 		// FIXME:
-	case DeleteEvent:
+	case kvstore.Deleted:
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteNetwork(nw.Tenant, nw.Name)
 		if err != nil {
@@ -62,7 +46,7 @@ func (w *Watcher) handleNetworkEvent(et EventType, nw *network.Network) {
 }
 
 // handleEndpointEvent handles endpoint event
-func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
+func (w *Watcher) handleEndpointEvent(et kvstore.WatchEventType, ep *network.Endpoint) {
 	// find the network
 	nw, err := w.statemgr.FindNetwork(ep.ObjectMeta.Tenant, ep.Status.Network)
 	if err != nil {
@@ -72,16 +56,16 @@ func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
 
 	// handle based on event type
 	switch et {
-	case CreateEvent:
+	case kvstore.Created:
 		// ask statemgr to create the endpoint
 		_, err = nw.CreateEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error creating endpoint {%+v}. Err: %v", ep, err)
 			return
 		}
-	case UpdateEvent:
+	case kvstore.Updated:
 		// FIXME:
-	case DeleteEvent:
+	case kvstore.Deleted:
 		// ask statemgr to delete the endpoint
 		_, err := nw.DeleteEndpoint(&ep.ObjectMeta)
 		if err != nil {
@@ -92,18 +76,18 @@ func (w *Watcher) handleEndpointEvent(et EventType, ep *network.Endpoint) {
 }
 
 // handleSgEvent handles security group events
-func (w *Watcher) handleSgEvent(et EventType, sg *network.SecurityGroup) {
+func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *network.SecurityGroup) {
 	switch et {
-	case CreateEvent:
+	case kvstore.Created:
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSecurityGroup(sg)
 		if err != nil {
 			log.Errorf("Error creating sg {%+v}. Err: %v", sg, err)
 			return
 		}
-	case UpdateEvent:
+	case kvstore.Updated:
 		// FIXME:
-	case DeleteEvent:
+	case kvstore.Deleted:
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSecurityGroup(sg.Tenant, sg.Name)
 		if err != nil {
@@ -114,18 +98,18 @@ func (w *Watcher) handleSgEvent(et EventType, sg *network.SecurityGroup) {
 }
 
 // handleSgPolicyEvent handles sg policy events
-func (w *Watcher) handleSgPolicyEvent(et EventType, sgp *network.Sgpolicy) {
+func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sgpolicy) {
 	switch et {
-	case CreateEvent:
+	case kvstore.Created:
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSgpolicy(sgp)
 		if err != nil {
 			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp, err)
 			return
 		}
-	case UpdateEvent:
+	case kvstore.Updated:
 		// FIXME:
-	case DeleteEvent:
+	case kvstore.Deleted:
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSgpolicy(sgp.Tenant, sgp.Name)
 		if err != nil {
@@ -162,7 +146,7 @@ func (w *Watcher) runNetwatcher() {
 			log.Infof("Watcher: Got network watch event: {%+v}", nw)
 
 			// process each event in its own go routine
-			go w.handleNetworkEvent(evt.EventType, nw)
+			go w.handleNetworkEvent(evt.Type, nw)
 		}
 	}
 }
@@ -191,10 +175,10 @@ func (w *Watcher) runVmmEpwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.EventType, ep)
+			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep)
 
 			// process each event in its own go routine
-			go w.handleEndpointEvent(evt.EventType, ep)
+			go w.handleEndpointEvent(evt.Type, ep)
 		}
 	}
 }
@@ -223,10 +207,10 @@ func (w *Watcher) runSgwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.EventType, ep)
+			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep)
 
 			// process each event in its own go routine
-			go w.handleSgEvent(evt.EventType, ep)
+			go w.handleSgEvent(evt.Type, ep)
 		}
 	}
 }
@@ -255,24 +239,33 @@ func (w *Watcher) runSgPolicyWatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.EventType, sgp)
+			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp)
 
 			// process each event in its own go routine
-			go w.handleSgPolicyEvent(evt.EventType, sgp)
+			go w.handleSgPolicyEvent(evt.Type, sgp)
 		}
 	}
 }
 
+// Stop watcher
+func (w *Watcher) Stop() {
+	// close the channels
+	close(w.netWatcher)
+	close(w.sgPolicyWatcher)
+	close(w.sgWatcher)
+	close(w.vmmEpWatcher)
+}
+
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr) (*Watcher, error) {
+func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string) (*Watcher, error) {
 	// create a watcher
 	// FIXME: we need to hook this to api server watch once its ready.
 	watcher := &Watcher{
 		statemgr:        statemgr,
-		netWatcher:      make(chan WatchEvent, watcherQueueLen),
-		vmmEpWatcher:    make(chan WatchEvent, watcherQueueLen),
-		sgWatcher:       make(chan WatchEvent, watcherQueueLen),
-		sgPolicyWatcher: make(chan WatchEvent, watcherQueueLen),
+		netWatcher:      make(chan kvstore.WatchEvent, watcherQueueLen),
+		vmmEpWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
+		sgWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
+		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 	}
 
 	// start a go routine to handle messages coming on watcher channel
@@ -280,6 +273,10 @@ func NewWatcher(statemgr *statemgr.Statemgr) (*Watcher, error) {
 	go watcher.runVmmEpwatcher()
 	go watcher.runSgwatcher()
 	go watcher.runSgPolicyWatcher()
+
+	// handle api watchers
+	go watcher.runApisrvWatcher(apisrvURL)
+	go watcher.runVmmWatcher(vmmURL)
 
 	return watcher, nil
 }
@@ -303,9 +300,9 @@ func (w *Watcher) CreateNetwork(tenant, net, subnet, gw string) error {
 		Status: network.NetworkStatus{},
 	}
 
-	evt := WatchEvent{
-		EventType: CreateEvent,
-		Object:    &nw,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &nw,
 	}
 	// inject the object into the network watcher
 	w.netWatcher <- evt
@@ -325,9 +322,9 @@ func (w *Watcher) DeleteNetwork(tenant, net string) error {
 	}
 
 	// create the watch event
-	evt := WatchEvent{
-		EventType: DeleteEvent,
-		Object:    &nw,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &nw,
 	}
 	// inject the object into the network watcher
 	w.netWatcher <- evt
@@ -358,9 +355,9 @@ func (w *Watcher) CreateEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 	}
 
 	// create the watch event
-	evt := WatchEvent{
-		EventType: CreateEvent,
-		Object:    &epInfo,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &epInfo,
 	}
 	// inject the object into the network watcher
 	w.vmmEpWatcher <- evt
@@ -389,14 +386,14 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 	}
 
 	// create the watch event
-	evt := WatchEvent{
-		EventType: DeleteEvent,
-		Object:    &epInfo,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &epInfo,
 	}
 	// inject the object into the network watcher
 	w.vmmEpWatcher <- evt
 
-	log.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.EventType, epInfo)
+	log.Infof("Injected endpoint Event %s. Ep: {%+v}", evt.Type, epInfo)
 
 	return nil
 }
@@ -415,9 +412,9 @@ func (w *Watcher) CreateSecurityGroup(tenant, sgname string, selectors []string)
 		},
 	}
 
-	evt := WatchEvent{
-		EventType: CreateEvent,
-		Object:    &sg,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &sg,
 	}
 	// inject the object into the sg watcher
 	w.sgWatcher <- evt
@@ -437,9 +434,9 @@ func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 	}
 
 	// create the watch event
-	evt := WatchEvent{
-		EventType: DeleteEvent,
-		Object:    &sg,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &sg,
 	}
 
 	// inject the object into the sg watcher
@@ -464,9 +461,9 @@ func (w *Watcher) CreateSgpolicy(tenant, pname string, attachGroups []string, in
 		},
 	}
 
-	evt := WatchEvent{
-		EventType: CreateEvent,
-		Object:    &sgp,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &sgp,
 	}
 
 	// inject the object into the sg policy watcher
@@ -487,9 +484,9 @@ func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
 	}
 
 	// create the watch event
-	evt := WatchEvent{
-		EventType: DeleteEvent,
-		Object:    &sgp,
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &sgp,
 	}
 
 	// inject the object into the sg watcher

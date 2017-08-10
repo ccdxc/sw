@@ -847,6 +847,24 @@
 			"revision": "44d81051d367757e1c7c6a5a86423ece9afcf63c"
 		},
 		{
+			"checksumSHA1": "zYWRs1ulJNrF3bmnRQAEA2WnPQs=",
+			"path": "github.com/google/gopacket",
+			"revision": "7d9ba85c47bb41298fed10f5769f793741de187f",
+			"revisionTime": "2017-08-08T17:56:35Z"
+		},
+		{
+			"checksumSHA1": "UUPiLxfHrb4F//CAXohRJaxpQTg=",
+			"path": "github.com/google/gopacket/layers",
+			"revision": "7d9ba85c47bb41298fed10f5769f793741de187f",
+			"revisionTime": "2017-08-08T17:56:35Z"
+		},
+		{
+			"checksumSHA1": "1oxFrdlDL5yqwyk9zGyPjC3ZBPE=",
+			"path": "github.com/google/gopacket/pcap",
+			"revision": "7d9ba85c47bb41298fed10f5769f793741de187f",
+			"revisionTime": "2017-08-08T17:56:35Z"
+		},
+		{
 			"checksumSHA1": "e/Kc2UOy1lKAy31xWlK37M1r2e8=",
 			"path": "github.com/google/shlex",
 			"revision": "6f45313302b9c56850fc17f99e40caebce98c716",
@@ -1272,10 +1290,10 @@
 			"revision": "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
 		},
 		{
-			"checksumSHA1": "DNTWzeXo5hW3EVmdGHRAcXl8pbo=",
+			"checksumSHA1": "amVkMCnzM505PYQhTcHx43UMMDs=",
 			"path": "github.com/pensando/grpc-gateway",
-			"revision": "8b1010d9fae7174143ca7d813931e854de2c76eb",
-			"revisionTime": "2017-07-03T07:32:47Z",
+			"revision": "5fe3d6eb857e6ed9e657e9b6568285ed37784867",
+			"revisionTime": "2017-07-18T00:41:43Z",
 			"tree": true
 		},
 		{
@@ -1295,13 +1313,6 @@
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator/vc",
 			"revision": "fbffc215d34cc7bf8b8d7e3a985effd5543606b1",
 			"revisionTime": "2017-07-06T21:30:02Z"
-		},
-		{
-			"checksumSHA1": "amVkMCnzM505PYQhTcHx43UMMDs=",
-			"path": "github.com/pensando/grpc-gateway",
-			"revision": "5fe3d6eb857e6ed9e657e9b6568285ed37784867",
-			"revisionTime": "2017-07-18T00:41:43Z",
-			"tree": true
 		},
 		{
 			"checksumSHA1": "hNxTczpwjMFOoLeffAvJLuMFJFw=",

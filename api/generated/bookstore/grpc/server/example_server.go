@@ -228,21 +228,9 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"bookstore.OrderSpec":                   apisrvpkg.NewMessage("bookstore.OrderSpec"),
-		"bookstore.OrderItem":                   apisrvpkg.NewMessage("bookstore.OrderItem"),
-		"bookstore.OrderStatus":                 apisrvpkg.NewMessage("bookstore.OrderStatus"),
-		"bookstore.AutoMsgPublisherWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherWatchHelper"),
-		"bookstore.AutoMsgPublisherListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := bookstore.AutoMsgPublisherListHelper{}
-			r := bookstore.Publisher{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"bookstore.OrderSpec":               apisrvpkg.NewMessage("bookstore.OrderSpec"),
+		"bookstore.OrderItem":               apisrvpkg.NewMessage("bookstore.OrderItem"),
+		"bookstore.OrderStatus":             apisrvpkg.NewMessage("bookstore.OrderStatus"),
 		"bookstore.AutoMsgOrderWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderWatchHelper"),
 		"bookstore.AutoMsgOrderListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -260,6 +248,18 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 
 			into := bookstore.AutoMsgBookListHelper{}
 			r := bookstore.Book{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"bookstore.AutoMsgPublisherWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherWatchHelper"),
+		"bookstore.AutoMsgPublisherListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := bookstore.AutoMsgPublisherListHelper{}
+			r := bookstore.Publisher{}
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

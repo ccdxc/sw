@@ -41,7 +41,7 @@ sudo yum install -y net-tools tcpdump wget git gcc gcc-c++ CUnit-devel  \
     openssl-devel vim pciutils libtool curl unzip openssl  \
     python-paramiko kernel-devel glibc.i686 libgcc.i686 \
     libstdc++.i686 glibc-devel.i686 kubelet kubeadm kubectl kubernetes-cni \
-    device-mapper-persistent-data lvm2 docker-ce
+    device-mapper-persistent-data lvm2 docker-ce libpcap-devel
 
 
 

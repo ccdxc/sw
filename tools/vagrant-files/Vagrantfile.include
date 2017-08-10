@@ -60,6 +60,9 @@ def preamble_script(postamble)
     gpasswd -a vagrant docker
     # curl -sSL box-builder.sh | bash
 
+    # Install pcap headers
+    yum install libpcap-devel -y
+
     # Add pensando internal docker registry
     mkdir -p /etc/docker
     echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json

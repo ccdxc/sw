@@ -7,10 +7,11 @@ import
 // . "github.com/pensando/sw/utils/testutils"
 (
 	"fmt"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/api/generated/network"
+
+	. "github.com/pensando/sw/utils/testutils"
 	. "gopkg.in/check.v1"
 )
 
@@ -28,11 +29,12 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// create sg in watcher
 	err := it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", []string{"env:production", "app:procurement"})
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 
 	// verify all agents have the security group
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.SgDB), Equals, 1)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.SgDB) == 1)
+		}, "Sg not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 		c.Assert(len(ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
 	}
 
@@ -53,31 +55,35 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// create sg policy
 	err = it.ctrler.Watchr.CreateSgpolicy("default", "testpolicy", []string{"testsg"}, inrules, outrules)
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 
 	// verify datapath has the rules
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.SgRule), Equals, 2)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.SgRule) == 2)
+		}, "Sg rules not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 	}
 
 	// delete the sg policy
 	err = it.ctrler.Watchr.DeleteSgpolicy("default", "testpolicy")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 
 	// verify rules are gone from datapath
 	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.SgRule) == 0)
+		}, "Sg rules still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 		c.Assert(len(ag.datapath.SgRule), Equals, 0)
 	}
 
 	// delete the security group
 	err = it.ctrler.Watchr.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 
 	// verify sg is removed from datapath
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.SgDB), Equals, 0)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.SgDB) == 0)
+		}, "Sg still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 	}
 }
 
@@ -98,21 +104,28 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	AssertEventually(c, func() bool {
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		return (nerr == nil)
+	}, "Network not found in statemgr")
 
 	// create sg in watcher
 	err = it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", []string{"env:production", "app:procurement"})
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	AssertEventually(c, func() bool {
+		_, serr := it.ctrler.StateMgr.FindSecurityGroup("default", "testsg")
+		return (serr == nil)
+	}, "Sg not found in statemgr")
 
 	// create endpoint
 	err = it.ctrler.Watchr.CreateEndpoint("default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", []string{"env:production", "app:procurement"}, 2)
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * 5 * time.Duration(it.numAgents))
 
 	// verify endpoint is present in all agents
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.EndpointDB), Equals, 1)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == 1)
+		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 1000+300*it.numAgents))
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
@@ -123,11 +136,12 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// create second endpoint
 	err = it.ctrler.Watchr.CreateEndpoint("default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", []string{"env:production", "app:procurement"}, 3)
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * 5 * time.Duration(it.numAgents))
 
 	// verify new endpoint is present in all agents
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.EndpointDB), Equals, 2)
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == 2)
+		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
@@ -138,29 +152,40 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// delete the second endpoint
 	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == 1)
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
+	}
 
 	// delete the security group
 	err = it.ctrler.Watchr.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
 
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
-		c.Assert(len(ag.datapath.EndpointDB), Equals, 1)
-		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-		c.Assert(ok, Equals, true)
-		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].SecurityGroup), Equals, 0)
+		AssertEventually(c, func() bool {
+			ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
+			c.Assert(ok, Equals, true)
+			c.Assert(len(ep.Request), Equals, 1)
+			return (len(ep.Request[0].SecurityGroup) == 0)
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
 	}
 
 	// delete endpoint
 	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			return (len(ag.datapath.EndpointDB) == 0)
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+	}
 
 	// delete the network
 	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
-	time.Sleep(time.Millisecond * time.Duration(it.numAgents))
+	AssertEventually(c, func() bool {
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		return (nerr != nil)
+	}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 }

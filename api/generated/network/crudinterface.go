@@ -15,17 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// NetworkInterface exposes the CRUD methods for Network
-type NetworkInterface interface {
-	Create(ctx context.Context, in *Network) (*Network, error)
-	Update(ctx context.Context, in *Network) (*Network, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // SecurityGroupInterface exposes the CRUD methods for SecurityGroup
 type SecurityGroupInterface interface {
 	Create(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
@@ -88,6 +77,17 @@ type TenantInterface interface {
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Tenant, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// NetworkInterface exposes the CRUD methods for Network
+type NetworkInterface interface {
+	Create(ctx context.Context, in *Network) (*Network, error)
+	Update(ctx context.Context, in *Network) (*Network, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }

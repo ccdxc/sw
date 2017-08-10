@@ -3,7 +3,7 @@
 package agent
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"github.com/pensando/sw/utils/log"
 
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/ctrlerif"
@@ -45,12 +45,21 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp netagent.NetDatapathAPI, ctrlerURL string) (*Agent, error) {
+func NewAgent(dp netagent.NetDatapathAPI, nodeUUID, ctrlerURL string) (*Agent, error) {
 
 	// create new network agent
-	nagent, err := netagent.NewNetAgent(dp)
+	nagent, err := netagent.NewNetAgent(dp, nodeUUID)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
+		return nil, err
+	}
+
+	log.Infof("NetAgent {%+v} is running", nagent)
+
+	// pass the agent back to datapath
+	err = dp.SetAgent(nagent)
+	if err != nil {
+		log.Errorf("Error linking datapath and agent. Err: %v", err)
 		return nil, err
 	}
 

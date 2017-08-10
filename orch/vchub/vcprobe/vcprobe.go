@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -29,6 +30,7 @@ type VCProbe struct {
 	cancel  context.CancelFunc
 	ctx     context.Context
 	outBox  chan<- defs.StoreMsg
+	wg      sync.WaitGroup
 }
 
 // NewVCProbe returns a new instance of VCProbe
@@ -63,6 +65,7 @@ func (v *VCProbe) Stop() {
 	if v.cancel != nil {
 		v.cancel()
 		v.cancel = nil
+		v.wg.Wait()
 	}
 }
 
@@ -100,6 +103,8 @@ func GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
 
 // probeSmartNICs probes the vCenter for SmartNICs
 func (v *VCProbe) probeSmartNICs() error {
+	v.wg.Add(1)
+	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
 	kinds := []string{"HostSystem"}
 	hostView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)
@@ -218,6 +223,8 @@ func (v *VCProbe) updateSNIC(hostKey string, pc []types.PropertyChange) {
 
 // probeNwIFs probes the vCenter for VNICs
 func (v *VCProbe) probeNwIFs() error {
+	v.wg.Add(1)
+	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
 	kinds := []string{"VirtualMachine"}
 	vmView, err := v.viewMgr.CreateContainerView(v.ctx, root, kinds, true)

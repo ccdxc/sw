@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/pensando/sw/ctrler/npm"
 	"github.com/pensando/sw/ctrler/npm/rpcserver"
 	"github.com/pensando/sw/utils/log"
@@ -25,7 +26,7 @@ func main() {
 		Debug:       *debugflag,
 		Context:     true,
 		LogToStdout: true,
-		LogToFile:   true,
+		LogToFile:   false,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
 			MaxSize:    10, // TODO: These needs to be part of Service Config Object
@@ -41,7 +42,7 @@ func main() {
 	waitCh := make(chan bool)
 
 	// create the controller
-	ctrler, err := npm.NewNetctrler(rpcserver.NetctrlerURL)
+	ctrler, err := npm.NewNetctrler(rpcserver.NetctrlerURL, "localhost:8082", "")
 	if err != nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}
