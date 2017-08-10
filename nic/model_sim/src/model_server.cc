@@ -117,7 +117,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t addr = buff->addr;
             bool ret = env->read_mem(addr, buff->data, buff->size);
             ret = true;
-            if ((buff->size > 4096) || !ret) {
+            if ((buff->size > 12288) || !ret) {
     	        std::cout << "ERROR: Reading memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
@@ -131,7 +131,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t addr = buff->addr;
             bool ret = env->write_mem(addr, buff->data, buff->size);
             ret = true;
-            if ((buff->size > 4096) || !ret) {
+            if ((buff->size > 12288) || !ret) {
     	        std::cout << "ERROR: Writing memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
@@ -181,11 +181,11 @@ int main (int argc, char ** argv)
 
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
-        char recv_buff[4096];
-        zmq_recv (responder, recv_buff, 4096, 0);
+        char recv_buff[12288];
+        zmq_recv (responder, recv_buff, 12288, 0);
         buff = (buffer_hdr_t *) recv_buff;
         process_buff(buff, env);
-        zmq_send (responder, recv_buff, 4096, 0);
+        zmq_send (responder, recv_buff, 12288, 0);
         //std::cout << "*************** HBM dump START ***************" << std::endl;
         //dumpHBM();
         //std::cout << "*************** HBM dump END ***************" << std::endl;

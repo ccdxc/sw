@@ -769,8 +769,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_TCP_ACK_RCVD);
                     modify_field(scratch_metadata.rflow_tcp_ack_num, tcp.ackNo);
                     modify_field(scratch_metadata.rflow_tcp_win_sz, tcp.window);
-                    // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
                 }
+                // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
             }
             if (tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_ACK) == (TCP_FLAG_SYN) and
                 tcp.ackNo == 0) {
@@ -779,6 +779,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                 if (l4_metadata.tcp_split_handshake_drop == NORMALIZATION_ACTION_DROP) {
                     modify_field(control_metadata.drop_reason, DROP_TCP_SPLIT_HANDSHAKE);
                     drop_packet();
+                    // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
                 } else {
                     modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD);
                     if (scratch_metadata.iflow_tcp_ws_option_sent == TRUE and
@@ -808,7 +809,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            if ((scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_SYN_RCVD) and
                (tcp.flags & (TCP_FLAG_ACK) == (TCP_FLAG_ACK)) and
                (tcp.ackNo == scratch_metadata.iflow_tcp_seq_num)) {
-               modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_TCP_SYN_ACK_RCVD);
+               modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_TCP_SYN_ACK_RCVD);
                // goto RESPONDER_TCP_SESSION_UPDATE
            }
            if ((scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_SYN_ACK_RCVD) and
