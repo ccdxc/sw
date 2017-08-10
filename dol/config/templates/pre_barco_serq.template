@@ -1,6 +1,6 @@
 # TLS CB Object Template File.
 meta:
-    id: PRE_BARCO_SERQ
+    id: SERQ
 
 id                    : None # TLS CB Local ID
 pi                    : 0
