@@ -11,7 +11,7 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-p4pd_program_l4_profile_table (pd_nwsec_profile_t *pd_nw)
+p4pd_program_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
 {
     hal_ret_t                ret;
     DirectMap                *dm;
@@ -80,17 +80,48 @@ p4pd_program_l4_profile_table (pd_nwsec_profile_t *pd_nw)
         profile->tcp_invalid_flags_drop;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_flags_nonsyn_noack_drop =
         profile->tcp_flags_nonsyn_noack_drop;
-
-    ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-Nwsec::{}: Unable to program L4 Profile: ret: {}",
-                __FUNCTION__, ret);
+    
+    if (create) {
+        ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);
     } else {
-        HAL_TRACE_DEBUG("PD-Nwsec::{}: Programmed L4 Profile at {}",
-                __FUNCTION__, pd_nw->nwsec_hw_id);
+        ret = dm->update(pd_nw->nwsec_hw_id, &data);
     }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-Nwsec::{}: Unable to program L4 Profile: create: {} ret: {}",
+                __FUNCTION__, create, ret);
+    } else {
+        HAL_TRACE_DEBUG("PD-Nwsec::{}: Programmed L4 Profile at {} create {}",
+                __FUNCTION__, pd_nw->nwsec_hw_id, create);
+    }
+    return (ret);
+}
 
-    return HAL_RET_OK;
+hal_ret_t
+pd_nwsec_profile_update (pd_nwsec_profile_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;; 
+    pd_nwsec_profile_t   *pd_nwsec;
+
+    HAL_TRACE_DEBUG("PD-Nwsec:{}: Updating pd state ",
+                    __FUNCTION__);
+
+    pd_nwsec = (pd_nwsec_profile_t *) args->nwsec_profile->pd;
+    // Cache the PI pointer since the ptr in the
+    // args is a local copy
+    void *cached_pi_ptr = pd_nwsec->nwsec_profile;
+     
+    pd_nwsec->nwsec_profile = (void *) args->nwsec_profile; 
+    // Program HW
+    ret = pd_nwsec_program_hw(pd_nwsec, FALSE);
+    if (ret != HAL_RET_OK) {
+        // No Resources, dont allocate PD
+        HAL_TRACE_ERR("PD-Nwsec::{}: Unable to program hw, ret : {}",
+                      __FUNCTION__, ret);
+    }
+    // Revert back to the cached PI ptr
+    pd_nwsec->nwsec_profile = cached_pi_ptr;
+
+    return ret;
 }
 
 hal_ret_t
@@ -122,7 +153,7 @@ pd_nwsec_profile_create (pd_nwsec_profile_args_t *args)
     }
 
     // Program HW
-    ret = pd_nwsec_program_hw(pd_nwsec);
+    ret = pd_nwsec_program_hw(pd_nwsec, TRUE);
 
 end:
     if (ret != HAL_RET_OK) {
@@ -202,12 +233,12 @@ pd_nwsec_alloc_res(pd_nwsec_profile_t *pd_nw)
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_nwsec_program_hw(pd_nwsec_profile_t *pd_nw)
+pd_nwsec_program_hw(pd_nwsec_profile_t *pd_nw, bool create)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
     // Program L4 Profile Table
-    ret = p4pd_program_l4_profile_table(pd_nw);
+    ret = p4pd_program_l4_profile_table(pd_nw, create);
     // ret = p4pd_program_l4_profile_table((hal::nwsec_profile_t*)pd_nw->nwsec_profile);
 
     return ret;

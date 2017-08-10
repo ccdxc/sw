@@ -171,6 +171,7 @@ hal_ret_t pd_l2seg_update(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_delete(pd_l2seg_args_t *l2seg);
 
 hal_ret_t pd_nwsec_profile_create(pd_nwsec_profile_args_t *nwsec_profile);
+hal_ret_t pd_nwsec_profile_update(pd_nwsec_profile_args_t *nwsec_profile);
 
 hal_ret_t pd_lif_create(pd_lif_args_t *lif);
 hal_ret_t pd_lif_update(pd_lif_args_t *lif);
