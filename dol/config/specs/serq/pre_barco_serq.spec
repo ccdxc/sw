@@ -4,6 +4,6 @@ meta:
 
 entries:
     - entry:
-        type        : SERQ
+        name        : SERQ
+        type        : PRE_BARCO_SERQ
         count       : 16
-        size        : 4096

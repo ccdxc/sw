@@ -15,17 +15,18 @@ from config.store               import Store
 from infra.common.logging       import cfglogger
 
 class SwDscrObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx, parent):
+    def __init__(self, ringname, swdreidx, parent = None):
         super().__init__()
         self.Clone(Store.templates.Get("DSCR"))
         self.GID("%s_DESC%04d" % (ringname, swdreidx))
+        cfglogger.info("SwDscrObject:%s"  % self.ID())
         # TODO: Populate the descriptor state from HAL
         return
 
 class SwDscrRingEntryObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx, type, parent):
+    def __init__(self, ringname, swdreidx, type, parent = None):
         super().__init__()
-        self.Clone(Store.templates.Get("%s_ENTRY" % type))
+        self.Clone(Store.templates.Get(type))
         self.GID("%s_ENTRY%04d" % (ringname, swdreidx))
         self.swdscr = SwDscrObject(ringname, swdreidx, parent)
         Store.objects.Add(self.swdscr)
@@ -37,16 +38,20 @@ class SwDscrRingEntryObject(base.ConfigObjectBase):
         return
 
 class SwDscrRingObject(base.ConfigObjectBase):
-    def __init__(self, swdr_type, count, parent):
+    def __init__(self, swdr_name, swdr_type, count, parent = None):
         super().__init__()
         self.Clone(Store.templates.Get(swdr_type))
+        self.swdr_name = swdr_name
         self.swdr_type = swdr_type
         self.count = count
         self.swdre_list = []
-        self.GID("%s_%s_SWDR" % (parent.upper(), self.swdr_type))
+        if (parent != None):
+            self.GID("%s_%s" % (parent.upper(), self.swdr_name))
+        else:
+            self.GID("%s" % (self.swdr_name))
         return
 
-    def Init(self, parent):
+    def Init(self, parent = None):
         for swdreidx in range(self.count):
             swdre = SwDscrRingEntryObject(self.ID(), swdreidx, self.swdr_type, parent)
             self.swdre_list.append(swdre)
@@ -69,10 +74,10 @@ class SwDscrRingObjectHelper:
         cfglogger.info("Configuring %s." % type)
         return
 
-    def Generate(self, type, parent):
+    def Generate(self, type, parent = None):
         spec = Store.specs.Get(type)
         for swdrt in spec.entries:
-            swdr = SwDscrRingObject(swdrt.entry.type, swdrt.entry.count, parent)
+            swdr = SwDscrRingObject(swdrt.entry.name, swdrt.entry.type, swdrt.entry.count, parent)
             swdr.Init(parent)
             self.swdr_list.append(swdr)
             Store.objects.Add(swdr)
@@ -83,7 +88,7 @@ class SwDscrRingObjectHelper:
             swdr.Show()
         return
 
-    def main(self, type, parent):
+    def main(self, type, parent = None):
         self.Generate(type, parent)
         self.Show()
 

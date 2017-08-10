@@ -2,10 +2,12 @@
 meta:
     id: NMDR
 
-types :
+entries :
     - entry:
-        type        : T
+        name        : TNMDR
+        type        : RING_REF_ENTRY
         count       : 16
     - entry:
-        type        : R
+        name        : RNMDR
+        type        : RING_REF_ENTRY
         count       : 16

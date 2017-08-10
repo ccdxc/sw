@@ -4,10 +4,10 @@ meta:
 
 entries:
     - entry:
-        type        : T
+        name        : TNMPR
+        type        : RING_REF_ENTRY
         count       : 16
-        size        : 4096
     - entry:
-        type        : R
+        name        : RNMPR
+        type        : RING_REF_ENTRY
         count       : 16
-        size        : 4096
