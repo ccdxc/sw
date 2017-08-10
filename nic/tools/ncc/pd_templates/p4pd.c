@@ -1,7 +1,6 @@
 //:: import os, pdb
 //:: from collections import OrderedDict
 //:: pddict = _context['pddict']
-
 //:: if pddict['p4plus']:
 //::    p4prog = pddict['p4program'] + '_'
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
@@ -11,9 +10,6 @@
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //:: #endif
-
-
-
 //:: #define here any constants needed.
 //:: ACTION_PC_LEN = 8 # in bits
 /*

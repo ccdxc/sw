@@ -1,10 +1,7 @@
 //:: import os, pdb
 //:: from collections import OrderedDict
-
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
-
-
 //:: if pddict['p4plus']:
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
@@ -12,19 +9,10 @@
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //:: #endif
-
-#ifndef __P4PD${caps_p4prog}_H__
-#define __P4PD${caps_p4prog}_H__
-
-
-#include <string.h>
-#include <hal_pd_error.hpp>
-
 /*
  * p4pd.h
  * Mahesh Shirshyad (Pensando Systems)
  */
-
 /* This file contains data structures and APIs needed to operate on each 
  * P4 Table. 
  *
@@ -69,6 +57,11 @@
  * This file is generated from P4 program. Any changes made to this file will
  * be lost.
  */
+#ifndef __P4PD${caps_p4prog}_H__
+#define __P4PD${caps_p4prog}_H__
+
+#include <string.h>
+#include <hal_pd_error.hpp>
 
 //::     tabledict = {}
 //::     tableid = 1

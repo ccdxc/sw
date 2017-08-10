@@ -605,6 +605,32 @@ class capri_p4pd:
 
         return kdict
 
+    def remove_duplicate_cfs(self, ki_or_kd_to_cf_map, bit_extractors, is_tcam):
+        if len(bit_extractors):
+            pad_list = []
+            for kbit in bit_extractors:
+                cflist = ki_or_kd_to_cf_map[kbit]
+                for cfs in cflist:
+                    (cf, cf_startbit, width, ftype) = cfs
+                    # check if cf 
+                    for k, v  in ki_or_kd_to_cf_map.items():
+                        if k == kbit:
+                            continue
+                        for dict_cfs in v:
+                            (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                            if cf == cf_:
+                                if cf_startbit >= cf_startbit_ and cf_startbit < (cf_startbit_ + width_):
+                                    # Duplicate; Convert to pad
+                                    # In case of hash, k-bits can also appear as I bit.
+                                    # Hence pad them and no need to make sure duplicate
+                                    # should appear only in tcam case.
+                                    #assert(is_tcam), pdb.set_trace()
+                                    # Convert to Pad
+                                    pad_list.append(kbit) 
+            if len(pad_list):
+                for kbit in pad_list:
+                    ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+        
 
     def build_table_asm_hwformat(self, ctable, kd=0):
         '''
@@ -627,6 +653,7 @@ class capri_p4pd:
             is_tcam = 1
         else:
             is_tcam = 0
+        bit_extractors = []
         for km_inst, km in enumerate(ctable.key_makers):
             km_start_byte = km_inst * (km_width/8)
             if not km.combined_profile:
@@ -674,12 +701,14 @@ class capri_p4pd:
                                     if (cf.phv_bit + cf_bit) == phv_bit:
                                         if kbit not in ki_or_kd_to_cf_map.keys():
                                             ki_or_kd_to_cf_map[kbit] = [(cf, cf_bit, 1, "I")]
+                                            bit_extractors.append(kbit)
                                         else:
                                             # Incase of field union, 2 different input bits can map
                                             # same km byte position. 
                                             if (cf, cf_bit, 1, "I") not in ki_or_kd_to_cf_map[kbit]:
                                                 # When sharing KMs, there can be duplicate p4_fld
                                                 ki_or_kd_to_cf_map[kbit].append((cf, cf_bit, 1, "I"))
+                                                bit_extractors.append(kbit)
                                         phv_bit_found = True
                                         break
                             if phv_bit_found:
@@ -700,11 +729,13 @@ class capri_p4pd:
                                     if (cf.phv_bit + cf_bit) == phv_bit:
                                         if kbit not in ki_or_kd_to_cf_map.keys():
                                             ki_or_kd_to_cf_map[kbit] = [(cf, cf_bit, 1, "K")]
+                                            bit_extractors.append(kbit)
                                         else:
                                             # Incase of field union, 2 different input bits can map
                                             # same km byte position. 
                                             if (cf, cf_bit, 1, "K") not in ki_or_kd_to_cf_map[kbit]:
                                                 ki_or_kd_to_cf_map[kbit].append((cf, cf_bit, 1, "K"))
+                                                bit_extractors.append(kbit)
                                         phv_bit_found = True
                                         break
                             if phv_bit_found:
@@ -878,6 +909,9 @@ class capri_p4pd:
                 elif not kd:
                     ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P")]
 
+        # remove any duplicate cf that are extracted as bit as well as
+        # byte or multibit in a byte
+        self.remove_duplicate_cfs(ki_or_kd_to_cf_map, bit_extractors, is_tcam)
         return ki_or_kd_to_cf_map
 
 
