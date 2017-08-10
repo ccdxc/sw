@@ -33,10 +33,10 @@ class ConfigObjectBase(objects.FrameworkObject):
             if isinstance(fvalue, objects.FrameworkFieldObject):
                 fvalue = fvalue.get()
             
-            if value.isdigit():
-                value = int(value)
-            if value == 'None':
-                value = None
+            if value.isdigit(): value = int(value)
+            if value == 'None': value = None
+            if value == 'True': value = True
+            if value == 'False': value = False
             cfglogger.verbose("  - %s: object" % attr, fvalue,
                               "filter:", value)
             if fvalue != value:

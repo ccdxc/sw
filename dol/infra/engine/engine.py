@@ -66,5 +66,4 @@ def main():
     report.show()
     if report.failed_count != 0:
         sys.exit(1)
-        pdb.set_trace()
     sys.exit(0)

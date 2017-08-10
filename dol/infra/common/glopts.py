@@ -20,6 +20,9 @@ parser.add_argument('-t', '--topology', dest='topology',
                     default='base/base.spec',
                     help='Topology to generate Config Objects.')
 parser.add_argument('-T', '--test', dest='test',
-                    default=None, help='Run single Test by name')
+                    default=None, help='Run single TestSpec by name')
+parser.add_argument('--tc', dest='tcid',
+                    default=None, help='Run single Testcase by ID')
 
 GlobalOptions = parser.parse_args()
+

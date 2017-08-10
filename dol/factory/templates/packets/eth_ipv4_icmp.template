@@ -12,7 +12,7 @@ headers:
         id      : ipv4
         template: ref://store/headers/id=IPV4
         fields:
-            proto: ipproto/6
+            proto: ipproto/1
     
     - header:
         id      : icmp

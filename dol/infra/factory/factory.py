@@ -14,6 +14,7 @@ import infra.factory.template   as template
 from infra.common.logging       import logger
 
 from infra.factory.store        import FactoryStore as FactoryStore
+from infra.common.glopts        import GlobalOptions
 
 TestCaseIdAllocator = objfactory.TemplateFieldObject("range/1/65535")
 
@@ -31,6 +32,10 @@ def init():
 def Generate(fwdata):
     for flow in fwdata.CfgFlows:
         tcid = TestCaseIdAllocator.get()
+        if GlobalOptions.tcid != None:
+            gl_opt_tcid = utils.ParseInteger(GlobalOptions.tcid)
+            if gl_opt_tcid != tcid:
+                continue
         tc = testcase.TestCase(tcid, flow, fwdata)
         fwdata.TestCases.append(tc)
     return defs.status.SUCCESS

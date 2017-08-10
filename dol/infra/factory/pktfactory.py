@@ -209,10 +209,11 @@ class Packet(objects.FrameworkObject):
 
     def __len__(self):
         size = 0
-        for key, hdr in self.headers.__dict__.items():
+        for h in self.headers_order:
+            hdr = self.headers.__dict__[h]
             if IsPacketHeader(hdr):
                 pktlogger.verbose("Size of HEADER: %s = " %\
-                                  key, hdr.meta.size)
+                                  h, hdr.meta.size)
                 size += hdr.meta.size
         return size
 

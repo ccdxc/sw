@@ -2,7 +2,6 @@
 meta:
     id: SECURITY_PROFILE
 
-ip_df_action: DROP
 cnxn_tracking_en: 1
 ipsg_en: 1
 tcp_rtt_estimate_en: 1

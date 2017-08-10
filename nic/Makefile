@@ -26,7 +26,6 @@ LIBDIRS = \
 		  hal/pd/utils/met \
 		  hal/pd/utils/tcam \
 		  hal/pd/utils \
-		  sknobs_gen/ \
 		  $(NULL)
 
 PGMDIRS = \

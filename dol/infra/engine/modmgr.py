@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import os
+import pdb
 import importlib
 
 import infra.common.dyml        as dyml
@@ -154,7 +155,8 @@ class ModuleDatabase:
 
     def __add_all(self):
         for pmod in self.parser.parsed_module_list:
-            self.__add(pmod)
+            if pmod.enable == True:
+                self.__add(pmod)
         return
 
     def getnext(self):

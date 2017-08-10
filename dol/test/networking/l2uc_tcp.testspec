@@ -3,19 +3,21 @@ config_filter:
     src:
         tenant  : filter/overlay=VLAN,type=TENANT
         segment : filter/any
-        endpoint: filter/remote=1
+        endpoint: filter/remote=True
     dst:
         tenant  : filter/overlay=VLAN,type=TENANT
         segment : filter/any
-        endpoint: filter/remote=1
-    flow        : filter/fwtype=L2,proto=UDP
+        endpoint: filter/remote=True
+    flow        : filter/fwtype=L2,type=IPV4,proto=TCP
     maxflows    : None
 
 packets:
     - packet:
         id          : PKT1     # Input packet 1
+        #headers     : callback://networking/packets/AddIngressHeadersByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP
+        #template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -28,7 +30,7 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : callback://networking/packets/GetIpv4Ttl
-            udp:
+            tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
             payload:

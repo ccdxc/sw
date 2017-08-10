@@ -1,15 +1,15 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/any
+        tenant  : filter/overlay=VLAN,type=TENANT
         segment : filter/any
-        endpoint: filter/any
+        endpoint: filter/remote=True
     dst:
-        tenant  : filter/any
+        tenant  : filter/overlay=VLAN,type=TENANT
         segment : filter/any
-        endpoint: filter/any
-    flow        : filter/fwtype=L2,proto=UDP,dport=128
-    maxflows    : 1
+        endpoint: filter/remote=True
+    flow        : filter/fwtype=L2,type=IPV4,proto=UDP
+    maxflows    : None
 
 packets:
     - packet:
@@ -38,10 +38,10 @@ trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
-            port    : 1
+            port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
-            port    : 0
+            port    : ref://testcase/config/dst/endpoint/intf/ports
