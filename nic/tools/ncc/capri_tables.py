@@ -252,6 +252,7 @@ class capri_table:
         self.hash_ct = None
         self.hash_type = 0  # pragma hash_type
         self.is_raw = False # Raw table (used in p4_plus)
+        self.is_raw_index = False # Raw index table (used in p4_plus) - slightly different from raw
         self.is_hbm = False # If table resides in HBM, it will be set to true.
                             # A pragma is used in P4 to qualify the table.
         self.is_writeback = False # True when MPU writes to table entry - need lock
@@ -3468,6 +3469,10 @@ class capri_gress_tm:
                         ctable.is_hbm = True    # must be in hbm ??
                         ctable.is_raw = True
 
+                    if t._parsed_pragmas and 'raw_index_table' in t._parsed_pragmas:
+                        ctable.is_hbm = True    # must be in hbm ??
+                        ctable.is_raw_index = True
+
                     # Check if a hash type has been specified for the table.
                     if t._parsed_pragmas and 'hash_type' in t._parsed_pragmas:
                         ctable.hash_type = int(t._parsed_pragmas['hash_type'].keys()[0])
@@ -3542,6 +3547,11 @@ class capri_gress_tm:
                         # mask not supported, use it as 0 while adding mpu_pc as key
                         # mpu pc appears before the key
                         ctable.keys.insert(0, (cf, p4.p4_match_type.P4_MATCH_EXACT, 0))
+                    elif ctable.is_raw_index:
+                        # this is a special index table where the index is the address in mem
+                        ctable.match_type = match_type.EXACT_IDX
+                        for cf in key_cfs:
+                            cf.is_index_key = True
                     elif len(ctable.keys) != 0:
                         # set as exact hash and later check index vs hash based on key
                         # and table size

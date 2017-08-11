@@ -1931,13 +1931,19 @@ def capri_te_cfg_output(stage):
         json_tbl_['addr_vf_id_en']['value'] = str(0)
         json_tbl_['addr_vf_id_loc']['value'] = str(0)
 
-        if ct.is_hbm and not ct.is_raw:
-            entry_size = ct.d_size
-            if ct.is_hash_table():
-                entry_size += ct.key_phv_size
-            entry_sizeB = (entry_size + 7) / 8   # conver to bytes
+        entry_size = ct.d_size
+        if ct.is_hash_table():
+            entry_size += ct.key_phv_size
+        entry_sizeB = (entry_size + 7) / 8   # convert to bytes
+
+        if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
             lg2entry_size = log2size(entry_sizeB)
             json_tbl_['addr_shift']['value'] = str(lg2entry_size)
+            json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+        elif ct.is_raw_index:
+            # special handling, don't shift addr, but read entry_size bytes
+            lg2entry_size = log2size(entry_sizeB)
+            json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
         else:
             json_tbl_['addr_shift']['value'] = str(0)
