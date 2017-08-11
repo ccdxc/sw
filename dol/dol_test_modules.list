@@ -66,6 +66,7 @@ modules:
 
     - module:
         name    : PKT_TCPCB
+        enable  : True
         package : test.tcp-tls-proxy
         module  : tcp_proxy
         spec    : tcp_proxy.testspec
