@@ -464,6 +464,18 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     return ret;
 }
 
+uint8_t *memrev(uint8_t *block, size_t elnum)
+{
+     uint8_t *s, *t, tmp;
+
+    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
+        tmp = *s;
+        *s = *t;
+        *t = tmp;
+    }
+     return block;
+}
+
 //------------------------------------------------------------------------------
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
@@ -480,6 +492,12 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
            IP6_ADDR8_LEN);
     memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dip.v6_addr.addr8,
            IP6_ADDR8_LEN);
+
+    if (flow->key.flow_type == FLOW_TYPE_V6) {
+        memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
+        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+    }
+
     if ((flow->key.proto == IP_PROTO_TCP) || (flow->key.proto == IP_PROTO_UDP)) {
         key.flow_lkp_metadata_lkp_sport = flow->key.sport;
         key.flow_lkp_metadata_lkp_dport = flow->key.dport;

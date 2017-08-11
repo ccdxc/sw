@@ -106,7 +106,7 @@ class Logger:
         self.level = level
 
     def GetLogPrefix(self):
-        return "[%s][INF]" % self.name
+        return "[%s][INFO]" % self.name
 
 start_level = levels.INFO
 if GlobalOptions.debug:

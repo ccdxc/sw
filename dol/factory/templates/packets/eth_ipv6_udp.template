@@ -6,7 +6,7 @@ headers:
         id      : eth
         template: ref://store/headers/id=ETHERNET
         fields:
-            type: ethertype/0x800
+            type: ethertype/0x86DD
 
     - header:
         id      : ipv6

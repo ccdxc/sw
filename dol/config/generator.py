@@ -15,7 +15,7 @@ from infra.common.logging import cfglogger as cfglogger
 
 def process(topospec):
     # Security Profiles
-    SecurityProfileHelper.main()
+    #SecurityProfileHelper.main()
     # Uplinks
     UplinkHelper.main(topospec)
     # UplinkPC

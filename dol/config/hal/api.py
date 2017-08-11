@@ -27,6 +27,8 @@ import session_pb2_grpc     as session_pb2_grpc
 import nwsec_pb2_grpc       as nwsec_pb2_grpc
 import telemetry_pb2_grpc   as telemetry_pb2_grpc
 
+HAL_MAX_BATCH_SIZE = 16
+
 HalChannel = None
 class HalInterfaceSegmentAssociation:
     def __init__(self, intf, seg):
@@ -73,7 +75,7 @@ def __config(objs, reqmsg_class, config_method):
         req_objs.append(obj)
 
         count += 1
-        if count >= defs.HAL_GRPC_MAX_SIZE:
+        if count >= HAL_MAX_BATCH_SIZE:
             resp_msg = config_method(req_msg)
             __process_response(resp_msg, req_msg, req_objs)
             req_msg = reqmsg_class()

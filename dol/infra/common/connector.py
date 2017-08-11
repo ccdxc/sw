@@ -138,7 +138,7 @@ class ModelConnector(Connector):
         self.set_recv_timeout()
 
     def send(self, data, port):
-        logger.info("Sending packet to the model.")
+        logger.verbose("Sending packet to the model.")
         model_wrap.step_network_pkt(data, port)
         self._queue_all_model_packets()
 

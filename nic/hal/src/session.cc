@@ -175,7 +175,7 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
             (flow_key->proto == types::IP_PROTO_UDP)) {
             flow_key->sport = flow_spec_key.v6_key().tcp_udp().sport();
             flow_key->dport = flow_spec_key.v6_key().tcp_udp().dport();;
-        } else if (flow_key->proto == types::IP_PROTO_ICMP) {
+        } else if (flow_key->proto == types::IP_PROTO_ICMPV6) {
             flow_key->icmp_type = flow_spec_key.v6_key().icmp().type();
             flow_key->icmp_code = flow_spec_key.v6_key().icmp().code();
             flow_key->icmp_id = flow_spec_key.v6_key().icmp().id();

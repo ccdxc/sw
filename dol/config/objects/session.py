@@ -133,9 +133,9 @@ class SessionObjectHelper:
             entries = tenant.spec.sessions.unidest.ipv4
             self.__process_ipv4(flowep1, flowep2, entries)
 
-        #if tenant.spec.sessions.unidest.ipv6:
-        #    entries = tenant.spec.sessions.unidest.ipv6
-        #    sessions += __process_ipv6(flowep1, flowep2, entries)
+        if tenant.spec.sessions.unidest.ipv6:
+            entries = tenant.spec.sessions.unidest.ipv6
+            self.__process_ipv6(flowep1, flowep2, entries)
 
         #if tenant.spec.sessions.unidest.l2:
         #    entries = tenant.spec.sessions.unidest.l2

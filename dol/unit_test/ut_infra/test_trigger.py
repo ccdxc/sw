@@ -38,6 +38,7 @@ def init_trigger_test(steps=1):
             self._test_case_spec.session = tc_steps
             setattr(self._test_case_spec, "info", self.info)
             setattr(self._test_case_spec, "debug", self.info)
+            setattr(self._test_case_spec, "verbose", self.info)
             self._test_case_spec.logger = logger
             x = next(self._tc_iter)
             self._test_case_spec.ID(x)

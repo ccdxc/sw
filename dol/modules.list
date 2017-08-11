@@ -1,20 +1,32 @@
 # This file contains the list of DOL test modules.
 modules:
     - module:
-        enable  : True
         name    : L2UC_UDP
+        enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc_udp.testspec
     - module:
-        enable  : True
         name    : L2UC_TCP
+        enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc_tcp.testspec
     - module:
-        enable  : False
         name    : L2UC_ICMP
+        enable  : False
         package : test.networking
         module  : networking
         spec    : l2uc_icmp.testspec
+    - module:
+        name    : L2UC_IPV6_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_ipv6_udp.testspec
+    - module:
+        name    : L2UC_IPV6_TCP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_ipv6_tcp.testspec

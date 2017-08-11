@@ -136,8 +136,6 @@ class FlowObject(base.ConfigObjectBase):
             req_spec.flow_key.v4_key.ip_proto = self.__get_hal_ipproto()
             self.__configure_l4_info(req_spec.flow_key.v4_key)
         elif self.IsIPV6():
-            ip.ip_af = haldefs.common.IP_AF_INET6
-            ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
             req_spec.flow_key.v6_key.sip.ip_af = haldefs.common.IP_AF_INET6
             req_spec.flow_key.v6_key.sip.v6_addr = self.sip.getnum().to_bytes(16, 'big')
             req_spec.flow_key.v6_key.dip.ip_af = haldefs.common.IP_AF_INET6

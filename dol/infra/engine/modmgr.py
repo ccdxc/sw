@@ -147,6 +147,12 @@ class ModuleDatabase:
         return
 
     def __add(self, pmod):
+        if GlobalOptions.test == pmod.name:
+            pmod.enable = True
+
+        if pmod.enable == False:
+            return
+
         if GlobalOptions.test == None or\
            GlobalOptions.test == pmod.name:
             module = Module(pmod)
@@ -155,8 +161,7 @@ class ModuleDatabase:
 
     def __add_all(self):
         for pmod in self.parser.parsed_module_list:
-            if pmod.enable == True:
-                self.__add(pmod)
+            self.__add(pmod)
         return
 
     def getnext(self):

@@ -311,6 +311,12 @@ Flow::generate_hash_(void *key, uint32_t key_len)
     // return crc32((uint32_t)HAL_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key, 
     //        (uint32_t)key_len) % dleft_capacity_;
 
+    uint8_t *tmp_key = (uint8_t *)key;
+     HAL_TRACE_DEBUG("Key: ");
+     for (uint32_t i = 0; i < key_len; i++) {
+         HAL_TRACE_DEBUG("{:#x}", tmp_key[i]);
+     }
+
 	switch(hash_poly_) {
 		case HASH_POLY0:
 			crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val, 

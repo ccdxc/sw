@@ -1,4 +1,4 @@
 *.o
 mockmodel/mockmodel
-dol.log
+dol.log*
 ut_run.log

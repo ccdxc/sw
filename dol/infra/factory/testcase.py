@@ -72,7 +72,7 @@ class TestCase(objects.FrameworkObject):
         self.logger         = fwdata.Logger
         self.session        = []
 
-        self.logpfx         = "TC%d:" % self.ID()
+        self.logpfx         = "TC%06d:" % self.ID()
         self.__generate()
         return
 

@@ -83,7 +83,8 @@ native_ipv6_packet:
   seq         c5, r2[63:56], 0xff
   seq         c6, r2, r4
   seq         c7, r3, r5
-  bcf         [c1|c2|c3|c4|c5|c6|c7], malformed_native_packet
+  setcf       c6, [c6 & c7]
+  bcf         [c1|c2|c3|c4|c5|c6], malformed_native_packet
 
   seq         c1, k.ethernet_dstAddr[40], 0
   add.c1      r7, r0, PACKET_TYPE_UNICAST
@@ -96,7 +97,7 @@ native_ipv6_packet:
   sub         r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr.c1    p.l4_metadata_tcp_data_len, r7
 
-  seq         c1, k.ipv4_protocol, IP_PROTO_UDP
+  seq         c1, k.ipv6_nextHdr, IP_PROTO_UDP
   phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
   phvwr.c1    p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
 

@@ -1,6 +1,7 @@
 #! /bin/bash
-DOL=${WS_TOP}/sw/dol
-NIC=${WS_TOP}/sw/nic/
+cd `dirname $0`
+DOL=$PWD
+NIC=$PWD/../nic/
 MOCKMODEL=${DOL}/mockmodel
 LOG_FILE=${DOL}/ut_run.log
 declare -a ut_files=("test_trigger_with_mock_model.py" "test_packet.py")

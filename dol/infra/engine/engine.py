@@ -64,6 +64,9 @@ def main():
     
     report = TrigExpEngine.get_run_report(20)
     report.show()
+    logger.info("SUMMARY: TOTAL=%d PASS=%d FAIL=%d" %\
+                (report.passed_count + report.failed_count,
+                 report.passed_count, report.failed_count))
     if report.failed_count != 0:
         sys.exit(1)
     sys.exit(0)

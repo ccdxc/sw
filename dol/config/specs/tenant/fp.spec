@@ -19,6 +19,8 @@ sessions:
         scale: 1
         ipv4:
             - ref://store/specs/id=SESSION_UDP_BASIC
+        ipv6: None
+        mac: None
 lif:
     spec        : ref://store/specs/id=LIF_ETH
     count       : 1

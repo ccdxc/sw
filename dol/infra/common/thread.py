@@ -103,7 +103,7 @@ class InfraThreadHandler(InfraThread):
                 break
         self.exit()
         self.started = False
-        logger.info("%s thread exits" % (self.name))
+        logger.verbose("%s thread exits" % (self.name))
 
     def startThread(self):
         if not self.started:

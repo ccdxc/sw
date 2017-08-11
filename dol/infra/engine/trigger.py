@@ -30,6 +30,7 @@ PEN_REF = getattr(penscapy, "PENDOL")
 '''Scapy Packet Comparator'''
 
 scapy_hdr_map = {"IP": "IPV4",
+                 "IPv6": "IPV6",   
                  "Ether": "ETHERNET",
                  "Dot1Q": "QTAG",
                  "TCP": "TCP",
@@ -480,7 +481,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         return Struct(mismatch_result)
 
     def __packets_process_result(self):
-        self._logger.info("Processing test step packets result")
+        self._logger.verbose("Processing test step packets result")
         result = PacketsTestStepResult()
         tmp_mismatch_ref = {}
         for port in self._exp_rcv_data.keys():
@@ -641,7 +642,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         pass
 
     def __process_result(self):
-        self._logger.info("Processing test step result")
+        self._logger.verbose("Processing test step result")
         result = TestStepResult()
         result.packets = self.__packets_process_result()
         result.descriptors = self.__descriptors_process_result()
@@ -695,7 +696,7 @@ class TriggerTestCase(objects.FrameworkObject):
     def run_test_case(self):
         if self._tc_status is not self.STATUS_RUNNING:
             self._start_ts = time.time()
-            self._logger.info("Started running.")
+            self._logger.verbose("Started running.")
             self._tc_status = self.STATUS_RUNNING
         else:
             self._logger.info("Continuing to next step")
