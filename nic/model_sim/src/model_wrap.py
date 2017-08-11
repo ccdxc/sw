@@ -7,8 +7,8 @@ def zmq_connect ():
     context = zmq.Context()
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)
-    user_str = os.environ['PWD']
-    zmqsockstr = 'ipc:///' + user_str + '/zmqsock'
+    model_sock_path = os.environ['MODEL_SOCK_PATH']
+    zmqsockstr = 'ipc:///' + model_sock_path + '/zmqsock'
     socket.connect(zmqsockstr)
     return socket
 
