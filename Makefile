@@ -170,7 +170,6 @@ dev-clean:
 test-cluster:
 	scripts/bringup-dev.sh Vagrantfile.e2e
 	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make cluster'
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startAgent.py -nodes $$NAPLES_NODES'
 
 test-clean:
 	scripts/cleanup-dev.sh

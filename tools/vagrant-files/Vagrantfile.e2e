@@ -12,15 +12,15 @@ def provider_cfg(node, cpus, memory, numNics)
 
         # enable 'virtio' on control nics to take benefit of builtin vlan tag
         v.customize ['modifyvm', :id, '--nictype1', 'virtio']
-	if numNics > 1 then
+        if numNics > 1 then
             v.customize ['modifyvm', :id, '--nictype2', 'virtio']
             v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-	end
-	if numNics > 2 then
+        end
+        if numNics > 2 then
             v.customize ['modifyvm', :id, '--nictype3', 'virtio']
             v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
         end
-	if numNics > 3 then
+        if numNics > 3 then
             v.customize ['modifyvm', :id, '--nictype4', 'virtio']
             v.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
         end
@@ -32,18 +32,19 @@ end
 def configure_vm(node, node_name)
       node.vm.provision "shell" do |s|
           s.inline = <<-EOF
-	    ## setup basic environment for the VM
-	    echo -n "#{node_name}" > /etc/hostname
-	    hostname -F /etc/hostname
-	    # Increase mmap count to support elasticsearch
-	    sysctl -w vm.max_map_count=262144
-	    # stop firewall service and disable selinux
-	    systemctl stop firewalld
-	    setenforce 0
-	    gpasswd -a vagrant root
-        gpasswd -a vagrant docker
-	    # Add pensando internal docker registry
-	    echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
+            ## setup basic environment for the VM
+            echo -n "#{node_name}" > /etc/hostname
+            hostname -F /etc/hostname
+            # Increase mmap count to support elasticsearch
+            sysctl -w vm.max_map_count=262144
+            # stop firewall service and disable selinux
+            systemctl stop firewalld
+            setenforce 0
+            gpasswd -a vagrant root
+            gpasswd -a vagrant docker
+            # Add pensando internal docker registry
+            mkdir -p /etc/docker
+            echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
             # Start docker
             systemctl enable docker && systemctl start docker
             # populate the master virtual ip
@@ -64,17 +65,17 @@ end
 def configure_alpine_vm(node, node_name)
       node.vm.provision "shell" do |s|
           s.inline = <<-EOF
-	    ## setup basic environment for the VM
-	    echo -n "#{node_name}" > /etc/hostname
-	    hostname -F /etc/hostname
+            ## setup basic environment for the VM
+            echo -n "#{node_name}" > /etc/hostname
+            hostname -F /etc/hostname
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
-	    # ssh params
-	    echo "KexAlgorithms diffie-hellman-group-exchange-sha256,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1" >> /etc/ssh/sshd_config
-	    sudo service sshd restart
-	    # bring up interfaces
-	    sudo ifconfig eth2 promisc up
-	    sudo ifconfig eth3 promisc up || echo "ignoring failure"
+            # ssh params
+            echo "KexAlgorithms diffie-hellman-group-exchange-sha256,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1" >> /etc/ssh/sshd_config
+            sudo service sshd restart
+            # bring up interfaces
+            sudo ifconfig eth2 promisc up
+            sudo ifconfig eth3 promisc up || echo "ignoring failure"
           EOF
       end
 
@@ -130,14 +131,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       node.vm.provision "shell" do |s|
           s.inline = <<-EOF
-	    echo "export PENS_NODES=#{venice_ips.join(",")}" >> /etc/profile.d/env.sh
-	    echo "export NAPLES_NODES=#{naples_ips.join(",")}" >> /etc/profile.d/env.sh
-	    source /etc/profile.d/env.sh
+            echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+            echo "export PENS_NODES=#{venice_ips.join(",")}" >> /etc/profile.d/env.sh
+            echo "export NAPLES_NODES=#{naples_ips.join(",")}" >> /etc/profile.d/env.sh
+            source /etc/profile.d/env.sh
           EOF
       end
       num_venice_nodes.times do |node_id|
           node.vm.provision "shell" do |s|
-	      s.inline = "echo '#{ip_prefix}#{node_id+11} node#{node_id+1} ' >> /etc/hosts"
+              s.inline = "echo '#{ip_prefix}#{node_id+11} node#{node_id+1} ' >> /etc/hosts"
           end
       end
     end
