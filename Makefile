@@ -68,7 +68,7 @@ deploy:
 cluster:
 	$(MAKE) container-compile
 	$(MAKE) install
-	tools/scripts/startCluster.py -nodes ${PENS_NODES}
+	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 
 cluster-stop:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop

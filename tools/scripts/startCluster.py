@@ -13,6 +13,8 @@ import http
 import exceptions
 from multiprocessing.dummy import Pool as ThreadPool
 
+dryRun = False
+
 # Utility function to run ssh
 def ssh_exec_thread(ssh_object, command):
     print "run: " + command
@@ -33,8 +35,11 @@ class Node:
         self.password = password
         self.gopath = gopath
         self.ssh = self.sshConnect(username, password)
-        out, err, ec = self.runCmd("hostname")
-        self.hostname = out[0].split('\n')[0]
+        if not dryRun:
+            out, err, ec = self.runCmd("hostname")
+            self.hostname = out[0].split('\n')[0]
+        else:
+            self.hostname = "dryrun " + self.addr
         print "Connected to " + self.hostname
 
     # Connect to vagrant node
@@ -42,6 +47,8 @@ class Node:
         ssh_object = paramiko.SSHClient()
         ssh_object.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
         print "Connecting to " + self.addr + " with userid: " + username + " password: " + password
+        if dryRun:
+            return
         try:
             ssh_object.connect(self.addr, username=username, password=password)
             return ssh_object
@@ -49,6 +56,8 @@ class Node:
             tutils.exit("Authentication failed")
 
     def isConnected(self):
+        if dryRun:
+            return True
         transport = self.ssh.get_transport() if self.ssh else None
         return transport and transport.is_active()
 
@@ -60,6 +69,8 @@ class Node:
             # We we disconnected for any reason, reconnect
             if not self.isConnected():
                 self.ssh = self.sshConnect(self.username, self.password)
+            if dryRun:
+                return
 
             # Execute the command
             stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=timeout)
@@ -113,7 +124,7 @@ def initCluster(nodeAddr):
             "name": "testCluster"
         },
         "spec": {
-            "quorumNodes": [ "node1", "node2", "node3" ],
+            "quorumNodes": quorumNames,
             "virtualIP": "192.168.30.10",
             "ntpServers": ["1.pool.ntp.org","2.pool.ntp.org"]
         }
@@ -128,6 +139,7 @@ def initCluster(nodeAddr):
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
 parser.add_argument("-nodes", required=True, help="list of nodes(comma separated)")
+parser.add_argument("-quorum", default="", help="list of quorum nodenames(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")
 parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
@@ -136,6 +148,7 @@ parser.add_argument("-stop", dest='stop', action='store_true')
 # Parse the args
 args = parser.parse_args()
 addrList = args.nodes.split(",")
+quorum = args.quorum.split(",")
 
 # Basic error checking
 if len(addrList) < 1:
@@ -152,6 +165,13 @@ print "################### Stopping all cluster services ###################"
 for addr in addrList:
     node = Node(addr, args.user, args.password, args.gopath)
     nodes.append(node)
+
+quorumNames = []
+if quorum == "":
+    for i in range(1,len(nodes)) :
+        quorumNames.append("node{}".format(i))
+else:
+    quorumNames = quorum
 
 pool = ThreadPool(len(addrList))
 pool.map(lambda x: x.stopCluster(),nodes)

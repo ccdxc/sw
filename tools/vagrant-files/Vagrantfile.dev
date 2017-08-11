@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box_version = "0.2"
   config.ssh.insert_key = false
 
-  nodeprops = build_nodes(3, "192.168.30.")
+  nodeprops = build_nodes(3, 3, "192.168.30.")
 
   nodeprops[:num_nodes].times do |n|
     node_name = nodeprops[:node_names][n]
@@ -61,8 +61,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
           EOF
-
-          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes]]
+          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes], nodeprops[:quorum_nodenames] ]
       end
 
       # mount the host directories
