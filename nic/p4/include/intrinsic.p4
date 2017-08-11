@@ -35,9 +35,9 @@ header_type cap_phv_intr_p4_t {
 header_type cap_phv_intr_txdma_t {
     fields {
         qid                : 24;
-        qtype              : 3;
-        qstate_addr        : 34;
         dma_cmd_ptr        : 6;
+        qstate_addr        : 34;
+        qtype              : 3;
         txdma_rsv          : 5;
     }
 }
@@ -45,9 +45,9 @@ header_type cap_phv_intr_txdma_t {
 header_type cap_phv_intr_rxdma_t {
     fields {
         qid                : 24;
-        qtype              : 3;
-        qstate_addr        : 34;
         dma_cmd_ptr        : 6;
+        qstate_addr        : 34;
+        qtype              : 3;
         rx_splitter_offset : 10;
         rxdma_rsv          : 3;
     }
