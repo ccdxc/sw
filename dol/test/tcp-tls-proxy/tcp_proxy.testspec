@@ -41,7 +41,7 @@ trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
-            port    : 1
+            port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
     callback:  callback://tcpcb/tcpcb/mycallback_verify
