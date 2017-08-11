@@ -395,13 +395,14 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 descriptor.descriptor.ring.post(descriptor.descriptor.object)
                 ring_set.add(descriptor.descriptor.ring)
 
-            if False and self._tc_step.trigger.doorbell and self._tc_step.trigger.doorbell.object:
+            if (hasattr(self._tc_step.trigger, "doorbell") and
+                self._tc_step.trigger.doorbell and
+                    self._tc_step.trigger.doorbell.object):
                 for ring in ring_set:
                     self._logger.info("Posting doorbell %s" %
                                       self._tc_step.trigger.doorbell.object)
-                    self._tc_step.trigger.doorbell.object.write(ring)
-                    # self._connector.doorbell(
-                    #    self._tc_step.trigger.doorbell.object.serialize())
+                    self._connector.doorbell(
+                        self._tc_step.trigger.doorbell, ring)
             if self._exp_rcv_descr:
                 self._connector.consume_rings(self._exp_rcv_descr.keys())
 

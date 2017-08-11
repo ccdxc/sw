@@ -884,5 +884,5 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     # logger.add_stdout()
     suite.addTest(DolTriggerTestWithMockModel(
-        'test_init_buffer'))
+        'test_single_desc_to_packet'))
     unittest.TextTestRunner(verbosity=2).run(suite)

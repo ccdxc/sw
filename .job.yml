@@ -7,3 +7,4 @@ image:
 rebase: true
 references:
   - nic
+  - dol

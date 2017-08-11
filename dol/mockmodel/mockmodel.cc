@@ -122,6 +122,8 @@ add_output_packet (buffer_hdr_t *buff)
     uint8_t port = buff->data[buff->size - 2];
     assert(port <= MAX_PORTS);
     buff->type = BUFF_TYPE_GET_NEXT_PKT;
+    //Real model is 0-based
+    buff->port -= 1;
     for (int i = 0; i < MAX_OUTPUT_PACKETS; i++) {
         if (gl_output[port][i] == NULL) {
             gl_output[port][i] = buff;
@@ -386,17 +388,13 @@ mock_model_process_buff (buffer_hdr_t *buff)
 
 int main (int argc, char ** argv)
 {
-    char tmpdir[100];
     char zmqsockstr[100];
     struct stat st = {0};
     buffer_hdr_t *buff;
 
-    const char* user_str = std::getenv("USER");
-    snprintf(tmpdir, 100, "/tmp/%s", user_str);
-    if (stat(tmpdir, &st) == -1) {
-        mkdir(tmpdir, 0700);
-    }
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", tmpdir);
+    const char *user_str = std::getenv("MODEL_SOCK_PATH");
+
+    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
 
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();

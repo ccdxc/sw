@@ -6,7 +6,9 @@ from collections import OrderedDict
 mocked_model_modules = ["model_sim", "model_sim.src.model_wrap"]
 
 mocked_modules = ["l2segment_pb2", "types_pb2", "tenant_pb2", "interface_pb2", "endpoint_pb2", "session_pb2", "endpoint_pb2_grpc",
-                  "l2segment_pb2_grpc", "tenant_pb2_grpc", "interface_pb2_grpc", "session_pb2_grpc", "GlobalOptions", "nwsec_pb2", "nwsec_pb2_grpc",
+                  "l2segment_pb2_grpc", "tenant_pb2_grpc", "interface_pb2_grpc", "session_pb2_grpc", "telemetry_pb2_grpc",
+                  "telemetry_pb2",
+                  "GlobalOptions", "nwsec_pb2", "nwsec_pb2_grpc",
                   "third_party.scapy.arch.windows"]
 
 
@@ -104,7 +106,7 @@ class DolInfraTest(unittest.TestCase):
     def _construct_spkt(self, pkt_data, data_len=64, add_pen_hdr=True, port=None, opcode=None, tc_id=None):
         from infra.penscapy import penscapy
         spkt = None
-        order = {"Ether": 0, "Dot1Q": 1, "IP": 2, "TCP": 3}
+        order = {"Ether": 0, "Dot1Q": 1, "IP": 2, "TCP": 3, "UDP": 3}
         pkt_data = OrderedDict(
             sorted(pkt_data.items(),  key=lambda t: order[t[0]]))
         for header, hdr_data in pkt_data.items():

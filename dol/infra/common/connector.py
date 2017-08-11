@@ -138,19 +138,29 @@ class ModelConnector(Connector):
         self.set_recv_timeout()
 
     def send(self, data, port):
-        logger.info("Sending packet TO THE MODEL............")
+        logger.info("Sending packet to the model.")
         model_wrap.step_network_pkt(data, port)
+        self._queue_all_model_packets()
 
     def send_to_client(self, addr, data):
         self._sock.sendto(data, addr)
+
+    def _queue_all_model_packets(self):
+        while True:
+            try:
+                pkt_ctx = self._packet_recv()
+                if not pkt_ctx:
+                    return
+                self._eventQueue.enqueueEv(pkt_ctx)
+            except Connector.Timeout:
+                # All packets received.
+                return
 
     def _packet_recv(self):
         opkt, port, cos = model_wrap.get_next_pkt()
         if len(opkt) == 0:
             raise Connector.Timeout
         logger.info("Received packet from model", len(opkt))
-        # Hack, Remove model header for now.
-        #opkt = opkt[47:]
         try:
             spkt = penscapy.Parse(opkt)
         except:
@@ -161,13 +171,10 @@ class ModelConnector(Connector):
 
     def recv(self, size=16384):
         try:
-            return self._packet_recv()
-        except Connector.Timeout:
-            try:
-                ring, descrs = self._eventQueue.dequeueEv()
-                return RingContext(ring, descrs)
-            except Queue.Empty:
-                raise Connector.Timeout
+            ctx = self._eventQueue.dequeueEv()
+            return ctx
+        except Queue.Empty:
+            raise Connector.Timeout
 
     def bind(self):
         pass
@@ -176,13 +183,17 @@ class ModelConnector(Connector):
     def set_recv_timeout(self, timeout=0.5):
         self._eventQueue.set_wait_interval(timeout)
 
+    def doorbell(self, doorbell, ring):
+        doorbell.object.write(ring)
+        self._queue_all_model_packets()
+
     def consume_rings(self, rings):
         for ring in rings:
             descrs = []
             for read_desc in ring.consume():
                 descrs.append(read_desc)
             if descrs:
-                self._eventQueue.enqueueEv((ring, descrs))
+                self._eventQueue.enqueueEv(RingContext(ring, descrs))
 
     def close(self):
         pass
