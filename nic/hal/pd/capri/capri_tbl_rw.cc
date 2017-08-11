@@ -14,12 +14,11 @@
 
 #include <p4pd.h>
 #include <p4pd_api.hpp>
-#include <capri_loader.h>
 #include <capri_tbl_rw.hpp>
-#include <lib_model_client.h>
 
-#undef HAL_GTEST
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
+#include <capri_loader.h>
+#include <lib_model_client.h>
 #include <cap_blk_reg_model.h>
 #include <cap_top_csr.h>
 #include <cap_pict_csr.h>
@@ -172,7 +171,7 @@ do { \
 static void
 capri_program_table_mpu_pc(void)
 {
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
     p4pd_table_properties_t       tbl_ctx;
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -232,7 +231,7 @@ int capri_table_rw_init()
 
     log_file_fd = fopen("./capri_tbl_rw.log", "w+");
 
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
     // register hal cpu interface
     auto cpu_if = new cpu_hal_if("cpu", "all");
     cpu::access()->add_if("cpu_if", cpu_if);
@@ -242,7 +241,6 @@ int capri_table_rw_init()
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
-#endif
 
     // Fill up table base address and action-pcs
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
@@ -261,6 +259,7 @@ int capri_table_rw_init()
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
+#endif
     return (CAPRI_OK);
 }
 
@@ -422,7 +421,7 @@ int capri_table_entry_write(uint32_t tableid,
         }
     }
 
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> sram_block_data;
@@ -663,7 +662,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
         }
     }
 
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> tcam_block_data_x;
@@ -801,7 +800,9 @@ int capri_hbm_table_entry_write(uint32_t tableid,
                                 + (index * tbl_ctx.hbm_layout.entry_width);
 
 
+#ifndef P4PD_CLI
     write_mem(hbm_mem_base_addr + entry_start_addr, hwentry, (entry_size >> 3));
+#endif
 #ifdef HAL_LOG_TBL_UPDATES
     char    buffer[2048];
     memset(buffer, 0, sizeof(buffer));
@@ -830,8 +831,10 @@ int capri_hbm_table_entry_read(uint32_t tableid,
 
     uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index 
                                 + (index * tbl_ctx.hbm_layout.entry_width);
+#ifndef P4PD_CLI
     read_mem(hbm_mem_base_addr + entry_start_addr, hwentry, 
              tbl_ctx.hbm_layout.entry_width);
+#endif
     *entry_size = tbl_ctx.hbm_layout.entry_width;
     return (CAPRI_OK);
 }

@@ -4371,10 +4371,7 @@ class capri_table_manager:
                         profile['width']['value'] = "0x%x" % table['width']
                         profile['hash']['value'] = "0x%x" % 0 # Not used, confirmed by hw
                         profile['opcode']['value'] = "0x%x" % 0 # Policer/Sampler/Counter
-                        if num_bkts == 0:
-                            profile['log2bkts']['value'] = str(0)
-                        else:
-                            profile['log2bkts']['value'] = "0x%x" % log2(num_bkts)
+                        profile['log2bkts']['value'] = "0x%x" % (0 if num_bkts == 0 else log2(num_bkts))
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
                         if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:

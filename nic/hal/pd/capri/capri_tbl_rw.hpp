@@ -11,7 +11,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
+#ifndef P4PD_CLI
 #include <base.h>
+#endif
 
 int capri_table_rw_init();
 

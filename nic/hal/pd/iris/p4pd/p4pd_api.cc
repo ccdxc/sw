@@ -14,10 +14,7 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 
-#ifndef P4PD_API_UT
-#include <capri_tbl_rw.hpp>
-#endif
-
+//#include <capri_tbl_rw.hpp>
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -94,8 +91,8 @@ static p4pd_table_type_en p4pd_get_table_type(const char *match_type)
     return (P4_TBL_TYPE_INVALID);
 }
 
-#ifdef P4PD_API_UT
-#define P4PD_TBL_PACKING_JSON  "../../../../gen/iris/p4pd/capri_p4_table_map.json"
+#ifdef P4PD_CLI
+#define P4PD_TBL_PACKING_JSON  "../../../gen/iris/p4pd/capri_p4_table_map.json"
 #else
 #define P4PD_TBL_PACKING_JSON  "../gen/iris/p4pd/capri_p4_table_map.json"
 #endif
@@ -105,16 +102,16 @@ static p4pd_error_t p4pd_tbl_packing_json_parse()
     pt::ptree               json_pt;
     p4pd_table_properties_t *tbl;
     std::string             full_path;
-#ifndef P4PD_API_UT
+#ifndef P4PD_CLI
     char                    *cfg_path;
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
          full_path =  std::string(cfg_path) + "/" + P4PD_TBL_PACKING_JSON;
      } else {
-         HAL_TRACE_ERR("Please specify HAL_CONFIG_PATH env. variable ... ");
-         HAL_ASSERT(0);
+         printf("Please specify HAL_CONFIG_PATH env. variable ... ");
+         exit(0);
      }
-     HAL_TRACE_DEBUG("Capri_Table_Map_Json: {}", full_path.c_str());
+     //printf("Capri_Table_Map_Json: %s\n", full_path.c_str());
 #else
      full_path =  std::string(P4PD_TBL_PACKING_JSON);
 #endif

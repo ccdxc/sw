@@ -52,7 +52,7 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 include $(TOPDIR)/make/Makefile.inc
 
 shell: build-image
-	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash
+	docker run -it --privileged -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash
 
 test: build-image
 	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash -c 'make gtest'

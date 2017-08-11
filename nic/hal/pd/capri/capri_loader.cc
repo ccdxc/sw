@@ -389,7 +389,8 @@ capri_program_offset_to_label(char *prog_name, uint64_t offset,
         }
     }
     printf("Could not resolve program name %s offset %lu \n", 
-           program_info[i].name.c_str(), offset);
+           prog_name, offset);
+          //program_info[i].name.c_str(), offset);
     return -1;
 }
 
@@ -425,7 +426,8 @@ capri_program_to_base_addr(char *prog_name, uint64_t *base_addr)
         }
     }
     printf("Could not resolve program name %s \n",
-           program_info[i].name.c_str());
+           prog_name);
+           //program_info[i].name.c_str());
     return -1;
 }
 

@@ -19,7 +19,7 @@
 #include <defines.h>
 #include <capri_tm_rw.hpp>
 
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
 #include <cap_blk_reg_model.h>
 #include <cap_top_csr.h>
 #include <cap_pbc_csr.h>
@@ -55,11 +55,12 @@ capri_tm_pg_params_update(uint32_t port,
                       __func__, port);
         return HAL_RET_INVALID_ARG;
     }
-#ifndef HAL_GTEST
+#ifndef P4PD_CLI
     uint32_t i;
     uint32_t cos;
     uint32_t npgs;
 
+    /* Do some sanity checks for port and pg */
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cpp_int cos_map_reg_val = 0;

@@ -9,7 +9,7 @@
 #include <tcp_proxy_rxdma_p4pd.h>
 #include <tcp_proxy_txdma_p4pd.h>
 
-#ifndef P4PD_API_UT
+#ifndef P4PD_CLI
 #include <hal_pd_error.hpp>
 #else
 typedef int p4pd_error_t;

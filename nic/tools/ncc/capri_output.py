@@ -2282,148 +2282,245 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
         of.write('Total %d tables. Total %d cells required' % (len(tables[mem_type][region]), reqd))
         of.close()
 
-def capri_p4pd_cli_create_makefile(be):
+def capri_get_top_level_path(cur_dir):
+    top_dir = '.'
+    subpaths = os.path.abspath(cur_dir).split("nic/")
+    del subpaths[0] # Drop everything until the topmost 'nic' and then count directories below it
+    for subpath in subpaths:
+        dirs = subpath.split("/")
+        for dir in dirs:
+            top_dir += '/..'
 
+    return top_dir
+
+def capri_p4pd_create_swig_makefile(be):
+    
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-
+    
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+    
+    top_dir = capri_get_top_level_path(out_dir)
 
     content_str = '# This Makefile is auto-generated. Changes will be overwritten!\n'
+    content_str += 'TOP_DIR = ' + top_dir + '\n'
     content_str += 'CXX = g++\n'
     content_str += 'SWG = swig\n'
-    content_str += 'SWGFLAGS = -c++ -python\n'
+    content_str += 'SWGFLAGS = -python\n'
     content_str += 'CPPFLAGS = -g -c -pthread -std=c++11 -fPIC\n'
-    content_str += 'LNKFLAGS = -Wl,-rpath,../../../../../../obj -shared\n'
+    content_str += 'LNKFLAGS = -Wl,-rpath,$(TOP_DIR)/obj -shared\n'
+    content_str += 'BLDFLAGS = -Wl,-rpath,$(TOP_DIR)/obj\n'
     content_str += 'INC_DIRS = -I.\n'
-    content_str += 'INC_DIRS += -I../include\n'
-    content_str += 'INC_DIRS += -I../../../../../../hal/pd/\n'
+    content_str += 'INC_DIRS += -I./../include\n'
+    content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd/ -I$(TOP_DIR)/hal/pd/capri/\n'
     content_str += 'INC_DIRS += -I/usr/local/include -I/usr/include/boost/\n'
     content_str += 'INC_DIRS += -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7\n'
-    content_str += 'LIB_DIRS = -L/usr/local/lib -L../../../../../../obj -L/usr/lib/python2.7/dist-packages -L.\n'
-    content_str += 'LIBS = -lpython2.7 -lcapri -lcaprimrl -ltrace\n'
+    content_str += 'LIB_DIRS = -L/usr/local/lib -L$(TOP_DIR)/obj -L/usr/lib/python2.7/dist-packages -L.\n'
+    content_str += 'LIBS = -lpython2.7 -lcapri -lcapricsr -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
-    content_str += '\t$(SWG) $(SWGFLAGS) -o p4pd_wrap.c p4pd.i\n'
+    content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o p4pd_wrap.c p4pd.i\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd.o ../src/p4pd.c\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o stub.o stub.cc\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_wrap.o p4pd_wrap.c\n'
-    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so *.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n'
+    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so p4pd.o p4pd_wrap.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\n'
+    content_str += 'main:\n'
+    content_str += '\t$(CXX) $(CPPFLAGS) -DP4PD_CLI $(INC_DIRS) -o main.o main.cc\n'
+    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o p4pd.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\n'
     content_str += 'clean:\n'
-    content_str += '\trm *.o *.so p4pd.py p4pd_wrap.c\n'
-
+    content_str += '\trm *.o *.so main p4pd.py p4pd_wrap.c\n'
+    
     out_file = out_dir + 'Makefile'
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
 
-def capri_p4pd_cli_create_swig_interface(be):
-
+def capri_p4pd_create_swig_interface(be):
+    
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-
+    
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    content_str = '/* This file is auto-generated. Changes will be overwritten! */\n'
-    content_str += '/* p4pd.i */\n'
-    content_str += '%module p4pd\n'
-    content_str += '%{\n'
-    content_str += '\t#include "p4pd.h"\n'
-    content_str += '\ttypedef int p4pd_error_t;\n'
-    content_str += '\tp4pd_error_t p4pd_entry_read(uint32_t tableid, uint32_t index, void *swkey, void *swkey_mask, void *actiondata);\n'
-    content_str += '%}\n'
-    content_str += '\n'
-    content_str += 'typedef int p4pd_error_t;\n'
-    content_str += 'p4pd_error_t p4pd_entry_read(uint32_t tableid, uint32_t index, void *swkey, void *swkey_mask, void *actiondata);\n'
+    top_dir = capri_get_top_level_path(out_dir)
 
+    content_str = \
+"""
+/* This file is auto-generated. Changes will be overwritten! */
+/* p4pd.i */
+%module p4pd
+%include "cpointer.i"
+%include "carrays.i"
+%include "cmalloc.i"
+%{
+    #include <thread>
+    #include "p4pd.h"
+    #include "p4pd_api.hpp"
+    extern int capri_init(void);
+    extern const char *__lmodel_env;
+    namespace hal {
+        thread_local std::thread *t_curr_thread;
+    }
+%}
+
+#define __attribute__(x)
+typedef int p4pd_error_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+%pointer_functions(uint8_t, uint8_ptr_t);
+%pointer_functions(uint16_t, uint16_ptr_t);
+%pointer_functions(uint32_t, uint32_ptr_t);
+%array_functions(uint8_t, uint8_array_t);
+%array_functions(uint16_t, uint16_array_t);
+%array_functions(uint32_t, uint32_array_t);
+%malloc(uint8_t);
+%malloc(uint16_t);
+%malloc(uint32_t);
+%free(uint8_t);
+%free(uint16_t);
+%free(uint32_t);
+%include "p4pd.h"
+%include "p4pd_api.hpp"
+%inline %{
+    int p4pd_cli_init()
+    {
+        int ret;
+        setenv("CAPRI_MOCK_MODE", "1", 1);
+        """ + \
+        """
+        setenv("HAL_CONFIG_PATH", "%s", 1);
+        """ % (top_dir + '/conf') + \
+        """
+        __lmodel_env = "1";
+        
+        if (ret = p4pd_init())
+        {
+            return ret;
+        }
+        
+        if (ret = capri_init())
+        {
+            return ret;
+        }
+        
+        return (P4PD_SUCCESS);
+    }
+
+    void p4pd_cli_cleanup()
+    {
+        p4pd_cleanup();
+    }
+%}
+"""
     out_file = out_dir + 'p4pd.i'
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
 
-def capri_p4pd_cli_create_stub_file(be):
-
+def capri_p4pd_create_swig_main(be):
+    
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-
+    
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    content_str = '/* This file is auto-generated. Changes will be overwritten! */\n'
-    content_str += '#include <stdint.h>\n'
-    content_str += '#include <string>\n'
-    content_str += '#include <iostream>\n'
-    content_str += '#include <thread>\n'
-    content_str += '#include "p4pd.h"\n'
-    content_str += '#include "p4pd_api.hpp"\n'
-    content_str += '\n'
-    content_str += 'std::thread *g_hal_threads[100];\n'
-    content_str += '\n'
-    content_str += 'namespace hal {\n'
-    content_str += '    thread_local std::thread *t_curr_thread;\n'
-    content_str += '}\n'
-    content_str += '\n'
-    content_str += 'typedef int p4pd_error_t;\n'
-    content_str += 'p4pd_error_t p4pd_table_properties_get(uint32_t                       tableid,\n'
-    content_str += '                                                                      p4pd_table_properties_t       *tbl_ctx)\n'
-    content_str += '{\n'
-    content_str += '    return 0;\n'
-    content_str += '}\n'
+    top_dir = capri_get_top_level_path(out_dir)
 
-    out_file = out_dir + 'stub.cc'
-    with open(out_file, "w") as of:
-        of.write(content_str)
-        of.close()
+    content_str = \
+"""
+/* This file is auto-generated. Changes will be overwritten! */
 
+#include <stdint.h>
+#include <string>
+#include <iostream>
+#include <thread>
+#include "p4pd.h"
+#include "p4pd_api.hpp"
 
-def capri_p4pd_cli_create_shell(be):
+extern int capri_init(void);
+extern const char* __lmodel_env;
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+namespace hal {
+    thread_local std::thread *t_curr_thread;
+}
 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+int main()
+{
+    int ret;
+    uint32_t tableid = 15;
+    uint32_t index = 11;
+    uint32_t hwkey_len_p;
+    uint32_t hwkeymask_len_p;
+    uint32_t hwactiondata_len_p;
+    uint8_t *hwkey_p;
+    uint8_t *hwkeymask_p;
+    uint8_t *hwactiondata_p;
+    uint8_t *swkeyp = NULL;
+    uint8_t *swkey_maskp = NULL;
+    p4pd_table_properties_t tbl_ctx;
+    twice_nat_actiondata actiondata;
 
-    content_str  = '#!/usr/bin/python\n'
-    content_str += '# This file is auto-generated. Changes will be overwritten! \n'
-    content_str += '#\n'
-    content_str += '# p4pd CLI\n'
-    content_str += '#\n'
-    content_str += 'from cmd2 import Cmd\n'
-    content_str += 'import p4pd\n'
-    content_str += '\n'
-    content_str += 'class level1Cmd(Cmd):\n'
-    content_str += '    prompt = "p4pd/level1> "\n'
-    content_str += '\n'
-    content_str += '    def __init__(self):\n'
-    content_str += '        Cmd.__init__(self)\n'
-    content_str += '\n'
-    content_str += '    def do_main(self, args):\n'
-    content_str += '        """Calls p4pd unit test."""\n'
-    content_str += '        p4pd.main()\n'
-    content_str += '\n'
-    content_str += '    def do_back(self, args):\n'
-    content_str += '        """Go back one level."""\n'
-    content_str += '        return True\n'
-    content_str += '\n'
-    content_str += '    do_EOF = do_back\n'
-    content_str += '\n'
-    content_str += 'class rootCmd(Cmd):\n'
-    content_str += '\n'
-    content_str += '    prompt = "p4pd> "\n'
-    content_str += '    intro = "This is a debug CLI. Theres no protection against bad arguments!"\n'
-    content_str += '\n'
-    content_str += '    def __init__(self):\n'
-    content_str += '        Cmd.__init__(self)\n'
-    content_str += '\n'
-    content_str += '    def do_level1(self, args):\n'
-    content_str += '        """Go to level1."""\n'
-    content_str += '        cmd = level1Cmd()\n'
-    content_str += '        cmd.cmdloop()\n'
-    content_str += '\n'
-    content_str += 'if __name__ == \'__main__\':\n'
-    content_str += '    cmd = rootCmd()\n'
-    content_str += '    cmd.cmdloop()\n'
+    setenv("CAPRI_MOCK_MODE", "1", 1);
+    """ + \
+    """
+    setenv("HAL_CONFIG_PATH", "%s", 1);
+    """ % (top_dir + '/conf') + \
+    """
+    __lmodel_env = "1";
 
-    out_file = out_dir + 'cli.py'
+    p4pd_init();
+    capri_init();
+
+    p4pd_table_properties_get(1, &tbl_ctx);
+    printf("%s\\n", tbl_ctx.tablename);
+    
+    p4pd_hwentry_query(tableid, &hwkey_len_p, &hwkeymask_len_p, &hwactiondata_len_p);
+    
+    hwkey_p = (uint8_t *)malloc(((hwkey_len_p)+7)/8);
+    hwkeymask_p = (uint8_t *)malloc(((hwkeymask_len_p)+7)/8);
+    
+    ret = p4pd_hwkey_hwmask_build(tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p);
+    
+    if (ret < 0)
+    {
+        printf("p4pd_hwkey_hwmask_build() returned %d!\\n", (ret));
+        return 1;
+    }
+    
+    actiondata.actionid = 5;
+    actiondata.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.l4_port = 80;
+    
+    ret = p4pd_entry_write(tableid, index, hwkey_p, hwkeymask_p, &actiondata);
+    
+    if (ret < 0)
+    {
+        printf("p4pd_entry_write() returned %d!\\n", (ret));
+        return 1;
+    }
+    
+    printf("Entry was written successfully at index %d\\n", (index));
+    
+    ret = p4pd_entry_read(tableid, index, swkeyp, swkey_maskp, &actiondata);
+    
+    if (ret < 0)
+    {
+        printf("Error: p4pd_entry_read() returned %d!\\n", (ret));
+        return 0;
+    }
+    
+    printf("Entry was read successfully at index %d\\n", (index));
+    
+    p4pd_cleanup();
+    free(hwkeymask_p);
+    free(hwkey_p);
+    return 0;
+}    
+"""
+    
+    out_file = out_dir + 'main.cc'
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()

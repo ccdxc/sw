@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#ifndef P4PD_API_UT
+#ifndef P4PD_CLI
 #include <hal_pd_error.hpp>
 #else
 typedef int p4pd_error_t;

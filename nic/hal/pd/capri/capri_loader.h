@@ -19,8 +19,10 @@
 #include <iostream>
 #include <fstream>
 #include <dirent.h>
+#ifndef P4PD_CLI
 #include <libcapisa.h>
 #include "libmpuobj.h"
+#endif
 
 /* Definition of maximum number of programs and parameters. 
  * TODO: Remove these artificial limits.
