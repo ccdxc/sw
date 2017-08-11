@@ -22,26 +22,59 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// EventType contains the type of service instance event.
+type ServiceInstanceEvent_EventType int32
+
+const (
+	ServiceInstanceEvent_Added   ServiceInstanceEvent_EventType = 0
+	ServiceInstanceEvent_Deleted ServiceInstanceEvent_EventType = 1
+)
+
+var ServiceInstanceEvent_EventType_name = map[int32]string{
+	0: "Added",
+	1: "Deleted",
+}
+var ServiceInstanceEvent_EventType_value = map[string]int32{
+	"Added":   0,
+	"Deleted": 1,
+}
+
+func (x ServiceInstanceEvent_EventType) String() string {
+	return proto.EnumName(ServiceInstanceEvent_EventType_name, int32(x))
+}
+func (ServiceInstanceEvent_EventType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorService, []int{5, 0}
+}
+
 // ServiceInstance contains the information about a single service
 // instance.
 type ServiceInstance struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	// Service contains the name of the service that this instance belongs to.
+	Service string `protobuf:"bytes,3,opt,name=Service,proto3" json:"Service,omitempty"`
 	// Image contains the image that the service instance is deployed
 	// with. In case of rolling upgrades, this may be different between
 	// instances.
-	Image string `protobuf:"bytes,3,opt,name=Image,proto3" json:"Image,omitempty"`
+	Image string `protobuf:"bytes,4,opt,name=Image,proto3" json:"Image,omitempty"`
 	// Node contains the IP address or hostname where the service
 	// instance is deployed.
-	Node string `protobuf:"bytes,4,opt,name=Node,proto3" json:"Node,omitempty"`
+	Node string `protobuf:"bytes,5,opt,name=Node,proto3" json:"Node,omitempty"`
 	// Port contains the port where the service instance is running.
-	Port uint32 `protobuf:"varint,5,opt,name=Port,proto3" json:"Port,omitempty"`
+	Port uint32 `protobuf:"varint,6,opt,name=Port,proto3" json:"Port,omitempty"`
 }
 
 func (m *ServiceInstance) Reset()                    { *m = ServiceInstance{} }
 func (m *ServiceInstance) String() string            { return proto.CompactTextString(m) }
 func (*ServiceInstance) ProtoMessage()               {}
 func (*ServiceInstance) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{0} }
+
+func (m *ServiceInstance) GetService() string {
+	if m != nil {
+		return m.Service
+	}
+	return ""
+}
 
 func (m *ServiceInstance) GetImage() string {
 	if m != nil {
@@ -64,6 +97,33 @@ func (m *ServiceInstance) GetPort() uint32 {
 	return 0
 }
 
+// ServiceInstanceReq is used to query a service instance.
+type ServiceInstanceReq struct {
+	// Service identifies the service name.
+	Service string `protobuf:"bytes,1,opt,name=Service,proto3" json:"Service,omitempty"`
+	// Instance identifies the instance name.
+	Instance string `protobuf:"bytes,2,opt,name=Instance,proto3" json:"Instance,omitempty"`
+}
+
+func (m *ServiceInstanceReq) Reset()                    { *m = ServiceInstanceReq{} }
+func (m *ServiceInstanceReq) String() string            { return proto.CompactTextString(m) }
+func (*ServiceInstanceReq) ProtoMessage()               {}
+func (*ServiceInstanceReq) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{1} }
+
+func (m *ServiceInstanceReq) GetService() string {
+	if m != nil {
+		return m.Service
+	}
+	return ""
+}
+
+func (m *ServiceInstanceReq) GetInstance() string {
+	if m != nil {
+		return m.Instance
+	}
+	return ""
+}
+
 // Service contains information about a single cluster service.
 type Service struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
@@ -75,7 +135,7 @@ type Service struct {
 func (m *Service) Reset()                    { *m = Service{} }
 func (m *Service) String() string            { return proto.CompactTextString(m) }
 func (*Service) ProtoMessage()               {}
-func (*Service) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{1} }
+func (*Service) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{2} }
 
 func (m *Service) GetInstances() []*ServiceInstance {
 	if m != nil {
@@ -95,7 +155,7 @@ type ServiceList struct {
 func (m *ServiceList) Reset()                    { *m = ServiceList{} }
 func (m *ServiceList) String() string            { return proto.CompactTextString(m) }
 func (*ServiceList) ProtoMessage()               {}
-func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{2} }
+func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{3} }
 
 func (m *ServiceList) GetItems() []*Service {
 	if m != nil {
@@ -104,10 +164,79 @@ func (m *ServiceList) GetItems() []*Service {
 	return nil
 }
 
+// ServiceInstanceList contains list of Service instances.
+type ServiceInstanceList struct {
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,2,opt,name=L,embedded=L" json:"meta,omitempty"`
+	// Items contains list of Service instances.
+	Items []*ServiceInstance `protobuf:"bytes,3,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *ServiceInstanceList) Reset()                    { *m = ServiceInstanceList{} }
+func (m *ServiceInstanceList) String() string            { return proto.CompactTextString(m) }
+func (*ServiceInstanceList) ProtoMessage()               {}
+func (*ServiceInstanceList) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{4} }
+
+func (m *ServiceInstanceList) GetItems() []*ServiceInstance {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// ServiceInstanceEvent contains a single service instance event.
+type ServiceInstanceEvent struct {
+	Type ServiceInstanceEvent_EventType `protobuf:"varint,1,opt,name=type,proto3,enum=types.ServiceInstanceEvent_EventType" json:"type,omitempty"`
+	// Instance is a single service instance.
+	Instance *ServiceInstance `protobuf:"bytes,2,opt,name=Instance" json:"Instance,omitempty"`
+}
+
+func (m *ServiceInstanceEvent) Reset()                    { *m = ServiceInstanceEvent{} }
+func (m *ServiceInstanceEvent) String() string            { return proto.CompactTextString(m) }
+func (*ServiceInstanceEvent) ProtoMessage()               {}
+func (*ServiceInstanceEvent) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{5} }
+
+func (m *ServiceInstanceEvent) GetType() ServiceInstanceEvent_EventType {
+	if m != nil {
+		return m.Type
+	}
+	return ServiceInstanceEvent_Added
+}
+
+func (m *ServiceInstanceEvent) GetInstance() *ServiceInstance {
+	if m != nil {
+		return m.Instance
+	}
+	return nil
+}
+
+// ServiceInstanceEventList contains a list of service instance events.
+type ServiceInstanceEventList struct {
+	// Items contains a list of service instance events.
+	Items []*ServiceInstanceEvent `protobuf:"bytes,1,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *ServiceInstanceEventList) Reset()                    { *m = ServiceInstanceEventList{} }
+func (m *ServiceInstanceEventList) String() string            { return proto.CompactTextString(m) }
+func (*ServiceInstanceEventList) ProtoMessage()               {}
+func (*ServiceInstanceEventList) Descriptor() ([]byte, []int) { return fileDescriptorService, []int{6} }
+
+func (m *ServiceInstanceEventList) GetItems() []*ServiceInstanceEvent {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ServiceInstance)(nil), "types.ServiceInstance")
+	proto.RegisterType((*ServiceInstanceReq)(nil), "types.ServiceInstanceReq")
 	proto.RegisterType((*Service)(nil), "types.Service")
 	proto.RegisterType((*ServiceList)(nil), "types.ServiceList")
+	proto.RegisterType((*ServiceInstanceList)(nil), "types.ServiceInstanceList")
+	proto.RegisterType((*ServiceInstanceEvent)(nil), "types.ServiceInstanceEvent")
+	proto.RegisterType((*ServiceInstanceEventList)(nil), "types.ServiceInstanceEventList")
+	proto.RegisterEnum("types.ServiceInstanceEvent_EventType", ServiceInstanceEvent_EventType_name, ServiceInstanceEvent_EventType_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -122,13 +251,15 @@ const _ = grpc.SupportPackageIsVersion4
 
 type ServiceAPIClient interface {
 	// List all Services
-	ListServices(ctx context.Context, in *api1.Filter, opts ...grpc.CallOption) (*ServiceList, error)
+	ListServices(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (*ServiceList, error)
 	// Get a Service
 	GetService(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*Service, error)
+	// List all Service instances
+	ListServiceInstances(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (*ServiceInstanceList, error)
 	// Get a Service instance
-	GetServiceInstance(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*ServiceInstance, error)
-	// Watch Services
-	WatchServices(ctx context.Context, in *api1.WatchSpec, opts ...grpc.CallOption) (ServiceAPI_WatchServicesClient, error)
+	GetServiceInstance(ctx context.Context, in *ServiceInstanceReq, opts ...grpc.CallOption) (*ServiceInstance, error)
+	// Watch Service instances
+	WatchServiceInstances(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (ServiceAPI_WatchServiceInstancesClient, error)
 }
 
 type serviceAPIClient struct {
@@ -139,7 +270,7 @@ func NewServiceAPIClient(cc *grpc.ClientConn) ServiceAPIClient {
 	return &serviceAPIClient{cc}
 }
 
-func (c *serviceAPIClient) ListServices(ctx context.Context, in *api1.Filter, opts ...grpc.CallOption) (*ServiceList, error) {
+func (c *serviceAPIClient) ListServices(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (*ServiceList, error) {
 	out := new(ServiceList)
 	err := grpc.Invoke(ctx, "/types.ServiceAPI/ListServices", in, out, c.cc, opts...)
 	if err != nil {
@@ -157,7 +288,16 @@ func (c *serviceAPIClient) GetService(ctx context.Context, in *api.ObjectMeta, o
 	return out, nil
 }
 
-func (c *serviceAPIClient) GetServiceInstance(ctx context.Context, in *api.ObjectMeta, opts ...grpc.CallOption) (*ServiceInstance, error) {
+func (c *serviceAPIClient) ListServiceInstances(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (*ServiceInstanceList, error) {
+	out := new(ServiceInstanceList)
+	err := grpc.Invoke(ctx, "/types.ServiceAPI/ListServiceInstances", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceAPIClient) GetServiceInstance(ctx context.Context, in *ServiceInstanceReq, opts ...grpc.CallOption) (*ServiceInstance, error) {
 	out := new(ServiceInstance)
 	err := grpc.Invoke(ctx, "/types.ServiceAPI/GetServiceInstance", in, out, c.cc, opts...)
 	if err != nil {
@@ -166,12 +306,12 @@ func (c *serviceAPIClient) GetServiceInstance(ctx context.Context, in *api.Objec
 	return out, nil
 }
 
-func (c *serviceAPIClient) WatchServices(ctx context.Context, in *api1.WatchSpec, opts ...grpc.CallOption) (ServiceAPI_WatchServicesClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ServiceAPI_serviceDesc.Streams[0], c.cc, "/types.ServiceAPI/WatchServices", opts...)
+func (c *serviceAPIClient) WatchServiceInstances(ctx context.Context, in *api1.Empty, opts ...grpc.CallOption) (ServiceAPI_WatchServiceInstancesClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ServiceAPI_serviceDesc.Streams[0], c.cc, "/types.ServiceAPI/WatchServiceInstances", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &serviceAPIWatchServicesClient{stream}
+	x := &serviceAPIWatchServiceInstancesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -181,17 +321,17 @@ func (c *serviceAPIClient) WatchServices(ctx context.Context, in *api1.WatchSpec
 	return x, nil
 }
 
-type ServiceAPI_WatchServicesClient interface {
-	Recv() (*ServiceList, error)
+type ServiceAPI_WatchServiceInstancesClient interface {
+	Recv() (*ServiceInstanceEventList, error)
 	grpc.ClientStream
 }
 
-type serviceAPIWatchServicesClient struct {
+type serviceAPIWatchServiceInstancesClient struct {
 	grpc.ClientStream
 }
 
-func (x *serviceAPIWatchServicesClient) Recv() (*ServiceList, error) {
-	m := new(ServiceList)
+func (x *serviceAPIWatchServiceInstancesClient) Recv() (*ServiceInstanceEventList, error) {
+	m := new(ServiceInstanceEventList)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -202,13 +342,15 @@ func (x *serviceAPIWatchServicesClient) Recv() (*ServiceList, error) {
 
 type ServiceAPIServer interface {
 	// List all Services
-	ListServices(context.Context, *api1.Filter) (*ServiceList, error)
+	ListServices(context.Context, *api1.Empty) (*ServiceList, error)
 	// Get a Service
 	GetService(context.Context, *api.ObjectMeta) (*Service, error)
+	// List all Service instances
+	ListServiceInstances(context.Context, *api1.Empty) (*ServiceInstanceList, error)
 	// Get a Service instance
-	GetServiceInstance(context.Context, *api.ObjectMeta) (*ServiceInstance, error)
-	// Watch Services
-	WatchServices(*api1.WatchSpec, ServiceAPI_WatchServicesServer) error
+	GetServiceInstance(context.Context, *ServiceInstanceReq) (*ServiceInstance, error)
+	// Watch Service instances
+	WatchServiceInstances(*api1.Empty, ServiceAPI_WatchServiceInstancesServer) error
 }
 
 func RegisterServiceAPIServer(s *grpc.Server, srv ServiceAPIServer) {
@@ -216,7 +358,7 @@ func RegisterServiceAPIServer(s *grpc.Server, srv ServiceAPIServer) {
 }
 
 func _ServiceAPI_ListServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api1.Filter)
+	in := new(api1.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -228,7 +370,7 @@ func _ServiceAPI_ListServices_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/types.ServiceAPI/ListServices",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceAPIServer).ListServices(ctx, req.(*api1.Filter))
+		return srv.(ServiceAPIServer).ListServices(ctx, req.(*api1.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -251,8 +393,26 @@ func _ServiceAPI_GetService_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ServiceAPI_ListServiceInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api1.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceAPIServer).ListServiceInstances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/types.ServiceAPI/ListServiceInstances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceAPIServer).ListServiceInstances(ctx, req.(*api1.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ServiceAPI_GetServiceInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ObjectMeta)
+	in := new(ServiceInstanceReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -264,29 +424,29 @@ func _ServiceAPI_GetServiceInstance_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/types.ServiceAPI/GetServiceInstance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceAPIServer).GetServiceInstance(ctx, req.(*api.ObjectMeta))
+		return srv.(ServiceAPIServer).GetServiceInstance(ctx, req.(*ServiceInstanceReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ServiceAPI_WatchServices_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api1.WatchSpec)
+func _ServiceAPI_WatchServiceInstances_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api1.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ServiceAPIServer).WatchServices(m, &serviceAPIWatchServicesServer{stream})
+	return srv.(ServiceAPIServer).WatchServiceInstances(m, &serviceAPIWatchServiceInstancesServer{stream})
 }
 
-type ServiceAPI_WatchServicesServer interface {
-	Send(*ServiceList) error
+type ServiceAPI_WatchServiceInstancesServer interface {
+	Send(*ServiceInstanceEventList) error
 	grpc.ServerStream
 }
 
-type serviceAPIWatchServicesServer struct {
+type serviceAPIWatchServiceInstancesServer struct {
 	grpc.ServerStream
 }
 
-func (x *serviceAPIWatchServicesServer) Send(m *ServiceList) error {
+func (x *serviceAPIWatchServiceInstancesServer) Send(m *ServiceInstanceEventList) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -303,14 +463,18 @@ var _ServiceAPI_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ServiceAPI_GetService_Handler,
 		},
 		{
+			MethodName: "ListServiceInstances",
+			Handler:    _ServiceAPI_ListServiceInstances_Handler,
+		},
+		{
 			MethodName: "GetServiceInstance",
 			Handler:    _ServiceAPI_GetServiceInstance_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "WatchServices",
-			Handler:       _ServiceAPI_WatchServices_Handler,
+			StreamName:    "WatchServiceInstances",
+			Handler:       _ServiceAPI_WatchServiceInstances_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -348,22 +512,58 @@ func (m *ServiceInstance) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n2
-	if len(m.Image) > 0 {
+	if len(m.Service) > 0 {
 		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Service)))
+		i += copy(dAtA[i:], m.Service)
+	}
+	if len(m.Image) > 0 {
+		dAtA[i] = 0x22
 		i++
 		i = encodeVarintService(dAtA, i, uint64(len(m.Image)))
 		i += copy(dAtA[i:], m.Image)
 	}
 	if len(m.Node) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintService(dAtA, i, uint64(len(m.Node)))
 		i += copy(dAtA[i:], m.Node)
 	}
 	if m.Port != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x30
 		i++
 		i = encodeVarintService(dAtA, i, uint64(m.Port))
+	}
+	return i, nil
+}
+
+func (m *ServiceInstanceReq) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ServiceInstanceReq) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Service) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Service)))
+		i += copy(dAtA[i:], m.Service)
+	}
+	if len(m.Instance) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintService(dAtA, i, uint64(len(m.Instance)))
+		i += copy(dAtA[i:], m.Instance)
 	}
 	return i, nil
 }
@@ -460,6 +660,115 @@ func (m *ServiceList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *ServiceInstanceList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ServiceInstanceList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintService(dAtA, i, uint64(m.TypeMeta.Size()))
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintService(dAtA, i, uint64(m.ListMeta.Size()))
+	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintService(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ServiceInstanceEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ServiceInstanceEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintService(dAtA, i, uint64(m.Type))
+	}
+	if m.Instance != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintService(dAtA, i, uint64(m.Instance.Size()))
+		n9, err := m.Instance.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
+
+func (m *ServiceInstanceEventList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ServiceInstanceEventList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintService(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeFixed64Service(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -494,6 +803,10 @@ func (m *ServiceInstance) Size() (n int) {
 	n += 1 + l + sovService(uint64(l))
 	l = m.ObjectMeta.Size()
 	n += 1 + l + sovService(uint64(l))
+	l = len(m.Service)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
 	l = len(m.Image)
 	if l > 0 {
 		n += 1 + l + sovService(uint64(l))
@@ -504,6 +817,20 @@ func (m *ServiceInstance) Size() (n int) {
 	}
 	if m.Port != 0 {
 		n += 1 + sovService(uint64(m.Port))
+	}
+	return n
+}
+
+func (m *ServiceInstanceReq) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Service)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.Instance)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
 	}
 	return n
 }
@@ -531,6 +858,47 @@ func (m *ServiceList) Size() (n int) {
 	n += 1 + l + sovService(uint64(l))
 	l = m.ListMeta.Size()
 	n += 1 + l + sovService(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovService(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ServiceInstanceList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovService(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovService(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovService(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ServiceInstanceEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovService(uint64(m.Type))
+	}
+	if m.Instance != nil {
+		l = m.Instance.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *ServiceInstanceEventList) Size() (n int) {
+	var l int
+	_ = l
 	if len(m.Items) > 0 {
 		for _, e := range m.Items {
 			l = e.Size()
@@ -644,6 +1012,35 @@ func (m *ServiceInstance) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Service", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Service = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Image", wireType)
 			}
 			var stringLen uint64
@@ -671,7 +1068,7 @@ func (m *ServiceInstance) Unmarshal(dAtA []byte) error {
 			}
 			m.Image = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Node", wireType)
 			}
@@ -700,7 +1097,7 @@ func (m *ServiceInstance) Unmarshal(dAtA []byte) error {
 			}
 			m.Node = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Port", wireType)
 			}
@@ -719,6 +1116,114 @@ func (m *ServiceInstance) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ServiceInstanceReq) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ServiceInstanceReq: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ServiceInstanceReq: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Service", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Service = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Instance", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Instance = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipService(dAtA[iNdEx:])
@@ -1022,6 +1527,330 @@ func (m *ServiceList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *ServiceInstanceList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ServiceInstanceList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ServiceInstanceList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &ServiceInstance{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ServiceInstanceEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ServiceInstanceEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ServiceInstanceEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (ServiceInstanceEvent_EventType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Instance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Instance == nil {
+				m.Instance = &ServiceInstance{}
+			}
+			if err := m.Instance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ServiceInstanceEventList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ServiceInstanceEventList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ServiceInstanceEventList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &ServiceInstanceEvent{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipService(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1130,34 +1959,42 @@ var (
 func init() { proto.RegisterFile("service.proto", fileDescriptorService) }
 
 var fileDescriptorService = []byte{
-	// 450 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x93, 0xcf, 0x6e, 0xd3, 0x40,
-	0x10, 0xc6, 0x3d, 0xa4, 0xa1, 0xea, 0x84, 0xa4, 0x68, 0x41, 0xc8, 0xf2, 0x21, 0x89, 0x2c, 0x10,
-	0x39, 0x14, 0xbb, 0x04, 0xa4, 0x8a, 0x13, 0xa2, 0x07, 0x50, 0xa4, 0x40, 0x2a, 0x13, 0x89, 0xf3,
-	0xc6, 0x1d, 0xd2, 0x45, 0x5d, 0xef, 0xca, 0xbb, 0x05, 0xe5, 0x4d, 0x38, 0xf1, 0x04, 0x3c, 0x02,
-	0x0f, 0xd0, 0x63, 0x9f, 0x20, 0x42, 0xe1, 0xd6, 0xa7, 0x40, 0x5e, 0x3b, 0x6d, 0x13, 0xfe, 0x49,
-	0x1c, 0x7a, 0x9b, 0xf9, 0xf6, 0xfb, 0x66, 0x7f, 0x1e, 0xdb, 0xd8, 0x34, 0x94, 0x7f, 0x14, 0x29,
-	0x45, 0x3a, 0x57, 0x56, 0xb1, 0xba, 0x9d, 0x69, 0x32, 0xc1, 0x83, 0xa9, 0xb0, 0x47, 0x27, 0x93,
-	0x28, 0x55, 0x32, 0xd6, 0x94, 0x19, 0x9e, 0x1d, 0xaa, 0xd8, 0x7c, 0x8a, 0xb9, 0x16, 0xb1, 0x24,
-	0xcb, 0x4b, 0x77, 0xf0, 0xf0, 0x2f, 0xb6, 0x54, 0x49, 0xa9, 0xb2, 0xca, 0xf8, 0xe8, 0x8a, 0x71,
-	0xaa, 0xa6, 0x2a, 0x76, 0xf2, 0xe4, 0xe4, 0xbd, 0xeb, 0x5c, 0xe3, 0xaa, 0xd2, 0x1e, 0x7e, 0x03,
-	0xdc, 0x7e, 0x5b, 0x72, 0x0d, 0x32, 0x63, 0x79, 0x96, 0x12, 0xdb, 0x45, 0x18, 0xfb, 0xd0, 0x85,
-	0x5e, 0xa3, 0xdf, 0x8c, 0xb8, 0x16, 0xd1, 0x78, 0xa6, 0xe9, 0x35, 0x59, 0xbe, 0x7f, 0xe7, 0x74,
-	0xde, 0xf1, 0xce, 0xe6, 0x1d, 0x38, 0x9f, 0x77, 0x36, 0x77, 0x44, 0x76, 0x2c, 0x32, 0x4a, 0x60,
-	0xcc, 0x9e, 0x21, 0x8c, 0xfc, 0x1b, 0x2e, 0xb1, 0xed, 0x12, 0xa3, 0xc9, 0x07, 0x4a, 0xad, 0xcb,
-	0x04, 0x57, 0x32, 0xad, 0xe2, 0x89, 0x76, 0x94, 0x14, 0x96, 0xa4, 0xb6, 0xb3, 0x04, 0x46, 0xec,
-	0x2e, 0xd6, 0x07, 0x92, 0x4f, 0xc9, 0xaf, 0x75, 0xa1, 0xb7, 0x95, 0x94, 0x0d, 0x63, 0xb8, 0xf1,
-	0x46, 0x1d, 0x92, 0xbf, 0xe1, 0x44, 0x57, 0x17, 0xda, 0x81, 0xca, 0xad, 0x5f, 0xef, 0x42, 0xaf,
-	0x99, 0xb8, 0x3a, 0xfc, 0x0a, 0xb8, 0x59, 0xe1, 0x5f, 0x2f, 0xf6, 0x53, 0xdc, 0x5a, 0xee, 0xcb,
-	0xf8, 0xb5, 0x6e, 0xad, 0xd7, 0xe8, 0xdf, 0x8b, 0xdc, 0x1b, 0x8d, 0xd6, 0xd6, 0x99, 0x5c, 0x1a,
-	0xc3, 0x2f, 0x80, 0x8d, 0xea, 0x78, 0x28, 0x8c, 0xfd, 0x0f, 0xe4, 0x3d, 0x84, 0x61, 0x85, 0x5c,
-	0x26, 0x8a, 0x39, 0xff, 0x06, 0x1e, 0xb2, 0xfb, 0x58, 0x1f, 0x58, 0x92, 0x4b, 0xd8, 0xd6, 0x2a,
-	0x6c, 0x52, 0x1e, 0xf6, 0xcf, 0x01, 0xb1, 0x92, 0x5e, 0x1c, 0x0c, 0xd8, 0x63, 0xbc, 0x55, 0xcc,
-	0xaf, 0x14, 0xc3, 0x1a, 0xee, 0xca, 0x97, 0xe2, 0xd8, 0x52, 0x1e, 0xb0, 0xd5, 0x11, 0x85, 0x31,
-	0xf4, 0x58, 0x8c, 0xf8, 0x8a, 0x96, 0x09, 0xb6, 0xbe, 0xd6, 0x60, 0xed, 0xde, 0xd0, 0x63, 0xcf,
-	0x91, 0x5d, 0x06, 0x2e, 0xbe, 0xc1, 0x5f, 0x82, 0x7f, 0xd8, 0x6e, 0xe8, 0xb1, 0x3d, 0x6c, 0xbe,
-	0xe3, 0x36, 0x3d, 0xba, 0xa0, 0x6c, 0xb9, 0x6c, 0xa9, 0x69, 0x4a, 0x7f, 0x0f, 0xba, 0x0b, 0xfb,
-	0xb7, 0x4f, 0x17, 0x6d, 0x38, 0x5b, 0xb4, 0xe1, 0xfb, 0xa2, 0x0d, 0x9f, 0x7f, 0xb4, 0xbd, 0xc9,
-	0x4d, 0xf7, 0x53, 0x3c, 0xf9, 0x19, 0x00, 0x00, 0xff, 0xff, 0xf4, 0xc4, 0xab, 0x44, 0xab, 0x03,
-	0x00, 0x00,
+	// 592 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0xcf, 0x6e, 0xd3, 0x40,
+	0x10, 0xc6, 0xbd, 0x6d, 0xd3, 0x90, 0x09, 0x49, 0xa3, 0x6d, 0x40, 0xc6, 0x48, 0x49, 0x64, 0xa8,
+	0xc8, 0x21, 0xd8, 0x21, 0x20, 0xa1, 0xde, 0x68, 0x45, 0x05, 0x41, 0x29, 0xa9, 0x4c, 0x24, 0xce,
+	0x8e, 0x3d, 0xa4, 0x46, 0xb5, 0xd7, 0x8d, 0xb7, 0x45, 0x79, 0x13, 0x4e, 0x3c, 0x00, 0x42, 0x3c,
+	0x06, 0xea, 0xb1, 0x27, 0x8e, 0x11, 0x0a, 0x37, 0x9e, 0x02, 0x79, 0x6d, 0xe7, 0x8f, 0x95, 0x04,
+	0x89, 0x43, 0x2f, 0xd1, 0xee, 0xec, 0xf7, 0xcd, 0xfc, 0x66, 0x34, 0x31, 0x14, 0x02, 0x1c, 0x5e,
+	0x3a, 0x16, 0x6a, 0xfe, 0x90, 0x71, 0x46, 0x33, 0x7c, 0xe4, 0x63, 0xa0, 0xec, 0x0d, 0x1c, 0x7e,
+	0x7a, 0xd1, 0xd7, 0x2c, 0xe6, 0xea, 0x3e, 0x7a, 0x81, 0xe9, 0xd9, 0x4c, 0x0f, 0x3e, 0xe9, 0xa6,
+	0xef, 0xe8, 0x2e, 0x72, 0x33, 0x52, 0x2b, 0x8f, 0xd6, 0xc8, 0x2c, 0xe6, 0xba, 0xcc, 0x8b, 0x85,
+	0x8f, 0xe7, 0x84, 0x03, 0x36, 0x60, 0xba, 0x08, 0xf7, 0x2f, 0x3e, 0x88, 0x9b, 0xb8, 0x88, 0x53,
+	0x24, 0x57, 0x7f, 0x12, 0xd8, 0x79, 0x17, 0x71, 0xb5, 0xbd, 0x80, 0x9b, 0x9e, 0x85, 0xb4, 0x09,
+	0xa4, 0x27, 0x93, 0x1a, 0xa9, 0xe7, 0x5b, 0x05, 0xcd, 0xf4, 0x1d, 0xad, 0x37, 0xf2, 0xf1, 0x18,
+	0xb9, 0x79, 0xb8, 0x7b, 0x35, 0xae, 0x4a, 0xd7, 0xe3, 0x2a, 0xf9, 0x33, 0xae, 0x66, 0x1b, 0x8e,
+	0x77, 0xe6, 0x78, 0x68, 0x90, 0x1e, 0xdd, 0x07, 0xd2, 0x95, 0x37, 0x84, 0x63, 0x47, 0x38, 0xba,
+	0xfd, 0x8f, 0x68, 0x71, 0xe1, 0x51, 0xe6, 0x3c, 0xc5, 0xb0, 0xa3, 0x06, 0x73, 0x1d, 0x8e, 0xae,
+	0xcf, 0x47, 0x06, 0xe9, 0x52, 0x19, 0xb2, 0x71, 0x7d, 0x79, 0xb3, 0x46, 0xea, 0x39, 0x23, 0xb9,
+	0xd2, 0x32, 0x64, 0xda, 0xae, 0x39, 0x40, 0x79, 0x4b, 0xc4, 0xa3, 0x0b, 0xa5, 0xb0, 0xf5, 0x96,
+	0xd9, 0x28, 0x67, 0x44, 0x50, 0x9c, 0xc3, 0xd8, 0x09, 0x1b, 0x72, 0x79, 0xbb, 0x46, 0xea, 0x05,
+	0x43, 0x9c, 0xd5, 0x37, 0x40, 0x53, 0x7d, 0x19, 0x78, 0x3e, 0x5f, 0x8d, 0x2c, 0x56, 0x53, 0xe0,
+	0x56, 0x22, 0x14, 0x9d, 0xe4, 0x8c, 0xe9, 0x5d, 0xfd, 0x46, 0xa6, 0xb6, 0x9b, 0x1d, 0xce, 0x33,
+	0xc8, 0x25, 0x10, 0x81, 0xbc, 0x59, 0xdb, 0xac, 0xe7, 0x5b, 0x77, 0x35, 0xb1, 0x37, 0x5a, 0xba,
+	0xb9, 0x99, 0x50, 0xfd, 0x42, 0x20, 0x1f, 0x3f, 0x77, 0x9c, 0x80, 0xff, 0x07, 0xf2, 0x73, 0x20,
+	0x9d, 0x18, 0x39, 0x72, 0x84, 0x79, 0xfe, 0x0d, 0xdc, 0xa1, 0x0f, 0x21, 0xd3, 0xe6, 0xe8, 0x26,
+	0xb0, 0xc5, 0x45, 0x58, 0x23, 0x7a, 0x54, 0xbf, 0x13, 0xd8, 0x4d, 0xf1, 0xdf, 0x34, 0x68, 0x63,
+	0x11, 0x74, 0xd5, 0x54, 0x63, 0xe0, 0xaf, 0x04, 0xca, 0xa9, 0xa7, 0xa3, 0x4b, 0xf4, 0x38, 0xdd,
+	0x87, 0xad, 0xd0, 0x28, 0xa0, 0x8b, 0xad, 0xbd, 0xe5, 0x59, 0x84, 0x54, 0x13, 0xbf, 0x61, 0x43,
+	0x86, 0xb0, 0xd0, 0x56, 0x6a, 0xe1, 0x56, 0x43, 0xcc, 0x16, 0xf1, 0x01, 0xe4, 0xa6, 0x69, 0x68,
+	0x0e, 0x32, 0x07, 0xb6, 0x8d, 0x76, 0x49, 0xa2, 0x79, 0xc8, 0xbe, 0xc4, 0x33, 0xe4, 0x68, 0x97,
+	0x88, 0x7a, 0x0c, 0xf2, 0x32, 0x00, 0x31, 0xe1, 0x27, 0x49, 0xdb, 0x44, 0xb4, 0x7d, 0x7f, 0x0d,
+	0x70, 0xdc, 0x7b, 0xeb, 0xc7, 0x06, 0x40, 0xfc, 0x7e, 0x70, 0xd2, 0xa6, 0x4d, 0xb8, 0x1d, 0x66,
+	0x8a, 0x23, 0x01, 0x05, 0x31, 0xf6, 0xa3, 0x70, 0xae, 0x0a, 0x5d, 0x4c, 0x17, 0xea, 0x54, 0x89,
+	0xea, 0x00, 0xaf, 0x30, 0x31, 0xd0, 0xf4, 0x5f, 0x40, 0x49, 0xed, 0x88, 0x2a, 0xd1, 0x17, 0x50,
+	0x9e, 0x2b, 0x31, 0xdd, 0xeb, 0x85, 0x52, 0xca, 0x72, 0xf2, 0xb8, 0x64, 0x1b, 0xe8, 0xac, 0xe4,
+	0xf4, 0xbb, 0x76, 0x6f, 0xc5, 0x7c, 0xf1, 0x5c, 0x59, 0x31, 0x7a, 0x55, 0xa2, 0xaf, 0xe1, 0xce,
+	0x7b, 0x93, 0x5b, 0xa7, 0x6b, 0x69, 0xaa, 0x6b, 0xe6, 0x18, 0x21, 0x35, 0xc9, 0x61, 0xe9, 0x6a,
+	0x52, 0x21, 0xd7, 0x93, 0x0a, 0xf9, 0x35, 0xa9, 0x90, 0xcf, 0xbf, 0x2b, 0x52, 0x7f, 0x5b, 0x7c,
+	0x83, 0x9f, 0xfe, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x80, 0x0f, 0x21, 0x5f, 0x1a, 0x06, 0x00, 0x00,
 }

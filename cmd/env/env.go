@@ -12,16 +12,18 @@ import (
 
 // CMD global state is held here.
 var (
-	Options        *options.ServerRunOptions
-	Scheme         *runtime.Scheme
-	KVStore        kvstore.Interface
-	Quorum         quorum.Interface
-	KVServers      []string
-	LeaderService  types.LeaderService // common leader service used by MasterService, NTP Service, VIPService etc
-	Mutex          sync.Mutex
-	MasterService  types.MasterService
-	NodeService    types.NodeService
-	VipService     types.VIPService
-	SystemdService types.SystemdService
-	NtpService     types.NtpService
+	Options         *options.ServerRunOptions
+	Scheme          *runtime.Scheme
+	KVStore         kvstore.Interface
+	Quorum          quorum.Interface
+	KVServers       []string
+	LeaderService   types.LeaderService // common leader service used by MasterService, NTP Service, VIPService etc
+	Mutex           sync.Mutex
+	MasterService   types.MasterService
+	NodeService     types.NodeService
+	VipService      types.VIPService
+	SystemdService  types.SystemdService
+	NtpService      types.NtpService
+	K8sService      types.K8sService
+	ResolverService types.ResolverService
 )

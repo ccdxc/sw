@@ -18,9 +18,10 @@ import (
 
 // constants used by REST interface
 const (
-	uRLPrefix  = "/api/v1"
-	clusterURL = "/cluster"
-	nodesURL   = "/nodes"
+	uRLPrefix   = "/api/v1"
+	clusterURL  = "/cluster"
+	nodesURL    = "/nodes"
+	servicesURL = "/services"
 )
 
 // NewRESTServer creates REST server endpoints for cluster create/get. These ops
@@ -33,6 +34,8 @@ func NewRESTServer() *martini.ClassicMartini {
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 
 	m.Get(uRLPrefix+nodesURL, NodeListHandler)
+
+	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
 
 	return m
 }
@@ -112,6 +115,20 @@ func NodeListHandler(w http.ResponseWriter, req *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	if err := encoder.Encode(&nodes); err != nil {
+		log.Errorf("Failed to encode with error: %v", err)
+	}
+}
+
+// ServiceListHandler returns the services running in the cluster.
+func ServiceListHandler(w http.ResponseWriter, req *http.Request) {
+	if env.ResolverService == nil {
+		errors.SendNotFound(w, "ServiceList", "")
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+
+	if err := encoder.Encode(env.ResolverService.List()); err != nil {
 		log.Errorf("Failed to encode with error: %v", err)
 	}
 }

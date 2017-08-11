@@ -7,16 +7,18 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
+	k8sclient "k8s.io/client-go/kubernetes"
+	k8srest "k8s.io/client-go/rest"
 
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/services"
 	"github.com/pensando/sw/cmd/utils"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/kvstore"
 	kstore "github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/quorum"
 	"github.com/pensando/sw/utils/quorum/store"
-	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
 	"github.com/pensando/sw/utils/version"
 )
@@ -27,24 +29,6 @@ const (
 
 	masterLeaderKey = "master"
 )
-
-// RunServer creates a gRPC server for cluster operations.
-func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
-	// create an rpc handler object
-	h := &clusterRPCHandler{}
-
-	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer("cmd", url, certFile, keyFile, caFile)
-	if err != nil {
-		log.Fatalf("Error creating grpc server: %v", err)
-	}
-	// register the RPC handler
-	RegisterClusterServer(rpcServer.GrpcServer, h)
-	defer func() { rpcServer.Stop() }()
-
-	// wait forever
-	<-stopChannel
-}
 
 // clusterRPCHandler handles all cluster gRPC calls.
 type clusterRPCHandler struct {
@@ -161,7 +145,13 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
-		env.MasterService = services.NewMasterService(req.VirtualIp)
+		config := &k8srest.Config{
+			Host: fmt.Sprintf("%v:%v", req.VirtualIp, globals.KubeAPIServerPort),
+		}
+		env.K8sService = services.NewK8sService(k8sclient.NewForConfigOrDie(config))
+		env.ResolverService = services.NewResolverService(env.K8sService)
+		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
+			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
 
 		env.SystemdService.Start() // must be called before dependent services

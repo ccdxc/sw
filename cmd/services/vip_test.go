@@ -1,6 +1,10 @@
 package services
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/pensando/sw/cmd/services/mock"
+)
 
 // NOTE: These tests assume the current implementation of ONE leaderService for all the virtualIPs.
 // When we support per-VIP leaderService, need to add more tests
@@ -11,8 +15,8 @@ func TestVIPServiceAfterLeaderStart(t *testing.T) {
 	testIP := "11.1.1.1"
 	testIP2 := "11.1.1.2"
 
-	l := NewMockLeaderService(id)
-	i := NewMockIPService()
+	l := mock.NewLeaderService(id)
+	i := mock.NewIPService()
 	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
 
 	l.Start()
@@ -62,8 +66,8 @@ func TestVIPServiceBeforeLeaderStart(t *testing.T) {
 	id := "TestVIPServiceBeforeLeaderStart"
 	testIP := "11.1.1.1"
 
-	l := NewMockLeaderService(id)
-	i := NewMockIPService()
+	l := mock.NewLeaderService(id)
+	i := mock.NewIPService()
 	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
 	vipSvc.AddVirtualIPs(testIP)
 
@@ -108,8 +112,8 @@ func TestVIPServiceWithIPLayerErrors(t *testing.T) {
 	id := "TestVIPServiceWithIPLayerErrors"
 	testIP := "11.1.1.1"
 
-	l := NewMockLeaderService(id)
-	i := NewMockIPService()
+	l := mock.NewLeaderService(id)
+	i := mock.NewIPService()
 	vipSvc := NewVIPService(WithLeaderServiceVIPOption(l), WithIPServiceVIPOption(i))
 	l.Start()
 	vipSvc.AddVirtualIPs(testIP)

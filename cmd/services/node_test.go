@@ -3,14 +3,15 @@ package services
 import (
 	"testing"
 
+	"github.com/pensando/sw/cmd/services/mock"
 	"github.com/pensando/sw/cmd/types"
 )
 
 func setupNode(testName string) (types.SystemdService, types.NodeService) {
 	testIP := "11.1.1.1"
 
-	s := NewSystemdService(WithSysIfSystemdSvcOption(&mockSystemdIf{}))
-	n := NewNodeService(testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mockConfigs{}))
+	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
+	n := NewNodeService(testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mock.Configs{}))
 	return s, n
 }
 

@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/utils/log"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,6 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/globals"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 )
 
@@ -134,11 +134,12 @@ var k8sModules = map[string]types.Module{
 	},
 }
 
-// newK8sService creates a new kubernetes service.
-func newK8sService(client k8sclient.Interface) types.K8sService {
+// NewK8sService creates a new kubernetes service.
+func NewK8sService(client k8sclient.Interface) types.K8sService {
 	return &k8sService{
-		client: client,
-		modCh:  make(chan types.Module, maxModules),
+		client:    client,
+		modCh:     make(chan types.Module, maxModules),
+		observers: make([]types.K8sPodEventObserver, 0),
 	}
 }
 

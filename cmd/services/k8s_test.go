@@ -69,7 +69,7 @@ func TestK8sService(t *testing.T) {
 	interval = time.Second
 
 	po := &podObserver{}
-	k8sSvc := newK8sService(client)
+	k8sSvc := NewK8sService(client)
 	k8sSvc.Register(po)
 	k8sSvc.Start()
 

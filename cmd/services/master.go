@@ -28,13 +28,14 @@ var (
 
 type masterService struct {
 	sync.Mutex
-	sysSvc    types.SystemdService
-	leaderSvc types.LeaderService
-	k8sSvc    types.K8sService
-	isLeader  bool
-	enabled   bool
-	virtualIP string // virtualIP for services which can listed on only one VIP
-	configs   configs.Interface
+	sysSvc      types.SystemdService
+	leaderSvc   types.LeaderService
+	k8sSvc      types.K8sService
+	resolverSvc types.ResolverService
+	isLeader    bool
+	enabled     bool
+	virtualIP   string // virtualIP for services which can listed on only one VIP
+	configs     configs.Interface
 }
 
 // MasterOption fills the optional params
@@ -68,6 +69,13 @@ func WithK8sSvcMasterOption(k8sSvc types.K8sService) MasterOption {
 	}
 }
 
+// WithResolverSvcMasterOption to pass a specifc types.ResolverService implementation
+func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption {
+	return func(m *masterService) {
+		m.resolverSvc = resolverSvc
+	}
+}
+
 // NewMasterService returns a Master Service
 func NewMasterService(virtualIP string, options ...MasterOption) types.MasterService {
 	m := masterService{
@@ -91,7 +99,10 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 		config := &k8srest.Config{
 			Host: fmt.Sprintf("%v:%v", virtualIP, globals.KubeAPIServerPort),
 		}
-		m.k8sSvc = newK8sService(k8sclient.NewForConfigOrDie(config))
+		m.k8sSvc = NewK8sService(k8sclient.NewForConfigOrDie(config))
+	}
+	if m.resolverSvc == nil {
+		m.resolverSvc = NewResolverService(m.k8sSvc)
 	}
 	m.leaderSvc.Register(&m)
 	m.sysSvc.Register(&m)
@@ -132,6 +143,7 @@ func (m *masterService) startLeaderServices(virtualIP string) error {
 			return err
 		}
 	}
+	m.resolverSvc.Start()
 	m.k8sSvc.Start()
 	return nil
 }
@@ -147,6 +159,7 @@ func (m *masterService) Stop() {
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
+	m.resolverSvc.Stop()
 	m.k8sSvc.Stop()
 	for ii := range masterServices {
 		if err := m.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {

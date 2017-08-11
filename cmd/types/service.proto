@@ -13,18 +13,23 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 // - Node object for services running on non controller (worker) node. Service
 //   map of services running on a worker node are published by NMD running on
 //   that node.
+//
+// TODO: Add filtering to List and Watch.
 service ServiceAPI {
     // List all Services
-    rpc ListServices (api.Filter) returns (ServiceList) {}
+    rpc ListServices (api.Empty) returns (ServiceList) {}
 
     // Get a Service
     rpc GetService (api.ObjectMeta) returns (Service) {}
 
-    // Get a Service instance
-    rpc GetServiceInstance (api.ObjectMeta) returns (ServiceInstance) {}
+    // List all Service instances
+    rpc ListServiceInstances (api.Empty) returns (ServiceInstanceList) {}
 
-    // Watch Services
-    rpc WatchServices (api.WatchSpec) returns (stream ServiceList) {}
+    // Get a Service instance
+    rpc GetServiceInstance (ServiceInstanceReq) returns (ServiceInstance) {}
+
+    // Watch Service instances
+    rpc WatchServiceInstances (api.Empty) returns (stream ServiceInstanceEventList) {}
 }
 
 // ServiceInstance contains the information about a single service
@@ -33,19 +38,31 @@ message ServiceInstance {
     api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
+    // Service contains the name of the service that this instance belongs to.
+    string Service = 3;
+
     // Image contains the image that the service instance is deployed
     // with. In case of rolling upgrades, this may be different between
     // instances.
-    string Image = 3;
+    string Image = 4;
 	    
     // Node contains the IP address or hostname where the service
     // instance is deployed.
-    string Node = 4;
+    string Node = 5;
 
     // Port contains the port where the service instance is running.
-    uint32 Port = 5;
+    uint32 Port = 6;
 }
-	
+
+// ServiceInstanceReq is used to query a service instance.
+message ServiceInstanceReq {
+    // Service identifies the service name.
+    string Service = 1;
+
+    // Instance identifies the instance name.
+    string Instance = 2;
+}
+
 // Service contains information about a single cluster service.
 message Service {
     api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
@@ -62,4 +79,32 @@ message ServiceList {
 
     // Items contains list of Services.
     repeated Service Items = 3;
+}
+
+// ServiceInstanceList contains list of Service instances.
+message ServiceInstanceList {
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta L = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Items contains list of Service instances.
+    repeated ServiceInstance Items = 3;
+}
+
+// ServiceInstanceEvent contains a single service instance event.
+message ServiceInstanceEvent {
+    // EventType contains the type of service instance event.
+    enum EventType {
+        Added = 0;
+        Deleted = 1;
+    }
+    EventType type = 1;
+
+    // Instance is a single service instance.
+    ServiceInstance Instance = 2;
+}
+
+// ServiceInstanceEventList contains a list of service instance events.
+message ServiceInstanceEventList {
+    // Items contains a list of service instance events.
+    repeated ServiceInstanceEvent Items = 1;
 }

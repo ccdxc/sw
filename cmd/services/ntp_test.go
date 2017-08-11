@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pensando/sw/cmd/services/mock"
 	"github.com/pensando/sw/cmd/types"
 )
 
@@ -15,7 +16,7 @@ type mockFile struct {
 }
 
 type ntpTest struct {
-	l *MockLeaderService
+	l *mock.LeaderService
 	s types.SystemdService
 	n types.NtpService
 	f *mockFile
@@ -35,8 +36,8 @@ func (m *mockFile) mockFileOpen(desiredFilename string, flag int, perms os.FileM
 }
 
 func setupNtp(t *testing.T) *ntpTest {
-	l := NewMockLeaderService(t.Name())
-	s := NewSystemdService(WithSysIfSystemdSvcOption(&mockSystemdIf{}))
+	l := mock.NewLeaderService(t.Name())
+	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	f := mockFile{t: t}
 	n := NewNtpService([]string{"server1", "server2"}, WithLeaderSvcNtpOption(l), WithSystemdSvcNtpOption(s), WithOpenFileNtpOption(f.mockFileOpen))
 	return &ntpTest{l: l, s: s, f: &f, n: n}

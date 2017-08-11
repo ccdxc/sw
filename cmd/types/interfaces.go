@@ -206,3 +206,34 @@ type NtpService interface {
 	// No need to Start the service for just calling this function
 	NtpConfigFile(servers []string)
 }
+
+// ServiceInstanceObserver is implemented by services which are interested in
+// knowing about Service instance creations/deletions.
+type ServiceInstanceObserver interface {
+	// OnNotifyServiceInstance allows an event to be "published" to interface implementations.
+	OnNotifyServiceInstance(ServiceInstanceEvent) error
+}
+
+// ResolverService is the interface for service resolution.
+type ResolverService interface {
+	Register(ServiceInstanceObserver)
+	UnRegister(ServiceInstanceObserver)
+
+	// Start the resolver service.
+	Start()
+
+	// Stop the resolver service.
+	Stop()
+
+	// Get a service by name.
+	Get(name string) *Service
+
+	// Get a service instance by service and instance name.
+	GetInstance(name, instance string) *ServiceInstance
+
+	// List all services.
+	List() *ServiceList
+
+	// List all service instances.
+	ListInstances() *ServiceInstanceList
+}

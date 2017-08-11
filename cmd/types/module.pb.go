@@ -14,8 +14,12 @@
 		Module
 		ModuleList
 		ServiceInstance
+		ServiceInstanceReq
 		Service
 		ServiceList
+		ServiceInstanceList
+		ServiceInstanceEvent
+		ServiceInstanceEventList
 */
 package types
 

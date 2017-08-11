@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pensando/sw/cmd/services/mock"
 	"github.com/pensando/sw/cmd/types"
 )
 
-func setupMaster(t *testing.T) (*MockLeaderService, types.SystemdService, types.MasterService) {
+func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, types.MasterService) {
 	testIP := "11.1.1.1"
 
-	l := NewMockLeaderService(t.Name())
-	s := NewSystemdService(WithSysIfSystemdSvcOption(&mockSystemdIf{}))
-	m := NewMasterService(testIP, WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mockConfigs{}))
+	l := mock.NewLeaderService(t.Name())
+	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
+	m := NewMasterService(testIP, WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}))
 	return l, s, m
 }
 
