@@ -3,6 +3,7 @@
 
 #include <base.h>
 #include <hal_lock.hpp>
+#include <stdint.h>
 
 namespace hal {
 namespace utils {
@@ -23,15 +24,32 @@ public:
 private:
     uint32_t        size_;              // size of indexer
     uint32_t        num_words_;         // number of workds
-    uint32_t        *bits_;             // bit representation
-    uint32_t        last_word_off_;     // last word offset
+    uint64_t        *bits_;             // bit representation
     bool            thread_safe_;       // enable/disable thread safety
     hal_spinlock_t  slock_;             // lock for thread safety
+    uint64_t        debruijn64_ = 0x022FDD63CC95386D;
+    /* Convert debruijn idx to standard idx */
+    const unsigned int index64_[64] =
+    {
+        0,  1,  2, 53,  3,  7, 54, 27,
+        4, 38, 41,  8, 34, 55, 48, 28,
+       62,  5, 39, 46, 44, 42, 22,  9,
+       24, 35, 59, 56, 49, 18, 29, 11,
+       63, 52,  6, 26, 37, 40, 33, 47,
+       61, 45, 43, 21, 23, 58, 17, 10,
+       51, 25, 36, 32, 60, 20, 57, 16,
+       50, 31, 19, 15, 30, 14, 13, 12,
+    };
+    /* Get index of rightmost set bit */
+    int get_rightmost_set_bit_ ( uint64_t v )
+    {
+        return index64_[((v & (-v)) * debruijn64_) >> 58];
+    }
 
 public:
     indexer(uint32_t size, bool thread_safe = true);
     ~indexer();
-    indexer::status alloc(uint32_t *index, uint32_t block_size = 1);
+    indexer::status alloc(uint32_t *index, bool lowest = TRUE, uint32_t block_size = 1);
     indexer::status alloc_withid(uint32_t index, uint32_t block_size = 1);
     indexer::status free(uint32_t index);
     bool is_alloced(uint32_t index);

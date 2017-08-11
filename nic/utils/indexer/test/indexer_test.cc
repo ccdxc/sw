@@ -226,6 +226,82 @@ TEST_F(indexer_test, test9) {
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
+// ----------------------------------------------------------------------------
+// Test 10:
+//      - Create indexer
+//      - Alloc index - bottom up
+//      - -ve cases
+// ----------------------------------------------------------------------------
+TEST_F(indexer_test, test10) {
+    indexer::status rs;
+    uint32_t i;
+
+    indexer ind1 = indexer(128);
+    indexer ind2 = indexer(100);
+
+    rs  = ind1.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 127);
+
+    rs = ind1.alloc_withid(130);
+    EXPECT_EQ(rs, indexer::INDEX_OOB);
+
+    rs  = ind1.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 126);
+
+    rs = ind1.free(127);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+
+    rs  = ind1.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 125);
+
+    rs  = ind1.alloc(&i);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 0);
+    
+    rs = ind1.free(125);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+
+    rs = ind1.free(127);
+    EXPECT_EQ(rs, indexer::DUPLICATE_FREE);
+
+    rs  = ind1.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 125);
+
+    // Second indexer
+    rs  = ind2.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 99);
+
+    rs = ind2.alloc_withid(130);
+    EXPECT_EQ(rs, indexer::INDEX_OOB);
+
+    rs = ind2.alloc_withid(128);
+    EXPECT_EQ(rs, indexer::INDEX_OOB);
+
+    rs  = ind2.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 98);
+
+    rs  = ind2.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 97);
+
+    rs  = ind2.alloc(&i);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 0);
+
+    rs = ind2.free(99);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+
+    rs  = ind2.alloc(&i, FALSE);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(i, (uint32_t) 96);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
