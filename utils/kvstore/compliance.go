@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/utils/runtime"
+	tutils "github.com/pensando/sw/utils/testutils"
 )
 
 // kvstore compliance
@@ -792,10 +793,9 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 
 	contender := newContest(context.Background(), t, store, contenders[0].Leader(), minTTL)
 
-	time.Sleep(time.Second)
-	if contenders[0].Leader() != contender.Leader() {
-		t.Fatalf("Leader changed to %v, expecting %v", contender.Leader(), contenders[0].Leader())
-	}
+	tutils.AssertEventually(t, func() bool {
+		return contenders[0].Leader() == contender.Leader()
+	}, "Leader changed when not expected to", "10ms", "1s")
 
 	// Clean up
 	contender.Stop()
@@ -822,20 +822,15 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 	}
 
 	cancel()
-	time.Sleep(time.Millisecond * 500)
 
-	// Check that one of the new candidates is leader.
-	found := false
-	for _, contender := range newContenders {
-		if contender.IsLeader() {
-			found = true
-			break
+	tutils.AssertEventually(t, func() bool {
+		for _, contender := range newContenders {
+			if contender.IsLeader() {
+				return true
+			}
 		}
-	}
-
-	if !found {
-		t.Fatalf("New candidate did not become leader on cancel of old leader")
-	}
+		return false
+	}, "One of the other contenders failed to become leader", "10ms", "1s")
 
 	// Clean up
 	for _, contender := range contenders {

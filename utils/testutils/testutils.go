@@ -52,7 +52,7 @@ func AssertEquals(tb TB, exp, act interface{}, msg string) {
 	}
 }
 
-// AssertEventually polls eveluator periodically and checks if it reached desired condition
+// AssertEventually polls evaluator periodically and checks if it reached desired condition
 // intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
 func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
 	var err error
@@ -79,13 +79,8 @@ func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
 	// loop till we reach timeout interval
 	for {
 		select {
-		case <-time.After(pollInterval):
-			if eval() {
-				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
-				return
-			}
 		case <-timeout:
-			// evaluate one last time before giving up
+			// evaluate one last time
 			if eval() {
 				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
 				return
@@ -93,6 +88,59 @@ func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
 			logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
 			_, file, line, _ := runtime.Caller(1)
 			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
+		case <-time.After(pollInterval):
+			if eval() {
+				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
+				return
+			}
 		}
+	}
+}
+
+// AssertConsistently polls evaluator periodically and checks that the condition
+// specified continuously matches until the timeout. intervals are pollInterval
+// followed by timeoutInterval in time.ParseDuration() format.
+func AssertConsistently(tb TB, eval Evaluator, msg string, intervals ...string) {
+	var err error
+	pollInterval := time.Millisecond
+	timeoutInterval := time.Second
+
+	// parse intervals
+	if len(intervals) > 0 {
+		pollInterval, err = time.ParseDuration(intervals[0])
+		if err != nil {
+			tb.Fatalf("%#v is not a valid parsable duration string.", intervals[0])
+		}
+	}
+	if len(intervals) > 1 {
+		timeoutInterval, err = time.ParseDuration(intervals[1])
+		if err != nil {
+			tb.Fatalf("%#v is not a valid parsable duration string.", intervals[1])
+		}
+	}
+
+	_, file, line, _ := runtime.Caller(1)
+	timer := time.Now()
+	timeout := time.After(timeoutInterval)
+
+	// loop till we reach timeout interval
+	for {
+		select {
+		case <-timeout:
+			// evaluate one last time
+			if eval() {
+				tb.Logf("Evaluator passed after %v", time.Since(timer))
+				return
+			}
+			logrus.Errorf("Evaluator failed after %v", time.Since(timer))
+			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
+		case <-time.After(pollInterval):
+			if !eval() {
+				logrus.Errorf("Evaluator failed after %v", time.Since(timer))
+				tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
+				return
+			}
+		}
+
 	}
 }

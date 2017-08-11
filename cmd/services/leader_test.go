@@ -2,7 +2,6 @@ package services
 
 import (
 	"testing"
-	"time"
 
 	"fmt"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/pensando/sw/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/runtime"
+	. "github.com/pensando/sw/utils/testutils"
 )
 
 func setupTestCluster(t *testing.T) (*integration.ClusterV3, kvstore.Interface) {
@@ -65,15 +65,10 @@ func TestLeaderService(t *testing.T) {
 
 	go l.Start()
 
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == id {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if l.Leader() != id {
-		t.Fatalf("Failed to become leader")
-	}
+	AssertEventually(t, func() bool {
+		return l.Leader() == id
+	}, "Failed to become leader", "10ms", "2s")
+
 	if m.LeaderStartCount != 1 {
 		t.Fatalf("Expected LeaderStartCount of 1. Got %d", m.LeaderStartCount)
 	}
@@ -85,16 +80,10 @@ func TestLeaderService(t *testing.T) {
 	}
 
 	l.Stop()
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == "" {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if leader := l.Leader(); leader != "" {
-		t.Fatalf("Found leader %v when not expected", leader)
-	}
-	time.Sleep(100 * time.Millisecond)
+	AssertEventually(t, func() bool {
+		return l.Leader() == ""
+	}, "Failed to give up leadership", "10ms", "1s")
+
 	if m.LeaderStartCount != 1 {
 		t.Fatalf("Expected LeaderStartCount of 1. Got %d", m.LeaderStartCount)
 	}
@@ -120,28 +109,15 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 	go l.Start()
 	defer l.Stop()
 
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == id {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if l.Leader() == id {
-		t.Fatalf("Became leader when it shouldn't")
-	}
+	AssertConsistently(t, func() bool {
+		return l.Leader() != id
+	}, "Became leader when it shouldn't", "10ms", "100ms")
 
 	m1.ForceError = false
 
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == id {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if l.Leader() != id {
-		t.Fatalf("Failed to become leader")
-	}
-
+	AssertEventually(t, func() bool {
+		return l.Leader() == id
+	}, "Failed to become leader", "10ms", "2s")
 }
 
 func TestLeaderRegisterService(t *testing.T) {
@@ -156,15 +132,10 @@ func TestLeaderRegisterService(t *testing.T) {
 
 	go l.Start()
 
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == id {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if l.Leader() != id {
-		t.Fatalf("Failed to become leader")
-	}
+	AssertEventually(t, func() bool {
+		return l.Leader() == id
+	}, "Failed to become leader", "10ms", "2s")
+
 	if m.LeaderStartCount != 1 {
 		t.Fatalf("Expected LeaderStartCount of 1. Got %d", m.LeaderStartCount)
 	}
@@ -177,15 +148,11 @@ func TestLeaderRegisterService(t *testing.T) {
 	l.UnRegister(m)
 
 	l.Stop()
-	for ii := 0; ii < 5; ii++ {
-		if l.Leader() == "" {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if leader := l.Leader(); leader != "" {
-		t.Fatalf("Found leader %v when not expected", leader)
-	}
+
+	AssertEventually(t, func() bool {
+		return l.Leader() == ""
+	}, "Failed to give up leadership", "10ms", "2s")
+
 	if m.LeaderStartCount != 1 || m.LeaderStopCount != 0 || m.LeaderChangeCount != 0 {
 		t.Fatalf("Got notified of Leadership events event after Unregister. Value: %+v", m)
 	}
