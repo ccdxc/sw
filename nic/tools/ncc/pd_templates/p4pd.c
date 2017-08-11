@@ -53,87 +53,65 @@
 #include <assert.h>
 #include "${p4prog}p4pd.h"
 
-#define P4PD_LOG_TABLE_UPDATES  /* Disable this once no more table writes logging is needed */
-
 #define P4PD_MAX_ACTION_DATA_LEN (512)
 #define P4PD_MAX_MATCHKEY_LEN    (512) /* When multiple flits can be
                                         * chained, then key max size
                                         * can be more than 512. For
                                         * assuming one flit.
                                         */
-
-#define P4PD_ACTIONPC_BITS (8)      /* For now assume 8bit actionPC.
-                                     * 9bits, change it to 2 bytes.
-                                     */
-#define P4PD_TCAM_WORD_CHUNK_LEN (16) /* Tcam word chunk */
+#define P4PD_ACTIONPC_BITS       (8)   /* For now assume 8bit actionPC.
+                                        * 9bits, change it to 2 bytes.
+                                        */
+#define P4PD_TCAM_WORD_CHUNK_LEN (16)  /* Tcam word chunk */
 
 char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
 uint16_t ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_TBLMAX];
 
 extern int capri_table_entry_write(uint32_t tableid,
-                            uint32_t index,
-                            uint8_t  *hwentry,
-                            uint16_t hwentry_bit_len);
-
-
-extern int capri_table_entry_read(uint32_t tableid,
-                           uint32_t index,
-                           uint8_t  *hwentry,
-                           uint16_t *hwentry_bit_len);
-
-
+                                   uint32_t index,
+                                   uint8_t  *hwentry,
+                                   uint16_t hwentry_bit_len);
+extern int capri_table_entry_read(uint32_t  tableid,
+                                  uint32_t  index,
+                                  uint8_t   *hwentry,
+                                  uint16_t  *hwentry_bit_len);
 extern int capri_tcam_table_entry_write(uint32_t tableid,
-                                 uint32_t index,
-                                 uint8_t  *trit_x,
-                                 uint8_t  *trit_y,
-                                 uint16_t hwentry_bit_len);
-
+                                        uint32_t index,
+                                        uint8_t  *trit_x,
+                                        uint8_t  *trit_y,
+                                        uint16_t hwentry_bit_len);
 extern int capri_tcam_table_entry_read(uint32_t tableid,
-                                uint32_t index,
-                                uint8_t  *trit_x,
-                                uint8_t  *trit_y,
-                                uint16_t *hwentry_bit_len);
-
+                                       uint32_t index,
+                                       uint8_t  *trit_x,
+                                       uint8_t  *trit_y,
+                                       uint16_t *hwentry_bit_len);
 extern int capri_hbm_table_entry_write(uint32_t tableid,
                                        uint32_t index,
                                        uint8_t *hwentry,
                                        uint16_t entry_size);
-
 extern int capri_hbm_table_entry_read(uint32_t tableid,
                                       uint32_t index,
                                       uint8_t *hwentry,
                                       uint16_t *entry_size);
-
 extern uint8_t capri_get_action_pc(uint32_t tableid, 
                                    uint8_t actionid);
-
 extern uint8_t capri_get_action_id(uint32_t tableid, 
                                    uint8_t actionpc);
 
-p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
-                                              void*      sw_key,
-                                              /* Valid only in case of TCAM;
-                                               * Otherwise can be NULL) 
-                                               */
-                                              void*      sw_key_mask,
-                                              void*      action_data,
-                                              char*      buffer,
-                                              uint16_t   buf_len);
 
 /* This function copies a byte at time or a single bit that goes 
  * into table memory 
  */
-static void p4pd_copy_into_hwentry(uint8_t *dest,
-                                   uint16_t dest_start_bit,
-                                   uint8_t *src,
-                                   uint16_t src_start_bit,
-                                   uint16_t num_bits)
+static void
+p4pd_copy_into_hwentry(uint8_t *dest,
+                       uint16_t dest_start_bit,
+                       uint8_t *src,
+                       uint16_t src_start_bit,
+                       uint16_t num_bits)
 {
 
-
     (void)p4pd_copy_into_hwentry;
-
 
     uint8_t src_byte, dest_byte, dest_byte_mask;
     uint8_t bits_in_src_byte1, bits_in_src_byte2;
@@ -150,9 +128,6 @@ static void p4pd_copy_into_hwentry(uint8_t *dest,
      * return memory line of data (K,D) should be in the format that is
      * agreeable to KM and MPU. Current understanding is that KM and MPU
      * see key bits and action-data bits in BE format.
-     * Data copied into SRAM/TCAM/HBM tables will be as per KM format.
-     * KM will specify which byte of key will be placed in which byte position
-     * in memory.
      */
     if (num_bits > 1) {
         // copying a byte from source to destination
@@ -160,21 +135,17 @@ static void p4pd_copy_into_hwentry(uint8_t *dest,
         bits_in_src_byte2 = (*(src + 1)  & ((1 << (src_start_bit % 8)) - 1 ));
         bits_in_src_byte2 = bits_in_src_byte2  << (8 - src_start_bit % 8);
         src_byte = bits_in_src_byte2 | bits_in_src_byte1;
-
         // When copying a byte from source to destination, 
         // destination start bit should also be on byte aligned boundary.
-    
         // So just copy the entire byte.
         *dest = src_byte;   
     } else {
         // copying a single bit from src to destination
-
         // clear out single bit in destination where a bit
         // from source will be copied into.
         dest_byte = *dest;
         dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
         dest_byte &= dest_byte_mask; 
-
         // get that single bit from source
         src_byte = (*src >> (src_start_bit % 8)) & 0x1;
         // position src bit at place where it should go in dest
@@ -182,17 +153,17 @@ static void p4pd_copy_into_hwentry(uint8_t *dest,
         dest_byte |= src_byte;
         *dest |= dest_byte;
     }
-
 }
 
 /* This function copies a byte at time or a single bit that goes 
  * into p4field (match key struct p4field)
  */
-static void p4pd_copy_into_p4field(uint8_t *dest,
-                                   uint16_t dest_start_bit,
-                                   uint8_t *src,
-                                   uint16_t src_start_bit,
-                                   uint16_t num_bits)
+static void
+p4pd_copy_into_p4field(uint8_t *dest,
+                       uint16_t dest_start_bit,
+                       uint8_t *src,
+                       uint16_t src_start_bit,
+                       uint16_t num_bits)
 {
     (void)p4pd_copy_into_p4field;
 
@@ -238,11 +209,12 @@ static void p4pd_copy_into_p4field(uint8_t *dest,
 }
 
 
-static void p4pd_copy_actiondata_be_order(uint8_t *dest,
-                                uint16_t dest_start_bit,
-                                uint8_t *src,
-                                uint16_t src_start_bit,
-                                uint16_t num_bits)
+static void
+p4pd_copy_actiondata_be_order(uint8_t *dest,
+                              uint16_t dest_start_bit,
+                              uint8_t *src,
+                              uint16_t src_start_bit,
+                              uint16_t num_bits)
 {
     (void)p4pd_copy_actiondata_be_order;
 
@@ -262,11 +234,12 @@ static void p4pd_copy_actiondata_be_order(uint8_t *dest,
     }
 }
 
-static void p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
-                                uint16_t dest_start_bit,
-                                uint8_t *src,
-                                uint16_t src_start_bit,
-                                uint16_t num_bits)
+static void
+p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
+                                      uint16_t dest_start_bit,
+                                      uint8_t *src,
+                                      uint16_t src_start_bit,
+                                      uint16_t num_bits)
 {
     (void)p4pd_place_key_and_actiondata_in_byte;
 
@@ -284,11 +257,12 @@ static void p4pd_place_key_and_actiondata_in_byte(uint8_t *dest,
                            1);
 }
 
-static void p4pd_copy_bit7_to_bit0_order(uint8_t *dest,
-                                uint16_t dest_start_bit,
-                                uint8_t *src,
-                                uint16_t src_start_bit,
-                                uint16_t num_bits)
+static void
+p4pd_copy_bit7_to_bit0_order(uint8_t *dest,
+                             uint16_t dest_start_bit,
+                             uint8_t *src,
+                             uint16_t src_start_bit,
+                             uint16_t num_bits)
 {
     (void)p4pd_copy_bit7_to_bit0_order;
 
@@ -309,11 +283,12 @@ static void p4pd_copy_bit7_to_bit0_order(uint8_t *dest,
 }
 
 
-static void p4pd_copy_multibyte(uint8_t *dest,
-                                uint16_t dest_start_bit,
-                                uint8_t *src,
-                                uint16_t src_start_bit,
-                                uint16_t num_bits)
+static void
+p4pd_copy_multibyte(uint8_t *dest,
+                    uint16_t dest_start_bit,
+                    uint8_t *src,
+                    uint16_t src_start_bit,
+                    uint16_t num_bits)
 {
     (void)p4pd_copy_multibyte;
 
@@ -351,7 +326,8 @@ static void p4pd_copy_multibyte(uint8_t *dest,
 }
 
 
-static void p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len) 
+static void
+p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len) 
 {
 
     (void)p4pd_swizzle_bytes;
@@ -369,15 +345,16 @@ static void p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len)
 }
 
 
-static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry, 
-                                            uint8_t action_pc, 
-                                            uint8_t match_key_start_byte,
-                                            uint8_t *hwkey, 
-                                            uint16_t keylen,
-                                            uint8_t *packed_actiondata_before_matchkey,
-                                            uint16_t actiondata_before_matchkey_len,
-                                            uint8_t *packed_actiondata_after_matchkey,
-                                            uint16_t actiondata_after_matchkey_len)
+static uint32_t
+p4pd_hash_table_entry_prepare(uint8_t *hwentry, 
+                              uint8_t action_pc, 
+                              uint8_t match_key_start_byte,
+                              uint8_t *hwkey, 
+                              uint16_t keylen,
+                              uint8_t *packed_actiondata_before_matchkey,
+                              uint16_t actiondata_before_matchkey_len,
+                              uint8_t *packed_actiondata_after_matchkey,
+                              uint16_t actiondata_after_matchkey_len)
 {
     (void)p4pd_hash_table_entry_prepare;
 
@@ -402,7 +379,8 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
     p4pd_copy_multibyte(hwentry,
                    dest_start_bit,
                    hwkey,
-                   //TODO: Take match_key_start_bit argument -- needed when match-key starts within a byte.
+                   //TODO: Take match_key_start_bit argument -- needed when
+                   //      match-key starts within a byte.
                    match_key_start_byte * 8, /* Starting key bit in hwkey which is always 512b */
                    keylen);
     dest_start_bit += keylen;
@@ -436,7 +414,7 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
 
     dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
 
-    p4pd_swizzle_bytes(hwentry, dest_start_bit);
+    //p4pd_swizzle_bytes(hwentry, dest_start_bit);
 
     // When swizzling bytes, 16b unit is used. Hence increase size.
     if (dest_start_bit % 16) {
@@ -447,12 +425,13 @@ static uint32_t p4pd_hash_table_entry_prepare(uint8_t *hwentry,
 }
 
 // Return hw table entry width
-static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry, 
-                                           uint8_t action_pc, 
-                                           uint8_t *hwkey, 
-                                           uint16_t keylen,
-                                           uint8_t *packed_actiondata,
-                                           uint16_t actiondata_len)
+static uint32_t
+p4pd_p4table_entry_prepare(uint8_t *hwentry, 
+                           uint8_t action_pc, 
+                           uint8_t *hwkey, 
+                           uint16_t keylen,
+                           uint8_t *packed_actiondata,
+                           uint16_t actiondata_len)
 {
     (void)p4pd_p4table_entry_prepare;
 
@@ -500,7 +479,7 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
 
     dest_start_bit += (actiondata_len - key_byte_shared_bits);
 
-    p4pd_swizzle_bytes(hwentry, dest_start_bit);
+    //p4pd_swizzle_bytes(hwentry, dest_start_bit);
 
     // When swizzling bytes, 16b unit is used. Hence increase size.
     if (dest_start_bit % 16) {
@@ -510,6 +489,20 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
     }
 }
 
+
+
+#define P4PD_LOG_TABLE_UPDATES   /* Disable this once no more table 
+                                  * writes logging is needed 
+                                  */
+p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
+                                              void*      sw_key,
+                                              /* Valid only in case of TCAM;
+                                               * Otherwise can be NULL) 
+                                               */
+                                              void*      sw_key_mask,
+                                              void*      action_data,
+                                              char*      buffer,
+                                              uint16_t   buf_len);
 
 /* ------ Per table Functions  ------- */
 
@@ -569,10 +562,11 @@ static uint32_t p4pd_p4table_entry_prepare(uint8_t *hwentry,
 //::                    keylen += 1
 //::                #endfor
 //::            #endif
-static void ${table}_hwentry_query(uint32_t tableid, 
-                                   uint32_t *hwkey_len, 
-                                   uint32_t *hwkeymask_len,
-                                   uint32_t *hwactiondata_len)
+static void
+${table}_hwentry_query(uint32_t tableid, 
+                       uint32_t *hwkey_len, 
+                       uint32_t *hwkeymask_len,
+                       uint32_t *hwactiondata_len)
 {
     *hwkey_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
     *hwkeymask_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
@@ -590,8 +584,9 @@ static void ${table}_hwentry_query(uint32_t tableid,
     return;
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-static void ${table}_hwentry_query(uint32_t tableid, 
-                                   uint32_t* hwactiondata_len)
+static void
+${table}_hwentry_query(uint32_t tableid, 
+                       uint32_t* hwactiondata_len)
 {
     /* Among all actions of the table, this length is set to maximum
      * action data len so that higher layer can allocate maximum 
@@ -601,9 +596,10 @@ static void ${table}_hwentry_query(uint32_t tableid,
     return;
 }
 //::        else:
-static void ${table}_hwentry_query(uint32_t tableid,
-                                   uint32_t *hwkey_len, 
-                                   uint32_t *hwactiondata_len)
+static void
+${table}_hwentry_query(uint32_t tableid,
+                       uint32_t *hwkey_len, 
+                       uint32_t *hwactiondata_len)
 {
     // For hash case always return key length as 512 bits.
     *hwkey_len = 512;
@@ -613,8 +609,9 @@ static void ${table}_hwentry_query(uint32_t tableid,
     return;
 }
 
-static void hash_${table}_key_len(uint32_t tableid,
-                                  uint16_t *hwkey_len)
+static void
+hash_${table}_key_len(uint32_t tableid,
+                      uint16_t *hwkey_len)
 { 
     /* Total bit len of all matchkeys of this table. */
     *hwkey_len = ${keylen};
@@ -625,12 +622,13 @@ static void hash_${table}_key_len(uint32_t tableid,
 
 
 //::        if pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
-static uint32_t ${table}_pack_action_data(uint32_t tableid,
-                                         ${table}_actiondata *actiondata,
-                                         uint8_t *packed_actiondata_before_key, 
-                                         uint16_t *actiondata_len_before_key,
-                                         uint8_t *packed_actiondata_after_key,
-                                         uint16_t *actiondata_len_after_key)
+static uint32_t
+${table}_pack_action_data(uint32_t tableid,
+                          ${table}_actiondata *actiondata,
+                          uint8_t *packed_actiondata_before_key, 
+                          uint16_t *actiondata_len_before_key,
+                          uint8_t *packed_actiondata_after_key,
+                          uint16_t *actiondata_len_after_key)
 {
     uint16_t dest_start_bit;
     uint16_t bits_before_mat_key;
@@ -738,9 +736,10 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
     return (${max_actionfld_len});
 }
 //::        else:
-static uint32_t ${table}_pack_action_data(uint32_t tableid,
-                                             ${table}_actiondata *actiondata,
-                                             uint8_t *packed_actiondata)
+static uint32_t
+${table}_pack_action_data(uint32_t tableid,
+                          ${table}_actiondata *actiondata,
+                          uint8_t *packed_actiondata)
                                       
 {
     uint16_t dest_start_bit;
@@ -815,11 +814,12 @@ static uint32_t ${table}_pack_action_data(uint32_t tableid,
  *  uint32_t                                : Length of hardware key in bytes.
  */
 //::            if pddict['tables'][table]['type'] == 'Ternary':
-static uint32_t ${table}_hwkey_hwmask_build(uint32_t tableid,
-                                            ${table}_swkey_t *swkey, 
-                                            ${table}_swkey_mask_t *swkey_mask, 
-                                            uint8_t *hwkey_x, 
-                                            uint8_t *hwkey_y)
+static uint32_t
+${table}_hwkey_hwmask_build(uint32_t tableid,
+                            ${table}_swkey_t *swkey, 
+                            ${table}_swkey_mask_t *swkey_mask, 
+                            uint8_t *hwkey_x, 
+                            uint8_t *hwkey_y)
 {
     uint8_t trit_x, trit_y, k, m;
     uint32_t key_len = 0;
@@ -1255,9 +1255,10 @@ static uint32_t ${table}_hwkey_hwmask_build(uint32_t tableid,
     return (key_len);
 }
 //::            elif pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
-static uint32_t ${table}_hwkey_build(uint32_t tableid,
-                                     ${table}_swkey_t *swkey, 
-                                     uint8_t *hwkey)
+static uint32_t
+${table}_hwkey_build(uint32_t tableid,
+                     ${table}_swkey_t *swkey, 
+                     uint8_t *hwkey)
 {
     uint32_t key_len = 0;
 //::                # Do not include Action-PC in hwkey. action-pc will be
@@ -1530,11 +1531,12 @@ static uint32_t ${table}_hwkey_build(uint32_t tableid,
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 //::        if pddict['tables'][table]['type'] == 'Ternary':
-static p4pd_error_t ${table}_entry_write(uint32_t tableid,
-                                         uint32_t index,
-                                         uint8_t *hwkey, 
-                                         uint8_t *hwkey_y,
-                                         ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_write(uint32_t tableid,
+                     uint32_t index,
+                     uint8_t *hwkey, 
+                     uint8_t *hwkey_y,
+                     ${table}_actiondata *actiondata)
 {
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  sram_hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -1550,6 +1552,7 @@ static p4pd_error_t ${table}_entry_write(uint32_t tableid,
                                             0, /* Zero matchkeylen */
                                             packed_actiondata,
                                             actiondatalen);
+    p4pd_swizzle_bytes(sram_hwentry, entry_size);
     capri_table_entry_write(tableid, index, sram_hwentry, entry_size);
 
     // Install Key in TCAM
@@ -1571,9 +1574,10 @@ static p4pd_error_t ${table}_entry_write(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-static p4pd_error_t ${table}_entry_write(uint32_t tableid,
-                                         uint32_t index, 
-                                         ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_write(uint32_t tableid,
+                     uint32_t index, 
+                     ${table}_actiondata *actiondata)
 {
     uint8_t  action_pc;
     // For entry update performance reasons 
@@ -1596,18 +1600,19 @@ static p4pd_error_t ${table}_entry_write(uint32_t tableid,
                                             packed_actiondata,
                                             actiondatalen);
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    p4pd_swizzle_bytes(hwentry, entry_size); // TODO: Cleanup.
     capri_hbm_table_entry_write(tableid, index, hwentry, entry_size);
 //::            else:
+    p4pd_swizzle_bytes(hwentry, entry_size);
     capri_table_entry_write(tableid, index, hwentry, entry_size);
 //::            #endif
     return (P4PD_SUCCESS);
 }
 //::        else:
-static p4pd_error_t ${table}_entry_write(uint32_t tableid,
-                                         uint32_t hashindex,
-                                         uint8_t *hwkey,
-                                         ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_write(uint32_t tableid,
+                     uint32_t hashindex,
+                     uint8_t *hwkey,
+                     ${table}_actiondata *actiondata)
 {
     uint32_t hwactiondata_len, hwkey_len;
     uint8_t  action_pc;
@@ -1653,9 +1658,9 @@ static p4pd_error_t ${table}_entry_write(uint32_t tableid,
                                              actiondata_len_after_key);
 
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    p4pd_swizzle_bytes(hwentry, entry_size);// TODO: Cleanup.
     capri_hbm_table_entry_write(tableid, hashindex, hwentry, entry_size);
 //::            else:
+    p4pd_swizzle_bytes(hwentry, entry_size);
     capri_table_entry_write(tableid, hashindex, hwentry, entry_size);
 //::            #endif
     
@@ -1665,13 +1670,14 @@ static p4pd_error_t ${table}_entry_write(uint32_t tableid,
 
 //::        #Hash tables in both HBM and PIPE are unpacked the same way
 //::        if pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
-static uint32_t hash_${table}_unpack_action_data(uint32_t tableid,
-                                                uint8_t  actionid,
-                                         uint8_t *packed_actiondata_before_key,
-                                         uint16_t actiondata_len_before_key,
-                                         uint8_t *packed_actiondata_after_key,
-                                         uint16_t actiondata_len_after_key,
-                                         ${table}_actiondata *actiondata)
+static uint32_t
+hash_${table}_unpack_action_data(uint32_t tableid,
+                                 uint8_t  actionid,
+                                 uint8_t *packed_actiondata_before_key,
+                                 uint16_t actiondata_len_before_key,
+                                 uint8_t *packed_actiondata_after_key,
+                                 uint16_t actiondata_len_after_key,
+                                 ${table}_actiondata *actiondata)
 {
     uint16_t src_start_bit;
     uint16_t actiondatalen, bits_from_adata_before_key;
@@ -1761,10 +1767,11 @@ static uint32_t hash_${table}_unpack_action_data(uint32_t tableid,
     return (actiondatalen);
 }
 //::        else:
-static uint32_t ${table}_unpack_action_data(uint32_t tableid,
-                                            uint8_t actionid,
-                                            uint8_t *packed_actiondata,
-                                            ${table}_actiondata *actiondata)
+static uint32_t
+${table}_unpack_action_data(uint32_t tableid,
+                            uint8_t actionid,
+                            uint8_t *packed_actiondata,
+                            ${table}_actiondata *actiondata)
 {
     uint16_t src_start_bit;
     uint16_t actiondatalen;
@@ -1834,12 +1841,13 @@ static uint32_t ${table}_unpack_action_data(uint32_t tableid,
  *  uint32_t                                : Length of hardware key in bits.
  */
 //::            if pddict['tables'][table]['type'] == 'Ternary':
-static uint32_t ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
-                                              uint8_t *hw_key,
-                                              uint8_t *hw_key_mask,
-                                              uint16_t hwkey_len,
-                                              ${table}_swkey_t *swkey,
-                                              ${table}_swkey_mask_t *swkey_mask)
+static uint32_t
+${table}_hwkey_hwmask_unbuild(uint32_t tableid,
+                              uint8_t *hw_key,
+                              uint8_t *hw_key_mask,
+                              uint16_t hwkey_len,
+                              ${table}_swkey_t *swkey,
+                              ${table}_swkey_mask_t *swkey_mask)
 {
     uint8_t trit_x, trit_y, k, m;
     /*
@@ -2220,10 +2228,11 @@ static uint32_t ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     return (hwkey_len);
 }
 //::            else:
-static uint32_t ${table}_hwkey_unbuild(uint32_t tableid,
-                                       uint8_t *hwkey,
-                                       uint16_t hwkey_len,
-                                       ${table}_swkey_t *swkey)
+static uint32_t
+${table}_hwkey_unbuild(uint32_t tableid,
+                       uint8_t *hwkey,
+                       uint16_t hwkey_len,
+                       ${table}_swkey_t *swkey)
 {
     /*
      * [ P4Table   Match      Byte Location      ByteLocation ]
@@ -2487,11 +2496,12 @@ static uint32_t ${table}_hwkey_unbuild(uint32_t tableid,
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 //::        if pddict['tables'][table]['type'] == 'Ternary':
-static p4pd_error_t ${table}_entry_read(uint32_t tableid,
-                                        uint32_t index,
-                                        ${table}_swkey_t *swkey, 
-                                        ${table}_swkey_mask_t *swkey_mask,
-                                        ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_read(uint32_t tableid,
+                    uint32_t index,
+                    ${table}_swkey_t *swkey, 
+                    ${table}_swkey_mask_t *swkey_mask,
+                    ${table}_actiondata *actiondata)
 {
     uint8_t  hwentry_x[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -2537,9 +2547,10 @@ static p4pd_error_t ${table}_entry_read(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-static p4pd_error_t ${table}_entry_read(uint32_t tableid,
-                                        uint32_t index, 
-                                        ${table}_actiondata* actiondata)
+static p4pd_error_t
+${table}_entry_read(uint32_t tableid,
+                    uint32_t index, 
+                    ${table}_actiondata* actiondata)
 {
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
@@ -2555,17 +2566,16 @@ static p4pd_error_t ${table}_entry_read(uint32_t tableid,
     capri_hbm_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
 //::            else:
     capri_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
     if (!hwentry_bit_len) {
         // Zero len!!
         return (P4PD_SUCCESS);
     }
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
     // Split HW entry into 
     //  - actionPC
     //  - Data
-
     //TODO : How to handle case where actionpc is not in table...
     actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
@@ -2574,10 +2584,11 @@ static p4pd_error_t ${table}_entry_read(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        else:
-static p4pd_error_t ${table}_entry_read(uint32_t tableid,
-                                        uint32_t hashindex, 
-                                        ${table}_swkey_t *swkey, 
-                                        ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_read(uint32_t tableid,
+                    uint32_t hashindex, 
+                    ${table}_swkey_t *swkey, 
+                    ${table}_actiondata *actiondata)
 {
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
@@ -2592,13 +2603,13 @@ static p4pd_error_t ${table}_entry_read(uint32_t tableid,
     capri_hbm_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
 //::            else:
     capri_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
+    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
     if (!hwentry_bit_len) {
         // Zero len!!
         return (P4PD_SUCCESS);
     }
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
     // Split HW entry into 
     //  - actionPC
     //  - Key 
@@ -2653,26 +2664,29 @@ static p4pd_error_t ${table}_entry_read(uint32_t tableid,
  *  pd_error_t                             : P4PD_SUCCESS / P4PD_FAIL
  */
 //::        if pddict['tables'][table]['type'] == 'Ternary':
-static p4pd_error_t ${table}_hwentry_create(uint32_t tableid,
-                                            ${table}_swkey_t *swkey, 
-                                            ${table}_swkey_mask_t *swkey_mask,
-                                            ${table}_actiondata *actiondata,
-                                            uint8_t *hwentry)
+static p4pd_error_t
+${table}_hwentry_create(uint32_t tableid,
+                        ${table}_swkey_t *swkey, 
+                        ${table}_swkey_mask_t *swkey_mask,
+                        ${table}_actiondata *actiondata,
+                        uint8_t *hwentry)
 {
     return (P4PD_SUCCESS);
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-static p4pd_error_t ${table}_hwentry_create(uint32_t tableid,
-                                            ${table}_actiondata* actiondata,
-                                            uint8_t *hwentry)
+static p4pd_error_t
+${table}_hwentry_create(uint32_t tableid,
+                        ${table}_actiondata* actiondata,
+                        uint8_t *hwentry)
 {
     return (P4PD_SUCCESS);
 }
 //::        else:
-static p4pd_error_t ${table}_hwentry_create(uint32_t tableid,
-                                            ${table}_swkey_t *swkey, 
-                                            ${table}_actiondata *actiondata,
-                                            uint8_t *hwentry)
+static p4pd_error_t
+${table}_hwentry_create(uint32_t tableid,
+                        ${table}_swkey_t *swkey, 
+                        ${table}_actiondata *actiondata,
+                        uint8_t *hwentry)
 {
     return (P4PD_SUCCESS);
 }
@@ -2698,12 +2712,13 @@ static p4pd_error_t ${table}_hwentry_create(uint32_t tableid,
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 //::        if pddict['tables'][table]['type'] == 'Ternary':
-static p4pd_error_t ${table}_key_decode(uint32_t tableid,
-                                          uint8_t *hwentry_x,
-                                          uint8_t *hwentry_y,
-                                          uint16_t hwentry_len,
-                                          ${table}_swkey_t *swkey, 
-                                          ${table}_swkey_mask_t *swkey_mask)
+static p4pd_error_t
+${table}_key_decode(uint32_t tableid,
+                    uint8_t *hwentry_x,
+                    uint8_t *hwentry_y,
+                    uint16_t hwentry_len,
+                    ${table}_swkey_t *swkey, 
+                    ${table}_swkey_mask_t *swkey_mask)
 {
 
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_len,
@@ -2712,10 +2727,11 @@ static p4pd_error_t ${table}_key_decode(uint32_t tableid,
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
-static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
-                                          uint8_t *hwentry,
-                                          uint16_t hwentry_len,
-                                          ${table}_actiondata* actiondata)
+static p4pd_error_t
+${table}_entry_decode(uint32_t tableid,
+                      uint8_t *hwentry,
+                      uint16_t hwentry_len,
+                      ${table}_actiondata* actiondata)
 {
     uint8_t  actionpc;
     
@@ -2731,11 +2747,12 @@ static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        else:
-static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
-                                          uint8_t *hwentry,
-                                          uint16_t hwentry_len,
-                                          ${table}_swkey_t *swkey, 
-                                          ${table}_actiondata *actiondata)
+static p4pd_error_t
+${table}_entry_decode(uint32_t tableid,
+                      uint8_t *hwentry,
+                      uint16_t hwentry_len,
+                      ${table}_swkey_t *swkey, 
+                      ${table}_actiondata *actiondata)
 {
     uint8_t  actionpc;
     uint16_t key_bit_len;
@@ -2805,10 +2822,11 @@ static p4pd_error_t ${table}_entry_decode(uint32_t tableid,
  * Return Value: 
  *  None
  */
-void ${api_prefix}_hwentry_query(uint32_t tableid, 
-                        uint32_t *hwkey_len, 
-                        uint32_t *hwkeymask_len, 
-                        uint32_t *hwactiondata_len)
+void 
+${api_prefix}_hwentry_query(uint32_t tableid, 
+                            uint32_t *hwkey_len, 
+                            uint32_t *hwkeymask_len, 
+                            uint32_t *hwactiondata_len)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -2873,7 +2891,8 @@ void ${api_prefix}_hwentry_query(uint32_t tableid,
  * Return Value 
  *  pd_error_t                  : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
+p4pd_error_t
+${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
                                  void       *swkey, 
                                  void       *swkey_mask, 
                                  uint8_t    *hw_key, 
@@ -2957,11 +2976,12 @@ p4pd_error_t ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_entry_write(uint32_t tableid,
-                              uint32_t index,
-                              uint8_t *hwkey, 
-                              uint8_t *hwkey_y,
-                              void    *actiondata)
+p4pd_error_t
+${api_prefix}_entry_write(uint32_t tableid,
+                          uint32_t index,
+                          uint8_t *hwkey, 
+                          uint8_t *hwkey_y,
+                          void    *actiondata)
 {
     /* P4 Table can reside in P4pipe or in HBM. Depending on where it resides
      * and depending on if table is lookedup using hash or using index
@@ -3103,11 +3123,12 @@ p4pd_error_t ${api_prefix}_entry_write(uint32_t tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_entry_read(uint32_t   tableid,
-                             uint32_t   index,
-                             void       *swkey, 
-                             void       *swkey_mask,
-                             void       *actiondata)
+p4pd_error_t
+${api_prefix}_entry_read(uint32_t   tableid,
+                         uint32_t   index,
+                         void       *swkey, 
+                         void       *swkey_mask,
+                         void       *actiondata)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -3166,11 +3187,12 @@ p4pd_error_t ${api_prefix}_entry_read(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_entry_create(uint32_t   tableid,
-                               void       *swkey, 
-                               void       *swkey_mask,
-                               void       *actiondata,
-                               uint8_t    *hwentry)
+p4pd_error_t
+${api_prefix}_entry_create(uint32_t   tableid,
+                           void       *swkey, 
+                           void       *swkey_mask,
+                           void       *actiondata,
+                           uint8_t    *hwentry)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -3220,16 +3242,17 @@ p4pd_error_t ${api_prefix}_entry_create(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
-                                                 uint32_t   index,
-                                                 uint8_t*   hwentry,
-                                                 /* Valid only in case of TCAM;
-                                                  * Otherwise can be NULL) 
-                                                  */
-                                                 uint8_t*   hwentry_y,
-                                                 uint16_t   hwentry_len,
-                                                 char*      buffer,
-                                                 uint16_t   buf_len)
+p4pd_error_t
+${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
+                                             uint32_t   index,
+                                             uint8_t*   hwentry,
+                                             /* Valid only in case of TCAM;
+                                              * Otherwise can be NULL) 
+                                              */
+                                             uint8_t*   hwentry_y,
+                                             uint16_t   hwentry_len,
+                                             char*      buffer,
+                                             uint16_t   buf_len)
 {
     char *buf = buffer;
     int  blen = buf_len, b;
@@ -3814,15 +3837,16 @@ p4pd_error_t ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
  * Return Value: 
  *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
  */
-p4pd_error_t ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
-                                              void*      sw_key,
-                                              /* Valid only in case of TCAM;
-                                               * Otherwise can be NULL) 
-                                               */
-                                              void*      sw_key_mask,
-                                              void*      action_data,
-                                              char*      buffer,
-                                              uint16_t   buf_len)
+p4pd_error_t
+${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
+                                          void*      sw_key,
+                                          /* Valid only in case of TCAM;
+                                           * Otherwise can be NULL) 
+                                           */
+                                          void*      sw_key_mask,
+                                          void*      action_data,
+                                          char*      buffer,
+                                          uint16_t   buf_len)
 {
     char *buf = buffer;
     int  blen = buf_len, b;
