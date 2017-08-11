@@ -85,14 +85,14 @@ func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
 				return
 			}
 		case <-timeout:
-			// eveluate one last time
+			// evaluate one last time before giving up
 			if eval() {
 				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
-			} else {
-				logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
-				_, file, line, _ := runtime.Caller(1)
-				tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
+				return
 			}
+			logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
+			_, file, line, _ := runtime.Caller(1)
+			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
 		}
 	}
 }

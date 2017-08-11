@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/runtime"
+	"github.com/pensando/sw/utils/testutils"
 )
 
 // validateObjectSpec Expects non-pointers in expected and result.
@@ -39,7 +40,7 @@ func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kv
 
 }
 
-func TestGrpcCrudOps(t *testing.T) {
+func TestCrudOps(t *testing.T) {
 	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
 
 	ctx := context.Background()
@@ -338,12 +339,14 @@ func TestGrpcCrudOps(t *testing.T) {
 	}
 
 	// ===== Validate Watch Events received === //
+	testutils.AssertEventually(t,
+		func() bool { return len(expectWatchEvents) == len(rcvWatchEvents) },
+		"failed to receive all watch events",
+		"10ms",
+		"3s")
 	cancel()
 	wg.Wait()
 
-	if len(expectWatchEvents) != len(rcvWatchEvents) {
-		t.Fatalf("expecting [%d] events, got [%d]", len(expectWatchEvents), len(rcvWatchEvents))
-	}
 	for k := range expectWatchEvents {
 		if expectWatchEvents[k].Type != rcvWatchEvents[k].Type {
 			t.Fatalf("mismatched event type expected (%s) got (%s)", expectWatchEvents[k].Type, rcvWatchEvents[k].Type)
