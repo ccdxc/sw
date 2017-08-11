@@ -42,7 +42,7 @@ func main() {
 			Format:      log.LogFmt,
 			Filter:      log.AllowAllFilter,
 			Debug:       *debugflag,
-			Context:     true,
+			CtxSelector: log.ContextAll,
 			LogToStdout: *logToStdoutFlag,
 			LogToFile:   logtoFileFlag,
 			FileCfg: log.FileConfig{

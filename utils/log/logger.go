@@ -87,6 +87,31 @@ const (
 	AllowNoneFilter
 )
 
+// ContextSelector is a bitmask type representing the various context
+// attributes that can be selected for log annotation.
+type ContextSelector uint16
+
+const (
+
+	// ContextNone disables adding any context data in logging
+	ContextNone ContextSelector = 0
+
+	// ContextTimestamp adds timestamp to log context
+	ContextTimestamp ContextSelector = 1 << iota
+
+	// ContextModule adds module name to log context
+	ContextModule
+
+	// ContextPid adds process-id to log context
+	ContextPid
+
+	// ContextCaller adds caller filename & line number to log context
+	ContextCaller
+
+	// ContextAll adds all of the following attributes
+	ContextAll ContextSelector = ContextTimestamp | ContextModule | ContextPid | ContextCaller
+)
+
 // FileConfig contains config params for logging to file
 type FileConfig struct {
 	// Filename of the Log file
@@ -116,8 +141,8 @@ type Config struct {
 	// Debug flag enables logging with stack-trace
 	Debug bool
 
-	// Enable context data annotation (timestamp, module, pid)
-	Context bool
+	// CtxSelector specifies the context attributes to include.
+	CtxSelector ContextSelector
 
 	// LogToStdout enable logging to stdout
 	LogToStdout bool
@@ -194,7 +219,7 @@ func GetDefaultConfig(module string) *Config {
 		Format:      LogFmt,
 		Filter:      AllowAllFilter,
 		Debug:       false,
-		Context:     true,
+		CtxSelector: ContextAll,
 		LogToStdout: true,
 		LogToFile:   false,
 		FileCfg:     FileConfig{},
@@ -252,20 +277,24 @@ func newLogger(config *Config) *kitLogger {
 		l = kitlog.NewLogfmtLogger(wr)
 	}
 
-	// Add context data: Timestamp, Module, Pid, Caller
-	if config.Context == true {
-		l = kitlog.With(l,
-			"ts", kitlog.DefaultTimestampUTC,
-			"module", config.Module,
-			"pid", strconv.Itoa(os.Getpid()),
-		)
+	// Add context data based on selectors : Timestamp, Module, Pid, Caller
+	if config.CtxSelector&ContextTimestamp != 0 {
+		l = kitlog.With(l, "ts", kitlog.DefaultTimestampUTC)
+	}
+
+	if config.CtxSelector&ContextModule != 0 {
+		l = kitlog.With(l, "module", config.Module)
+	}
+
+	if config.CtxSelector&ContextPid != 0 {
+		l = kitlog.With(l, "pid", strconv.Itoa(os.Getpid()))
 	}
 
 	// Add debug trace if enabled
 	if config.Debug {
 		l = kitlog.With(l, "caller", stackTrace())
 	} else {
-		if config.Context == true {
+		if config.CtxSelector&ContextCaller != 0 {
 			l = kitlog.With(l, "caller", caller)
 		}
 	}

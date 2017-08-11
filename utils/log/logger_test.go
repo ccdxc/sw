@@ -18,7 +18,7 @@ func TestLoggerToFile(t *testing.T) {
 		Module:      "LogTester",
 		Format:      LogFmt,
 		Debug:       false,
-		Context:     true,
+		CtxSelector: ContextAll,
 		LogToStdout: false,
 		LogToFile:   true,
 		FileCfg: FileConfig{
@@ -380,7 +380,7 @@ func TestLogFilter(t *testing.T) {
 
 			buf := &bytes.Buffer{}
 			config := GetDefaultConfig("TestLogger")
-			config.Context = false
+			config.CtxSelector = ContextNone
 			l := GetNewLogger(config).SetOutput(buf).SetFilter(tc.filter)
 
 			l.Debug("debug log")

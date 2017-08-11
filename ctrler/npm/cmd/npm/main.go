@@ -24,7 +24,7 @@ func main() {
 		Format:      log.LogFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
-		Context:     true,
+		CtxSelector: log.ContextAll,
 		LogToStdout: true,
 		LogToFile:   false,
 		FileCfg: log.FileConfig{
