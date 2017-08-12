@@ -113,9 +113,8 @@ struct ${table}_k {
 //::        #endif # if k+i len > 0
 
 /* K + D fields */
-//::        max_kd_size = 0
-//::        pad_to_512 = 0
 //::        for action in pddict['tables'][table]['actions']:
+//::            pad_to_512 = 0
 //::            (actionname, actionfldlist) = action
 //::            kd_size = 0
 //::            if len(actionfldlist):
@@ -184,10 +183,19 @@ struct ${table}_${actionname}_d {
     ${actionfldname} : ${actionfldwidth};
 //::                    kd_size += actionfldwidth 
 //::                #endfor
+//::                if len(pddict['tables'][table]['actions']) > 1:
+//::                    if not (pddict['tables'][table]['is_raw']):
+//::                        pad_to_512 = 512 - (8 + kd_size)
+//::                    else:
+//::                        pad_to_512 = 512 - (kd_size)
+//::                    #endif
+//::                else:
+//::                    pad_to_512 = 512 - (kd_size)
+//::                #endif
+//::                if pad_to_512:
+    __pad_to_512b : ${pad_to_512};
+//::                #endif
 };
-//::            #endif
-//::            if kd_size > max_kd_size:
-//::                max_kd_size = kd_size
 //::            #endif
 //::        #endfor
 
@@ -214,20 +222,12 @@ struct ${table}_d {
 //::                #endfor
     } u;
 //::            #endif
-//::            if (8 + max_kd_size) < 512:
-//::                pad_to_512 = 512 - (8 + max_kd_size)
-    __pad_to_512b : ${pad_to_512};
-//::            #endif
 };
 //::        elif len(pddict['tables'][table]['actions']) == 1:
 //::            (actionname, actionfldlist) = pddict['tables'][table]['actions'][0]
 //::            if len(actionfldlist):
 struct ${table}_d {
     struct ${table}_${actionname}_d  ${actionname}_d;
-//::            if (max_kd_size) < 512:
-//::                pad_to_512 = 512 - max_kd_size
-    __pad_to_512b : ${pad_to_512};
-//::            #endif
 };
 //::            #endif
 //::        #endif
