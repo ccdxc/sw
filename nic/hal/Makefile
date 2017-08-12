@@ -89,6 +89,11 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/tcp_proxy_cb.pb.o \
 				$(OBJ_DIR)/tcpcb.o \
 				$(OBJ_DIR)/descriptor_aol.pb.o \
+				$(OBJ_DIR)/wring.pb.o \
+				$(OBJ_DIR)/wring.o \
+				$(OBJ_DIR)/proxy.pb.o \
+				$(OBJ_DIR)/proxy.o \
+
 	
 
 HAL_OBJS := $(OBJ_DIR)/main.o 

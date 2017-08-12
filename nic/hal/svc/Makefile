@@ -27,6 +27,8 @@ SOURCES = \
 		descriptor_aol_svc.cc \
 		qos_svc.cc \
 		acl_svc.cc \
+		wring_svc.cc \
+		proxy_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

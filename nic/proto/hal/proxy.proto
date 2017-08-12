@@ -1,0 +1,99 @@
+//------------------------------------------------------------------------------
+// protobuf specification for proxy
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package proxy;
+
+// The proxy service definition
+service Proxy {
+  rpc ProxyCreate (ProxyRequestMsg) returns (ProxyResponseMsg) {}
+  rpc ProxyUpdate (ProxyRequestMsg) returns (ProxyResponseMsg) {}
+  rpc ProxyDelete (ProxyDeleteRequestMsg) returns (ProxyDeleteResponseMsg) {}
+  rpc ProxyGet (ProxyGetRequestMsg) returns (ProxyGetResponseMsg) {}
+}
+
+// ProxyKeyHandle is used to operate on a proxy either by its key or handle
+message ProxyKeyHandle {
+  oneof key_or_handle {
+    uint32     proxy_id          = 1;    // unique proxy allocated by app
+    fixed64    proxy_handle      = 2;    // proxy handle returned by HAL
+  }
+}
+
+// ProxySpec captures all the proxy level configuration
+message ProxySpec {
+  types.ObjectMeta      meta                       = 1;    // common object meta
+  ProxyKeyHandle        key_or_handle              = 2;    // proxy being created/updated
+  types.ProxyType       proxy_type                 = 3;
+  uint32                proxy_qtype                = 4;
+}
+
+// ProxyRequestMsg is batched add or modify proxy request
+message ProxyRequestMsg {
+  repeated ProxySpec    request = 1;    // batched request
+}
+
+// ProxyStatus is the operational status of a given proxy 
+message ProxyStatus {
+  fixed64    proxy_handle     = 1;    // id of proxy returned by HAL
+}
+
+// ProxyResponse is response to ProxySpec
+message ProxyResponse {
+  types.ApiStatus        api_status     = 1;    // API status code
+  ProxyStatus            proxy_status   = 2;    // proxy status, if api succeeded
+}
+
+// ProxyResponseMsg is batched response to ProxyRequestMsg
+message ProxyResponseMsg {
+  repeated ProxyResponse    response = 1;    // batched response
+}
+
+// ProxyDeleteRequest is used to delete a proxy
+message ProxyDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  ProxyKeyHandle          key_or_handle = 2;    // Proxy key or handle
+}
+
+// ProxyDeleteRequestMsg is used to delete a batch of proxy 
+message ProxyDeleteRequestMsg {
+  repeated ProxyDeleteRequest    request = 1;    // batched delete request
+}
+
+// ProxyDeleteResponseMsg is batched response to ProxyDeleteRequestMsg
+message ProxyDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// ProxyGetRequest is used to get information about a proxy
+message ProxyGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  ProxyKeyHandle            key_or_handle = 2;    // Proxy key or handle
+}
+
+// ProxyGetRequestMsg is batched GET requests for proxys
+message ProxyGetRequestMsg {
+  repeated ProxyGetRequest    request = 1;    // batched get request
+}
+
+// ProxyStats is the statistics object for each proxy
+message ProxyStats {
+}
+
+// ProxyGetResponse captures all the information about a proxy
+// only if api_status indicates success, other fields are valid
+message ProxyGetResponse {
+  types.ApiStatus        api_status = 1;    // API status code
+  ProxySpec              spec       = 2;    // proxy configuration
+  ProxyStatus       status     = 3;    // operational state of proxy
+  ProxyStats        stats      = 4;    // stats of the proxy
+}
+
+// ProxyGetResponseMsg is batched response to ProxyGetRequestMsg
+message ProxyGetResponseMsg {
+  repeated ProxyGetResponse    response = 1;    // batch get response
+}

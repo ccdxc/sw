@@ -86,9 +86,61 @@
             "name": "ipsec-cb",
             "size_kb": 64
         },
-	{
-	    "name": "lif2qstate_map",
-	    "size_kb": 16384
-	}
+	    {
+	        "name": "lif2qstate_map",
+	        "size_kb": 16384
+	    },
+        {
+            "name": "nmdr-tx",
+            "size_kb": 128 
+        },
+        {
+            "name": "nmdr-rx",
+            "size_kb": 128 
+        },
+        {
+            "name": "nmpr-small-tx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-small-rx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-big-tx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-big-rx",
+            "size_kb": 128
+        },
+        {
+            "name": "serq",
+            "size_kb": 16384
+        },
+        {
+            "name": "descriptor-tx",
+            "size_kb": 2048
+        },
+        {
+            "name": "descriptor-rx",
+            "size_kb": 2048
+        },
+        {
+            "name": "page-small-tx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-small-rx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-big-tx",
+            "size_kb": 147456
+        },
+        {
+            "name": "page-big-rx",
+            "size_kb": 147456
+        }
     ]
 }

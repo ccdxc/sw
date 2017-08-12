@@ -111,6 +111,9 @@ hal_ret_t tcpcb_create(tcpcb::TcpCbSpec& spec,
 hal_ret_t tcpcb_update(tcpcb::TcpCbSpec& spec,
                        tcpcb::TcpCbResponse *rsp);
 
+hal_ret_t tcpcb_delete(tcpcb::TcpCbDeleteRequest& req,
+                       tcpcb::TcpCbDeleteResponseMsg *rsp);
+
 hal_ret_t tcpcb_get(tcpcb::TcpCbGetRequest& req,
                     tcpcb::TcpCbGetResponse *rsp);
 }    // namespace hal

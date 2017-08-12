@@ -2,7 +2,7 @@
 #define __CAPRI_HBM_HPP__
 
 #define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
-#define CARPI_HBM_MEM_NUM_MEM_REGS 20
+#define CARPI_HBM_MEM_NUM_MEM_REGS 50
 
 #define JKEY_REGIONS             "regions"
 #define JKEY_REGION_NAME         "name"

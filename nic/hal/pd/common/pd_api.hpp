@@ -12,6 +12,7 @@
 #include <tcpcb.hpp>
 #include <qos.hpp>
 #include <acl.hpp>
+#include <wring.hpp>
 
 namespace hal {
 namespace pd {
@@ -31,6 +32,7 @@ using hal::buf_pool_t;
 using hal::queue_t;
 using hal::policer_t;
 using hal::acl_t;
+using hal::wring_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -89,6 +91,10 @@ typedef struct pd_tlscb_args_s {
 typedef struct pd_tcpcb_args_s {
     tcpcb_t            *tcpcb;
 } __PACK__ pd_tcpcb_args_t;
+
+typedef struct pd_wring_args_s {
+    wring_t            *wring;
+} __PACK__ pd_wring_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -168,6 +174,13 @@ static inline void
 pd_tcpcb_args_init (pd_tcpcb_args_t *args)
 {
     args->tcpcb = NULL;
+    return;
+}
+
+static inline void
+pd_wring_args_init (pd_wring_args_t *args)
+{
+    args->wring = NULL;
     return;
 }
 
@@ -271,6 +284,10 @@ pd_acl_args_init (pd_acl_args_t *args)
 }
 
 hal_ret_t pd_acl_create(pd_acl_args_t *acl);
+hal_ret_t pd_wring_create(pd_wring_args_t *wring);
+hal_ret_t pd_wring_update(pd_wring_args_t *wring);
+hal_ret_t pd_wring_delete(pd_wring_args_t *wring);
+hal_ret_t pd_wring_get(pd_wring_args_t *wring);
 
 }    // namespace pd
 }    // namespace hal

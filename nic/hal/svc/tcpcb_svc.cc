@@ -54,7 +54,17 @@ TcpCbServiceImpl::TcpCbDelete(ServerContext *context,
                               const TcpCbDeleteRequestMsg *req,
                               TcpCbDeleteResponseMsg *rsp)
 {
+    uint32_t         i, nreqs = req->request_size();
+
     HAL_TRACE_DEBUG("Rcvd TcpCb Delete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto spec = req->request(i);
+        hal::tcpcb_delete(spec, rsp);
+    }
     return Status::OK;
 }
 

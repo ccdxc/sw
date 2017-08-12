@@ -77,6 +77,13 @@ add_tcpcb_pd_to_db (pd_tcpcb_t *tcpcb_pd)
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+del_tcpcb_pd_from_db(pd_tcpcb_t *tcpcb_pd)
+{
+    g_hal_state_pd->tcpcb_hwid_ht()->remove(&tcpcb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
 // find a tcpcb pd instance given its hw id
 static inline pd_tcpcb_t *
 find_tcpcb_by_hwid (tcpcb_hw_id_t hwid)

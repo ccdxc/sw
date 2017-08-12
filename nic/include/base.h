@@ -173,6 +173,9 @@ do {                                                       \
     ENTRY(HAL_RET_QUEUE_NOT_FOUND,            30,"interface not found") \
     ENTRY(HAL_RET_NETWORK_NOT_FOUND,          31,"network not found") \
                                                                         \
+    ENTRY(HAL_RET_WRING_NOT_FOUND,            32, "Wring not found") \
+    ENTRY(HAL_RET_PROXY_NOT_FOUND,            33, "Proxy Service not found") \
+                                                                            \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 

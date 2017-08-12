@@ -34,6 +34,8 @@ SOURCES = \
 		  bm_allocator.cc \
 		  lif_manager_base.cc \
 		  lif_manager.cc \
+		  wring.cc \
+		  proxy.cc \ 
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

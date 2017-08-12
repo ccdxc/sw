@@ -22,6 +22,7 @@ typedef struct pd_buf_pool_s pd_buf_pool_t;
 typedef struct pd_queue_s pd_queue_t;
 typedef struct pd_policer_s pd_policer_t;
 typedef struct pd_acl_s pd_acl_t;
+typedef struct pd_wring_s pd_wring_t;
 
 }    // namespace pd
 }    // namespace hal

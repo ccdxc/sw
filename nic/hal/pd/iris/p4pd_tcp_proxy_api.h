@@ -8,15 +8,9 @@
 #include <stdint.h>
 #include <tcp_proxy_rxdma_p4plus_ingress.h>
 #include <tcp_proxy_txdma_p4plus_ingress.h>
-#include <../../../model_sim/include/lib_model_client.h>
+#include <p4plus_pd_api.h>
 
-#ifndef P4PD_CLI
-#include <hal_pd_error.hpp>
-#else
-typedef int p4pd_error_t;
-#endif
-
-#define P4PD_TCPCB_STAGE_ENTRY_OFFSET     64
+#define P4PD_TCPCB_STAGE_ENTRY_OFFSET   64
 #define P4PD_HBM_TCP_CB_ENTRY_SIZE      512
 
 typedef enum tcpcb_hwid_order_ {
@@ -53,21 +47,5 @@ typedef struct __attribute__((__packed__)) __tcp_rx_read_tx2rx_actiondata_d {
     uint64_t ecn_flags_tx: 8;
     uint64_t packets_out: 16;
 } tcp_rx_read_tx2rx_actiondata_d;
-
-bool
-p4plus_hbm_write(uint64_t addr_offset, uint8_t* data, uint32_t size)
-{
-    return write_mem(addr_offset, data, size);            
-}
-
-bool
-p4plus_hbm_read(uint64_t addr_offset, uint8_t* data, uint32_t size)
-{
-    return read_mem(addr_offset, data, size);            
-}
-
-#define P4PD_HBM_TCP_CB_START_ADDR                   0xbbbb
-#define P4PD_HBM_TCP_CB_ENTRY_SIZE                   512
-
 
 #endif

@@ -19,6 +19,8 @@
 #include <asic_rw.hpp>
 #include <tlscb_pd.hpp>
 #include <tcpcb_pd.hpp>
+#include <wring_pd.hpp>
+#include <proxy.hpp>
 
 namespace hal {
 namespace pd {
@@ -191,6 +193,19 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((acl_pd_slab_ != NULL), false);
 
+    // initialize WRING related data structures
+    wring_slab_ = slab::factory("WRING PD", HAL_SLAB_WRING_PD,
+                                 sizeof(hal::pd::pd_wring_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((wring_slab_ != NULL), false);
+
+    wring_hwid_ht_ = ht::factory(HAL_MAX_HW_WRING,
+                                 hal::pd::wring_pd_get_hw_key_func,
+                                 hal::pd::wring_pd_compute_hw_hash_func,
+                                 hal::pd::wring_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
+
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -259,6 +274,9 @@ hal_state_pd::hal_state_pd()
     
     tcpcb_slab_ = NULL;
     tcpcb_hwid_ht_ = NULL;
+    
+    wring_slab_ = NULL;
+    wring_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -313,6 +331,10 @@ hal_state_pd::~hal_state_pd()
     egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
 
     acl_pd_slab_ ? delete acl_pd_slab_ : HAL_NOP;
+
+    wring_slab_ ? delete wring_slab_ : HAL_NOP;
+    wring_hwid_ht_ ? delete wring_hwid_ht_ : HAL_NOP;
+
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -616,6 +638,28 @@ hal_pd_pgm_def_entries (void)
 }
 
 //------------------------------------------------------------------------------
+// program default entries for P4Plus tables
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_pd_pgm_def_p4plus_entries (void)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("Programming p4plus default entries ...");
+    ret = wring_pd_init_global_rings();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program default rings, err: {}", ret);
+    }
+
+    ret = hal_init_def_proxy_services();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize default proxy services");
+    }
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
 // free an element back to given PD slab specified by its id
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -654,7 +698,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->tlscb_slab()->free_(elem);
         break;
 
-   case HAL_SLAB_TCPCB_PD:
+    case HAL_SLAB_TCPCB_PD:
         g_hal_state_pd->tcpcb_slab()->free_(elem);
         break;
 
@@ -672,6 +716,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ACL_PD:
         g_hal_state_pd->acl_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_WRING_PD:
+        g_hal_state_pd->wring_slab()->free_(elem);
         break;
 
     default:

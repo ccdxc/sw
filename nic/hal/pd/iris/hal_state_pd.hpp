@@ -120,6 +120,10 @@ public:
     // get APIs for Acl related state
     slab *acl_pd_slab(void) const { return acl_pd_slab_; }
 
+    // get APIs for WRING related state
+    slab *wring_slab(void) const { return wring_slab_; }
+    ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
+
     hal_ret_t init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
@@ -251,6 +255,12 @@ private:
     // Acl related state
     struct {
         slab       *acl_pd_slab_;
+    } __PACK__;
+
+    // wring related state
+    struct {
+        slab       *wring_slab_;
+        ht         *wring_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;
