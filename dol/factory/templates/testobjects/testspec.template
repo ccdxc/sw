@@ -4,19 +4,19 @@ meta:
 
 config_filter:
     src:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
     dst:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-    flow: filter/any
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+    flow: filter://any
     maxflows: None
     rdma:
-        lqpair  : filter/any # Local QPair
-        rqpair  : filter/any # Remote QPair
-        session : filter/any 
+        lqpair  : filter://any # Local QPair
+        rqpair  : filter://any # Remote QPair
+        session : filter://any 
 
 packets:
     - packet:

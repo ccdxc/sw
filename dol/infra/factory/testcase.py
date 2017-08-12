@@ -54,7 +54,7 @@ class TestCaseSessionStepObject:
         return
 
 class TestCase(objects.FrameworkObject):
-    def __init__(self, tcid, flow, fwdata):
+    def __init__(self, tcid, flow, infra_data, module):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
@@ -67,9 +67,9 @@ class TestCase(objects.FrameworkObject):
         self.descriptors    = objects.ObjectDatabase(logger = self)
         self.buffers        = objects.ObjectDatabase(logger = self)
 
-        self.fwdata         = fwdata
-        self.testspec       = fwdata.TestSpec
-        self.logger         = fwdata.Logger
+        self.infra_data     = infra_data
+        self.testspec       = module.testspec
+        self.logger         = infra_data.Logger
         self.session        = []
 
         self.logpfx         = "TC%06d:" % self.ID()
@@ -115,7 +115,10 @@ class TestCase(objects.FrameworkObject):
             if spec_pkt.packet.object == None: continue
             tc_pkt = TestCaseTrigExpPacketObject()
             tc_pkt.packet = spec_pkt.packet.object.Get(self)
-            tc_pkt.ports = spec_pkt.packet.port.Get(self)
+            if objects.IsReference(spec_pkt.packet.port):
+                tc_pkt.ports = spec_pkt.packet.port.Get(self)
+            else:
+                tc_pkt.ports = [ spec_pkt.packet.port ]
             self.info("    - Adding Packet: %s" % tc_pkt.packet.GID())
             self.info("    -        Ports :", tc_pkt.ports)
             tc_section.packets.append(tc_pkt)

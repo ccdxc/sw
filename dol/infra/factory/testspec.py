@@ -20,7 +20,7 @@ class TestSpecSessionStep(objects.FrameworkObject):
         super().__init__()
         return
 
-class TestSpec(objects.FrameworkObject):
+class TestSpecObject(objects.FrameworkObject):
     def __init__(self, path, filename):
         super().__init__()
         tspec = parser.ParseFile(path, filename)

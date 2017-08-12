@@ -1,16 +1,16 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any # Local QPair
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+        qpair   : filter://any # Local QPair
     dst:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any 
-    flow        : filter/proto=TCP,dport=80
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+        qpair   : filter://any 
+    flow        : filter://proto=TCP,dport=80
     maxflows    : 1
 
 packets:

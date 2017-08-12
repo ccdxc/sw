@@ -1,26 +1,26 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
     dst:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
-    flow        : filter/fwtype=L2,type=IPV4,proto=TCP
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2
     maxflows    : None
 
 packets:
     - packet:
         id          : PKT1     # Input packet 1
-        #headers     : callback://networking/packets/AddIngressHeadersByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        #template    : callback://networking/packets/GetPacketTemplateByFlow
-        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
@@ -30,9 +30,24 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : callback://networking/packets/GetIpv4Ttl
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetIpv4Ttl
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

@@ -1,4 +1,4 @@
 #! /bin/bash
 DIR_NIC=`dirname $0`
 export HAL_CONFIG_PATH=$DIR_NIC/conf/
-CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$DIR_NIC/obj $DIR_NIC/obj/hal_stub -c hal.json
+CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$DIR_NIC/obj $DIR_NIC/obj/hal_stub -c hal.json 2>&1 | tee hal.log

@@ -1,20 +1,25 @@
-# Testcase definition file.
+#! /usr/bin/python3
 
-import pdb
+def Setup(infra, module):
+    print("Setup(): Sample Implementation")
+    if module.args:
+        for arg in module.args:
+            print("- Arg: ", arg)
+    return
 
-import infra.common.defs as defs
+def Teardown(infra, module):
+    print("Teardown(): Sample Implementation.")
+    return
 
-def setup (fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseSetup(tc):
+    print("TestCaseSetup(): Sample Implementation.")
+    return
 
-def verify (fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseVerify(tc):
+    print("TestCaseVerify(): Sample Implementation.")
+    return
 
-def debug (fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseTeardown(tc):
+    print("TestCaseTeardown(): Sample Implementation.")
+    return
 
-def teardown (fwdata, usrdata):
-    return defs.status.SUCCESS
-
-def foo(fwdata, usrdata):
-    return defs.status.SUCCESS

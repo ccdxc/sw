@@ -3,26 +3,26 @@ meta:
 
 status  : None  # Status of Testcase after Execution
 testspec: None  # Instance of the testspec
-fwdata  : None  # Hanlde of FrameworkData
+infra_data  : None  # Hanlde of FrameworkData
 logger  : None  # Logger Instance
 logpfx  : None  # Logger Prefix for all logs of this Testcase.
 
 config:
     src:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        lif     : filter/any
+        tenant  : None
+        segment : None
+        endpoint: None
+        lif     : None
     dst:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        lif     : filter/any
-    flow: filter/any
+        tenant  : None
+        segment : None
+        endpoint: None
+        lif     : None
+    flow: None
     rdma:
-        lqpair  : filter/any # Local QPair
-        rqpair  : filter/any # Remote QPair
-        session : filter/any 
+        lqpair  : None # Local QPair
+        rqpair  : None # Remote QPair
+        session : None 
 
 packets      : None # Database packet objects for this testcase.
 descriptors  : None # Database

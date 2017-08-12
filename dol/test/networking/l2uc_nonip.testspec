@@ -1,14 +1,14 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
     dst:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
-    flow        : filter/fwtype=L2,type=MAC
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=MAC
     maxflows    : None
 
 packets:

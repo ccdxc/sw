@@ -1,21 +1,23 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
     dst:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
-    flow        : filter/fwtype=L2,type=IPV6,proto=ICMPV6
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=IPV4,proto=TCP
     maxflows    : None
 
 packets:
     - packet:
         id          : PKT1     # Input packet 1
+        #headers     : callback://networking/packets/AddIngressHeadersByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV6_ICMPV6
+        #template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -24,14 +26,13 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv6:
+            ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : callback://networking/packets/GetIpv4Ttl
-            icmpv6:
-                #code    : ref://testcase/config/flow/icmpcode
-                #type    : ref://testcase/config/flow/icmptype
-                #id      : ref://testcase/config/flow/icmpid
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

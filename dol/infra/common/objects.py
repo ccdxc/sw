@@ -479,7 +479,10 @@ class FilterField(FrameworkFieldObject):
             assert(len(params) == 2)
             self.filters.append((params[0], params[1]))
         return
-
+    def Extend(self, filter_str):
+        obj = TemplateFieldObject(filter_str)
+        self.filters.extend(obj.filters)
+        return
 
 class TspecReferenceFied(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -699,7 +702,7 @@ TemplateFieldValueToObject = {
         'pcount': 1,
     },
 
-    'filter': {
+    'filter://': {
         'object': FilterField,
         'pcount': 1,
     },

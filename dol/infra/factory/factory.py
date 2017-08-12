@@ -29,14 +29,14 @@ def init():
     memfactory.init()
     return
 
-def Generate(fwdata):
-    for flow in fwdata.CfgFlows:
+def Generate(infra_data, module):
+    for flow in infra_data.Flows:
         tcid = TestCaseIdAllocator.get()
         if GlobalOptions.tcid != None:
             gl_opt_tcid = utils.ParseInteger(GlobalOptions.tcid)
             if gl_opt_tcid != tcid:
                 continue
-        tc = testcase.TestCase(tcid, flow, fwdata)
-        fwdata.TestCases.append(tc)
+        tc = testcase.TestCase(tcid, flow, infra_data, module)
+        infra_data.TestCases.append(tc)
     return defs.status.SUCCESS
 

@@ -1,48 +1,56 @@
 # This file contains the list of DOL test modules.
 modules:
     - module:
+        enable  : True
         name    : PKT_TO_PKT_MATCH
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt.testspec
 
     - module:
+        enable  : True
         name    : PKT_TO_PKT_MISMATCH
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_mismatch.testspec
 
     - module:
+        enable  : True
         name    : PKT_TO_PKT_MISSING
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_missing.testspec
 
     - module:
+        enable  : True
         name    : PKT_TO_PKT_EXTRA
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_extra.testspec
 
     - module:
+        enable  : True
         name    : PKT_TO_PKT
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt.testspec
 
     - module:
+        enable  : True
         name    : PKT_SESSION
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_session.testspec
 
     - module:
+        enable  : True
         name    : PKT_TCP_OPTS
         package : test.examples
         module  : sample
         spec    : sample_pkt_tcp_options.testspec
 
     - module:
+        enable  : True
         name    : PKT_VXLAN
         package : test.examples
         module  : sample

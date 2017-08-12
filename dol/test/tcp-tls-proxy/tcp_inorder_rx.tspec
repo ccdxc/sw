@@ -4,16 +4,16 @@ config_filter:
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any # Local QPair
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+        qpair   : filter://any # Local QPair
     dst:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any 
-    flow        : filter/sip=10.1.0.2,dip=10.1.0.1,proto=TCP,dport=80
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+        qpair   : filter://any 
+    flow        : filter://sip=10.1.0.2,dip=10.1.0.1,proto=TCP,dport=80
 
 state:
     - entry:

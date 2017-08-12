@@ -1,18 +1,21 @@
-# Testcase definition file.
+#! /usr/bin/python3
+# Test Module
+
 import pdb
-import infra.common.defs as defs
+import infra.api.api as InfraApi
 
-def setup (fwdata, usrdata):
-    return defs.status.SUCCESS
+def Setup(infra, module):
+    module.testspec.config_filter.flow.Extend(module.args.flow)
+    return
 
-def verify (fwdata, usrdata):
-    return defs.status.SUCCESS
+def Teardown(infra, module):
+    return
 
-def debug (fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseSetup(tc):
+    return
 
-def teardown (fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseVerify(tc):
+    return
 
-def foo(fwdata, usrdata):
-    return defs.status.SUCCESS
+def TestCaseTeardown(tc):
+    return

@@ -15,38 +15,24 @@ from infra.engine.trigger import TrigExpEngine
 
 global modDB
 
-
 def init():
     global modDB
     modDB = modmgr.ModuleDatabase(module_list_file=GlobalOptions.modlist)
     logger.info("Initializing Trigger Infra.")
     TrigExpEngine.start()
-
     return
 
-
-def AllocUserData():
-    obj = objects.FrameworkObject()
-    obj.spec = None
-    obj.logger = None
-    obj.LockAttributes()
-    return obj
-
-
-def AllocFrameworkData():
+def CreateInfraData():
     # TODO: Parse this object from Template:
     # templates/testobjects/framework_data.template
     obj = objects.FrameworkObject()
-    obj.TestModuleID = None
-    obj.Logger = None
-    obj.Factory = factory
-    obj.TestSpec = None
-    obj.CfgObjectStore = None
-    obj.MemObjectStore = None
-    obj.CfgFlows = None
-    obj.TestCases = []
-    obj.TrigExpEngine = TrigExpEngine
-    obj.UserData = None
+    obj.Logger          = None
+    obj.Factory         = factory
+    obj.ConfigStore     = None
+    obj.Flows           = None
+    obj.TestCases       = []
+    obj.TrigExpEngine   = TrigExpEngine
+    obj.UserData        = None
     obj.LockAttributes()
     return obj
 
@@ -54,9 +40,8 @@ def AllocFrameworkData():
 def main():
     module = modDB.getfirst()
     while module != None:
-        fwdata = AllocFrameworkData()
-        fwdata.UserData = AllocUserData()
-        status = module.main(fwdata)
+        infra_data = CreateInfraData()
+        status = module.main(infra_data)
         module = modDB.getnext()
 
     if GlobalOptions.standalone == True:

@@ -111,11 +111,11 @@ def GetFunctionName():
 
 def LogFunctionBegin(lg):
     lg.debug("BEG: %s()" % inspect.stack()[1][3])
-
-
+    return
+    
 def LogFunctionEnd(lg, status=0):
     lg.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
-
+    return
 
 def log_exception():
     exc_type, exc_value, exc_traceback = sys.exc_info()

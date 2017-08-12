@@ -1,14 +1,14 @@
 # Test Spec
 config:
     filter:
-        SrcTen      : filter/any
-        DstTen      : filter/any
-        SrcSeg      : filter/any
-        DstSeg      : filter/any
-        SrcEP       : filter/any
-        DstEP       : filter/any
-        Flow        : filter/SrcIP=10.1.0.2,DstIP=10.1.0.1
-        RdmaSession : filter/any
+        SrcTen      : filter://any
+        DstTen      : filter://any
+        SrcSeg      : filter://any
+        DstSeg      : filter://any
+        SrcEP       : filter://any
+        DstEP       : filter://any
+        Flow        : filter://SrcIP=10.1.0.2,DstIP=10.1.0.1
+        RdmaSession : filter://any
 
 packets:
     - packet:

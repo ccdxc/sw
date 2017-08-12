@@ -1,21 +1,21 @@
 # Test Spec
 config_filter:
     src:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
     dst:
-        tenant  : filter/overlay=VLAN,type=TENANT
-        segment : filter/any
-        endpoint: filter/remote=True
-    flow        : filter/fwtype=L2,type=IPV4,proto=ICMP
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=IPV4,proto=UDP
     maxflows    : None
 
 packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_ICMP
+        template    : ref://factory/packets/id=ETH_IPV4_UDP
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -28,10 +28,9 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : callback://networking/packets/GetIpv4Ttl
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

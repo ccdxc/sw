@@ -16,8 +16,8 @@ from infra.common.glopts    import GlobalOptions
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 
-MODULE_CB_SETUP     = 'setup'
-MODULE_CB_TEARDOWN  = 'teardown'
+MODULE_CB_SETUP     = 'Setup'
+MODULE_CB_TEARDOWN  = 'Teardown'
 
 class Module:
     def __init__(self, parsedata):
@@ -28,25 +28,26 @@ class Module:
         self.module     = parsedata.module
         self.spec       = parsedata.spec
         self.path       = self.package.replace(".", "/")
-
-        self.TestModuleID = ModuleIdAllocator.get()
-        self.modhdl = None
-        self.fwdata = None
-        self.usrdata = None
+        self.args       = None 
+        if 'args' in parsedata.__dict__:
+            self.args = parsedata.args
+        self.id             = ModuleIdAllocator.get()
+        self.modhdl         = None
+        self.infra_data     = None
         return
 
     def __select_config(self):
         utils.LogFunctionBegin(self.logger)
-        self.fwdata.CfgFlows =\
-                    SessionHelper.GetFlows(self.fwdata.TestSpec.config_filter)
-        self.logger.info("- Selected %d FLOWS" % len(self.fwdata.CfgFlows))
+        self.infra_data.Flows =\
+                    SessionHelper.GetFlows(self.testspec.config_filter)
+        self.logger.info("- Selected %d FLOWS" % len(self.infra_data.Flows))
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 
     def __load_spec(self):
         utils.LogFunctionBegin(self.logger)
         self.logger.info("- Loading TEST SPEC = %s" % self.spec)
-        self.fwdata.TestSpec = testspec.TestSpec(self.path, self.spec)
+        self.testspec = testspec.TestSpecObject(self.path, self.spec)
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 
@@ -63,22 +64,24 @@ class Module:
         self.modhdl = None
         return
 
-    def __module_cb(self, cb):
+    def RunModuleCallback(self, cb):
         if self.modhdl == None:
-            return defs.status.SUCCESS
-        cb_handle = getattr(self.modhdl, cb)
-        assert(cb_handle != None)
-        return cb_handle(self.fwdata, self.usrdata)
+            return
+        if hasattr(self.modhdl, cb):
+            cb_handle = getattr(self.modhdl, cb)
+            assert(cb_handle != None)
+            return cb_handle(self.infra_data, self)
+        return
 
-    def __setup(self):
+    def __setup_callback(self):
         utils.LogFunctionBegin(self.logger)
-        status = self.__module_cb(MODULE_CB_SETUP)
-        utils.LogFunctionEnd(self.logger, status)
-        return status
+        self.RunModuleCallback(MODULE_CB_SETUP)
+        utils.LogFunctionEnd(self.logger)
+        return
 
     def __generate(self):
         utils.LogFunctionBegin(self.logger)
-        status = self.fwdata.Factory.Generate(self.fwdata)
+        status = self.infra_data.Factory.Generate(self.infra_data, self)
         utils.LogFunctionEnd(self.logger, status)
         return status
 
@@ -89,38 +92,36 @@ class Module:
         return
 
     def __execute_testcase(self, testcase):
-        testcase.status = self.fwdata.TrigExpEngine.run_test_case(testcase)
+        testcase.status = self.infra_data.TrigExpEngine.run_test_case(testcase)
         self.__debug_testcase(testcase)
         self.__update_results(testcase)
         return
 
     def __execute(self):
-        for testcase in self.fwdata.TestCases:
+        for testcase in self.infra_data.TestCases:
             self.__execute_testcase(testcase)
         return
 
-    def __teardown(self):
+    def __teardown_callback(self):
         utils.LogFunctionBegin(self.logger)
-        status = self.__module_cb(MODULE_CB_TEARDOWN)
-        utils.LogFunctionEnd(self.logger, status)
-        return defs.status.SUCCESS
+        self.RunModuleCallback(MODULE_CB_TEARDOWN)
+        utils.LogFunctionEnd(self.logger)
+        return
 
-    def main(self, fwdata):
-        fwdata.TestModuleID = self.TestModuleID
-        self.fwdata = fwdata
-        self.usrdata = fwdata.UserData
+    def main(self, infra_data):
+        self.infra_data = infra_data
         self.logger = logging.Logger(level=logging.levels.INFO,
                                      name="MOD:%s" % self.name)
-        self.fwdata.Logger = self.logger
+        self.infra_data.Logger = self.logger
 
         self.logger.info("========== Starting Test Module =============")
         self.__load()
         self.__load_spec()
-        self.__setup()
+        self.__setup_callback()
         self.__select_config()
         self.__generate()
         self.__execute()
-        self.__teardown()
+        self.__teardown_callback()
         self.__unload()
         return
 

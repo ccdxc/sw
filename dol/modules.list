@@ -1,41 +1,52 @@
 # This file contains the list of DOL test modules.
 modules:
     - module:
-        name    : L2UC_UDP
+        name    : L2UC_IPV4_UDP
         enable  : True
         package : test.networking
         module  : networking
-        spec    : l2uc_udp.testspec
+        spec    : l2uc.testspec
+        args    :
+            flow: filter://type=IPV4,proto=UDP
     - module:
-        name    : L2UC_TCP
+        name    : L2UC_IPV4_TCP
         enable  : True
         package : test.networking
         module  : networking
-        spec    : l2uc_tcp.testspec
+        spec    : l2uc.testspec
+        args    :
+            flow: filter://type=IPV4,proto=TCP
     - module:
-        name    : L2UC_ICMP
+        name    : L2UC_IPV4_ICMP
         enable  : False
         package : test.networking
         module  : networking
-        spec    : l2uc_icmp.testspec
+        spec    : l2uc.testspec
+        args    :
+            flow: filter://type=IPV4,proto=ICMP
     - module:
         name    : L2UC_IPV6_UDP
         enable  : True
         package : test.networking
         module  : networking
-        spec    : l2uc_ipv6_udp.testspec
+        spec    : l2uc.testspec
+        args    :
+            flow: filter://type=IPV6,proto=UDP
     - module:
         name    : L2UC_IPV6_TCP
         enable  : True
         package : test.networking
         module  : networking
-        spec    : l2uc_ipv6_tcp.testspec
+        spec    : l2uc.testspec
+        args    :
+            flow: filter://type=IPV6,proto=TCP
     - module:
         name    : L2UC_NONIP
         enable  : False
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
+        args    : None
     - module:
         name    : NORMALIZATION
         enable  : False
