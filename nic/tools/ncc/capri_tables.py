@@ -3853,6 +3853,9 @@ class capri_table_mapper:
 
     def get_next_unplaced_table(self, tables, i):
         for i in range(i+1, len(tables)):
+            if tables[i]['width'] <= 0 or tables[i]['depth'] <= 0:
+                continue
+
             if not tables[i]['layout']:
                 return i
 
@@ -4114,35 +4117,42 @@ class capri_table_mapper:
         return
 
     def map_sram_tables(self, region):
-
         mem_type = 'sram'
         tables = self.tables[mem_type][region]
         memory = self.memory[mem_type][region]
 
         memory['space'] = [[0 for x in range(memory['width'])] for y in range(memory['depth'])]
 
-        self.place_sram_table(region, {'top':0, 'left':0}, 0, tables[0]['width'], tables[0]['depth'],
+        i = self.get_next_unplaced_table(tables, -1)
+        self.place_sram_table(region, {'top':0, 'left':0}, i, tables[i]['width'], tables[i]['depth'],
                               memory['width'], memory['depth'])
 
     def map_hbm_tables(self, region):
+        mem_type = 'hbm'
+        tables = self.tables[mem_type][region]
+
         start_pos = 0
-        for rgn in sorted(self.memory['hbm']):
+        for rgn in sorted(self.memory[mem_type]):
             if rgn == region:
                 break;
-            start_pos += self.memory['hbm'][rgn]['depth']
+            start_pos += self.memory[mem_type][rgn]['depth']
 
         current_pos = start_pos
-        end_pos = start_pos + self.memory['hbm'][region]['depth']
-        for table in self.tables['hbm'][region]:
+        end_pos = start_pos + self.memory[mem_type][region]['depth']
+
+        i = self.get_next_unplaced_table(tables, -1)
+        while i < len(tables):
+            table = tables[i]
             table_size = table['width'] * table['depth']
             if end_pos < current_pos + table_size:
                 self.logger.critical("map_hbm_tables(): No space in %s region for table %s" % (region, table['name']))
-                return
+            else:
+                table['layout'] = OrderedDict()
+                table['layout']['top_left'] = {'block' : 0, 'x' : current_pos, 'y' : 0}
+                table['layout']['bottom_right'] = {'block' : 0, 'x' : current_pos + table_size - 1, 'y' : 0}
+                current_pos += table_size
 
-            table['layout'] = OrderedDict()
-            table['layout']['top_left'] = {'block' : 0, 'x' : current_pos, 'y' : 0}
-            table['layout']['bottom_right'] = {'block' : 0, 'x' : current_pos + table_size - 1, 'y' : 0}
-            current_pos += table_size
+            i = self.get_next_unplaced_table(tables, i)
 
         return
 
