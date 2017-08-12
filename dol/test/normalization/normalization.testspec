@@ -1,47 +1,62 @@
 # Test Spec
-config:
-    filter:
-        Flow        : filter/SrcIP=10.1.0.2,DstIP=10.1.0.1
-    objects:
-        - entry:
-            object: ref://store/objects/tenants/id=TEN1
-            secprofile: ref://store/objects/secprofiles/id=SP1
-        
+config_filter:
+    src:
+        tenant  : filter/overlay=VLAN,type=TENANT
+        segment : filter/any
+        endpoint: filter/remote=True
+    dst:
+        tenant  : filter/overlay=VLAN,type=TENANT
+        segment : filter/any
+        endpoint: filter/remote=True
+    flow        : filter/fwtype=L2,type=IPV4,proto=UDP
+    maxflows    : None
 
-#Associate security profile (SP1) to the tenant (Tenant1)
-#
 packets:
     - packet:
-        id          : PKT1     # Input packet 1
-        payloadsize : random/64/128
-        template    : ref://factory/packets/id=ETH_QTAG_IPV4_TCP
+        id          : BASE_PKT  # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
-                flags   : df
-    
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetIpv4Ttl
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
     - packet:
-        id          : PKT2     # Input packet 1
-        payloadsize : random/64/128
-        template    : ref://factory/packets/id=ETH_QTAG_IPV4_TCP
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
-            ipv4:
-                flags   : 0
+            ipv4    :
+                flags   :   4
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1
-            port    : 1
+    - packet:
+        id          : PKT2     # Input packet 2
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            ipv4    :
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT2
-            port    : 1
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1
+                    port    : ref://testcase/config/src/endpoint/intf/ports
 
-teardown:
-    objects:
-        - entry:
-            object: ref://store/objects/tenants/id=TEN1
-            secprofile: None
-
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : ref://testcase/config/dst/endpoint/intf/ports

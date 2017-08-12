@@ -9,17 +9,17 @@ NormalizationAction {
 '''
 
 knobs_list = [
-    ('bool', 'cnxn_tracking_en', '3'),
-    ('bool', 'ipsg_en', '4'),
-    ('bool', 'tcp_rtt_estimate_en', '5'),
+#    ('bool', 'cnxn_tracking_en', '3'),
+#    ('bool', 'ipsg_en', '4'),
+#    ('bool', 'tcp_rtt_estimate_en', '5'),
 #    ('uint32', 'session_idle_timeout', '6'),
 #    ('uint32', 'tcp_cnxn_setup_timeout', '7'),
 #    ('uint32', 'tcp_close_timeout', '8'),
 #    ('uint32', 'tcp_close_wait_timeout', '9'),
 ####
-    ('bool', 'ip_normalization_en', '10'),
-    ('bool', 'tcp_normalization_en', '11'),
-    ('bool', 'icmp_normalization_en', '12'),
+#    ('bool', 'ip_normalization_en', '10'),
+#    ('bool', 'tcp_normalization_en', '11'),
+#    ('bool', 'icmp_normalization_en', '12'),
 # IP normalization knobs
     ('bool', 'ip_ttl_change_detect_en', '20'),
     ('NormalizationAction', 'ip_rsvd_flags_action', '21'),
@@ -51,9 +51,41 @@ knobs_list = [
     ('bool', 'tcp_invalid_flags_drop', '56'),
     ('bool', 'tcp_flags_nonsyn_noack_drop', '57')]
 
+print 'meta:'
+print '    id: SECURITY_PROFILES'
+print
+print 'profiles:'
+print '    - id: SEC_PROF_DEFAULT'
+print '        fields:'
+print
+
+drop_id_offset = 100
+edit_id_offset = 200
+
 for knob in knobs_list:
     (type, knob, num) = knob
     if type == 'bool':
-        print knob + ': ' + '1'
+        print '    - id: SEC_PROF_%s' % (num)
+        print '        fields:'
+        print '            %s: ALLOW' % (knob)
+        print
+        print '    - id: SEC_PROF_%d' % (int(drop_id_offset) + int(num))
+        print '        fields:'
+        print '            %s: DROP' % (knob)
+        print
     elif type == 'NormalizationAction':
-        print knob + ': ' + 'ALLOW'
+        print '    - id: SEC_PROF_%s' % (num)
+        print '        fields:'
+        print '            %s: ALLOW' % (knob)
+        print
+        print '    - id: SEC_PROF_%d' % (int(drop_id_offset) + int(num))
+        print '        fields:'
+        print '            %s: DROP' % (knob)
+        print
+        print '    - id: SEC_PROF_%d' % (int(edit_id_offset) + int(num))
+        print '        fields:'
+        print '            %s: EDIT' % (knob)
+        print
+
+
+

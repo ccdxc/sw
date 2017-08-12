@@ -2,17 +2,22 @@
 meta:
     id: SECURITY_PROFILE
 
-cnxn_tracking_en: 1
-ipsg_en: 1
-tcp_rtt_estimate_en: 1
+cnxn_tracking_en: 0
+ipsg_en: 0
+tcp_rtt_estimate_en: 0
+session_idle_timeout: 0
+tcp_cnxn_setup_timeout: 0
+tcp_close_timeout: 0
+tcp_close_wait_timeout: 0
 ip_normalization_en: 1
 tcp_normalization_en: 1
 icmp_normalization_en: 1
 ip_ttl_change_detect_en: 1
-ip_rsvd_flags_action: ALLOW
+ip_rsvd_flags_action: DROP
 ip_df_action: ALLOW
 ip_options_action: ALLOW
 ip_invalid_len_action: ALLOW
+ip_normalize_ttl: 64
 icmp_invalid_code_action: ALLOW
 icmp_deprecated_msgs_drop: 1
 icmp_redirect_msg_drop: 1

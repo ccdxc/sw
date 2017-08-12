@@ -52,9 +52,10 @@ class Module:
 
     def __load(self):
         utils.LogFunctionBegin(self.logger)
-        module_name = "%s.%s" % (self.parsedata.package, self.module)
-        self.modhdl = importlib.import_module(module_name)
-        assert(self.modhdl)
+        if self.module:
+            module_name = "%s.%s" % (self.parsedata.package, self.module)
+            self.modhdl = importlib.import_module(module_name)
+            assert(self.modhdl)
         utils.LogFunctionEnd(self.logger)
 
     def __unload(self):
@@ -63,6 +64,8 @@ class Module:
         return
 
     def __module_cb(self, cb):
+        if self.modhdl == None:
+            return defs.status.SUCCESS
         cb_handle = getattr(self.modhdl, cb)
         assert(cb_handle != None)
         return cb_handle(self.fwdata, self.usrdata)

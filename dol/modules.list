@@ -36,3 +36,9 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
+    - module:
+        name    : NORMALIZATION
+        enable  : False
+        package : test.normalization
+        module  : None
+        spec    : normalization.testspec
