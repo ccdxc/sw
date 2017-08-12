@@ -2006,7 +2006,8 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
             decoder = m.group(1)
             idx = int(m.group(2))
             if idx > (len(mems[decoder]['entries']) - 1):
-                pass
+                # entry does not exist in the decode, skip it
+                continue
             else:
                 result = [data, 0]
                 _decode_mem(mems[decoder]['entries'][int(idx)], result)
@@ -2042,8 +2043,8 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
             continue
 
         while width > 0:
-#           print '0x%08x 0x%08x %s\n' % \
-#                       (addr_offset, data & 0xFFFFFFFF, name)
+#            print '0x%08x 0x%08x %s' % \
+#                (addr_offset, data & 0xFFFFFFFF, name)
             cfg_out_fp.write(struct.pack('II', addr_offset, data & 0xFFFFFFFF))
             data = data >> 32
             width -= 32
