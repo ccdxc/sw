@@ -698,7 +698,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->tlscb_slab()->free_(elem);
         break;
 
-   case HAL_SLAB_TCPCB_PD:
+    case HAL_SLAB_TCPCB_PD:
         g_hal_state_pd->tcpcb_slab()->free_(elem);
         break;
 
