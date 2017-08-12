@@ -193,7 +193,9 @@ struct ${table}_${actionname}_d {
 
 //::        if len(pddict['tables'][table]['actions']) > 1:
 struct ${table}_d {
-    action_id : 8; /* TBD: Does this need to go after listing all actions? */
+//::            if not (pddict['tables'][table]['is_raw']):
+    action_id : 8;
+//::            #endif
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action

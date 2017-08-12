@@ -54,6 +54,9 @@ struct __attribute__((__packed__)) ${table}_${actionname}_d {
 
 //::        if len(pddict['tables'][table]['actions']) > 1:
 struct __attribute__((__packed__)) ${table}_d {
+//::            if not (pddict['tables'][table]['is_raw']):
+    uint64_t action_id : 8;
+//::            #endif
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action

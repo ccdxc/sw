@@ -638,6 +638,20 @@ class capri_p4pd:
                 for kbit in pad_list:
                     ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
         
+    def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
+        covered_bits = 0
+        for k, v  in ki_or_kd_to_cf_map.items():
+            if len(v) > 1:
+                max_width = 0
+                for dict_cfs in v:
+                    (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                    if width_ > max_width:
+                        max_width = width_
+                covered_bits = k + max_width
+            else:
+                # check if this field is already covered
+                if k < covered_bits:
+                    del ki_or_kd_to_cf_map[k] 
 
     def build_table_asm_hwformat(self, ctable, kd=0):
         '''
@@ -661,6 +675,7 @@ class capri_p4pd:
         else:
             is_tcam = 0
         bit_extractors = []
+
         for km_inst, km in enumerate(ctable.key_makers):
             km_start_byte = km_inst * (km_width/8)
             if not km.combined_profile:
@@ -919,6 +934,8 @@ class capri_p4pd:
         # remove any duplicate cf that are extracted as bit as well as
         # byte or multibit in a byte
         self.remove_duplicate_cfs(ki_or_kd_to_cf_map, bit_extractors, is_tcam)
+        # purge pad bits that appeared with in a union and outside union
+        self.purge_duplicate_pad(ki_or_kd_to_cf_map)
         return ki_or_kd_to_cf_map
 
 
@@ -1116,6 +1133,11 @@ class capri_p4pd:
                 tdict['type'] = 'Hash'
 
             tdict['direction'] = "INGRESS" if ctable.d == xgress.INGRESS else "EGRESS"
+            if self.be.args.p4_plus:
+                tdict['is_raw'] = ctable.is_raw
+            else:
+                tdict['is_raw'] = False
+
             alltables[table_name] = tdict
 
         self.pddict['tables'] = alltables
