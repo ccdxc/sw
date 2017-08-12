@@ -68,7 +68,7 @@ capri_p4_asm_init()
     }
 
     p4_prm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
-    HAL_TRACE_DEBUG("base addr {#x}", p4_prm_base_addr);
+    HAL_TRACE_DEBUG("base addr {:#x}", p4_prm_base_addr);
     capri_load_mpu_programs((char *)full_path.c_str(), p4_prm_base_addr, NULL, 0);
 
     return ret;
