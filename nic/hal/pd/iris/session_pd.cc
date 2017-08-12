@@ -14,6 +14,8 @@
 #include <endpoint_pd.hpp>
 #include <hal_state_pd.hpp>
 #include <defines.h>
+#include <string.h>
+
 
 namespace hal {
 namespace pd {
@@ -486,26 +488,37 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
     p4pd_flow_hash_data_t    flow_data;
+    fmt::MemoryWriter src_buf, dst_buf;
 
     // initialize all the key fields of flow
-    memcpy(key.flow_lkp_metadata_lkp_src, flow->key.sip.v6_addr.addr8,
-           IP6_ADDR8_LEN);
-    memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dip.v6_addr.addr8,
-           IP6_ADDR8_LEN);
+    if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {
+        memcpy(key.flow_lkp_metadata_lkp_src, flow->key.sip.v6_addr.addr8,
+                IP6_ADDR8_LEN);
+        memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dip.v6_addr.addr8,
+                IP6_ADDR8_LEN);
+    } else {
+        memcpy(key.flow_lkp_metadata_lkp_src, flow->key.smac, sizeof(flow->key.smac)); 
+        memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dmac, sizeof(flow->key.dmac)); 
+    }
 
     if (flow->key.flow_type == FLOW_TYPE_V6) {
         memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
         memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
     }
 
-    if ((flow->key.proto == IP_PROTO_TCP) || (flow->key.proto == IP_PROTO_UDP)) {
-        key.flow_lkp_metadata_lkp_sport = flow->key.sport;
-        key.flow_lkp_metadata_lkp_dport = flow->key.dport;
-    } else if ((flow->key.proto == IP_PROTO_ICMP) ||
-               (flow->key.proto == IP_PROTO_ICMPV6)) {
-        key.flow_lkp_metadata_lkp_sport = flow->key.icmp_id;
-        key.flow_lkp_metadata_lkp_dport =
-            ((flow->key.icmp_type << 8) | flow->key.icmp_code);
+    if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {
+        if ((flow->key.proto == IP_PROTO_TCP) || (flow->key.proto == IP_PROTO_UDP)) {
+            key.flow_lkp_metadata_lkp_sport = flow->key.sport;
+            key.flow_lkp_metadata_lkp_dport = flow->key.dport;
+        } else if ((flow->key.proto == IP_PROTO_ICMP) ||
+                (flow->key.proto == IP_PROTO_ICMPV6)) {
+            key.flow_lkp_metadata_lkp_sport = flow->key.icmp_id;
+            key.flow_lkp_metadata_lkp_dport =
+                ((flow->key.icmp_type << 8) | flow->key.icmp_code);
+        }
+    } else {
+        // For FLOW_TYPE_L2
+        key.flow_lkp_metadata_lkp_sport = flow->key.ether_type;
     }
     if (flow->key.flow_type == FLOW_TYPE_L2) {
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
@@ -524,6 +537,16 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = FALSE;    // TODO: when analytics APIs are ready,
                                     // set this appropriately
+    for (uint32_t i = 0; i < 16; i++) {
+        src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);
+    }
+    HAL_TRACE_DEBUG("Src:");
+    HAL_TRACE_DEBUG(src_buf.c_str());
+    for (uint32_t i = 0; i < 16; i++) {
+        dst_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_dst[i]);
+    }
+    HAL_TRACE_DEBUG("Dst:");
+    HAL_TRACE_DEBUG(dst_buf.c_str());
     ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
                                                &flow_pd->flow_hash_hw_id);
     if (ret != HAL_RET_OK) {

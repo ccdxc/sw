@@ -30,3 +30,9 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_ipv6_tcp.testspec
+    - module:
+        name    : L2UC_NONIP
+        enable  : False
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec

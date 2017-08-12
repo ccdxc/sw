@@ -48,16 +48,18 @@ class EndpointObject(base.ConfigObjectBase):
         self.security_groups = []
 
         self.useg_vlan_id = 0
-        #self.attachment = self.tenant.spec.endpoints.attachment[0].entry.type
         return
 
     def SetRemote(self):
         self.remote = True
-
+        return
+    
     def GetIpAddress(self, idx = 0):
         return self.ipaddrs[idx]
+    
     def GetIpv6Address(self, idx = 0):
         return self.ipv6addrs[idx]
+    
     def GetInterface(self):
         return self.intf
 

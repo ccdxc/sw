@@ -19,9 +19,10 @@ service Session {
 
 // Key for L2 flows (i.e, non-IP flows)
 message FlowKeyL2 {
-  fixed64    smac  = 1;            // source MAC address
-  fixed64    dmac  = 2;            // destination MAC address
-  uint32     l2_segment_id = 3;    // L2 segment id
+  fixed64    smac           = 1;   // source MAC address
+  fixed64    dmac           = 2;   // destination MAC address
+  uint32     ether_type     = 4;   // ether type 
+  uint32     l2_segment_id  = 3;   // L2 segment id
 }
 
 message FlowKeyTcpUdpInfo {

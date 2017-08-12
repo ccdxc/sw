@@ -216,7 +216,13 @@ class TriggerFieldCompareResult(objects.FrameworkObject):
 def PacketCompare(expected, actual, partial_match=None):
 
     def _get_layers(spkt):
-        return [header.strip().split(" ")[0] for header in spkt.summary().split("/")]
+        hdrs = []
+        p = spkt
+        while p.name != 'NoPayload':
+            hdrs.append(p.__class__.__name__)
+            p = p.payload
+        return hdrs
+        #return [header.strip().split(" ")[0] for header in spkt.summary().split("/")]
 
     result = PacketCompareResult()
 

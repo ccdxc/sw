@@ -39,31 +39,29 @@ class FlowObject(base.ConfigObjectBase):
 
         # Initialize Externally Visible Fields
         self.domid = sfep.dom
-        self.__init_addrs()
-        self.__init_l4_info()
+        self.__init_key()
         return
 
-    def __init_addrs(self):
+    def __init_key(self):
         if self.IsIP():
             self.sip = self.sfep.addr
             self.dip = self.dfep.addr
             assert(self.sfep.proto == self.dfep.proto)
             self.proto = self.sfep.proto
-        elif self.IsL2():
+            if self.HasL4Ports():
+                self.sport = self.sfep.port
+                self.dport = self.dfep.port
+            elif self.IsICMP():
+                self.icmpid     = self.sfep.icmp_id
+                self.icmptype   = self.sfep.icmp_type
+                self.icmpcode   = self.sfep.icmp_code
+        elif self.IsMAC():
             self.smac = self.sfep.addr
             self.dmac = self.dfep.addr
+            self.ethertype = self.sfep.ethertype
         else:
             assert(0)
-        return
 
-    def __init_l4_info(self):
-        if self.HasL4Ports():
-            self.sport = self.sfep.port
-            self.dport = self.dfep.port
-        elif self.IsICMP():
-            self.icmpid     = self.sfep.icmp_id
-            self.icmptype   = self.sfep.icmp_type
-            self.icmpcode   = self.sfep.icmp_code
         return
 
     def IsIPV4(self):
@@ -75,7 +73,7 @@ class FlowObject(base.ConfigObjectBase):
     def IsIP(self):
         return self.IsIPV4() or self.IsIPV6()
 
-    def IsL2(self):
+    def IsMAC(self):
         return self.type == 'MAC'
 
     def IsICMP(self):
@@ -126,10 +124,11 @@ class FlowObject(base.ConfigObjectBase):
         return hal_ipproto
 
     def PrepareHALRequestSpec(self, req_spec):
-        if self.IsL2():
+        if self.IsMAC():
             req_spec.flow_key.l2_key.smac = self.smac.getnum()
             req_spec.flow_key.l2_key.dmac = self.dmac.getnum()
-            req_spec.flow_key.l2_key.l2_segment_id = self.sseg.ID()
+            req_spec.flow_key.l2_key.l2_segment_id = self.sseg.id
+            req_spec.flow_key.l2_key.ether_type = self.ethertype
         elif self.IsIPV4():
             req_spec.flow_key.v4_key.sip = self.sip.getnum()
             req_spec.flow_key.v4_key.dip = self.dip.getnum()
@@ -158,11 +157,16 @@ class FlowObject(base.ConfigObjectBase):
         else:
             string += "%d/%s/%s/" % (self.domid, self.smac.get(), self.dmac.get())
 
-        string += "%s/" % self.proto
-        if self.HasL4Ports():
-            string += "%d/%d" % (self.sport, self.dport)
+        if self.proto: string += "%s/" % self.proto
+        if self.IsIP():
+            if self.HasL4Ports():
+                string += "%d/%d" % (self.sport, self.dport)
+            elif self.IsICMP():
+                string += "%d/%d/%d" % (self.icmptype, self.icmpcode, self.icmpid)
+        elif self.IsMAC():
+            string += "%04x" % (self.ethertype)
         else:
-            string += "%d/%d/%d" % (self.icmptype, self.icmpcode, self.icmpid)
+            assert(0)
         return string
 
     def IsFilterMatch(self, config_filter):

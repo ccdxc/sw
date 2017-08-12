@@ -26,6 +26,13 @@ bool
 ep_compare_l2_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    HAL_TRACE_DEBUG("key1.l2_segid {}, key2.l2_segid {}",
+                    ((ep_l2_key_t *)key1)->l2_segid,
+                    ((ep_l2_key_t *)key2)->l2_segid);
+    HAL_TRACE_DEBUG("key1.mac {}, key2.mac {}",
+                    macaddr2str(((ep_l2_key_t *)key1)->mac_addr),
+                    macaddr2str(((ep_l2_key_t *)key2)->mac_addr));
+
     if (!memcmp(key1, key2, sizeof(ep_l2_key_t))) {
         return true;
     }

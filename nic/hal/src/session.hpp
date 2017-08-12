@@ -66,6 +66,7 @@ typedef struct flow_key_s {
             l2seg_id_t    l2seg_id;          // L2 segment
             mac_addr_t    smac;              // source MAC address of flow
             mac_addr_t    dmac;              // destination MAC address of flow
+            uint16_t      ether_type;        // ether type
         } __PACK__;
 
         // IPv4/IPv6 flow key information

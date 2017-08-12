@@ -65,7 +65,20 @@ class SessionObject(base.ConfigObjectBase):
 class SessionObjectHelper:
     def __init__(self):
         self.objlist = []
+        self.gid_pairs = {}
         return
+
+    def __add_gid_pair(self, gid1, gid2):
+        key = "%s__TO__%s" % (gid1, gid2)
+        self.gid_pairs[key] = True
+        return
+
+    def __is_gid_pair_done(self, gid1, gid2):
+        key1 = "%s__TO__%s" % (gid1, gid2)
+        key2 = "%s__TO__%s" % (gid2, gid1)
+        if key1 in self.gid_pairs or key2 in self.gid_pairs:
+            return True
+        return False
 
     def __process_multidest(self, src_ep, dst_ep):
         return
@@ -74,12 +87,17 @@ class SessionObjectHelper:
         for ref in refs:
             spec = ref.Get(Store)
             assert(spec)
-            proto = spec.proto.upper()
-            flowep1.proto = proto
-            flowep2.proto = proto
+            if spec.proto:
+                proto = spec.proto.upper()
+                flowep1.proto = proto
+                flowep2.proto = proto
+            else:
+                flowep1.proto = None
+                flowep2.proto = None
+
             for t in spec.entries:
-                flowep1.set_l4_info(t.entry.initiator)
-                flowep2.set_l4_info(t.entry.responder)
+                flowep1.SetInfo(t.entry.initiator)
+                flowep2.SetInfo(t.entry.responder)
                 session = SessionObject()
                 session.Init(copy.copy(flowep1),
                              copy.copy(flowep2))
@@ -114,10 +132,26 @@ class SessionObjectHelper:
                 self.__process_session_specs(flowep1, flowep2, entries)
         return
 
+    def __process_mac(self, flowep1, flowep2, entries):
+        flowep1.type = 'MAC'
+        flowep2.type = 'MAC'
+        seg1 = flowep1.ep.segment
+        seg2 = flowep2.ep.segment
+
+        if seg1 != seg2: return
+        if self.__is_gid_pair_done(flowep1.ep.GID(), flowep2.ep.GID()): return
+
+        flowep1.dom = flowep1.ep.segment.id
+        flowep2.dom = flowep2.ep.segment.id
+        
+        flowep1.addr = flowep1.ep.macaddr
+        flowep2.addr = flowep2.ep.macaddr
+        self.__process_session_specs(flowep1, flowep2, entries)
+        self.__add_gid_pair(flowep1.ep.GID(), flowep2.ep.GID())
+        return
+
     def __process_unidest(self, ep1, ep2):
-        seg1 = ep1.segment
         ten1 = ep1.tenant
-        seg2 = ep2.segment
         ten2 = ep2.tenant
 
         assert(ten1 == ten2)
@@ -137,9 +171,9 @@ class SessionObjectHelper:
             entries = tenant.spec.sessions.unidest.ipv6
             self.__process_ipv6(flowep1, flowep2, entries)
 
-        #if tenant.spec.sessions.unidest.l2:
-        #    entries = tenant.spec.sessions.unidest.l2
-        #    sessions += __process_unidest_type(src_ep, dst_ep, entries)
+        if tenant.spec.sessions.unidest.mac:
+            entries = tenant.spec.sessions.unidest.mac
+            self.__process_mac(flowep1, flowep2, entries)
         return
 
 

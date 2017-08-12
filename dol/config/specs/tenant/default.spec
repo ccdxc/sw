@@ -29,7 +29,7 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_BASIC
             - ref://store/specs/id=SESSION_UDP_BASIC
             - ref://store/specs/id=SESSION_ICMPV6_BASIC
-        l2:
+        mac:
             - ref://store/specs/id=SESSION_MAC_BASIC
 
     multidest:
@@ -40,7 +40,7 @@ sessions:
         ipv6:
             - ref://store/specs/id=SESSION_L2MC_BASIC
             - ref://store/specs/id=SESSION_L2BC_BASIC
-        l2:
+        mac:
             - ref://store/specs/id=SESSION_L2MC_BASIC
             - ref://store/specs/id=SESSION_L2BC_BASIC
 

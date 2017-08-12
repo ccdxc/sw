@@ -147,7 +147,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
 	rs = alloc_flow_entry_index_(&fe_idx);
 	if (rs != HAL_RET_OK) goto end;
 
-    HAL_TRACE_DEBUG("Flow::{}: Insert {} ", __FUNCTION__, fe_idx);
+    HAL_TRACE_DEBUG("Flow::{}: Insert flow_entry_pi_idx: {} ", 
+                    __FUNCTION__, fe_idx);
 
     // create a flow entry
     entry = new FlowEntry(key, key_len_, data, data_len_);
@@ -172,7 +173,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
     // check if flow table entry exists
     ft_bits = fetch_flow_table_bits_(hash_val);
     itr = flow_table_.find(ft_bits);
-    HAL_TRACE_DEBUG("Flow::{}: hash_val: {}, ft_bits: {}", 
+    HAL_TRACE_DEBUG("Flow::{}: hash_val: {}, flow_table_index: {}", 
                     __FUNCTION__, hash_val, ft_bits);
     if (itr != flow_table_.end()) {
         // flow table entry already exists
@@ -307,9 +308,14 @@ Flow::generate_hash_(void *key, uint32_t key_len)
 	uint32_t hash_val = 0;
 	uint32_t crc_init_val = 0x00000000;
 	boost::crc_basic<32> *crc_hash;
-    // TODO - Replace this with whatever hardware implements
-    // return crc32((uint32_t)HAL_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key, 
-    //        (uint32_t)key_len) % dleft_capacity_;
+    fmt::MemoryWriter buf;
+
+    uint8_t *tmp = (uint8_t *)key;
+    for (uint32_t i = 0; i < key_len; i++, tmp++) {
+        buf.write("{:#x} ", (uint8_t)*tmp);
+    }
+    HAL_TRACE_DEBUG("Key:");
+    HAL_TRACE_DEBUG(buf.c_str());
 
     uint8_t *tmp_key = (uint8_t *)key;
      HAL_TRACE_DEBUG("Key: ");
@@ -348,8 +354,10 @@ Flow::generate_hash_(void *key, uint32_t key_len)
 
 end:
 	delete crc_hash;
+#if 0
     HAL_TRACE_DEBUG("Flow::{}: flow_hash: {}, ft_capacity: {}", 
                     __FUNCTION__, hash_val, flow_hash_capacity_);
+#endif
     return hash_val;
 }
 

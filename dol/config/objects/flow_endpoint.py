@@ -41,11 +41,17 @@ class FlowEndpointObject:
         self.icmp_id = entry.id.get()
         return
 
-    def set_l4_info(self, entry):
+    def __set_mac_info(self, entry):
+        self.ethertype = entry.ethertype
+        return
+
+    def SetInfo(self, entry):
         if self.proto == 'TCP' or self.proto == 'UDP':
             self.__set_tcpudp_info(entry)
         elif self.proto == 'ICMP' or self.proto == 'ICMPV6':
             self.__set_icmp_info(entry)
+        elif self.type == 'MAC':
+            self.__set_mac_info(entry)
         else:
             assert(0)
         return
@@ -53,10 +59,13 @@ class FlowEndpointObject:
     def __str__(self):
         string = self.type + '/'
         string += "%d/%s/" % (self.dom, self.addr.get())
-        string += "%s/" % self.proto
         if self.proto == 'TCP' or self.proto == 'UDP':
+            string += "%s/" % self.proto
             string += "%d" % (self.port)
-        else:
+        elif self.proto == 'ICMP' or self.proto == 'ICMPV6':
+            string += "%s/" % self.proto
             string += "%d/%d/%d" % (self.icmp_type, self.icmp_code, self.icmp_id)
+        elif self.type == 'MAC':
+            string += "%04x" % self.ethertype
         return string
 

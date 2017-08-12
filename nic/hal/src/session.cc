@@ -131,6 +131,7 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
     if (flow_spec_key.has_l2_key()) {
         flow_key->flow_type = FLOW_TYPE_L2;
         flow_key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
+        flow_key->ether_type = flow_spec_key.l2_key().ether_type();
         MAC_UINT64_TO_ADDR(flow_key->smac, flow_spec_key.l2_key().smac());
         MAC_UINT64_TO_ADDR(flow_key->dmac, flow_spec_key.l2_key().dmac());
 
@@ -264,7 +265,8 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
                                  mac_addr);
         if (*sep == NULL) {
             HAL_TRACE_ERR("Src EP with key ({}, {}) not found",
-                          tid, macaddr2str(mac_addr));
+                          flow_key.l2_key().l2_segment_id(),
+                          macaddr2str(mac_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
 
@@ -273,7 +275,8 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
                                  mac_addr);
         if (*dep == NULL) {
             HAL_TRACE_ERR("Dst EP with key ({}, {}) not found",
-                          tid, macaddr2str(mac_addr));
+                          flow_key.l2_key().l2_segment_id(),
+                          macaddr2str(mac_addr));
             return HAL_RET_EP_NOT_FOUND;
         }
         return HAL_RET_OK;
