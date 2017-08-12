@@ -270,6 +270,7 @@ class capri_p4pd:
         cf_table_ilist = ctable.input_fields
         km_width = self.be.hw_model['match_action']['key_maker_width']
         match_key_start_byte = ctable.start_key_off / 8
+        match_key_start_bit = ctable.start_key_off
 
         for km_inst, km in enumerate(ctable.key_makers):
             km_start_byte = km_inst * (km_width/8) #Each Key maker has 256bits
@@ -495,6 +496,7 @@ class capri_p4pd:
         kdict['cf_to_km_byte']          = tbl_cf_to_km_byte_map
         kdict['cf_to_km_bit']           = tbl_cf_to_km_bit_map
         kdict['match_key_start_byte']   = match_key_start_byte
+        kdict['match_key_start_bit']    = match_key_start_bit
         kdict['match_key_len']          = match_key_len
         kdict['not_my_key_bytes']       = not_my_key_bytes
         kdict['not_my_key_bits']        = not_my_key_bits
@@ -591,6 +593,7 @@ class capri_p4pd:
             kdict['not_my_key_bytes']       = []
             kdict['not_my_key_bits']        = []
             kdict['match_key_start_byte']   = 0
+            kdict['match_key_start_bit']   = 0
             kdict['match_key_len']          = 0
             kdict['km_byte_to_cf']          = []
             kdict['km_bit_to_cf']           = []
@@ -1104,6 +1107,7 @@ class capri_p4pd:
             tdict['hdrunion_keys'] = keydict['hdr_u_keys']
             tdict['keysize'] = keydict['keysize']
             tdict['match_key_start_byte'] = keydict['match_key_start_byte']
+            tdict['match_key_start_bit'] = keydict['match_key_start_bit']
             tdict['match_key_bit_length'] = keydict['match_key_len']
             # Not my key bytes and bits will NOT be NULL when
             # KeyMaker is shared by 2 TCAM tables. KM logic
