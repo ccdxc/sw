@@ -14,7 +14,8 @@ const auto LOG_OVERFLOW_POLICY = spdlog::async_overflow_policy::block_retry;
 logger& hal_logger() {
     static std::shared_ptr<spdlog::logger> _logger = []{
         spdlog::set_level(spdlog::level::debug);
-        //spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY);
+        //spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY,
+        //                       NULL, std::chrono::milliseconds::zero(), NULL);
         spdlog::set_sync_mode();
         spdlog::set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
         return spdlog::stdout_logger_mt("hal");

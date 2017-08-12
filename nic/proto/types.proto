@@ -20,6 +20,13 @@ enum IPProtocol {
   IP_PROTO_ICMPV6        = 58;
 }
 
+// ICMP message types
+// TBD - add more here !!
+enum ICMPMsgType {
+  ICMP_MSG_TYPE_NONE = 0;
+  ICMP_MSG_TYPE_ECHO = 1;
+}
+
 // API return codes (more descriptive than protobuf enums)
 enum ApiStatus {
   API_STATUS_OK                       = 0;     // success

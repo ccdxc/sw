@@ -15,11 +15,10 @@ service NwSecurity {
     rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
     rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
 
-    rpc SecurityGroupCreate (SecurityGroupMsg) returns (SecurityGroupResponseMsg) {}
-    rpc SecurityGroupUpdate (SecurityGroupMsg) returns (SecurityGroupResponseMsg) {}
-
-    rpc SecurityPolicyRuleCreate (SecurityPolicyRuleMsg) returns (SecurityPolicyRuleResponseMsg) {}
-    rpc SecurityPolicyRuleUpdate (SecurityPolicyRuleMsg) returns (SecurityPolicyRuleResponseMsg) {}
+    rpc SecurityGroupCreate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
+    rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
+    rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
+    rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
 }
 
 // normalization feature actions upon detecting malformed packets
@@ -159,14 +158,71 @@ message SecurityProfileGetResponseMsg {
   repeated SecurityProfileGetResponse    response = 1;    // batched get response
 }
 
-// SecurityGroupSpec captures the configuration parameters for a security group
-message SecurityGroupSpec {
-  types.ObjectMeta    meta     = 1;    // common object meta
-  fixed32             sg_id    = 2;    // security group id
+// Firewall policy actions
+enum FirewallAction {
+  FIREWALL_ACTION_NONE   = 0;
+  FIREWALL_ACTION_ALLOW  = 1;
+  FIREWALL_ACTION_DENY   = 2;
+  FIREWALL_ACTION_REJECT = 3;
 }
 
-// SecurityGroupMsg is batched add or modify security group request
-message SecurityGroupMsg {
+// Service object identifies an app defined by IP protocol and TCP/UDP port
+// in most cases. This object also can specify blanket apps like all TCP or
+// UDP traffic, all IP traffic, ICMP type/code combinations etc.
+message Service {
+   types.IPProtocol         ip_protocol   = 1;    // IP protocol
+   oneof l4_info {
+     uint32                 dst_port      = 2;    // TCP or UDP port, 0 for other protocols
+     types.ICMPMsgType      icmp_msg_type = 3;
+   }
+}
+
+// FirewallRuleSpec defines a stateful firewall rule that is part of a
+// SecurityGroupSpec
+message FirewallRuleSpec {
+    repeated uint32    peer_security_group = 1;    // TO security group for
+                                                   // egress rules, FROM
+                                                   // security group for ingress
+                                                   // rules
+    repeated Service    svc                = 2;    // application service
+    FirewallAction      action             = 3;    // action to take
+    bool                log                = 4;    // log if this rule is hit
+}
+
+// ingress policy for the security group
+message IngressSGPolicy {
+   repeated FirewallRuleSpec fw_rules = 1;    // ingress firewall rules
+}
+
+// egress policy for the security group
+message EgressSGPolicy {
+   repeated FirewallRuleSpec fw_rules = 1;    // egress firewall rules
+}
+
+// SecurityGroupKeyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security groups
+message SecurityGroupKeyHandle {
+  oneof key_or_handle {
+   uint32     security_group_id     = 1;    // security group id or label
+   fixed64    security_group_handle = 2;    // id of security group returned by HAL
+  }
+}
+
+// SecurityGroupSpec captures the policy for a security group (aka. group of
+// endpoints or enic interfaces) in both directions from workload's perspective.
+// This policy will be attached to enic interface or an endpoint so it applies
+// to the traffic from/to that workload. If no match is found for the new
+// session in the slow path, either a drop flow will be installed or packet will
+// be dropped without creating drop flow
+message SecurityGroupSpec {
+   types.ObjectMeta          meta           = 1;    // object meta
+   SecurityGroupKeyHandle    key_or_handle  = 2;    // key or handle
+   IngressSGPolicy           ingress_policy = 3;    // ingress policy
+   EgressSGPolicy            egress_policy  = 4;    // egress policy
+}
+
+// SecurityGroupRequestMsg is batched add or modify security group policy request
+message SecurityGroupRequestMsg {
   repeated SecurityGroupSpec    request = 1;    // batched request
 }
 
@@ -181,54 +237,51 @@ message SecurityGroupResponse {
   SecurityGroupStatus    status      = 2;    // operational status
 }
 
-// SecurityGroupResponseMsg is batched response to SecurityGroupMsg
+// SecurityGroupResponseMsg is batched response to SecurityGroupRequestMsg
 message SecurityGroupResponseMsg {
   repeated SecurityGroupResponse    response = 1;    // batched response
 }
 
-// Service represents an application service defined in terms of protocol and port
-message Service {
-   types.IPProtocol    ip_protocol = 1;    // IP protocol
-   uint32              port        = 2;    // TCP or UDP port, 0 for other protocols
+// SecurityGroupDeleteRequest is used to delete a security group
+message SecurityGroupDeleteRequest {
+  types.ObjectMeta          meta           = 1;    // object meta
+  SecurityGroupKeyHandle    key_or_handle  = 2;    // key or handle
 }
 
-// security policy actions
-enum Action {
- SECURITY_POLICY_ACTION_NONE   = 0;
- SECURITY_POLICY_ACTION_ALLOW  = 1;
- SECURITY_POLICY_ACTION_DENY   = 2;
- SECURITY_POLICY_ACTION_REJECT = 3;
+// SecurityGroupDeleteRequestMsg is used to delete a batch of security groups
+message SecurityGroupDeleteRequestMsg {
+  repeated SecurityGroupDeleteRequest    request = 1;
 }
 
-// SecurityPolicyRule defines a rule between a pair of security groups
-// A rule can contain multiple services to match against
-message SecurityPolicyRuleSpec {
-  types.ObjectMeta meta        = 1;    // object meta
-  fixed32          src_sg_id   = 2;    // source security group id
-  fixed32          dst_sg_id   = 3;    // destination security group id
-  repeated Service svc         = 4;    // application service
-  Action           action      = 5;    // action to take
-  bool             rule_log_en = 6;    // log if this rule is hit
-  qos.QOSActions   qos_actions = 7;    // QOS actions 
+// SecurityGroupDeleteResponseMsg is batched response to
+// SecurityGroupDeleteRequestMsg
+message SecurityGroupDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
-// SecurityPolicyRuleMsg is batched add or modify security policy request
-message SecurityPolicyRuleMsg {
-  repeated SecurityPolicyRuleSpec    request = 1;    // batched request
+// SecurityGroupGetRequest is used to get information about a security group
+message SecurityGroupGetRequest {
+  types.ObjectMeta          meta           = 1;    // object meta
+  SecurityGroupKeyHandle    key_or_handle  = 2;    // key or handle
 }
 
-// SecurityPolicyRuleStatus is the operational state of a rule
-message SecurityPolicyRuleStatus {
-  fixed64    rule_handle = 1;    // id of policy rule returned by HAL
+// SecurityGroupGetRequestMsg is batched GET request for security groups
+message SecurityGroupGetRequestMsg {
+  repeated SecurityGroupGetRequest    request = 1;    // batched get request
 }
 
-// SecurityPolicyRuleResponse is the response to SecurityPolicyRuleSpec
-message SecurityPolicyRuleResponse {
-  types.ApiStatus             api_status  = 1;    // API status code
-  SecurityPolicyRuleStatus    status      = 2;    // operational status
+// SecurityGroupStats is the statistics object for a security group
+message SecurityGroupStats {
 }
 
-// SecurityPolicyRuleResponseMsg is batched response to SecurityPolicyRuleMsg
-message SecurityPolicyRuleResponseMsg {
-  repeated SecurityPolicyRuleResponse    response = 1;    // batched response
+// SecurityGroupGetResponse captures all the information about a security group
+message SecurityGroupGetResponse {
+  SecurityGroupSpec      spec   = 1;    // configuration of security group
+  SecurityGroupStatus    status = 2;    // operational state of security group
+  SecurityGroupStats     stats  = 3;    // debug status of security group
+}
+
+// SecurityGroupGetResponseMsg is batched response to SecurityGroupGetRequestMsg
+message SecurityGroupGetResponseMsg {
+  repeated SecurityGroupGetResponse    response = 1;    // batched get response
 }

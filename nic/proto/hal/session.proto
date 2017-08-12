@@ -33,7 +33,7 @@ message FlowKeyTcpUdpInfo {
 message FlowKeyICMPInfo {
   uint32    type = 1;          // ICMP type
   uint32    code = 2;          // ICMP code
-  uint32    id = 3;            // ICMP id, if any
+  uint32    id   = 3;          // ICMP id, if any
 }
 
 // Key for IPv4 flows

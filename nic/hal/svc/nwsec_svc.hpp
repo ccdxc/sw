@@ -25,16 +25,11 @@ using nwsec::SecurityProfileStats;
 using nwsec::SecurityProfileGetResponse;
 using nwsec::SecurityProfileGetResponseMsg;
 using nwsec::SecurityGroupSpec;
-using nwsec::SecurityGroupMsg;
+using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupStatus;
 using nwsec::SecurityGroupResponse;
 using nwsec::SecurityGroupResponseMsg;
 using nwsec::Service;
-using nwsec::SecurityPolicyRuleSpec;
-using nwsec::SecurityPolicyRuleMsg;
-using nwsec::SecurityPolicyRuleStatus;
-using nwsec::SecurityPolicyRuleResponse;
-using nwsec::SecurityPolicyRuleResponseMsg;
 
 class NwSecurityServiceImpl final : public NwSecurity::Service {
 public:
