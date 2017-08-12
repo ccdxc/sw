@@ -524,19 +524,36 @@ class capri_table:
         sorted_i_bits = sorted(self.i_bit_ext, key=lambda k:k[1], reverse=True)
 
         for b,w,in_key in sorted_i_bits:
-            if in_key:
-                # this indicates that i bits are in the middle of the key in the same flit
-                # these can be converted to key if this is a TCAM lookup
-                # XXX need better indication when w<8
-                i2k_bits.append((b,w))
-                continue
-            # update the chunk info and record the pad chunk
-            assert(w<8), pdb.set_trace()
-            add_bits += (8-w)
-            rm_bits += w
-            rm_chunks.append((b,w,in_key))
             if rm_bits >= extra_bits:
                 break
+            if in_key:
+                # keep these as bit extraction as much as possible
+                # remove them later if it is a must
+                continue
+                    
+            # update the chunk info and record the pad chunk
+            if w%8:
+                n_add_bits = (8-(w%8))
+                if (ki_size + add_bits + n_add_bits) > max_ki:
+                    continue
+                add_bits += (8-(w%8))
+            rm_bits += w
+            rm_chunks.append((b,w,in_key))
+
+        # if there are still extra bits try to remove those
+        for b,w,in_key in sorted_i_bits:
+            if rm_bits >= extra_bits:
+                break
+            if not in_key:
+                continue
+            if self.is_tcam_table():
+                # this indicates that i bits are in the middle of the key in the same flit
+                # these can be converted to key if this is a TCAM lookup
+                i2k_bits.append((b,w))
+                if w%8:
+                    add_bits += (8-(w%8))
+                rm_bits += w
+
         if (ki_size + add_bits) > max_ki:
             # still a problem - needs to change the program
             assert 0, pdb.set_trace()
@@ -566,12 +583,8 @@ class capri_table:
                 self.km_flits[fid].i2_phv_chunks = \
                     sorted(self.km_flits[fid].i2_phv_chunks, key=lambda k:k[0])
 
-        extra_bits -= rm_bits   # the remaining extra bits are mingled with key
-        ki_size += add_bits
-        if extra_bits > 0 and len(i2k_bits) and self.match_type == match_type.TERNARY:
+        if len(i2k_bits) and self.is_tcam_table():
             for b,w in i2k_bits:
-                if extra_bits <= 0:
-                    break
                 fid = b/flit_size
                 # record the bits added to the front and back of this chunk
                 # remove this chunk from i_bit_ext to k_phv_chunks
@@ -612,9 +625,10 @@ class capri_table:
                 self.km_flits[fid].k_phv_chunks = \
                     sorted(self.km_flits[fid].k_phv_chunks, key=lambda k:k[0])
                 ki_size += pad
-                extra_bits -= w
 
-            assert extra_bits <= 0, pdb.set_trace()
+                ## extra_bits -= w
+
+            ## assert extra_bits <= 0, pdb.set_trace()
         return True
 
     def ct_update_table_config(self):
@@ -1200,14 +1214,21 @@ class capri_table:
                 # if i1 cannot be completely moved to km1, then divide i1+i2 evenly
                 self.gtm.tm.logger.debug("%s:%s:Split key_makers k < max_km" % \
                     (self.gtm.d.name, self.p4_table.name))
-                keep_free = (km0_free + km1_free - total_kB - total_iB) / 2
-                km0_profile.k_byte_sel += self.combined_profile.k_byte_sel
-                assert num_kbits < max_km_bits, pdb.set_trace() # XXX TBD
-                km0_profile.k_bit_sel += self.combined_profile.k_bit_sel
-                km0_free -= total_kB
+
+                # when km are fully used, do not round-up bits to byte separately for
+                # K and I
                 num_byte_sel = len(self.combined_profile.k_byte_sel) + \
                                 len(self.combined_profile.i1_byte_sel) + \
                                 len(self.combined_profile.i2_byte_sel)
+                num_bitB = (num_ibits + num_kbits + 7) / 8
+                keep_free = (km0_free + km1_free - num_byte_sel - num_bitB) / 2
+                assert keep_free >= 0, pdb.set_trace()
+
+                # copy k bytes and bits to km0
+                km0_profile.k_byte_sel += self.combined_profile.k_byte_sel
+                km0_free -= len(self.combined_profile.k_byte_sel)
+                assert num_kbits < max_km_bits, pdb.set_trace() # XXX TBD
+                km0_profile.k_bit_sel += self.combined_profile.k_bit_sel
 
                 byte_avail = (self.num_km * max_kmB) - num_byte_sel
                 byte_avail -= ((num_kbits+7)/8)
@@ -1218,14 +1239,15 @@ class capri_table:
                     km0_bits = min(km0_bits, num_ibits)
                     for b in range(km0_bits):
                         km0_profile.i_bit_sel.append(self.combined_profile.i_bit_sel[b])
-                    km0_free -= ((km0_bits+7)/8)
+                    km0_free -= ((km0_bits+num_kbits+7)/8)
                     for b in range(km0_bits, num_ibits):
                         km1_profile.i_bit_sel.append(self.combined_profile.i_bit_sel[b])
                     km1_free -= ((num_ibits-km0_bits+7)/8)
                 else:
                     # move all i bits to km1
                     km1_profile.i_bit_sel += self.combined_profile.i_bit_sel
-                    km1_free -= ((len(self.combined_profile.i_bit_sel)+7)/8)
+                    km1_free -= ((num_ibits+7)/8)
+                    km0_free -= (num_kbits+7)/8
 
                 km0_iB = km0_free-keep_free
                 km1_iB = km1_free-keep_free
@@ -1238,6 +1260,7 @@ class capri_table:
                     km1_free -= 1
                     km1_iB -= 1
 
+                # rest of i1B to km0
                 for b in range(i+1, total_i1B):
                     km0_profile.i1_byte_sel.append(self.combined_profile.i1_byte_sel[b])
                     km0_free -= 1
@@ -2431,7 +2454,8 @@ class capri_km_profile:
 
     def __repr__(self):
         if len(self.byte_sel) or len(self.bit_sel):
-            return '[%d] : byte_sel %s :\t\tbit_sel %s' % (self.hw_id, self.byte_sel, self.bit_sel)
+            return '[id%d] : byte_sel[%d]: %s :\nbit_sel[%d]: %s' % \
+                (self.hw_id, len(self.byte_sel), self.byte_sel, len(self.bit_sel), self.bit_sel)
         else:
             return ''
 
@@ -2894,6 +2918,7 @@ class capri_stage:
                     self.gtm.tm.logger.critical( \
                         "%s:%d:Not enough key-makers for %s Revise P4 program and try" % \
                         (self.gtm.d.name, self.id, ct.p4_table.name))
+                    assert 0, pdb.set_trace()
                     continue
 
         # fix table key-makers E.g. assign otcams to get the same km as its hash table

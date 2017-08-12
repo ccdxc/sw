@@ -617,6 +617,7 @@ class capri_parser:
         self.ohi = None
         self.ohi_used = 0
         self.hdr_ext_states = OrderedDict() # {hdr : [ states where it is extracted ] }
+        self.meta_ext_states = OrderedDict() # {meta_fld : [ states where it is extracted ] }
         self.hdr_order_groups = []  # header groups specified using header_ordering pragma
         parser_flits = self.be.hw_model['parser']['parser_num_flits']
         hv_per_flit = self.be.hw_model['parser']['flit_hv_bits']
@@ -859,6 +860,10 @@ class capri_parser:
                             self.logger.debug("%s:%s:meta_field %s" % \
                                 (self.d.name, s.name, cfield.hfname))
                             s.meta_extracted_fields.append(cfield)
+                        if cfield not in self.meta_ext_states:
+                            self.meta_ext_states[cfield] = [s]
+                        else:
+                            self.meta_ext_states[cfield].append(s)
                     else:
                         pass
 

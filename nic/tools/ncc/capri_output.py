@@ -1108,8 +1108,11 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
     flit_sizeB = flit_size / 8
 
     insts = parser.generate_extract_instructions(nxt_cs, add_cs)
-    if (len(insts)):
-        current_flit = insts[0][2] / flit_sizeB
+    for i in range(len(insts)):
+        if current_flit != None:
+            assert current_flit == (insts[i][2] / flit_sizeB), pdb.set_trace()
+        else:
+            current_flit = insts[i][2] / flit_sizeB
     #assert len(insts) <= len(sram['extract_inst']), "%s:Too many(%d) extractions" % \
     #    (nxt_cs.name, len(insts))
     if len(insts) > len(sram['extract_inst']):
@@ -1310,7 +1313,7 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
             continue
 
         flit = dst_phv / flit_size
-        if not current_flit:
+        if current_flit == None:
             current_flit = flit
         assert current_flit == flit, pdb.set_trace()
 

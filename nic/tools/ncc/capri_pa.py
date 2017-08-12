@@ -205,7 +205,7 @@ class capri_flit:
                 hdr = cf.get_p4_hdr()
                 if cf.need_phv() and cf.width and \
                     not self.gress_pa.pa.be.args.p4_plus and \
-                    hdr != self.gress_pa.capri_p4_intr_hdr:
+                    not cf.is_intrinsic:
                     
                     cf_end = self.flit_used + cf.width
 
@@ -229,6 +229,7 @@ class capri_flit:
                             return False
                     else:
                         pass
+
             if (self.flit_used + cf.width) > self.flit_size:
                 # not enough space XXX what if the field does not need phv ???
                 return False
@@ -250,7 +251,6 @@ class capri_flit:
         # when there is a field union, we have to make sure
         # that the headers that the union flds come from are placed in the same flit
         if hdr and hdr not in self.headers and not cf.is_hdr_union and not is_synthetic_header(hdr):
-            hv_per_flit = self.gress_pa.pa.be.hw_model['parser']['flit_hv_bits']
             hdr_list = []
             for hdr_group in self.gress_pa.pa.be.parsers[self.gress_pa.d].hdr_order_groups:
                 if hdr in hdr_group:
@@ -332,6 +332,18 @@ class capri_flit:
             for sh in unique_hdr_list:
                 self.headers[sh] = cf
                 
+        if hdr and hdr not in self.headers and not cf.is_hdr_union and is_synthetic_header(hdr):
+            hdr_size = self.gress_pa.get_header_phv_size(hdr)
+            bits_needed = (hdr_size * 8)
+            if (self.flit_used + bits_needed) > self.flit_size:
+                # not enough space
+                self.gress_pa.logger.debug("%s:Flit %d full, not enought space for syn-header" % \
+                    (self.gress_pa.d.name, self.id))
+                self.gress_pa.logger.debug("%s:Flit %d avail %d need %d hdr %s" % \
+                    (self.gress_pa.d.name, self.id, (self.flit_size - self.flit_used),
+                     bits_needed, hdr))
+                return False
+            self.headers[hdr] = cf
         # flit has space
         if cf.need_phv() and cf.width:
             assert cf.width > 0, pdb.set_trace()
@@ -415,6 +427,8 @@ class capri_flit:
         assert flit_bits == self.flit_used, pdb.set_trace()
 
     def flit_close(self):
+        if len(self.field_order) == 0: pdb.set_trace()
+            
         self.gress_pa.logger.debug("%s:Close flit[%d], used %d, at %s" % \
             (self.gress_pa.d.name, self.id, self.flit_used, self.field_order[-1].hfname))
 
@@ -956,8 +970,14 @@ class capri_gress_pa:
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
             assert cf, "unknown field %s" % (hdr.name + f.name)
-            if not cf.is_ohi:
+            if is_synthetic_header(hdr):
+                assert not cf.is_ohi, pdb.set_trace() # cannot have ohi flds in syn header
+                if not cf.is_union():
+                    hphv += cf.width
+            elif not cf.is_ohi:
                hphv += cf.width
+            else:
+                pass
         assert((hphv % 8) == 0)
         return (hphv+7)/8
         
