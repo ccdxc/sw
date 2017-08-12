@@ -80,6 +80,58 @@ flow_compare_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
+// thread safe helper to stringify flow_key_t
+//------------------------------------------------------------------------------
+const char *
+flowkey2str (const flow_key_t& key)
+{
+    static thread_local char       key_str[4][400];
+    static thread_local uint8_t    key_str_next = 0;
+    char                           *buf;
+
+    buf = key_str[key_str_next++ & 0x3];
+    fmt::ArrayWriter out(buf, 400);
+
+    out.write("{{dir={}, ", key.dir);
+
+    switch (key.flow_type) {
+    case FLOW_TYPE_L2:
+        out.write("l2seg={}, smac={}, dmac={}", key.l2seg_id, key.smac, key.dmac);
+        break;
+    case FLOW_TYPE_V4:
+    case FLOW_TYPE_V6:
+        out.write("tid={}, ", key.tenant_id);
+        if (key.flow_type == FLOW_TYPE_V4) {
+            out.write("sip={}, dip={}, ", key.sip.v4_addr, key.dip.v4_addr);
+        } else {
+            out.write("sip={}, dip={}, ", key.sip.v6_addr, key.dip.v6_addr);
+        }
+
+        switch (key.proto) {
+        case types::IP_PROTO_ICMP:
+            out.write("proto=icmp, type={}, code={}, id={}",
+                      key.icmp_type, key.icmp_code, key.icmp_id);
+            break;
+        case types::IP_PROTO_TCP:
+            out.write("proto=tcp, sport={}, dport={}", key.sport, key.dport);
+            break;
+        case types::IP_PROTO_UDP:
+            out.write("proto=udp, sport={}, dport={}", key.sport, key.dport);
+            break;
+        default:
+            out.write("proto={}", key.proto);
+        }
+        break;
+    default:
+        out.write("flow-type=unknonw(%d)", key.flow_type);
+    }
+
+    out.write("}}");
+
+    return buf;
+}
+
+//------------------------------------------------------------------------------
 // validate an incoming session create request
 //------------------------------------------------------------------------------
 static hal_ret_t
@@ -248,6 +300,41 @@ extract_session_state_from_spec (session_state_t *session_state, bool is_initiat
 
 //------------------------------------------------------------------------------
 // given a flow key, get the source and destination endpoint records
+//------------------------------------------------------------------------------
+hal_ret_t
+ep_get_from_flow_key(const flow_key_t* key, ep_t **sep, ep_t **dep)
+{
+    *sep = *dep = NULL;
+
+    switch  (key->flow_type) {
+    case FLOW_TYPE_L2:
+        *sep = find_ep_by_l2_key(key->l2seg_id, key->smac);
+        *dep = find_ep_by_l2_key(key->l2seg_id, key->dmac);
+        break;
+
+    case FLOW_TYPE_V4:
+    case FLOW_TYPE_V6:
+        ep_l3_key_t l3key;
+        l3key.tenant_id = key->tenant_id;
+        l3key.ip_addr.af = key->flow_type == FLOW_TYPE_V4 ? IP_AF_IPV4 : IP_AF_IPV6;
+
+        l3key.ip_addr.addr = key->sip;
+        *sep = find_ep_by_l3_key(&l3key);
+
+        l3key.ip_addr.addr = key->dip;
+        *dep = find_ep_by_l3_key(&l3key);
+        break;
+    }
+
+    if (*sep == NULL || *dep == NULL) {
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// given a flow key spec, get the source and destination endpoint records
 //------------------------------------------------------------------------------
 static hal_ret_t
 ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,

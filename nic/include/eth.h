@@ -68,5 +68,10 @@ mac_addr_to_str (mac_addr_t mac, char *str)
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
+//spdlog formatter for ipv6_addr_t
+inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
+    return os << macaddr2str(mac);
+}
+
 #endif    // __ETH_H__
 

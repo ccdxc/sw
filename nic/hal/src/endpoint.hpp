@@ -93,7 +93,7 @@ find_ep_by_handle (hal_handle_t handle)
 }
 
 static inline ep_t *
-find_ep_by_l2_key (l2seg_id_t l2seg_id, mac_addr_t mac_addr)
+find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
 {
     ep_l2_key_t    l2_key = { 0 };
     ep_t           *ep;
@@ -130,7 +130,7 @@ find_ep_by_v4_key (tenant_id_t tid, uint32_t v4_addr)
 }
 
 static inline ep_t *
-find_ep_by_v6_key (tenant_id_t tid, ip_addr_t *ip_addr)
+find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
 {
     ep_l3_key_t    l3_key = { 0 };
 

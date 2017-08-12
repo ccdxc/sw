@@ -1,6 +1,7 @@
 #include <sys/queue.h>
 
 #include "fte.hpp"
+#include "fte_flow.hpp"
 
 namespace fte {
 
@@ -216,6 +217,53 @@ void unregister_features_and_pipelines() {
         feature_t *feature = STAILQ_FIRST(&g_feature_list_);
         STAILQ_REMOVE_HEAD(&g_feature_list_, entries);
         HAL_FREE(feature_t, feature);
+    }
+}
+
+// FTE main pkt loop
+void
+pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
+         hal_ret_t (*tx)(phv_t *phv, uint8_t *pkt, size_t pkt_len))
+{
+    hal_ret_t rc;
+    phv_t *phv;
+    uint8_t *pkt;
+    size_t pkt_len;
+    ctx_t ctx;
+
+    while(true) {
+        // read the packet
+        rc = rx(&phv, &pkt, &pkt_len);
+        if (rc != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte - arm rx failed, rc={}", rc);
+            continue;
+        }
+
+        // Init ctx_t
+        rc = ctx_init(ctx, phv, pkt, pkt_len);
+        if (rc != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte - failied to init context, rc={}", rc);
+            continue;
+        }
+
+        // execute the pipeline
+        rc = execute_pipeline(ctx);
+        if (rc != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte - failied to execute pipeline, rc={}", rc);
+            continue;
+        }
+
+        // update GFT
+        rc = flow_update_gft(ctx);
+        if (rc != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte - failied to updated gft, rc={}", rc);
+            continue;
+        }
+
+        // write the packet
+        if (ctx.pkt) {
+            tx(ctx.phv, ctx.pkt, ctx.pkt_len);
+        }
     }
 }
 } // namespace fte

@@ -90,7 +90,23 @@ typedef struct ip_prefix_s {
 
 extern char *ipv4addr2str(ipv4_addr_t v4_addr);
 extern char *ipv6addr2str(ipv6_addr_t v6_addr);
-extern char *ipaddr2str(ip_addr_t *ip_addr);
+extern char *ipaddr2str(const ip_addr_t *ip_addr);
+
+//spdlog formatter for ip_addr_t
+inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {
+    return os << ipaddr2str(&ip);
+}
+
+// TODO(goli) conflicts with another << operator overload for unisigned int
+//spdlog formatter for ipv4_addr_t
+//inline std::ostream& operator<<(std::ostream& os, const ipv4_addr_t& ip) {
+//    return os << ipv4addr2str(ip);
+//}
+
+//spdlog formatter for ipv6_addr_t
+inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip) {
+    return os << ipv6addr2str(ip);
+}
 
 #endif    // __IP_H__
 

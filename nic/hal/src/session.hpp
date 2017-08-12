@@ -91,6 +91,13 @@ typedef struct flow_key_s {
     } __PACK__;
 } __PACK__ flow_key_t;
 
+//spdlog formatter for flow_key_t
+const char* flowkey2str(const flow_key_t& key);
+inline std::ostream& operator<<(std::ostream& os, const flow_key_t& key)
+{
+    return os << flowkey2str(key);
+}
+
 // flow config
 typedef struct flow_cfg_s {
     flow_key_t        key;                 // flow's key
@@ -220,6 +227,9 @@ extern bool session_compare_handle_key_func(void *key1, void *key2);
 extern void *flow_get_key_func(void *entry);
 extern uint32_t flow_compute_hash_func(void *key, uint32_t ht_size);
 extern bool flow_compare_key_func(void *key1, void *key2);
+
+extern hal_ret_t ep_get_from_flow_key(const flow_key_t* key,
+                                      ep_t **sep, ep_t **dep);
 
 extern hal_ret_t session_release(session_t *session);
 

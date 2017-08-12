@@ -1,6 +1,7 @@
 LIBDIRS = \
-		  pd \
-		  $(NULL)
+	pd \
+	plugins \
+	$(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 TOPDIR = ..

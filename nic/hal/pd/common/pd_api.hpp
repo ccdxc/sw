@@ -28,6 +28,8 @@ using hal::buf_pool_t;
 using hal::queue_t;
 using hal::policer_t;
 
+typedef uint16_t    l2seg_hw_id_t;
+
 typedef struct pd_tenant_args_s {
     tenant_t           *tenant;
     nwsec_profile_t    *nwsec_profile;
@@ -171,6 +173,7 @@ hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
 hal_ret_t pd_l2seg_create(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_update(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_delete(pd_l2seg_args_t *l2seg);
+l2seg_t *find_l2seg_by_hwid (l2seg_hw_id_t hwid);
 
 hal_ret_t pd_nwsec_profile_create(pd_nwsec_profile_args_t *nwsec_profile);
 hal_ret_t pd_nwsec_profile_update(pd_nwsec_profile_args_t *nwsec_profile);

@@ -30,8 +30,8 @@
  *    log("{:*^30}", "centered");  // use '*' as a fill char // Result: "***********centered***********"
  *
  *  4. Replacing %x and %o and converting the value to different bases:
- *    log("int: {d};  hex: {x};  oct: {o}; bin: {b}", 42,42,42,42); // Result: "int: 42;  hex: 2a;  oct: 52; bin: 101010"
- *    log("int: {d};  hex: {#x};  oct: {#o};  bin: {#b}", 42,42,42,42); // Result: "int: 42;  hex: 0x2a;  oct: 052;  bin: 0b101010"
+ *    log("int: {:d};  hex: {:x};  oct: {:o}; bin: {:b}", 42,42,42,42); // Result: "int: 42;  hex: 2a;  oct: 52; bin: 101010"
+ *    log("int: {:d};  hex: {:#x};  oct: {:#o};  bin: {:#b}", 42,42,42,42); // Result: "int: 42;  hex: 0x2a;  oct: 052;  bin: 0b101010"
  *
  * Refer to http://fmtlib.net/latest/syntax.html for formatting trace messages.
  *

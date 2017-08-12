@@ -3,13 +3,13 @@
 TOPDIR = .
 LIBDIRS = \
 		  utils \
-		  fte \
 		  hal/pd/capri/csr \
 		  proto gen/protobuf \
 		  p4 \
 		  capsim \
 		  asm/nw \
 		  model_sim/build \
+		  fte \
 		  hal/svc \
 		  hal/src \
 		  hal/periodic \

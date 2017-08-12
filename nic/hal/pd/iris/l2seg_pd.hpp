@@ -13,8 +13,6 @@ namespace pd {
 
 #define HAL_MAX_HW_L2SEGMENTS                        2048
 
-typedef uint16_t    l2seg_hw_id_t;
-
 // l2seg pd state
 struct pd_l2seg_s {
     void               *l2seg;              // PI L2 segment
@@ -86,7 +84,7 @@ add_l2seg_pd_to_db (pd_l2seg_t *l2seg_pd)
 
 // find a l2seg pd instance given its hw id
 static inline pd_l2seg_t *
-find_l2seg_by_hwid (l2seg_hw_id_t hwid)
+find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
 {
     return (pd_l2seg_t *)g_hal_state_pd->l2seg_hwid_ht()->lookup(&hwid);
 }

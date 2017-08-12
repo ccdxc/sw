@@ -1,12 +1,17 @@
 TOPDIR = ..
 SHAREDLIBRARY = libfte.so
 
-LCXXFLAGS = \
+LCXXFLAGS = -I. \
 	-I$(TOPDIR)/include \
+	-I$(TOPDIR)/hal/src \
+	-I$(TOPDIR)/gen/protobuf \
+	-I$(TOPDIR)/p4/nw/include \
 	-I$(TOPDIR)/third-party/spdlog/include
 
 SOURCES = \
 	fte.cc \
+	fte_ctx.cc \
+	fte_flow.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

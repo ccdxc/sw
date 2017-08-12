@@ -66,7 +66,7 @@ ipv6addr2str (ipv6_addr_t v6_addr)
 // thread safe helper to stringify IP address
 //------------------------------------------------------------------------------
 char *
-ipaddr2str (ip_addr_t *ip_addr)
+ipaddr2str (const ip_addr_t *ip_addr)
 {
     switch (ip_addr->af) {
     case IP_AF_IPV4:

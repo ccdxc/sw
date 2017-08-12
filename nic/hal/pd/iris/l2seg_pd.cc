@@ -31,6 +31,13 @@ l2seg_pd_compare_hw_key_func (void *key1, void *key2)
     return false;
 }
 
+l2seg_t *
+find_l2seg_by_hwid (l2seg_hw_id_t hwid)
+{
+    pd_l2seg_t *l2seg_pd = find_l2seg_pd_by_hwid(hwid);
+    return l2seg_pd ? (l2seg_t*) l2seg_pd->l2seg : NULL;
+}
+
 hal_ret_t
 pd_l2seg_create (pd_l2seg_args_t *args)
 {
