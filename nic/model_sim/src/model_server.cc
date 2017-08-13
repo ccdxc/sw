@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <zmq.h>
 #include "HBM.h"
+#include "HOST_MEM.h"
 #include "buf_hdr.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -13,6 +14,48 @@
 #include <cstdlib>
 #include <assert.h>
 #include <vector>
+
+#include "../../utils/host_mem/params.hpp"
+
+namespace utils {
+
+class HostMem : public pen_mem_base {
+ public:
+  HostMem() {
+    int shmid = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
+    assert(shmid >= 0);
+    shmaddr_ = shmat(shmid, nullptr, 0);
+    assert(shmaddr_ != (void*)-1);
+    shmctl(shmid, IPC_RMID, NULL);
+  }
+  virtual ~HostMem() {
+    if ((shmaddr_) && (shmaddr_ != (void *)-1))
+      shmdt(shmaddr_);
+  }
+  virtual bool burst_read(uint64_t addr, unsigned char *data,
+                          unsigned int len, bool secure, bool reverse_bo) {
+    addr &= (1ULL << 52) - 1;
+    if ((addr >= kShmSize) || ((addr + len) > kShmSize))
+      return false;
+    void *sa = (void *)((uint64_t)shmaddr_ + addr);
+    bcopy(sa, data, len);
+    return true;
+  }
+  virtual bool burst_write(uint64_t addr, const unsigned char *data,
+                           unsigned int len, bool secure, bool reverse_bo) {
+    addr &= (1ULL << 52) - 1;
+    if ((addr >= kShmSize) || ((addr + len) > kShmSize))
+      return false;
+    void *da = (void *)((uint64_t)shmaddr_ + addr);
+    bcopy(data, da, len);
+    return true;
+  }
+
+ private:
+  void *shmaddr_;
+};
+
+}  // namespace utils
 
 
 static void show_pkt(const std::vector<uint8_t> &pkt)
@@ -165,6 +208,9 @@ int main (int argc, char ** argv)
     char zmqsockstr[100];
     struct stat st = {0};
     buffer_hdr_t *buff;
+
+    utils::HostMem host_mem;
+    HOST_MEM::access(&host_mem);
 
     sknobs_init(argc, argv);
     auto env = new cap_env_base(0);

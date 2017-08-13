@@ -39,6 +39,7 @@ PGMDIRS = \
 		  utils/pt/test \
 		  utils/slab/test \
 		  utils/twheel/test \
+		  utils/host_mem/test \
 		  hal/pd/utils/directmap/test \
 		  hal/pd/utils/flow/test \
 		  hal/pd/utils/hash/test \

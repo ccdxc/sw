@@ -11,6 +11,7 @@ LIBDIRS = \
           indexer \
           thread \
           print \
+	  host_mem \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

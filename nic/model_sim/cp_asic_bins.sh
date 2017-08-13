@@ -12,6 +12,7 @@ cp -v $ASIC_SRC/ip/verif/pcpp/cpu_bus_base.h include/cpu_bus_base.h
 cp -v $ASIC_SRC/ip/verif/pcpp/cpu_bus_stub.h include/cpu_bus_stub.h
 cp -v $ASIC_SRC/ip/verif/pcpp/cpu.h include/cpu.h
 cp -v $ASIC_SRC/ip/verif/pcpp/HBM.h include/HBM.h
+cp -v $ASIC_SRC/ip/verif/pcpp/HOST_MEM.h include/HOST_MEM.h
 cp -v $ASIC_SRC/ip/verif/pcpp/pen_mem.h include/pen_mem.h
 cp -v $ASIC_SRC/ip/verif/pcpp/pen_mem_base.h include/pen_mem_base.h
 cp -v $ASIC_SRC/ip/verif/pcpp/pknobs.h include/pknobs.h

@@ -20,8 +20,9 @@ void print_banner ()
     printf("1. Read Reg (0xaddr n_words)\n");
     printf("2. Write Reg (0xaddr 0xdata)\n");
     printf("3. Read Mem (0xaddr size)\n");
-    printf("4. Dump HBM\n");
-    printf("5. Exit\n");
+    printf("4. Write Mem uint32 (0xaddr 0xdata)\n");
+    printf("5. Dump HBM\n");
+    printf("6. Exit\n");
     printf("*************************************\n");
     return;
 }
@@ -61,12 +62,17 @@ int main (void)
                 printf("\n");
                 break;
             case 4:
+                scanf("%lx %x", &addr, &data);
+                write_mem(addr, (uint8_t*)&data, 4);
+                printf("write_mem complete\n");
+                break;
+            case 5:
                 dump_hbm();
                 break;
             default:
                 break;
         }
-        if (opt == 5) break;
+        if (opt == 6) break;
     }
     lib_model_conn_close();
 
