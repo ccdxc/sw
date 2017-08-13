@@ -128,6 +128,11 @@ action native_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_src, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dst, ethernet.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, 0);
+    if (vlan_tag.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_sport, vlan_tag.etherType);
+    } else {
+        modify_field(flow_lkp_metadata.lkp_sport, ethernet.etherType);
+    }
     modify_field(flow_lkp_metadata.lkp_sport, ethernet.etherType);
     modify_field(flow_lkp_metadata.lkp_dport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);

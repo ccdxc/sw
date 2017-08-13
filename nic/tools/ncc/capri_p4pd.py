@@ -648,13 +648,15 @@ class capri_p4pd:
                 max_width = 0
                 for dict_cfs in v:
                     (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
-                    if width_ > max_width:
-                        max_width = width_
+                    max_width += width_
                 covered_bits = k + max_width
             else:
                 # check if this field is already covered
                 if k < covered_bits:
-                    del ki_or_kd_to_cf_map[k] 
+                    for dict_cfs in v:
+                        (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                        if cf_ == None:
+                            del ki_or_kd_to_cf_map[k]
 
     def build_table_asm_hwformat(self, ctable, kd=0):
         '''

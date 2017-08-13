@@ -7,8 +7,10 @@ struct phv_                   p;
 
 %%
 
+// r5: ipv4_ihl
 native_ipv4_packet:
-  or          r1, k.ethernet_srcAddr_sbit32_ebit47, k.ethernet_srcAddr_sbit0_ebit31, 16
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  or          r5, k.ipv4_ihl_sbit2_ebit3, k.ipv4_ihl_sbit0_ebit1, 2
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -34,7 +36,7 @@ native_ipv4_packet:
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
   seq         c1, k.ipv4_protocol, IP_PROTO_TCP
-  add         r6, k.ipv4_ihl, k.tcp_dataOffset
+  add         r6, r5, k.tcp_dataOffset
   sub         r7, k.ipv4_totalLen, r6, 2
   phvwr.c1    p.l4_metadata_tcp_data_len, r7
 
@@ -48,7 +50,7 @@ native_ipv4_packet:
   phvwr       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwr       p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
   phvwr       p.flow_lkp_metadata_ipv4_frag_offset, k.{ipv4_fragOffset_sbit0_ebit4,ipv4_fragOffset_sbit5_ebit12}
-  phvwr       p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
+  phvwr       p.flow_lkp_metadata_ipv4_hlen, r5
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
   phvwr       p.flow_lkp_metadata_ip_version, k.ipv4_version
   phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
@@ -58,7 +60,7 @@ native_ipv4_packet:
 
 .align
 native_ipv6_packet:
-  or          r1, k.ethernet_srcAddr_sbit32_ebit47, k.ethernet_srcAddr_sbit0_ebit31, 16
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -117,7 +119,7 @@ native_ipv6_packet:
 
 .align
 native_non_ip_packet:
-  or          r1, k.ethernet_srcAddr_sbit32_ebit47, k.ethernet_srcAddr_sbit0_ebit31, 16
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -131,9 +133,11 @@ native_non_ip_packet:
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
-  phvwr       p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
-  phvwr.e     p.flow_lkp_metadata_lkp_src, r1
-  phvwr       p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
+  seq         c1, k.vlan_tag_valid, 1
+  phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.vlan_tag_etherType
+  phvwr.!c1   p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
+  phvwr.e     p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
+  phvwr       p.flow_lkp_metadata_lkp_src, r1
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
