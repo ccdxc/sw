@@ -5,7 +5,6 @@
 syntax = "proto3";
 
 import "types.proto";
-import "qos.proto";
 
 package nwsec;
 
@@ -177,6 +176,21 @@ message Service {
    }
 }
 
+// Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
+enum ALGName {
+   APP_SVC_NONE = 0;
+   APP_SVC_TFTP = 1;    // Trivial File Transfer Protocol
+   APP_SVC_FTP  = 2;    // File Transfer Protocol
+   APP_SVC_DNS  = 3;    // Domain Name System
+   APP_SVC_SIP  = 4;    // Session Initiation Protocol
+}
+
+// ALG object maps a service to one of the supported ALGs
+message ALG {
+   ALGName    alg = 1;    // application service name (used to invoke ALGs)
+   Service    svc = 2;    // match criteria for ALG
+}
+
 // FirewallRuleSpec defines a stateful firewall rule that is part of a
 // SecurityGroupSpec
 message FirewallRuleSpec {
@@ -189,14 +203,65 @@ message FirewallRuleSpec {
     bool                log                = 4;    // log if this rule is hit
 }
 
+// DoSSessionLimits captures the session limits to be enforced on a security
+// group
+message DoSSessionLimits {
+  uint32    max_sessions       = 1;    // max. no of sessions
+  uint32    blocking_timeout   = 2;    // cool off period once session count
+                                       // comes below the above limit
+}
+
+// DoSPolicer is aggregate DoS policer object
+message DoSPolicer {
+  uint32    bytes_per_second = 1;    // max. bytes per second
+  uint32    peak_rate        = 2;    // in bytes-per-second
+  uint32    burst_size       = 3;    // in bytes
+}
+
+// DoSFloodLimits object captures the flood limits configuration
+message DoSFloodLimits {
+  // default and only action in restrict phase is Random Early Drop (RED)
+  message RestrictLimits {
+    uint32    pps               = 1;    // packet-per-second limit
+    uint32    burst_pps         = 2;    // packets-per-second burst
+    uint32    restrict_interval = 3;    // restrict action duration in seconds
+  }
+  // default and only action in protection phase is drop
+  message ProtectLimits {
+    uint32    pps               = 1;    // packet-per-second limit
+    uint32    burst_pps         = 2;    // packets-per-second burst
+    uint32    restrict_interval = 3;    // protect action duration in seconds
+  }
+  RestrictLimits    restrict_limits = 1;
+  ProtectLimits     protect_limits  = 2;
+}
+
+// DoSProtectionSpec defines DoS protection policy for a security group
+message DoSProtectionSpec {
+  Service             svc                  = 1;    // (optional) application
+                                                   // service for which rest of
+                                                   // the DDoS config to be
+                                                   // applied on
+  uint32              session_setup_rate   = 2;    // 0 inidicates no limits
+  DoSSessionLimits    session_limits       = 3;    // session limits config
+  DoSPolicer          policer              = 4;    // DoS policer configuration
+  DoSFloodLimits      tcp_syn_flood_limits = 5;    // TCP SYN flood limits
+  DoSFloodLimits      udp_flood_limits     = 6;    // UDP flood limits
+  DoSFloodLimits      icmp_flood_limits    = 7;    // ICMP flood limits
+  DoSFloodLimits      other_flood_limits   = 8;    // flood limits for all other
+                                                   // traffic (IP and non-IP)
+}
+
 // ingress policy for the security group
 message IngressSGPolicy {
-   repeated FirewallRuleSpec fw_rules = 1;    // ingress firewall rules
+  repeated FirewallRuleSpec    fw_rules       = 1;    // ingress firewall rules
+  DoSProtectionSpec            dos_protection = 2;    // ingress (D)DoS protection policy
 }
 
 // egress policy for the security group
 message EgressSGPolicy {
-   repeated FirewallRuleSpec fw_rules = 1;    // egress firewall rules
+  repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
+  DoSProtectionSpec            dos_protection = 2;    // egress (D)DoS protection policy
 }
 
 // SecurityGroupKeyHandle uniquely identifies a security group and is used
