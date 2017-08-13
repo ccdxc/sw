@@ -21,7 +21,7 @@ parser.add_argument('--topo', dest='topology',
                     help='Topology to generate Config Objects.')
 parser.add_argument('--test', dest='test',
                     default=None, help='Run single TestSpec by name')
-parser.add_argument('--tescase', dest='tcid',
+parser.add_argument('--testcase', dest='tcid',
                     default=None, help='Run single Testcase by ID')
 
 GlobalOptions = parser.parse_args()

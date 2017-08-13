@@ -15,6 +15,8 @@ from infra.engine.trigger import TrigExpEngine
 
 global modDB
 
+TestCaseDB = objects.ObjectDatabase(logger)
+
 def init():
     global modDB
     modDB = modmgr.ModuleDatabase(module_list_file=GlobalOptions.modlist)
@@ -36,22 +38,53 @@ def CreateInfraData():
     obj.LockAttributes()
     return obj
 
-
-def main():
+def ExecuteAllModules():
     module = modDB.getfirst()
     while module != None:
         infra_data = CreateInfraData()
         status = module.main(infra_data)
+        TestCaseDB.SetAll(infra_data.TestCases)
         module = modDB.getnext()
-
-    if GlobalOptions.standalone == True:
-        sys.exit(0)
-    
+  
+def PrintResultSummary():
+    print("\nResult Summary:")
+    print("=" * 78)
+    print("%-24s %-32s %-6s %-6s %-6s" %\
+          ('Module', 'Name', 'Passed', 'Failed', ' Total'))
+    print("=" * 78)
+    module = modDB.getfirst()
+    passed = 0
+    failed = 0
+    total = 0
+    while module != None:
+        print("%-24s %-32s %6d %6d %6d" %\
+              (module.module, module.name,
+               module.passed, module.failed, module.total))
+        passed += module.passed
+        failed += module.failed
+        total += module.total
+        module = modDB.getnext()
+    print("-" * 78)
+    print("%-24s %-32s %6d %6d %6d" % ('Total', '', passed, failed, total))
+    print("-" * 78)
+    return
+        
+def ProcessReport():
     report = TrigExpEngine.get_run_report(20)
     report.show()
-    logger.info("SUMMARY: TOTAL=%d PASS=%d FAIL=%d" %\
-                (report.passed_count + report.failed_count,
-                 report.passed_count, report.failed_count))
+    for tcid,tcreport in report.details.items():
+        tc = TestCaseDB.Get(tcid)
+        tc.status = tcreport.status
+        tc.module.UpdateResult(tc)
+    PrintResultSummary()
     if report.failed_count != 0:
         sys.exit(1)
-    sys.exit(0)
+    sys.exit(0)   
+    return
+
+def main():
+    ExecuteAllModules()
+    if GlobalOptions.standalone == True:
+        sys.exit(0)
+    ProcessReport()
+    return

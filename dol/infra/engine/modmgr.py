@@ -34,6 +34,10 @@ class Module:
         self.id             = ModuleIdAllocator.get()
         self.modhdl         = None
         self.infra_data     = None
+
+        self.passed         = 0
+        self.failed         = 0
+        self.total          = 0
         return
 
     def __select_config(self):
@@ -62,6 +66,14 @@ class Module:
     def __unload(self):
         del self.modhdl
         self.modhdl = None
+        return
+
+    def UpdateResult(self, tc):
+        self.total += 1
+        if tc.status == 'Failed':
+            self.failed += 1
+        else:
+            self.passed += 1
         return
 
     def RunModuleCallback(self, cb):

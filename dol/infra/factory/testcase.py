@@ -67,6 +67,7 @@ class TestCase(objects.FrameworkObject):
         self.descriptors    = objects.ObjectDatabase(logger = self)
         self.buffers        = objects.ObjectDatabase(logger = self)
 
+        self.module         = module
         self.infra_data     = infra_data
         self.testspec       = module.testspec
         self.logger         = infra_data.Logger
