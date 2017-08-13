@@ -1542,11 +1542,9 @@ def capri_parser_output_decoders(parser):
 
 def _fill_te_tcam_catch_all_run(tcam_t):
     # create an entry that will always be a 'hit'
-    te = copy.deepcopy(tcam_t)
-    te['valid']['value'] = str(1)
-    te['value']['value'] = str(0)
-    te['mask']['value'] = str(0)
-    return te
+    tcam_t['valid']['value'] = str(1)
+    tcam_t['value']['value'] = str(0)
+    tcam_t['mask']['value'] = str(0)
 
 def _phv_bit_flit_le_bit(phv_bit):
     # ncc numbers everthing from left to right, msb->lsb
@@ -1709,8 +1707,8 @@ def capri_te_cfg_output(stage):
             json_tbl_prof_key['sel%d' % k]['value'] = str(0)
         # setup tcam entry#0 as catch-all and prgram all tables in sram..
         idx = 0
-        te = _fill_te_tcam_catch_all_run(tcam_t)
-        json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % idx] = te
+        tcam_t = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % idx]
+        _fill_te_tcam_catch_all_run(tcam_t)
         # profile_id 0 is used to populate all the tables by the compiler
         run_all_tables = True
 
