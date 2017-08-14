@@ -37,6 +37,11 @@ public:
     ht *tenant_id_ht(void) const { return tenant_id_ht_; }
     ht *tenant_hal_handle_ht(void) const { return tenant_hal_handle_ht_; }
 
+    // get APIs for network related state
+    slab *network_slab(void) const { return network_slab_; }
+    ht *network_key_ht(void) const { return network_key_ht_; }
+    ht *network_hal_handle_ht(void) const { return network_hal_handle_ht_; }
+
     // get APIs for security profile related state
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
     ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
@@ -112,6 +117,13 @@ private:
         slab       *tenant_slab_;
         ht         *tenant_id_ht_;
         ht         *tenant_hal_handle_ht_;
+    } __PACK__;
+
+    // network related state
+    struct {
+        slab       *network_slab_;
+        ht         *network_key_ht_;
+        ht         *network_hal_handle_ht_;
     } __PACK__;
 
     // security profile related state

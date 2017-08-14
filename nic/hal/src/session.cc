@@ -403,6 +403,73 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Updates flow parameters for flow if the flow undergoes routing
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+update_flow_for_routing(session_args_t *args, SessionResponse *rsp, 
+                           bool is_initiator_flow)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    flow_cfg_t  *flow = NULL;
+    // ep_t        *sep = NULL, *dep = NULL;
+    l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
+
+    if (is_initiator_flow) {
+        flow = args->iflow;
+        // sep = args->sep;
+        // dep = args->dep;
+        sl2seg = args->sl2seg;
+        dl2seg = args->dl2seg;
+    } else {
+        flow = args->rflow;
+        // sep = args->dep;
+        // dep = args->sep;
+        sl2seg = args->dl2seg;
+        dl2seg = args->sl2seg;
+    }
+
+    // Routing case only if nat type is NONE
+    if (flow->nat_type != NAT_TYPE_NONE) {
+        return HAL_RET_OK;
+    }
+
+    if (sl2seg != dl2seg) {
+        // Routing
+        flow->ttl_dec = true;
+        flow->mac_sa_rewrite = true;
+        flow->mac_da_rewrite = true;
+        flow->rw_act = REWRITE_L3_REWRITE_ID;
+    }
+
+
+    return ret;
+}
+
+
+
+//------------------------------------------------------------------------------
+// Updates flow parameters for sessions if the flow undergoes routing
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+update_session_for_routing(session_args_t *args, SessionResponse *rsp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    ret = update_flow_for_routing(args, rsp, TRUE);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = update_flow_for_routing(args, rsp, FALSE);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+
 static inline hal_ret_t
 update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, if_t **dif, ep_t **dep)
 {
@@ -703,6 +770,13 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
+
+
+    ret = update_session_for_routing(&args, rsp);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    
 
     // update flows for dnat
     ret = update_flow_for_dest_nat(args.tenant, args.iflow, &args.dl2seg, &args.dif, &args.dep);

@@ -23,4 +23,17 @@ ip_addr_spec_to_ip_addr (ip_addr_t *out_ipaddr,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx, 
+                        const types::IPPrefix& in_ippfx)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ip_pfx->len = in_ippfx.prefix_len();
+    ret = ip_addr_spec_to_ip_addr(&ip_pfx->addr, in_ippfx.address());
+
+    return ret;
+
+}
+
 }    // namespace hal

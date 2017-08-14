@@ -9,6 +9,7 @@ namespace hal {
 typedef enum hal_slab_e {
     HAL_SLAB_NONE,
     HAL_SLAB_TENANT,
+    HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,
     HAL_SLAB_LIF,
     HAL_SLAB_LIF_QUEUE,

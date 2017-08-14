@@ -29,7 +29,8 @@ message NetworkKeyHandle {
 message NetworkSpec {
   types.ObjectMeta    meta              = 1;    // common object meta
   NetworkKeyHandle    key_or_handle     = 2;    // network being create or updated
-  repeated uint32     security_group    = 3;    // security group list(s) of this network
+  uint64              rmac              = 3;    // router mac for this network
+  repeated uint32     security_group    = 4;    // security group list(s) of this network
 }
 
 // NetworkRequestMsg is batched request message used to create/update network
@@ -94,5 +95,6 @@ message NetworkGetResponse {
 
 // NetworkGetResponseMsg is response to NetworkGetRequestMsg
 message NetworkGetResponseMsg {
-  repeated NetworkGetResponse    response = 1;    // batched get response
+  types.ApiStatus                api_status = 1;    // API status code
+  repeated NetworkGetResponse    response   = 2;    // batched get response
 }

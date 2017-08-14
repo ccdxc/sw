@@ -9,6 +9,7 @@
 #include <endpoint.hpp>
 #include <session.pb.h>
 #include <pd.hpp>
+#include <p4pd.h>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -100,18 +101,20 @@ inline std::ostream& operator<<(std::ostream& os, const flow_key_t& key)
 
 // flow config
 typedef struct flow_cfg_s {
-    flow_key_t        key;                 // flow's key
-    uint16_t          state:4;             // flow state
-    uint16_t          action:3;            // flow action(s)
-    uint16_t          role:1;              // flow role (initiator or responder)
-    uint16_t          nat_type:3;          // type of NAT
-    uint16_t          mac_sa_rewrite:1;    // rewrite src mac
-    uint16_t          mac_da_rewrite:1;    // rewrite dst mac
-    ip_addr_t         nat_sip;             // source NAT IP, if any
-    ip_addr_t         nat_dip;             // destination NAT IP, if any
-    uint16_t          nat_sport;           // NAT source port
-    uint16_t          nat_dport;           // NAT destination port
-    intf::LifQType    lif_qtype;           // qtype per flow
+    flow_key_t          key;                 // flow's key
+    uint16_t            state:4;             // flow state
+    uint16_t            action:3;            // flow action(s)
+    uint16_t            role:1;              // flow role (initiator or responder)
+    uint16_t            nat_type:3;          // type of NAT
+    uint16_t            mac_sa_rewrite:1;    // rewrite src mac
+    uint16_t            mac_da_rewrite:1;    // rewrite dst mac
+    rewrite_actions_en  rw_act;              // rewrite action
+    uint16_t            ttl_dec:1;           // decrement ttl
+    ip_addr_t           nat_sip;             // source NAT IP, if any
+    ip_addr_t           nat_dip;             // destination NAT IP, if any
+    uint16_t            nat_sport;           // NAT source port
+    uint16_t            nat_dport;           // NAT destination port
+    intf::LifQType      lif_qtype;           // qtype per flow
 } __PACK__ flow_cfg_t;
 
 // flow state

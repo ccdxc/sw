@@ -25,6 +25,7 @@
 #include <getopt.h>
 #include <hal.hpp>
 #include <tenant_svc.hpp>
+#include <network_svc.hpp>
 #include <interface_svc.hpp>
 #include <l2segment_svc.hpp>
 #include <endpoint_svc.hpp>
@@ -48,6 +49,7 @@ void
 svc_reg (const std::string& server_addr)
 {
     TenantServiceImpl        tenant_svc;
+    NetworkServiceImpl       network_svc;
     InterfaceServiceImpl     if_svc;
     L2SegmentServiceImpl     l2seg_svc;
     SessionServiceImpl       session_svc;

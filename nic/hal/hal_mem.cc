@@ -1,6 +1,7 @@
 #include <hal.hpp>
 #include <hal_state.hpp>
 #include <tenant.hpp>
+#include <network.hpp>
 #include <l2segment.hpp>
 #include <interface.hpp>
 #include <endpoint.hpp>
@@ -37,6 +38,24 @@ hal_state::init(void)
                                         hal::tenant_compute_handle_hash_func,
                                         hal::tenant_compare_handle_key_func);
     HAL_ASSERT_RETURN((tenant_hal_handle_ht_ != NULL), false);
+
+    // initialize network related data structures
+    network_slab_ = slab::factory("network", HAL_SLAB_NETWORK,
+                                 sizeof(hal::network_t), 16,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((network_slab_ != NULL), false);
+
+    network_key_ht_ = ht::factory(HAL_MAX_VRFS,
+                                hal::network_get_key_func,
+                                hal::network_compute_hash_func,
+                                hal::network_compare_key_func);
+    HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
+
+    network_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
+                                        hal::network_get_handle_key_func,
+                                        hal::network_compute_handle_hash_func,
+                                        hal::network_compare_handle_key_func);
+    HAL_ASSERT_RETURN((network_hal_handle_ht_ != NULL), false);
 
     // initialize security profile related data structures
     nwsec_profile_slab_ = slab::factory("nwsec-profile",

@@ -1,4 +1,5 @@
 -I ../../gen
+-I ../../gen/iris/include
 -I ../../hal/pd/iris
 -I ../../gen/protobuf
 -I ../../third-party/crc32

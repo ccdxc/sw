@@ -6,7 +6,6 @@ How to define Proto
     - Create your APIs in this proto file.
     - Each API takes in a RequestMsg as input and returns a Response. (Look at existing .protos for examples)
     - The .proto will be automatically picked by Makefile in proto/ and generates the .cc files in gen/protobuf.
-      Add <service>.pb.cc and <service>.grpc.pb.cc into Makefile.proto in proto/
     - Register the new service in main.cc in hal/. Look for server_builder.RegisterService(). Follow the existing examples.
     - Create a new .cc and .hpp in hal/svc. In this you will inherit the new service and override the APIs.
       Look at the existing services for examples.

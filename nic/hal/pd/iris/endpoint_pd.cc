@@ -8,6 +8,7 @@
 #include <lif_pd.hpp>
 #include <uplinkif_pd.hpp>
 #include <l2segment.hpp>
+#include <network.hpp>
 #include <l2seg_pd.hpp>
 #include <defines.h>
 #include <if_pd_utils.hpp>
@@ -213,6 +214,9 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
     rewrite_actiondata   data;
     DirectMap            *rw_tbl = NULL;
     mac_addr_t           *mac;
+    network_t            *nw = NULL;
+    ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
+    l2seg_t              *l2seg = NULL;
 
     memset(mac_sa, 0, sizeof(mac_sa));
     memset(mac_da, 0, sizeof(mac_da));
@@ -231,6 +235,14 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
             case REWRITE_NOP_ID:
                 break;
             case REWRITE_L3_REWRITE_ID:
+                l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
+                HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
+                nw = find_network_by_handle(l2seg->nw_handle);
+                // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
+                if (nw) {
+                    memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, nw->rmac_addr, 6);
+                } 
+                memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, *mac, 6);
                 break;
             case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
                 break;
@@ -362,7 +374,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     data.actionid = IPSG_IPSG_HIT_ID;
     data.ipsg_action_u.ipsg_ipsg_hit.lif = if_get_hw_lif_id(pi_if);
     mac = ep_get_mac_addr(pi_ep);
-    mac_int = MAC_TO_UINT64(*mac);
+    mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
     memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, &mac_int, 6);
     data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid = 1;
     data.ipsg_action_u.ipsg_ipsg_hit.vlan_id = if_get_encap_vlan(pi_if, l2seg);

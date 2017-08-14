@@ -359,9 +359,11 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     d.flow_info_action_u.flow_info_flow_info.mac_sa_rewrite = flow->mac_sa_rewrite;
     d.flow_info_action_u.flow_info_flow_info.mac_da_rewrite = flow->mac_da_rewrite;
+    d.flow_info_action_u.flow_info_flow_info.ttl_dec = flow->ttl_dec;
+    d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd, 
+            flow->rw_act);
 
     // TODO: if we are doing routing, then set ttl_dec to TRUE
-    d.flow_info_action_u.flow_info_flow_info.ttl_dec = FALSE;
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow->role;

@@ -5,6 +5,7 @@
 #include <l2segment.hpp>
 #include <nwsec.hpp>
 #include <interface.hpp>
+#include <network.hpp>
 #include <endpoint.hpp>
 #include <session.hpp>
 #include <tlscb.hpp>
@@ -16,6 +17,7 @@ namespace pd {
 
 using hal::tenant_t;
 using hal::l2seg_t;
+using hal::network_t;
 using hal::nwsec_profile_t;
 using hal::if_t;
 using hal::lif_t;

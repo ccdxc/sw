@@ -1,5 +1,7 @@
 -I ../gen
+-I ../gen/protobuf
 -I ../third-party/crc32
+-I ../third-party/spdlog/include
 -I svc
 -I src
 -I ../utils
@@ -7,3 +9,4 @@
 -I pd/iris
 -I pd
 -I ../include
+-std=c++11

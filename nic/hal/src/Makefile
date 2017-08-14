@@ -7,12 +7,14 @@ LCXXFLAGS = \
 			-I.. \
 			-I../svc \
 			-I../../gen/protobuf \
+			-I../../gen/iris/include \
 			-I../../include \
 			-I../../third-party/spdlog/include
 
 SOURCES = \
 		  utils.cc \
 		  tenant.cc \
+		  network.cc \
 		  interface.cc \
 		  l2segment.cc \
 		  endpoint.cc \

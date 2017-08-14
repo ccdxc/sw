@@ -1,4 +1,5 @@
 #include <interface.hpp>
+#include <network.hpp>
 #include <interface.pb.h>
 #include <l2segment.pb.h>
 #include <tenant.pb.h>
@@ -20,6 +21,8 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
+using nw::NetworkSpec;
+using nw::NetworkResponse;
 
 void
 hal_initialize()
@@ -145,6 +148,8 @@ TEST_F(uplinkif_test, test3)
     InterfaceL2SegmentResponse      if_l2seg_rsp;
     SecurityProfileSpec             sp_spec;
     SecurityProfileResponse         sp_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -158,6 +163,16 @@ TEST_F(uplinkif_test, test3)
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(1);
@@ -168,6 +183,7 @@ TEST_F(uplinkif_test, test3)
     
     // Create l2segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.set_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);

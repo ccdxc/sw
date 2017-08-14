@@ -69,6 +69,15 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
+    // TODO: Uncomment this once DOL config adds network handle
+#if 0
+    // must have network handle
+    if (spec.network_handle() == HAL_HANDLE_INVALID) {
+        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
+        return HAL_RET_HANDLE_INVALID;
+    }
+#endif
+
     // must have key-handle set
     if (!spec.has_key_or_handle()) {
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
@@ -121,6 +130,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg_t                *l2seg;
     tenant_id_t            tid;
     pd::pd_l2seg_args_t    pd_l2seg_args;
+    // hal_handle_t           nw_handle;
+    // network_t              *nw = NULL;
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -147,6 +158,18 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
+    // TODO: Uncomment this once DOL config adds network handle
+#if 0
+    // fetch the network information
+    nw_handle = spec.network_handle();
+    nw = find_network_by_handle(nw_handle);
+    if (nw == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        rsp->set_api_status(types::API_STATUS_NETWORK_NOT_FOUND);
+        goto end;
+    }
+#endif
+    
     // instantiate the L2 segment
     l2seg = l2seg_alloc_init();
     if (l2seg == NULL) {
@@ -157,6 +180,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
     l2seg->tenant_id = tid;
+    // l2seg->nw_handle = nw_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();

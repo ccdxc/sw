@@ -1,12 +1,13 @@
 TOPDIR = ../..
 PROGRAM = fte_test
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
-SYSTEM_LIBRARIES = -lpthread -lht -lfte -ltrace $(GTEST_ROOT)/make/gtest.a
+SYSTEM_LIBRARIES = -lpthread -lfte -lht -ltrace $(GTEST_ROOT)/make/gtest.a
 
 LCXXFLAGS = \
 	-I$(TOPDIR)/include \
 	-I$(TOPDIR)/hal/src \
 	-I$(TOPDIR)/gen/protobuf \
+	-I$(TOPDIR)/gen/iris/include \
 	-I$(TOPDIR)/p4/nw/include \
 	-I$(TOPDIR)/third-party/spdlog/include \
 	-I$(GTEST_ROOT)/include \

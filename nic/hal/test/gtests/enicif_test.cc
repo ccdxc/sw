@@ -1,4 +1,5 @@
 #include <interface.hpp>
+#include <network.hpp>
 #include <nwsec.hpp>
 #include <interface.pb.h>
 #include <l2segment.pb.h>
@@ -23,6 +24,8 @@ using intf::LifResponse;
 using intf::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
+using nw::NetworkSpec;
+using nw::NetworkResponse;
 
 void
 hal_initialize()
@@ -105,6 +108,8 @@ TEST_F(enicif_test, test1)
     InterfaceResponse           enicif_rsp;
     SecurityProfileSpec         sp_spec;
     SecurityProfileResponse     sp_rsp;
+    NetworkSpec                 nw_spec;
+    NetworkResponse             nw_rsp;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -118,6 +123,16 @@ TEST_F(enicif_test, test1)
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
@@ -126,6 +141,7 @@ TEST_F(enicif_test, test1)
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.set_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);

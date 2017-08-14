@@ -52,6 +52,7 @@ typedef struct ep_ip_entry_s {
 typedef struct ep_s {
     hal_spinlock_t       slock;                // lock to protect this structure
     ep_l2_key_t          l2_key;               // MAC, vlan information
+    hal_handle_t         nw_handle;            // network this EP belongs to
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
     hal_handle_t         if_handle;            // interface endpoint is attached to
     tenant_id_t          tenant_id;            // VRF this endpoint belongs to

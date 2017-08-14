@@ -8,7 +8,7 @@ OBJ_DIR = $(TOPDIR)/obj
 GEN_DIR = $(TOPDIR)/gen
 
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
-INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -I$(TOPDIR)/hal/svc -I$(TOPDIR)/hal/src -I$(TOPDIR)/utils/ -I$(TOPDIR)/hal/pd/common -I$(TOPDIR)/include -I$(TOPDIR)/hal/pd \
+INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -I$(GEN_DIR)/iris/include -I$(TOPDIR)/hal/svc -I$(TOPDIR)/hal/src -I$(TOPDIR)/utils/ -I$(TOPDIR)/hal/pd/common -I$(TOPDIR)/include -I$(TOPDIR)/hal/pd \
 		-I$(GTEST_ROOT)/include -I$(TOPDIR)/third-party/spdlog/include \
 		-I$(TOPDIR)/p4/nw/include
 

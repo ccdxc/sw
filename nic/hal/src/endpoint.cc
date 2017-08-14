@@ -159,6 +159,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         goto end;
     }
 
+
     // fetch the L2 segment information
     l2seg_handle = spec.l2_segment_handle();
     l2seg = find_l2seg_by_handle(l2seg_handle);
