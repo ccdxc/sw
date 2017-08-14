@@ -659,7 +659,6 @@ pd_tcpcb_create (pd_tcpcb_args_t *args)
     }
     HAL_TRACE_DEBUG("Alloc done");
     tcpcb_pd->tcpcb = args->tcpcb;
-    HAL_TRACE_DEBUG("Alok2");
     // get hw-id for this TCPCB
     tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd);
     HAL_TRACE_DEBUG("Received hw-id");
@@ -667,14 +666,12 @@ pd_tcpcb_create (pd_tcpcb_args_t *args)
     // program tcpcb
     ret = p4pd_add_or_del_tcpcb_entry(tcpcb_pd, false);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Alok3");
         goto cleanup;    
     }
     HAL_TRACE_DEBUG("Programming done");
     // add to db
     ret = add_tcpcb_pd_to_db(tcpcb_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Alok16");
        goto cleanup;
     }
     HAL_TRACE_DEBUG("DB add done");
