@@ -2,6 +2,7 @@
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
+import infra.config.base        as base
 
 import config.resmgr            as resmgr
 import config.objects.segment   as segment
@@ -12,7 +13,7 @@ import config.hal.defs           as haldefs
 from infra.common.logging       import cfglogger
 from config.store               import Store
 
-class UplinkObject(objects.FrameworkObject):
+class UplinkObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(Store.templates.Get('UPLINK'))
@@ -22,7 +23,7 @@ class UplinkObject(objects.FrameworkObject):
         self.GID(spec.id)
         self.id = resmgr.InterfaceIdAllocator.get()
         self.port   = spec.port
-        self.type   = haldefs.interface.IF_TYPE_UPLINK
+        self.type   = 'UPLINK'
         self.status = haldefs.interface.IF_STATUS_UP
         self.sriov  = spec.sriov
         self.mode   = spec.mode
@@ -38,7 +39,7 @@ class UplinkObject(objects.FrameworkObject):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.interface_id = self.id
 
-        req_spec.type = self.type
+        req_spec.type = haldefs.interface.IF_TYPE_UPLINK
         req_spec.admin_status = self.status
 
         req_spec.if_uplink_info.port_num = self.port
@@ -53,6 +54,9 @@ class UplinkObject(objects.FrameworkObject):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
         return
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
+
 
 class UplinkObjectHelper:
     def __init__(self):

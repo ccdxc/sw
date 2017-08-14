@@ -63,29 +63,8 @@ class LifObject(objects.FrameworkObject):
                         self.hal_handle))
         return
 
-    def __match_one(self, filter_tuple):
-        keytype = filter_tuple[0]
-        value = filter_tuple[1]
-
-        if keytype == defs.filters.ID:
-            return self.id == value
-        elif keytype == defs.filters.ANY:
-            return True
-        return False
-
-    def match(self, filterobj):
-        if filterobj == None: return True
-        for f in filterobj.get():
-            if not self.__match_one(f):
-                return False
-        return True
-
-
-        self.lifspec = self.tenant.spec.lif.spec.Get(Store)
-        assert(self.lifspec)
-        objlist = lif.LoadConfigSpec(self.lifspec, self)
-        assert(len(objlist) == 1)
-        self.lif = objlist[0]
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 class LifObjectHelper:
     def __init__(self):

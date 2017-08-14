@@ -15,7 +15,7 @@ from infra.engine.trigger import TrigExpEngine
 
 global modDB
 
-TestCaseDB = objects.ObjectDatabase(logger)
+TestCaseDB = objects.ObjectDatabase(None)
 
 def init():
     global modDB
@@ -43,30 +43,38 @@ def ExecuteAllModules():
     while module != None:
         infra_data = CreateInfraData()
         status = module.main(infra_data)
-        TestCaseDB.SetAll(infra_data.TestCases)
+        if len(infra_data.TestCases):
+            TestCaseDB.SetAll(infra_data.TestCases)
         module = modDB.getnext()
-  
-def PrintResultSummary():
+ 
+def PrintSummaryAndExit(report):
     print("\nResult Summary:")
     print("=" * 78)
-    print("%-24s %-32s %-6s %-6s %-6s" %\
-          ('Module', 'Name', 'Passed', 'Failed', ' Total'))
+    print("%-16s %-32s %-6s %-6s %-6s %-6s" %\
+          ('Module', 'Name', '', 'Passed', 'Failed', ' Total'))
     print("=" * 78)
+    
     module = modDB.getfirst()
-    passed = 0
-    failed = 0
-    total = 0
+    final_result = 0
     while module != None:
-        print("%-24s %-32s %6d %6d %6d" %\
-              (module.module, module.name,
-               module.passed, module.failed, module.total))
-        passed += module.passed
-        failed += module.failed
-        total += module.total
+        module.PrintResultSummary()
+        module_result = module.GetFinalResult()
+        #logger.info("Module %s result = %d" % (module.name, module_result))
+        final_result += module_result
         module = modDB.getnext()
+    
     print("-" * 78)
-    print("%-24s %-32s %6d %6d %6d" % ('Total', '', passed, failed, total))
+    print("%-16s %-32s %-6s %6d %6d %6d" %\
+          ('Total', '', '', report.passed_count, report.failed_count, 
+           report.passed_count + report.failed_count))
     print("-" * 78)
+    if final_result != 0:
+        print("Final Status = FAIL")
+        sys.exit(1)
+    
+    print("Final Status = PASS")
+    sys.exit(0)   
+
     return
         
 def ProcessReport():
@@ -76,15 +84,12 @@ def ProcessReport():
         tc = TestCaseDB.Get(tcid)
         tc.status = tcreport.status
         tc.module.UpdateResult(tc)
-    PrintResultSummary()
-    if report.failed_count != 0:
-        sys.exit(1)
-    sys.exit(0)   
+    PrintSummaryAndExit(report)
     return
 
 def main():
     ExecuteAllModules()
-    if GlobalOptions.standalone == True:
+    if GlobalOptions.dryrun == True:
         sys.exit(0)
     ProcessReport()
     return

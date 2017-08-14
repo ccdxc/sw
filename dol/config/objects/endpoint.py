@@ -132,6 +132,8 @@ class EndpointObjectHelper:
 
     def __create(self, segment, intfs, count, remote = False):
         eps = []
+        if count > len(intfs):
+            count = len(intfs)
         for e in range(count):
             intf = intfs[e % len(intfs)]
             ep = EndpointObject()

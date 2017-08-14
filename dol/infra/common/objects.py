@@ -875,9 +875,9 @@ class ObjectDatabase(FrameworkObject):
 
     def Set(self, key, data):
         if key in self.db:
-            self.logger.error("Duplicate Key : %s" % key)
+            print("ERROR: Duplicate Key : %s" % key)
             assert(0)
-        self.logger.info("- Adding %s to store." % key)
+        if self.logger: self.logger.info("- Adding %s to store." % key)
         self.db[key] = data
         return
 

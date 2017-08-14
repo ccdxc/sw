@@ -8,6 +8,7 @@ import infra.common.defs        as defs
 import infra.common.utils       as utils
 import infra.common.logging     as logging
 import infra.common.objects     as objects
+import infra.common.loader      as loader
 import infra.factory.testspec   as testspec
 
 from config.objects.session import SessionHelper
@@ -18,6 +19,12 @@ ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 
 MODULE_CB_SETUP     = 'Setup'
 MODULE_CB_TEARDOWN  = 'Teardown'
+class ModuleStats:
+    def __init__(self):
+        self.passed     = 0
+        self.failed     = 0
+        self.ignored    = 0
+        self.total      = 0
 
 class Module:
     def __init__(self, parsedata):
@@ -28,16 +35,15 @@ class Module:
         self.module     = parsedata.module
         self.spec       = parsedata.spec
         self.path       = self.package.replace(".", "/")
+        self.ignore     = parsedata.ignore
         self.args       = None 
         if 'args' in parsedata.__dict__:
             self.args = parsedata.args
         self.id             = ModuleIdAllocator.get()
-        self.modhdl         = None
+        self.module_hdl         = None
         self.infra_data     = None
 
-        self.passed         = 0
-        self.failed         = 0
-        self.total          = 0
+        self.stats = ModuleStats()
         return
 
     def __select_config(self):
@@ -58,36 +64,63 @@ class Module:
     def __load(self):
         utils.LogFunctionBegin(self.logger)
         if self.module:
-            module_name = "%s.%s" % (self.parsedata.package, self.module)
-            self.modhdl = importlib.import_module(module_name)
-            assert(self.modhdl)
+            self.module_hdl = loader.ImportModule(self.package, self.module)
+            assert(self.module_hdl)
         utils.LogFunctionEnd(self.logger)
 
     def __unload(self):
-        del self.modhdl
-        self.modhdl = None
+        del self.module_hdl
+        self.module_hdl = None
         return
 
     def UpdateResult(self, tc):
-        self.total += 1
+        self.stats.total += 1
         if tc.status == 'Failed':
-            self.failed += 1
+            if self.ignore:
+                self.stats.ignored += 1
+            self.stats.failed += 1
         else:
-            self.passed += 1
+            self.stats.passed += 1
         return
 
-    def RunModuleCallback(self, cb):
-        if self.modhdl == None:
-            return
-        if hasattr(self.modhdl, cb):
-            cb_handle = getattr(self.modhdl, cb)
-            assert(cb_handle != None)
-            return cb_handle(self.infra_data, self)
+    def GetFinalResult(self):
+        if self.stats.failed == 0:
+            return 0
+        assert(self.stats.failed >= self.stats.ignored)
+        net_fail = self.stats.failed - self.stats.ignored
+        if net_fail > 0:
+            return 1
+        return 0
+
+    def PrintResultSummary(self):
+        ign = ''
+        if self.ignore:
+            ign = 'ignore'
+        print("%-16s %-32s %-6s %6d %6d %6d" %\
+              (self.module, self.name, ign,
+               self.stats.passed, self.stats.failed,
+               self.stats.total))
         return
+
+    def GetNumFailed(self):
+        if self.ignore:
+            return 0
+        return self.failed
+
+    def RunModuleCallback(self, cb, *args):
+        if self.module_hdl == None:
+            return
+        if hasattr(self.module_hdl, cb):
+            cb_handle = getattr(self.module_hdl, cb)
+            assert(cb_handle != None)
+            return cb_handle(*args)
+        return
+
+
 
     def __setup_callback(self):
         utils.LogFunctionBegin(self.logger)
-        self.RunModuleCallback(MODULE_CB_SETUP)
+        self.RunModuleCallback(MODULE_CB_SETUP, self.infra_data, self)
         utils.LogFunctionEnd(self.logger)
         return
 
@@ -116,7 +149,7 @@ class Module:
 
     def __teardown_callback(self):
         utils.LogFunctionBegin(self.logger)
-        self.RunModuleCallback(MODULE_CB_TEARDOWN)
+        self.RunModuleCallback(MODULE_CB_TEARDOWN, self.infra_data, self)
         utils.LogFunctionEnd(self.logger)
         return
 
@@ -168,6 +201,9 @@ class ModuleDatabase:
 
         if pmod.enable == False:
             return
+
+        if 'ignore' not in pmod.__dict__:
+            pmod.ignore = False
 
         if GlobalOptions.test == None or\
            GlobalOptions.test == pmod.name:

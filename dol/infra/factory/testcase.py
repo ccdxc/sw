@@ -171,8 +171,27 @@ class TestCase(objects.FrameworkObject):
             self.session.append(tc_ssn_entry)
         return defs.status.SUCCESS
 
+    def __setup_callback(self):
+        self.module.RunModuleCallback('TestCaseSetup', self)
+        return
+
+    def __teardown_callback(self):
+        self.module.RunModuleCallback('TestCaseTeardown', self)
+        return
+
+    def __show_config_objects(self):
+        self.info("- Config Objects for TestCase:")
+        self.info("  - Src EP: %s" % self.config.src.endpoint.GID())
+        self.info("  - Src IF: %s" % self.config.src.endpoint.intf.GID())
+        self.info("  - Dst EP: %s" % self.config.dst.endpoint.GID())
+        self.info("  - Dst IF: %s" % self.config.dst.endpoint.intf.GID())
+        self.info("  - Flow  : %s" % self.config.flow)
+        return
+    
     def __generate(self):
-        self.info("Generating TestCase")
+        self.info("%s Starting TestCase. %s" % ('=' * 20, '=' * 20))
+        self.__show_config_objects()
+        self.__setup_callback()
         self.__generate_objects()
         self.__setup_session()
         return defs.status.SUCCESS

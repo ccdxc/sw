@@ -20,7 +20,7 @@ def _mock_module_common(modules):
         glopts = Object()
         glopts.debug = False
         glopts.verbose = False
-        glopts.standalone = False
+        glopts.dryrun = False
         glopts.no_hal = True
         glopts.modlist = "dol_test_modules.list"
         glopts.topology = "base/base.spec"

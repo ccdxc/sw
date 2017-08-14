@@ -781,7 +781,7 @@ class Trigger(InfraThreadHandler):
     def __init__(self, connector='ModelConnector', addr=utils.FakeModelSockAddr()):
         super(Trigger, self).__init__(name="Trigger MAIN",
                                       max_idle_interval=1, max_time_per_run=200)
-        if GlobalOptions.standalone:
+        if GlobalOptions.dryrun:
             logger.info("Connecting trigger to dumb connector....")
             self._connector = Connector.factory('DumbConnector')(addr)
         else:
@@ -799,7 +799,7 @@ class Trigger(InfraThreadHandler):
         self._tc_db = dict()
 
     def run_test_case(self, test_case):
-        if GlobalOptions.standalone:
+        if GlobalOptions.dryrun:
             test_case.status = defs.status.SUCCESS
             return
 
@@ -908,7 +908,7 @@ class Trigger(InfraThreadHandler):
         logger.info("Trigger Stopped.")
 
     def eventTimeout(self):
-        if GlobalOptions.standalone:
+        if GlobalOptions.dryrun:
             return
         with self._tc_db_lock:
             for tc_id in list(self._tc_db.keys()):
@@ -1010,7 +1010,7 @@ class Trigger(InfraThreadHandler):
                 tc_report = TriggerTestCaseReport(self._tc_db[tc_id])
                 tc_report.id, tc_report.result, tc_report.details = tc_id, result, details
                 self._tc_status_dict[tc_id] = tc_report
-                del self._tc_db[tc_id]
+                #del self._tc_db[tc_id]
 
         report = TriggerReport()
         for tc_id in self._tc_status_dict:

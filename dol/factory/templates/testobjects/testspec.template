@@ -4,13 +4,15 @@ meta:
 
 config_filter:
     src:
-        tenant  : filter://any
-        segment : filter://any
-        endpoint: filter://any
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        interface   : filter://any
     dst:
-        tenant  : filter://any
-        segment : filter://any
-        endpoint: filter://any
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        interface   : filter://any
     flow: filter://any
     maxflows: None
     rdma:

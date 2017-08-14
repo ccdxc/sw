@@ -16,12 +16,14 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 class FlowObject(base.ConfigObjectBase):
-    def __init__(self, sfep, dfep):
+    def __init__(self, session, sfep, dfep, direction):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         
         self.ID(resmgr.FlowIdAllocator.get())
         assert(sfep.type == dfep.type)
+        self.session = session
+        self.direction = direction
         self.type   = sfep.type
         self.sep    = sfep.ep
         self.dep    = dfep.ep
@@ -151,7 +153,8 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def __str__(self):
-        string = self.type + '/'
+        string = "%s:%s:" % (self.session.GID(), self.direction)
+        string += self.type + '/'
         if self.IsIP():
             string += "%d/%s/%s/" % (self.domid, self.sip.get(), self.dip.get())
         else:
@@ -187,6 +190,12 @@ class FlowObject(base.ConfigObjectBase):
         if match == False: return match
         # Match Destination Endpoint
         match = self.dep.IsFilterMatch(config_filter.dst.endpoint)
+        if match == False: return match
+        # Match Source Interface
+        match = self.sep.intf.IsFilterMatch(config_filter.src.interface)
+        if match == False: return match
+        # Match Destination Interface
+        match = self.dep.intf.IsFilterMatch(config_filter.dst.interface)
         if match == False: return match
         # Match Flow
         match = super().IsFilterMatch(config_filter.flow.filters)

@@ -2,6 +2,7 @@
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
+import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from infra.common.logging       import cfglogger
@@ -14,7 +15,7 @@ ENIC_TYPE_DIRECT= 'DIRECT'
 ENIC_TYPE_USEG  = 'USEG'
 ENIC_TYPE_PVLAN = 'PVLAN'
 
-class EnicObject(objects.FrameworkObject):
+class EnicObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.id = resmgr.InterfaceIdAllocator.get()
@@ -88,6 +89,8 @@ class EnicObject(objects.FrameworkObject):
                         self.hal_handle))
         return
 
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 class EnicObjectHelper:
     def __init__(self):

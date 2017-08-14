@@ -101,7 +101,7 @@ def init():
     return
 
 def IsHalDisabled():
-    return GlobalOptions.no_hal or GlobalOptions.standalone
+    return GlobalOptions.no_hal or GlobalOptions.dryrun
 
 def ConfigureLifs(objlist):
     if IsHalDisabled(): return

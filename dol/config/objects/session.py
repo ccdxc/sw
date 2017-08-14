@@ -31,8 +31,10 @@ class SessionObject(base.ConfigObjectBase):
         self.initiator = initiator
         self.responder = responder
 
-        self.iflow = flow.FlowObject(self.initiator, self.responder)
-        self.rflow = flow.FlowObject(self.responder, self.initiator)
+        self.iflow = flow.FlowObject(self, self.initiator,
+                                     self.responder, 'IFLOW')
+        self.rflow = flow.FlowObject(self, self.responder,
+                                     self.initiator, 'RFLOW')
 
         cfglogger.info("Created Session with GID:%s" % self.GID())
         cfglogger.info("  - Initiator       : %s" % self.initiator)

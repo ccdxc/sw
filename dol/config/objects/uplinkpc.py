@@ -1,7 +1,9 @@
 #! /usr/bin/python3
+import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
+import infra.config.base        as base
 
 import config.resmgr            as resmgr
 import config.objects.segment   as segment
@@ -12,7 +14,7 @@ from config.store               import Store
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-class UplinkPcObject(objects.FrameworkObject):
+class UplinkPcObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(Store.templates.Get('UPLINKPC'))
@@ -22,7 +24,7 @@ class UplinkPcObject(objects.FrameworkObject):
         self.id = resmgr.InterfaceIdAllocator.get()
         self.GID(spec.id)
         self.port   = spec.port
-        self.type   = haldefs.interface.IF_TYPE_UPLINK_PC
+        self.type   = 'UPLINK_PC'
         self.status = haldefs.interface.IF_STATUS_UP
         self.mode   = spec.mode
 
@@ -44,7 +46,7 @@ class UplinkPcObject(objects.FrameworkObject):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.interface_id = self.id
 
-        req_spec.type = self.type
+        req_spec.type = haldefs.interface.IF_TYPE_UPLINK_PC
         req_spec.admin_status = self.status
 
         req_spec.if_uplink_pc_info.uplink_pc_num = self.port
@@ -62,6 +64,9 @@ class UplinkPcObject(objects.FrameworkObject):
 
         self.hal_handle = resp_spec.status.if_handle
         return
+
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
 
 class UplinkPcObjectHelper:
     def __init__(self):
@@ -91,6 +96,7 @@ class UplinkPcObjectHelper:
         return
 
     def main(self, topospec):
+        return
         self.Generate(topospec)
         self.Configure()
         if len(self.uplinkpcs) == 0: return

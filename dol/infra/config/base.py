@@ -22,7 +22,7 @@ class ConfigObjectBase(objects.FrameworkObject):
             attr = f[0]
             value = f[1]
             if attr == 'any' and value == None:
-                return True
+                continue
             if attr not in self.__dict__:
                 cfglogger.error("Attr:%s not present in %s." %\
                                 (attr, self.__class__))

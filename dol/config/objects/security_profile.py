@@ -86,6 +86,9 @@ class SecurityProfileObject(base.ConfigObjectBase):
                         self.hal_handle))
         return
 
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
+
 # Helper Class to Generate/Configure/Manage Security Profile Objects
 class SecurityProfileObjectHelper:
     def __init__(self):

@@ -66,6 +66,9 @@ class TunnelObject(objects.FrameworkObject):
                         self.hal_handle))
         return
 
+    def IsFilterMatch(self, spec):
+        return super().IsFilterMatch(spec.filters)
+
 class TunnelObjectHelper:
     def __init__(self):
         self.tunnels = []

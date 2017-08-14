@@ -19,7 +19,7 @@ def _mock_module_common(modules):
         glopts = Object()
         glopts.debug = False
         glopts.verbose = False
-        glopts.standalone = False
+        glopts.dryrun = False
         glopts.no_hal = False
         glopts.level = 0
         return glopts

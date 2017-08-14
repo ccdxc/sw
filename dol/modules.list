@@ -9,6 +9,17 @@ modules:
         args    :
             flow: filter://type=IPV4,proto=UDP
     - module:
+        name    : L2UC_IPV4_UDP_PC_TO_PC
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=UDP
+            srcif: filter://type=UPLINK_PC
+            dstif: filter://type=UPLINK_PC
+    - module:
         name    : L2UC_IPV4_TCP
         enable  : True
         package : test.networking
@@ -18,10 +29,11 @@ modules:
             flow: filter://type=IPV4,proto=TCP
     - module:
         name    : L2UC_IPV4_ICMP
-        enable  : False
+        enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
+        ignore  : True
         args    :
             flow: filter://type=IPV4,proto=ICMP
     - module:
@@ -42,10 +54,11 @@ modules:
             flow: filter://type=IPV6,proto=TCP
     - module:
         name    : L2UC_NONIP
-        enable  : False
+        enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
+        ignore  : False
         args    : None
     - module:
         name    : NORMALIZATION
