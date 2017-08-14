@@ -4,7 +4,8 @@ DOL=$PWD
 NIC=$PWD/../nic/
 MOCKMODEL=${DOL}/mockmodel
 LOG_FILE=${DOL}/ut_run.log
-declare -a ut_files=("test_trigger_with_mock_model.py" "test_packet.py")
+declare -a ut_files=("test_trigger_with_mock_model.py" "test_packet.py",
+ "test_dol_main.py")
 
 export PYTHONPATH=${DOL}:${NIC}
 export WS_TOP=${WS_TOP}/sw

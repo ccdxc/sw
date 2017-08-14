@@ -23,21 +23,9 @@ from infra.common.objects import FrameworkObject
 from infra.common.utils import convert_object_to_dict
 from infra.factory.testcase import TestCaseTrigExpPacketObject,\
     TestCaseTrigExpDescriptorObject
+from infra.factory.pktfactory import get_factory_id_from_scapy_id
 
 PEN_REF = getattr(penscapy, "PENDOL")
-
-
-'''Scapy Packet Comparator'''
-
-scapy_hdr_map = {"IP": "IPV4",
-                 "IPv6": "IPV6",   
-                 "Ether": "ETHERNET",
-                 "Dot1Q": "QTAG",
-                 "TCP": "TCP",
-                 "UDP": "UDP",
-                 "PAYLOAD": "PAYLOAD",
-                 "PENDOL": "PENDOL",
-                 "CRC": "CRC"}
 
 
 class TestCaseParser(parser.ParserBase):
@@ -222,7 +210,8 @@ def PacketCompare(expected, actual, partial_match=None):
             hdrs.append(p.__class__.__name__)
             p = p.payload
         return hdrs
-        #return [header.strip().split(" ")[0] for header in spkt.summary().split("/")]
+        # return [header.strip().split(" ")[0] for header in
+        # spkt.summary().split("/")]
 
     result = PacketCompareResult()
 
@@ -240,7 +229,8 @@ def PacketCompare(expected, actual, partial_match=None):
     result.headers = defaultdict(lambda: {})
     for header in match_hdrs:
         hdr_result = TriggerObjectCompareResult()
-        header_info = FactoryStore.headers.Get(scapy_hdr_map[header])
+        header_info = FactoryStore.headers.Get(
+            get_factory_id_from_scapy_id(header))
         if not header_info:
             assert 0
         scapy_ref = getattr(penscapy, header)
@@ -497,7 +487,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 packet_ctx = recvd_packets.pop()
                 packet = packet_ctx.packet
                 for exp_pkt in self._exp_rcv_data[port].expected[:]:
-                    # TODO :ADd Partial Match.
+                    # TODO :Add Partial Match.
                     match, match_result = self._packets_match(
                         exp_pkt.packet.spkt, packet, None)
                     if not match:
@@ -579,6 +569,12 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             mismatch_result = PacketMismatchResult()
             mismatch_result.id, mismatch_result.expected, mismatch_result.actual = key.packet.GID(
             ), expected_packet, actual_packet
+
+            # Remove header mismatches which are empty.
+            for hdr in list(res[1].headers.keys()):
+                hdr_result = res[1].headers[hdr]
+                if not hdr_result.not_empty():
+                    del res[1].headers[hdr]
             mismatch_result.mismatch = self._convert_mismatch_result(
                 res[1].__dict__)
             result.mismatch.append(mismatch_result)

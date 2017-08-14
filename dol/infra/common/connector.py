@@ -138,7 +138,6 @@ class ModelConnector(Connector):
         self.set_recv_timeout()
 
     def send(self, data, port):
-        logger.verbose("Sending packet to the model.")
         model_wrap.step_network_pkt(data, port)
         self._queue_all_model_packets()
 
@@ -160,7 +159,6 @@ class ModelConnector(Connector):
         opkt, port, cos = model_wrap.get_next_pkt()
         if len(opkt) == 0:
             raise Connector.Timeout
-        logger.info("Received packet from model", len(opkt))
         try:
             spkt = penscapy.Parse(opkt)
         except:

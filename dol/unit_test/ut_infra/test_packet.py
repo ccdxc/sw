@@ -1,4 +1,4 @@
-from scapy.all import TCP
+from third_party.scapy.all import TCP
 
 from unit_test.ut_infra.test_common import DolInfraTest
 from unit_test.ut_infra.test_common import mock_modules

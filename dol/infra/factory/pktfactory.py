@@ -14,6 +14,8 @@ from infra.factory.store            import FactoryStore
 from infra.common.logging           import pktlogger
 from infra.penscapy                 import penscapy
 
+scapy_hdr_map = {}
+
 def IsVariableSizedField(field):
     if isinstance(field, objects.PatternFixed) or\
        isinstance(field, objects.PatternIncrement) or\
@@ -22,10 +24,16 @@ def IsVariableSizedField(field):
         return True
     return False
 
+def get_factory_id_from_scapy_id(scapy_id):
+    return scapy_hdr_map.get(scapy_id)
+
 def init():
     pktlogger.info("Loading HEADER templates.")
     objlist = template.ParseHeaderTemplates()
     FactoryStore.headers.SetAll(objlist)
+    global scapy_hdr_map
+    for hdr in objlist:
+        scapy_hdr_map[hdr.meta.scapy] = hdr.meta.id
 
     pktlogger.info("Loading PACKET templates.")
     objlist = template.ParsePacketTemplates()
