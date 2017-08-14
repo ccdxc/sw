@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"time"
 
-	netutils "github.com/pensando/sw/utils/net"
+	"github.com/pensando/sw/utils/netutils"
 	"github.com/pkg/errors"
 )
 

@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/ctrler/npm/writer"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
@@ -108,8 +107,8 @@ func (eps *EndpointState) attachSecurityGroups() error {
 }
 
 // Write writes the object to api server
-func (eps *EndpointState) Write() error {
-	return writer.WriteObject(eps)
+func (eps *EndpointState) Write(update bool) error {
+	return eps.stateMgr.writer.WriteEndpoint(&eps.Endpoint, update)
 }
 
 // Delete deletes all state associated with the endpoint
@@ -142,7 +141,7 @@ func NewEndpointState(epinfo network.Endpoint, stateMgr *Statemgr) (*EndpointSta
 	}
 
 	// save it to api server
-	err = eps.Write()
+	err = eps.Write(false)
 	if err != nil {
 		log.Errorf("Error writing the endpoint state to api server. Err: %v", err)
 		return nil, err

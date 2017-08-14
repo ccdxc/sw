@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
@@ -20,34 +19,33 @@ import (
 )
 
 // handleApisrvWatch handles api server watch events
-func (w *Watcher) handleApisrvWatch(apicl apiclient.Services) {
+func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Services) {
 	// network watcher
 	opts := api.ListWatchOptions{}
-	ctx := context.Background()
 	netWatcher, err := apicl.NetworkV1().Network().Watch(ctx, &opts)
 	if err != nil {
-		logrus.Errorf("Failed to start watch (%s)\n", err)
+		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
 
 	// sg watcher
 	sgWatcher, err := apicl.SecurityGroupV1().SecurityGroup().Watch(ctx, &opts)
 	if err != nil {
-		logrus.Errorf("Failed to start watch (%s)\n", err)
+		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
 
 	// sg policy watcher
 	sgpWatcher, err := apicl.SgpolicyV1().Sgpolicy().Watch(ctx, &opts)
 	if err != nil {
-		logrus.Errorf("Failed to start watch (%s)\n", err)
+		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
 
 	// ep object watcher
 	epWatcher, err := apicl.EndpointV1().Endpoint().Watch(ctx, &opts)
 	if err != nil {
-		logrus.Errorf("Failed to start watch (%s)\n", err)
+		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
 
@@ -56,14 +54,14 @@ func (w *Watcher) handleApisrvWatch(apicl apiclient.Services) {
 		select {
 		case evt, ok := <-netWatcher.EventChan():
 			if !ok {
-				logrus.Errorf("Error receiving from apisrv watcher")
+				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
 
 			w.netWatcher <- *evt
 		case evt, ok := <-sgWatcher.EventChan():
 			if !ok {
-				logrus.Errorf("Error receiving from apisrv watcher")
+				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
 
@@ -71,14 +69,14 @@ func (w *Watcher) handleApisrvWatch(apicl apiclient.Services) {
 
 		case evt, ok := <-sgpWatcher.EventChan():
 			if !ok {
-				logrus.Errorf("Error receiving from apisrv watcher")
+				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
 			w.netWatcher <- *evt
 
 		case evt, ok := <-epWatcher.EventChan():
 			if !ok {
-				logrus.Errorf("Error receiving from apisrv watcher")
+				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
 			w.vmmEpWatcher <- *evt
@@ -87,11 +85,15 @@ func (w *Watcher) handleApisrvWatch(apicl apiclient.Services) {
 }
 
 // runApisrvWatcher run API server watcher forever
-func (w *Watcher) runApisrvWatcher(apisrvURL string) {
+func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string) {
 	// if we have no URL, exit
 	if apisrvURL == "" {
 		return
 	}
+
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
 
 	// create logger
 	config := log.GetDefaultConfig("NpmApiWatcher")
@@ -101,17 +103,21 @@ func (w *Watcher) runApisrvWatcher(apisrvURL string) {
 	for {
 		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
 		if err != nil {
-			logrus.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
+			log.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
+		} else {
+			log.Infof("API client connected {%+v}", apicl)
 
-			// wait for a second and retry connecting to api server
-			time.Sleep(time.Second)
-			continue
+			// handle api server watch events
+			w.handleApisrvWatch(ctx, apicl)
 		}
 
-		logrus.Infof("API client connected {%+v}", apicl)
+		// if stop flag is set, we are done
+		if w.stopFlag {
+			log.Infof("Exiting API server watcher")
+			return
+		}
 
-		// handle api server watch events
-		w.handleApisrvWatch(apicl)
+		// wait for a second and retry connecting to api server
 		time.Sleep(time.Second)
 	}
 }
@@ -122,7 +128,7 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 		// keep receving events
 		evt, err := stream.Recv()
 		if err != nil {
-			logrus.Errorf("Error receving from nw if watcher. Err: %v", err)
+			log.Errorf("Error receving from nw if watcher. Err: %v", err)
 			return
 		}
 
@@ -180,38 +186,43 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 }
 
 // runVmmWatcher runs grpc client to watch VMM events
-func (w *Watcher) runVmmWatcher(vmmURL string) {
+func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string) {
 	// if we have no URL, exit
 	if vmmURL == "" {
 		return
 	}
+
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
 
 	// loop forever
 	for {
 		// create a grpc client
 		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, "", "", "")
 		if err != nil {
-			logrus.Warnf("Error connecting to grpc server. Err: %v", err)
+			log.Warnf("Error connecting to grpc server. Err: %v", err)
+		} else {
+			// create vmm client
+			vmmClient := orch.NewOrchApiClient(rpcClient.ClientConn)
 
-			// wait for a bit and retry connecting
-			time.Sleep(time.Second)
-			continue
+			// keep receiving events
+			stream, err := vmmClient.WatchNwIFs(ctx, &orch.WatchSpec{})
+			if err != nil {
+				log.Errorf("Error watching vmm nw if")
+			} else {
+				// handle vmm events
+				w.handleVmmEvents(stream)
+			}
 		}
 
-		// create vmm client
-		vmmClient := orch.NewOrchApiClient(rpcClient.ClientConn)
-
-		// keep receiving events
-		stream, err := vmmClient.WatchNwIFs(context.Background(), &orch.WatchSpec{})
-		if err != nil {
-			logrus.Errorf("Error watching vmm nw if")
-			// wait for a bit and retry connecting
-			time.Sleep(time.Second)
-			continue
+		// if stop flag is set, we are done
+		if w.stopFlag {
+			log.Infof("Exiting VMM watcher")
+			return
 		}
 
-		// handle vmm events
-		w.handleVmmEvents(stream)
+		// wait for a bit and retry connecting
 		time.Sleep(time.Second)
 	}
 }

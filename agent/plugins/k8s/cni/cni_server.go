@@ -14,12 +14,12 @@ import (
 
 	cniapi "github.com/containernetworking/cni/pkg/skel"
 	"github.com/pensando/sw/agent/netagent"
-	"github.com/pensando/sw/agent/netagent/netutils"
-	"github.com/pensando/sw/agent/netagent/netutils/httputils"
+	"github.com/pensando/sw/agent/netagent/httputils"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/netutils"
 
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"

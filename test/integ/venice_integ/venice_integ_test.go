@@ -148,9 +148,14 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	for _, ag := range it.agents {
 		ag.Stop()
 	}
+	it.agents = []*agent.Agent{}
+	it.datapaths = []*datapath.MockHalDatapath{}
 
 	// stop server and client
 	it.ctrler.RPCServer.Stop()
+	it.ctrler = nil
+	it.apiSrv.Stop()
+	it.apiGw.Stop()
 }
 
 // basic test to make sure all components come up

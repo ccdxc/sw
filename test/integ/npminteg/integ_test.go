@@ -60,6 +60,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 		it.agents = append(it.agents, agent)
 	}
 
+	log.Infof("Total number of agents: %v", len(it.agents))
 }
 
 func (it *integTestSuite) SetUpTest(c *C) {
@@ -75,9 +76,13 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	for _, ag := range it.agents {
 		ag.nagent.Stop()
 	}
+	it.agents = []*Dpagent{}
 
 	// stop server and client
 	it.ctrler.RPCServer.Stop()
+	it.ctrler = nil
+
+	log.Infof("Stopped all servers and clients")
 }
 
 // basic connectivity tests between NPM and agent
@@ -134,49 +139,127 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 		return (nerr == nil)
 	}, "Network not found in statemgr")
 
+	// wait till agent has the network
+	for _, ag := range it.agents {
+		AssertEventually(c, func() bool {
+			ometa := api.ObjectMeta{Tenant: "default", Name: "testNetwork"}
+			_, nerr := ag.nagent.Netagent.FindNetwork(ometa)
+			return (nerr == nil)
+		}, "Network not found in agent")
+	}
+
+	// create a wait channel
+	waitCh := make(chan error, it.numAgents*2)
+
 	// create one endpoint from each agent
 	for i, ag := range it.agents {
-		epname := fmt.Sprintf("testEndpoint-%d", i)
-		hostName := fmt.Sprintf("testHost-%d", i)
+		go func(i int, ag *Dpagent) {
+			epname := fmt.Sprintf("testEndpoint-%d", i)
+			hostName := fmt.Sprintf("testHost-%d", i)
 
-		// make the call
-		ep, cerr := ag.createEndpointReq("default", "testNetwork", epname, hostName)
-		c.Assert(cerr, IsNil)
-		c.Assert(ep.Name, Equals, epname)
-		c.Assert(ep.Status.HomingHostName, Equals, hostName)
+			// make the call
+			ep, cerr := ag.createEndpointReq("default", "testNetwork", epname, hostName)
+			if cerr != nil {
+				waitCh <- fmt.Errorf("endpoint create failed: %v", cerr)
+				return
+			}
+			if ep.Name != epname {
+				waitCh <- fmt.Errorf("Endpoint name did not match")
+				return
+			}
+			if ep.Status.HomingHostName != hostName {
+				waitCh <- fmt.Errorf("host name did not match")
+				return
+			}
 
-		// verify endpoint was added to datapath
-		c.Assert(len(ag.datapath.EndpointDB[objKey(ep.ObjectMeta)].Request), Equals, 1)
+			// verify endpoint was added to datapath
+			eps, ok := ag.datapath.EndpointDB[objKey(ep.ObjectMeta)]
+			if !ok || len(eps.Request) != 1 {
+				waitCh <- fmt.Errorf("Endpoint not found in datapath")
+				return
+			}
+			waitCh <- nil
+		}(i, ag)
+	}
+
+	// wait for all endpoint creates to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Error during endpoint create")
 	}
 
 	// wait for all endpoints to be propagated to other agents
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == it.numAgents)
-		}, "Endpoints not found on agent", "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
-		for i := range it.agents {
-			epname := fmt.Sprintf("testEndpoint-%d", i)
-			c.Assert(len(ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", epname)].Request), Equals, 1)
-		}
+		go func(ag *Dpagent) {
+			found := CheckEventually(func() bool {
+				return (len(ag.datapath.EndpointDB) == it.numAgents)
+			}, "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
+			if !found {
+				waitCh <- fmt.Errorf("Endpoint cound incorrect in datapath")
+				return
+			}
+			for i := range it.agents {
+				epname := fmt.Sprintf("testEndpoint-%d", i)
+				eps, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", epname)]
+				if !ok || len(eps.Request) != 1 {
+					waitCh <- fmt.Errorf("Endpoint not found in datapath")
+					return
+				}
+			}
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+
 	}
 
 	// now delete the endpoints
 	for i, ag := range it.agents {
-		epname := fmt.Sprintf("testEndpoint-%d", i)
-		hostName := fmt.Sprintf("testHost-%d", i)
+		go func(i int, ag *Dpagent) {
+			epname := fmt.Sprintf("testEndpoint-%d", i)
+			hostName := fmt.Sprintf("testHost-%d", i)
 
-		// make the call
-		ep, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
-		c.Assert((cerr == nil || cerr == netagent.ErrEndpointNotFound), Equals, true)
+			// make the call
+			ep, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
+			if cerr != nil && cerr != netagent.ErrEndpointNotFound {
+				waitCh <- fmt.Errorf("Endpoint delete failed: %v", err)
+				return
+			}
 
-		// verify endpoint was added to datapath
-		c.Assert(len(ag.datapath.EndpointDelDB[objKey(ep.ObjectMeta)].Request), Equals, 1)
+			// verify endpoint was deleted from datapath
+			eps, ok := ag.datapath.EndpointDelDB[objKey(ep.ObjectMeta)]
+			if !ok || len(eps.Request) != 1 {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+			waitCh <- nil
+		}(i, ag)
+	}
+
+	// wait for all endpoint deletes to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete failed")
+
 	}
 
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == 0)
-		}, "Endpoints still found on agent", "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
+		go func(ag *Dpagent) {
+			if !CheckEventually(func() bool {
+				return (len(ag.datapath.EndpointDB) == 0)
+			}, "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents)) {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete error")
 	}
 
 	// delete the network

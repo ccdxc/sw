@@ -33,6 +33,7 @@ import (
 	"github.com/pensando/sw/ctrler/npm/rpcserver"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
 	"github.com/pensando/sw/ctrler/npm/watcher"
+	"github.com/pensando/sw/ctrler/npm/writer"
 	"github.com/pensando/sw/utils/log"
 )
 
@@ -45,8 +46,14 @@ type Netctrler struct {
 
 // NewNetctrler returns a controller instance
 func NewNetctrler(serverURL, apisrvURL, vmmURL string) (*Netctrler, error) {
+	wr, err := writer.NewAPISrvWriter(apisrvURL)
+	if err != nil {
+		log.Errorf("Error creating api server writer. Err: %v", err)
+		return nil, err
+	}
+
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(wr)
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err

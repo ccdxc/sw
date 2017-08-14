@@ -3,6 +3,9 @@
 package watcher
 
 import (
+	"context"
+	"sync"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
@@ -15,12 +18,15 @@ const watcherQueueLen = 1000
 
 // Watcher watches api server for changes
 type Watcher struct {
+	waitGrp         sync.WaitGroup          // wait group to wait on all go routines to exit
 	statemgr        *statemgr.Statemgr      // reference to network manager
 	netWatcher      chan kvstore.WatchEvent // network object watcher
 	vmmEpWatcher    chan kvstore.WatchEvent // vmm endpoint watcher
 	sgWatcher       chan kvstore.WatchEvent // sg object watcher
 	sgPolicyWatcher chan kvstore.WatchEvent // sg object watcher
-
+	watchCtx        context.Context         // ctx for watchers
+	watchCancel     context.CancelFunc      // cancel for watchers
+	stopFlag        bool                    // boolean flag to exit the API watchers
 }
 
 // handleNetworkEvent handles network event
@@ -123,6 +129,10 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *network.Sg
 func (w *Watcher) runNetwatcher() {
 	log.Infof("Network watcher running")
 
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
 	// loop till channel is closed
 	for {
 		select {
@@ -154,6 +164,10 @@ func (w *Watcher) runNetwatcher() {
 // runVmmEpwatcher watches on a channel for changes from VMM mgr
 func (w *Watcher) runVmmEpwatcher() {
 	log.Infof("VMM watcher watcher running")
+
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
 
 	// loop till channel is closed
 	for {
@@ -187,6 +201,10 @@ func (w *Watcher) runVmmEpwatcher() {
 func (w *Watcher) runSgwatcher() {
 	log.Infof("SecurityGroup watcher running")
 
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
 	// loop till channel is closed
 	for {
 		select {
@@ -219,6 +237,10 @@ func (w *Watcher) runSgwatcher() {
 func (w *Watcher) runSgPolicyWatcher() {
 	log.Infof("SgPolicy watcher running")
 
+	// setup wait group
+	w.waitGrp.Add(1)
+	defer w.waitGrp.Done()
+
 	// loop till channel is closed
 	for {
 		select {
@@ -249,23 +271,34 @@ func (w *Watcher) runSgPolicyWatcher() {
 
 // Stop watcher
 func (w *Watcher) Stop() {
+	// stop the context
+	w.stopFlag = true
+	w.watchCancel()
+
 	// close the channels
 	close(w.netWatcher)
 	close(w.sgPolicyWatcher)
 	close(w.sgWatcher)
 	close(w.vmmEpWatcher)
+
+	// wait for all goroutines to exit
+	w.waitGrp.Wait()
 }
 
 // NewWatcher returns a new watcher object
 func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string) (*Watcher, error) {
+	// create context and cancel
+	watchCtx, watchCancel := context.WithCancel(context.Background())
+
 	// create a watcher
-	// FIXME: we need to hook this to api server watch once its ready.
 	watcher := &Watcher{
 		statemgr:        statemgr,
 		netWatcher:      make(chan kvstore.WatchEvent, watcherQueueLen),
 		vmmEpWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
+		watchCtx:        watchCtx,
+		watchCancel:     watchCancel,
 	}
 
 	// start a go routine to handle messages coming on watcher channel
@@ -275,8 +308,8 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string) (*Watcher
 	go watcher.runSgPolicyWatcher()
 
 	// handle api watchers
-	go watcher.runApisrvWatcher(apisrvURL)
-	go watcher.runVmmWatcher(vmmURL)
+	go watcher.runApisrvWatcher(watchCtx, apisrvURL)
+	go watcher.runVmmWatcher(watchCtx, vmmURL)
 
 	return watcher, nil
 }

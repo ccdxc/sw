@@ -158,6 +158,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		panic(fmt.Sprintf("Could not connect to KV Store (%s)", err))
 	}
 
+	a.doneCh = make(chan error)
 	go func() {
 		a.runstate.cond.L.Lock()
 		a.Logger.Log("Grpc Listen Start", a.runstate.addr)

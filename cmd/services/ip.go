@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/cmd/types"
-	"github.com/pensando/sw/utils/net"
+	"github.com/pensando/sw/utils/netutils"
 )
 
 // ipService provides ip configuration utilities on ethernet interfaces.
@@ -21,7 +21,7 @@ func NewIPService() types.IPService {
 func (i *ipService) HasIP(ip string) (bool, error) {
 	i.Lock()
 	defer i.Unlock()
-	return net.HasIP(ip)
+	return netutils.HasIP(ip)
 }
 
 // AddSecondaryIP adds the provided ip address as a secondary IP to an interface
@@ -29,12 +29,12 @@ func (i *ipService) HasIP(ip string) (bool, error) {
 func (i *ipService) AddSecondaryIP(ip string) error {
 	i.Lock()
 	defer i.Unlock()
-	return net.AddSecondaryIP(ip)
+	return netutils.AddSecondaryIP(ip)
 }
 
 // DeleteIP deletes the specified address from the interface it is found on.
 func (i *ipService) DeleteIP(ip string) error {
 	i.Lock()
 	defer i.Unlock()
-	return net.DeleteIP(ip)
+	return netutils.DeleteIP(ip)
 }

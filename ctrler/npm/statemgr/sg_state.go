@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/ctrler/npm/writer"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
@@ -22,7 +21,7 @@ type SecurityGroupState struct {
 
 // Write writes the object to api server
 func (sg *SecurityGroupState) Write() error {
-	return writer.WriteObject(sg)
+	return sg.stateMgr.writer.WriteSecurityGroup(&sg.SecurityGroup)
 }
 
 // Delete cleans up all state associated with the sg

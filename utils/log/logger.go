@@ -3,10 +3,6 @@ package log
 import (
 	"context"
 	"fmt"
-	kitlog "github.com/go-kit/kit/log"
-	kitlevel "github.com/go-kit/kit/log/level"
-	"github.com/go-stack/stack"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
 	"os/signal"
@@ -14,6 +10,11 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+
+	kitlog "github.com/go-kit/kit/log"
+	kitlevel "github.com/go-kit/kit/log/level"
+	"github.com/go-stack/stack"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // Logger interface definition
@@ -217,7 +218,7 @@ func GetDefaultConfig(module string) *Config {
 	return &Config{
 		Module:      module,
 		Format:      LogFmt,
-		Filter:      AllowAllFilter,
+		Filter:      AllowInfoFilter,
 		Debug:       false,
 		CtxSelector: ContextAll,
 		LogToStdout: true,

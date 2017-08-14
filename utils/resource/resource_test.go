@@ -2,12 +2,13 @@ package resource
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/pensando/sw/utils/kvstore/store"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/resource/rproto"
 	kvapi "github.com/pensando/sw/utils/runtime"
 	. "github.com/pensando/sw/utils/testutils"
@@ -30,6 +31,12 @@ func newRsrcmgr(t *testing.T) *RsrcMgr {
 	AssertOk(t, err, "Resourcemgr init failed")
 
 	return rm
+}
+
+func TestMain(m *testing.M) {
+	lcfg := log.GetDefaultConfig("resource_test")
+	log.SetConfig(lcfg)
+	os.Exit(m.Run())
 }
 
 // test least used scheduler

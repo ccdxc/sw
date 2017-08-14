@@ -11,7 +11,7 @@ import (
 	"github.com/appc/cni/pkg/types"
 	cni "github.com/containernetworking/cni/pkg/skel"
 	"github.com/gorilla/mux"
-	"github.com/pensando/sw/agent/netagent/netutils/httputils"
+	"github.com/pensando/sw/agent/netagent/httputils"
 	cniServer "github.com/pensando/sw/agent/plugins/k8s/cni"
 	. "github.com/pensando/sw/utils/testutils"
 )

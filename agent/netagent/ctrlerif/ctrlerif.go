@@ -17,6 +17,7 @@ import (
 // NpmClient is the network policy mgr client
 type NpmClient struct {
 	sync.Mutex                                      // lock the npm client
+	waitGrp           sync.WaitGroup                // wait group to wait on all go routines to exit
 	agent             netagent.CtrlerIntf           // net Agent API
 	grpcClient        *rpckit.RPCClient             // grpc client
 	networkRPCClient  netproto.NetworkApiClient     // network RPC client
@@ -80,6 +81,11 @@ func NewNpmClient(agent netagent.CtrlerIntf, srvURL string) (*NpmClient, error) 
 
 // runNetworkWatcher runs network watcher loop
 func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// start the watch
 	stream, err := client.networkRPCClient.WatchNetworks(ctx, &api.ObjectMeta{})
 	if err != nil {
 		log.Fatalf("Error watching network")
@@ -121,6 +127,10 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 
 // runEndpointWatcher runs endpoint watcher loop
 func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
 	// start the watch
 	stream, err := client.endpointRPCClient.WatchEndpoints(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -176,6 +186,11 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 
 // runSecurityGroupWatcher runs sg watcher loop
 func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// start the watch
 	stream, err := client.sgRPCClient.WatchSecurityGroups(ctx, &api.ObjectMeta{})
 	if err != nil {
 		log.Fatalf("Error watching security group")
@@ -219,6 +234,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 func (client *NpmClient) Stop() {
 	client.watchCancel()
 	client.grpcClient.Close()
+	client.waitGrp.Wait()
 }
 
 // EndpointCreateReq creates an endpoint

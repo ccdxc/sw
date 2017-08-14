@@ -7,9 +7,9 @@ import (
 
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/datapath/fswitch"
-	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/netutils"
 )
 
 // FakeDatapath has the fake datapath for testing purposes

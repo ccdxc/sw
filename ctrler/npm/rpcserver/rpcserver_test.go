@@ -17,10 +17,31 @@ import (
 
 const testServerURL = "localhost:9090"
 
+// dummy writer
+type dummyWriter struct {
+	// no fields
+}
+
+func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+	return nil
+}
+
 // createRPCServerClient creates rpc client and server
 func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpckit.RPCClient) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 	}

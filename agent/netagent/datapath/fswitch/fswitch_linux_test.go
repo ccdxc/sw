@@ -11,10 +11,10 @@ import (
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
-	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/netutils"
 	. "github.com/pensando/sw/utils/testutils"
 )
 

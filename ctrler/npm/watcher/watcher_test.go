@@ -11,9 +11,30 @@ import (
 	. "github.com/pensando/sw/utils/testutils"
 )
 
+// dummy writer
+type dummyWriter struct {
+	// no fields
+}
+
+func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+	return nil
+}
+
 func TestNetworkWatcher(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -57,7 +78,7 @@ func TestNetworkWatcher(t *testing.T) {
 
 func TestVmmEndpointWatcher(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -117,7 +138,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 
 func TestSecurityGroupWatcher(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -161,7 +182,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 
 func TestSgPolicyWatcher(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return

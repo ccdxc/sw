@@ -194,7 +194,6 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 	// see if we have the object
 	obj, ok := od.objects[memdbKey(ometa)]
 	if !ok {
-		logrus.Errorf("Object %v/{%+v} not found", kind, ometa)
 		return nil, errors.New("Object not found")
 	}
 

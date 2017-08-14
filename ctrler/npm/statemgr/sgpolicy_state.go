@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/ctrler/npm/writer"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 )
@@ -21,7 +20,7 @@ type SgpolicyState struct {
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
-	return writer.WriteObject(sgp)
+	return sgp.stateMgr.writer.WriteSgPolicy(&sgp.Sgpolicy)
 }
 
 // Delete cleans up all state associated with the sg

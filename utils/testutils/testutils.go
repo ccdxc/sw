@@ -144,3 +144,48 @@ func AssertConsistently(tb TB, eval Evaluator, msg string, intervals ...string) 
 
 	}
 }
+
+// CheckEventually polls eveluator periodically and checks if it reached desired condition
+// intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
+// returns true if desired state is reached
+func CheckEventually(eval Evaluator, intervals ...string) bool {
+	var err error
+	pollInterval := time.Millisecond
+	timeoutInterval := time.Second
+
+	// parse intervals
+	if len(intervals) > 0 {
+		pollInterval, err = time.ParseDuration(intervals[0])
+		if err != nil {
+			logrus.Fatalf("%#v is not a valid parsable duration string.", intervals[0])
+		}
+	}
+	if len(intervals) > 1 {
+		timeoutInterval, err = time.ParseDuration(intervals[1])
+		if err != nil {
+			logrus.Fatalf("%#v is not a valid parsable duration string.", intervals[1])
+		}
+	}
+
+	timer := time.Now()
+	timeout := time.After(timeoutInterval)
+
+	// loop till we reach timeout interval
+	for {
+		select {
+		case <-time.After(pollInterval):
+			if eval() {
+				return true
+			}
+		case <-timeout:
+			// eveluate one last time
+			if !eval() {
+				_, file, line, _ := runtime.Caller(1)
+				logrus.Errorf("%s:%d: Evaluator timed out after %v", filepath.Base(file), line, time.Since(timer))
+				return false
+			}
+
+			return true
+		}
+	}
+}

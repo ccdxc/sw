@@ -63,6 +63,7 @@ func TestLevels(t *testing.T) {
 
 	// Debug
 	config := GetDefaultConfig("TestLogger")
+	config.Filter = AllowAllFilter
 	l := GetNewLogger(config).SetOutput(buf)
 	l.Printf("testmsg")
 
@@ -153,6 +154,7 @@ func TestLevelsWithDefaultLogger(t *testing.T) {
 	buf := &bytes.Buffer{}
 
 	config := GetDefaultConfig("TestLogger")
+	config.Filter = AllowAllFilter
 	SetConfig(config)
 	getDefaultInstance().SetOutput(buf)
 
@@ -381,6 +383,7 @@ func TestLogFilter(t *testing.T) {
 			buf := &bytes.Buffer{}
 			config := GetDefaultConfig("TestLogger")
 			config.CtxSelector = ContextNone
+			config.Filter = tc.filter
 			l := GetNewLogger(config).SetOutput(buf).SetFilter(tc.filter)
 
 			l.Debug("debug log")

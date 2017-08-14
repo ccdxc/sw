@@ -7,9 +7,9 @@ import (
 
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
-	"github.com/pensando/sw/agent/netagent/netutils"
 	"github.com/pensando/sw/ctrler/npm/rpcserver"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/netutils"
 )
 
 // Main function

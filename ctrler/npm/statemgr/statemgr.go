@@ -4,13 +4,15 @@ package statemgr
 
 import (
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/ctrler/npm/writer"
 
 	"github.com/pensando/sw/utils/memdb"
 )
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB *memdb.Memdb // database of all objects
+	memDB  *memdb.Memdb  // database of all objects
+	writer writer.Writer // writer to apis erver
 }
 
 // FindObject looks up an object in local db
@@ -37,10 +39,11 @@ func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error 
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr() (*Statemgr, error) {
+func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		memDB: memdb.NewMemdb(),
+		memDB:  memdb.NewMemdb(),
+		writer: wr,
 	}
 
 	return statemgr, nil

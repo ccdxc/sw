@@ -58,7 +58,7 @@ func createAPIServer(url string) (apiserver.Server, apiserver.Config) {
 
 func TestApiWatcher(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -165,12 +165,13 @@ func TestApiWatcher(t *testing.T) {
 	// stop the api server
 	apiSrv.Stop()
 	vcs.StopServer()
+	watcher.Stop()
 	time.Sleep(time.Millisecond * 10)
 }
 
 func TestApiWatcherConnectDisconnect(t *testing.T) {
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr()
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -200,5 +201,6 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 
 	// stop the vchub
 	vcs.StopServer()
+	watcher.Stop()
 	time.Sleep(time.Millisecond * 10)
 }

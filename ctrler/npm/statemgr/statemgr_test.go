@@ -53,10 +53,31 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selectors []string) (*n
 	return &sg, err
 }
 
+// dummy writer
+type dummyWriter struct {
+	// no fields
+}
+
+func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
+	return nil
+}
+
 // TestNetworkCreateDelete tests network create
 func TestNetworkCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -100,7 +121,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 func TestNetworkListWatch(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -134,7 +155,7 @@ func TestNetworkListWatch(t *testing.T) {
 // TestEndpointCreateDelete tests network create
 func TestEndpointCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -228,7 +249,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 
 func TestEndpointCreateFailure(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -296,7 +317,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 // TestEndpointListWatch tests ep watch and list
 func TestEndpointListWatch(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -362,7 +383,7 @@ func TestEndpointListWatch(t *testing.T) {
 
 func TestSgCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -388,7 +409,7 @@ func TestSgCreateDelete(t *testing.T) {
 
 func TestSgAttachEndpoint(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -473,7 +494,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 
 func TestSgpolicyCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr()
+	stateMgr, err := NewStatemgr(&dummyWriter{})
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return

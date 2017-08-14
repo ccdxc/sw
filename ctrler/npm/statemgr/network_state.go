@@ -11,7 +11,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/ctrler/npm/writer"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/memdb"
 	"github.com/willf/bitset"
@@ -280,7 +279,7 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 
 // Write writes the object to api server
 func (ns *NetworkState) Write() error {
-	return writer.WriteObject(ns)
+	return ns.stateMgr.writer.WriteNetwork(&ns.Network)
 }
 
 // Delete cleans up all state associated with the network
