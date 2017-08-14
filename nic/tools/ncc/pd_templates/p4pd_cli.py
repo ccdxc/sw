@@ -1370,6 +1370,89 @@ class rootCmd(Cmd):
         print '  btm_right_y: ', tbl_ctx.hbm_layout.btm_right_y
         print '  btm_right_block: ', tbl_ctx.hbm_layout.btm_right_block
 
+    def do_read_reg(self, args):
+        """Usage: read_reg <addr>"""
+
+        values = args.split()
+        if len(values) != 1:
+            print('Usage: read_reg <addr>')
+            return
+
+        addr = int(values[0], 16)
+        data_p = p4pd.new_uint32_ptr_t()
+        p4pd.read_reg(addr, data_p)
+        print("Value @0x%08x: %d (0x%08x)" % (addr, p4pd.uint32_ptr_t_value(data_p), p4pd.uint32_ptr_t_value(data_p)))
+        p4pd.delete_uint32_ptr_t(data_p)
+
+    def do_write_reg(self, args):
+        """Usage: write_reg <addr> <value>"""
+
+        values = args.split()
+        if len(values) != 2:
+            print('Usage: write_reg <addr> <value>')
+            return
+
+        addr = int(values[0], 16)
+        value = int(values[1], 16)
+        p4pd.write_reg(addr, value)
+
+        print("Wrote @0x%08x: %d (0x%08x)" % (addr, value, value))
+
+    def do_read_mem(self, args):
+        """Usage: read_mem <addr> <size>"""
+
+        values = args.split()
+        if len(values) != 2:
+            print('Usage: read_mem <addr> <size>')
+            return
+
+        addr = int(values[0], 16)
+        size = int(values[1])
+        array = p4pd.new_uint8_array_t(size)
+        p4pd.read_mem(addr, array, size)
+        valstr = "Content @0x%08x: {" % (addr)
+        lenstr = len(valstr)
+        for i in range(size):
+            if i != 0 and (i % array_cols) == 0:
+                valstr += ('\n' + (' ' * lenstr))
+            valstr += "0x%02x " % (p4pd.uint8_array_t_getitem(array, i))
+        valstr += "}"
+        print(valstr)
+        p4pd.delete_uint8_array_t(array)
+
+    def do_write_mem(self, args):
+        """Usage: write_mem <addr> <size> <value0> <value1> ... <valueSize-1>"""
+
+        values = args.split()
+        if len(values) < 2 or len(values) != (int(values[1]) + 2):
+            print('"Usage: write_mem <addr> <size> <value0> <value1> ... <valueSize-1>')
+            return
+
+        addr = int(values[0], 16)
+        size = int(values[1])
+
+        if size > 0:
+            array = p4pd.new_uint8_array_t(size)
+            for i in range(size):
+                p4pd.uint8_array_t_setitem(array, i, int(values[i+2], 16))
+
+            p4pd.write_mem(addr, array, size)
+            p4pd.delete_uint8_array_t(array)
+
+        print("Wrote %d bytes @0x%08x" % (size, addr))
+
+    def do_dump_hbm(self, args):
+        """Usage: dump_hbm"""
+
+        values = args.split()
+        if len(values) != 0:
+            print('Usage: dump_hbm')
+            return
+
+        p4pd.dump_hbm()
+        print("Dumped HBM.")
+
+
 if __name__ == '__main__':
     p4pd.p4pd_cli_init()
     cmd = rootCmd()

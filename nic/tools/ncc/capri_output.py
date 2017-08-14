@@ -2314,11 +2314,13 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'BLDFLAGS = -Wl,-rpath,$(TOP_DIR)/obj\n'
     content_str += 'INC_DIRS = -I.\n'
     content_str += 'INC_DIRS += -I./../include\n'
-    content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd/ -I$(TOP_DIR)/hal/pd/capri/\n'
-    content_str += 'INC_DIRS += -I/usr/local/include -I/usr/include/boost/\n'
+    content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/hal/pd/capri -I$(TOP_DIR)/model_sim/include\n'
+    content_str += 'INC_DIRS += -I/usr/local/include -I/usr/include/boost\n'
     content_str += 'INC_DIRS += -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7\n'
-    content_str += 'LIB_DIRS = -L/usr/local/lib -L$(TOP_DIR)/obj -L/usr/lib/python2.7/dist-packages -L.\n'
-    content_str += 'LIBS = -lpython2.7 -lcapri -lcapricsr -ltrace\n'
+    content_str += 'LIB_DIRS = -L$(TOP_DIR)/obj -L$(TOP_DIR)/model_sim/build -L$(TOP_DIR)/model_sim/libs\n'
+    content_str += 'LIB_DIRS += -L/home/asic/tools/src/0.25/x86_64/lib64/\n'
+    content_str += 'LIB_DIRS += -L/usr/local/lib -L/usr/lib/python2.7/dist-packages -L.\n'
+    content_str += 'LIBS = -lpython2.7 -lcapri -lcapricsr -lzmq -lmodelclient -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
     content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o p4pd_wrap.c p4pd.i\n'
@@ -2360,6 +2362,7 @@ def capri_p4pd_create_swig_interface(be):
     #include <thread>
     #include "p4pd.h"
     #include "p4pd_api.hpp"
+    #include "lib_model_client.h"
     extern int capri_init(void);
     extern const char *__lmodel_env;
     namespace hal {
@@ -2372,32 +2375,41 @@ typedef int p4pd_error_t;
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
 %pointer_functions(uint8_t, uint8_ptr_t);
 %pointer_functions(uint16_t, uint16_ptr_t);
 %pointer_functions(uint32_t, uint32_ptr_t);
+%pointer_functions(uint64_t, uint64_ptr_t);
 %array_functions(uint8_t, uint8_array_t);
 %array_functions(uint16_t, uint16_array_t);
 %array_functions(uint32_t, uint32_array_t);
+%array_functions(uint64_t, uint64_array_t);
 %malloc(uint8_t);
 %malloc(uint16_t);
 %malloc(uint32_t);
+%malloc(uint64_t);
 %free(uint8_t);
 %free(uint16_t);
 %free(uint32_t);
+%free(uint64_t);
 %include "p4pd.h"
 %include "p4pd_api.hpp"
+%include "lib_model_client.h"
 %inline %{
     int p4pd_cli_init()
     {
         int ret;
-        setenv("CAPRI_MOCK_MODE", "1", 1);
         """ + \
         """
         setenv("HAL_CONFIG_PATH", "%s", 1);
         """ % (top_dir + '/conf') + \
         """
-        __lmodel_env = "1";
         
+        if (ret = lib_model_connect())
+        {
+            return ret;
+        }
+
         if (ret = p4pd_init())
         {
             return ret;
@@ -2413,6 +2425,7 @@ typedef unsigned int uint32_t;
 
     void p4pd_cli_cleanup()
     {
+        lib_model_conn_close();
         p4pd_cleanup();
     }
 %}
@@ -2441,6 +2454,7 @@ def capri_p4pd_create_swig_main(be):
 #include <thread>
 #include "p4pd.h"
 #include "p4pd_api.hpp"
+#include "lib_model_client.h"
 
 extern int capri_init(void);
 extern const char* __lmodel_env;
@@ -2454,9 +2468,9 @@ int main()
     int ret;
     uint32_t tableid = 15;
     uint32_t index = 11;
-    uint32_t hwkey_len_p;
-    uint32_t hwkeymask_len_p;
-    uint32_t hwactiondata_len_p;
+    uint32_t hwkey_len;
+    uint32_t hwkeymask_len;
+    uint32_t hwactiondata_len;
     uint8_t *hwkey_p;
     uint8_t *hwkeymask_p;
     uint8_t *hwactiondata_p;
@@ -2465,24 +2479,23 @@ int main()
     p4pd_table_properties_t tbl_ctx;
     twice_nat_actiondata actiondata;
 
-    setenv("CAPRI_MOCK_MODE", "1", 1);
     """ + \
     """
     setenv("HAL_CONFIG_PATH", "%s", 1);
     """ % (top_dir + '/conf') + \
     """
-    __lmodel_env = "1";
-
+    lib_model_connect();
     p4pd_init();
     capri_init();
+    read_reg(300, hwactiondata_len);
 
     p4pd_table_properties_get(1, &tbl_ctx);
     printf("%s\\n", tbl_ctx.tablename);
     
-    p4pd_hwentry_query(tableid, &hwkey_len_p, &hwkeymask_len_p, &hwactiondata_len_p);
+    p4pd_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &hwactiondata_len);
     
-    hwkey_p = (uint8_t *)malloc(((hwkey_len_p)+7)/8);
-    hwkeymask_p = (uint8_t *)malloc(((hwkeymask_len_p)+7)/8);
+    hwkey_p = (uint8_t *)malloc(((hwkey_len)+7)/8);
+    hwkeymask_p = (uint8_t *)malloc(((hwkeymask_len)+7)/8);
     
     ret = p4pd_hwkey_hwmask_build(tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p);
     
@@ -2515,6 +2528,7 @@ int main()
     
     printf("Entry was read successfully at index %d\\n", (index));
     
+    lib_model_conn_close();
     p4pd_cleanup();
     free(hwkeymask_p);
     free(hwkey_p);
