@@ -24,6 +24,7 @@ SOURCES = \
 		l4lb_svc.cc \
 		tlscb_svc.cc \
 		tcpcb_svc.cc \
+		descriptor_aol_svc.cc \
 		qos_svc.cc \
 		acl_svc.cc \
 		$(NULL)

@@ -4,6 +4,7 @@ meta:
 
 entries:
     - entry:
-        type        : SERQ
+        name        : SERQ
+        type        : DESCR_AOL_VIA_REF
         count       : 16
         size        : 4096

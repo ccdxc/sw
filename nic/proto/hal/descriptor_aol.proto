@@ -1,0 +1,45 @@
+//------------------------------------------------------------------------------
+// protobuf specification for AOL Descriptors HAL APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package descraol;
+
+
+service DescrAol {
+  rpc DescrAolGet (DescrAolRequestMsg) returns (DescrAolResponseMsg) {}
+}
+
+message DescrAolRequest {
+  types.ObjectMeta      meta                        = 1;    // common object meta
+  fixed64               descr_aol_handle            = 2;    // Handle to the AOL Descriptor
+}
+
+message DescrAolRequestMsg {
+  repeated DescrAolRequest request                  = 1;    // batched request
+}
+
+
+message DescrAolSpec {
+  types.ApiStatus       api_status                  = 1;    // API status code
+  types.ObjectMeta      meta                        = 2;    // common object meta
+  fixed64               descr_aol_handle            = 3;    // Handle to the AOL Descriptor
+  fixed64               Address1                    = 4;    // Address 1
+  fixed32               Offset1                     = 5;    // Offset 1
+  fixed32               Length1                     = 6;    // Length 1
+  fixed64               Address2                    = 7;    // Address 2
+  fixed32               Offset2                     = 8;    // Offset 2
+  fixed32               Length2                     = 9;    // Length 2
+  fixed64               Address3                    = 10;    // Address 3
+  fixed32               Offset3                     = 11;    // Offset 3
+  fixed32               Length3                     = 12;    // Length 3
+  fixed64               next_descr_aol_handle       = 13;    // Handle to the next chained AOL Descriptor
+}
+
+message DescrAolResponseMsg {
+  repeated DescrAolSpec    response                 = 1;    // batched request
+}
+

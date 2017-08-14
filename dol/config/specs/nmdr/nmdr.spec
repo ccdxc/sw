@@ -2,12 +2,14 @@
 meta:
     id: NMDR
 
+type : 
+
 entries :
     - entry:
         name        : TNMDR
-        type        : RING_REF_ENTRY
+        type        : DESCR_AOL_VIA_REF
         count       : 16
     - entry:
         name        : RNMDR
-        type        : RING_REF_ENTRY
+        type        : DESCR_AOL_VIA_REF
         count       : 16

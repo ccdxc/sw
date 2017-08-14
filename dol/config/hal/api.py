@@ -21,6 +21,7 @@ import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
 import tcp_proxy_cb_pb2     as tcpcb_pb2
 import tls_proxy_cb_pb2     as tlscb_pb2
+import descriptor_aol_pb2   as descriptor_aol_pb2
 
 import endpoint_pb2_grpc    as endpoint_pb2_grpc
 import l2segment_pb2_grpc   as l2segment_pb2_grpc
@@ -34,6 +35,7 @@ import telemetry_pb2_grpc   as telemetry_pb2_grpc
 HAL_MAX_BATCH_SIZE = 16
 import tcp_proxy_cb_pb2_grpc       as tcpcb_pb2_grpc
 import tls_proxy_cb_pb2_grpc       as tls_pb2_grpc
+import descriptor_aol_pb2_grpc as descriptor_aol_pb2_grpc
 
 HalChannel = None
 class HalInterfaceSegmentAssociation:
@@ -208,4 +210,11 @@ def ConfigureNetworks(objlist):
     stub = nw_pb2_grpc.NetworkStub(HalChannel)
     __config(objlist, nw_pb2.NetworkRequestMsg,
              stub.NetworkCreate)
+    return
+
+def GetDscrAolObjectState(objlist):
+    if IsHalDisabled(): return
+    stub = descriptor_aol_pb2_grpc.DescrAolStub(HalChannel)
+    __config(objlist, descriptor_aol_pb2.DescrAolRequestMsg,
+             stub.DescrAolGet)
     return

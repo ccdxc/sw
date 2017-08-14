@@ -5,9 +5,9 @@ meta:
 entries:
     - entry:
         name        : TNMPR
-        type        : RING_REF_ENTRY
+        type        : DESCR_AOL_VIA_REF 
         count       : 16
     - entry:
         name        : RNMPR
-        type        : RING_REF_ENTRY
+        type        : DESCR_AOL_VIA_REF
         count       : 16
