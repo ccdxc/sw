@@ -64,6 +64,8 @@ hal_thread_init (void)
     int                   rv, thread_prio;
     char                  thread_name[16];
     struct sched_param    sched_param = { 0 };
+    pthread_attr_t        attr;
+    cpu_set_t             cpus;
 
     // spawn data core threads and pin them to their cores
     thread_prio = sched_get_priority_max(SCHED_FIFO);
@@ -91,9 +93,24 @@ hal_thread_init (void)
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->start(g_hal_threads[HAL_THREAD_ID_PERIODIC]);
 
+    // make the current thread, main hal config thread (also a real-time thread)
+    rv = pthread_attr_init(&attr);
+    if (rv != 0) {
+        HAL_TRACE_ERR("pthread_attr_init failure, err : {}", rv);
+        return HAL_RET_ERR;
+    }
+
+    // set core affinity
+    CPU_ZERO(&cpus);
+    CPU_SET(HAL_CONTROL_CORE_ID, &cpus);
+    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+    if (rv != 0) {
+        HAL_TRACE_ERR("pthread_attr_setaffinity_np failure, err : {}", rv);
+        return HAL_RET_ERR;
+    }
+
     if (gl_super_user) {
-        HAL_TRACE_DEBUG("Started by SuperUser: Switching to RealTime scheduling.");
-        // make the current thread, main hal config thread (also a real-time thread)
+        HAL_TRACE_DEBUG("Started by root, switching to RealTime scheduling");
         sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
         rv = sched_setscheduler(0, SCHED_RR, &sched_param);
         if (rv != 0) {
