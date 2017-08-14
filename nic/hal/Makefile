@@ -95,7 +95,6 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/proxy.pb.o \
 				$(OBJ_DIR)/proxy.o \
 
-	
 
 HAL_OBJS := $(OBJ_DIR)/main.o 
 
