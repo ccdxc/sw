@@ -22,7 +22,6 @@ class QueueObject(objects.FrameworkObject):
 
         self.parent = parent
         TcpCbHelper.main(self)
-        TcpCbHelper.Configure(TcpCbHelper.objlist)
         return
 
     def configure(self, req_spec):
