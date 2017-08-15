@@ -44,15 +44,16 @@ capri_hbm_regions_init()
         return ret;
     }
 
+    ret = capri_p4p_asm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
     ret = capri_p4_pgm_init();
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    ret = capri_p4p_prgm_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
     return ret;
 }
 
@@ -114,7 +115,7 @@ capri_p4_pgm_init()
 }
 
 hal_ret_t
-capri_p4p_prgm_init()
+capri_p4p_asm_init()
 {
     hal_ret_t                           ret = HAL_RET_OK;
     uint64_t                            p4plus_prm_base_addr;
