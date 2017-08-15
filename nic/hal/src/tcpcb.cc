@@ -54,6 +54,37 @@ tcpcb_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+hal_ret_t
+tcpcb_create_default_entry()
+{
+ 
+    hal_ret_t              ret = HAL_RET_OK;
+    tcpcb_t                *tcpcb;
+    pd::pd_tcpcb_args_t    pd_tcpcb_args;
+
+   
+    HAL_TRACE_DEBUG("***********Creating TCB default entry ************");
+
+    tcpcb = tcpcb_alloc_init();
+    tcpcb->cb_id = 0;
+    
+    tcpcb->hal_handle = hal_alloc_handle();
+    
+    pd::pd_tcpcb_args_init(&pd_tcpcb_args);
+    pd_tcpcb_args.tcpcb = tcpcb;
+    ret = pd::pd_tcpcb_create(&pd_tcpcb_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD TCP CB create failure, err : {}", ret);
+        return ret;
+    }
+
+    // add this L2 segment to our db
+    //ret = add_tcpcb_to_db(tcpcb);
+
+    return HAL_RET_OK;
+}
+
+
 //------------------------------------------------------------------------------
 // validate an incoming TCPCB create request
 // TODO:
