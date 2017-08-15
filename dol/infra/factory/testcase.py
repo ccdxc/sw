@@ -209,4 +209,3 @@ class TestCase(objects.FrameworkObject):
             return defs.status.SUCCESS
         else:
             return defs.status.ERROR
-

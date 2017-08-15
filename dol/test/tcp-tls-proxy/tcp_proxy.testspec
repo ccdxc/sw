@@ -4,17 +4,18 @@ config_filter:
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any # Local QPair
+        tenant  : filter://any
+        segment : filter://any
+        endpoint    : filter://remote=True
+        qpair   : filter://any # Local QPair
     dst:
-        tenant  : filter/any
-        segment : filter/any
-        endpoint: filter/any
-        qpair   : filter/any 
-    flow        : filter/sip=64.0.0.2,dip=64.0.0.1,proto=TCP,dport=80
-    #flow        : filter/proto=TCP,dport=80
+        tenant  : filter://any
+        segment : filter://any
+        endpoint    : filter://remote=True
+        qpair   : filter://any 
+    #flow        : filter://sip=64.1.0.2,dip=64.1.0.1,proto=TCP,dport=80
+    flow        : filter://proto=TCP,dport=80
+    maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
@@ -49,4 +50,3 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    callback:  callback://tcpcb/tcpcb/VerifySeqNum
