@@ -452,7 +452,7 @@ func (l *kitLogger) Debugln(args ...interface{}) {
 }
 
 func (l *kitLogger) Log(keyvals ...interface{}) error {
-	return l.logger.Log(keyvals...)
+	return kitlevel.Info(l.logger).Log(keyvals...)
 }
 
 func (l *kitLogger) Audit(ctx context.Context, keyvals ...interface{}) error {
@@ -631,5 +631,5 @@ func Debugln(args ...interface{}) {
 
 // Log messages
 func Log(keyvals ...interface{}) error {
-	return getDefaultInstance().logger.Log(keyvals...)
+	return kitlevel.Info(getDefaultInstance().logger).Log(keyvals...)
 }
