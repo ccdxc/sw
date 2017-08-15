@@ -87,7 +87,7 @@ protected:
 
   // will be called immediately after the constructor before each test
   virtual void SetUp() {
-    hal_initialize();
+    // hal_initialize();
   }
 
   // will be called immediately after each test before the destructor
@@ -96,7 +96,7 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-    // hal_initialize();
+    hal_initialize();
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
