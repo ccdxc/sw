@@ -27,6 +27,10 @@ capri_init (void)
         return HAL_RET_ERR;
     }
 
+	if (ret == HAL_RET_OK) {
+			ret = capri_hbm_mem_init();
+	}
+
     return ret;
 }
 

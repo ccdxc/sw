@@ -29,6 +29,48 @@
             "size_kb": 65536
         },
         {
+            "name": "semaphore",
+            "size_kb": 8,
+            "size_elem": 8,
+            "num_elem": 1024
+        },
+        {
+            "name": "nmdr",
+            "size_kb": 72,
+            "size_elem": 8,
+            "num_elem": 9216
+        },
+        {
+            "name": "descriptor",
+            "size_kb": 1152,
+            "size_elem": 128,
+            "num_elem": 9216
+        },
+        {
+            "name": "nmpr-big",
+            "size_kb": 24,
+            "size_elem": 8,
+            "num_elem": 3072
+        },
+        {
+            "name": "page-big",
+            "size_kb": 29184,
+            "size_elem": 9728,
+            "num_elem": 3072
+        },
+        {
+            "name": "nmpr-small",
+            "size_kb": 48,
+            "size_elem": 8,
+            "num_elem": 6144
+        },
+        {
+            "name": "page-small",
+            "size_kb": 12288,
+            "size_elem": 2048,
+            "num_elem": 6144
+        },
+        {
             "name": "mcast_repl",
             "size_kb": 4096
         },
@@ -39,18 +81,6 @@
         {
             "name": "tlscb",
             "size_kb": 2048
-        },
-        {
-            "name": "nmdr",
-            "size_kb": 2048
-        },
-        {
-            "name": "nmpr-small",
-            "size_kb": 16384
-        },
-        {
-            "name": "nmpr-big",
-            "size_kb": 32768
         },
         {
             "name": "ipsec-cb",
