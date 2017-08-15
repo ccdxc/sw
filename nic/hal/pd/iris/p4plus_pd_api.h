@@ -31,6 +31,7 @@ p4plus_swizzle_bytes(uint8_t* data, uint32_t size_in_bytes)
 static inline bool
 p4plus_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
 {
+#if 0
     if(size_in_bytes > P4PLUS_MAX_DATA_LEN_IN_BYTES) {
         printf("Cannot write more than 64 byte data\n");
         return false;    
@@ -42,7 +43,8 @@ p4plus_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
     // Swizzle entry 
     p4plus_swizzle_bytes(buffer, size_in_bytes);
     size_in_bytes += (size_in_bytes & 1) ? 1 : 0;
-    return write_mem(addr, buffer, size_in_bytes);            
+#endif
+    return write_mem(addr, data, size_in_bytes);            
 }
 
 static inline bool

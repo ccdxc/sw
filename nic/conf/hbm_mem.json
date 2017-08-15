@@ -29,6 +29,14 @@
             "size_kb": 65536
         },
         {
+            "name": "mcast_repl",
+            "size_kb": 4096
+        },
+	    {
+	        "name": "lif2qstate_map",
+	        "size_kb": 16384
+	    },
+        {
             "name": "semaphore",
             "size_kb": 8,
             "size_elem": 8,
@@ -71,10 +79,6 @@
             "num_elem": 6144
         },
         {
-            "name": "mcast_repl",
-            "size_kb": 4096
-        },
-        {
             "name": "tcpcb",
             "size_kb": 8192
         },
@@ -86,10 +90,6 @@
             "name": "ipsec-cb",
             "size_kb": 64
         },
-	    {
-	        "name": "lif2qstate_map",
-	        "size_kb": 16384
-	    },
         {
             "name": "nmdr-tx",
             "size_kb": 128 
@@ -141,6 +141,10 @@
         {
             "name": "page-big-rx",
             "size_kb": 147456
+        },
+        {
+            "name": "p4plus_program",
+            "size_kb": 131072
         }
     ]
 }
