@@ -5,7 +5,7 @@
  *
  */
 
-package vchub
+package server
 
 import (
 	"fmt"
@@ -207,8 +207,8 @@ func (as *VchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, err
 	return &as.stats, nil
 }
 
-// StartVCHServer starts the vchub api server
-func StartVCHServer(listenURL string) (*VchServer, error) {
+// NewVCHServer creates and starts a vchub api server
+func NewVCHServer(listenURL string) (*VchServer, error) {
 	lis, err := net.Listen("tcp", listenURL)
 	if err != nil {
 		log.Infof("failed to listen: %v", err)

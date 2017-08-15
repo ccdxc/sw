@@ -3,6 +3,9 @@
 
 require 'fileutils'
 
+def get_user_specific_nw(net)
+	return ENV['USER'] + net
+end
 # VM parameters
 def provider_cfg(node, cpus, memory, numNics)
     node.vm.provider "virtualbox" do |v|
@@ -62,7 +65,7 @@ def configure_vm(node, node_name)
 end
 
 # Alpine VM specific configuration
-def configure_alpine_vm(node, node_name)
+def configure_alpine_vm(node, node_name, share)
       node.vm.provision "shell" do |s|
           s.inline = <<-EOF
             ## setup basic environment for the VM
@@ -79,18 +82,25 @@ def configure_alpine_vm(node, node_name)
           EOF
       end
 
+      if share
       # mount the host directories
-      if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
-          node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
-          node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
-      else
-          node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+          if File.dirname(__FILE__).include? "src/github.com/pensando/sw"
+              node.vm.synced_folder "../../../", File.join("/import", "src"), rsync: true
+              node.vm.synced_folder File.join("./", "bin"), File.join("/import", "bin"), rsync: true
+          else
+              node.vm.synced_folder "../", "/import/src/github.com/pensando/sw", rsync: true
+          end
       end
 end
 
 # Ensure vagrant-alpine plugin is installed
 unless Vagrant.has_plugin?("vagrant-alpine")
   raise 'vagrant-alpine plugin is not installed!'
+end
+
+# Ensure vagrant-scp plugin is installed
+unless Vagrant.has_plugin?("vagrant-scp")
+  raise 'vagrant-scp plugin is not installed!'
 end
 
 # Main configuration
@@ -121,7 +131,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.box = "nasuku/centos73"
       node.vm.box_version = "0.2"
       # Control Interface
-      node.vm.network :private_network, ip: node_addr
+      node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
 
       # configure VM
       provider_cfg(node, 4, 4096, 2)
@@ -151,21 +161,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_addr = ip_prefix + "#{n+21}"
     host_net  = "host_net#{n+1}"
     dc_net    = "dc_net"
+    wired_mac = "02020202020" + "#{n+1}"
 
     config.vm.define node_name do |node|
       node.vm.box = "Dalee/alpine"
       # Control Interface
-      node.vm.network :private_network, ip: node_addr
+      node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
       # Uplink Interface
-      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: dc_net, auto_config: false
+      node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(dc_net), auto_config: false
       # Hots Interface
-      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: host_net, auto_config: false
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
 
       # configure VM
       provider_cfg(node, 4, 4096, 4)
 
       # provision base os
-      configure_alpine_vm(node, node_name)
+      configure_alpine_vm(node, node_name, true)
 
     end
   end
@@ -175,19 +186,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_name = "host#{n+1}"
     node_addr = ip_prefix + "#{n+121}"
     host_net  = "host_net#{n+1}"
+    wired_mac = "02020202020" + "#{n+1}"
 
     config.vm.define node_name do |node|
-      node.vm.box = "Dalee/alpine"
+      node.vm.box = "jojimt/alpine_host"
+      node.vm.synced_folder ".", "/vagrant", :disabled => true
       # Control Interface
-      node.vm.network :private_network, ip: node_addr
+      node.vm.network :private_network, ip: node_addr, virtualbox__intnet: get_user_specific_nw("control")
       # Hots Interface
-      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: host_net, auto_config: false
+      node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
 
       # configure VM
       provider_cfg(node, 4, 4096, 3)
 
       # provision base os
-      configure_alpine_vm(node, node_name)
+      configure_alpine_vm(node, node_name, false)
 
     end
   end

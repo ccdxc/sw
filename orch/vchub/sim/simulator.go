@@ -8,14 +8,45 @@
 package sim
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"reflect"
 	"runtime"
+	"strings"
 	"time"
 
+	"github.com/vmware/govmomi/vim25/types"
+
+	"github.com/pensando/sw/orch/simapi"
+	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/vic/pkg/vsphere/simulator"
 	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
+
+// Inventory maintains inventory info for the simulator
+type Inventory struct {
+	vCenters map[string]*simInfo
+	servers  map[string]*serverInfo // indexed by snic mac
+}
+
+type serverInfo struct {
+	simURL    string // url to access hostsim
+	snicMac   string
+	hSystem   *simulator.HostSystem
+	workLoads map[string]*wlInfo
+}
+
+type wlInfo struct {
+	wlUUID   string
+	nwIFUUID string
+	vm       *simulator.VirtualMachine
+	vethName string
+}
 
 type simInfo struct {
 	model  *simulator.Model
@@ -24,9 +55,12 @@ type simInfo struct {
 
 var vCenters map[string]*simInfo
 
+var instCount int
+
 // Setup sets up the simulator
 func Setup() {
 	vCenters = make(map[string]*simInfo)
+	instCount++
 }
 
 // TearDown cleans up the simulator
@@ -41,6 +75,7 @@ func TearDown() {
 	}
 
 	vCenters = nil
+	instCount--
 }
 
 // Simulate simulates a vCenter with the specified IP:port, hosts and VMs
@@ -55,7 +90,7 @@ func Simulate(addr string, hosts, vms int) (string, error) {
 	}
 
 	m := simulator.VPX()
-	m.ClusterHost = hosts
+	m.ClusterHost = 1
 	m.Host = hosts
 	m.Machine = vms
 
@@ -79,13 +114,13 @@ func Simulate(addr string, hosts, vms int) (string, error) {
 }
 
 // AddSmartNIC adds a smartnic to the inventory
-func AddSmartNIC(name, mac string) error {
+func AddSmartNIC(hostIndex int, name, mac string) error {
 	hosts := esx.GetHostList()
-	if len(hosts) == 0 {
-		return fmt.Errorf("No hosts found")
+	if len(hosts) <= hostIndex {
+		return fmt.Errorf("Specified host not found, %d hosts available", len(hosts))
 	}
 
-	esx.AddPnicToHost(hosts[0], name, mac)
+	esx.AddPnicToHost(hosts[hostIndex], name, mac)
 
 	return nil
 }
@@ -106,4 +141,278 @@ func DeleteNwIF(name string) error {
 		return fmt.Errorf("No vms found")
 	}
 	return vms[0].RemoveVeth(name)
+}
+
+// PrintInventory used for dumping inventory
+func PrintInventory() {
+	hosts := make(map[string]*simulator.HostSystem)
+	vms := simulator.GetVMList()
+	log.Infof("==================================")
+	for _, vm := range vms {
+		vmID := vm.Reference().Value
+		href := vm.Runtime.Host.Reference()
+		hostID := href.Value
+		log.Infof("%s  <=  %s", vmID, hostID)
+		hh := simulator.Map.Get(href)
+		if hh != nil {
+			hs := hh.(*simulator.HostSystem)
+			if hs != nil && hs.Config != nil {
+				hosts[hostID] = hs
+			}
+		}
+	}
+	log.Infof("++++++++++++++++++++++++++++++++++")
+	for k, e := range hosts {
+		log.Infof("HostKey=== %s", k)
+		for _, v := range e.Vm {
+			log.Infof("VMKey: %s", v.Reference().Value)
+		}
+	}
+
+	log.Infof("==================================")
+}
+
+// New returns an instance of the simulator
+func New() simapi.OrchSim {
+	if instCount != 0 {
+		log.Fatalf("Only one instance of simulator supported")
+	}
+
+	instCount++
+
+	return &Inventory{
+		vCenters: make(map[string]*simInfo),
+		servers:  make(map[string]*serverInfo),
+	}
+}
+
+// Run runs the simulator
+func (s *Inventory) Run(addr string, snicMacs []string, vms int) (string, error) {
+	m := simulator.VPX()
+	m.ClusterHost = 1
+	m.Host = len(snicMacs)
+	m.Machine = vms
+
+	f := flag.Lookup("httptest.serve")
+	f.Value.Set(addr)
+	tag := " (govmomi simulator)"
+	m.ServiceContent.About.Name += tag
+	m.ServiceContent.About.OsType = runtime.GOOS + "-" + runtime.GOARCH
+
+	esx.HostSystem.Summary.Hardware.Vendor += tag
+
+	err := m.Create()
+	if err != nil {
+		return "", err
+	}
+
+	s.updateInv(snicMacs)
+	srv := m.Service.NewServer()
+	i := &simInfo{model: m, server: srv}
+	s.vCenters[addr] = i
+	return fmt.Sprintf("%s", srv.URL), nil
+}
+func getVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
+	dKind := reflect.TypeOf(d).Elem()
+	if dKind == reflect.TypeOf((*types.VirtualE1000)(nil)).Elem() {
+		e1 := d.(*types.VirtualE1000)
+		return &e1.VirtualEthernetCard
+	}
+
+	return nil
+}
+
+func (s *Inventory) updateInv(snicMacs []string) {
+	vms := simulator.GetVMList()
+	hMap := make(map[string]*simulator.HostSystem)
+	for _, vm := range vms {
+		href := vm.Runtime.Host.Reference()
+		hh := simulator.Map.Get(href)
+		if hh != nil {
+			hs := hh.(*simulator.HostSystem)
+			if hs != nil && hs.Config != nil && len(hs.Config.Network.Pnic) > 0 {
+				hMap[href.Value] = hs
+			}
+		}
+
+		if len(hMap) == len(snicMacs) {
+			break
+		}
+	}
+
+	hostCount := 0
+	for _, e := range hMap {
+		mac := snicMacs[hostCount]
+		e.Config.Network.Pnic[0].Mac = mac
+		s.servers[mac] = &serverInfo{
+			snicMac:   mac,
+			hSystem:   e,
+			workLoads: make(map[string]*wlInfo),
+		}
+		hostCount++
+	}
+
+	// remove all pre-created vnics.
+	for _, vm := range vms {
+		for _, d := range vm.Config.Hardware.Device {
+			veth := getVeth(d)
+			if veth == nil {
+				continue
+			}
+
+			unitNum := *veth.VirtualDevice.UnitNumber
+			err := vm.RemoveVeth(fmt.Sprintf("Veth-%d", unitNum-7))
+			if err != nil {
+				log.Errorf("RemoveVeth returned %v", err)
+			}
+		}
+	}
+}
+
+// Destroy destroys the simulator
+func (s *Inventory) Destroy() {
+	for _, i := range s.vCenters {
+		i.server.Close()
+		i.model.Remove()
+	}
+
+	instCount--
+}
+
+// SetHostURL sets the hostsim URL to reach a host
+func (s *Inventory) SetHostURL(snicMac, hostURL string) error {
+	srv := s.servers[snicMac]
+	if srv == nil {
+		return fmt.Errorf("No host with snic %s", snicMac)
+	}
+
+	srv.simURL = hostURL
+	r := &simapi.NwIFSetReq{}
+	resp := &simapi.NwIFSetResp{}
+	httpPost(hostURL+"/nwifs/cleanup", r, resp)
+	return nil
+}
+
+// CreateNwIF creates a vnic in the simulator
+func (s *Inventory) CreateNwIF(hostURL string, r *simapi.NwIFSetReq) (*simapi.NwIFSetResp, error) {
+	// find a matching host
+	for _, srv := range s.servers {
+		if srv.simURL == hostURL {
+			if r.IPAddr == "" {
+				return nil, fmt.Errorf("IP address is required")
+			}
+
+			// if mac address is empty, generate from IP addr
+			if r.MacAddr == "" {
+				r.MacAddr = macFromIP(r.IPAddr)
+			}
+
+			vmRef := srv.hSystem.Vm[0].Reference()
+			vv := simulator.Map.Get(vmRef)
+			vm := vv.(*simulator.VirtualMachine)
+			name, err := vm.AddVeth(r.MacAddr, r.PortGroup)
+			if err != nil {
+				return nil, err
+			}
+
+			resp := &simapi.NwIFSetResp{}
+			err = httpPost(hostURL+"/nwifs/create", r, resp)
+			if err != nil {
+				vm.RemoveVeth(name)
+			}
+			wl := &wlInfo{
+				wlUUID:   resp.WlUUID,
+				nwIFUUID: resp.UUID,
+				vm:       vm,
+				vethName: name,
+			}
+
+			srv.workLoads[resp.UUID] = wl
+
+			return resp, err
+		}
+	}
+	return nil, fmt.Errorf("No server with %s url", hostURL)
+}
+
+// DeleteNwIF not yet
+func (s *Inventory) DeleteNwIF(hostURL string, id string) *simapi.NwIFDelResp {
+	// find a matching host
+	for _, srv := range s.servers {
+		if srv.simURL == hostURL {
+			wl := srv.workLoads[id]
+			if wl == nil {
+				log.Errorf("DeleteNwIF %s, %s not found", hostURL, id)
+				return nil
+			}
+
+			r := &simapi.NwIFSetReq{}
+			resp := &simapi.NwIFDelResp{}
+			u1 := fmt.Sprintf("%s/nwifs/%s/delete", hostURL, id)
+			err := httpPost(u1, r, resp)
+			if err != nil {
+				log.Errorf("DeleteNwIF %s, %s failed on host", hostURL, id)
+				return nil
+			}
+
+			wl.vm.RemoveVeth(wl.vethName)
+			delete(srv.workLoads, id)
+			return resp
+		}
+	}
+	return nil
+}
+
+// httpPost performs http POST operation
+func httpPost(url string, req interface{}, resp interface{}) error {
+	// Convert the req to json
+	jsonStr, err := json.Marshal(req)
+	if err != nil {
+		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
+		return err
+	}
+
+	// Perform HTTP POST operation
+	res, err := http.Post(url, "application/json", strings.NewReader(string(jsonStr)))
+	if err != nil {
+		log.Errorf("Error during http POST. Err: %v", err)
+		return err
+	}
+
+	defer res.Body.Close()
+
+	// Check the response code
+	if res.StatusCode == http.StatusInternalServerError {
+		eBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return errors.New("HTTP StatusInternalServerError" + err.Error())
+		}
+		return errors.New(string(eBody))
+	}
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return errors.New("HTTP Error response")
+	}
+
+	// Read the entire response
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Errorf("Error during ioutil readall. Err: %v", err)
+		return err
+	}
+
+	// Convert response json to struct
+	err = json.Unmarshal(body, resp)
+	if err != nil {
+		log.Errorf("Error during json unmarshall. Err: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func macFromIP(IP string) string {
+	ipAddr := net.ParseIP(IP)
+	return fmt.Sprintf("00:50:%02x:%02x:%02x:%02x", ipAddr[12], ipAddr[13], ipAddr[14], ipAddr[15])
 }

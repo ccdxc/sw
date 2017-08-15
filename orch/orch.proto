@@ -110,6 +110,10 @@ message NwIF {
     string portGroup = 2;
     string switch = 3;
     string smartNIC_ID = 4;
+    string ipAddress = 5;
+    string network = 6;
+    string wlName = 7;
+    string wlUUID = 8;
   }
   Status status = 5;
   map<string, string> attributes = 6;

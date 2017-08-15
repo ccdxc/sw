@@ -18,7 +18,7 @@ import (
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/ctrler/npm/statemgr"
 	"github.com/pensando/sw/orch"
-	"github.com/pensando/sw/orch/vchub"
+	vchserver "github.com/pensando/sw/orch/vchub/server"
 	vchstore "github.com/pensando/sw/orch/vchub/store"
 	"github.com/pensando/sw/utils/kvstore/store"
 	kvs "github.com/pensando/sw/utils/kvstore/store"
@@ -74,7 +74,7 @@ func TestApiWatcher(t *testing.T) {
 	Assert(t, (kvs != nil), "Error creating kvstore")
 
 	// create vchub
-	vcs, err := vchub.StartVCHServer(vmmURL)
+	vcs, err := vchserver.NewVCHServer(vmmURL)
 	AssertOk(t, err, "Error creating vchub")
 	time.Sleep(time.Millisecond * 10)
 
@@ -189,13 +189,13 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 
 	// create vchub
-	vcs, err := vchub.StartVCHServer(vmmURL)
+	vcs, err := vchserver.NewVCHServer(vmmURL)
 	AssertOk(t, err, "Error creating vchub")
 
 	// stop the server and restart it
 	vcs.StopServer()
 	time.Sleep(time.Second * 3)
-	vcs, err = vchub.StartVCHServer(vmmURL)
+	vcs, err = vchserver.NewVCHServer(vmmURL)
 	AssertOk(t, err, "Error creating vchub")
 	time.Sleep(time.Millisecond * 10)
 

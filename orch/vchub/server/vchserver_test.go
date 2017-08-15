@@ -5,9 +5,10 @@
  *
  */
 
-package vchub
+package server
 
 import (
+	"fmt"
 	"reflect"
 	"runtime/debug"
 	"testing"
@@ -20,7 +21,6 @@ import (
 	"google.golang.org/grpc"
 
 	infraapi "github.com/pensando/sw/api"
-	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/vchub/defs"
 	"github.com/pensando/sw/orch/vchub/sim"
@@ -30,12 +30,14 @@ import (
 	"github.com/pensando/sw/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/utils/kvstore/store"
+	. "github.com/pensando/sw/utils/testutils"
 	"github.com/pensando/vic/pkg/vsphere/simulator"
 	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 const (
-	serverAddr   = "127.0.0.1:" + globals.VCHubAPIPort
+	vchTestPort  = "19003"
+	serverAddr   = "127.0.0.1:" + vchTestPort
 	testNic1Mac  = "6a:00:02:e7:a8:40"
 	testNic2Mac  = "6a:00:02:e7:aa:54"
 	testIf1Mac   = "6e:00:02:e7:dd:40"
@@ -44,9 +46,9 @@ const (
 	testPG       = "dvportgroup-30"
 	testIf1ID    = "52fd7958-f4da-78bb-1590-856861348cee:4001"
 	testIf2ID    = "53256758-eecc-79bb-1590-899861348cfd:4004"
-	waitTO       = 2 * time.Second
+	waitTO       = 10 * time.Second
 	pollInterval = 10 * time.Millisecond
-	vchURL       = ":" + globals.VCHubAPIPort
+	vchURL       = ":" + vchTestPort
 )
 
 type TestSuite struct {
@@ -60,7 +62,7 @@ type TestSuite struct {
 }
 
 func (ts *TestSuite) setup(t *testing.T, fake bool) {
-	vch, err := StartVCHServer(vchURL)
+	vch, err := NewVCHServer(vchURL)
 	if err != nil {
 		t.Errorf("VCHServer start failed %v", err)
 	}
@@ -197,27 +199,37 @@ func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
 var suite *TestSuite
 
 func verifySmartNICList(t *testing.T, expected map[string]*orch.SmartNIC) {
+	err := checkSmartNICList(expected)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+func checkSmartNICList(expected map[string]*orch.SmartNIC) error {
 	filter := &orch.Filter{}
 	nicList, err := suite.vcHubClient.ListSmartNICs(context.Background(), filter)
 	if err != nil {
-		t.Errorf("Error listing nics %v", err)
+		return fmt.Errorf("Error listing nics %v", err)
 	}
 	nics := nicList.GetItems()
 
 	if len(nics) != len(expected) {
-		t.Errorf("Expected %d items, got %+v", len(expected), nics)
+		return fmt.Errorf("Expected %d items, got %+v", len(expected), nics)
 	}
 
 	for _, n1 := range nics {
 		n2 := expected[n1.Status.MacAddress]
-		// ignore resource version for now
-		n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
-		n1.Status.Switch = n2.Status.Switch
-		if !reflect.DeepEqual(n1, n2) {
-			t.Errorf("Expected %+v, got %+v", n2, n1)
+		if n2 != nil {
+			// ignore resource version for now
+			n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+			n1.Status.Switch = n2.Status.Switch
+			if !reflect.DeepEqual(n1, n2) {
+				return fmt.Errorf("Expected %+v, got %+v", n2, n1)
+			}
 		}
 		delete(expected, n1.Status.MacAddress)
 	}
+
+	return nil
 }
 
 func TestListSmartNICs(t *testing.T) {
@@ -518,28 +530,40 @@ func TestSmartNICInspect(t *testing.T) {
 }
 
 func verifyNwIFList(t *testing.T, expected map[string]*orch.NwIF) {
+	err := checkNwIFList(expected)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func checkNwIFList(expected map[string]*orch.NwIF) error {
 	filter := &orch.Filter{}
 	ifList, err := suite.vcHubClient.ListNwIFs(context.Background(), filter)
 	if err != nil {
-		t.Errorf("Error listing ifs %v", err)
+		return fmt.Errorf("Error listing ifs %v", err)
 	}
 	ifs := ifList.GetItems()
 
-	if len(ifs) != len(expected) {
-		t.Errorf("Expected %d items, got %+v", len(expected), ifs)
+	if len(ifs) < len(expected) {
+		return fmt.Errorf("Expected %d items, got %d", len(expected), len(ifs))
 	}
 
 	for _, n1 := range ifs {
 		n2 := expected[n1.ObjectMeta.UUID]
-		if n2 != nil {
-			n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+		if n2 == nil {
+			continue
 		}
+		n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
 		if !reflect.DeepEqual(n1, n2) {
-			t.Errorf("Expected %+v, got %+v", n2, n1)
-			debug.PrintStack()
+			return fmt.Errorf("Expected %+v, got %+v", n2, n1)
 		}
 		delete(expected, n1.ObjectMeta.UUID)
 	}
+
+	if len(expected) != 0 {
+		return fmt.Errorf("%d items not found", len(expected))
+	}
+	return nil
 }
 
 func TestListNwIFs(t *testing.T) {
@@ -849,6 +873,13 @@ func getExpectedNICs(t *testing.T) map[string]*orch.SmartNIC {
 	return nicMap
 }
 
+func verifyVCPSnics(t *testing.T, poll, timeOut string) {
+	AssertEventually(t, func() bool {
+		nicMap := getExpectedNICs(t)
+		return checkSmartNICList(nicMap) == nil
+	}, poll, timeOut)
+}
+
 func TestVCPSnic(t *testing.T) {
 	suite = &TestSuite{}
 	suite.setup(t, false)
@@ -881,20 +912,15 @@ func TestVCPSnic(t *testing.T) {
 	}
 
 	v1.Run()
-	time.Sleep(1 * time.Second)
-	nicMap := getExpectedNICs(t)
-	verifySmartNICList(t, nicMap)
+	verifyVCPSnics(t, "50ms", "5s")
 
 	hosts := esx.GetHostList()
 	esx.AddPnicToHost(hosts[0], "vmnic2", "0c:c4:7a:70:68:68")
 	esx.AddPnicToHost(hosts[1], "vmnic3", "0c:c4:7a:70:86:86")
-	time.Sleep(1200 * time.Millisecond)
-	nicMap = getExpectedNICs(t)
-	verifySmartNICList(t, nicMap)
+	verifyVCPSnics(t, "50ms", "10s")
+
 	esx.DelPnicFromHost(hosts[1], "vmnic3")
-	time.Sleep(1200 * time.Millisecond)
-	nicMap = getExpectedNICs(t)
-	verifySmartNICList(t, nicMap)
+	verifyVCPSnics(t, "50ms", "10s")
 
 	// Start another vc simulator
 	vc2, err := sim.Simulate("127.0.0.1:8990", 4, 3)
@@ -917,9 +943,7 @@ func TestVCPSnic(t *testing.T) {
 	}
 
 	v2.Run()
-	time.Sleep(1 * time.Second)
-	nicMap = getExpectedNICs(t)
-	verifySmartNICList(t, nicMap)
+	verifyVCPSnics(t, "50ms", "5s")
 
 	v1.Stop()
 	v2.Stop()
@@ -959,6 +983,9 @@ func getExpectedNwIFs(t *testing.T) map[string]*orch.NwIF {
 		vmRef := v.Reference()
 		vmKey := "127.0.0.1:8989:" + vmRef.Value
 		pnicMac := getPNICMac(v.Runtime.Host)
+		if pnicMac == "" {
+			continue
+		}
 		for _, d := range v.Config.Hardware.Device {
 			veth := vcp.GetVeth(d)
 			if veth == nil {
@@ -970,13 +997,21 @@ func getExpectedNwIFs(t *testing.T) map[string]*orch.NwIF {
 			ifMap[ifKey] = &orch.NwIF{
 				ObjectKind:       "NwIF",
 				ObjectAPIVersion: "v1",
-				ObjectMeta:       &infraapi.ObjectMeta{UUID: ifKey},
-				Config:           &orch.NwIF_Config{},
+				ObjectMeta: &infraapi.ObjectMeta{
+					UUID:   ifKey,
+					Tenant: "default",
+					Name:   v.Name,
+				},
+				Config: &orch.NwIF_Config{},
 				Status: &orch.NwIF_Status{
 					MacAddress:  veth.MacAddress,
 					PortGroup:   b.Port.PortgroupKey,
 					Switch:      b.Port.SwitchUuid,
 					SmartNIC_ID: pnicMac,
+					WlName:      v.Name,
+					WlUUID:      vmKey,
+					Network:     b.Port.PortgroupKey,
+					IpAddress:   store.GetIPFromMac(veth.MacAddress),
 				},
 			}
 		}
@@ -1042,21 +1077,10 @@ func TestVCPNwIF(t *testing.T) {
 	}
 
 	v1.Run()
-	time.Sleep(1 * time.Second)
-	filter := &orch.Filter{}
-	ifList, err := suite.vcHubClient.ListNwIFs(context.Background(), filter)
-	if err != nil {
-		t.Errorf("Error listing nwifs %v", err)
-	}
-	ifs := ifList.GetItems()
-	for _, nwif := range ifs {
-		log.Infof("nwif.Status: %+v", nwif.Status)
-	}
-	if len(ifs) == 0 {
-		t.Errorf("No nwifs were created")
-	}
-	e1 := getExpectedNwIFs(t)
-	verifyNwIFList(t, e1)
+	AssertEventually(t, func() bool {
+		ifMap := getExpectedNwIFs(t)
+		return checkNwIFList(ifMap) == nil
+	}, "50ms", "5s")
 
 	// Add a new NwIF and verify
 	doneCh := make(chan bool)

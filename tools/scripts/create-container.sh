@@ -12,6 +12,13 @@ function createApiGwContainer() {
     docker build --rm --no-cache -t pen-apigw:latest -f tools/docker-files/apigw/Dockerfile tools/docker-files/apigw
 }
 
+function createVCHubContainer() {
+    docker build --rm --no-cache -t pen-vchub:latest -f tools/docker-files/vchub/Dockerfile tools/docker-files/vchub
+}
+
+function createNPMContainer() {
+    docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/npm/Dockerfile tools/docker-files/npm
+}
 
 function createBinContainerTarBall() {
     staticimages="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
@@ -27,7 +34,7 @@ function createBinContainerTarBall() {
         fi
     done
     mkdir -p bin/tars
-    dynamicimages="pen-base:latest pen-apiserver:latest pen-apigw:latest"
+    dynamicimages="pen-base:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest"
     for i in $staticimages $dynamicimages
     do
         # i is srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -46,8 +53,10 @@ function stopCluster() {
 
 case $1 in 
     createBaseContainer) createBaseContainer ;;
-    createApiGwContainer) createApiGwContainer ;;
-    createApiSrvContainer) createApiSrvContainer;;
+    apigw) createApiGwContainer ;;
+    apiserver) createApiSrvContainer;;
+    vchub) createVCHubContainer;;
+    npm) createNPMContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

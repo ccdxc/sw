@@ -5,6 +5,8 @@ PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */))
 TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... \
 ./apiserver/... ./globals/... ./ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/...
+TO_DOCKERIZE := apigw apiserver vchub npm
+TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
@@ -45,14 +47,10 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd /import/bin/apigw /import/bin/apiserver
-	@cp ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
-	@cp ${PWD}/bin/apigw tools/docker-files/apigw/apigw
-	@cp ${PWD}/bin/apiserver tools/docker-files/apiserver/apiserver
-	@chmod 755 tools/docker-files/pencmd/target/usr/bin/pen-cmd tools/docker-files/apigw/apigw tools/docker-files/apiserver/apiserver
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd ${TO_STRIP}
+	@cp -p ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh createBaseContainer
-	@tools/scripts/create-container.sh createApiGwContainer
-	@tools/scripts/create-container.sh createApiSrvContainer
+	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
 qdeploy:
@@ -170,6 +168,11 @@ dev-clean:
 test-cluster:
 	scripts/bringup-dev.sh Vagrantfile.e2e
 	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make cluster'
+	scripts/setup_hostsim.sh
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startAgent.py -nodes $$NAPLES_NODES'
+
+e2e-test:
+	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/test/e2e; sudo -E E2E_TEST=1 GOPATH=/import /usr/local/go/bin/go test -v .'
 
 test-clean:
 	scripts/cleanup-dev.sh

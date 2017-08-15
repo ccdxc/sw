@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"reflect"
 	"strconv"
 
@@ -113,14 +115,23 @@ func (ns *nwifStore) setConfig(vmKey string, c *defs.VMConfig) {
 		nwif := &orch.NwIF{
 			ObjectKind:       nwifKind,
 			ObjectAPIVersion: "v1",
-			ObjectMeta:       &swapi.ObjectMeta{UUID: k},
-			Config:           &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
+			ObjectMeta: &swapi.ObjectMeta{
+				UUID:   k,
+				Tenant: "default",
+				Name:   currVM.vmName,
+			},
+			Config: &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
 			Status: &orch.NwIF_Status{
 				MacAddress: vnic.MacAddress,
 				// TODO: change this to PG Name
 				PortGroup:   vnic.PortgroupKey,
 				Switch:      vnic.SwitchUUID,
 				SmartNIC_ID: snicID,
+				WlName:      currVM.vmName,
+				WlUUID:      vmKey,
+				// TODO: change this to nw obj key
+				Network:   vnic.PortgroupKey,
+				IpAddress: GetIPFromMac(vnic.MacAddress),
 			},
 			Attributes: currVM.attr,
 		}
@@ -261,14 +272,23 @@ func (ns *nwifStore) createVMNwIFs(vmKey string, vm *vmInfo) {
 		nwif := &orch.NwIF{
 			ObjectKind:       nwifKind,
 			ObjectAPIVersion: "v1",
-			ObjectMeta:       &swapi.ObjectMeta{UUID: k},
-			Config:           &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
+			ObjectMeta: &swapi.ObjectMeta{
+				UUID:   k,
+				Tenant: "default",
+				Name:   vm.vmName,
+			},
+			Config: &orch.NwIF_Config{LocalVLAN: getLocalVLAN(vnic)},
 			Status: &orch.NwIF_Status{
 				MacAddress: vnic.MacAddress,
 				// TODO: change this to PG Name
 				PortGroup:   vnic.PortgroupKey,
 				Switch:      vnic.SwitchUUID,
 				SmartNIC_ID: snicID,
+				WlName:      vm.vmName,
+				WlUUID:      vmKey,
+				// TODO: change this to nw obj key
+				Network:   vnic.PortgroupKey,
+				IpAddress: GetIPFromMac(vnic.MacAddress),
 			},
 			Attributes: vm.attr,
 		}
@@ -299,4 +319,14 @@ func nullvmInfo() *vmInfo {
 		vmRunTime: &defs.VMRuntime{},
 		attr:      make(map[string]string),
 	}
+}
+
+// GetIPFromMac generates IP from lower 4 bytes of mac
+func GetIPFromMac(mac string) string {
+	m, err := net.ParseMAC(mac)
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%d.%d.%d.%d", m[2], m[3], m[4], m[5])
 }
