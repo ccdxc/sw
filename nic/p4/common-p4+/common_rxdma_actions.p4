@@ -49,16 +49,18 @@ action rx_table_dummy_action(data0, data1,
 }
 
 action common_p4plus_stage0_app_header_table_action() {
-    modify_field(scratch_app.app_type, app_header.app_type);
-    modify_field(scratch_app.gft_flow_id, app_header.gft_flow_id);
-    modify_field(scratch_app.table0_valid, app_header.table0_valid);
-    modify_field(scratch_app.table1_valid, app_header.table1_valid);
-    modify_field(scratch_app.table2_valid, app_header.table2_valid);
-    modify_field(scratch_app.table3_valid, app_header.table3_valid);
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
-    modify_field(scratch_app.app_data, app_header.app_data);
+    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
+    modify_field(scratch_app.app_type, app_header.app_type);
+    modify_field(scratch_app.table0_valid, app_header.table0_valid);
+    modify_field(scratch_app.table1_valid, app_header.table1_valid);
+    modify_field(scratch_app.table2_valid, app_header.table2_valid);
+    modify_field(scratch_app.table3_valid, app_header.table3_valid);
+    modify_field(scratch_app.gft_flow_id, app_header.gft_flow_id);
+    modify_field(scratch_app.app_data0, app_header.app_data0);
+    modify_field(scratch_app.app_data1, app_header.app_data1);
 }
 

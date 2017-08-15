@@ -199,15 +199,17 @@ header_type scratch_metadata_t {
 header_type dma_cmd_pkt2mem_t {
     fields {
         // pkt2mem - used for copying input packet to memory.
-        dma_cmd_type : 3;
-        dma_cmd_eop : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_addr : 52;
-        dma_cmd_size : 14;
-        dma_cmd_cache : 1;
-        dma_cmd_use_override_lif : 1;
+		dma_cmd_pad : 43;
+        dma_cmd_round : 1;
         dma_cmd_override_lif : 11;
-        dma_cmd_pad : 44;
+        dma_cmd_use_override_lif : 1;
+        dma_cmd_size : 14;
+        dma_cmd_addr : 52;
+        dma_cmd_cache : 1;
+        dma_cmd_host_addr : 1;
+        dma_cmd_eop : 1;
+        dma_cmd_type : 3;
+
     }
 }
 
@@ -220,19 +222,20 @@ header_type dma_cmd_pkt2mem_t {
 
 header_type dma_cmd_phv2mem_t {
     fields {
-        dma_cmd_type : 3;
-        dma_cmd_eop : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_addr : 52;
-        dma_cmd_phv_start_addr : 10;
-        dma_cmd_phv_end_addr : 10;
-        dma_cmd_wr_fence : 1;
-        dma_cmd_cache : 1;
-        dma_cmd_use_override_lif : 1;
-        dma_cmd_override_lif : 11;
-        dma_cmd_barrier : 1;
+        dma_cmd_pad : 34;
+        dma_cmd_round : 1;
         dma_cmd_pcie_msg : 1;
-        dma_cmd_pad : 35;
+        dma_cmd_barrier : 1;
+        dma_cmd_override_lif : 11;
+        dma_cmd_use_override_lif : 1;
+        dma_cmd_phv_end_addr : 10;
+        dma_cmd_phv_start_addr : 10;
+        dma_cmd_wr_fence : 1;
+        dma_cmd_addr : 52;
+        dma_cmd_cache : 1;
+        dma_cmd_host_addr : 1;
+        dma_cmd_eop : 1;
+        dma_cmd_type : 3;
     }
 }
 
@@ -247,23 +250,23 @@ header_type dma_cmd_phv2mem_t {
     modify_field(_dma_cmd_phv2mem.dma_cmd_wr_fence, _fence);
 
 header_type dma_cmd_mem2mem_t {
-    fields {  
-        dma_cmd_type : 3;
-        dma_cmd_eop : 1;
-        dma_cmd_mem2mem_type : 2;
-        dma_cmd_host_addr : 1;
-        dma_cmd_cache : 1;
-        dma_cmd_addr : 52;
-        dma_cmd_size : 14;
-        dma_cmd_phv_start_addr : 10;
-        dma_cmd_phv_end_addr : 10;
-        dma_cmd_wr_fence : 1;
-        dma_cmd_use_override_lif : 1;
-        dma_cmd_override_lif : 11;
-        dma_cmd_barrier : 1;
+	fields {
+		dma_cmd_pad : 18;
+        dma_cmd_round : 1;
         dma_cmd_pcie_msg : 1;
-        dma_cmd_pad      : 19;
-    }
+        dma_cmd_barrier : 1;
+        dma_cmd_override_lif : 11;
+        dma_cmd_use_override_lif : 1;
+        dma_cmd_phv_end_addr : 10;
+        dma_cmd_phv_start_addr : 10;
+        dma_cmd_wr_fence : 1;
+        dma_cmd_size : 14;
+        dma_cmd_addr : 52;
+        dma_cmd_cache : 1;
+        dma_cmd_host_addr : 1;
+        dma_cmd_mem2mem_type : 2;
+        dma_cmd_eop : 1;
+        dma_cmd_type : 3;
 }
 
 #define DMA_COMMAND_MEM2MEM_FILL(_dma_cmd_m2m_src, _dma_cmd_m2m_dst, _src_addr, _src_host, _dst_addr, _dst_host, _size, _cache, _fence, _barrier) \
