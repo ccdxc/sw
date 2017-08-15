@@ -14,10 +14,13 @@ import config.hal.api           as halapi
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
-
+'''
+AOL Type descriptor object support
+'''
 class SwDscrAolObject(base.ConfigObjectBase):
     def __init__(self, ringname, swdreidx, parent = None):
         super().__init__()
+        self.idx = swdreidx
         self.Clone(Store.templates.Get("DESCR_AOL_VIA_REF"))
         self.GID("%s_DESC%04d" % (ringname, swdreidx))
         return
@@ -28,7 +31,6 @@ class SwDscrAolObject(base.ConfigObjectBase):
         # FIXME, this should really be an index into the ring
         reqspec.descr_aol_handle = 543210
         return
-
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.DescAddr   = resp_spec.descr_aol_handle
         self.Addr1      = resp_spec.Address1
@@ -40,44 +42,55 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.Addr3      = resp_spec.Address3
         self.Offset3    = resp_spec.Offset3
         self.Len3       = resp_spec.Length3
-        cfglogger.info("Received response for handle: %016d" % self.DescAddr)
+        cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
         cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
         cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
         cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
         return
-
+    def GetHandle(self):
+        return self.DescAddr
 
 class SwDscrAolObjectHelper:
     def __init__(self):
         return
     def Generate(self, ringname, swdreidx, parent = None):
         return SwDscrAolObject(ringname, swdreidx, parent)
+    def Configure(self, swdre_list):
+        halapi.GetDscrAolObjectState(swdre_list)
+        return
+
+'''
+Page Type object support
+'''
+class SwDscrPageObject(base.ConfigObjectBase):
+    def __init__(self, ringname, swdreidx, parent = None):
+        super().__init__()
+        self.idx = swdreidx
+        self.Clone(Store.templates.Get("PAGE_VIA_REF"))
+        self.GID("%s_PAGE%04d" % (ringname, swdreidx))
+        return
+    def Show(self):
+        cfglogger.info("SwPage: %s" % (self.ID()))
+        return
+    def PrepareHALRequestSpec(self, reqspec):
+        # FIXME, query address of the page
+        return
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        return
+
+class SwPageObjectHelper:
+    def __init__(self):
+        return
+    def Generate(self, ringname, swdreidx, parent = None):
+        return SwDscrPageObject(ringname, swdreidx, parent)
+    def Configure(self, swdre_list):
+        # TODO: integrate the HAL API
+        #halapi.GetDscrAolObjectState(swdre_list)
+        return
 
 HelperDB = {}
 HelperDB["DESCR_AOL_VIA_REF"] = SwDscrAolObjectHelper()
-
-class SwDscrRingEntryObject(base.ConfigObjectBase):
-    def __init__(self, ringname, swdreidx, type, parent):
-        super().__init__()
-        self.Clone(Store.templates.Get(type))
-        self.index = swdreidx
-        self.GID("%s_ENTRY%04d" % (ringname, swdreidx))
-        # TODO: Populate the entry state from HAL into handle
-        self.handle = 0
-        SwDscrObjectHelper = HelperDB[type]
-        self.swdscr = SwDscrObjectHelper.Generate(ringname, swdreidx, parent)
-        Store.objects.Add(self.swdscr)
-        return
-
-    def Show(self):
-        cfglogger.info("SwDscrRingEntry: %s SwDscrObject: %s" % (self.ID(), self.swdscr.ID()))
-        return
-
-    def GetRingEntryObjectHandle(self):
-        return self.handle
-
-    def GetDscrObject(self):
-        return self.swdscr
+HelperDB["PAGE_VIA_REF"] = SwPageObjectHelper()
 
 class SwDscrRingObject(base.ConfigObjectBase):
     def __init__(self, ring_def, parent = None):
@@ -110,7 +123,9 @@ class SwDscrRingObject(base.ConfigObjectBase):
         return self.swdre_list[index]
 
     def Configure(self):
-        halapi.GetDscrAolObjectState(self.swdre_list)
+        RingEntryHelper = HelperDB[self.swdr_type]
+        RingEntryHelper.Configure(self.swdre_list)
+        return
 
 
 class SwDscrRingObjectHelper:
@@ -118,8 +133,9 @@ class SwDscrRingObjectHelper:
         self.swdr_list = []
         return
 
-    def Configure(self, type):
-        cfglogger.info("Configuring %s." % type)
+    def Configure(self):
+        for swdr in self.swdr_list:
+            swdr.Configure()
         return
 
     def Generate(self, type, parent):
@@ -127,7 +143,6 @@ class SwDscrRingObjectHelper:
         for swdrt in spec.entries:
             swdr = SwDscrRingObject(swdrt.entry, parent)
             swdr.Init(parent)
-            swdr.Configure()
             self.swdr_list.append(swdr)
             Store.objects.Add(swdr)
         return
@@ -139,6 +154,7 @@ class SwDscrRingObjectHelper:
 
     def main(self, type, parent):
         self.Generate(type, parent)
+        self.Configure()
         self.Show()
 
 
