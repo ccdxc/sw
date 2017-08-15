@@ -120,8 +120,9 @@ class TestCase(objects.FrameworkObject):
                 tc_pkt.ports = spec_pkt.packet.port.Get(self)
             else:
                 tc_pkt.ports = [ spec_pkt.packet.port ]
-            self.info("    - Adding Packet: %s" % tc_pkt.packet.GID())
-            self.info("    -        Ports :", tc_pkt.ports)
+            self.info("- Adding Packet: %s, Ports :" %\
+                      tc_pkt.packet.GID(), tc_pkt.ports)
+            tc_pkt.packet.Show(self)
             tc_section.packets.append(tc_pkt)
         return
 
@@ -131,13 +132,13 @@ class TestCase(objects.FrameworkObject):
             tc_desc = TestCaseTrigExpDescriptorObject()
             tc_desc.object  = spec_desc_entry.descriptor.object.Get(self)
             tc_desc.ring    = spec_desc_entry.descriptor.ring.Get(self)
-            self.info("    - Adding Descriptor: %s, Ring: %s" %\
+            self.info("- Adding Descriptor: %s, Ring: %s" %\
                       (tc_desc.object.GID(), tc_desc.ring.GID()))
             tc_section.descriptors.append(tc_desc)
             return
     
     def __setup_trigger(self, tc_ssn_step, spec_ssn_step):
-        self.info("  - Setting up Trigger.")
+        self.info("- Setting up Trigger.")
         self.__setup_packets(tc_ssn_step.trigger,
                              spec_ssn_step.trigger)
         self.__setup_descriptors(tc_ssn_step.trigger,
@@ -145,7 +146,7 @@ class TestCase(objects.FrameworkObject):
         return defs.status.SUCCESS
 
     def __setup_expect(self, tc_ssn_step, spec_ssn_step):
-        self.info("  - Setting up Expect.")
+        self.info("- Setting up Expect.")
         self.__setup_packets(tc_ssn_step.expect,
                              spec_ssn_step.expect)
         self.__setup_descriptors(tc_ssn_step.expect,

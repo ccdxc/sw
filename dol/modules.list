@@ -66,3 +66,23 @@ modules:
         package : test.normalization
         module  : None
         spec    : normalization.testspec
+        ignore  : True
+    - module:
+        name    : L3UC_IPV4_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=UDP
+    - module:
+        name    : L3UC_IPV6_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV6,proto=UDP
+

@@ -1,10 +1,12 @@
-#! /usr/bin/python3
+# /usr/bin/python3
 import pdb
 from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 
-def GetIpv4Ttl(testcase, packet):
+def GetTtl(testcase, packet):
     return 129
+def GetRoutedTtl(testcase, packet):
+    return 128
 
 def GetPacketTemplateByFlow():
     return

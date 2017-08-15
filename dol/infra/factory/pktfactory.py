@@ -326,7 +326,7 @@ def GeneratePackets(tc):
     for pspec in tc.testspec.packets:
         packet = Packet(tc, pspec.packet)
         packet.Build(tc)
-        packet.Show(tc)
+        #packet.Show(tc)
         tc.packets.Add(packet)
     return
 
