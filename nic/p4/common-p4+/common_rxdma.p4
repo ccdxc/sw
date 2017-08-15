@@ -90,7 +90,29 @@ header_type classic_scratch_metadata_t {
 
 header_type rdma_scratch_metadata_t {
     fields {
-        rdma_pointers : 192;
+        //Per LIF PageTranslationTable and MemoryRegionWindowTable
+        //are allocated adjacent to each other in HBM in that order.
+        //This is the base page_id of that allocation.
+        //Assumption is that it is 4K Byte(page) aligned and
+        //number of PT entries are in power of 2s.
+        pt_base_addr_page_id: 20;
+        log_num_pt_entries: 7;
+
+        //Per LIF CQCB and EQCB tables
+        //are allocated adjacent to each other in HBM in that order.
+        //This is the base page_id of that allocation.
+        //Assumption is that it is 4K Byte(page) aligned and
+        //number of PT entries are in power of 2s.
+        cqcb_base_addr_page_id: 20;
+        log_num_cq_entries: 5;
+
+        //RQCB prefetch uses per LIF global ring
+        //This is the base address of that ring
+        prefetch_pool_base_addr_page_id: 20;
+        log_num_prefetch_pool_entries:5;
+
+        reserved: 115;
+
     }
 }
 
@@ -992,10 +1014,25 @@ parser start {
     return ingress;
 }
 
-action common_p4plus_stage0_lif_table1(rdma_pointers) {
-    modify_field(scratch_rdma.rdma_pointers, rdma_pointers);
+action common_p4plus_stage0_lif_table1(pt_base_addr_page_id, 
+                                       log_num_pt_entries, 
+                                       cqcb_base_addr_page_id, 
+                                       log_num_cq_entries,
+                                       prefetch_pool_base_addr_page_id,
+                                       log_num_prefetch_pool_entries, 
+                                       reserved) {
+    modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
+    modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
+    modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
+    modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
+    modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
+                 prefetch_pool_base_addr_page_id);
+    modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
+                 log_num_prefetch_pool_entries);
+    modify_field(scratch_rdma.reserved, reserved);
 }
 
+@pragma stage 0
 table common_p4plus_stage0_lif_table1 {
     reads {
         p4_intr_global.lif : exact;
@@ -1011,6 +1048,7 @@ action common_p4plus_stage0_lif_table0(hash_seed_320) {
     modify_field(scratch_classic.hash_seed_320, hash_seed_320);
 }
 
+@pragma stage 0
 table common_p4plus_stage0_lif_table0 {
     reads {
         p4_intr_global.lif : exact;
