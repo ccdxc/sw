@@ -183,7 +183,7 @@ TEST_F(uplinkif_test, test3)
     
     // Create l2segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
-    l2seg_spec.set_network_handle(nw_hdl);
+    l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);

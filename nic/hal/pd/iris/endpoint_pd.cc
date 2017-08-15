@@ -12,6 +12,7 @@
 #include <l2seg_pd.hpp>
 #include <defines.h>
 #include <if_pd_utils.hpp>
+#include <utils.hpp>
 
 using namespace hal;
 
@@ -237,7 +238,7 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
             case REWRITE_L3_REWRITE_ID:
                 l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
                 HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-                nw = find_network_by_handle(l2seg->nw_handle);
+                nw = ep_pd_get_nw(pi_ep, l2seg);
                 // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
                 if (nw) {
                     memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, nw->rmac_addr, 6);
@@ -501,6 +502,34 @@ ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act)
     HAL_ASSERT(rw_act < REWRITE_MAX_ID);
 
     return pd_ep->rw_tbl_idx[rw_act];
+}
+
+network_t *
+ep_pd_get_nw(ep_t *pi_ep, l2seg_t *l2seg) 
+{
+    network_t       *nw = NULL;
+    dllist_ctxt_t   *lnode = NULL, *nw_lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    // Get the first IP
+    if (dllist_empty(&pi_ep->ip_list_head)) {
+        goto end;
+    } else {
+        lnode = pi_ep->ip_list_head.next;
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - offsetof(ep_ip_entry_t, ep_ip_lentry));
+
+        dllist_for_each(nw_lnode, &(l2seg->nw_list_head)) {
+            nw = (network_t *)((char *)nw_lnode -
+                    offsetof(network_t, l2seg_nw_lentry));
+            // Check if ip is in prefix
+            if (hal::ip_addr_in_ip_pfx(&pi_ip_entry->ip_addr, &nw->nw_key.ip_pfx)) {
+                return nw;
+            }
+        }
+    }
+
+end:
+    return nw;
 }
 
 }    // namespace pd

@@ -141,7 +141,7 @@ TEST_F(enicif_test, test1)
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
-    l2seg_spec.set_network_handle(nw_hdl);
+    l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);

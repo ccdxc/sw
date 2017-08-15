@@ -25,7 +25,7 @@ typedef struct l2seg_s {
     tenant_id_t           tenant_id;               // tenant this L2 segment belongs to
     l2seg_id_t            seg_id;                  // L2 segment id
     L2SegmentType         segment_type;            // type of L2 segment
-    hal_handle_t          nw_handle;               // network this belongs to
+    // hal_handle_t          nw_handle;               // network this belongs to
     encap_t               access_encap;            // encap within the host
     encap_t               fabric_encap;            // encap on the wire
     MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
@@ -41,6 +41,7 @@ typedef struct l2seg_s {
     // meta data maintained for tenant
     ht_ctxt_t             ht_ctxt;                 // segment id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+    dllist_ctxt_t         nw_list_head;            // network list
     dllist_ctxt_t         ep_list_head;            // endpoint list
     dllist_ctxt_t         tenant_l2seg_lentry;     // tenant's L2 segment list link
     dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
@@ -78,6 +79,7 @@ l2seg_init (l2seg_t *l2seg)
     // initialize meta information
     l2seg->ht_ctxt.reset();
     l2seg->hal_handle_ht_ctxt.reset();
+    utils::dllist_reset(&l2seg->nw_list_head);
     utils::dllist_reset(&l2seg->ep_list_head);
     utils::dllist_reset(&l2seg->tenant_l2seg_lentry);
     utils::dllist_reset(&l2seg->session_list_head);

@@ -92,8 +92,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     tenant_t            *tenant = NULL;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    // HAL_TRACE_DEBUG("PI-Network:{}: Network Create {}/{}", __FUNCTION__, 
-    //                 spec.key_or_handle().tenant_id());
+    HAL_TRACE_DEBUG("PI-Network:{}: Network Create ", __FUNCTION__);
 
 
     auto kh = spec.key_or_handle();
@@ -126,6 +125,8 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw->nw_key.tenant_id = tid;
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
     ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
+
+    HAL_TRACE_DEBUG("Rmac: {}", macaddr2str(nw->rmac_addr));
 
     // nw->gw_ep_handle = 
     nw->hal_handle = hal_alloc_handle();

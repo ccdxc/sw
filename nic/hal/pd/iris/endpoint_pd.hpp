@@ -41,7 +41,7 @@ intf::IfType ep_pd_get_if_type(ep_t *pi_ep);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
                                          rewrite_actions_en rw_act);
 uint32_t ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act);
-
+network_t *ep_pd_get_nw(ep_t *pi_ep, l2seg_t *l2seg);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_ENDPOINT_PD_HPP__

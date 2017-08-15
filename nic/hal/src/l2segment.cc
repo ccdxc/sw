@@ -130,8 +130,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg_t                *l2seg;
     tenant_id_t            tid;
     pd::pd_l2seg_args_t    pd_l2seg_args;
-    // hal_handle_t           nw_handle;
-    // network_t              *nw = NULL;
+    hal_handle_t           nw_handle;
+    network_t              *nw = NULL;
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -158,18 +158,6 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    // TODO: Uncomment this once DOL config adds network handle
-#if 0
-    // fetch the network information
-    nw_handle = spec.network_handle();
-    nw = find_network_by_handle(nw_handle);
-    if (nw == NULL) {
-        ret = HAL_RET_INVALID_ARG;
-        rsp->set_api_status(types::API_STATUS_NETWORK_NOT_FOUND);
-        goto end;
-    }
-#endif
-    
     // instantiate the L2 segment
     l2seg = l2seg_alloc_init();
     if (l2seg == NULL) {
@@ -180,7 +168,6 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
     l2seg->tenant_id = tid;
-    // l2seg->nw_handle = nw_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
@@ -194,6 +181,21 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         l2seg->fabric_encap.val = spec.fabric_encap().encap_value();
     }
     l2seg->hal_handle = hal_alloc_handle();
+
+    // consume network handles
+    utils::dllist_reset(&l2seg->nw_list_head);
+    for (int i = 0; i < spec.network_handle_size(); i++) {
+        nw_handle = spec.network_handle(i);        
+        nw = find_network_by_handle(nw_handle);
+        if (nw == NULL) {
+            ret = HAL_RET_INVALID_ARG;
+            rsp->set_api_status(types::API_STATUS_NETWORK_NOT_FOUND);
+            goto end;
+        }
+
+        // add nw to list
+        utils::dllist_add(&l2seg->nw_list_head, &nw->l2seg_nw_lentry);
+    }
 
     // allocate all PD resources and finish programming, if any
     pd::pd_l2seg_args_init(&pd_l2seg_args);

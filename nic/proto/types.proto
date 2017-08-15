@@ -73,6 +73,7 @@ enum ApiStatus {
   API_STATUS_QUEUE_NOT_FOUND          = 41;    // QUEUE not found
   API_STATUS_POLICER_ID_INVALID       = 42;    // invalid POLICER id
   API_STATUS_POLICER_NOT_FOUND        = 43;    // POLICER not found
+  API_STATUS_NETWORK_NOT_FOUND        = 44;    // network not found
 }
 
 // common meta object that is part of all other top level objects

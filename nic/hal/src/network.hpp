@@ -27,6 +27,7 @@ typedef struct network_s {
     // meta data maintained for network     
     ht_ctxt_t         nwkey_ht_ctxt;        // network key based hash table ctxt
     ht_ctxt_t         hal_handle_ht_ctxt;   // hal handle based hash table ctxt
+    dllist_ctxt_t     l2seg_nw_lentry;      // L2 segment's nw list entry
 } __PACK__ network_t;
 
 // max. number of networks supported  (TODO: we can take this from cfg file)
@@ -60,6 +61,7 @@ network_init (network_t *network)
     // initialize meta information
     network->nwkey_ht_ctxt.reset();
     network->hal_handle_ht_ctxt.reset();
+    utils::dllist_reset(&network->l2seg_nw_lentry);
 
     return network;
 }
