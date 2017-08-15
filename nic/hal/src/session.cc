@@ -204,6 +204,14 @@ extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
             flow_key->icmp_type = flow_spec_key.v4_key().icmp().type();
             flow_key->icmp_code = flow_spec_key.v4_key().icmp().code();
             flow_key->icmp_id = flow_spec_key.v4_key().icmp().id();
+            // Bharat: TODO: For now we are not handling ICMP flows which are 
+            //               neither echo req or echo reply. Have to check 
+            //               if we even need to install flows for other 
+            //               types. If yes, we have to see how to form
+            //               sport and dport. Revisit while full testing
+            //               of icmp. icmp_id: 0(Req), 8 (Reply)
+            HAL_ASSERT_RETURN(flow_key->icmp_type == 0 || 
+                    flow_key->icmp_type == 8, HAL_RET_INVALID_ARG);
         } else {
             flow_key->sport = flow_key->dport = 0;
         }

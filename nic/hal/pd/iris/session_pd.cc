@@ -514,8 +514,10 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
             key.flow_lkp_metadata_lkp_dport = flow->key.dport;
         } else if ((flow->key.proto == IP_PROTO_ICMP) ||
                 (flow->key.proto == IP_PROTO_ICMPV6)) {
-            key.flow_lkp_metadata_lkp_sport = flow->key.icmp_id;
-            key.flow_lkp_metadata_lkp_dport =
+            // Revisit: Swapped sport and dport. This is what matches what 
+            //          is coded in P4. 
+            key.flow_lkp_metadata_lkp_dport = flow->key.icmp_id;
+            key.flow_lkp_metadata_lkp_sport =
                 ((flow->key.icmp_type << 8) | flow->key.icmp_code);
         }
     } else {

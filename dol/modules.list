@@ -33,7 +33,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=ICMP
     - module:
