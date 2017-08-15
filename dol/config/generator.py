@@ -25,7 +25,7 @@ def process(topospec):
 
     # Enable all segments on Uplinks and UplinkPcs
     UplinkHelper.ConfigureAllSegments()
-    #UplinkPcHelper.ConfigureAllSegments()
+    UplinkPcHelper.ConfigureAllSegments()
 
     # Generate all sessions
     SessionHelper.main()

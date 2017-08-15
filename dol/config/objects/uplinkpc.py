@@ -96,7 +96,6 @@ class UplinkPcObjectHelper:
         return
 
     def main(self, topospec):
-        return
         self.Generate(topospec)
         self.Configure()
         if len(self.uplinkpcs) == 0: return
