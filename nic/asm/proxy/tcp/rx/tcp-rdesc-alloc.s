@@ -28,7 +28,7 @@ struct tcp_rx_rdesc_alloc_rdesc_alloc_d d;
 %%
 	.align
 tcp_rx_rdesc_alloc_stage_3_start:
-	//phvwri		p.p4_intr_global_tm_oport, 8
+	phvwri		p.p4_intr_global_tm_oport, 8
 
         CAPRI_CLEAR_TABLE1_VALID
 

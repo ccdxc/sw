@@ -23,7 +23,7 @@ struct tcp_rx_tcp_rx_d d;
         .param          tcp_rx_sack_stage2_start
 	.align
 tcp_rx_process_stage1_start:
-        //phvwri          p.p4_intr_global_tm_oport, 14 
+        phvwri          p.p4_intr_global_tm_oport, 14 
 #if 0
 dma_cmd_test:
 dma_cmd_data:

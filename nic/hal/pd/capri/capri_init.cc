@@ -43,10 +43,16 @@ capri_hbm_regions_init()
     if (ret != HAL_RET_OK) {
         return ret;
     }
-    capri_p4_prgm_init();
-    capri_p4p_prgm_init();
 
     ret = capri_p4_pgm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = capri_p4p_prgm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
     return ret;
 }
 

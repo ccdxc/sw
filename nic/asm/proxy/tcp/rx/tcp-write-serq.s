@@ -17,11 +17,11 @@ struct tcp_rx_write_serq_write_serq_d d;
 %%
 	.align	
 tcp_rx_write_serq_stage6_start:
-        //phvwri          p.p4_intr_global_tm_oport, 0            // HACK no more stages - delete after hw is fixed
-        //phvwri          p.common_te0_phv_table_pc, 0
-        //phvwri          p.common_te1_phv_table_pc, 0
-        //phvwri          p.common_te2_phv_table_pc, 0
-        //phvwri          p.common_te3_phv_table_pc, 0 // HACK workaround to prevent stage 7 from being launched
+        phvwri          p.p4_intr_global_tm_oport, 0            // HACK no more stages - delete after hw is fixed
+        phvwri          p.common_te0_phv_table_pc, 0
+        phvwri          p.common_te1_phv_table_pc, 0
+        phvwri          p.common_te2_phv_table_pc, 0
+        phvwri          p.common_te3_phv_table_pc, 0 // HACK workaround to prevent stage 7 from being launched
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 	/* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */

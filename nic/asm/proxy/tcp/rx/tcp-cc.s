@@ -16,7 +16,7 @@ struct tcp_rx_tcp_cc_tcp_cc_d d;
 	
 %%
         .param          tcp_rx_fc_stage5_start
-	
+	.align
 tcp_rx_cc_stage4_start:
 	/* Fall Thru */
 	/* r4 is loaded at the beginning of the stage with current timestamp value */

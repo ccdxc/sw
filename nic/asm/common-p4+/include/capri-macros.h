@@ -91,6 +91,17 @@
 #define CAPRI_NEXT_IDX3_READ(_lock_en, _stage_entry, _table_base, _table_read_size) \
         CAPRI_NEXT_TABLE3_READ(0, _lock_en, _stage_entry, _table_base, 0, 0, _table_read_size) \
 
+#define CAPRI_CLEAR_TABLE0_VALID \
+        phvwri  p.tcp_app_header_table0_valid, 0;
+
+#define CAPRI_CLEAR_TABLE1_VALID \
+        phvwri  p.tcp_app_header_table1_valid, 0;
+
+#define CAPRI_CLEAR_TABLE2_VALID \
+        phvwri  p.tcp_app_header_table2_valid, 0;
+
+#define CAPRI_CLEAR_TABLE3_VALID \
+        phvwri  p.tcp_app_header_table3_valid, 0;
 
 #define CAPRI_READ_ADDR(_addr, _table_type, _stage_entry) \
         add		r1, r0, _addr			                ;\
@@ -117,8 +128,13 @@
 #define DB_SCHED_UPD_CLEAR             (0x2)
 #define DB_SCHED_UPD_SET               (0x3)
 
-#define LIF_TCP                        1
-#define LIF_GLOBALQ                    2
+#define LIF_WIDTH                      11
+#define QTYPE_WIDTH                    3
+#define QID_WIDTH                      24        
+
+#define LIF_TCP                        1001
+#define LIF_TLS                        1002
+#define LIF_GLOBALQ                    1003
 
 #define SERQ_QID                       0
 #define SESQ_QID                       1
@@ -208,6 +224,24 @@
         seq             c7, _pidx, _cidx;\
         tbladd.c1       _cidx, 1
         
-       
+#define CAPRI_PHV_START_OFFSET(_start) \
+        (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3);
+
+#define CAPRI_PHV_END_OFFSET(_end) \
+        (sizeof(p) >> 3) - (offsetof(p, _end) >> 3); 
+
+#define CAPRI_QSTATE_HEADER_COMMON \
+        pc                              : 8;\
+        cos_a                           : 4;\
+        cos_b                           : 4;\
+        cos_sel                         : 8;\
+        eval_last                       : 8;\
+        total_rings                     : 4;\
+        host_rings                      : 4;\
+        pid                             : 16;\
+
+#define CAPRI_QSTATE_HEADER_RING(_x)		\
+        pi_##_x                           : 16;\
+        ci_##_x                           : 16;\
         
 #endif /* #ifndef __CAPRI_MACROS_H__ */

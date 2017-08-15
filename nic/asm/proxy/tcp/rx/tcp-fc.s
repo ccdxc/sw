@@ -16,7 +16,7 @@ struct tcp_rx_tcp_cc_tcp_cc_d d;       // TODO : define own k for s5
 	
 %%
         .param          tcp_rx_write_serq_stage6_start
-	
+	.align	
 tcp_rx_fc_stage5_start:
         // TODO : FC stage has to be implemented
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,

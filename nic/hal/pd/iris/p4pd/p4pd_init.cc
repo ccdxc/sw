@@ -499,51 +499,6 @@ p4pd_flow_stats_init (void)
 static hal_ret_t
 p4pd_p4plus_app_init (void)
 {
-    hal_ret_t                ret = HAL_RET_OK;
-    DirectMap                *dm;
-    p4plus_app_actiondata data = { 0 };
-
-    for (int i = P4PLUS_APP_TYPE_MIN; i <= P4PLUS_APP_TYPE_MAX; i++) {
-        switch(i) {
-            case P4PLUS_APPTYPE_CLASSIC_NIC:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
-                break;
-            case P4PLUS_APPTYPE_RDMA:
-                break;
-            case P4PLUS_APPTYPE_TCPTLS:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;
-                break;
-            case P4PLUS_APPTYPE_IPSEC:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_IPSEC_ID;
-                break;
-            case P4PLUS_APPTYPE_NDE:
-                break;
-            case P4PLUS_APPTYPE_STORAGE:
-                break;
-            case P4PLUS_APPTYPE_TELEMETRY:
-                break;
-            default:
-                HAL_TRACE_ERR("Unknown app_type: {}", i);
-                HAL_ASSERT(0);
-        }
-
-        dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
-        HAL_ASSERT(dm != NULL);
-
-        ret = dm->insert_withid(&data, i);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("p4plus app table write failure, idx : {}, err : {}",
-                    i, ret);
-            return ret;
-        }
-    }
-
-    return ret;
-}
-
-static hal_ret_t
-p4pd_p4plus_app_init (void)
-{
     hal_ret_t                ret;
     DirectMap                *dm;
     p4plus_app_actiondata data = { 0 };

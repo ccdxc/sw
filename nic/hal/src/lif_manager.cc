@@ -4,7 +4,7 @@
 void push_qstate_to_capri(hal::LIFQState *qstate);
 int32_t read_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size);
 int32_t write_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size);
-int32_t get_pc_offset(char *prog_name, char *label, uint8_t *offset);
+int32_t get_pc_offset(const char *handle, char *prog_name, char *label, uint8_t *offset);
 
 const static char *kHBMLabel = "lif2qstate_map";
 const static uint32_t kHBMSizeKB = 16384;
@@ -54,8 +54,8 @@ int32_t LIFManager::WriteQStateImpl(
 }
 
 int32_t LIFManager::GetPCOffset(
-    char *prog_name, char *label, uint8_t *ret_offset) {
-  return get_pc_offset(prog_name, label, ret_offset);
+    const char *handle, char *prog_name, char *label, uint8_t *ret_offset) {
+  return get_pc_offset(handle, prog_name, label, ret_offset);
 }
 
 }  // namespace hal

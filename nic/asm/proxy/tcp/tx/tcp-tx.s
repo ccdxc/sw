@@ -273,7 +273,7 @@ tcp_retxq_consume_start:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
 	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.fid, TCP_SCHED_RING_DATA, d.retx_ci)
+	CAPRI_RING_DOORBELL_DATA(0, k.fid, TCP_SCHED_RING_SESQ, d.retx_ci)
 	memwr.d		r4, r3
 	sne		c4, r7, r0
 	jr.c4		r7

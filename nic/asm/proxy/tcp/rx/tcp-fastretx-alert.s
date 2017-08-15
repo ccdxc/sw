@@ -102,7 +102,7 @@ struct tcp_rx_tcp_fra_tcp_fra_d d;
 
 %%
         .param          tcp_rx_cc_stage4_start
-	
+	.align
 tcp_rx_fra_stage3_start:
         phvwri		p.p4_intr_global_tm_oport, 8
 

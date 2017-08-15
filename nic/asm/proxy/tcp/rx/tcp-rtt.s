@@ -16,8 +16,11 @@ struct tcp_rx_tcp_rtt_tcp_rtt_d d;
 	
 %%
         .param          tcp_rx_fra_stage3_start
-	
+	.align
 tcp_rx_rtt_stage2_start:
+
+        CAPRI_CLEAR_TABLE0_VALID
+
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 	/* Prefer RTT measured from ACK's timing to TS-ECR. This is because

@@ -86,7 +86,7 @@ class LIFManagerBase {
 
   // GetPCOffset for a specific P4+ program.
   virtual int32_t GetPCOffset(
-      char *prog_name, char *label, uint8_t *offset) = 0;
+      const char *handle, char *prog_name, char *label, uint8_t *offset) = 0;
 
   // Implement later
   // void DestroyLIFToQstate(uint32_t lif_id);

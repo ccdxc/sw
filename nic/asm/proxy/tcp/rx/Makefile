@@ -6,15 +6,15 @@ CUSTOM_CLEAN = my_clean
 include $(TOPDIR)/make/Makefile.inc
 
 PROJ = tcp_proxy_rxdma
-OBJ_DIR = $(TOPDIR)/obj/asm_bin
+OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include
 SRC_DIR = .
-CAPAS_BIN = $(TOPDIR)/gen/bin/capas
-CAPSIM_BIN = $(TOPDIR)/gen/bin/capsim
+CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 

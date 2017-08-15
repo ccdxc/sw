@@ -17,7 +17,7 @@ struct phv_ p;
 struct tcp_rx_read_serq_read_serq_d d;
 	
 %%
-	
+	.align
 tcp_rx_read_serq_pidx_stage2_start:
 	phvwr.e		p.to_s6_serq_pidx, d.serq_pidx
 	nop.e

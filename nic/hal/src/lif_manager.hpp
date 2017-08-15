@@ -11,7 +11,7 @@ namespace hal {
 class LIFManager : public LIFManagerBase {
  public:
   LIFManager();
-  virtual int32_t GetPCOffset(char *prog_name, char *label, uint8_t *offset);
+  virtual int32_t GetPCOffset(const char *handle, char *prog_name, char *label, uint8_t *offset);
 
  protected:
   virtual int32_t InitLIFQStateImpl(LIFQState *qstate);

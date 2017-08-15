@@ -35,7 +35,8 @@ SOURCES = \
 		  lif_manager_base.cc \
 		  lif_manager.cc \
 		  wring.cc \
-		  proxy.cc \ 
+		  proxy.cc \
 		  $(NULL)
+
 
 include $(TOPDIR)/make/Makefile.inc

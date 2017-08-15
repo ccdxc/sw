@@ -200,7 +200,7 @@ header_type scratch_metadata_t {
 header_type dma_cmd_pkt2mem_t {
     fields {
         // pkt2mem - used for copying input packet to memory.
-		dma_cmd_pad : 43;
+        dma_cmd_pad : 43;
         dma_cmd_round : 1;
         dma_cmd_override_lif : 11;
         dma_cmd_use_override_lif : 1;
@@ -251,8 +251,8 @@ header_type dma_cmd_phv2mem_t {
     modify_field(_dma_cmd_phv2mem.dma_cmd_wr_fence, _fence);
 
 header_type dma_cmd_mem2mem_t {
-	fields {
-		dma_cmd_pad : 18;
+    fields {
+        dma_cmd_pad      : 18;
         dma_cmd_round : 1;
         dma_cmd_pcie_msg : 1;
         dma_cmd_barrier : 1;
@@ -363,6 +363,12 @@ header_type doorbell_data_t {
         pad : 5;
         ring : 3;
         index : 16;
+    }
+}
+
+header_type dma_cmd_start_pad_t {
+    fields {
+        dma_cmd_start_pad : 64;
     }
 }
 

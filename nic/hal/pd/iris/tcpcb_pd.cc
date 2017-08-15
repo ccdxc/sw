@@ -43,7 +43,8 @@ p4pd_get_stage0_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "tcp_rx_stage0";
 
-    int ret = capri_program_label_to_offset(progname,
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
                                             labelname,
                                             offset);
     if(ret < 0) {
@@ -85,8 +86,6 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     tcp_rx_tcp_rx_d             data = {0};
     hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     buffer[64] = {0};
-    int                         i, j;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
@@ -101,20 +100,8 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.ts_recent = 0xFAFAFAF0;
     }
     int size = sizeof(tcp_rx_tcp_rx_d);
-#if 0
-    if(size & 1) {
-        size++;
-    }
-#endif
-
-    //memcpy(buffer, (uint8_t *)&data, sizeof(tcp_rx_tcp_rx_d));
-    j = size - 1;
-    for(i = 0; i < size; i++, j--) {
-        //uint8_t temp = buffer[i];
-        buffer[j] = ((uint8_t *)&data)[i];
-    }
     
-    if(!p4plus_hbm_write(hwid,  buffer, size)) {
+    if(!p4plus_hbm_write(hwid, (uint8_t *)&data, size)) {
         HAL_TRACE_ERR("Failed to create rx: tcp_rx entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -216,7 +203,6 @@ p4pd_add_or_del_tcp_rx_tcp_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     tcp_rx_tcp_fra_d   data = {0};
     hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     buffer[64] = {0};
     
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 

@@ -145,6 +145,17 @@
 #define  TCP_CA_Loss 4
 #define TCPF_CA_Loss    (1<<TCP_CA_Loss)
 
+#define TCPHDR_FIN 0x01
+#define TCPHDR_SYN 0x02
+#define TCPHDR_RST 0x04
+#define TCPHDR_PSH 0x08
+#define TCPHDR_ACK 0x10
+#define TCPHDR_URG 0x20
+#define TCPHDR_ECE 0x40
+#define TCPHDR_CWR 0x80
+
+#define TCPHDR_SYN_ECN  (TCPHDR_SYN | TCPHDR_ECE | TCPHDR_CWR)
+
 
 
 #define FLAG_DATA               0x01 /* Incoming frame contained data.          */

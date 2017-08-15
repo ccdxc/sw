@@ -291,7 +291,7 @@ int capri_table_rw_init()
         capri_program_to_base_addr("iris", progname, &capri_table_asm_base[i]);
         for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
             p4pd_get_action_name(i, j, action_name);
-            capri_program_label_to_offset(progname, action_name, &capri_action_asm_base[i][j]);
+            capri_program_label_to_offset("iris", progname, action_name, &capri_action_asm_base[i][j]);
             capri_action_asm_base[i][j] >>= 6; /* Action base is in byte and 64B aligned... */
             CAPRI_TBL_RW_PRINT(CAP_TBL_RW_LOG_LEVEL_INFO,
                                "xxx: Program-Name %s, Action-Name %s, Action-Pc 0x%lx\n",

@@ -15,7 +15,7 @@ struct tcp_rx_rpage_alloc_rpage_alloc_d d;
 %%
 	
 tcp_rx_rpage_alloc_stage3_start:
-	//phvwri		p.p4_intr_global_tm_oport, 8
+	phvwri		p.p4_intr_global_tm_oport, 8
 
         CAPRI_CLEAR_TABLE2_VALID
 

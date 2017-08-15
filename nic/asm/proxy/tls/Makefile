@@ -6,12 +6,12 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 PROJ = proxy
-OBJ_DIR = $(TOPDIR)/obj/asm_bin
+OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../include -I../tcp/include -I./include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../include -I../tcp/include -I./include -I../..//common-p4+/include
 SRC_DIR = .
-CAPAS_BIN = $(TOPDIR)/capsim/gen/bin/capas
-CAPSIM_BIN = $(TOPDIR)/capsim/gen/bin/capsim
+CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
 
 all: deps asm
 
