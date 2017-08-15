@@ -6,10 +6,14 @@ import infra.api.api as infra_api
 from infra.common.logging       import logger
 import infra.common.defs as defs
 
-def mycallback (tc, pkt):
-    return 999
+def GetSeqNum (tc, pkt):
+    return 0xbabababa
 
-def mycallback_verify (tc, dummy):
-    logger.info("mycallback_verify!!!")
+def GetAckNum (tc, pkt):
+    return 0xefefefef
+
+def VerifySeqNum (tc, dummy):
+    #verify seq number is 0xbabababa + 0x40 = 0xBABABAFA
+    logger.info("VerifySeqNum!!!")
     return True, "Passed"
 

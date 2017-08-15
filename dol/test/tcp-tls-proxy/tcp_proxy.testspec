@@ -22,18 +22,23 @@ packets:
     - packet:
         id          : PKT1
         template    : ref://factory/packets/id=ETH_IPV4_TCP
-        payloadsize : 128
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
                 smac : ref://testcase/config/src/endpoint/macaddr
                 dmac : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 sip : ref://testcase/config/flow/sip
                 dip : ref://testcase/config/flow/dip
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                seq     : callback://tcpcb/tcpcb/mycallback 
+                seq     : callback://tcpcb/tcpcb/GetSeqNum
+                ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
@@ -44,4 +49,4 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    callback:  callback://tcpcb/tcpcb/mycallback_verify
+    callback:  callback://tcpcb/tcpcb/VerifySeqNum
