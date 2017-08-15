@@ -6,6 +6,7 @@ OBJDIR = $(TOPDIR)/obj
 SLOBJECTS = \
 		  $(OBJDIR)/directmap.o \
 		  $(OBJDIR)/tcam.o \
+		  $(OBJDIR)/acl_tcam.o \
 		  $(OBJDIR)/tcam_entry.o \
 		  $(OBJDIR)/hash.o \
 		  $(OBJDIR)/hash_entry.o \
@@ -27,6 +28,7 @@ LPOSTALL = $(OBJDIR)/libpdutils_stub.so
 SLOBJECTS_STUB = \
 		  $(OBJDIR)/stub_directmap.o \
 		  $(OBJDIR)/stub_tcam.o \
+		  $(OBJDIR)/stub_acl_tcam.o \
 		  $(OBJDIR)/stub_tcam_entry.o \
 		  $(OBJDIR)/stub_hash.o \
 		  $(OBJDIR)/stub_hash_entry.o \
@@ -50,7 +52,7 @@ CUSTOM_CLEAN = stub_clean
 include $(TOPDIR)/make/Makefile.inc
 
 $(OBJDIR)/libpdutils_stub.so: $(SLOBJECTS_STUB)
-	g++ -shared -o $(OBJDIR)/libpdutils_stub.so $(SLOBJECTS_STUB)
+	g++ -g -shared -o $(OBJDIR)/libpdutils_stub.so $(SLOBJECTS_STUB)
 
 stub_clean:
 	rm -rf ../../../obj/libpdutils_stub.so

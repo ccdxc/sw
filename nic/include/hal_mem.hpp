@@ -65,6 +65,7 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_FLOW,
     HAL_MEM_ALLOC_PD,
     HAL_MEM_ALLOC_QOS,
+    HAL_MEM_ALLOC_LIB_ACL_TCAM,
     HAL_MEM_ALLOC_OTHER,
 } hal_mem_alloc_t;
 

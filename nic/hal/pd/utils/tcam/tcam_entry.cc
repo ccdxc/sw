@@ -8,11 +8,13 @@ using hal::pd::utils::TcamEntry;
 // Constructor - TcamEntry
 // ---------------------------------------------------------------------------
 TcamEntry::TcamEntry(void *key, void *key_mask, uint32_t key_len, 
-                     void *data, uint32_t data_len, uint32_t index)
+                     void *data, uint32_t data_len, uint32_t index,
+                     priority_t priority)
 {
     key_len_  = key_len;
     data_len_ = data_len;
     index_    = index;
+    priority_ = priority;
 
     key_        = ::operator new(key_len);
     key_mask_   = ::operator new(key_len);

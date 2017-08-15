@@ -25,6 +25,7 @@ LIBDIRS = \
 		  hal/pd/utils/hash \
 		  hal/pd/utils/met \
 		  hal/pd/utils/tcam \
+		  hal/pd/utils/acl_tcam \
 		  hal/pd/utils \
 		  $(NULL)
 
@@ -45,6 +46,7 @@ PGMDIRS = \
 		  hal/pd/utils/hash/test \
 		  hal/pd/utils/met/test \
 		  hal/pd/utils/tcam/test \
+		  hal/pd/utils/acl_tcam/test \
 		  hal/test \
 		  agents \
 		  $(NULL)

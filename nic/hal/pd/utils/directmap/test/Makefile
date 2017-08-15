@@ -8,7 +8,7 @@ LIBS = \
 	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 	   $(GTEST_ROOT)/make/gtest.a \
 	   $(NULL)
-SYSTEM_LIBRARIES = -lpdutils_stub $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpthread -lmodelclient -lzmq -lthread -lcapri -lcapricsr -lp4pd -lindexer -ltrace
+SYSTEM_LIBRARIES = -lpdutils_stub $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpthread -lmodelclient -lzmq -lthread -lcapri -lcapricsr -lp4pd -lindexer -ltrace -lbitmap
 
 LCXXFLAGS = \
 			-I.. \

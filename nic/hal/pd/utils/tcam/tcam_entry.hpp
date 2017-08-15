@@ -10,6 +10,9 @@
 #define __TCAM_ENTRY_HPP__
 
 #include <base.h>
+#include <acl_tcam.hpp>
+
+using hal::pd::utils::priority_t;
 
 namespace hal {
 namespace pd {
@@ -25,6 +28,8 @@ namespace utils {
 */
 class TcamEntry {
 
+#define TCAM_ENTRY_INVALID_INDEX 0xffffffff
+
 private:
     void        *key_;          // sw key
     void        *key_mask_;     // sw key mask
@@ -32,10 +37,12 @@ private:
     void        *data_;         // sw/hw data 
     uint32_t    data_len_;      // sw/hw data len
     uint32_t    index_;         // tcam index
+    priority_t  priority_;      // tcam entry priority
 
 public:
     TcamEntry (void *key, void *key_mask, uint32_t key_len, 
-               void *data, uint32_t data_len, uint32_t index);
+               void *data, uint32_t data_len, uint32_t index,
+               priority_t priority = 0);
     ~TcamEntry();
 
     void update_data(void *data);
@@ -47,6 +54,8 @@ public:
     void *get_data() { return data_; }
     uint32_t get_data_len() { return data_len_; }
     uint32_t get_index() { return index_; }
+    void set_index(uint32_t index) { index_ = index; }
+    priority_t get_priority() { return priority_; }
 
 
 };

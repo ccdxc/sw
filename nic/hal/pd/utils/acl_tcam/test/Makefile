@@ -1,6 +1,6 @@
 
 TOPDIR = ../../../../..
-PROGRAM = hash_test
+PROGRAM = acl_tcam_test
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
 LIBS = \
 	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.a \
@@ -8,7 +8,7 @@ LIBS = \
 	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 	   $(GTEST_ROOT)/make/gtest.a \
 	   $(NULL)
-SYSTEM_LIBRARIES = $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpdutils_stub -lpthread -lmodelclient -lzmq -lthread -lcapri -lhalmock -lcapricsr -lp4pd -lindexer -ltrace -lbitmap
+SYSTEM_LIBRARIES = -lpdutils_stub $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpthread -lmodelclient -lzmq -lthread -lcapri -lcapricsr -lp4pd -lindexer -ltrace -lbitmap
 
 LCXXFLAGS = \
 			-I.. \
@@ -21,7 +21,7 @@ LCXXFLAGS = \
 			$(NULL)
 
 SOURCES = \
-	hash_test.cc \
+	acl_tcam_test.cc \
 	$(NULL)
 
 
@@ -29,4 +29,4 @@ include $(TOPDIR)/make/Makefile.inc
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
 gtest:
-	LD_LIBRARY_PATH=$(TOPDIR)/obj HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/hash_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/hash_test.xml"
+	LD_LIBRARY_PATH=$(TOPDIR)/obj HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
