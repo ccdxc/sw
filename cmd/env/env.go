@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/quorum"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
 )
 
@@ -26,4 +27,5 @@ var (
 	NtpService      types.NtpService
 	K8sService      types.K8sService
 	ResolverService types.ResolverService
+	RPCServer       *rpckit.RPCServer
 )

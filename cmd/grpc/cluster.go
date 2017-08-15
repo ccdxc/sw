@@ -11,7 +11,9 @@ import (
 	k8srest "k8s.io/client-go/rest"
 
 	"github.com/pensando/sw/cmd/env"
+	"github.com/pensando/sw/cmd/grpc/service"
 	"github.com/pensando/sw/cmd/services"
+	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/cmd/utils"
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/kvstore"
@@ -159,6 +161,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		env.MasterService.Start()
 		env.LeaderService.Start()
 		env.NtpService.Start()
+
+		// create and register the RPC handler for service object.
+		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})

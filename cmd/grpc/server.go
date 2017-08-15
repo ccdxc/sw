@@ -2,8 +2,6 @@ package grpc
 
 import (
 	"github.com/pensando/sw/cmd/env"
-	"github.com/pensando/sw/cmd/grpc/service"
-	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 )
@@ -17,11 +15,10 @@ func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	}
 	defer func() { rpcServer.Stop() }()
 
+	env.RPCServer = rpcServer
+
 	// create and register the RPC handler for cluster object.
 	RegisterClusterServer(rpcServer.GrpcServer, &clusterRPCHandler{})
-
-	// create and register the RPC handler for service object.
-	types.RegisterServiceAPIServer(rpcServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 
 	// wait forever
 	<-stopChannel
