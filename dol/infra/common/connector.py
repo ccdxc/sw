@@ -164,7 +164,7 @@ class ModelConnector(Connector):
         except:
             logger.critical("Received invalid packet...")
             return
-        spkt.show()
+        # spkt.show()
         return PacketContext(None, spkt, port)
 
     def recv(self, size=16384):

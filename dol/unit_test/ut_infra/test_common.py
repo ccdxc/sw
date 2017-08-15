@@ -34,8 +34,10 @@ def _mock_module_common(modules):
     module_patcher.start()
 
     import argparse
+    from third_party.scapy.all import Packet as ScapyPacket
     mock_object_func_map = {
-        argparse.ArgumentParser: {"parse_args": mock_parse_args}
+        argparse.ArgumentParser: {"parse_args": mock_parse_args},
+        ScapyPacket: {"show2": mock.MagicMock()},
     }
 
     for obj_class in mock_object_func_map:

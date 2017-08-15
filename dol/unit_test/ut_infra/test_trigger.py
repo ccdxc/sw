@@ -84,6 +84,7 @@ snapshot:
         # This will take a snapshot of  the SendQ QPCB of the Local Qpair
 
 current_step : None # Current step being executed by trigger.
+GetLogPrefix : None
 
 session:
     # List of steps in a session
@@ -220,6 +221,7 @@ session:
         os.environ["WS_TOP"] = "/"
         objlist = prs.Parse("/tmp", self._TMP_PKT_FILE_NAME)
         test_spec = objlist[0]
+        test_spec.GetLogPrefix = lambda : "test"
         pkt_yml = '''
 meta:
     id: None
