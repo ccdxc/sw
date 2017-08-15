@@ -56,7 +56,7 @@ class SwDscrAolObjectHelper:
     def Generate(self, ringname, swdreidx):
         return SwDscrAolObject(ringname, swdreidx)
     def Configure(self, swdre_list):
-        halapi.GetDscrAolObjectState(swdre_list)
+        #halapi.GetDscrAolObjectState(swdre_list)
         return
 
 '''
