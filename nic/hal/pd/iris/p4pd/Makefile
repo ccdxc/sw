@@ -15,6 +15,8 @@ LCXXFLAGS = \
 			-I../../../../utils/bitmap \
 			-I../../../../gen/iris/include \
 			-I../../../../p4/nw/include \
+			-I../../../../p4/include \
+			-I../../../../p4/rdma/include \
 			-I../../capri \
 			-I../../../../third-party/spdlog/include \
 			-I/usr/local/include \

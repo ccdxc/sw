@@ -4,6 +4,9 @@
 #include <tcam.hpp>
 #include <hal_state_pd.hpp>
 #include <defines.h>
+#include <common_defines.h>
+#include <rdma_defines.h>
+#include <table_sizes.h>
 
 using hal::pd::utils::Tcam;
 
@@ -707,6 +710,103 @@ p4pd_tunnel_rewrite_init (void)
     return HAL_RET_OK;
 }
 
+typedef struct roce_opcode_info_t {
+    uint32_t valid:1;
+    uint32_t roce_hdr_length: 8; //in bytes
+    uint32_t type: 4; //LIF sub-type
+    uint32_t raw_flags:16;
+} roce_opcode_info_t;
+
+roce_opcode_info_t opc_to_info[DECODE_ROCE_OPCODE_TABLE_SIZE] = {
+    //Reliable-Connect opcodes
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+     (RESP_RX_FLAG_FIRST | RESP_RX_FLAG_SEND)}, //0 - send-first
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+     (RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_SEND)}, //1 - send-middle
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+     (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)}, //2 - send-last
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ, 
+     (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)}, //3 - send-last-with-immediate
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+     (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)}, //4 - send-only
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)}, //5 - send-only-with-immediate
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_reth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_FIRST | RESP_RX_FLAG_WRITE)}, //6 - write-first
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_WRITE)}, //7 - write-middle
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_LAST | RESP_RX_FLAG_WRITE)}, //8 - write-last
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_LAST | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)},//9 - write-last-with-immediate
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_reth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_WRITE)}, //10 - write-only
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_reth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)}, //11 - write-only-with-immediate
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_reth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_READ_REQ)}, //12 - read-request
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_FIRST | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_AETH)}, //13 - read-response-first
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_MIDDLE | REQ_RX_FLAG_READ_RESP)}, //14 - read-response-middle
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_LAST | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_AETH | REQ_RX_FLAG_COMPLETION)}, //15 - read-response-last
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_ONLY | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_AETH | REQ_RX_FLAG_COMPLETION)}, //16 - read-response-only
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_COMPLETION)}, //17 - ack
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_aeth_t)+sizeof(rdma_atomicaeth_t), Q_TYPE_RDMA_SQ,
+     (REQ_RX_FLAG_AETH | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_COMPLETION)}, //18 - atomic-ack
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_atomiceth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ATOMIC_CSWAP)}, //19 - compare-and-swap
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_atomiceth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ATOMIC_FNA)}, //20 - fetch-and-add
+    {0, 0, 0}, //21 - Reserved
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_ieth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY)}, //22 - send-last-with-inv-rkey
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_ieth_t), Q_TYPE_RDMA_RQ,
+     (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY)}, //23 - send-only-with-inv-rkey
+};      
+
+static hal_ret_t
+p4pd_decode_roce_opcode_init (void)
+{
+    uint32_t                     idx = 0;
+    hal_ret_t                    ret;
+    DirectMap                    *dm;
+    decode_roce_opcode_actiondata data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_DECODE_ROCE_OPCODE);
+    HAL_ASSERT(dm != NULL);
+
+    for (idx = 0; idx < DECODE_ROCE_OPCODE_TABLE_SIZE; idx++) {
+
+        if (opc_to_info[idx].valid == 1) {
+                      
+            // valid entry
+            data.actionid = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype = 
+                opc_to_info[idx].type;
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len = 
+                opc_to_info[idx].roce_hdr_length;
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags =
+                opc_to_info[idx].raw_flags;
+        } else {
+            // nop entry
+            data.actionid = DECODE_ROCE_OPCODE_NOP_ID;
+        }
+     
+        ret = dm->insert_withid(&data, idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("decode roce opcode table write failure, idx : {}, err : {}",
+                          idx, ret);
+            return ret;
+        }
+    }
+    
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 p4pd_table_defaults_init (void)
 {
@@ -725,6 +825,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
     HAL_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
     return HAL_RET_OK;
 }
 
