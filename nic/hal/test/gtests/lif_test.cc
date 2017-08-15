@@ -89,8 +89,8 @@ TEST_F(lif_test, test1)
     spec.mutable_key_or_handle()->set_lif_id(1);
 
     ret = hal::lif_create(spec, &rsp);
+    printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    printf("Done with test1\n");
 }
 
 // ----------------------------------------------------------------------------

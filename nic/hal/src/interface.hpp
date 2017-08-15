@@ -343,6 +343,12 @@ hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec,
                                  if_t *hal_if);
 
 hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp);
+hal_ret_t lif_p4_create(intf::LifSpec& spec, 
+                        intf::LifResponse *rsp,
+                        lif_t *lif,
+                        uint32_t hw_lif_id);
+
+
 hal_ret_t interface_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);
 hal_ret_t interface_update(intf::InterfaceSpec& spec,

@@ -137,18 +137,17 @@ add_lif_to_db (lif_t *lif)
 }
 
 //------------------------------------------------------------------------------
-// process a interface create request
-// TODO: if interface already exists, treat it as modify
+// process lif create
 //------------------------------------------------------------------------------
 hal_ret_t
 lif_create (LifSpec& spec, LifResponse *rsp)
 {
-    hal_ret_t            ret;
+    hal_ret_t            ret = HAL_RET_OK;
     lif_t                *lif = NULL;
-    pd::pd_lif_args_t    pd_lif_args;
     uint32_t             qoff = 0;
+    uint32_t             hw_lif_id = 0;
     lif_queue_t          *lif_q = NULL;
-
+    
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: Lif Create for id {}", __FUNCTION__, 
                     spec.key_or_handle().lif_id());
@@ -203,13 +202,14 @@ lif_create (LifSpec& spec, LifResponse *rsp)
         utils::dllist_add(&lif->qlist_head, &lif_q->qlist_entry);
     }
 
-    // allocate all PD resources and finish programming, if any
-    pd::pd_lif_args_init(&pd_lif_args);
-    pd_lif_args.lif = lif;
-    ret = pd::pd_lif_create(&pd_lif_args);
+    // Allocate a hw lif id
+
+    // Make P4Plus Call
+
+    // Make P4 Call
+    ret = lif_p4_create(spec, rsp, lif, hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD lif create failure, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
         goto end;
     }
 
@@ -226,6 +226,33 @@ end:
     }
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
+}
+
+
+
+hal_ret_t
+lif_p4_create (LifSpec& spec, LifResponse *rsp, lif_t *lif, uint32_t hw_lif_id)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    pd::pd_lif_args_t    pd_lif_args;
+
+    HAL_TRACE_DEBUG("PI-LIF:{}: P4 Processing for lif id {}", __FUNCTION__, 
+                    spec.key_or_handle().lif_id());
+
+    // allocate all PD resources and finish programming, if any
+    pd::pd_lif_args_init(&pd_lif_args);
+    pd_lif_args.lif = lif;
+    pd_lif_args.hw_lif_id = hw_lif_id;
+    ret = pd::pd_lif_create(&pd_lif_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD lif create failure, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
+
+end:
+    return ret;
+
 }
 
 //------------------------------------------------------------------------------

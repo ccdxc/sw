@@ -48,6 +48,7 @@ typedef struct pd_nwsec_profile_args_s {
 
 typedef struct pd_lif_args_s {
     lif_t    *lif;
+    uint32_t hw_lif_id;
 } __PACK__ pd_lif_args_t;
 
 typedef struct pd_if_args_s {

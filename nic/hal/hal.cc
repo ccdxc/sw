@@ -220,8 +220,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
-    // Bharat: Commenting out as its crashing in gtest
-    // g_lif_manager = new LIFManager();
+    g_lif_manager = new LIFManager();
 
     return HAL_RET_OK;
 }
