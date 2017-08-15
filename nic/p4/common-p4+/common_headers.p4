@@ -61,8 +61,9 @@ header_type p4_2_p4plus_app_header_t {
         table2_valid : 1;
         table3_valid : 1;
         gft_flow_id : 24;
-        app_data : 360;
-        app_data_pad : 120;
+        app_data0 : 224;
+        app_data1 : 88;
+        app_data_pad : 168;
     }
 }
 
@@ -267,6 +268,7 @@ header_type dma_cmd_mem2mem_t {
         dma_cmd_mem2mem_type : 2;
         dma_cmd_eop : 1;
         dma_cmd_type : 3;
+    }
 }
 
 #define DMA_COMMAND_MEM2MEM_FILL(_dma_cmd_m2m_src, _dma_cmd_m2m_dst, _src_addr, _src_host, _dst_addr, _dst_host, _size, _cache, _fence, _barrier) \

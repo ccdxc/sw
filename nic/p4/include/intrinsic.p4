@@ -85,7 +85,12 @@ header_type p4_to_p4plus_roce_header_t {
 header_type p4_to_p4plus_tcp_proxy_base_header_t {
     fields {
         p4plus_app_id       : 4;
-        num_sack_blocks     : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        gft_flow_id         : 24;
+        num_sack_blocks     : 8;
         payload_len         : 16;
         srcPort             : 16;
         dstPort             : 16;
@@ -97,7 +102,9 @@ header_type p4_to_p4plus_tcp_proxy_base_header_t {
         window              : 16;
         urgentPtr           : 16;
         ts                  : 32;
+        tcp_pad1            : 24;
         prev_echo_ts        : 32;
+        tcp_pad             : 24;
     }
 }
 
