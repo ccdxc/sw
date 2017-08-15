@@ -6,8 +6,10 @@ type    : tenant
 overlay : vlan
 
 segments:
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE
+      count : 1
     - spec  : ref://store/specs/id=SEGMENT_MDST_FWD
-      count : 2
+      count : 1
     #- spec  : ref://store/specs/id=SEGMENT_MDST_DROP
     #  count : 2
 

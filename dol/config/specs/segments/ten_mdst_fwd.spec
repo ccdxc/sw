@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_MDST_FWD
 
 type        : tenant
+native      : False
 broadcast   : flood
 multicast   : replicate
 endpoints   :

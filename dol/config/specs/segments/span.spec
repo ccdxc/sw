@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_SPAN
 
 type        : span
+native      : False
 broadcast   : drop
 multicast   : drop
 endpoints   :

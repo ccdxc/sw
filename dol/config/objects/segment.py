@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-
+import pdb
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
@@ -27,6 +27,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.spec   = spec
         self.tenant = tenant
         self.type   = spec.type.upper()
+        self.native = spec.native
 
         self.vlan_id    = resmgr.SegVlanAllocator.get()
         self.vxlan_id   = resmgr.SegVxlanAllocator.get()

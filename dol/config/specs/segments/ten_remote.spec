@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_REMOTE
 
 type        : tenant
+native      : False
 broadcast   : drop
 multicast   : drop
 endpoints   :

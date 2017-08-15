@@ -550,6 +550,13 @@ end:
 hal_ret_t
 interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
+    if_t    *hal_if = NULL;
+    hal_if = find_if_by_id(spec.key_or_handle().interface_id());
+
+    // prepare the response
+    rsp->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
+
     return HAL_RET_OK;
 }
 

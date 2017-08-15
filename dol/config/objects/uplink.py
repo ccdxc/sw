@@ -28,6 +28,7 @@ class UplinkObject(base.ConfigObjectBase):
         self.sriov  = spec.sriov
         self.mode   = spec.mode
         self.ports  = [ spec.port ]
+        self.native_segment = None
 
         cfglogger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))
@@ -35,6 +36,13 @@ class UplinkObject(base.ConfigObjectBase):
 
     def IsTrunkPort(self):
         return self.mode == 'TRUNK'
+
+    def SetNativeSegment(self, seg):
+        assert(self.native_segment == None)
+        cfglogger.info("Adding Segment:%s as native segment on Uplink:%s" %\
+                       (seg.GID(), self.GID()))
+        self.native_segment = seg
+        return
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.interface_id = self.id
@@ -69,8 +77,18 @@ class UplinkObjectHelper:
         halapi.ConfigureInterfaces(self.objlist)
         return
 
+    def ReConfigure(self):
+        cfglogger.info("Updating %d Uplinks." % len(self.objlist))
+        halapi.ConfigureInterfaces(self.objlist, update = True)
+        return
+
     def ConfigureAllSegments(self):
         segs = Store.objects.GetAllByClass(segment.SegmentObject)
+        for seg in segs:
+            if seg.native == False: continue
+            for uplink in self.trunks:
+                uplink.SetNativeSegment(seg)
+        self.ReConfigure()
         halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
         return
 

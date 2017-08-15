@@ -27,6 +27,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         self.type   = 'UPLINK_PC'
         self.status = haldefs.interface.IF_STATUS_UP
         self.mode   = spec.mode
+        self.native_segment = None
 
         self.members = []
         self.ports = []
@@ -38,6 +39,13 @@ class UplinkPcObject(base.ConfigObjectBase):
             mbrobj = mbr.Get(Store)
             self.members.append(mbrobj)
             self.ports.append(mbrobj.port)
+        return
+
+    def SetNativeSegment(self, seg):
+        assert(self.native_segment == None)
+        cfglogger.info("Adding Segment:%s as native segment on UplinkPC:%s" %\
+                       (seg.GID(), self.GID()))
+        self.native_segment = seg
         return
 
     def IsTrunkPort(self):
@@ -80,9 +88,19 @@ class UplinkPcObjectHelper:
         halapi.ConfigureInterfaces(self.uplinkpcs)
         return
 
+    def ReConfigure(self):
+        if len(self.uplinkpcs) == 0: return
+        cfglogger.info("Updating %d UplinkPCs." % len(self.uplinkpcs))
+        halapi.ConfigureInterfaces(self.uplinkpcs, update = True)
+        return
+
     def ConfigureAllSegments(self):
         if len(self.uplinkpcs) == 0: return
         segs = Store.objects.GetAllByClass(segment.SegmentObject)
+        for seg in segs:
+            if seg.native == False: continue
+            for uplinkpc in self.trunks:
+                uplinkpc.SetNativeSegment(seg)
         halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
         return
 

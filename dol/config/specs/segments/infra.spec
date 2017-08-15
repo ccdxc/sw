@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_INFRA
 
 type        : infra
+native      : False
 broadcast   : drop
 multicast   : drop
 endpoints   :

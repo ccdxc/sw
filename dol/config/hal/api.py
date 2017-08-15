@@ -110,11 +110,12 @@ def ConfigureLifs(objlist):
              stub.LifCreate)
     return
 
-def ConfigureInterfaces(objlist):
+def ConfigureInterfaces(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2_grpc.InterfaceStub(HalChannel)
-    __config(objlist, interface_pb2.InterfaceRequestMsg,
-             stub.InterfaceCreate)
+    api = stub.InterfaceCreate
+    if update: api = stub.InterfaceUpdate
+    __config(objlist, interface_pb2.InterfaceRequestMsg, api)
     return
 
 def ConfigureInterfaceSegmentAssociations(intfs, segs):
