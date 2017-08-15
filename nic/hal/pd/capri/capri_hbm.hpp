@@ -48,7 +48,6 @@ uint32_t get_size_kb(const char *reg_name);
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
 
 #define CAPRI_NUM_SEMAPHORES            512
-
 #define PAGE_SCRATCH_SIZE               512
 #define PAGE_SCRATCH_SIZE_BYTES         8
 

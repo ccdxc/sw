@@ -32,15 +32,13 @@
             "name": "mcast_repl",
             "size_kb": 4096
         },
-	    {
-	        "name": "lif2qstate_map",
-	        "size_kb": 16384
-	    },
+	{
+	    "name": "lif2qstate_map",
+	    "size_kb": 16384
+	},
         {
             "name": "semaphore",
             "size_kb": 8,
-            "size_elem": 8,
-            "num_elem": 1024
         },
         {
             "name": "tcpcb",
