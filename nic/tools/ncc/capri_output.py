@@ -1540,7 +1540,7 @@ def capri_parser_output_decoders(parser):
                              ppa_json['cap_ppa']['registers'],
                              ppa_json['cap_ppa']['memories'],)
 
-def _fill_te_tcam_catch_all_run(tcam_t):
+def _fill_te_tcam_catch_all(tcam_t):
     # create an entry that will always be a 'hit'
     tcam_t['valid']['value'] = str(1)
     tcam_t['value']['value'] = str(0)
@@ -1708,31 +1708,34 @@ def capri_te_cfg_output(stage):
         # setup tcam entry#0 as catch-all and prgram all tables in sram..
         idx = 0
         tcam_t = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % idx]
-        _fill_te_tcam_catch_all_run(tcam_t)
+        _fill_te_tcam_catch_all(tcam_t)
         # profile_id 0 is used to populate all the tables by the compiler
         run_all_tables = True
-
     else:
-        # ASIC does not launch any lookup on TCAM miss.. so need to program any catchall
-
         w, cf_key_sel = stage.stg_get_tbl_profile_key()
         k = 0
         # program the key selector
+        key_sel_bits = []
         for cf in cf_key_sel:
             phv_bit = cf.phv_bit
             stage.gtm.tm.logger.debug("%s:Stage %d:Table profile key field %s phv %d, w %d" % \
                 (stage.gtm.d.name, stage.id, cf.hfname, cf.phv_bit, cf.width))
             for b in range(cf.width):
-                json_tbl_prof_key['sel%d' % k]['value'] = str(phv_bit)
+                key_sel_bits.insert(0, phv_bit)
                 phv_bit += 1
                 k += 1
 
-        assert k == w, pdb.set_trace()
-        for k in range(w, max_key_sel):
+        # ASIC uses flittle endian when using bit locations.
+        # Keep the active profile bits to lsb since val and mask is computed that way
+        k = -1
+        for k in range(len(key_sel_bits)):
+            json_tbl_prof_key['sel%d' % k]['value'] = "0x%x" % \
+                int(_phv_bit_flit_le_bit(key_sel_bits[k]))
+            
+        for k in range(k+1, max_key_sel):
             json_tbl_prof_key['sel%d' % k]['value'] = str(0)
 
     prof_idx = 0
-
     profile_vals = sorted(stage.table_profiles.keys(), reverse=True)
     tcam_entries = OrderedDict()
     for prof_val in profile_vals:
@@ -1790,6 +1793,7 @@ def capri_te_cfg_output(stage):
                     if km not in flit_kms[fid]:
                         flit_kms[fid].append(km)
         fid = 0
+        prev_fid = -1
         cyc_done = False
         for cyc in range(num_cycles):
             # fill control_sram entry
@@ -1810,7 +1814,9 @@ def capri_te_cfg_output(stage):
                     assert se['km_mode%d' % kmid]['value'] == '-1', pdb.set_trace()
                     se['km_mode%d' % kmid]['value'] = str(km_prof.mode)
                     se['km_profile%d' % kmid]['value'] = str(km_prof.hw_id)
-                    if fid == km.flits_used[0]:
+                    if fid == km.flits_used[0] and fid != prev_fid:
+                        # asic loads km only on accepting new flit, if flit is not
+                        # advanced, km can get reset if new_key is set
                         se['km_new_key%d' % kmid]['value'] = str(1)
                     else:
                         se['km_new_key%d' % kmid]['value'] = str(0)
@@ -1839,9 +1845,11 @@ def capri_te_cfg_output(stage):
             json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
             if stage.table_sequencer[prof_val][cyc].adv_flit:
                 json_sram_ext['adv_phv_flit']['value'] = str(1)
+                prev_fid = fid
                 fid += 1
             else:
                 json_sram_ext['adv_phv_flit']['value'] = str(0)
+                prev_fid = fid
 
             if stage.table_sequencer[prof_val][cyc].is_last:
                 json_sram_ext['done']['value'] = str(1)
@@ -1858,6 +1866,35 @@ def capri_te_cfg_output(stage):
 
         prof_idx += 1
 
+    if len(stage.active_predicates) > 0:
+        # create a catch-all entry to execute NO tables
+        # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
+        assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
+            pdb.set_trace()
+        sidx = (prof_idx * num_cycles)
+        te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
+        _fill_te_tcam_catch_all(te)
+
+        json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
+        json_tbl_prof['mpu_results']['value'] = str(0)        
+        json_tbl_prof['seq_base']['value'] = str(sidx)
+
+        json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
+        json_sram_ext['adv_phv_flit']['value'] = str(1)
+        json_sram_ext['done']['value'] = str(1)
+
+        # setup sram entry to launch no lookup
+        se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+        se['lkup']['value'] = te_consts['no_op']
+        stage.gtm.tm.logger.debug( \
+            "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
+                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'], 
+                te['mask']['value'], 0, [], 0))
+        stage.gtm.tm.logger.debug(\
+                    "%s:Stage[%d]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
+                    (stage.gtm.d.name, stage.id, sidx,
+                    te_ctrl_sram_print(se, json_sram_ext)))
+        
     for ct in stage.ct_list:
         if ct.is_otcam:
             continue
@@ -1911,11 +1948,14 @@ def capri_te_cfg_output(stage):
             k -= 1
 
         if ct.is_writeback:
-            json_tbl_['lock_en']['value'] = str(1)
+            if ct.is_raw:
+                json_tbl_['lock_en_raw']['value'] = str(1)
+            else:
+                json_tbl_['lock_en']['value'] = str(1)
         else:
             json_tbl_['lock_en']['value'] = str(0)
 
-        if ct.num_actions() > 1:
+        if ct.num_actions() > 1 and not ct.is_raw:
             json_tbl_['mpu_pc_dyn']['value'] = str(1)
         else:
             json_tbl_['mpu_pc_dyn']['value'] = str(0)
@@ -1936,16 +1976,20 @@ def capri_te_cfg_output(stage):
         if ct.is_hash_table():
             entry_size += ct.key_phv_size
         entry_sizeB = (entry_size + 7) / 8   # convert to bytes
+        lg2entry_size = log2size(entry_sizeB)
 
         if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
-            lg2entry_size = log2size(entry_sizeB)
             json_tbl_['addr_shift']['value'] = str(lg2entry_size)
             json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
         elif ct.is_raw_index:
             # special handling, don't shift addr, but read entry_size bytes
-            lg2entry_size = log2size(entry_sizeB)
             json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+        elif ct.is_raw:
+            # XXX need parameter to pragma if entry size is fixed - leave it to run-time for now
+            json_tbl_['tbl_entry_sz_raw']['value'] = str(1)
+            json_tbl_['addr_shift']['value'] = str(0)
+            json_tbl_['lg2_entry_size']['value'] = str(0)
         else:
             json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(0)

@@ -251,7 +251,7 @@ class capri_flit:
         # when there is a field union, we have to make sure
         # that the headers that the union flds come from are placed in the same flit
         if hdr and hdr not in self.headers and not cf.is_hdr_union and not is_synthetic_header(hdr):
-            hdr_list = []
+            hdr_list = [hdr] # handle a case of header extracted in deparse only state
             for hdr_group in self.gress_pa.pa.be.parsers[self.gress_pa.d].hdr_order_groups:
                 if hdr in hdr_group:
                     # All headers in hdr order group must fit in the same flit as parser

@@ -2558,6 +2558,7 @@ class capri_stage:
             km_profile = None
             for km in kt.key_makers:
                 km_profile = km.combined_profile
+                km_hw_id = km.hw_id
                 if km.is_shared:
                     if not ct.is_raw:
                         # XXX multi-way sharing... need to check and operate on shared key-maker
@@ -2565,6 +2566,11 @@ class capri_stage:
                         continue
                     # allow multi-way sharing for raw tables
                     km_profile = km.shared_km.combined_profile
+                    km_hw_id = km.shared_km.hw_id
+
+                if km_hw_id == -1:
+                    # km is not allocated yet, it will get shared when it turn comes
+                    continue
 
                 u_byte_sel = set(km_profile.byte_sel) | ct_byte_sel
                 # remove the bytes reserved for bit_sel
