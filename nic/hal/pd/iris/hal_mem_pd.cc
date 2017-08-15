@@ -458,7 +458,19 @@ p4pd_table_info_dump_ (void)
 
 //------------------------------------------------------------------------------
 // initializing tables
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------i
+
+hal_ret_t
+tcp_lif_init() {
+    pd_lif_t tcp_lif;
+
+    lif_pd_init(&tcp_lif);
+    tcp_lif.hw_lif_id = 1001;
+
+    lif_pd_pgm_output_mapping_tbl(&tcp_lif);
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 hal_state_pd::init_tables(void)
 {

@@ -12,7 +12,7 @@ namespace pd {
 
 #define HAL_MAX_HW_TCPCBS                        2048
 
-typedef uint32_t    tcpcb_hw_id_t;
+typedef uint64_t    tcpcb_hw_id_t;
 
 // tcpcb pd state
 struct pd_tcpcb_s {

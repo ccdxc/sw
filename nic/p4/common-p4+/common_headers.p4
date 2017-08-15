@@ -157,6 +157,14 @@ header_type scratch_metadata_t {
     modify_field(scratch.data6, data6);		\
     modify_field(scratch.data7, data7);		\
 
+#define SCRATCH_METADATA_INIT_7(scratch) 		\
+    modify_field(scratch.data0, data0);		\
+    modify_field(scratch.data1, data1);		\
+    modify_field(scratch.data2, data2);		\
+    modify_field(scratch.data3, data3);		\
+    modify_field(scratch.data4, data4);		\
+    modify_field(scratch.data5, data5);		\
+    modify_field(scratch.data6, data6);
 #if 0
 #define TABLE0_PARAMS_INIT(scratch, te)					\
    modify_field(scratch.table0_pc, te.table0_pc);			\
@@ -278,19 +286,19 @@ header_type dma_cmd_mem2mem_t {
 
 header_type dma_cmd_generic_t {
     fields {
-        dma_cmd_type : 3;
         dma_cmd_pad : 125;
+        dma_cmd_type : 3;
     }
 }
 
 header_type dma_cmd_phv2pkt_t {
     fields {
-        dma_cmd_type : 3;
-        dma_cmd_eop : 1;
-        dma_pkt_eop : 1;
-        dma_cmd_phv_start_addr : 10;
-        dma_cmd_phv_end_addr : 10;
         dma_cmd_phv2pkt_pad : 103;
+        dma_cmd_phv_end_addr : 10;
+        dma_cmd_phv_start_addr : 10;
+        dma_pkt_eop : 1;
+        dma_cmd_eop : 1;
+        dma_cmd_type : 3;
     }
 }
 
@@ -302,16 +310,16 @@ header_type dma_cmd_phv2pkt_t {
 
 header_type dma_cmd_mem2pkt_t {
     fields {
-        dma_cmd_type : 3;
-        dma_cmd_eop : 1;
-        dma_pkt_eop : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_cache : 1;
-        dma_cmd_addr : 52;
-        dma_cmd_size : 14;
-        dma_cmd_use_override_lif : 1;
-        dma_cmd_override_lif : 11;
         dma_cmd_mem2pkt_pad : 43;
+        dma_cmd_override_lif : 11;
+        dma_cmd_use_override_lif : 1;
+        dma_cmd_size : 14;
+        dma_cmd_addr : 52;
+        dma_cmd_cache : 1;
+        dma_cmd_host_addr : 1;
+        dma_pkt_eop : 1;
+        dma_cmd_eop : 1;
+        dma_cmd_type : 3;
     }
 }
 
@@ -345,11 +353,11 @@ header_type doorbell_addr_t {
 
 header_type doorbell_data_t {
     fields {
-        index : 16;
-        ring : 3;
-        pad : 5;
-        qid : 24;
         pid : 16;
+        qid : 24;
+        pad : 5;
+        ring : 3;
+        index : 16;
     }
 }
 
@@ -362,18 +370,18 @@ header_type doorbell_data_t {
 
 header_type pkt_descr_t {
     fields {
-        scratch : 512;
-        A0 : 64;
-        O0 : 32;
-        L0 : 32;
-        A1 : 64;
-        O1 : 32;
-        L1 : 32;
-        A2 : 64;
-        O2 : 32;
-        L2 : 32;
-        next_addr : 64;
         reserved : 64;
+        next_addr : 64;
+        L2 : 32;
+        O2 : 32;
+        A2 : 64;
+        L1 : 32;
+        O1 : 32;
+        A1 : 64;
+        L0 : 32;
+        O0 : 32;
+        A0 : 64;
+        scratch : 512;
     }
 }
 
@@ -385,17 +393,18 @@ header_type pkt_descr_scratch_t {
 
 header_type pkt_descr_aol_t {
     fields {
-        A0 : 64;
-        O0 : 32;
-        L0 : 32;
-        A1 : 64;
-        O1 : 32;
-        L1 : 32;
-        A2 : 64;
-        O2 : 32;
-        L2 : 32;
-        next_addr : 64;
         reserved : 64;
+        next_addr : 64;
+        L2 : 32;
+        O2 : 32;
+        A2 : 64;
+        L1 : 32;
+        O1 : 32;
+        A1 : 64;
+        L0 : 32;
+        O0 : 32;
+        A0 : 64;
+
     }
 }
 

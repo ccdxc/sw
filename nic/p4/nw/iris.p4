@@ -194,7 +194,6 @@ header_type scratch_metadata_t {
     }
 }
 
-metadata cap_phv_intr_p4_t capri_p4_intrinsic;
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
 // scratch_metadata : no phvs will be allocated for this. These fields

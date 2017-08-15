@@ -1059,13 +1059,19 @@ table common_p4plus_stage0_lif_table0 {
     size : LIF_TABLE_SIZE;
 }
 
+action common_p4plus_stage0_app_header_table_action_dummy() {
+}
+
+@pragma stage 0
+@pragma raw_index_table
 table common_p4plus_stage0_app_header_table {
     reads { 
         // dummy - we do not need any key to this table, we just need 52 bytes of app-data to go into K+I
-        app_header.app_type : exact; 
+        p4_rxdma_intr.qstate_addr : exact;
     }
     actions {
         common_p4plus_stage0_app_header_table_action;
+        common_p4plus_stage0_app_header_table_action_dummy;
     }
 }
 

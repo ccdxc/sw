@@ -670,6 +670,48 @@ class capri_p4pd:
                         if cf_ == None:
                             del ki_or_kd_to_cf_map[k]
 
+    def remove_duplicate_cfs(self, ki_or_kd_to_cf_map, bit_extractors, is_tcam):
+        if len(bit_extractors):
+            pad_list = []
+            for kbit in bit_extractors:
+                cflist = ki_or_kd_to_cf_map[kbit]
+                for cfs in cflist:
+                    (cf, cf_startbit, width, ftype) = cfs
+                    # check if cf 
+                    for k, v  in ki_or_kd_to_cf_map.items():
+                        if k == kbit:
+                            continue
+                        for dict_cfs in v:
+                            (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                            if cf == cf_:
+                                if cf_startbit >= cf_startbit_ and cf_startbit < (cf_startbit_ + width_):
+                                    # Duplicate; Convert to pad
+                                    # In case of hash, k-bits can also appear as I bit.
+                                    # Hence pad them and no need to make sure duplicate
+                                    # should appear only in tcam case.
+                                    #assert(is_tcam), pdb.set_trace()
+                                    # Convert to Pad
+                                    pad_list.append(kbit) 
+            if len(pad_list):
+                for kbit in pad_list:
+                    ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+        
+    def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
+        covered_bits = 0
+        for k, v  in ki_or_kd_to_cf_map.items():
+            if len(v) > 1:
+                max_width = 0
+                for dict_cfs in v:
+                    (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                    if width_ > max_width:
+                        max_width = width_
+                covered_bits = k + max_width
+            else:
+                # check if this field is already covered
+                if k < covered_bits:
+                    del ki_or_kd_to_cf_map[k] 
+
+
     def build_table_asm_hwformat(self, ctable, kd=0):
         '''
             This function builds dictionary of KM byte to

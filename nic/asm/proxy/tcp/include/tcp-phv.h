@@ -15,15 +15,19 @@
 // Flit 1:  1023b - 512b
 // Flit 0:  511b  - 0b (INTRINSIC DATA)
 
-#define TCP_PHV_DB_DATA_START       432
-#define TCP_PHV_DB_DATA_END         560
-#define TCP_PHV_DB_DATA_SIZE        64
+#define TCP_PHV_DB_DATA_START       386 /* CAPRI_PHV_START_OFFSET(db_data_index) = 3088b = 386B */
+#define TCP_PHV_DB_DATA_END         394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
+#define TCP_PHV_DB_DATA_SIZE        8
+
 #define TCP_PHV_AOL_START           512
 #define TCP_PHV_AOL_END             640
 #define TCP_PHV_AOL_SIZE            64
-#define TCP_PHV_AOL_DESC_START      640
-#define TCP_PHV_AOL_DESC_END        768
 
+#define TCP_PHV_AOL_DESC_START      512 /* CAPRI_PHV_START_OFFSET(aol_A0) = 4096b = 512B */
+#define TCP_PHV_AOL_DESC_END        568 /* CAPRI_PHV_START_OFFSET(aol_reserved) = 4544b = 568B */
+
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 402 /* CAPRI_PHV_START_OFFSET(rx2tx_pad_rx2tx_pad) = 3216b = 402B */
 
 #define TCP_PHV_ETH_SIZE            112  //14B
 #define TCP_PHV_IP_SIZE             160  //20B
@@ -36,15 +40,18 @@
 #define TCP_PHV_TCP_START           (TCP_PHV_IP_START+ROCEV2_PHV_IP_SIZE-1)
 #define TCP_PHV_HEADERS_END         (TCP_PHV_TCP_START+TCP_PHV_TCP_SIZE-1)
 
-#define TCP_PHV_RX2TX_SHARED_START  2064 /* 3088 - 1024 */
-#define TCP_PHV_RX2TX_SHARED_SIZE   512
-#define TCP_PHV_RX2TX_SHARED_END    2576 /* 3088 - 1024 */
+#define TCP_PHV_RX2TX_SHARED_START  418 /* CAPRI_PHV_START_OFFSET(rx2tx_snd_cwnd) = 3344b = 418B offset */
+#define TCP_PHV_RX2TX_SHARED_SIZE   94
+#define TCP_PHV_RX2TX_SHARED_END    512 /* CAPRI_PHV_START_OFFSET(rx2tx_extra_ack_blocked) = 4096b = 512B offset */
+
+
+
 #define TCP_PHV_TX2RX_SHARED_START  2576 /* 3088 - 512 */
 #define TCP_PHV_TX2RX_SHARED_SIZE   512
 
 //#define TCP_PHV_HEADERS_END      3088
-#define TCP_PHV_DMA_COMMANDS_START      3088
-#define TCP_PHV_DMA_COMMANDS_END        4095
+#define TCP_PHV_DMA_COMMANDS_START      40 /* 40 * (16B) = 5120 bits */
+#define TCP_PHV_DMA_COMMANDS_END        6144
 #define TCP_PHV_DMA_COMMAND_ADDR_OFFSET 0
 #define TCP_PHV_DMA_COMMAND_ADDR_LEN    64
 #define TCP_PHV_DMA_COMMAND_PAD_OFFSET  (TCP_PHV_DMA_COMMAND_ADDR_OFFSET+TCP_PHV_DMA_COMMAND_ADDR_LEN)

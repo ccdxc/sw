@@ -277,12 +277,26 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     if (!mcast) {
         d.flow_info_action_u.flow_info_flow_info.lif =
             ep_pd_get_hw_lif_id(dep);
+        printf("xxx: actual lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
+#if 1
+        // HACK DO NOT COMMIT
+        d.flow_info_action_u.flow_info_flow_info.lif = 1001;
+        printf("xxx: programmed lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
+#endif
     } else {
     }
+#if 1
+    // HACK DO NOT COMMIT
+    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+#endif
 
     d.flow_info_action_u.flow_info_flow_info.multicast_en = mcast;
     // TBD: where do these come from ?
     d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 0;
+#if 1
+    // HACK DO NOT COMMIT
+    d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 3;
+#endif
     d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
     d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;
@@ -342,6 +356,10 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
+#if 1
+    // HACK DO NOT COMMIT
+    d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
+#endif
     session_pd_fill_queue_info(dep,
                                flow->lif_qtype,
                                &d.flow_info_action_u.flow_info_flow_info.qid_en,

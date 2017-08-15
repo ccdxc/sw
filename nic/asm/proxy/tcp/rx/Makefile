@@ -92,6 +92,7 @@ run: $(BIN_FILES)
 		-P tcp_rx_read_rnpdr_stage2_start=0x300000 \
 		-P tcp_rx_read_serq_stage2_start=0x400000 \
 		-P tcp_rx_sack_stage2_start=0x500000 \
+		-P tcp_rx_read_rnmpr_stage2_start=0x600000 \
 		> $(SRC_DIR)/run/tcp-rx.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-write-serq.ctl $(OBJ_DIR)/tcp-write-serq.bin > $(SRC_DIR)/run/tcp-write-serq.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-cc.ctl $(OBJ_DIR)/tcp-cc.bin \

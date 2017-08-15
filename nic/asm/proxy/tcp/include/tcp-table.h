@@ -2,7 +2,7 @@
 
 #define TCP_TCB_TABLE_ENTRY_SIZE        512 /* 512B */
 #define TCP_TCB_TABLE_ENTRY_SIZE_SHFT   9  /* 512B */
-#define TCP_TCB_RX_OFFSET               0
+#define TCP_TCB_RX_OFFSET               128
 #define TCP_TCB_TX_OFFSET               32
 #define TCP_TCB_SACK_OFFSET             96
 #define TCP_TCB_RTT_OFFSET              160
@@ -20,13 +20,13 @@
 #define TNMDR_TABLE_SIZE                255
 #define TNMDR_TABLE_SIZE_SHFT           8
 
-#define RNMDR_TABLE_BASE                0xbeef2000 
+#define RNMDR_TABLE_BASE                0xa4102000 
 #define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
 #define RNMDR_TABLE_SIZE                255
 #define RNMDR_TABLE_SIZE_SHFT           8
 
-#define RNMPR_TABLE_BASE                0xbeef3000 
+#define RNMPR_TABLE_BASE                0xa4234000 
 #define RNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
 #define RNMPR_TABLE_SIZE                255
@@ -68,13 +68,13 @@
 #define TABLE_LOCK_DIS                 0
 #define TABLE_LOCK_EN                  1
 
-#define TABLE_SIZE_8_BITS              1
-#define TABLE_SIZE_16_BITS             2
-#define TABLE_SIZE_32_BITS             3
-#define TABLE_SIZE_64_BITS             4
-#define TABLE_SIZE_128_BITS            5
-#define TABLE_SIZE_256_BITS            6
-#define TABLE_SIZE_512_BITS            7
+#define TABLE_SIZE_8_BITS              0
+#define TABLE_SIZE_16_BITS             1
+#define TABLE_SIZE_32_BITS             2
+#define TABLE_SIZE_64_BITS             3
+#define TABLE_SIZE_128_BITS            4
+#define TABLE_SIZE_256_BITS            5
+#define TABLE_SIZE_512_BITS            6
 
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400

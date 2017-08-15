@@ -3,10 +3,13 @@
 /*****************************************************************************/
 action p4plus_app_tcp_proxy() {
     remove_header(ethernet);
+    remove_header(vlan_tag);
     remove_header(ipv4);
     remove_header(ipv6);
     remove_header(tcp);
 
+    add_header(capri_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
     add_header(p4_to_p4plus_tcp_proxy);
     add_header(p4_to_p4plus_tcp_proxy_sack);
     modify_field(p4_to_p4plus_tcp_proxy.payload_len, l4_metadata.tcp_data_len);

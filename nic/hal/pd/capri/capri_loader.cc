@@ -285,13 +285,23 @@ capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
            program_info[i].copy.complete != 1 || 
            program_info[i].copy.text.size()*sizeof(uint64_t) != 
            program_info[i].size) {
-           printf("Can't load program: error in validation of size/flags \n");
-           return -1;
+           printf("valid = %d, complete = %d copy size %lu size %lu\n",
+                   program_info[i].copy.valid, program_info[i].copy.complete,
+                   program_info[i].copy.text.size(), program_info[i].size);
+           printf("Can't load program: error in validation of size/flags!!!!!!!! \n");
+           //return -1;
+           continue;
        }
        
        rv = write_mem(program_info[i].base_addr,
                       (uint8_t *) program_info[i].copy.text.data(),
                       program_info[i].size);
+       printf("yyy: loading at address 0x%lx, size %ld: \n", program_info[i].base_addr, program_info[i].size);
+       int ii;
+       for (ii = 0; ii < 16; ii++) {
+           printf("0x%x ", (uint8_t)program_info[i].copy.text.data()[ii]);
+       }
+       printf("\n");
        if (rv != true) {
            printf("HBM P4 program write failed\n");
        }

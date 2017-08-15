@@ -17,6 +17,7 @@ model:
 sample:
 	g++ -g -o ./libmodelclient.so -c -g -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -std=c++11 -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -I../include ../src/lib_model_client.cc -lzmq -fPIC
 	g++ -g -o sample_client -std=c++11 -L./ -I../include -lmodelclient -lzmq ../examples/sample_client.c
+	g++ -g -o sample_client_tcp -std=c++11 -L./ -I../include -lmodelclient -lzmq ../examples/sample_client_tcp.c
 
 cli:
 	g++ -g -o model_cli -L./ -I../include -lmodelclient -lzmq ../examples/model_cli.c

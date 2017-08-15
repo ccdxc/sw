@@ -20,6 +20,7 @@ struct tcp_rx_tcp_cc_tcp_cc_d d;
 tcp_rx_cc_stage4_start:
 	/* Fall Thru */
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
+        phvwri          p.p4_intr_global_tm_oport, 8
 	tblwr		d.curr_ts, r4
 tcp_cong_control:
 	/* Check if we are in congestion window reduction state */
@@ -119,6 +120,9 @@ update_sndcnt:
 	add		r5, r5, r6
 	tbladd		d.snd_cwnd, r5
 tcp_cwnd_reduction_done:
+	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fc_stage5_start,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	/* u32 ack in r1, u32 acked in r2 */
 tcp_cong_avoid:
@@ -257,7 +261,7 @@ tcp_cong_avoid_ai:
 	tblwr.c2	d.snd_cwnd, d.snd_cwnd_clamp
 table_read_FC:
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fc_stage5_start,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

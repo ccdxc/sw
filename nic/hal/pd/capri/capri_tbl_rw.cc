@@ -294,10 +294,24 @@ int capri_table_rw_init()
             capri_program_label_to_offset(progname, action_name, &capri_action_asm_base[i][j]);
             capri_action_asm_base[i][j] >>= 6; /* Action base is in byte and 64B aligned... */
             CAPRI_TBL_RW_PRINT(CAP_TBL_RW_LOG_LEVEL_INFO,
-                               "Program-Name %s, Action-Name %s, Action-Pc 0x%lx\n",
+                               "xxx: Program-Name %s, Action-Name %s, Action-Pc 0x%lx\n",
                                progname, action_name, capri_action_asm_base[i][j]);
         }
     }
+
+#if 1 
+    // HACK
+    uint64_t capri_action_p4plus_asm_base;
+    capri_program_to_base_addr((char *)"p4plus",
+            (char *)"rxdma_stage0.bin",
+            &capri_action_p4plus_asm_base);
+    printf("xxx: Program-Name %s, Action-PC 0x%lx\n", "p4plus",
+            capri_action_p4plus_asm_base);
+
+	capri_program_p4plus_table_mpu_pc_for_stage0((uint32_t) capri_action_p4plus_asm_base);
+
+    capri_program_p4plus_table_config();
+#endif
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();

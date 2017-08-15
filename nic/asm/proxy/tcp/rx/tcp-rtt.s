@@ -40,7 +40,7 @@ tcp_rx_rtt_stage2_start:
 	add		r1, k.common_phv_process_ack_flag, r0
 	smeqh		c1, r1, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
 
-	sub		r1, d.curr_ts, k.common_phv_rcv_tsecr
+	//sub		r1, d.curr_ts, k.common_phv_rcv_tsecr
 	tblwr.c1	d.seq_rtt_us, r1
 	tblwr.c1	d.ca_rtt_us, r1
 
@@ -214,7 +214,7 @@ flow_rtt_process_done:
 	
 table_read_FC:
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fra_stage3_start,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

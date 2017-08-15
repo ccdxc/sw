@@ -103,6 +103,8 @@ extern void *tcpcb_get_handle_key_func(void *entry);
 extern uint32_t tcpcb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool tcpcb_compare_handle_key_func(void *key1, void *key2);
 
+hal_ret_t tcpcb_create_default_entry();
+
 hal_ret_t tcpcb_create(tcpcb::TcpCbSpec& spec,
                        tcpcb::TcpCbResponse *rsp);
 

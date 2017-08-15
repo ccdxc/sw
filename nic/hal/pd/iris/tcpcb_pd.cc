@@ -5,6 +5,7 @@
 #include <p4pd_tcp_proxy_api.h>
 #include <capri_loader.h>
 #include <capri_hbm.hpp>
+#include <capri_lif.hpp>
 
 namespace hal {
 namespace pd {
@@ -39,8 +40,8 @@ tcpcb_pd_compare_hw_key_func (void *key1, void *key2)
 hal_ret_t
 p4pd_get_stage0_prog_addr(uint64_t* offset)
 {
-    char progname[] = "tcp-read-tx2rx-shared";
-    char labelname[]= "tcp_rx_read_shared_stage0_start";
+    char progname[] = "rxdma_stage0.bin";
+    char labelname[]= "tcp_rx_stage0";
 
     int ret = capri_program_label_to_offset(progname,
                                             labelname,
@@ -72,7 +73,7 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.pc = pc_offset;
     }
 
-    HAL_TRACE_DEBUG("Programming at address:", hwid);
+    printf("Programming at address: 0x%lx\n", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
@@ -85,20 +86,37 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     tcp_rx_tcp_rx_d             data = {0};
     hal_ret_t                   ret = HAL_RET_OK;
+    uint8_t                     buffer[64] = {0};
+    int                         i, j;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_RX);
 
     if(!del) {
-        data.u.tcp_rx_d.rcv_nxt = tcpcb_pd->tcpcb->rcv_nxt;
-        data.u.tcp_rx_d.snd_una = tcpcb_pd->tcpcb->snd_una;
-        data.u.tcp_rx_d.rcv_tsval = 0xFA;
-        data.u.tcp_rx_d.ts_recent = 0xF0;
+       // data.u.tcp_rx_d.rcv_nxt = tcpcb_pd->tcpcb->rcv_nxt;
+        //data.u.tcp_rx_d.snd_una = tcpcb_pd->tcpcb->snd_una;
+        data.u.tcp_rx_d.rcv_nxt = 0xBABABABA;
+        data.u.tcp_rx_d.snd_una = 0xEFEFEFEF;
+        data.u.tcp_rx_d.rcv_tsval = 0xFAFAFAFA;
+        data.u.tcp_rx_d.ts_recent = 0xFAFAFAF0;
+    }
+    int size = sizeof(tcp_rx_tcp_rx_d);
+#if 0
+    if(size & 1) {
+        size++;
+    }
+#endif
+
+    //memcpy(buffer, (uint8_t *)&data, sizeof(tcp_rx_tcp_rx_d));
+    j = size - 1;
+    for(i = 0; i < size; i++, j--) {
+        //uint8_t temp = buffer[i];
+        buffer[j] = ((uint8_t *)&data)[i];
     }
     
-    HAL_TRACE_DEBUG("Programming at address:", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)) {
+    printf("Programming rx_entry at address: 0x%lx", hwid);
+    if(!p4plus_hbm_write(hwid,  buffer, size)) {
         HAL_TRACE_ERR("Failed to create rx: tcp_rx entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -127,7 +145,8 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rtt_d.mdev_max_us = 0;
         data.u.tcp_rtt_d.rtt_seq = 0x20;
     }
-    HAL_TRACE_DEBUG("Programming at address:", hwid);
+    
+    printf("Programming rx_entry at address: 0x%lx", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create rx: tcp_rtt entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
@@ -210,10 +229,10 @@ p4pd_add_or_del_tcp_rx_tcp_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fra_d.ca_state = 0x2;
-        data.u.tcp_fra_d.high_seq = 0x10;
+        data.u.tcp_fra_d.high_seq = 0xEFEFEFEF;
     }
     
-    HAL_TRACE_DEBUG("Programming at address:", hwid);
+    printf("Programming fra at address: 0x%lx", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create rx: tcp_fra entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
@@ -234,7 +253,7 @@ p4pd_add_or_del_tcp_rx_rdesc_alloc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
     }
     
-    HAL_TRACE_DEBUG("Programming at address:", hwid);
+    printf("Programming rdesc alloc at address: 0x%lx", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
         ret = HAL_RET_HW_FAIL;
@@ -589,14 +608,12 @@ pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
     HAL_ASSERT(NULL != tcpcb_pd);
     HAL_ASSERT(NULL != tcpcb_pd->tcpcb);
     
-    /*
+    
     char tcpcb_reg[10] = "tcpcb";
-    return get_start_offset(tcpcb_reg) + \
+    uint64_t offset = get_start_offset(tcpcb_reg);
+    HAL_TRACE_DEBUG("received offset ", offset);
+    return offset + \
         (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
-    */
-    return 0xbbbb + \
-        (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
-
 }
 
 hal_ret_t
@@ -613,6 +630,8 @@ p4pd_add_or_del_tcpcb_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto err;    
     }
+    HAL_TRACE_DEBUG("*************Programming lif qstate");
+    ret = capri_lif_qstate_create(1001);
 
 err:
     /*TODO: cleanup */
@@ -661,7 +680,7 @@ pd_tcpcb_create (pd_tcpcb_args_t *args)
     tcpcb_pd->tcpcb = args->tcpcb;
     // get hw-id for this TCPCB
     tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd);
-    HAL_TRACE_DEBUG("Received hw-id");
+    printf("Received hw-id: 0x%lx ", tcpcb_pd->hw_id);
     
     // program tcpcb
     ret = p4pd_add_or_del_tcpcb_entry(tcpcb_pd, false);

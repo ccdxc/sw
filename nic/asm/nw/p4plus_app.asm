@@ -29,6 +29,7 @@ p4plus_app_classic_nic:
 .align
 p4plus_app_tcp_proxy:
   phvwr       p.ethernet_valid, FALSE
+  phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ipv4_valid, FALSE
   phvwr       p.ipv6_valid, FALSE
   phvwr       p.tcp_valid, FALSE

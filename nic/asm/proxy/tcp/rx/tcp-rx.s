@@ -3,6 +3,7 @@
  */
 
 #include "tcp-constants.h"
+#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
@@ -12,20 +13,147 @@
 
 struct phv_ p;
 struct tcp_rx_tcp_rx_k k;
-struct tcp_rx_tcp_rx_tcp_rx_d d;
+struct tcp_rx_tcp_rx_d d;
 
 %%
         .param          tcp_rx_rtt_stage2_start
         .param          tcp_rx_read_rnmdr_stage2_start
         .param          tcp_rx_read_rnmpr_stage2_start
-        .param          tcp_rx_read_serq_stage2_start
+        .param          tcp_rx_read_serq_pidx_stage2_start
         .param          tcp_rx_sack_stage2_start
-	
+	.align
 tcp_rx_process_stage1_start:
+        //phvwri          p.p4_intr_global_tm_oport, 14 
+#if 0
+dma_cmd_test:
+dma_cmd_data:
+	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
+	add		r4, r5, r0
+	phvwr		p.p4_rxdma_intr_dma_cmd_ptr, r4
+	/* Set the DMA_WRITE CMD for data */
+#if 0
+	add		r1, r0, k.to_s6_page
+#else
+	addi		r1, r0, 0xa6ec6200
+#endif
+	addi		r5, r1, NIC_PAGE_HDR_SIZE
+	/* r5 is start of packet data */
+	
+	add		r3, r0, NIC_PAGE_HEADROOM
+
+	
+	add		r1, r5, r3
+	
+	phvwr		p.dma_cmd0_dma_cmd_addr, r1
+#if 1
+	add		r7, r0, 24
+#endif	
+	phvwr		p.dma_cmd0_dma_cmd_size, r7
+	
+	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
+        phvwri          p.dma_cmd0_dma_cmd_eop, 0
+
+	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
+dma_cmd_descr:	
+	/* Set the DMA_WRITE CMD for descr */
+#if 0
+	add		r5, k.to_s6_descr, r0
+#else
+	addi		r5, r0, 0xa6ec7000
+#endif
+	addi		r1, r5, NIC_DESC_ENTRY_0_OFFSET
+	phvwr		p.dma_cmd1_dma_cmd_addr, r1
+
+	phvwr		p.aol_A0, r5
+	phvwr		p.aol_O0, r3
+	phvwr		p.aol_L0, r7
+	phvwr		p.aol_A1, r0
+	phvwr		p.aol_O1, r0
+	phvwr		p.aol_L1, r0
+	phvwr		p.aol_A2, r0
+	phvwr		p.aol_O2, r0
+	phvwr		p.aol_L2, r0
+	phvwr		p.aol_next_addr, r0
+
+        phvwri          p.dma_cmd1_dma_cmd_phv_start_addr, TCP_PHV_AOL_DESC_START
+	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, TCP_PHV_AOL_DESC_END
+
+	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+        phvwri          p.dma_cmd1_dma_cmd_eop, 0
+	
+	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
+
+dma_cmd_serq_slot:
+#if 0
+	add		r5, r0, k.to_s6_serq_pidx
+#else
+	add		r5, r0, r0
+#endif
+	sll		r5, r5, NIC_SERQ_ENTRY_SIZE_SHIFT
+	/* Set the DMA_WRITE CMD for SERQ slot */
+#if 0
+	add		r1, r5, k.to_s6_serq_base
+#else
+	addi		r1, r5, 0xa6ec7200
+#endif
+
+	phvwr		p.dma_cmd2_dma_cmd_addr, r1
+#if 0
+	phvwr		p.ring_entry_descr_addr, k.to_s6_descr
+#else
+	phvwri		p.ring_entry_descr_addr, 0xa6ec7000
+#endif
+	phvwri		p.dma_cmd2_dma_cmd_phv_start_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_START
+	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_END
+        phvwri          p.dma_cmd2_dma_cmd_eop, 0
+	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
+dma_cmd_write_rx2tx_shared:
+	/* Set the DMA_WRITE CMD for copying rx2tx shared data from phv to mem */
+	add		r5, r0, k.common_phv_qstate_addr
+	add		r6, r0, k.common_phv_fid
+	sll		r6, r6, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
+	add		r5, r5, r6
+	add		r6, r0, TCP_TCB_RX2TX_SHARED_OFFSET
+	add		r5, r5, r6
+	phvwr		p.dma_cmd3_dma_cmd_addr, r5
+	phvwri		p.dma_cmd3_dma_cmd_phv_start_addr, TCP_PHV_RX2TX_SHARED_START
+	phvwri		p.dma_cmd3_dma_cmd_phv_end_addr, TCP_PHV_RX2TX_SHARED_END
+	phvwri		p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+        phvwri          p.dma_cmd3_dma_cmd_eop, 0
+	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
+
+tcp_serq_produce:
+	/* address will be in r4 */
+	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+	/* data will be in r3 */
+#if 0
+	CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, k.to_s6_serq_pidx)
+#else
+	CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, r0)
+#endif
+	
+	phvwr		p.dma_cmd4_dma_cmd_addr, r4
+#if 0
+        phvwr           p.db_data_index, k.to_s6_serq_pidx
+#else
+        phvwr           p.db_data_index, r0
+#endif
+        phvwr           p.db_data_qid, k.common_phv_fid
+	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_START
+	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_END
+	phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+        phvwri          p.dma_cmd4_dma_cmd_eop, 1
+        phvwri          p.dma_cmd4_dma_cmd_wr_fence, 1
+	nop.e
+	nop.e
+dma_test_done:	
+#endif
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	add		r6, r4,r0
+	/* Setup the to-stage/stage-to-stage variables */
+	phvwr		p.common_phv_snd_una, d.u.tcp_rx_d.snd_una
 	/* if (cp->seq != tp->rx.rcv_nxt) { */
-	sne		c7, k.to_s1_seq, d.rcv_nxt
+	sne		c7, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
 	phvwri.c7	p.common_phv_ooo_rcv, 1
 	bcf		[c7], flow_rx_process_done
 	nop
@@ -47,14 +175,14 @@ tcp_rx_process_stage1_start:
 	}
 	*/
 	// XXX: VS - rcv_tsval should come from k
-	sub		r1, d.rcv_tsval, d.ts_recent
+	sub		r1, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
 	slt		c1, r1, r0
 	bcf		[c1],slow_path
 	nop
 
 	/* tcp_store_ts_recent(tp) */
 	// XXX: VS - rcv_tsval should come from k
-	tblwr		d.ts_recent, d.rcv_tsval
+	tblwr		d.u.tcp_rx_d.ts_recent, d.u.tcp_rx_d.rcv_tsval
 //	tblwr		d.ts_recent_tstamp, r6
 	add		r6,r6,r0
 
@@ -67,17 +195,17 @@ tcp_rx_process_stage1_start:
 
 tcp_queue_rcv:
 	phvwri		p.common_phv_write_serq, 1
-	tblwr		d.write_serq, 1
+	tblwr		d.u.tcp_rx_d.write_serq, 1
 	
 tcp_rcv_nxt_update:
-	sub		r1, k.to_s1_seq, d.rcv_nxt
-	tblwr		d.rcv_nxt, k.to_s1_seq
-	tbladd		d.bytes_rcvd, r1
+	sub		r1, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
+	tblwr		d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
+	tbladd		d.u.tcp_rx_d.bytes_rcvd, r1
 	
 tcp_event_data_recv:
 	/* SCHEDULE_ACK(tp) */
 	phvwr		p.common_phv_pending_ack_send,1
-	tblwr.c1	d.pending_txdma, 1
+	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
 	/* Register write to set the pending bit for flow */
 	addi		r1, r0, 1
 	add		r5, k.common_phv_fid, r0
@@ -91,7 +219,7 @@ tcp_event_data_recv:
 		tp->fto.ato = TCP_ATO_MIN ;                                                                                    }
 	 *
 	 */
-	seq 		c1, d.ato, r0
+	seq 		c1, d.u.tcp_rx_d.ato, r0
 	bcf		[!c1], delack_engine_init_done
 	nop
 tcp_incr_quickack_start:
@@ -121,17 +249,17 @@ tcp_incr_quickack_start:
 
 	   tp->tx.quick = min(quickacks, TCP_MAX_QUICKACKS);
 	 */
-	slt		c2, d.quick,r1
+	slt		c2, d.u.tcp_rx_d.quick,r1
 	addi		r2, r0, TCP_MAX_QUICKACKS
 	slt.c2		c3, r2, r1
-	tblwr.c3	d.quick, TCP_MAX_QUICKACKS
-	tblwr.!c3	d.quick, r1
-	phvwr		p.common_phv_quick, d.quick
+	tblwr.c3	d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
+	tblwr.!c3	d.u.tcp_rx_d.quick, r1
+	phvwr		p.common_phv_quick, d.u.tcp_rx_d.quick
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
 	
-	tblwr		d.ato, TCP_ATO_MIN
+	tblwr		d.u.tcp_rx_d.ato, TCP_ATO_MIN
 
 
 delack_engine_init_done:
@@ -155,31 +283,31 @@ delack_engine_init_done:
 	  }
 	 */
 	/* r1 = m */
-	sub		r1, r6, d.lrcv_time
+	sub		r1, r6, d.u.tcp_rx_d.lrcv_time
 	/* r2 = TCP_ATO_MIN / 2 */
 	addi		r2, r0, TCP_ATO_MIN
 	sll		r2, r2, 1
 	slt		c1, r2, r1
 	/* tp->fto.ato = tp->fto.ato >> 1 */
-	add		r5, d.ato, r0
+	add		r5, d.u.tcp_rx_d.ato, r0
 	srl		r5, r5, 1
-	tblwr		d.ato, r5
+	tblwr		d.u.tcp_rx_d.ato, r5
 	/* tp->fto.ato = tp->fto.ato + TCP_ATO_MIN/2 */
-	tbladd.!c1	d.ato, r2
+	tbladd.!c1	d.u.tcp_rx_d.ato, r2
 	/*  if (m < tp->fto.ato) */
-	slt.c1		c2, r1, d.ato
+	slt.c1		c2, r1, d.u.tcp_rx_d.ato
 	/* tp->fto.ato = (tp->fto.ato >> 1) + m */
-	tbladd.c2	d.ato, r1
+	tbladd.c2	d.u.tcp_rx_d.ato, r1
 	/* if (tp->fto.ato > tp->fto.rto) */
-	slt.c2		c3, d.rto, d.ato
+	slt.c2		c3, d.u.tcp_rx_d.rto, d.u.tcp_rx_d.ato
 	/*     tp->fto.ato = tp->fto.rto */
-	tblwr.c3	d.ato, d.rto
+	tblwr.c3	d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
 	/* if (m > tp->fto.rto */
-	slt.c2		c4, d.rto, r1
+	slt.c2		c4, d.u.tcp_rx_d.rto, r1
 	jal.c2		r7, tcp_incr_quickack
 	nop
 	/* tp->rx.lrcv_time = tcp_time_stamp */
-	tblwr		d.lrcv_time, r6
+	tblwr		d.u.tcp_rx_d.lrcv_time, r6
 
 	/* tcp_ecn_check_ce (tp, cp) */
 	jal 		r7, tcp_ecn_check_ce
@@ -187,7 +315,7 @@ delack_engine_init_done:
 	
 tcp_event_data_rcv_done:
 	/* c1 = (ack_seq == snd_una) */
-	seq		c1, k.to_s1_ack_seq, d.snd_una
+	seq		c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
 	/* clear process_ack_flag if ack_seq != snd_una */
 	phvwr.!c1	p.common_phv_process_ack_flag, r0
 	bcf		[c1], flow_rx_process_done
@@ -209,10 +337,10 @@ tcp_ack:
 	}
 	*
 	*/
-	slt		c1,k.to_s1_ack_seq, d.snd_una
-	sub.c1		r1, d.snd_una, d.max_window
+	slt		c1,k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+	sub.c1		r1, d.u.tcp_rx_d.snd_una, d.u.tcp_rx_d.max_window
 	slt.c1  	c2, k.to_s1_ack_seq, r1
-	phvwr.c2	p.rx2tx_pending_challenge_ack_send, 1
+	phvwr.c2	p.rx2tx_extra_pending_challenge_ack_send, 1
 	bcf		[c2], flow_rx_process_done
 	nop
 	b.c1		old_ack
@@ -236,8 +364,8 @@ tcp_ack:
 	   tcp_rearm_rto(tp);
 	 *
 	 */
-	sne		c1, d.pending, ICSK_TIME_EARLY_RETRANS
-	sne		c2, d.pending, ICSK_TIME_LOSS_PROBE
+	sne		c1, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
+	sne		c2, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
 	bcf		[c1 & c2], no_rearm_rto
 	nop
 	jal  		r7, tcp_rearm_rto
@@ -250,7 +378,7 @@ no_rearm_rto:
         }
 	 *
 	 */
-	slt		c1, d.snd_una, k.to_s1_ack_seq
+	slt		c1, d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
 	add		r5, k.common_phv_process_ack_flag, r0
 	ori.c1		r5, r5, FLAG_SND_UNA_ADVANCED
 	phvwr.c1	p.common_phv_process_ack_flag, r5
@@ -284,13 +412,13 @@ no_rearm_rto:
 	add		r5, k.common_phv_process_ack_flag, r0
 	smneh		c2, r5, FLAG_SLOWPATH, FLAG_SLOWPATH
 tcp_update_wl:
-	tblwr.c2	d.snd_wl1, k.to_s1_ack_seq
+	tblwr.c2	d.u.tcp_rx_d.snd_wl1, k.to_s1_ack_seq
 tcp_snd_una_update:
 	/* Increment bytes acked by the delta between ack_seq and snd_una */
-	sub.c2		r1, k.to_s1_ack_seq, d.snd_una
-	tbladd.c2	d.bytes_acked, r1
+	sub.c2		r1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+	tbladd.c2	d.u.tcp_rx_d.bytes_acked, r1
 	/* Update snd_una */
-	tblwr.c2	d.snd_una, k.to_s1_ack_seq
+	tblwr.c2	d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
 
 	add.c2		r5, k.common_phv_process_ack_flag, r0
 	ori.c2		r5, r5, FLAG_WIN_UPDATE
@@ -339,17 +467,17 @@ tcp_ack_update_window:
 	/* if (!cp->syn) */
 	seq		c1, k.common_phv_syn, r0
 	/*     nwin <<= tp->rx_opt.snd_wscale; */
-	add.c1		r5, d.snd_wscale, r0
+	add.c1		r5, d.u.tcp_rx_d.snd_wscale, r0
 	sllv.c1		r2, r2, r5
 tcp_may_update_window:
 	/* after(ack, snd_una) */
-	slt		c1, k.to_s1_ack_seq, d.snd_una
+	slt		c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
 	/* after(ack_seq, snd_wl1) */
-	slt		c2, k.to_s1_seq, d.snd_wl1
+	slt		c2, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
 	/* ack_seq == snd_wl1 */
-	slt		c3, k.to_s1_seq, d.snd_wl1
+	slt		c3, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
 	/* nwin > snd_wnd */
-	slt		c4, d.snd_wnd, r2
+	slt		c4, d.u.tcp_rx_d.snd_wnd, r2
 	setcf		c5, [!c3 | !c4]
 	setcf		c5, [!c1 & !c2 & c5]
 	bcf		[c5], tcp_update_window_bypass
@@ -363,7 +491,7 @@ tcp_update_window:
 	/* ack_ev_flags |= CA_ACK_WIN_UPDATE */
 	ori		r1, r1, CA_ACK_WIN_UPDATE
 	/* tcp_update_wl */
-	tblwr		d.snd_wl1, k.to_s1_seq
+	tblwr		d.u.tcp_rx_d.snd_wl1, k.to_s1_seq
 	/*
 	    if (tp->tx.snd_wnd != nwin) {
 		tp->tx.snd_wnd = nwin;
@@ -382,16 +510,16 @@ tcp_update_window:
 	 */
 
 	/* if (tp->tx.snd_wnd != nwin) { */
-	sne		c1,d.snd_wnd, r2
+	sne		c1,d.u.tcp_rx_d.snd_wnd, r2
 	/*   tp->tx.snd_wnd = nwin; */
 
-	tblwr.c1	d.snd_wnd, r2
+	tblwr.c1	d.u.tcp_rx_d.snd_wnd, r2
 	/*   tp->rx.pred_flags = 0; */
-	tblwr.c1	d.pred_flags, 0
+	tblwr.c1	d.u.tcp_rx_d.pred_flags, 0
         /*   if (nwin > tp->rx.max_window) { */
-	slt.c1		c2, d.max_window, r2
+	slt.c1		c2, d.u.tcp_rx_d.max_window, r2
         /*        tp->rx.max_window = nwin; */
-	tblwr.c2	d.max_window, r2
+	tblwr.c2	d.u.tcp_rx_d.max_window, r2
 	/*        tcp_sync_mss(tp, tp->rx_opt.pmtu);
 	 *        tcp_sync_mss will be triggered in tx stage based on pending bit
 	 */
@@ -401,14 +529,14 @@ tcp_update_window:
 tcp_update_window_bypass:
 	/* tcp_snd_una_update */
 	/* Increment bytes acked by the delta between ack_seq and snd_una */
-	sub		r3, k.to_s1_ack_seq, d.snd_una
-	tbladd		d.bytes_acked, r3
+	sub		r3, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+	tbladd		d.u.tcp_rx_d.bytes_acked, r3
 	/* Update snd_una */
-	tblwr		d.snd_una, k.to_s1_ack_seq
+	tblwr		d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
 	/* ecn_flags & TCP_ECN_OK */
-	smeqb		c3, d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
+	smeqb		c3, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
 	/* c4 = !cp->ece */
 	seq		c4, k.common_phv_ece, r0
 	/* c5 = !cp->syn */
@@ -432,7 +560,7 @@ tcp_in_ack_event:
 	 * if (!prior_packets)
 	 *     goto no_queue;
 	 */
-	 tblwr		d.rcv_tstamp, r6
+	 tblwr		d.u.tcp_rx_d.rcv_tstamp, r6
 	 seq       	c3, k.s1_s2s_packets_out, r0
 	 bcf		[!c3], no_queue
 	 nop
@@ -441,7 +569,7 @@ tcp_ecn_check_ce_start:
 	sne		c4, r7, r0
 
 	/*   if (tp->rx.ecn_flags & TCP_ECN_OK) */
-	smeqb		c1, d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
+	smeqb		c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
 	bcf		[!c1], tcp_ecn_check_ce_done
 	nop
 	add		r1, k.s1_s2s_ip_dsfield, r0
@@ -454,34 +582,34 @@ tcp_ecn_check_ce_start:
 
 	//.cscase	INET_ECN_NOT_ECT
 	setcf		c1, [c0]
-	smeqb.c5	c1, d.ecn_flags, TCP_ECN_SEEN, TCP_ECN_SEEN
+	smeqb.c5	c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN, TCP_ECN_SEEN
 	jal.c1		r7, tcp_enter_quickack_mode
 	nop
 
 	//.cscase INET_ECN_ECT_1
 	setcf		c1,[c0]
-	smeqb.c4	c1, d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
+	smeqb.c4	c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
 	addi.c1		r2, r0, CA_EVENT_ECN_NO_CE
 	phvwr.c1	p.common_phv_ca_event, r2
-	tblor.c4	d.ecn_flags, TCP_ECN_SEEN
+	tblor.c4	d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 
 	//.cscase INET_ECN_ECT_0
 	setcf		c1, [c0]
-	smeqb.c3	c1, d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
+	smeqb.c3	c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
 	addi.c1		r2, r0, CA_EVENT_ECN_NO_CE
 	phvwr.c1	p.common_phv_ca_event, r2
-	tblor.c3	d.ecn_flags, TCP_ECN_SEEN
+	tblor.c3	d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 
 	//.cscase INET_ECN_CE
 	setcf		c1, [c0]
-	smeqb.c2	c1, d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
+	smeqb.c2	c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
 	addi.c1		r2, r0, CA_EVENT_ECN_IS_CE
 	phvwr.c1	p.common_phv_ca_event, r2
 	setcf		c1, [c0]
-	smeqb.c2	c1, d.ecn_flags, TCP_ECN_DEMAND_CWR, TCP_ECN_DEMAND_CWR
+	smeqb.c2	c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR, TCP_ECN_DEMAND_CWR
 	jal.!c1		r7, tcp_enter_quickack_mode
-	tblor.!c1	d.ecn_flags, TCP_ECN_DEMAND_CWR
-	tblor		d.ecn_flags, TCP_ECN_SEEN
+	tblor.!c1	d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR
+	tblor		d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 	//.csend
 	
 tcp_ecn_check_ce_done:	
@@ -492,6 +620,9 @@ tcp_ecn_check_ce_done:
  * RFC2988 recommends to restart timer to now+rto.
  */
 tcp_rearm_rto_start:
+
+        CAPRI_CLEAR_TABLE0_VALID
+
 	sne		c4, r7, r0
 	/* If the retrans timer is currently being used by Fast Open
 	 * for SYN-ACK retrans purpose, stay put.
@@ -499,22 +630,22 @@ tcp_rearm_rto_start:
 	  if (tp->rx_opt.fastopen_rsk)
 		return;
 	 */
-	sne		c1, d.fastopen_rsk, r0
+	sne		c1, d.u.tcp_rx_d.fastopen_rsk, r0
 	bcf		[c1 & c4], tcp_rearm_rto_done
 	nop
 	seq		c1, k.s1_s2s_packets_out, r0
-	phvwr.c1	p.rx2tx_pending_ft_clear,1
-	tblwr.c1	d.pending_txdma, 1
+	phvwr.c1	p.rx2tx_extra_pending_ft_clear,1
+	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
 	bcf		[c1], tcp_rearm_rto_done
-	tbladd.c1	d.rto,  -1
+	tbladd.c1	d.u.tcp_rx_d.rto,  -1
 	/* r3 = rto */
-	add		r3, d.rto, r0
-	seq		c2, d.pending, ICSK_TIME_EARLY_RETRANS
-	seq		c3, d.pending, ICSK_TIME_LOSS_PROBE
+	add		r3, d.u.tcp_rx_d.rto, r0
+	seq		c2, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
+	seq		c3, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
 	bcf		[!c2 & !c3], early_retx_or_tlp
 	nop
 	/* rto_time_stamp = tp->rx.retx_head_ts + rto */
-	add		r1, d.retx_head_ts, r3
+	add		r1, d.u.tcp_rx_d.retx_head_ts, r3
 	/* delta = (s32) (rto_time_stamp - tcp_time_stamp) */
 	sub		r2, r1, r6
 	/* if (delta > 0) */
@@ -526,11 +657,11 @@ early_retx_or_tlp:
 	addi		r4, r0, TCP_RTO_MAX
 	slt		c1, r3, r4
 	add.c1		r5, r3, r6
-	tblwr.c1	d.rto_deadline, r5
+	tblwr.c1	d.u.tcp_rx_d.rto_deadline, r5
 	add.!c1         r5, r4, r6
-	tblwr.!c1	d.rto_deadline, r5
-	phvwr		p.rx2tx_pending_ft_reset,1
-	tblwr.c1	d.pending_txdma, 1
+	tblwr.!c1	d.u.tcp_rx_d.rto_deadline, r5
+	phvwr		p.rx2tx_extra_pending_ft_reset,1
+	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
 tcp_rearm_rto_done:	
 	jr.c4		r7
 	add		r7, r0, r0
@@ -544,9 +675,9 @@ tcp_replace_ts_recent_start:
 tcp_enter_quickack_mode_start:
 	jal		r7, tcp_incr_quickack
 	nop
-	tblwr 		d.pingpong, r0
-	phvwr		p.common_phv_pingpong, d.pingpong
-	tblwr		d.ato, TCP_ATO_MIN
+	tblwr 		d.u.tcp_rx_d.pingpong, r0
+	phvwr		p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
+	tblwr		d.u.tcp_rx_d.ato, TCP_ATO_MIN
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
@@ -557,7 +688,7 @@ invalid_ack:
 no_queue:
 flow_rx_process_done:
 	// check and trigger pending tx processing
-	sne		c4, d.pending_txdma, r0
+	sne		c4, d.u.tcp_rx_d.pending_txdma, r0
 	bcf		[!c4], table_read_setup_next
 	nop
 	/* Address will be in r4 */
@@ -565,30 +696,39 @@ flow_rx_process_done:
 	/* data will be in r3 */
 	CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, TCP_SCHED_RING_PENDING, r0)
 table_read_setup_next:
-	phvwr		p.rx2tx_snd_wl1, d.snd_wl1
+	phvwr		p.rx2tx_snd_wl1, d.u.tcp_rx_d.snd_wl1
 	bcf		[c7], table_read_SACK
 	nop
 table_read_RTT:
-	sne		c1, d.write_serq, r0
+	sne		c1, d.u.tcp_rx_d.write_serq, r0
 	bcf		[c1], table_read_RNMDR_ALLOC_IDX
 	nop
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)
 table_read_RNMDR_ALLOC_IDX:
-	// TODO: CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
-	                    // TODO: RNMDR_ALLOC_IDX, TABLE_SIZE_16_BITS)
+	addi 		r3, r0, RNMDR_ALLOC_IDX
+	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
+	                    r3, TABLE_SIZE_16_BITS)
 table_read_RNMPR_ALLOC_IDX:
-	// TODO: CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
-	                    // TODO: RNMPR_ALLOC_IDX, TABLE_SIZE_16_BITS)
+	addi 		r3, r0, RNMPR_ALLOC_IDX
+	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
+	                    r3, TABLE_SIZE_16_BITS)
 table_read_SERQ_PRODUCER_IDX:
-	// TODO: CAPRI_NEXT_IDX3_READ(TABLE_LOCK_DIS, tcp_rx_read_serq_stage2_start,
-	                    // TODO: SERQ_PRODUCER_IDX, TABLE_SIZE_16_BITS)
+	phvwri		p.common_phv_write_serq, 1
+	//phvwr		p.to_s6_serq_base, d.u.tcp_rx_d.serq_base TODO
+        phvwri          p.to_s6_serq_base, 0xa6ec7800 // TODO
+	phvwri		p.to_s6_serq_pidx, 0
+	
+#if 0
+	CAPRI_NEXT_IDX3_READ(TABLE_LOCK_DIS, tcp_rx_read_serq_stage2_start,
+	                    d.u.tcp_rx_d.serq_base, TABLE_SIZE_16_BITS)
+#endif
 	nop.e
 	nop
 table_read_SACK:	
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_sack_stage2_start,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_SACK_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

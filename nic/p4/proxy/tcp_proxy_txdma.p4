@@ -62,30 +62,31 @@
 /******************************************************************************
  * D-vectors
  *****************************************************************************/
+// d for stage 0
+header_type rx2tx_d_t {
+    fields {
+        CAPRI_QSTATE_HEADER_COMMON
+
+	CAPRI_QSTATE_HEADER_RING(0)
+
+	CAPRI_QSTATE_HEADER_RING(1)
+
+	CAPRI_QSTATE_HEADER_RING(2)
+
+	CAPRI_QSTATE_HEADER_RING(3)
+
+	CAPRI_QSTATE_HEADER_RING(4)
+
+	CAPRI_QSTATE_HEADER_RING(5)
+
+        RX2TX_SHARED_STATE
+    }
+}
+
 // d for stage 1
 header_type rx2tx_extra_d_t {
     fields {
-        prior_ssthresh         : 16;
-        high_seq                : 32;
-        shared_pad3             : 32;
-        sacked_out              : 16;
-        lost_out                : 8;
-        retrans_out             : 8;
-        fackets_out             : 16;
-        shared_pad1             : 16;
-        ooo_datalen             : 16;
-        quick                   : 4;
-        pingpong                : 1;
-        backoff                 : 4;
-        dsack                   : 1;
-        num_sacks               : 8;
-        reordering              : 32;
-        undo_marker             : 32;
-        undo_retrans            : 32;
-        shared_pad2             : 32;
-        snd_ssthresh            : 16;
-        loss_cwnd               : 16;
-        ecn_flags               : 8;
+        RX2TX_SHARED_EXTRA_STATE
     }
 }
 
@@ -184,15 +185,7 @@ metadata common_global_phv_t common_global_scratch;
  * Stage 0 table 0 action
  */
 action read_rx2tx(pc, snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, write_seq,
-                    tso_seq, snd_cwnd, snd_wscale, rcv_mss_shft,
-                    rcv_mss, rto, ca_state, pending_challenge_ack_send,
-                    pending_ack_send, pending_sync_mss, pending_tso_keepalive,
-                    pending_tso_pmtu_probe, pending_tso_data,
-                    pending_tso_probe_data, pending_tso_probe,
-                    pending_ooo_se_recv, pending_tso_retx, pending_ft_clear,
-                    pending_ft_reset, pending_rexmit, pending, ack_blocked,
-                    ack_pending, ato_deadline, rto_deadline, retx_head_ts,
-                    srtt_us, rcv_wnd) {
+                    tso_seq, snd_cwnd) {
 
     // k + i for stage 0
 
@@ -209,53 +202,55 @@ action read_rx2tx(pc, snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, write_seq,
     modify_field(rx2tx_d.write_seq, write_seq);
     modify_field(rx2tx_d.tso_seq, tso_seq);
     modify_field(rx2tx_d.snd_cwnd, snd_cwnd);
-    modify_field(rx2tx_d.snd_wscale, snd_wscale);
-    modify_field(rx2tx_d.rcv_mss_shft, rcv_mss_shft);
-    modify_field(rx2tx_d.rcv_mss, rcv_mss);
-    modify_field(rx2tx_d.rto, rto);
-    modify_field(rx2tx_d.ca_state, ca_state);
-    modify_field(rx2tx_d.pending_challenge_ack_send, pending_challenge_ack_send);
-    modify_field(rx2tx_d.pending_ack_send, pending_ack_send);
-    modify_field(rx2tx_d.pending_sync_mss, pending_sync_mss);
-    modify_field(rx2tx_d.pending_tso_keepalive, pending_tso_keepalive);
-    modify_field(rx2tx_d.pending_tso_pmtu_probe, pending_tso_pmtu_probe);
-    modify_field(rx2tx_d.pending_tso_data, pending_tso_data);
-    modify_field(rx2tx_d.pending_tso_probe_data, pending_tso_probe_data);
-    modify_field(rx2tx_d.pending_ooo_se_recv, pending_ooo_se_recv);
-    modify_field(rx2tx_d.pending_tso_retx, pending_tso_retx);
-    modify_field(rx2tx_d.pending_ft_clear, pending_ft_clear);
-    modify_field(rx2tx_d.pending_ft_reset, pending_ft_reset);
-    modify_field(rx2tx_d.pending_rexmit, pending_rexmit);
-    modify_field(rx2tx_d.pending, pending);
-    modify_field(rx2tx_d.ack_blocked, ack_blocked);
-    modify_field(rx2tx_d.ack_pending, ack_pending);
-    modify_field(rx2tx_d.ato_deadline, ato_deadline);
-    modify_field(rx2tx_d.rto_deadline, rto_deadline);
-    modify_field(rx2tx_d.retx_head_ts, retx_head_ts);
-    modify_field(rx2tx_d.srtt_us, srtt_us);
-    modify_field(rx2tx_d.rcv_wnd, rcv_wnd);
 }
 
 /*
  * Stage 1 table 0 action
  */
-action read_rx2tx_extra(prior_ssthresh, high_seq, shared_pad3, sacked_out,
-        lost_out, retrans_out, fackets_out, shared_pad1, ooo_datalen, quick,
-        pingpong, backoff, dsack, num_sacks, reordering, undo_marker,
-        undo_retrans, shared_pad2, snd_ssthresh, loss_cwnd, ecn_flags) {
+action read_rx2tx_extra(pending_challenge_ack_send, pending_ack_send, pending_sync_mss, pending_tso_keepalive,
+       pending_tso_pmtu_probe, pending_tso_data, pending_tso_probe_data, pending_tso_probe,
+       pending_ooo_se_recv, pending_tso_retx, pending_ft_clear, pending_ft_reset, pending_xmit, pending,
+       ack_blocked, ack_pending, snd_wscale, rcv_mss_shft, rcv_mss, rto, ca_state, ato_deadline, rto_deadline,
+       retx_head_ts, srtt_us, rcv_wnd, prior_ssthresh, high_seq,  sacked_out,
+       lost_out, retrans_out, fackets_out, ooo_datalen, quick,
+       pingpong, backoff, dsack, num_sacks, reordering, undo_marker,
+       undo_retrans, snd_ssthresh, loss_cwnd, ecn_flags) {
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // d for stage 0
+    modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
+    modify_field(rx2tx_extra_d.pending_ack_send, pending_ack_send);
+    modify_field(rx2tx_extra_d.pending_sync_mss, pending_sync_mss);
+    modify_field(rx2tx_extra_d.pending_tso_keepalive, pending_tso_keepalive);
+    modify_field(rx2tx_extra_d.pending_tso_pmtu_probe, pending_tso_pmtu_probe);
+    modify_field(rx2tx_extra_d.pending_tso_data, pending_tso_data);
+    modify_field(rx2tx_extra_d.pending_tso_probe_data, pending_tso_probe_data);
+    modify_field(rx2tx_extra_d.pending_tso_probe, pending_tso_probe);
+    modify_field(rx2tx_extra_d.pending_ooo_se_recv, pending_ooo_se_recv);
+    modify_field(rx2tx_extra_d.pending_tso_retx, pending_tso_retx);
+    modify_field(rx2tx_extra_d.pending_ft_clear, pending_ft_clear);
+    modify_field(rx2tx_extra_d.pending_ft_reset, pending_ft_reset);
+    modify_field(rx2tx_extra_d.pending, pending);
+    modify_field(rx2tx_extra_d.ack_blocked, ack_blocked);
+    modify_field(rx2tx_extra_d.ack_pending, ack_pending);
+    modify_field(rx2tx_extra_d.snd_wscale, snd_wscale);
+    modify_field(rx2tx_extra_d.rcv_mss_shft, rcv_mss_shft);
+    modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
+    modify_field(rx2tx_extra_d.rto, rto);
+    modify_field(rx2tx_extra_d.ca_state, ca_state);
+    modify_field(rx2tx_extra_d.ato_deadline, ato_deadline);
+    modify_field(rx2tx_extra_d.rto_deadline, rto_deadline);
+    modify_field(rx2tx_extra_d.retx_head_ts, retx_head_ts);
+    modify_field(rx2tx_extra_d.srtt_us, srtt_us);
+    modify_field(rx2tx_extra_d.rcv_wnd, rcv_wnd);
     modify_field(rx2tx_extra_d.prior_ssthresh, prior_ssthresh);
     modify_field(rx2tx_extra_d.high_seq, high_seq);
-    modify_field(rx2tx_extra_d.shared_pad3, shared_pad3);
     modify_field(rx2tx_extra_d.sacked_out, sacked_out);
     modify_field(rx2tx_extra_d.lost_out, lost_out);
     modify_field(rx2tx_extra_d.retrans_out, retrans_out);
     modify_field(rx2tx_extra_d.fackets_out, fackets_out);
-    modify_field(rx2tx_extra_d.shared_pad1, shared_pad1);
     modify_field(rx2tx_extra_d.ooo_datalen, ooo_datalen);
     modify_field(rx2tx_extra_d.quick, quick);
     modify_field(rx2tx_extra_d.pingpong, pingpong);
@@ -265,7 +260,6 @@ action read_rx2tx_extra(prior_ssthresh, high_seq, shared_pad3, sacked_out,
     modify_field(rx2tx_extra_d.reordering, reordering);
     modify_field(rx2tx_extra_d.undo_marker, undo_marker);
     modify_field(rx2tx_extra_d.undo_retrans, undo_retrans);
-    modify_field(rx2tx_extra_d.shared_pad2, shared_pad2);
     modify_field(rx2tx_extra_d.snd_ssthresh, snd_ssthresh);
     modify_field(rx2tx_extra_d.loss_cwnd, loss_cwnd);
     modify_field(rx2tx_extra_d.ecn_flags, ecn_flags);

@@ -104,6 +104,7 @@ struct tcp_rx_tcp_fra_tcp_fra_d d;
         .param          tcp_rx_cc_stage4_start
 	
 tcp_rx_fra_stage3_start:
+        phvwri		p.p4_intr_global_tm_oport, 8
 
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
@@ -213,7 +214,7 @@ tcp_check_sack_reneging:
 	add.c1		r1, r2, r0
 	/* r1 = max(delay, TCP_RTO_MAX) */
 	add		r2, d.curr_ts, r1
-	phvwr		p.rx2tx_rto_deadline, r2
+	phvwr		p.rx2tx_extra_rto_deadline, r2
 	bcf		[c1], flow_fra_process_done
 	nop
 tcp_check_sack_reneging_done:	
@@ -313,7 +314,7 @@ tcp_may_undo:
 	          before(tp->rx_opt.rcv_tsecr, when) ;
 	}
 	*/
-	slt		c4, d.retx_head_ts, k.common_phv_rcv_tsecr
+	//slt		c4, d.retx_head_ts, k.common_phv_rcv_tsecr
 	setcf		c5, [c2 & c3 & c4]
 	setcf		c5, [c1 | c5]
 	bcf		[c5], tcp_undo_cwnd_reduction
@@ -376,7 +377,7 @@ flow_fra_process_done:
 	
 table_read_CC:
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
-                    tcp_rx_cc_stage4_start, TCP_TCB_TABLE_BASE,
+                    tcp_rx_cc_stage4_start, k.common_phv_qstate_addr,
                     TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_CC_OFFSET,
                     TABLE_SIZE_512_BITS)
 	nop.e

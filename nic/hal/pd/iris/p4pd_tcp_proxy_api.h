@@ -57,15 +57,13 @@ typedef struct __attribute__((__packed__)) __tcp_rx_read_tx2rx_actiondata_d {
 bool
 p4plus_hbm_write(uint64_t addr_offset, uint8_t* data, uint32_t size)
 {
-    uint64_t hbm_mem_base_addr = 0x80000000;
-    return write_mem(hbm_mem_base_addr + addr_offset, data, size);            
+    return write_mem(addr_offset, data, size);            
 }
 
 bool
 p4plus_hbm_read(uint64_t addr_offset, uint8_t* data, uint32_t size)
 {
-    uint64_t hbm_mem_base_addr = 0x80000000;
-    return read_mem(hbm_mem_base_addr + addr_offset, data, size);            
+    return read_mem(addr_offset, data, size);            
 }
 
 #define P4PD_HBM_TCP_CB_START_ADDR                   0xbbbb

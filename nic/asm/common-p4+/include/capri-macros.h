@@ -23,7 +23,15 @@
         phvwri	        p.table_size, 8                                 ;
 
 #define CAPRI_GET_TABLE_ADDR(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
-        addi		r1, r0, _table_base;					\
+        addi  		r1, r0, _table_base;					\
+        add 		r2, r0, _fid;						\
+        sll		r2, r2, _table_entry_size_shft;				\
+        add		r1, r1, r2;						\
+        addi		r2, r0, _table_state_offset;				\
+        add		r1, r1, r2;
+
+#define CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
+        add   		r1, r0, _table_base;					\
         add 		r2, r0, _fid;						\
         sll		r2, r2, _table_entry_size_shft;				\
         add		r1, r1, r2;						\
@@ -31,36 +39,45 @@
         add		r1, r1, r2;
 
 #define CAPRI_NEXT_TABLE0_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
-        phvwri        p.common_te0_phv_table_lock_en, 1; \
-        phvwri	p.common_te0_phv_table_raw_table_size, _table_read_size; \
-        phvwri	p.common_te0_phv_table_pc, _stage_entry; \
-        CAPRI_GET_TABLE_ADDR(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
-        phvwr		p.common_te0_phv_table_addr, r1; \
-        phvwri	p.common_te0_phv_table_addr[63], 1;
+        phvwri  p.common_te0_phv_table_lock_en, 1; \
+        phvwri  p.common_te0_phv_table_raw_table_size, _table_read_size; \
+        addi    r2, r0, _stage_entry; \
+        srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
+        phvwr   p.common_te0_phv_table_pc, r1; \
+        CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
+        phvwr   p.common_te0_phv_table_addr, r1; \
+        phvwri  p.tcp_app_header_table0_valid, 1;
+
 
 #define CAPRI_NEXT_TABLE1_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
-        phvwri        p.common_te1_phv_table_lock_en, 1; \
-        phvwri	p.common_te1_phv_table_raw_table_size, _table_read_size; \
-        phvwri	p.common_te1_phv_table_pc, _stage_entry; \
-        CAPRI_GET_TABLE_ADDR(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
-        phvwr		p.common_te1_phv_table_addr, r1; \
-        phvwri	p.common_te1_phv_table_addr[63], 1;
+        phvwri  p.common_te1_phv_table_lock_en, 1; \
+        phvwri  p.common_te1_phv_table_raw_table_size, _table_read_size; \
+        addi    r2, r0, _stage_entry; \
+        srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
+        phvwr   p.common_te1_phv_table_pc, r1; \
+        CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
+        phvwr   p.common_te1_phv_table_addr, r1; \
+        phvwri  p.tcp_app_header_table1_valid, 1;
 
 #define CAPRI_NEXT_TABLE2_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
-        phvwri        p.common_te2_phv_table_lock_en, 1; \
-        phvwri	p.common_te2_phv_table_raw_table_size, _table_read_size; \
-        phvwri	p.common_te2_phv_table_pc, _stage_entry; \
-        CAPRI_GET_TABLE_ADDR(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
-        phvwr		p.common_te2_phv_table_addr, r1; \
-        phvwri	p.common_te2_phv_table_addr[63], 1;
+        phvwri  p.common_te2_phv_table_lock_en, 1; \
+        phvwri  p.common_te2_phv_table_raw_table_size, _table_read_size; \
+        addi    r2, r0, _stage_entry; \
+        srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
+        phvwr   p.common_te2_phv_table_pc, r1; \
+        CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
+        phvwr   p.common_te2_phv_table_addr, r1; \
+        phvwri  p.tcp_app_header_table2_valid, 1;
 
 #define CAPRI_NEXT_TABLE3_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
-        phvwri        p.common_te3_phv_table3_lock_en, 1; \
-        phvwri	p.common_te3_phv_table_raw_table_size, _table_read_size; \
-        phvwri	p.common_te3_phv_table_pc, _stage_entry; \
-        CAPRI_GET_TABLE_ADDR(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
-        phvwr		p.common_te3_phv_table_addr, r1; \
-        phvwri	p.common_te3_phv_table_addr[63], 1;
+        phvwri  p.common_te3_phv_table_lock_en, 1; \
+        phvwri  p.common_te3_phv_table_raw_table_size, _table_read_size; \
+        addi    r2, r0, _stage_entry; \
+        srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
+        phvwr   p.common_te3_phv_table_pc, r1; \
+        CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
+        phvwr   p.common_te3_phv_table_addr, r1; \
+        phvwri  p.tcp_app_header_table3_valid, 1;
 
 #define CAPRI_NEXT_IDX0_READ(_lock_en, _stage_entry, _table_base, _table_read_size) \
         CAPRI_NEXT_TABLE0_READ(0, _lock_en, _stage_entry, _table_base, 0, 0, _table_read_size) \
@@ -141,12 +158,15 @@
 
 #define CAPRI_DMA_COMMAND_SIZE            128
 
-#define CAPRI_DMA_COMMAND_MEM_TO_PKT      0
-#define CAPRI_DMA_COMMAND_PHV_TO_PKT      1
-#define CAPRI_DMA_COMMAND_PHV_TO_MEM      2
-#define CAPRI_DMA_COMMAND_PKT_TO_MEM      3
-#define CAPRI_DMA_COMMAND_SKIP            4
-#define CAPRI_DMA_COMMAND_MEM_TO_MEM      5
+#define CAPRI_DMA_COMMAND_MEM_TO_PKT      1
+#define CAPRI_DMA_COMMAND_PHV_TO_PKT      2
+#define CAPRI_DMA_COMMAND_PHV_TO_MEM      3
+#define CAPRI_DMA_COMMAND_PKT_TO_MEM      4
+#define CAPRI_DMA_COMMAND_SKIP            5
+#define CAPRI_DMA_COMMAND_MEM_TO_MEM      6
+#define CAPRI_DMA_COMMAND_NOP             7
+
+#define CAPRI_MPU_PC_SHIFT                6
 
 #define TIMER_START_ARRAY_BASE         0xab000000
 #define TIMER_START_ARRAY_LIF_SHIFT    12
