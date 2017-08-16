@@ -60,7 +60,7 @@ class TestCase(objects.FrameworkObject):
         self.Clone(self.template)
         self.LockAttributes()
         
-        self.ID(tcid)
+        self.GID(tcid)
         self.__init_config(flow)
 
         self.packets        = objects.ObjectDatabase(logger = self)
@@ -115,7 +115,14 @@ class TestCase(objects.FrameworkObject):
         for spec_pkt in spec_section.packets:
             if spec_pkt.packet.object == None: continue
             tc_pkt = TestCaseTrigExpPacketObject()
-            tc_pkt.packet = spec_pkt.packet.object.Get(self)
+            # Resolve the packet.
+            if objects.IsCallback(spec_pkt.packet.object):
+                tc_pkt.packet = spec_pkt.packet.object.call(self)
+                if tc_pkt.packet == None: return
+            else:
+                tc_pkt.packet = spec_pkt.packet.object.Get(self)
+
+            # Resolve the ports
             if objects.IsReference(spec_pkt.packet.port):
                 tc_pkt.ports = spec_pkt.packet.port.Get(self)
             else:

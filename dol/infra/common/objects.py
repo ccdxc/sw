@@ -51,7 +51,11 @@ class FrameworkObject(object):
 
     def Clone(self, template):
         #assert(isinstance(template, FrameworkTemplateObject))
+        old_gid = self.__gid
         self.__dict__.update(copy.deepcopy(template.__dict__))
+
+        # Restore the original GID.
+        self.__gid == old_gid
         self.template = template
         # self.LockAttributes()
         return
@@ -451,9 +455,9 @@ class CallbackField(FrameworkFieldObject):
             self.pkg += ".%s" % s
         return
 
-    def call(self, arg1=None, arg2=None):
+    def call(self, *args):
         cb = loader.GetModuleAttr(self.pkg, self.module, self.callback)
-        return cb(arg1, arg2)
+        return cb(*args)
 
 
 class PercentField(FrameworkFieldObject):

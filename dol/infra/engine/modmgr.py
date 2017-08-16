@@ -26,6 +26,22 @@ class ModuleStats:
         self.ignored    = 0
         self.total      = 0
 
+class ModuleIterator:
+    def __init__(self, elems):
+        self.elems  = elems
+        self.idx    = 0
+        return
+
+    def Get(self):
+        return self.elems[self.idx]
+
+    def Next(self):
+        self.idx += 1
+        return
+
+    def End(self):
+        return self.idx == len(self.elems)
+
 class Module:
     def __init__(self, parsedata):
         self.parsedata = parsedata
@@ -36,12 +52,14 @@ class Module:
         self.spec       = parsedata.spec
         self.path       = self.package.replace(".", "/")
         self.ignore     = parsedata.ignore
+        self.iterator   = ModuleIterator(parsedata.iterate)
         self.args       = None 
         if 'args' in parsedata.__dict__:
             self.args = parsedata.args
-        self.id             = ModuleIdAllocator.get()
-        self.module_hdl         = None
-        self.infra_data     = None
+        self.id         = ModuleIdAllocator.get()
+        self.module_hdl = None
+        self.infra_data = None
+        self.CompletedTestCases = []
 
         self.stats = ModuleStats()
         return
@@ -145,6 +163,8 @@ class Module:
     def __execute(self):
         for testcase in self.infra_data.TestCases:
             self.__execute_testcase(testcase)
+        self.CompletedTestCases.extend(self.infra_data.TestCases)
+        self.infra_data.TestCases = []
         return
 
     def __teardown_callback(self):
@@ -158,14 +178,17 @@ class Module:
         self.logger = logging.Logger(level=logging.levels.INFO,
                                      name="MOD:%s" % self.name)
         self.infra_data.Logger = self.logger
-
-        self.logger.info("========== Starting Test Module =============")
         self.__load()
         self.__load_spec()
-        self.__setup_callback()
-        self.__select_config()
-        self.__generate()
-        self.__execute()
+        while self.iterator.End() == False:
+            self.logger.info("========== Starting Test Module =============")
+            self.__setup_callback()
+            self.__select_config()
+            self.__generate()
+            self.__execute()
+            self.iterator.Next()
+
+        # Teardown must be called only once after iterating all elements.
         self.__teardown_callback()
         self.__unload()
         return
@@ -204,6 +227,9 @@ class ModuleDatabase:
 
         if 'ignore' not in pmod.__dict__:
             pmod.ignore = False
+
+        if 'iterate' not in pmod.__dict__:
+            pmod.iterate = [ None ]
 
         if GlobalOptions.test == None or\
            GlobalOptions.test == pmod.name:

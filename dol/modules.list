@@ -62,11 +62,16 @@ modules:
         args    : None
     - module:
         name    : NORMALIZATION
-        enable  : False
+        enable  : True
         package : test.normalization
-        module  : None
+        module  : normalization
         spec    : normalization.testspec
         ignore  : True
+        iterate :
+            - SEC_PROF_IP_RSVD_FLAG_ALLOW
+            - SEC_PROF_IP_RSVD_FLAG_DROP
+            - SEC_PROF_IP_RSVD_FLAG_EDIT
+
     - module:
         name    : L3UC_IPV4_UDP
         enable  : True
@@ -93,4 +98,3 @@ modules:
         module  : None
         spec    : firstpacket.testspec
         ignore  : True
-

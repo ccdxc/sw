@@ -18,7 +18,7 @@ segments:
 # - All the segments will be enabled on these Enics              
 nfveps: 4
 
-security_profile: ref://store/objects/id=SEC_PROF_DEFAULT
+security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 
 sessions:
     unidest:

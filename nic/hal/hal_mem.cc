@@ -207,11 +207,6 @@ hal_state::init(void)
                                          hal::session_compare_handle_key_func);
     HAL_ASSERT_RETURN((if_hal_handle_ht_ != NULL), false);
 
-    nwsec_profile_slab_ = slab::factory("SecProfile", HAL_SLAB_SECURITY_PROFILE,
-                                        sizeof(hal::nwsec_profile_t), 4, false,
-                                        false, true, true);
-    HAL_ASSERT_RETURN((nwsec_profile_slab_ != NULL), false);
-
     // initialize TLS CB related data structures
     tlscb_slab_ = slab::factory("tlscb", HAL_SLAB_TLSCB,
                                 sizeof(hal::tlscb_t), 16,

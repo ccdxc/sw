@@ -168,9 +168,11 @@ def ConfigureLifsForObjects(objlist):
     ConfigureLifs(lif_objlist)
     return
 
-def ConfigureSecurityProfiles(objlist):
+def ConfigureSecurityProfiles(objlist, update = False):
     if IsHalDisabled(): return
     stub = nwsec_pb2_grpc.NwSecurityStub(HalChannel)
+    api = stub.SecurityProfileCreate
+    if update: api = stub.SecurityProfileUpdate
     __config(objlist, nwsec_pb2.SecurityProfileRequestMsg,
              stub.SecurityProfileCreate)
     return

@@ -16,8 +16,8 @@ entries:
         initiator: const/40000
         span     : rspan_vxlan
 
-    - entry:
-        responder: const/0
-        initiator: const/4791
-        span     : rspan
+    #- entry:
+    #    responder: const/0
+    #    initiator: const/4791
+    #    span     : rspan
 

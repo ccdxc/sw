@@ -10,8 +10,9 @@ import infra.common.objects as objects
 import infra.common.defs as defs
 from infra.common.glopts import GlobalOptions
 
-from infra.common.logging import logger
-from infra.engine.trigger import TrigExpEngine
+from infra.common.logging   import logger
+from infra.engine.trigger   import TrigExpEngine
+from config.store           import Store
 
 global modDB
 
@@ -30,7 +31,7 @@ def CreateInfraData():
     obj = objects.FrameworkObject()
     obj.Logger          = None
     obj.Factory         = factory
-    obj.ConfigStore     = None
+    obj.ConfigStore     = Store
     obj.Flows           = None
     obj.TestCases       = []
     obj.TrigExpEngine   = TrigExpEngine
@@ -43,8 +44,8 @@ def ExecuteAllModules():
     while module != None:
         infra_data = CreateInfraData()
         status = module.main(infra_data)
-        if len(infra_data.TestCases):
-            TestCaseDB.SetAll(infra_data.TestCases)
+        if len(module.CompletedTestCases):
+            TestCaseDB.SetAll(module.CompletedTestCases)
         module = modDB.getnext()
  
 def PrintSummaryAndExit(report):
