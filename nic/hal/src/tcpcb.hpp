@@ -22,7 +22,10 @@ typedef struct tcpcb_s {
     uint32_t              rcv_nxt;
     uint32_t              snd_nxt;
     uint32_t              snd_una;
-
+    uint32_t              rcv_tsval;
+    uint32_t              ts_recent;
+    uint64_t              serq_base;    
+    
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

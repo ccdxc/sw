@@ -30,6 +30,7 @@ message TcpCbSpec {
   uint32                rcv_nxt                    = 2;
   uint32                snd_nxt                    = 3;
   uint32                snd_una                    = 4;
+  fixed64               serq_base                  = 7;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

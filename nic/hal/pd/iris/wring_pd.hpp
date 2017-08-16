@@ -95,6 +95,11 @@ find_wring_by_hwid (wring_hw_id_t hwid)
 
 hal_ret_t wring_pd_init_global_rings(void);
 
+// Get the base address for the ring
+hal_ret_t wring_pd_get_base_addr(types::WRingType type,
+                                 uint32_t wring_id,
+                                 wring_hw_id_t* wring_base);
+
 extern void *wring_pd_get_hw_key_func(void *entry);
 extern uint32_t wring_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool wring_pd_compare_hw_key_func(void *key1, void *key2);

@@ -133,11 +133,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     // validate the request message
     ret = validate_tcpcb_create(spec, rsp);
-    if (ret != HAL_RET_OK) {
-        // api_status already set, just return
-        HAL_TRACE_ERR("PD TCP CB validate failure, err : {}", ret);
-        return ret;
-    }
+    
     // instantiate TCP CB
     tcpcb = tcpcb_alloc_init();
     if (tcpcb == NULL) {
@@ -187,21 +183,9 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_args_t    pd_tcpcb_args;
 
-    if (!spec.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_TCP_CB_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
     auto kh = spec.key_or_handle();
 
-    if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbId) {
-        tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
-    } else if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbHandle) {
-        tcpcb = find_tcpcb_by_handle(kh.tcpcb_handle());
-    } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
+    tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
@@ -234,26 +218,9 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_args_t    pd_tcpcb_args;
 
-    if (!req.has_meta()) {
-        rsp->set_api_status(types::API_STATUS_TCP_CB_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_TCP_CB_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
     auto kh = req.key_or_handle();
 
-    if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbId) {
-        tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
-    } else if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbHandle) {
-        tcpcb = find_tcpcb_by_handle(kh.tcpcb_handle());
-    } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
+    tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
@@ -266,14 +233,17 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     
     ret = pd::pd_tcpcb_get(&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD TCPCB: Failed to get, err: ", ret);
+        HAL_TRACE_ERR("PD TCPCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
+    HAL_TRACE_DEBUG("cb_id: 0x{0:x}, rcv_nxt: 0x{0:x}", rtcpcb.cb_id, rtcpcb.rcv_nxt);
+
     // fill config spec of this TCP CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
+    rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -293,21 +263,8 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_args_t    pd_tcpcb_args;
 
-    if (!req.has_key_or_handle()) {
-        rsp->add_api_status(types::API_STATUS_TCP_CB_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
     auto kh = req.key_or_handle();
-
-    if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbId) {
-        tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
-    } else if (kh.key_or_handle_case() == tcpcb::TcpCbKeyHandle::kTcpcbHandle) {
-        tcpcb = find_tcpcb_by_handle(kh.tcpcb_handle());
-    } else {
-        rsp->add_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
+    tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         rsp->add_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
@@ -318,7 +275,7 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
     
     ret = pd::pd_tcpcb_delete(&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD TCPCB: delete Failed, err: ", ret);
+        HAL_TRACE_ERR("PD TCPCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }

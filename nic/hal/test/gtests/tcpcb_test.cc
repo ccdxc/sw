@@ -8,6 +8,8 @@
 using tcpcb::TcpCbSpec;
 using tcpcb::TcpCbResponse;
 using tcpcb::TcpCbKeyHandle;
+using tcpcb::TcpCbGetRequest;
+using tcpcb::TcpCbGetResponse;
 
 void
 hal_initialize()
@@ -82,17 +84,30 @@ TEST_F(tcpcb_test, test1)
     hal_ret_t            ret;
     TcpCbSpec spec;
     TcpCbResponse rsp;
+    TcpCbGetRequest getReq;
+    TcpCbGetResponse getRsp;
 
-    spec.mutable_key_or_handle()->set_tcpcb_id(100);
+    spec.mutable_key_or_handle()->set_tcpcb_id(0);
+    spec.set_rcv_nxt(100);
 
     ret = hal::tcpcb_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    printf("TCP CB create done\n");
+
+    getReq.mutable_key_or_handle()->set_tcpcb_id(0);
+    ret = hal::tcpcb_get(getReq, &getRsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    printf("cb_id: %d\n", getRsp.spec().key_or_handle().tcpcb_id());
+    printf("rcv_nxt: %d\n", getRsp.spec().rcv_nxt());
+    ASSERT_TRUE(100 == getRsp.spec().rcv_nxt());
+
     printf("Done with test1\n");
 }
 
 // ----------------------------------------------------------------------------
 // Creating muliple TCPCBs
 // ----------------------------------------------------------------------------
+/*
 TEST_F(tcpcb_test, test2) 
 {
     hal_ret_t           ret;
@@ -107,7 +122,7 @@ TEST_F(tcpcb_test, test2)
     }
 
 }
-
+*/
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
