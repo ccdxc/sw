@@ -42,13 +42,28 @@ class TcpCbObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         #req_spec.meta.tcpcb_id             = self.id
         req_spec.key_or_handle.tcpcb_id    = self.id
-        req_spec.rcv_nxt                   = self.rcv_nxt
+        if req_spec.__class__.__name__ != 'TcpCbGetRequest':
+           req_spec.rcv_nxt                   = self.rcv_nxt
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("  - TcpCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        if resp_spec.__class__.__name__ != 'TcpCbResponse':
+            self.rcv_nxt = resp_spec.spec.rcv_nxt
+        return
+
+    def GetObjValPd(self):
+        lst = []
+        lst.append(self)
+        halapi.GetTcpCbs(lst)
+        return
+
+    def SetObjValPd(self):
+        lst = []
+        lst.append(self)
+        halapi.UpdateTcpCbs(lst)
         return
 
     def IsFilterMatch(self, spec):
@@ -89,7 +104,6 @@ class TcpCbObjectHelper:
     def main(self):
         objlist = self.Generate()
         self.Configure(self.objlist)
-        #Store.objects.SetAll(objlist)
         return objlist
 
 TcpCbHelper = TcpCbObjectHelper()
