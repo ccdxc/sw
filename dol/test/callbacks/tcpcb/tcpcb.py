@@ -7,13 +7,13 @@ from infra.common.logging       import logger
 import infra.common.defs as defs
 
 def GetSMac (tc, pkt):
-    return "00:22:22:22:22:22"
+    return "00:EE:FF:00:00:13"
 
 def GetDMac (tc, pkt):
-    return "00:33:33:33:33:33"
+    return "00:EE:FF:00:00:09"
 
 def GetVlanId (tc, pkt):
-    return 2
+    return 6
 
 def GetSip (tc, pkt):
     return "64.2.0.4"
