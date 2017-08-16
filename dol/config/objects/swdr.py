@@ -42,10 +42,10 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.Addr3      = resp_spec.Address3
         self.Offset3    = resp_spec.Offset3
         self.Len3       = resp_spec.Length3
-        cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
+        #cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
+        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
+        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
+        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
         return
     def GetHandle(self):
         return self.DescAddr
@@ -56,7 +56,7 @@ class SwDscrAolObjectHelper:
     def Generate(self, ringname, swdreidx):
         return SwDscrAolObject(ringname, swdreidx)
     def Configure(self, swdre_list):
-        #halapi.GetDscrAolObjectState(swdre_list)
+        halapi.GetDscrAolObjectState(swdre_list)
         return
 
 '''
@@ -84,8 +84,7 @@ class SwPageObjectHelper:
     def Generate(self, ringname, swdreidx):
         return SwDscrPageObject(ringname, swdreidx)
     def Configure(self, swdre_list):
-        # TODO: integrate the HAL API
-        #halapi.GetDscrAolObjectState(swdre_list)
+        # Nothing to be done for now
         return
 
 HelperDB = {}
@@ -115,15 +114,17 @@ class SwDscrRingEntry(base.ConfigObjectBase):
         reqspec.index = self.idx
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
+        #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
         if (resp_spec.spec.type != req_spec.type):
             assert(0)
         if (resp_spec.index != req_spec.index):
             assert(0)
 
         self.handle = resp_spec.value
-        cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
+        #cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
         return
+    def GetHandle(self):
+        return self.handle
 
 
 class SwDscrRingObject(base.ConfigObjectBase):
