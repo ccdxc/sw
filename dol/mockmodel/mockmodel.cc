@@ -122,8 +122,6 @@ add_output_packet (buffer_hdr_t *buff)
     uint8_t port = buff->data[buff->size - 2];
     assert(port <= MAX_PORTS);
     buff->type = BUFF_TYPE_GET_NEXT_PKT;
-    //Real model is 0-based
-    buff->port -= 1;
     for (int i = 0; i < MAX_OUTPUT_PACKETS; i++) {
         if (gl_output[port][i] == NULL) {
             gl_output[port][i] = buff;
@@ -348,6 +346,8 @@ void doorbell(buffer_hdr_t_ *buf) {
         if (dest < MAX_PORTS) {
             /* Send the packet to the port */
             pkt_buff->port = pkt_buff->data[pkt_buff->size - 2];
+            // Real model is 0-based.
+            pkt_buff->port -= 1;
             add_output_packet(pkt_buff);
         } else if (dest - MAX_PORTS <= sizeof(gl_rings)) {
             /* Have to post a descriptor for this packet */
@@ -402,7 +402,7 @@ int main (int argc, char ** argv)
     int rc = zmq_bind(responder, zmqsockstr);
     assert (rc == 0);
 
-    printf("Mock Model initialized! Waiting for pkts/command....\n");
+    printf("Mock Model initialized! Waiting for pkts/command on %s\n", zmqsockstr);
     while (1) {
         buff = mock_model_alloc_buffer();
         assert(buff);
