@@ -36,16 +36,16 @@ type MiddlewareCmdV1Client func(ServiceCmdV1Client) ServiceCmdV1Client
 type EndpointsCmdV1Client struct {
 	Client CmdV1Client
 
-	AutoAddNodeEndpoint       endpoint.Endpoint
-	AutoUpdateNodeEndpoint    endpoint.Endpoint
-	AutoGetNodeEndpoint       endpoint.Endpoint
-	AutoDeleteNodeEndpoint    endpoint.Endpoint
-	AutoListNodeEndpoint      endpoint.Endpoint
 	AutoAddClusterEndpoint    endpoint.Endpoint
-	AutoUpdateClusterEndpoint endpoint.Endpoint
-	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoAddNodeEndpoint       endpoint.Endpoint
 	AutoDeleteClusterEndpoint endpoint.Endpoint
+	AutoDeleteNodeEndpoint    endpoint.Endpoint
+	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoGetNodeEndpoint       endpoint.Endpoint
 	AutoListClusterEndpoint   endpoint.Endpoint
+	AutoListNodeEndpoint      endpoint.Endpoint
+	AutoUpdateClusterEndpoint endpoint.Endpoint
+	AutoUpdateNodeEndpoint    endpoint.Endpoint
 }
 
 // EndpointsCmdV1RestClient is the REST client
@@ -54,18 +54,18 @@ type EndpointsCmdV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddNodeEndpoint       endpoint.Endpoint
-	AutoUpdateNodeEndpoint    endpoint.Endpoint
-	AutoGetNodeEndpoint       endpoint.Endpoint
-	AutoDeleteNodeEndpoint    endpoint.Endpoint
-	AutoListNodeEndpoint      endpoint.Endpoint
-	AutoWatchNodeEndpoint     endpoint.Endpoint
 	AutoAddClusterEndpoint    endpoint.Endpoint
-	AutoUpdateClusterEndpoint endpoint.Endpoint
-	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoAddNodeEndpoint       endpoint.Endpoint
 	AutoDeleteClusterEndpoint endpoint.Endpoint
+	AutoDeleteNodeEndpoint    endpoint.Endpoint
+	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoGetNodeEndpoint       endpoint.Endpoint
 	AutoListClusterEndpoint   endpoint.Endpoint
+	AutoListNodeEndpoint      endpoint.Endpoint
+	AutoUpdateClusterEndpoint endpoint.Endpoint
+	AutoUpdateNodeEndpoint    endpoint.Endpoint
 	AutoWatchClusterEndpoint  endpoint.Endpoint
+	AutoWatchNodeEndpoint     endpoint.Endpoint
 }
 
 // MiddlewareCmdV1Server adds middle ware to the server
@@ -73,89 +73,19 @@ type MiddlewareCmdV1Server func(ServiceCmdV1Server) ServiceCmdV1Server
 
 // EndpointsCmdV1Server is the server endpoints
 type EndpointsCmdV1Server struct {
-	AutoAddNodeEndpoint       endpoint.Endpoint
-	AutoUpdateNodeEndpoint    endpoint.Endpoint
-	AutoGetNodeEndpoint       endpoint.Endpoint
-	AutoDeleteNodeEndpoint    endpoint.Endpoint
-	AutoListNodeEndpoint      endpoint.Endpoint
 	AutoAddClusterEndpoint    endpoint.Endpoint
-	AutoUpdateClusterEndpoint endpoint.Endpoint
-	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoAddNodeEndpoint       endpoint.Endpoint
 	AutoDeleteClusterEndpoint endpoint.Endpoint
+	AutoDeleteNodeEndpoint    endpoint.Endpoint
+	AutoGetClusterEndpoint    endpoint.Endpoint
+	AutoGetNodeEndpoint       endpoint.Endpoint
 	AutoListClusterEndpoint   endpoint.Endpoint
+	AutoListNodeEndpoint      endpoint.Endpoint
+	AutoUpdateClusterEndpoint endpoint.Endpoint
+	AutoUpdateNodeEndpoint    endpoint.Endpoint
 
 	watchHandlerNode    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerCluster func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-}
-
-// AutoAddNode is endpoint for AutoAddNode
-func (e EndpointsCmdV1Client) AutoAddNode(ctx context.Context, in *Node) (*Node, error) {
-	resp, err := e.AutoAddNodeEndpoint(ctx, in)
-	if err != nil {
-		return &Node{}, err
-	}
-	return resp.(*Node), nil
-}
-
-type respCmdV1AutoAddNode struct {
-	V   Node
-	Err error
-}
-
-// AutoUpdateNode is endpoint for AutoUpdateNode
-func (e EndpointsCmdV1Client) AutoUpdateNode(ctx context.Context, in *Node) (*Node, error) {
-	resp, err := e.AutoUpdateNodeEndpoint(ctx, in)
-	if err != nil {
-		return &Node{}, err
-	}
-	return resp.(*Node), nil
-}
-
-type respCmdV1AutoUpdateNode struct {
-	V   Node
-	Err error
-}
-
-// AutoGetNode is endpoint for AutoGetNode
-func (e EndpointsCmdV1Client) AutoGetNode(ctx context.Context, in *Node) (*Node, error) {
-	resp, err := e.AutoGetNodeEndpoint(ctx, in)
-	if err != nil {
-		return &Node{}, err
-	}
-	return resp.(*Node), nil
-}
-
-type respCmdV1AutoGetNode struct {
-	V   Node
-	Err error
-}
-
-// AutoDeleteNode is endpoint for AutoDeleteNode
-func (e EndpointsCmdV1Client) AutoDeleteNode(ctx context.Context, in *Node) (*Node, error) {
-	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
-	if err != nil {
-		return &Node{}, err
-	}
-	return resp.(*Node), nil
-}
-
-type respCmdV1AutoDeleteNode struct {
-	V   Node
-	Err error
-}
-
-// AutoListNode is endpoint for AutoListNode
-func (e EndpointsCmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgNodeListHelper, error) {
-	resp, err := e.AutoListNodeEndpoint(ctx, in)
-	if err != nil {
-		return &AutoMsgNodeListHelper{}, err
-	}
-	return resp.(*AutoMsgNodeListHelper), nil
-}
-
-type respCmdV1AutoListNode struct {
-	V   AutoMsgNodeListHelper
-	Err error
 }
 
 // AutoAddCluster is endpoint for AutoAddCluster
@@ -172,31 +102,17 @@ type respCmdV1AutoAddCluster struct {
 	Err error
 }
 
-// AutoUpdateCluster is endpoint for AutoUpdateCluster
-func (e EndpointsCmdV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
-	resp, err := e.AutoUpdateClusterEndpoint(ctx, in)
+// AutoAddNode is endpoint for AutoAddNode
+func (e EndpointsCmdV1Client) AutoAddNode(ctx context.Context, in *Node) (*Node, error) {
+	resp, err := e.AutoAddNodeEndpoint(ctx, in)
 	if err != nil {
-		return &Cluster{}, err
+		return &Node{}, err
 	}
-	return resp.(*Cluster), nil
+	return resp.(*Node), nil
 }
 
-type respCmdV1AutoUpdateCluster struct {
-	V   Cluster
-	Err error
-}
-
-// AutoGetCluster is endpoint for AutoGetCluster
-func (e EndpointsCmdV1Client) AutoGetCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
-	resp, err := e.AutoGetClusterEndpoint(ctx, in)
-	if err != nil {
-		return &Cluster{}, err
-	}
-	return resp.(*Cluster), nil
-}
-
-type respCmdV1AutoGetCluster struct {
-	V   Cluster
+type respCmdV1AutoAddNode struct {
+	V   Node
 	Err error
 }
 
@@ -214,6 +130,48 @@ type respCmdV1AutoDeleteCluster struct {
 	Err error
 }
 
+// AutoDeleteNode is endpoint for AutoDeleteNode
+func (e EndpointsCmdV1Client) AutoDeleteNode(ctx context.Context, in *Node) (*Node, error) {
+	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
+	if err != nil {
+		return &Node{}, err
+	}
+	return resp.(*Node), nil
+}
+
+type respCmdV1AutoDeleteNode struct {
+	V   Node
+	Err error
+}
+
+// AutoGetCluster is endpoint for AutoGetCluster
+func (e EndpointsCmdV1Client) AutoGetCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
+	resp, err := e.AutoGetClusterEndpoint(ctx, in)
+	if err != nil {
+		return &Cluster{}, err
+	}
+	return resp.(*Cluster), nil
+}
+
+type respCmdV1AutoGetCluster struct {
+	V   Cluster
+	Err error
+}
+
+// AutoGetNode is endpoint for AutoGetNode
+func (e EndpointsCmdV1Client) AutoGetNode(ctx context.Context, in *Node) (*Node, error) {
+	resp, err := e.AutoGetNodeEndpoint(ctx, in)
+	if err != nil {
+		return &Node{}, err
+	}
+	return resp.(*Node), nil
+}
+
+type respCmdV1AutoGetNode struct {
+	V   Node
+	Err error
+}
+
 // AutoListCluster is endpoint for AutoListCluster
 func (e EndpointsCmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgClusterListHelper, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
@@ -228,6 +186,48 @@ type respCmdV1AutoListCluster struct {
 	Err error
 }
 
+// AutoListNode is endpoint for AutoListNode
+func (e EndpointsCmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgNodeListHelper, error) {
+	resp, err := e.AutoListNodeEndpoint(ctx, in)
+	if err != nil {
+		return &AutoMsgNodeListHelper{}, err
+	}
+	return resp.(*AutoMsgNodeListHelper), nil
+}
+
+type respCmdV1AutoListNode struct {
+	V   AutoMsgNodeListHelper
+	Err error
+}
+
+// AutoUpdateCluster is endpoint for AutoUpdateCluster
+func (e EndpointsCmdV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
+	resp, err := e.AutoUpdateClusterEndpoint(ctx, in)
+	if err != nil {
+		return &Cluster{}, err
+	}
+	return resp.(*Cluster), nil
+}
+
+type respCmdV1AutoUpdateCluster struct {
+	V   Cluster
+	Err error
+}
+
+// AutoUpdateNode is endpoint for AutoUpdateNode
+func (e EndpointsCmdV1Client) AutoUpdateNode(ctx context.Context, in *Node) (*Node, error) {
+	resp, err := e.AutoUpdateNodeEndpoint(ctx, in)
+	if err != nil {
+		return &Node{}, err
+	}
+	return resp.(*Node), nil
+}
+
+type respCmdV1AutoUpdateNode struct {
+	V   Node
+	Err error
+}
+
 // AutoWatchNode performs Watch for Node
 func (e EndpointsCmdV1Client) AutoWatchNode(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchNodeClient, error) {
 	return e.Client.AutoWatchNode(ctx, in)
@@ -236,116 +236,6 @@ func (e EndpointsCmdV1Client) AutoWatchNode(ctx context.Context, in *api.ListWat
 // AutoWatchCluster performs Watch for Cluster
 func (e EndpointsCmdV1Client) AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchClusterClient, error) {
 	return e.Client.AutoWatchCluster(ctx, in)
-}
-
-// AutoAddNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoAddNode(ctx context.Context, in Node) (Node, error) {
-	resp, err := e.AutoAddNodeEndpoint(ctx, in)
-	if err != nil {
-		return Node{}, err
-	}
-	return *resp.(*Node), nil
-}
-
-// MakeCmdV1AutoAddNodeEndpoint creates  AutoAddNode endpoints for the service
-func MakeCmdV1AutoAddNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Node)
-		v, err := s.AutoAddNode(ctx, *req)
-		return respCmdV1AutoAddNode{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddNode")(f)
-}
-
-// AutoUpdateNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoUpdateNode(ctx context.Context, in Node) (Node, error) {
-	resp, err := e.AutoUpdateNodeEndpoint(ctx, in)
-	if err != nil {
-		return Node{}, err
-	}
-	return *resp.(*Node), nil
-}
-
-// MakeCmdV1AutoUpdateNodeEndpoint creates  AutoUpdateNode endpoints for the service
-func MakeCmdV1AutoUpdateNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Node)
-		v, err := s.AutoUpdateNode(ctx, *req)
-		return respCmdV1AutoUpdateNode{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateNode")(f)
-}
-
-// AutoGetNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoGetNode(ctx context.Context, in Node) (Node, error) {
-	resp, err := e.AutoGetNodeEndpoint(ctx, in)
-	if err != nil {
-		return Node{}, err
-	}
-	return *resp.(*Node), nil
-}
-
-// MakeCmdV1AutoGetNodeEndpoint creates  AutoGetNode endpoints for the service
-func MakeCmdV1AutoGetNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Node)
-		v, err := s.AutoGetNode(ctx, *req)
-		return respCmdV1AutoGetNode{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetNode")(f)
-}
-
-// AutoDeleteNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoDeleteNode(ctx context.Context, in Node) (Node, error) {
-	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
-	if err != nil {
-		return Node{}, err
-	}
-	return *resp.(*Node), nil
-}
-
-// MakeCmdV1AutoDeleteNodeEndpoint creates  AutoDeleteNode endpoints for the service
-func MakeCmdV1AutoDeleteNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Node)
-		v, err := s.AutoDeleteNode(ctx, *req)
-		return respCmdV1AutoDeleteNode{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteNode")(f)
-}
-
-// AutoListNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoListNode(ctx context.Context, in api.ListWatchOptions) (AutoMsgNodeListHelper, error) {
-	resp, err := e.AutoListNodeEndpoint(ctx, in)
-	if err != nil {
-		return AutoMsgNodeListHelper{}, err
-	}
-	return *resp.(*AutoMsgNodeListHelper), nil
-}
-
-// MakeCmdV1AutoListNodeEndpoint creates  AutoListNode endpoints for the service
-func MakeCmdV1AutoListNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListNode(ctx, *req)
-		return respCmdV1AutoListNode{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListNode")(f)
 }
 
 // AutoAddCluster implementation on server Endpoint
@@ -370,48 +260,26 @@ func MakeCmdV1AutoAddClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) en
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddCluster")(f)
 }
 
-// AutoUpdateCluster implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoUpdateCluster(ctx context.Context, in Cluster) (Cluster, error) {
-	resp, err := e.AutoUpdateClusterEndpoint(ctx, in)
+// AutoAddNode implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoAddNode(ctx context.Context, in Node) (Node, error) {
+	resp, err := e.AutoAddNodeEndpoint(ctx, in)
 	if err != nil {
-		return Cluster{}, err
+		return Node{}, err
 	}
-	return *resp.(*Cluster), nil
+	return *resp.(*Node), nil
 }
 
-// MakeCmdV1AutoUpdateClusterEndpoint creates  AutoUpdateCluster endpoints for the service
-func MakeCmdV1AutoUpdateClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeCmdV1AutoAddNodeEndpoint creates  AutoAddNode endpoints for the service
+func MakeCmdV1AutoAddNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Cluster)
-		v, err := s.AutoUpdateCluster(ctx, *req)
-		return respCmdV1AutoUpdateCluster{
+		req := request.(*Node)
+		v, err := s.AutoAddNode(ctx, *req)
+		return respCmdV1AutoAddNode{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateCluster")(f)
-}
-
-// AutoGetCluster implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoGetCluster(ctx context.Context, in Cluster) (Cluster, error) {
-	resp, err := e.AutoGetClusterEndpoint(ctx, in)
-	if err != nil {
-		return Cluster{}, err
-	}
-	return *resp.(*Cluster), nil
-}
-
-// MakeCmdV1AutoGetClusterEndpoint creates  AutoGetCluster endpoints for the service
-func MakeCmdV1AutoGetClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Cluster)
-		v, err := s.AutoGetCluster(ctx, *req)
-		return respCmdV1AutoGetCluster{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetCluster")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddNode")(f)
 }
 
 // AutoDeleteCluster implementation on server Endpoint
@@ -436,6 +304,72 @@ func MakeCmdV1AutoDeleteClusterEndpoint(s ServiceCmdV1Server, logger log.Logger)
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteCluster")(f)
 }
 
+// AutoDeleteNode implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoDeleteNode(ctx context.Context, in Node) (Node, error) {
+	resp, err := e.AutoDeleteNodeEndpoint(ctx, in)
+	if err != nil {
+		return Node{}, err
+	}
+	return *resp.(*Node), nil
+}
+
+// MakeCmdV1AutoDeleteNodeEndpoint creates  AutoDeleteNode endpoints for the service
+func MakeCmdV1AutoDeleteNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Node)
+		v, err := s.AutoDeleteNode(ctx, *req)
+		return respCmdV1AutoDeleteNode{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteNode")(f)
+}
+
+// AutoGetCluster implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoGetCluster(ctx context.Context, in Cluster) (Cluster, error) {
+	resp, err := e.AutoGetClusterEndpoint(ctx, in)
+	if err != nil {
+		return Cluster{}, err
+	}
+	return *resp.(*Cluster), nil
+}
+
+// MakeCmdV1AutoGetClusterEndpoint creates  AutoGetCluster endpoints for the service
+func MakeCmdV1AutoGetClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Cluster)
+		v, err := s.AutoGetCluster(ctx, *req)
+		return respCmdV1AutoGetCluster{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetCluster")(f)
+}
+
+// AutoGetNode implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoGetNode(ctx context.Context, in Node) (Node, error) {
+	resp, err := e.AutoGetNodeEndpoint(ctx, in)
+	if err != nil {
+		return Node{}, err
+	}
+	return *resp.(*Node), nil
+}
+
+// MakeCmdV1AutoGetNodeEndpoint creates  AutoGetNode endpoints for the service
+func MakeCmdV1AutoGetNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Node)
+		v, err := s.AutoGetNode(ctx, *req)
+		return respCmdV1AutoGetNode{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetNode")(f)
+}
+
 // AutoListCluster implementation on server Endpoint
 func (e EndpointsCmdV1Server) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (AutoMsgClusterListHelper, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
@@ -456,6 +390,72 @@ func MakeCmdV1AutoListClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 		}, nil
 	}
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListCluster")(f)
+}
+
+// AutoListNode implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoListNode(ctx context.Context, in api.ListWatchOptions) (AutoMsgNodeListHelper, error) {
+	resp, err := e.AutoListNodeEndpoint(ctx, in)
+	if err != nil {
+		return AutoMsgNodeListHelper{}, err
+	}
+	return *resp.(*AutoMsgNodeListHelper), nil
+}
+
+// MakeCmdV1AutoListNodeEndpoint creates  AutoListNode endpoints for the service
+func MakeCmdV1AutoListNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListNode(ctx, *req)
+		return respCmdV1AutoListNode{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListNode")(f)
+}
+
+// AutoUpdateCluster implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoUpdateCluster(ctx context.Context, in Cluster) (Cluster, error) {
+	resp, err := e.AutoUpdateClusterEndpoint(ctx, in)
+	if err != nil {
+		return Cluster{}, err
+	}
+	return *resp.(*Cluster), nil
+}
+
+// MakeCmdV1AutoUpdateClusterEndpoint creates  AutoUpdateCluster endpoints for the service
+func MakeCmdV1AutoUpdateClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Cluster)
+		v, err := s.AutoUpdateCluster(ctx, *req)
+		return respCmdV1AutoUpdateCluster{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateCluster")(f)
+}
+
+// AutoUpdateNode implementation on server Endpoint
+func (e EndpointsCmdV1Server) AutoUpdateNode(ctx context.Context, in Node) (Node, error) {
+	resp, err := e.AutoUpdateNodeEndpoint(ctx, in)
+	if err != nil {
+		return Node{}, err
+	}
+	return *resp.(*Node), nil
+}
+
+// MakeCmdV1AutoUpdateNodeEndpoint creates  AutoUpdateNode endpoints for the service
+func MakeCmdV1AutoUpdateNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Node)
+		v, err := s.AutoUpdateNode(ctx, *req)
+		return respCmdV1AutoUpdateNode{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateNode")(f)
 }
 
 // AutoWatchNode is the watch handler for Node on the server side.
@@ -488,16 +488,16 @@ func MakeAutoWatchClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) func(
 func MakeCmdV1ServerEndpoints(s ServiceCmdV1Server, logger log.Logger) EndpointsCmdV1Server {
 	return EndpointsCmdV1Server{
 
-		AutoAddNodeEndpoint:       MakeCmdV1AutoAddNodeEndpoint(s, logger),
-		AutoUpdateNodeEndpoint:    MakeCmdV1AutoUpdateNodeEndpoint(s, logger),
-		AutoGetNodeEndpoint:       MakeCmdV1AutoGetNodeEndpoint(s, logger),
-		AutoDeleteNodeEndpoint:    MakeCmdV1AutoDeleteNodeEndpoint(s, logger),
-		AutoListNodeEndpoint:      MakeCmdV1AutoListNodeEndpoint(s, logger),
 		AutoAddClusterEndpoint:    MakeCmdV1AutoAddClusterEndpoint(s, logger),
-		AutoUpdateClusterEndpoint: MakeCmdV1AutoUpdateClusterEndpoint(s, logger),
-		AutoGetClusterEndpoint:    MakeCmdV1AutoGetClusterEndpoint(s, logger),
+		AutoAddNodeEndpoint:       MakeCmdV1AutoAddNodeEndpoint(s, logger),
 		AutoDeleteClusterEndpoint: MakeCmdV1AutoDeleteClusterEndpoint(s, logger),
+		AutoDeleteNodeEndpoint:    MakeCmdV1AutoDeleteNodeEndpoint(s, logger),
+		AutoGetClusterEndpoint:    MakeCmdV1AutoGetClusterEndpoint(s, logger),
+		AutoGetNodeEndpoint:       MakeCmdV1AutoGetNodeEndpoint(s, logger),
 		AutoListClusterEndpoint:   MakeCmdV1AutoListClusterEndpoint(s, logger),
+		AutoListNodeEndpoint:      MakeCmdV1AutoListNodeEndpoint(s, logger),
+		AutoUpdateClusterEndpoint: MakeCmdV1AutoUpdateClusterEndpoint(s, logger),
+		AutoUpdateNodeEndpoint:    MakeCmdV1AutoUpdateNodeEndpoint(s, logger),
 
 		watchHandlerNode:    MakeAutoWatchNodeEndpoint(s, logger),
 		watchHandlerCluster: MakeAutoWatchClusterEndpoint(s, logger),
@@ -534,71 +534,6 @@ type loggingCmdV1MiddlewareServer struct {
 	next   ServiceCmdV1Server
 }
 
-func (m loggingCmdV1MiddlewareClient) AutoAddNode(ctx context.Context, in *Node) (resp *Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareClient) AutoUpdateNode(ctx context.Context, in *Node) (resp *Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareClient) AutoGetNode(ctx context.Context, in *Node) (resp *Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareClient) AutoDeleteNode(ctx context.Context, in *Node) (resp *Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgNodeListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListNode(ctx, in)
-	return
-}
 func (m loggingCmdV1MiddlewareClient) AutoAddCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -612,7 +547,7 @@ func (m loggingCmdV1MiddlewareClient) AutoAddCluster(ctx context.Context, in *Cl
 	resp, err = m.next.AutoAddCluster(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareClient) AutoUpdateCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
+func (m loggingCmdV1MiddlewareClient) AutoAddNode(ctx context.Context, in *Node) (resp *Node, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -620,22 +555,9 @@ func (m loggingCmdV1MiddlewareClient) AutoUpdateCluster(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateCluster(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareClient) AutoGetCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetCluster(ctx, in)
+	resp, err = m.next.AutoAddNode(ctx, in)
 	return
 }
 func (m loggingCmdV1MiddlewareClient) AutoDeleteCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
@@ -651,6 +573,45 @@ func (m loggingCmdV1MiddlewareClient) AutoDeleteCluster(ctx context.Context, in 
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
 }
+func (m loggingCmdV1MiddlewareClient) AutoDeleteNode(ctx context.Context, in *Node) (resp *Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteNode(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareClient) AutoGetCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareClient) AutoGetNode(ctx context.Context, in *Node) (resp *Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetNode(ctx, in)
+	return
+}
 func (m loggingCmdV1MiddlewareClient) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgClusterListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -662,6 +623,45 @@ func (m loggingCmdV1MiddlewareClient) AutoListCluster(ctx context.Context, in *a
 		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgNodeListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListNode(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareClient) AutoUpdateCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareClient) AutoUpdateNode(ctx context.Context, in *Node) (resp *Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNode(ctx, in)
 	return
 }
 
@@ -692,71 +692,6 @@ func (m loggingCmdV1MiddlewareClient) AutoWatchCluster(ctx context.Context, in *
 	return
 }
 
-func (m loggingCmdV1MiddlewareServer) AutoAddNode(ctx context.Context, in Node) (resp Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareServer) AutoUpdateNode(ctx context.Context, in Node) (resp Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareServer) AutoGetNode(ctx context.Context, in Node) (resp Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareServer) AutoDeleteNode(ctx context.Context, in Node) (resp Node, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteNode(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareServer) AutoListNode(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgNodeListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListNode(ctx, in)
-	return
-}
 func (m loggingCmdV1MiddlewareServer) AutoAddCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -770,7 +705,7 @@ func (m loggingCmdV1MiddlewareServer) AutoAddCluster(ctx context.Context, in Clu
 	resp, err = m.next.AutoAddCluster(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareServer) AutoUpdateCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
+func (m loggingCmdV1MiddlewareServer) AutoAddNode(ctx context.Context, in Node) (resp Node, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -778,22 +713,9 @@ func (m loggingCmdV1MiddlewareServer) AutoUpdateCluster(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateCluster(ctx, in)
-	return
-}
-func (m loggingCmdV1MiddlewareServer) AutoGetCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetCluster(ctx, in)
+	resp, err = m.next.AutoAddNode(ctx, in)
 	return
 }
 func (m loggingCmdV1MiddlewareServer) AutoDeleteCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
@@ -809,6 +731,45 @@ func (m loggingCmdV1MiddlewareServer) AutoDeleteCluster(ctx context.Context, in 
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
 }
+func (m loggingCmdV1MiddlewareServer) AutoDeleteNode(ctx context.Context, in Node) (resp Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteNode(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareServer) AutoGetCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareServer) AutoGetNode(ctx context.Context, in Node) (resp Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetNode(ctx, in)
+	return
+}
 func (m loggingCmdV1MiddlewareServer) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgClusterListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -820,6 +781,45 @@ func (m loggingCmdV1MiddlewareServer) AutoListCluster(ctx context.Context, in ap
 		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListCluster", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareServer) AutoListNode(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgNodeListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListNode(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareServer) AutoUpdateCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateCluster(ctx, in)
+	return
+}
+func (m loggingCmdV1MiddlewareServer) AutoUpdateNode(ctx context.Context, in Node) (resp Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "CmdV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNode(ctx, in)
 	return
 }
 
@@ -866,43 +866,13 @@ func (r *EndpointsCmdV1RestClient) getHTTPRequest(ctx context.Context, in interf
 }
 
 //
-func makeURICmdV1AutoAddNodeCreateOper(in *Node) string {
-	return fmt.Sprint("/v1/cmd", "/nodes")
-}
-
-//
-func makeURICmdV1AutoUpdateNodeUpdateOper(in *Node) string {
-	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
-}
-
-//
-func makeURICmdV1AutoGetNodeGetOper(in *Node) string {
-	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
-}
-
-//
-func makeURICmdV1AutoDeleteNodeDeleteOper(in *Node) string {
-	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
-}
-
-//
-func makeURICmdV1AutoListNodeListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cmd", "/nodes")
-}
-
-//
 func makeURICmdV1AutoAddClusterCreateOper(in *Cluster) string {
 	return fmt.Sprint("/v1/cmd", "/cluster")
 }
 
 //
-func makeURICmdV1AutoUpdateClusterUpdateOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cmd", "/cluster/", in.Name)
-}
-
-//
-func makeURICmdV1AutoGetClusterGetOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cmd", "/cluster/", in.Name)
+func makeURICmdV1AutoAddNodeCreateOper(in *Node) string {
+	return fmt.Sprint("/v1/cmd", "/nodes")
 }
 
 //
@@ -911,8 +881,38 @@ func makeURICmdV1AutoDeleteClusterDeleteOper(in *Cluster) string {
 }
 
 //
+func makeURICmdV1AutoDeleteNodeDeleteOper(in *Node) string {
+	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
+}
+
+//
+func makeURICmdV1AutoGetClusterGetOper(in *Cluster) string {
+	return fmt.Sprint("/v1/cmd", "/cluster/", in.Name)
+}
+
+//
+func makeURICmdV1AutoGetNodeGetOper(in *Node) string {
+	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
+}
+
+//
 func makeURICmdV1AutoListClusterListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/cmd", "/cluster")
+}
+
+//
+func makeURICmdV1AutoListNodeListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/cmd", "/nodes")
+}
+
+//
+func makeURICmdV1AutoUpdateClusterUpdateOper(in *Cluster) string {
+	return fmt.Sprint("/v1/cmd", "/cluster/", in.Name)
+}
+
+//
+func makeURICmdV1AutoUpdateNodeUpdateOper(in *Node) string {
+	return fmt.Sprint("/v1/cmd", "/nodes/", in.Name)
 }
 
 // AutoAddNode CRUD method for Node

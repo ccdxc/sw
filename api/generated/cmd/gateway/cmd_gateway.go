@@ -38,52 +38,16 @@ type adapterCmdV1 struct {
 	service cmd.ServiceCmdV1Client
 }
 
-func (a adapterCmdV1) AutoAddNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoAddNode(ctx, t)
-}
-
-func (a adapterCmdV1) AutoUpdateNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateNode(ctx, t)
-}
-
-func (a adapterCmdV1) AutoGetNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoGetNode(ctx, t)
-}
-
-func (a adapterCmdV1) AutoDeleteNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteNode(ctx, t)
-}
-
-func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgNodeListHelper, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoListNode(ctx, t)
-}
-
 func (a adapterCmdV1) AutoAddCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoAddCluster(ctx, t)
 }
 
-func (a adapterCmdV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
+func (a adapterCmdV1) AutoAddNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateCluster(ctx, t)
-}
-
-func (a adapterCmdV1) AutoGetCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoGetCluster(ctx, t)
+	return a.service.AutoAddNode(ctx, t)
 }
 
 func (a adapterCmdV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
@@ -92,10 +56,46 @@ func (a adapterCmdV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cmd.Cluste
 	return a.service.AutoDeleteCluster(ctx, t)
 }
 
+func (a adapterCmdV1) AutoDeleteNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoDeleteNode(ctx, t)
+}
+
+func (a adapterCmdV1) AutoGetCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetCluster(ctx, t)
+}
+
+func (a adapterCmdV1) AutoGetNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetNode(ctx, t)
+}
+
 func (a adapterCmdV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgClusterListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListCluster(ctx, t)
+}
+
+func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgNodeListHelper, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoListNode(ctx, t)
+}
+
+func (a adapterCmdV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateCluster(ctx, t)
+}
+
+func (a adapterCmdV1) AutoUpdateNode(oldctx oldcontext.Context, t *cmd.Node, options ...grpc.CallOption) (*cmd.Node, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateNode(ctx, t)
 }
 
 func (a adapterCmdV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchNodeClient, error) {

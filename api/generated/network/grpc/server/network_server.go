@@ -35,34 +35,45 @@ type snetworkBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
-	endpointsTenantV1        *eTenantV1Endpoints
+	endpointsEndpointV1      *eEndpointV1Endpoints
+	endpointsLbPolicyV1      *eLbPolicyV1Endpoints
 	endpointsNetworkV1       *eNetworkV1Endpoints
 	endpointsSecurityGroupV1 *eSecurityGroupV1Endpoints
-	endpointsSgpolicyV1      *eSgpolicyV1Endpoints
 	endpointsServiceV1       *eServiceV1Endpoints
-	endpointsLbPolicyV1      *eLbPolicyV1Endpoints
-	endpointsEndpointV1      *eEndpointV1Endpoints
+	endpointsSgpolicyV1      *eSgpolicyV1Endpoints
+	endpointsTenantV1        *eTenantV1Endpoints
 }
 
-type eTenantV1Endpoints struct {
+type eEndpointV1Endpoints struct {
 	Svc snetworkBackend
 
-	fnAutoAddTenant    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateTenant func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetTenant    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteTenant func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListTenant   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListEndpoint   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchTenant func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchEndpoint func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+}
+type eLbPolicyV1Endpoints struct {
+	Svc snetworkBackend
+
+	fnAutoAddLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteLbPolicy func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListLbPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateLbPolicy func(ctx context.Context, t interface{}) (interface{}, error)
+
+	fnAutoWatchLbPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eNetworkV1Endpoints struct {
 	Svc snetworkBackend
 
 	fnAutoAddNetwork    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateNetwork func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetNetwork    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteNetwork func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNetwork    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListNetwork   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNetwork func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchNetwork func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
@@ -70,248 +81,150 @@ type eSecurityGroupV1Endpoints struct {
 	Svc snetworkBackend
 
 	fnAutoAddSecurityGroup    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateSecurityGroup func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetSecurityGroup    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteSecurityGroup func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetSecurityGroup    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListSecurityGroup   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateSecurityGroup func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchSecurityGroup func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-}
-type eSgpolicyV1Endpoints struct {
-	Svc snetworkBackend
-
-	fnAutoAddSgpolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateSgpolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetSgpolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteSgpolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListSgpolicy   func(ctx context.Context, t interface{}) (interface{}, error)
-
-	fnAutoWatchSgpolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eServiceV1Endpoints struct {
 	Svc snetworkBackend
 
 	fnAutoAddService    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateService func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetService    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteService func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetService    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListService   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateService func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchService func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
-type eLbPolicyV1Endpoints struct {
+type eSgpolicyV1Endpoints struct {
 	Svc snetworkBackend
 
-	fnAutoAddLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateLbPolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteLbPolicy func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListLbPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddSgpolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteSgpolicy func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetSgpolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListSgpolicy   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateSgpolicy func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchLbPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSgpolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
-type eEndpointV1Endpoints struct {
+type eTenantV1Endpoints struct {
 	Svc snetworkBackend
 
-	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListEndpoint   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddTenant    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteTenant func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetTenant    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListTenant   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateTenant func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchEndpoint func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchTenant func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"network.TenantSpec":   apisrvpkg.NewMessage("network.TenantSpec"),
-		"network.TenantStatus": apisrvpkg.NewMessage("network.TenantStatus"),
-		"network.Tenant": apisrvpkg.NewMessage("network.Tenant").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := network.Tenant{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(network.Tenant)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.Tenant)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.Tenant)
+		"network.AutoMsgEndpointListHelper": apisrvpkg.NewMessage("network.AutoMsgEndpointListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgEndpointListHelper{}
+			r := network.Endpoint{}
 			key := r.MakeKey(prefix)
-			r.Kind = "Tenant"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
 			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.Tenant)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Tenant{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Tenant{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
+			return into, nil
 		}),
-		"network.TenantList":    apisrvpkg.NewMessage("network.TenantList"),
-		"network.NetworkSpec":   apisrvpkg.NewMessage("network.NetworkSpec"),
-		"network.NetworkStatus": apisrvpkg.NewMessage("network.NetworkStatus"),
-		"network.Network": apisrvpkg.NewMessage("network.Network").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := network.Network{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(network.Network)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.Network)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.Network)
+		"network.AutoMsgEndpointWatchHelper": apisrvpkg.NewMessage("network.AutoMsgEndpointWatchHelper"),
+		"network.AutoMsgLbPolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgLbPolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgLbPolicyListHelper{}
+			r := network.LbPolicy{}
 			key := r.MakeKey(prefix)
-			r.Kind = "Network"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
 			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.Network)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			return into, nil
+		}),
+		"network.AutoMsgLbPolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgLbPolicyWatchHelper"),
+		"network.AutoMsgNetworkListHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgNetworkListHelper{}
 			r := network.Network{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Network{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
 		}),
-		"network.NetworkList":         apisrvpkg.NewMessage("network.NetworkList"),
-		"network.SecurityGroupSpec":   apisrvpkg.NewMessage("network.SecurityGroupSpec"),
-		"network.SecurityGroupStatus": apisrvpkg.NewMessage("network.SecurityGroupStatus"),
-		"network.SecurityGroup": apisrvpkg.NewMessage("network.SecurityGroup").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := network.SecurityGroup{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(network.SecurityGroup)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.SecurityGroup)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.SecurityGroup)
-			key := r.MakeKey(prefix)
-			r.Kind = "SecurityGroup"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
-			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.SecurityGroup)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+		"network.AutoMsgNetworkWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
+		"network.AutoMsgSecurityGroupListHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgSecurityGroupListHelper{}
 			r := network.SecurityGroup{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.SecurityGroup{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
 		}),
-		"network.SecurityGroupList": apisrvpkg.NewMessage("network.SecurityGroupList"),
-		"network.SGRule":            apisrvpkg.NewMessage("network.SGRule"),
-		"network.SgpolicySpec":      apisrvpkg.NewMessage("network.SgpolicySpec"),
-		"network.SgpolicyStatus":    apisrvpkg.NewMessage("network.SgpolicyStatus"),
-		"network.Sgpolicy": apisrvpkg.NewMessage("network.Sgpolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
+		"network.AutoMsgSecurityGroupWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupWatchHelper"),
+		"network.AutoMsgServiceListHelper": apisrvpkg.NewMessage("network.AutoMsgServiceListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgServiceListHelper{}
+			r := network.Service{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgServiceWatchHelper": apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
+		"network.AutoMsgSgpolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgSgpolicyListHelper{}
+			r := network.Sgpolicy{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgSgpolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyWatchHelper"),
+		"network.AutoMsgTenantListHelper": apisrvpkg.NewMessage("network.AutoMsgTenantListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := network.AutoMsgTenantListHelper{}
+			r := network.Tenant{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"network.AutoMsgTenantWatchHelper": apisrvpkg.NewMessage("network.AutoMsgTenantWatchHelper"),
+		"network.Endpoint": apisrvpkg.NewMessage("network.Endpoint").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
-				r := network.Sgpolicy{}
+				r := network.Endpoint{}
 				return r.MakeKey(prefix)
 			}
-			r := i.(network.Sgpolicy)
+			r := i.(network.Endpoint)
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.Sgpolicy)
+			r := i.(network.Endpoint)
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.Sgpolicy)
+			r := i.(network.Endpoint)
 			key := r.MakeKey(prefix)
-			r.Kind = "Sgpolicy"
+			r.Kind = "Endpoint"
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
@@ -327,7 +240,7 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.Sgpolicy)
+			r := i.(network.Endpoint)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -339,77 +252,21 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 			}
 			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Sgpolicy{}
+			r := network.Endpoint{}
 			err := kvs.Get(ctx, key, &r)
 			err = errors.Wrap(err, "KV get failed")
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Sgpolicy{}
+			r := network.Endpoint{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"network.SgpolicyList":  apisrvpkg.NewMessage("network.SgpolicyList"),
-		"network.ServiceSpec":   apisrvpkg.NewMessage("network.ServiceSpec"),
-		"network.ServiceStatus": apisrvpkg.NewMessage("network.ServiceStatus"),
-		"network.Service": apisrvpkg.NewMessage("network.Service").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := network.Service{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(network.Service)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.Service)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.Service)
-			key := r.MakeKey(prefix)
-			r.Kind = "Service"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
-			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.Service)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Service{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Service{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
-		}),
-		"network.ServiceList":     apisrvpkg.NewMessage("network.ServiceList"),
+		"network.EndpointList":    apisrvpkg.NewMessage("network.EndpointList"),
+		"network.EndpointSpec":    apisrvpkg.NewMessage("network.EndpointSpec"),
+		"network.EndpointStatus":  apisrvpkg.NewMessage("network.EndpointStatus"),
 		"network.HealthCheckSpec": apisrvpkg.NewMessage("network.HealthCheckSpec"),
-		"network.LbPolicySpec":    apisrvpkg.NewMessage("network.LbPolicySpec"),
-		"network.LbPolicyStatus":  apisrvpkg.NewMessage("network.LbPolicyStatus"),
 		"network.LbPolicy": apisrvpkg.NewMessage("network.LbPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := network.LbPolicy{}
@@ -464,23 +321,23 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 			return txn.Delete(key)
 		}),
 		"network.LbPolicyList":   apisrvpkg.NewMessage("network.LbPolicyList"),
-		"network.EndpointSpec":   apisrvpkg.NewMessage("network.EndpointSpec"),
-		"network.EndpointStatus": apisrvpkg.NewMessage("network.EndpointStatus"),
-		"network.Endpoint": apisrvpkg.NewMessage("network.Endpoint").WithKeyGenerator(func(i interface{}, prefix string) string {
+		"network.LbPolicySpec":   apisrvpkg.NewMessage("network.LbPolicySpec"),
+		"network.LbPolicyStatus": apisrvpkg.NewMessage("network.LbPolicyStatus"),
+		"network.Network": apisrvpkg.NewMessage("network.Network").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
-				r := network.Endpoint{}
+				r := network.Network{}
 				return r.MakeKey(prefix)
 			}
-			r := i.(network.Endpoint)
+			r := i.(network.Network)
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(network.Endpoint)
+			r := i.(network.Network)
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(network.Endpoint)
+			r := i.(network.Network)
 			key := r.MakeKey(prefix)
-			r.Kind = "Endpoint"
+			r.Kind = "Network"
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
@@ -496,7 +353,7 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(network.Endpoint)
+			r := i.(network.Network)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -508,168 +365,311 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 			}
 			return err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Endpoint{}
+			r := network.Network{}
 			err := kvs.Get(ctx, key, &r)
 			err = errors.Wrap(err, "KV get failed")
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := network.Endpoint{}
+			r := network.Network{}
 			err := kvs.Delete(ctx, key, &r)
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"network.EndpointList":               apisrvpkg.NewMessage("network.EndpointList"),
-		"network.AutoMsgSgpolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyWatchHelper"),
-		"network.AutoMsgSgpolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgSgpolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgSgpolicyListHelper{}
-			r := network.Sgpolicy{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
+		"network.NetworkList":   apisrvpkg.NewMessage("network.NetworkList"),
+		"network.NetworkSpec":   apisrvpkg.NewMessage("network.NetworkSpec"),
+		"network.NetworkStatus": apisrvpkg.NewMessage("network.NetworkStatus"),
+		"network.SGRule":        apisrvpkg.NewMessage("network.SGRule"),
+		"network.SecurityGroup": apisrvpkg.NewMessage("network.SecurityGroup").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := network.SecurityGroup{}
+				return r.MakeKey(prefix)
 			}
-			return into, nil
-		}),
-		"network.AutoMsgServiceWatchHelper": apisrvpkg.NewMessage("network.AutoMsgServiceWatchHelper"),
-		"network.AutoMsgServiceListHelper": apisrvpkg.NewMessage("network.AutoMsgServiceListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgServiceListHelper{}
-			r := network.Service{}
+			r := i.(network.SecurityGroup)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(network.SecurityGroup)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(network.SecurityGroup)
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
+			r.Kind = "SecurityGroup"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
 			}
-			return into, nil
-		}),
-		"network.AutoMsgLbPolicyWatchHelper": apisrvpkg.NewMessage("network.AutoMsgLbPolicyWatchHelper"),
-		"network.AutoMsgLbPolicyListHelper": apisrvpkg.NewMessage("network.AutoMsgLbPolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgLbPolicyListHelper{}
-			r := network.LbPolicy{}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.SecurityGroup)
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
 			}
-			return into, nil
-		}),
-		"network.AutoMsgEndpointWatchHelper": apisrvpkg.NewMessage("network.AutoMsgEndpointWatchHelper"),
-		"network.AutoMsgEndpointListHelper": apisrvpkg.NewMessage("network.AutoMsgEndpointListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgEndpointListHelper{}
-			r := network.Endpoint{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"network.AutoMsgTenantWatchHelper": apisrvpkg.NewMessage("network.AutoMsgTenantWatchHelper"),
-		"network.AutoMsgTenantListHelper": apisrvpkg.NewMessage("network.AutoMsgTenantListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgTenantListHelper{}
-			r := network.Tenant{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"network.AutoMsgNetworkWatchHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkWatchHelper"),
-		"network.AutoMsgNetworkListHelper": apisrvpkg.NewMessage("network.AutoMsgNetworkListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgNetworkListHelper{}
-			r := network.Network{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"network.AutoMsgSecurityGroupWatchHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupWatchHelper"),
-		"network.AutoMsgSecurityGroupListHelper": apisrvpkg.NewMessage("network.AutoMsgSecurityGroupListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := network.AutoMsgSecurityGroupListHelper{}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.SecurityGroup{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.SecurityGroup{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
+		"network.SecurityGroupList":   apisrvpkg.NewMessage("network.SecurityGroupList"),
+		"network.SecurityGroupSpec":   apisrvpkg.NewMessage("network.SecurityGroupSpec"),
+		"network.SecurityGroupStatus": apisrvpkg.NewMessage("network.SecurityGroupStatus"),
+		"network.Service": apisrvpkg.NewMessage("network.Service").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := network.Service{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(network.Service)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(network.Service)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(network.Service)
+			key := r.MakeKey(prefix)
+			r.Kind = "Service"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Service)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Service{}
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Service{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
+		}),
+		"network.ServiceList":   apisrvpkg.NewMessage("network.ServiceList"),
+		"network.ServiceSpec":   apisrvpkg.NewMessage("network.ServiceSpec"),
+		"network.ServiceStatus": apisrvpkg.NewMessage("network.ServiceStatus"),
+		"network.Sgpolicy": apisrvpkg.NewMessage("network.Sgpolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := network.Sgpolicy{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(network.Sgpolicy)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(network.Sgpolicy)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(network.Sgpolicy)
+			key := r.MakeKey(prefix)
+			r.Kind = "Sgpolicy"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Sgpolicy)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Sgpolicy{}
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Sgpolicy{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
+		}),
+		"network.SgpolicyList":   apisrvpkg.NewMessage("network.SgpolicyList"),
+		"network.SgpolicySpec":   apisrvpkg.NewMessage("network.SgpolicySpec"),
+		"network.SgpolicyStatus": apisrvpkg.NewMessage("network.SgpolicyStatus"),
+		"network.Tenant": apisrvpkg.NewMessage("network.Tenant").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := network.Tenant{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(network.Tenant)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(network.Tenant)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(network.Tenant)
+			key := r.MakeKey(prefix)
+			r.Kind = "Tenant"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(network.Tenant)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Tenant{}
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := network.Tenant{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
+		}),
+		"network.TenantList":   apisrvpkg.NewMessage("network.TenantList"),
+		"network.TenantSpec":   apisrvpkg.NewMessage("network.TenantSpec"),
+		"network.TenantStatus": apisrvpkg.NewMessage("network.TenantStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
 	scheme.AddKnownTypes(
-		&network.Tenant{},
+		&network.Endpoint{},
+		&network.LbPolicy{},
 		&network.Network{},
 		&network.SecurityGroup{},
-		&network.Sgpolicy{},
 		&network.Service{},
-		&network.LbPolicy{},
-		&network.Endpoint{},
+		&network.Sgpolicy{},
+		&network.Tenant{},
 	)
 
 	apisrv.RegisterMessages("network", s.Messages)
 
 	{
-		srv := apisrvpkg.NewService("TenantV1")
+		srv := apisrvpkg.NewService("EndpointV1")
 
-		s.endpointsTenantV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",
-			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoAddTenant")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+		s.endpointsEndpointV1.fnAutoAddEndpoint = srv.AddMethod("AutoAddEndpoint",
+			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoAddEndpoint")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsTenantV1.fnAutoUpdateTenant = srv.AddMethod("AutoUpdateTenant",
-			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoUpdateTenant")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsEndpointV1.fnAutoDeleteEndpoint = srv.AddMethod("AutoDeleteEndpoint",
+			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoDeleteEndpoint")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsTenantV1.fnAutoGetTenant = srv.AddMethod("AutoGetTenant",
-			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoGetTenant")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+		s.endpointsEndpointV1.fnAutoGetEndpoint = srv.AddMethod("AutoGetEndpoint",
+			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoGetEndpoint")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsTenantV1.fnAutoDeleteTenant = srv.AddMethod("AutoDeleteTenant",
-			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoDeleteTenant")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+		s.endpointsEndpointV1.fnAutoListEndpoint = srv.AddMethod("AutoListEndpoint",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgEndpointListHelper"], "endpoints", "AutoListEndpoint")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsTenantV1.fnAutoListTenant = srv.AddMethod("AutoListTenant",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgTenantListHelper"], "tenants", "AutoListTenant")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+		s.endpointsEndpointV1.fnAutoUpdateEndpoint = srv.AddMethod("AutoUpdateEndpoint",
+			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoUpdateEndpoint")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsTenantV1.fnAutoWatchTenant = s.Messages["network.Tenant"].WatchFromKv
+		s.endpointsEndpointV1.fnAutoWatchEndpoint = s.Messages["network.Endpoint"].WatchFromKv
 
 		s.Services = map[string]apiserver.Service{
-			"network.TenantV1": srv,
+			"network.EndpointV1": srv,
 		}
-		apisrv.RegisterService("network.TenantV1", srv)
-		endpoints := network.MakeTenantV1ServerEndpoints(s.endpointsTenantV1, logger)
-		server := network.MakeGRPCServerTenantV1(ctx, endpoints, logger)
-		network.RegisterTenantV1Server(grpcserver, server)
+		apisrv.RegisterService("network.EndpointV1", srv)
+		endpoints := network.MakeEndpointV1ServerEndpoints(s.endpointsEndpointV1, logger)
+		server := network.MakeGRPCServerEndpointV1(ctx, endpoints, logger)
+		network.RegisterEndpointV1Server(grpcserver, server)
 	}
 	// Add Watchers
 	{
 
-		s.Messages["network.Tenant"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := network.Tenant{}
+		s.Messages["network.Endpoint"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.Endpoint{}
 			key := o.MakeKey(svcprefix)
-			wstream := stream.(network.TenantV1_AutoWatchTenantServer)
+			wstream := stream.(network.EndpointV1_AutoWatchEndpointServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Endpoint")
 				return err
 			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Tenant Watcher")
+						l.DebugLog("Channel closed for Endpoint Watcher")
 						return nil
 					}
-					in, ok := ev.Object.(*network.Tenant)
+					in, ok := ev.Object.(*network.Endpoint)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -677,26 +677,110 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-					strEvent := network.AutoMsgTenantWatchHelper{
+					strEvent := network.AutoMsgEndpointWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Tenant watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "recieved Endpoint watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Tenant", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Endpoint", "fromver", in.APIVersion, "tover", version)
 							break
 						}
-						strEvent.Object = i.(*network.Tenant)
+						strEvent.Object = i.(*network.Endpoint)
 					}
 					l.DebugLog("msg", "writing to stream")
 					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Tenant", "error", err)
+						l.DebugLog("msg", "Stream send error'ed for Endpoint", "error", err)
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Tenant Watcher")
+					l.DebugLog("msg", "Context cancelled for Endpoint Watcher")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
+	}
+
+	{
+		srv := apisrvpkg.NewService("LbPolicyV1")
+
+		s.endpointsLbPolicyV1.fnAutoAddLbPolicy = srv.AddMethod("AutoAddLbPolicy",
+			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoAddLbPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsLbPolicyV1.fnAutoDeleteLbPolicy = srv.AddMethod("AutoDeleteLbPolicy",
+			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoDeleteLbPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsLbPolicyV1.fnAutoGetLbPolicy = srv.AddMethod("AutoGetLbPolicy",
+			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoGetLbPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsLbPolicyV1.fnAutoListLbPolicy = srv.AddMethod("AutoListLbPolicy",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgLbPolicyListHelper"], "lb-policy", "AutoListLbPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsLbPolicyV1.fnAutoUpdateLbPolicy = srv.AddMethod("AutoUpdateLbPolicy",
+			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoUpdateLbPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsLbPolicyV1.fnAutoWatchLbPolicy = s.Messages["network.LbPolicy"].WatchFromKv
+
+		s.Services = map[string]apiserver.Service{
+			"network.LbPolicyV1": srv,
+		}
+		apisrv.RegisterService("network.LbPolicyV1", srv)
+		endpoints := network.MakeLbPolicyV1ServerEndpoints(s.endpointsLbPolicyV1, logger)
+		server := network.MakeGRPCServerLbPolicyV1(ctx, endpoints, logger)
+		network.RegisterLbPolicyV1Server(grpcserver, server)
+	}
+	// Add Watchers
+	{
+
+		s.Messages["network.LbPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.LbPolicy{}
+			key := o.MakeKey(svcprefix)
+			wstream := stream.(network.LbPolicyV1_AutoWatchLbPolicyServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "LbPolicy")
+				return err
+			}
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.DebugLog("Channel closed for LbPolicy Watcher")
+						return nil
+					}
+					in, ok := ev.Object.(*network.LbPolicy)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					strEvent := network.AutoMsgLbPolicyWatchHelper{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "recieved LbPolicy watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "LbPolicy", "fromver", in.APIVersion, "tover", version)
+							break
+						}
+						strEvent.Object = i.(*network.LbPolicy)
+					}
+					l.DebugLog("msg", "writing to stream")
+					if err := wstream.Send(&strEvent); err != nil {
+						l.DebugLog("msg", "Stream send error'ed for LbPolicy", "error", err)
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for LbPolicy Watcher")
 					return wstream.Context().Err()
 				}
 			}
@@ -710,17 +794,17 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 		s.endpointsNetworkV1.fnAutoAddNetwork = srv.AddMethod("AutoAddNetwork",
 			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoAddNetwork")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsNetworkV1.fnAutoUpdateNetwork = srv.AddMethod("AutoUpdateNetwork",
-			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoUpdateNetwork")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsNetworkV1.fnAutoDeleteNetwork = srv.AddMethod("AutoDeleteNetwork",
+			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoDeleteNetwork")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetNetwork = srv.AddMethod("AutoGetNetwork",
 			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoGetNetwork")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsNetworkV1.fnAutoDeleteNetwork = srv.AddMethod("AutoDeleteNetwork",
-			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoDeleteNetwork")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
 		s.endpointsNetworkV1.fnAutoListNetwork = srv.AddMethod("AutoListNetwork",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgNetworkListHelper"], "networks", "AutoListNetwork")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoUpdateNetwork = srv.AddMethod("AutoUpdateNetwork",
+			apisrvpkg.NewMethod(s.Messages["network.Network"], s.Messages["network.Network"], "networks", "AutoUpdateNetwork")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoWatchNetwork = s.Messages["network.Network"].WatchFromKv
 
@@ -794,17 +878,17 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 		s.endpointsSecurityGroupV1.fnAutoAddSecurityGroup = srv.AddMethod("AutoAddSecurityGroup",
 			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoAddSecurityGroup")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsSecurityGroupV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",
-			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoUpdateSecurityGroup")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsSecurityGroupV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
+			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoDeleteSecurityGroup")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsSecurityGroupV1.fnAutoGetSecurityGroup = srv.AddMethod("AutoGetSecurityGroup",
 			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoGetSecurityGroup")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsSecurityGroupV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
-			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoDeleteSecurityGroup")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
 		s.endpointsSecurityGroupV1.fnAutoListSecurityGroup = srv.AddMethod("AutoListSecurityGroup",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgSecurityGroupListHelper"], "security-groups", "AutoListSecurityGroup")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsSecurityGroupV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",
+			apisrvpkg.NewMethod(s.Messages["network.SecurityGroup"], s.Messages["network.SecurityGroup"], "security-groups", "AutoUpdateSecurityGroup")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsSecurityGroupV1.fnAutoWatchSecurityGroup = s.Messages["network.SecurityGroup"].WatchFromKv
 
@@ -873,106 +957,22 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 	}
 
 	{
-		srv := apisrvpkg.NewService("SgpolicyV1")
-
-		s.endpointsSgpolicyV1.fnAutoAddSgpolicy = srv.AddMethod("AutoAddSgpolicy",
-			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoAddSgpolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsSgpolicyV1.fnAutoUpdateSgpolicy = srv.AddMethod("AutoUpdateSgpolicy",
-			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoUpdateSgpolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsSgpolicyV1.fnAutoGetSgpolicy = srv.AddMethod("AutoGetSgpolicy",
-			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoGetSgpolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsSgpolicyV1.fnAutoDeleteSgpolicy = srv.AddMethod("AutoDeleteSgpolicy",
-			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoDeleteSgpolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsSgpolicyV1.fnAutoListSgpolicy = srv.AddMethod("AutoListSgpolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgSgpolicyListHelper"], "sgpolicy", "AutoListSgpolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsSgpolicyV1.fnAutoWatchSgpolicy = s.Messages["network.Sgpolicy"].WatchFromKv
-
-		s.Services = map[string]apiserver.Service{
-			"network.SgpolicyV1": srv,
-		}
-		apisrv.RegisterService("network.SgpolicyV1", srv)
-		endpoints := network.MakeSgpolicyV1ServerEndpoints(s.endpointsSgpolicyV1, logger)
-		server := network.MakeGRPCServerSgpolicyV1(ctx, endpoints, logger)
-		network.RegisterSgpolicyV1Server(grpcserver, server)
-	}
-	// Add Watchers
-	{
-
-		s.Messages["network.Sgpolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := network.Sgpolicy{}
-			key := o.MakeKey(svcprefix)
-			wstream := stream.(network.SgpolicyV1_AutoWatchSgpolicyServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Sgpolicy")
-				return err
-			}
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.DebugLog("Channel closed for Sgpolicy Watcher")
-						return nil
-					}
-					in, ok := ev.Object.(*network.Sgpolicy)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-					strEvent := network.AutoMsgSgpolicyWatchHelper{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "recieved Sgpolicy watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Sgpolicy", "fromver", in.APIVersion, "tover", version)
-							break
-						}
-						strEvent.Object = i.(*network.Sgpolicy)
-					}
-					l.DebugLog("msg", "writing to stream")
-					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Sgpolicy", "error", err)
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Sgpolicy Watcher")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-	}
-
-	{
 		srv := apisrvpkg.NewService("ServiceV1")
 
 		s.endpointsServiceV1.fnAutoAddService = srv.AddMethod("AutoAddService",
 			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoAddService")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsServiceV1.fnAutoUpdateService = srv.AddMethod("AutoUpdateService",
-			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoUpdateService")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsServiceV1.fnAutoDeleteService = srv.AddMethod("AutoDeleteService",
+			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoDeleteService")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsServiceV1.fnAutoGetService = srv.AddMethod("AutoGetService",
 			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoGetService")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsServiceV1.fnAutoDeleteService = srv.AddMethod("AutoDeleteService",
-			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoDeleteService")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
 		s.endpointsServiceV1.fnAutoListService = srv.AddMethod("AutoListService",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgServiceListHelper"], "services", "AutoListService")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsServiceV1.fnAutoUpdateService = srv.AddMethod("AutoUpdateService",
+			apisrvpkg.NewMethod(s.Messages["network.Service"], s.Messages["network.Service"], "services", "AutoUpdateService")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsServiceV1.fnAutoWatchService = s.Messages["network.Service"].WatchFromKv
 
@@ -1041,55 +1041,55 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 	}
 
 	{
-		srv := apisrvpkg.NewService("LbPolicyV1")
+		srv := apisrvpkg.NewService("SgpolicyV1")
 
-		s.endpointsLbPolicyV1.fnAutoAddLbPolicy = srv.AddMethod("AutoAddLbPolicy",
-			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoAddLbPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+		s.endpointsSgpolicyV1.fnAutoAddSgpolicy = srv.AddMethod("AutoAddSgpolicy",
+			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoAddSgpolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsLbPolicyV1.fnAutoUpdateLbPolicy = srv.AddMethod("AutoUpdateLbPolicy",
-			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoUpdateLbPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsSgpolicyV1.fnAutoDeleteSgpolicy = srv.AddMethod("AutoDeleteSgpolicy",
+			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoDeleteSgpolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsLbPolicyV1.fnAutoGetLbPolicy = srv.AddMethod("AutoGetLbPolicy",
-			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoGetLbPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+		s.endpointsSgpolicyV1.fnAutoGetSgpolicy = srv.AddMethod("AutoGetSgpolicy",
+			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoGetSgpolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsLbPolicyV1.fnAutoDeleteLbPolicy = srv.AddMethod("AutoDeleteLbPolicy",
-			apisrvpkg.NewMethod(s.Messages["network.LbPolicy"], s.Messages["network.LbPolicy"], "lb-policy", "AutoDeleteLbPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+		s.endpointsSgpolicyV1.fnAutoListSgpolicy = srv.AddMethod("AutoListSgpolicy",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgSgpolicyListHelper"], "sgpolicy", "AutoListSgpolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsLbPolicyV1.fnAutoListLbPolicy = srv.AddMethod("AutoListLbPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgLbPolicyListHelper"], "lb-policy", "AutoListLbPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+		s.endpointsSgpolicyV1.fnAutoUpdateSgpolicy = srv.AddMethod("AutoUpdateSgpolicy",
+			apisrvpkg.NewMethod(s.Messages["network.Sgpolicy"], s.Messages["network.Sgpolicy"], "sgpolicy", "AutoUpdateSgpolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsLbPolicyV1.fnAutoWatchLbPolicy = s.Messages["network.LbPolicy"].WatchFromKv
+		s.endpointsSgpolicyV1.fnAutoWatchSgpolicy = s.Messages["network.Sgpolicy"].WatchFromKv
 
 		s.Services = map[string]apiserver.Service{
-			"network.LbPolicyV1": srv,
+			"network.SgpolicyV1": srv,
 		}
-		apisrv.RegisterService("network.LbPolicyV1", srv)
-		endpoints := network.MakeLbPolicyV1ServerEndpoints(s.endpointsLbPolicyV1, logger)
-		server := network.MakeGRPCServerLbPolicyV1(ctx, endpoints, logger)
-		network.RegisterLbPolicyV1Server(grpcserver, server)
+		apisrv.RegisterService("network.SgpolicyV1", srv)
+		endpoints := network.MakeSgpolicyV1ServerEndpoints(s.endpointsSgpolicyV1, logger)
+		server := network.MakeGRPCServerSgpolicyV1(ctx, endpoints, logger)
+		network.RegisterSgpolicyV1Server(grpcserver, server)
 	}
 	// Add Watchers
 	{
 
-		s.Messages["network.LbPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := network.LbPolicy{}
+		s.Messages["network.Sgpolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.Sgpolicy{}
 			key := o.MakeKey(svcprefix)
-			wstream := stream.(network.LbPolicyV1_AutoWatchLbPolicyServer)
+			wstream := stream.(network.SgpolicyV1_AutoWatchSgpolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "LbPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Sgpolicy")
 				return err
 			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for LbPolicy Watcher")
+						l.DebugLog("Channel closed for Sgpolicy Watcher")
 						return nil
 					}
-					in, ok := ev.Object.(*network.LbPolicy)
+					in, ok := ev.Object.(*network.Sgpolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1097,26 +1097,26 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-					strEvent := network.AutoMsgLbPolicyWatchHelper{
+					strEvent := network.AutoMsgSgpolicyWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved LbPolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "recieved Sgpolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "LbPolicy", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Sgpolicy", "fromver", in.APIVersion, "tover", version)
 							break
 						}
-						strEvent.Object = i.(*network.LbPolicy)
+						strEvent.Object = i.(*network.Sgpolicy)
 					}
 					l.DebugLog("msg", "writing to stream")
 					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for LbPolicy", "error", err)
+						l.DebugLog("msg", "Stream send error'ed for Sgpolicy", "error", err)
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for LbPolicy Watcher")
+					l.DebugLog("msg", "Context cancelled for Sgpolicy Watcher")
 					return wstream.Context().Err()
 				}
 			}
@@ -1125,55 +1125,55 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 	}
 
 	{
-		srv := apisrvpkg.NewService("EndpointV1")
+		srv := apisrvpkg.NewService("TenantV1")
 
-		s.endpointsEndpointV1.fnAutoAddEndpoint = srv.AddMethod("AutoAddEndpoint",
-			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoAddEndpoint")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+		s.endpointsTenantV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",
+			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoAddTenant")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsEndpointV1.fnAutoUpdateEndpoint = srv.AddMethod("AutoUpdateEndpoint",
-			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoUpdateEndpoint")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsTenantV1.fnAutoDeleteTenant = srv.AddMethod("AutoDeleteTenant",
+			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoDeleteTenant")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsEndpointV1.fnAutoGetEndpoint = srv.AddMethod("AutoGetEndpoint",
-			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoGetEndpoint")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+		s.endpointsTenantV1.fnAutoGetTenant = srv.AddMethod("AutoGetTenant",
+			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoGetTenant")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsEndpointV1.fnAutoDeleteEndpoint = srv.AddMethod("AutoDeleteEndpoint",
-			apisrvpkg.NewMethod(s.Messages["network.Endpoint"], s.Messages["network.Endpoint"], "endpoints", "AutoDeleteEndpoint")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+		s.endpointsTenantV1.fnAutoListTenant = srv.AddMethod("AutoListTenant",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgTenantListHelper"], "tenants", "AutoListTenant")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsEndpointV1.fnAutoListEndpoint = srv.AddMethod("AutoListEndpoint",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["network.AutoMsgEndpointListHelper"], "endpoints", "AutoListEndpoint")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+		s.endpointsTenantV1.fnAutoUpdateTenant = srv.AddMethod("AutoUpdateTenant",
+			apisrvpkg.NewMethod(s.Messages["network.Tenant"], s.Messages["network.Tenant"], "tenants", "AutoUpdateTenant")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsEndpointV1.fnAutoWatchEndpoint = s.Messages["network.Endpoint"].WatchFromKv
+		s.endpointsTenantV1.fnAutoWatchTenant = s.Messages["network.Tenant"].WatchFromKv
 
 		s.Services = map[string]apiserver.Service{
-			"network.EndpointV1": srv,
+			"network.TenantV1": srv,
 		}
-		apisrv.RegisterService("network.EndpointV1", srv)
-		endpoints := network.MakeEndpointV1ServerEndpoints(s.endpointsEndpointV1, logger)
-		server := network.MakeGRPCServerEndpointV1(ctx, endpoints, logger)
-		network.RegisterEndpointV1Server(grpcserver, server)
+		apisrv.RegisterService("network.TenantV1", srv)
+		endpoints := network.MakeTenantV1ServerEndpoints(s.endpointsTenantV1, logger)
+		server := network.MakeGRPCServerTenantV1(ctx, endpoints, logger)
+		network.RegisterTenantV1Server(grpcserver, server)
 	}
 	// Add Watchers
 	{
 
-		s.Messages["network.Endpoint"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := network.Endpoint{}
+		s.Messages["network.Tenant"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := network.Tenant{}
 			key := o.MakeKey(svcprefix)
-			wstream := stream.(network.EndpointV1_AutoWatchEndpointServer)
+			wstream := stream.(network.TenantV1_AutoWatchTenantServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Endpoint")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")
 				return err
 			}
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Endpoint Watcher")
+						l.DebugLog("Channel closed for Tenant Watcher")
 						return nil
 					}
-					in, ok := ev.Object.(*network.Endpoint)
+					in, ok := ev.Object.(*network.Tenant)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1181,26 +1181,26 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-					strEvent := network.AutoMsgEndpointWatchHelper{
+					strEvent := network.AutoMsgTenantWatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Endpoint watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "recieved Tenant watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Endpoint", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Tenant", "fromver", in.APIVersion, "tover", version)
 							break
 						}
-						strEvent.Object = i.(*network.Endpoint)
+						strEvent.Object = i.(*network.Tenant)
 					}
 					l.DebugLog("msg", "writing to stream")
 					if err := wstream.Send(&strEvent); err != nil {
-						l.DebugLog("msg", "Stream send error'ed for Endpoint", "error", err)
+						l.DebugLog("msg", "Stream send error'ed for Tenant", "error", err)
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Endpoint Watcher")
+					l.DebugLog("msg", "Context cancelled for Tenant Watcher")
 					return wstream.Context().Err()
 				}
 			}
@@ -1211,288 +1211,8 @@ func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.L
 	return nil
 }
 
-func (e *eTenantV1Endpoints) AutoAddTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
-	r, err := e.fnAutoAddTenant(ctx, t)
-	if err == nil {
-		return r.(network.Tenant), err
-	}
-	return network.Tenant{}, err
-
-}
-func (e *eTenantV1Endpoints) AutoUpdateTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
-	r, err := e.fnAutoUpdateTenant(ctx, t)
-	if err == nil {
-		return r.(network.Tenant), err
-	}
-	return network.Tenant{}, err
-
-}
-func (e *eTenantV1Endpoints) AutoGetTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
-	r, err := e.fnAutoGetTenant(ctx, t)
-	if err == nil {
-		return r.(network.Tenant), err
-	}
-	return network.Tenant{}, err
-
-}
-func (e *eTenantV1Endpoints) AutoDeleteTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
-	r, err := e.fnAutoDeleteTenant(ctx, t)
-	if err == nil {
-		return r.(network.Tenant), err
-	}
-	return network.Tenant{}, err
-
-}
-func (e *eTenantV1Endpoints) AutoListTenant(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgTenantListHelper, error) {
-	r, err := e.fnAutoListTenant(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgTenantListHelper), err
-	}
-	return network.AutoMsgTenantListHelper{}, err
-
-}
-
-func (e *eTenantV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream network.TenantV1_AutoWatchTenantServer) error {
-	return e.fnAutoWatchTenant(in, stream, "tenants")
-}
-func (e *eNetworkV1Endpoints) AutoAddNetwork(ctx context.Context, t network.Network) (network.Network, error) {
-	r, err := e.fnAutoAddNetwork(ctx, t)
-	if err == nil {
-		return r.(network.Network), err
-	}
-	return network.Network{}, err
-
-}
-func (e *eNetworkV1Endpoints) AutoUpdateNetwork(ctx context.Context, t network.Network) (network.Network, error) {
-	r, err := e.fnAutoUpdateNetwork(ctx, t)
-	if err == nil {
-		return r.(network.Network), err
-	}
-	return network.Network{}, err
-
-}
-func (e *eNetworkV1Endpoints) AutoGetNetwork(ctx context.Context, t network.Network) (network.Network, error) {
-	r, err := e.fnAutoGetNetwork(ctx, t)
-	if err == nil {
-		return r.(network.Network), err
-	}
-	return network.Network{}, err
-
-}
-func (e *eNetworkV1Endpoints) AutoDeleteNetwork(ctx context.Context, t network.Network) (network.Network, error) {
-	r, err := e.fnAutoDeleteNetwork(ctx, t)
-	if err == nil {
-		return r.(network.Network), err
-	}
-	return network.Network{}, err
-
-}
-func (e *eNetworkV1Endpoints) AutoListNetwork(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgNetworkListHelper, error) {
-	r, err := e.fnAutoListNetwork(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgNetworkListHelper), err
-	}
-	return network.AutoMsgNetworkListHelper{}, err
-
-}
-
-func (e *eNetworkV1Endpoints) AutoWatchNetwork(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchNetworkServer) error {
-	return e.fnAutoWatchNetwork(in, stream, "networks")
-}
-func (e *eSecurityGroupV1Endpoints) AutoAddSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
-	r, err := e.fnAutoAddSecurityGroup(ctx, t)
-	if err == nil {
-		return r.(network.SecurityGroup), err
-	}
-	return network.SecurityGroup{}, err
-
-}
-func (e *eSecurityGroupV1Endpoints) AutoUpdateSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
-	r, err := e.fnAutoUpdateSecurityGroup(ctx, t)
-	if err == nil {
-		return r.(network.SecurityGroup), err
-	}
-	return network.SecurityGroup{}, err
-
-}
-func (e *eSecurityGroupV1Endpoints) AutoGetSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
-	r, err := e.fnAutoGetSecurityGroup(ctx, t)
-	if err == nil {
-		return r.(network.SecurityGroup), err
-	}
-	return network.SecurityGroup{}, err
-
-}
-func (e *eSecurityGroupV1Endpoints) AutoDeleteSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
-	r, err := e.fnAutoDeleteSecurityGroup(ctx, t)
-	if err == nil {
-		return r.(network.SecurityGroup), err
-	}
-	return network.SecurityGroup{}, err
-
-}
-func (e *eSecurityGroupV1Endpoints) AutoListSecurityGroup(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgSecurityGroupListHelper, error) {
-	r, err := e.fnAutoListSecurityGroup(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgSecurityGroupListHelper), err
-	}
-	return network.AutoMsgSecurityGroupListHelper{}, err
-
-}
-
-func (e *eSecurityGroupV1Endpoints) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream network.SecurityGroupV1_AutoWatchSecurityGroupServer) error {
-	return e.fnAutoWatchSecurityGroup(in, stream, "security-groups")
-}
-func (e *eSgpolicyV1Endpoints) AutoAddSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
-	r, err := e.fnAutoAddSgpolicy(ctx, t)
-	if err == nil {
-		return r.(network.Sgpolicy), err
-	}
-	return network.Sgpolicy{}, err
-
-}
-func (e *eSgpolicyV1Endpoints) AutoUpdateSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
-	r, err := e.fnAutoUpdateSgpolicy(ctx, t)
-	if err == nil {
-		return r.(network.Sgpolicy), err
-	}
-	return network.Sgpolicy{}, err
-
-}
-func (e *eSgpolicyV1Endpoints) AutoGetSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
-	r, err := e.fnAutoGetSgpolicy(ctx, t)
-	if err == nil {
-		return r.(network.Sgpolicy), err
-	}
-	return network.Sgpolicy{}, err
-
-}
-func (e *eSgpolicyV1Endpoints) AutoDeleteSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
-	r, err := e.fnAutoDeleteSgpolicy(ctx, t)
-	if err == nil {
-		return r.(network.Sgpolicy), err
-	}
-	return network.Sgpolicy{}, err
-
-}
-func (e *eSgpolicyV1Endpoints) AutoListSgpolicy(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgSgpolicyListHelper, error) {
-	r, err := e.fnAutoListSgpolicy(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgSgpolicyListHelper), err
-	}
-	return network.AutoMsgSgpolicyListHelper{}, err
-
-}
-
-func (e *eSgpolicyV1Endpoints) AutoWatchSgpolicy(in *api.ListWatchOptions, stream network.SgpolicyV1_AutoWatchSgpolicyServer) error {
-	return e.fnAutoWatchSgpolicy(in, stream, "sgpolicy")
-}
-func (e *eServiceV1Endpoints) AutoAddService(ctx context.Context, t network.Service) (network.Service, error) {
-	r, err := e.fnAutoAddService(ctx, t)
-	if err == nil {
-		return r.(network.Service), err
-	}
-	return network.Service{}, err
-
-}
-func (e *eServiceV1Endpoints) AutoUpdateService(ctx context.Context, t network.Service) (network.Service, error) {
-	r, err := e.fnAutoUpdateService(ctx, t)
-	if err == nil {
-		return r.(network.Service), err
-	}
-	return network.Service{}, err
-
-}
-func (e *eServiceV1Endpoints) AutoGetService(ctx context.Context, t network.Service) (network.Service, error) {
-	r, err := e.fnAutoGetService(ctx, t)
-	if err == nil {
-		return r.(network.Service), err
-	}
-	return network.Service{}, err
-
-}
-func (e *eServiceV1Endpoints) AutoDeleteService(ctx context.Context, t network.Service) (network.Service, error) {
-	r, err := e.fnAutoDeleteService(ctx, t)
-	if err == nil {
-		return r.(network.Service), err
-	}
-	return network.Service{}, err
-
-}
-func (e *eServiceV1Endpoints) AutoListService(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgServiceListHelper, error) {
-	r, err := e.fnAutoListService(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgServiceListHelper), err
-	}
-	return network.AutoMsgServiceListHelper{}, err
-
-}
-
-func (e *eServiceV1Endpoints) AutoWatchService(in *api.ListWatchOptions, stream network.ServiceV1_AutoWatchServiceServer) error {
-	return e.fnAutoWatchService(in, stream, "services")
-}
-func (e *eLbPolicyV1Endpoints) AutoAddLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
-	r, err := e.fnAutoAddLbPolicy(ctx, t)
-	if err == nil {
-		return r.(network.LbPolicy), err
-	}
-	return network.LbPolicy{}, err
-
-}
-func (e *eLbPolicyV1Endpoints) AutoUpdateLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
-	r, err := e.fnAutoUpdateLbPolicy(ctx, t)
-	if err == nil {
-		return r.(network.LbPolicy), err
-	}
-	return network.LbPolicy{}, err
-
-}
-func (e *eLbPolicyV1Endpoints) AutoGetLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
-	r, err := e.fnAutoGetLbPolicy(ctx, t)
-	if err == nil {
-		return r.(network.LbPolicy), err
-	}
-	return network.LbPolicy{}, err
-
-}
-func (e *eLbPolicyV1Endpoints) AutoDeleteLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
-	r, err := e.fnAutoDeleteLbPolicy(ctx, t)
-	if err == nil {
-		return r.(network.LbPolicy), err
-	}
-	return network.LbPolicy{}, err
-
-}
-func (e *eLbPolicyV1Endpoints) AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgLbPolicyListHelper, error) {
-	r, err := e.fnAutoListLbPolicy(ctx, t)
-	if err == nil {
-		return r.(network.AutoMsgLbPolicyListHelper), err
-	}
-	return network.AutoMsgLbPolicyListHelper{}, err
-
-}
-
-func (e *eLbPolicyV1Endpoints) AutoWatchLbPolicy(in *api.ListWatchOptions, stream network.LbPolicyV1_AutoWatchLbPolicyServer) error {
-	return e.fnAutoWatchLbPolicy(in, stream, "lb-policy")
-}
 func (e *eEndpointV1Endpoints) AutoAddEndpoint(ctx context.Context, t network.Endpoint) (network.Endpoint, error) {
 	r, err := e.fnAutoAddEndpoint(ctx, t)
-	if err == nil {
-		return r.(network.Endpoint), err
-	}
-	return network.Endpoint{}, err
-
-}
-func (e *eEndpointV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t network.Endpoint) (network.Endpoint, error) {
-	r, err := e.fnAutoUpdateEndpoint(ctx, t)
-	if err == nil {
-		return r.(network.Endpoint), err
-	}
-	return network.Endpoint{}, err
-
-}
-func (e *eEndpointV1Endpoints) AutoGetEndpoint(ctx context.Context, t network.Endpoint) (network.Endpoint, error) {
-	r, err := e.fnAutoGetEndpoint(ctx, t)
 	if err == nil {
 		return r.(network.Endpoint), err
 	}
@@ -1507,6 +1227,14 @@ func (e *eEndpointV1Endpoints) AutoDeleteEndpoint(ctx context.Context, t network
 	return network.Endpoint{}, err
 
 }
+func (e *eEndpointV1Endpoints) AutoGetEndpoint(ctx context.Context, t network.Endpoint) (network.Endpoint, error) {
+	r, err := e.fnAutoGetEndpoint(ctx, t)
+	if err == nil {
+		return r.(network.Endpoint), err
+	}
+	return network.Endpoint{}, err
+
+}
 func (e *eEndpointV1Endpoints) AutoListEndpoint(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgEndpointListHelper, error) {
 	r, err := e.fnAutoListEndpoint(ctx, t)
 	if err == nil {
@@ -1515,9 +1243,281 @@ func (e *eEndpointV1Endpoints) AutoListEndpoint(ctx context.Context, t api.ListW
 	return network.AutoMsgEndpointListHelper{}, err
 
 }
+func (e *eEndpointV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t network.Endpoint) (network.Endpoint, error) {
+	r, err := e.fnAutoUpdateEndpoint(ctx, t)
+	if err == nil {
+		return r.(network.Endpoint), err
+	}
+	return network.Endpoint{}, err
+
+}
 
 func (e *eEndpointV1Endpoints) AutoWatchEndpoint(in *api.ListWatchOptions, stream network.EndpointV1_AutoWatchEndpointServer) error {
 	return e.fnAutoWatchEndpoint(in, stream, "endpoints")
+}
+func (e *eLbPolicyV1Endpoints) AutoAddLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
+	r, err := e.fnAutoAddLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.LbPolicy), err
+	}
+	return network.LbPolicy{}, err
+
+}
+func (e *eLbPolicyV1Endpoints) AutoDeleteLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
+	r, err := e.fnAutoDeleteLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.LbPolicy), err
+	}
+	return network.LbPolicy{}, err
+
+}
+func (e *eLbPolicyV1Endpoints) AutoGetLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
+	r, err := e.fnAutoGetLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.LbPolicy), err
+	}
+	return network.LbPolicy{}, err
+
+}
+func (e *eLbPolicyV1Endpoints) AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgLbPolicyListHelper, error) {
+	r, err := e.fnAutoListLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgLbPolicyListHelper), err
+	}
+	return network.AutoMsgLbPolicyListHelper{}, err
+
+}
+func (e *eLbPolicyV1Endpoints) AutoUpdateLbPolicy(ctx context.Context, t network.LbPolicy) (network.LbPolicy, error) {
+	r, err := e.fnAutoUpdateLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.LbPolicy), err
+	}
+	return network.LbPolicy{}, err
+
+}
+
+func (e *eLbPolicyV1Endpoints) AutoWatchLbPolicy(in *api.ListWatchOptions, stream network.LbPolicyV1_AutoWatchLbPolicyServer) error {
+	return e.fnAutoWatchLbPolicy(in, stream, "lb-policy")
+}
+func (e *eNetworkV1Endpoints) AutoAddNetwork(ctx context.Context, t network.Network) (network.Network, error) {
+	r, err := e.fnAutoAddNetwork(ctx, t)
+	if err == nil {
+		return r.(network.Network), err
+	}
+	return network.Network{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoDeleteNetwork(ctx context.Context, t network.Network) (network.Network, error) {
+	r, err := e.fnAutoDeleteNetwork(ctx, t)
+	if err == nil {
+		return r.(network.Network), err
+	}
+	return network.Network{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoGetNetwork(ctx context.Context, t network.Network) (network.Network, error) {
+	r, err := e.fnAutoGetNetwork(ctx, t)
+	if err == nil {
+		return r.(network.Network), err
+	}
+	return network.Network{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoListNetwork(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgNetworkListHelper, error) {
+	r, err := e.fnAutoListNetwork(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgNetworkListHelper), err
+	}
+	return network.AutoMsgNetworkListHelper{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoUpdateNetwork(ctx context.Context, t network.Network) (network.Network, error) {
+	r, err := e.fnAutoUpdateNetwork(ctx, t)
+	if err == nil {
+		return r.(network.Network), err
+	}
+	return network.Network{}, err
+
+}
+
+func (e *eNetworkV1Endpoints) AutoWatchNetwork(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchNetworkServer) error {
+	return e.fnAutoWatchNetwork(in, stream, "networks")
+}
+func (e *eSecurityGroupV1Endpoints) AutoAddSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
+	r, err := e.fnAutoAddSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(network.SecurityGroup), err
+	}
+	return network.SecurityGroup{}, err
+
+}
+func (e *eSecurityGroupV1Endpoints) AutoDeleteSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
+	r, err := e.fnAutoDeleteSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(network.SecurityGroup), err
+	}
+	return network.SecurityGroup{}, err
+
+}
+func (e *eSecurityGroupV1Endpoints) AutoGetSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
+	r, err := e.fnAutoGetSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(network.SecurityGroup), err
+	}
+	return network.SecurityGroup{}, err
+
+}
+func (e *eSecurityGroupV1Endpoints) AutoListSecurityGroup(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgSecurityGroupListHelper, error) {
+	r, err := e.fnAutoListSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgSecurityGroupListHelper), err
+	}
+	return network.AutoMsgSecurityGroupListHelper{}, err
+
+}
+func (e *eSecurityGroupV1Endpoints) AutoUpdateSecurityGroup(ctx context.Context, t network.SecurityGroup) (network.SecurityGroup, error) {
+	r, err := e.fnAutoUpdateSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(network.SecurityGroup), err
+	}
+	return network.SecurityGroup{}, err
+
+}
+
+func (e *eSecurityGroupV1Endpoints) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream network.SecurityGroupV1_AutoWatchSecurityGroupServer) error {
+	return e.fnAutoWatchSecurityGroup(in, stream, "security-groups")
+}
+func (e *eServiceV1Endpoints) AutoAddService(ctx context.Context, t network.Service) (network.Service, error) {
+	r, err := e.fnAutoAddService(ctx, t)
+	if err == nil {
+		return r.(network.Service), err
+	}
+	return network.Service{}, err
+
+}
+func (e *eServiceV1Endpoints) AutoDeleteService(ctx context.Context, t network.Service) (network.Service, error) {
+	r, err := e.fnAutoDeleteService(ctx, t)
+	if err == nil {
+		return r.(network.Service), err
+	}
+	return network.Service{}, err
+
+}
+func (e *eServiceV1Endpoints) AutoGetService(ctx context.Context, t network.Service) (network.Service, error) {
+	r, err := e.fnAutoGetService(ctx, t)
+	if err == nil {
+		return r.(network.Service), err
+	}
+	return network.Service{}, err
+
+}
+func (e *eServiceV1Endpoints) AutoListService(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgServiceListHelper, error) {
+	r, err := e.fnAutoListService(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgServiceListHelper), err
+	}
+	return network.AutoMsgServiceListHelper{}, err
+
+}
+func (e *eServiceV1Endpoints) AutoUpdateService(ctx context.Context, t network.Service) (network.Service, error) {
+	r, err := e.fnAutoUpdateService(ctx, t)
+	if err == nil {
+		return r.(network.Service), err
+	}
+	return network.Service{}, err
+
+}
+
+func (e *eServiceV1Endpoints) AutoWatchService(in *api.ListWatchOptions, stream network.ServiceV1_AutoWatchServiceServer) error {
+	return e.fnAutoWatchService(in, stream, "services")
+}
+func (e *eSgpolicyV1Endpoints) AutoAddSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
+	r, err := e.fnAutoAddSgpolicy(ctx, t)
+	if err == nil {
+		return r.(network.Sgpolicy), err
+	}
+	return network.Sgpolicy{}, err
+
+}
+func (e *eSgpolicyV1Endpoints) AutoDeleteSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
+	r, err := e.fnAutoDeleteSgpolicy(ctx, t)
+	if err == nil {
+		return r.(network.Sgpolicy), err
+	}
+	return network.Sgpolicy{}, err
+
+}
+func (e *eSgpolicyV1Endpoints) AutoGetSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
+	r, err := e.fnAutoGetSgpolicy(ctx, t)
+	if err == nil {
+		return r.(network.Sgpolicy), err
+	}
+	return network.Sgpolicy{}, err
+
+}
+func (e *eSgpolicyV1Endpoints) AutoListSgpolicy(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgSgpolicyListHelper, error) {
+	r, err := e.fnAutoListSgpolicy(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgSgpolicyListHelper), err
+	}
+	return network.AutoMsgSgpolicyListHelper{}, err
+
+}
+func (e *eSgpolicyV1Endpoints) AutoUpdateSgpolicy(ctx context.Context, t network.Sgpolicy) (network.Sgpolicy, error) {
+	r, err := e.fnAutoUpdateSgpolicy(ctx, t)
+	if err == nil {
+		return r.(network.Sgpolicy), err
+	}
+	return network.Sgpolicy{}, err
+
+}
+
+func (e *eSgpolicyV1Endpoints) AutoWatchSgpolicy(in *api.ListWatchOptions, stream network.SgpolicyV1_AutoWatchSgpolicyServer) error {
+	return e.fnAutoWatchSgpolicy(in, stream, "sgpolicy")
+}
+func (e *eTenantV1Endpoints) AutoAddTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
+	r, err := e.fnAutoAddTenant(ctx, t)
+	if err == nil {
+		return r.(network.Tenant), err
+	}
+	return network.Tenant{}, err
+
+}
+func (e *eTenantV1Endpoints) AutoDeleteTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
+	r, err := e.fnAutoDeleteTenant(ctx, t)
+	if err == nil {
+		return r.(network.Tenant), err
+	}
+	return network.Tenant{}, err
+
+}
+func (e *eTenantV1Endpoints) AutoGetTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
+	r, err := e.fnAutoGetTenant(ctx, t)
+	if err == nil {
+		return r.(network.Tenant), err
+	}
+	return network.Tenant{}, err
+
+}
+func (e *eTenantV1Endpoints) AutoListTenant(ctx context.Context, t api.ListWatchOptions) (network.AutoMsgTenantListHelper, error) {
+	r, err := e.fnAutoListTenant(ctx, t)
+	if err == nil {
+		return r.(network.AutoMsgTenantListHelper), err
+	}
+	return network.AutoMsgTenantListHelper{}, err
+
+}
+func (e *eTenantV1Endpoints) AutoUpdateTenant(ctx context.Context, t network.Tenant) (network.Tenant, error) {
+	r, err := e.fnAutoUpdateTenant(ctx, t)
+	if err == nil {
+		return r.(network.Tenant), err
+	}
+	return network.Tenant{}, err
+
+}
+
+func (e *eTenantV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream network.TenantV1_AutoWatchTenantServer) error {
+	return e.fnAutoWatchTenant(in, stream, "tenants")
 }
 
 func init() {
@@ -1526,8 +1526,12 @@ func init() {
 	svc := snetworkBackend{}
 
 	{
-		e := eTenantV1Endpoints{Svc: svc}
-		svc.endpointsTenantV1 = &e
+		e := eEndpointV1Endpoints{Svc: svc}
+		svc.endpointsEndpointV1 = &e
+	}
+	{
+		e := eLbPolicyV1Endpoints{Svc: svc}
+		svc.endpointsLbPolicyV1 = &e
 	}
 	{
 		e := eNetworkV1Endpoints{Svc: svc}
@@ -1538,20 +1542,16 @@ func init() {
 		svc.endpointsSecurityGroupV1 = &e
 	}
 	{
-		e := eSgpolicyV1Endpoints{Svc: svc}
-		svc.endpointsSgpolicyV1 = &e
-	}
-	{
 		e := eServiceV1Endpoints{Svc: svc}
 		svc.endpointsServiceV1 = &e
 	}
 	{
-		e := eLbPolicyV1Endpoints{Svc: svc}
-		svc.endpointsLbPolicyV1 = &e
+		e := eSgpolicyV1Endpoints{Svc: svc}
+		svc.endpointsSgpolicyV1 = &e
 	}
 	{
-		e := eEndpointV1Endpoints{Svc: svc}
-		svc.endpointsEndpointV1 = &e
+		e := eTenantV1Endpoints{Svc: svc}
+		svc.endpointsTenantV1 = &e
 	}
 	apisrv.Register("network.protos/network.proto", &svc)
 }

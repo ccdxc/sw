@@ -19,11 +19,6 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
-func (m *Publisher) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "publishers/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
 	return fmt.Sprint("/venice/", prefix, "/", "books/", m.Name)
 }
@@ -34,14 +29,19 @@ func (m *Order) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgOrderListHelper) MakeKey(prefix string) string {
-	obj := Order{}
-	return obj.MakeKey(prefix)
+func (m *Publisher) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "publishers/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgBookListHelper) MakeKey(prefix string) string {
 	obj := Book{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgOrderListHelper) MakeKey(prefix string) string {
+	obj := Order{}
 	return obj.MakeKey(prefix)
 }
 
@@ -52,14 +52,14 @@ func (m *AutoMsgPublisherListHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgOrderWatchHelper) MakeKey(prefix string) string {
-	obj := Order{}
+func (m *AutoMsgBookWatchHelper) MakeKey(prefix string) string {
+	obj := Book{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgBookWatchHelper) MakeKey(prefix string) string {
-	obj := Book{}
+func (m *AutoMsgOrderWatchHelper) MakeKey(prefix string) string {
+	obj := Order{}
 	return obj.MakeKey(prefix)
 }
 

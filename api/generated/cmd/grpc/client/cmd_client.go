@@ -51,76 +51,6 @@ func addVersion(ctx context.Context, version string) context.Context {
 // NewCmdV1 sets up a new client for CmdV1
 func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 
-	var lAutoAddNodeEndpoint endpoint.Endpoint
-	{
-		lAutoAddNodeEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoAddNode",
-			cmd.EncodeGrpcReqNode,
-			cmd.DecodeGrpcRespNode,
-			&cmd.Node{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoAddNode")(lAutoAddNodeEndpoint)
-	}
-	var lAutoUpdateNodeEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateNodeEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoUpdateNode",
-			cmd.EncodeGrpcReqNode,
-			cmd.DecodeGrpcRespNode,
-			&cmd.Node{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateNode")(lAutoUpdateNodeEndpoint)
-	}
-	var lAutoGetNodeEndpoint endpoint.Endpoint
-	{
-		lAutoGetNodeEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoGetNode",
-			cmd.EncodeGrpcReqNode,
-			cmd.DecodeGrpcRespNode,
-			&cmd.Node{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoGetNode")(lAutoGetNodeEndpoint)
-	}
-	var lAutoDeleteNodeEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteNodeEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoDeleteNode",
-			cmd.EncodeGrpcReqNode,
-			cmd.DecodeGrpcRespNode,
-			&cmd.Node{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteNode")(lAutoDeleteNodeEndpoint)
-	}
-	var lAutoListNodeEndpoint endpoint.Endpoint
-	{
-		lAutoListNodeEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoListNode",
-			cmd.EncodeGrpcReqListWatchOptions,
-			cmd.DecodeGrpcRespAutoMsgNodeListHelper,
-			&cmd.AutoMsgNodeListHelper{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoListNode")(lAutoListNodeEndpoint)
-	}
 	var lAutoAddClusterEndpoint endpoint.Endpoint
 	{
 		lAutoAddClusterEndpoint = grpctransport.NewClient(
@@ -135,33 +65,19 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 		).Endpoint()
 		lAutoAddClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoAddCluster")(lAutoAddClusterEndpoint)
 	}
-	var lAutoUpdateClusterEndpoint endpoint.Endpoint
+	var lAutoAddNodeEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateClusterEndpoint = grpctransport.NewClient(
+		lAutoAddNodeEndpoint = grpctransport.NewClient(
 			conn,
 			"cmd.CmdV1",
-			"AutoUpdateCluster",
-			cmd.EncodeGrpcReqCluster,
-			cmd.DecodeGrpcRespCluster,
-			&cmd.Cluster{},
+			"AutoAddNode",
+			cmd.EncodeGrpcReqNode,
+			cmd.DecodeGrpcRespNode,
+			&cmd.Node{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateCluster")(lAutoUpdateClusterEndpoint)
-	}
-	var lAutoGetClusterEndpoint endpoint.Endpoint
-	{
-		lAutoGetClusterEndpoint = grpctransport.NewClient(
-			conn,
-			"cmd.CmdV1",
-			"AutoGetCluster",
-			cmd.EncodeGrpcReqCluster,
-			cmd.DecodeGrpcRespCluster,
-			&cmd.Cluster{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoGetCluster")(lAutoGetClusterEndpoint)
+		lAutoAddNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoAddNode")(lAutoAddNodeEndpoint)
 	}
 	var lAutoDeleteClusterEndpoint endpoint.Endpoint
 	{
@@ -177,6 +93,48 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 		).Endpoint()
 		lAutoDeleteClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteCluster")(lAutoDeleteClusterEndpoint)
 	}
+	var lAutoDeleteNodeEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteNodeEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoDeleteNode",
+			cmd.EncodeGrpcReqNode,
+			cmd.DecodeGrpcRespNode,
+			&cmd.Node{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteNode")(lAutoDeleteNodeEndpoint)
+	}
+	var lAutoGetClusterEndpoint endpoint.Endpoint
+	{
+		lAutoGetClusterEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoGetCluster",
+			cmd.EncodeGrpcReqCluster,
+			cmd.DecodeGrpcRespCluster,
+			&cmd.Cluster{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoGetCluster")(lAutoGetClusterEndpoint)
+	}
+	var lAutoGetNodeEndpoint endpoint.Endpoint
+	{
+		lAutoGetNodeEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoGetNode",
+			cmd.EncodeGrpcReqNode,
+			cmd.DecodeGrpcRespNode,
+			&cmd.Node{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoGetNode")(lAutoGetNodeEndpoint)
+	}
 	var lAutoListClusterEndpoint endpoint.Endpoint
 	{
 		lAutoListClusterEndpoint = grpctransport.NewClient(
@@ -191,19 +149,61 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 		).Endpoint()
 		lAutoListClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoListCluster")(lAutoListClusterEndpoint)
 	}
+	var lAutoListNodeEndpoint endpoint.Endpoint
+	{
+		lAutoListNodeEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoListNode",
+			cmd.EncodeGrpcReqListWatchOptions,
+			cmd.DecodeGrpcRespAutoMsgNodeListHelper,
+			&cmd.AutoMsgNodeListHelper{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoListNode")(lAutoListNodeEndpoint)
+	}
+	var lAutoUpdateClusterEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateClusterEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoUpdateCluster",
+			cmd.EncodeGrpcReqCluster,
+			cmd.DecodeGrpcRespCluster,
+			&cmd.Cluster{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateClusterEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateCluster")(lAutoUpdateClusterEndpoint)
+	}
+	var lAutoUpdateNodeEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateNodeEndpoint = grpctransport.NewClient(
+			conn,
+			"cmd.CmdV1",
+			"AutoUpdateNode",
+			cmd.EncodeGrpcReqNode,
+			cmd.DecodeGrpcRespNode,
+			&cmd.Node{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateNodeEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateNode")(lAutoUpdateNodeEndpoint)
+	}
 	return cmd.EndpointsCmdV1Client{
 		Client: cmd.NewCmdV1Client(conn),
 
-		AutoAddNodeEndpoint:       lAutoAddNodeEndpoint,
-		AutoUpdateNodeEndpoint:    lAutoUpdateNodeEndpoint,
-		AutoGetNodeEndpoint:       lAutoGetNodeEndpoint,
-		AutoDeleteNodeEndpoint:    lAutoDeleteNodeEndpoint,
-		AutoListNodeEndpoint:      lAutoListNodeEndpoint,
 		AutoAddClusterEndpoint:    lAutoAddClusterEndpoint,
-		AutoUpdateClusterEndpoint: lAutoUpdateClusterEndpoint,
-		AutoGetClusterEndpoint:    lAutoGetClusterEndpoint,
+		AutoAddNodeEndpoint:       lAutoAddNodeEndpoint,
 		AutoDeleteClusterEndpoint: lAutoDeleteClusterEndpoint,
+		AutoDeleteNodeEndpoint:    lAutoDeleteNodeEndpoint,
+		AutoGetClusterEndpoint:    lAutoGetClusterEndpoint,
+		AutoGetNodeEndpoint:       lAutoGetNodeEndpoint,
 		AutoListClusterEndpoint:   lAutoListClusterEndpoint,
+		AutoListNodeEndpoint:      lAutoListNodeEndpoint,
+		AutoUpdateClusterEndpoint: lAutoUpdateClusterEndpoint,
+		AutoUpdateNodeEndpoint:    lAutoUpdateNodeEndpoint,
 	}
 }
 

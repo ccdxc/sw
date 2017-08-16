@@ -15,35 +15,13 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// SecurityGroupInterface exposes the CRUD methods for SecurityGroup
-type SecurityGroupInterface interface {
-	Create(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
-	Update(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*SecurityGroup, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// SgpolicyInterface exposes the CRUD methods for Sgpolicy
-type SgpolicyInterface interface {
-	Create(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
-	Update(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Sgpolicy, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// ServiceInterface exposes the CRUD methods for Service
-type ServiceInterface interface {
-	Create(ctx context.Context, in *Service) (*Service, error)
-	Update(ctx context.Context, in *Service) (*Service, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Service, error)
+// EndpointInterface exposes the CRUD methods for Endpoint
+type EndpointInterface interface {
+	Create(ctx context.Context, in *Endpoint) (*Endpoint, error)
+	Update(ctx context.Context, in *Endpoint) (*Endpoint, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Endpoint, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }
@@ -59,13 +37,46 @@ type LbPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// EndpointInterface exposes the CRUD methods for Endpoint
-type EndpointInterface interface {
-	Create(ctx context.Context, in *Endpoint) (*Endpoint, error)
-	Update(ctx context.Context, in *Endpoint) (*Endpoint, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Endpoint, error)
+// NetworkInterface exposes the CRUD methods for Network
+type NetworkInterface interface {
+	Create(ctx context.Context, in *Network) (*Network, error)
+	Update(ctx context.Context, in *Network) (*Network, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// SecurityGroupInterface exposes the CRUD methods for SecurityGroup
+type SecurityGroupInterface interface {
+	Create(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
+	Update(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*SecurityGroup, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// ServiceInterface exposes the CRUD methods for Service
+type ServiceInterface interface {
+	Create(ctx context.Context, in *Service) (*Service, error)
+	Update(ctx context.Context, in *Service) (*Service, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Service, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
+// SgpolicyInterface exposes the CRUD methods for Sgpolicy
+type SgpolicyInterface interface {
+	Create(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
+	Update(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Sgpolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }
@@ -81,20 +92,14 @@ type TenantInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// NetworkInterface exposes the CRUD methods for Network
-type NetworkInterface interface {
-	Create(ctx context.Context, in *Network) (*Network, error)
-	Update(ctx context.Context, in *Network) (*Network, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+// EndpointV1Interface exposes objects with CRUD operations allowed by the service
+type EndpointV1Interface interface {
+	Endpoint() EndpointInterface
 }
 
-// TenantV1Interface exposes objects with CRUD operations allowed by the service
-type TenantV1Interface interface {
-	Tenant() TenantInterface
+// LbPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type LbPolicyV1Interface interface {
+	LbPolicy() LbPolicyInterface
 }
 
 // NetworkV1Interface exposes objects with CRUD operations allowed by the service
@@ -107,22 +112,17 @@ type SecurityGroupV1Interface interface {
 	SecurityGroup() SecurityGroupInterface
 }
 
-// SgpolicyV1Interface exposes objects with CRUD operations allowed by the service
-type SgpolicyV1Interface interface {
-	Sgpolicy() SgpolicyInterface
-}
-
 // ServiceV1Interface exposes objects with CRUD operations allowed by the service
 type ServiceV1Interface interface {
 	Service() ServiceInterface
 }
 
-// LbPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type LbPolicyV1Interface interface {
-	LbPolicy() LbPolicyInterface
+// SgpolicyV1Interface exposes objects with CRUD operations allowed by the service
+type SgpolicyV1Interface interface {
+	Sgpolicy() SgpolicyInterface
 }
 
-// EndpointV1Interface exposes objects with CRUD operations allowed by the service
-type EndpointV1Interface interface {
-	Endpoint() EndpointInterface
+// TenantV1Interface exposes objects with CRUD operations allowed by the service
+type TenantV1Interface interface {
+	Tenant() TenantInterface
 }

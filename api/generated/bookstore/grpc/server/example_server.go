@@ -41,21 +41,21 @@ type sbookstoreBackend struct {
 type eBookstoreV1Endpoints struct {
 	Svc sbookstoreBackend
 
-	fnAutoAddOrder        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateOrder     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetOrder        func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteOrder     func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListOrder       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddBook         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateBook      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetBook         func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteBook      func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListBook        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddOrder        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdatePublisher func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteBook      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteOrder     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeletePublisher func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetBook         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetOrder        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListBook        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListOrder       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListPublisher   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateBook      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateOrder     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdatePublisher func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchOrder     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchBook      func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -66,60 +66,42 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"bookstore.Publisher": apisrvpkg.NewMessage("bookstore.Publisher").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := bookstore.Publisher{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(bookstore.Publisher)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(bookstore.Publisher)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(bookstore.Publisher)
+		"bookstore.AutoMsgBookListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgBookListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := bookstore.AutoMsgBookListHelper{}
+			r := bookstore.Book{}
 			key := r.MakeKey(prefix)
-			r.Kind = "Publisher"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
 			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(bookstore.Publisher)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := bookstore.Publisher{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := bookstore.Publisher{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
+			return into, nil
 		}),
-		"bookstore.PublisherSpec": apisrvpkg.NewMessage("bookstore.PublisherSpec"),
+		"bookstore.AutoMsgBookWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgBookWatchHelper"),
+		"bookstore.AutoMsgOrderListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := bookstore.AutoMsgOrderListHelper{}
+			r := bookstore.Order{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"bookstore.AutoMsgOrderWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderWatchHelper"),
+		"bookstore.AutoMsgPublisherListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := bookstore.AutoMsgPublisherListHelper{}
+			r := bookstore.Publisher{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"bookstore.AutoMsgPublisherWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherWatchHelper"),
 		"bookstore.Book": apisrvpkg.NewMessage("bookstore.Book").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Book{}
@@ -228,53 +210,71 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"bookstore.OrderSpec":               apisrvpkg.NewMessage("bookstore.OrderSpec"),
-		"bookstore.OrderItem":               apisrvpkg.NewMessage("bookstore.OrderItem"),
-		"bookstore.OrderStatus":             apisrvpkg.NewMessage("bookstore.OrderStatus"),
-		"bookstore.AutoMsgOrderWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderWatchHelper"),
-		"bookstore.AutoMsgOrderListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgOrderListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := bookstore.AutoMsgOrderListHelper{}
-			r := bookstore.Order{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
+		"bookstore.OrderItem":   apisrvpkg.NewMessage("bookstore.OrderItem"),
+		"bookstore.OrderSpec":   apisrvpkg.NewMessage("bookstore.OrderSpec"),
+		"bookstore.OrderStatus": apisrvpkg.NewMessage("bookstore.OrderStatus"),
+		"bookstore.Publisher": apisrvpkg.NewMessage("bookstore.Publisher").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := bookstore.Publisher{}
+				return r.MakeKey(prefix)
 			}
-			return into, nil
-		}),
-		"bookstore.AutoMsgBookWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgBookWatchHelper"),
-		"bookstore.AutoMsgBookListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgBookListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := bookstore.AutoMsgBookListHelper{}
-			r := bookstore.Book{}
+			r := i.(bookstore.Publisher)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(bookstore.Publisher)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(bookstore.Publisher)
 			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
+			r.Kind = "Publisher"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
 			}
-			return into, nil
-		}),
-		"bookstore.AutoMsgPublisherWatchHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherWatchHelper"),
-		"bookstore.AutoMsgPublisherListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgPublisherListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := bookstore.AutoMsgPublisherListHelper{}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(bookstore.Publisher)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := bookstore.Publisher{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := bookstore.Publisher{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
+		"bookstore.PublisherSpec": apisrvpkg.NewMessage("bookstore.PublisherSpec"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
 	scheme.AddKnownTypes(
-		&bookstore.Publisher{},
 		&bookstore.Book{},
 		&bookstore.Order{},
+		&bookstore.Publisher{},
 	)
 
 	apisrv.RegisterMessages("bookstore", s.Messages)
@@ -282,50 +282,50 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 	{
 		srv := apisrvpkg.NewService("BookstoreV1")
 
-		s.endpointsBookstoreV1.fnAutoAddOrder = srv.AddMethod("AutoAddOrder",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoAddOrder")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoUpdateOrder = srv.AddMethod("AutoUpdateOrder",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoUpdateOrder")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoGetOrder = srv.AddMethod("AutoGetOrder",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoGetOrder")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoDeleteOrder = srv.AddMethod("AutoDeleteOrder",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoDeleteOrder")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoListOrder = srv.AddMethod("AutoListOrder",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.AutoMsgOrderListHelper"], "bookstore", "AutoListOrder")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
-
 		s.endpointsBookstoreV1.fnAutoAddBook = srv.AddMethod("AutoAddBook",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoAddBook")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsBookstoreV1.fnAutoUpdateBook = srv.AddMethod("AutoUpdateBook",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoUpdateBook")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoGetBook = srv.AddMethod("AutoGetBook",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoGetBook")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoDeleteBook = srv.AddMethod("AutoDeleteBook",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoDeleteBook")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsBookstoreV1.fnAutoListBook = srv.AddMethod("AutoListBook",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.AutoMsgBookListHelper"], "bookstore", "AutoListBook")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+		s.endpointsBookstoreV1.fnAutoAddOrder = srv.AddMethod("AutoAddOrder",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoAddOrder")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoAddPublisher = srv.AddMethod("AutoAddPublisher",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoAddPublisher")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsBookstoreV1.fnAutoUpdatePublisher = srv.AddMethod("AutoUpdatePublisher",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoUpdatePublisher")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+		s.endpointsBookstoreV1.fnAutoDeleteBook = srv.AddMethod("AutoDeleteBook",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoDeleteBook")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsBookstoreV1.fnAutoGetPublisher = srv.AddMethod("AutoGetPublisher",
-			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoGetPublisher")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+		s.endpointsBookstoreV1.fnAutoDeleteOrder = srv.AddMethod("AutoDeleteOrder",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoDeleteOrder")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoDeletePublisher = srv.AddMethod("AutoDeletePublisher",
 			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoDeletePublisher")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
+		s.endpointsBookstoreV1.fnAutoGetBook = srv.AddMethod("AutoGetBook",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoGetBook")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoGetOrder = srv.AddMethod("AutoGetOrder",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoGetOrder")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoGetPublisher = srv.AddMethod("AutoGetPublisher",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoGetPublisher")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoListBook = srv.AddMethod("AutoListBook",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.AutoMsgBookListHelper"], "bookstore", "AutoListBook")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoListOrder = srv.AddMethod("AutoListOrder",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.AutoMsgOrderListHelper"], "bookstore", "AutoListOrder")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
 		s.endpointsBookstoreV1.fnAutoListPublisher = srv.AddMethod("AutoListPublisher",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["bookstore.AutoMsgPublisherListHelper"], "bookstore", "AutoListPublisher")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoUpdateBook = srv.AddMethod("AutoUpdateBook",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Book"], s.Messages["bookstore.Book"], "bookstore", "AutoUpdateBook")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoUpdateOrder = srv.AddMethod("AutoUpdateOrder",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Order"], s.Messages["bookstore.Order"], "bookstore", "AutoUpdateOrder")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoUpdatePublisher = srv.AddMethod("AutoUpdatePublisher",
+			apisrvpkg.NewMethod(s.Messages["bookstore.Publisher"], s.Messages["bookstore.Publisher"], "bookstore", "AutoUpdatePublisher")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoWatchOrder = s.Messages["bookstore.Order"].WatchFromKv
 
@@ -502,46 +502,6 @@ func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log
 	return nil
 }
 
-func (e *eBookstoreV1Endpoints) AutoAddOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
-	r, err := e.fnAutoAddOrder(ctx, t)
-	if err == nil {
-		return r.(bookstore.Order), err
-	}
-	return bookstore.Order{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoUpdateOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
-	r, err := e.fnAutoUpdateOrder(ctx, t)
-	if err == nil {
-		return r.(bookstore.Order), err
-	}
-	return bookstore.Order{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoGetOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
-	r, err := e.fnAutoGetOrder(ctx, t)
-	if err == nil {
-		return r.(bookstore.Order), err
-	}
-	return bookstore.Order{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoDeleteOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
-	r, err := e.fnAutoDeleteOrder(ctx, t)
-	if err == nil {
-		return r.(bookstore.Order), err
-	}
-	return bookstore.Order{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoListOrder(ctx context.Context, t api.ListWatchOptions) (bookstore.AutoMsgOrderListHelper, error) {
-	r, err := e.fnAutoListOrder(ctx, t)
-	if err == nil {
-		return r.(bookstore.AutoMsgOrderListHelper), err
-	}
-	return bookstore.AutoMsgOrderListHelper{}, err
-
-}
 func (e *eBookstoreV1Endpoints) AutoAddBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
 	r, err := e.fnAutoAddBook(ctx, t)
 	if err == nil {
@@ -550,36 +510,12 @@ func (e *eBookstoreV1Endpoints) AutoAddBook(ctx context.Context, t bookstore.Boo
 	return bookstore.Book{}, err
 
 }
-func (e *eBookstoreV1Endpoints) AutoUpdateBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
-	r, err := e.fnAutoUpdateBook(ctx, t)
+func (e *eBookstoreV1Endpoints) AutoAddOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
+	r, err := e.fnAutoAddOrder(ctx, t)
 	if err == nil {
-		return r.(bookstore.Book), err
+		return r.(bookstore.Order), err
 	}
-	return bookstore.Book{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoGetBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
-	r, err := e.fnAutoGetBook(ctx, t)
-	if err == nil {
-		return r.(bookstore.Book), err
-	}
-	return bookstore.Book{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoDeleteBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
-	r, err := e.fnAutoDeleteBook(ctx, t)
-	if err == nil {
-		return r.(bookstore.Book), err
-	}
-	return bookstore.Book{}, err
-
-}
-func (e *eBookstoreV1Endpoints) AutoListBook(ctx context.Context, t api.ListWatchOptions) (bookstore.AutoMsgBookListHelper, error) {
-	r, err := e.fnAutoListBook(ctx, t)
-	if err == nil {
-		return r.(bookstore.AutoMsgBookListHelper), err
-	}
-	return bookstore.AutoMsgBookListHelper{}, err
+	return bookstore.Order{}, err
 
 }
 func (e *eBookstoreV1Endpoints) AutoAddPublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
@@ -590,20 +526,20 @@ func (e *eBookstoreV1Endpoints) AutoAddPublisher(ctx context.Context, t bookstor
 	return bookstore.Publisher{}, err
 
 }
-func (e *eBookstoreV1Endpoints) AutoUpdatePublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
-	r, err := e.fnAutoUpdatePublisher(ctx, t)
+func (e *eBookstoreV1Endpoints) AutoDeleteBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
+	r, err := e.fnAutoDeleteBook(ctx, t)
 	if err == nil {
-		return r.(bookstore.Publisher), err
+		return r.(bookstore.Book), err
 	}
-	return bookstore.Publisher{}, err
+	return bookstore.Book{}, err
 
 }
-func (e *eBookstoreV1Endpoints) AutoGetPublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
-	r, err := e.fnAutoGetPublisher(ctx, t)
+func (e *eBookstoreV1Endpoints) AutoDeleteOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
+	r, err := e.fnAutoDeleteOrder(ctx, t)
 	if err == nil {
-		return r.(bookstore.Publisher), err
+		return r.(bookstore.Order), err
 	}
-	return bookstore.Publisher{}, err
+	return bookstore.Order{}, err
 
 }
 func (e *eBookstoreV1Endpoints) AutoDeletePublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
@@ -614,12 +550,76 @@ func (e *eBookstoreV1Endpoints) AutoDeletePublisher(ctx context.Context, t books
 	return bookstore.Publisher{}, err
 
 }
+func (e *eBookstoreV1Endpoints) AutoGetBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
+	r, err := e.fnAutoGetBook(ctx, t)
+	if err == nil {
+		return r.(bookstore.Book), err
+	}
+	return bookstore.Book{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoGetOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
+	r, err := e.fnAutoGetOrder(ctx, t)
+	if err == nil {
+		return r.(bookstore.Order), err
+	}
+	return bookstore.Order{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoGetPublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
+	r, err := e.fnAutoGetPublisher(ctx, t)
+	if err == nil {
+		return r.(bookstore.Publisher), err
+	}
+	return bookstore.Publisher{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoListBook(ctx context.Context, t api.ListWatchOptions) (bookstore.AutoMsgBookListHelper, error) {
+	r, err := e.fnAutoListBook(ctx, t)
+	if err == nil {
+		return r.(bookstore.AutoMsgBookListHelper), err
+	}
+	return bookstore.AutoMsgBookListHelper{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoListOrder(ctx context.Context, t api.ListWatchOptions) (bookstore.AutoMsgOrderListHelper, error) {
+	r, err := e.fnAutoListOrder(ctx, t)
+	if err == nil {
+		return r.(bookstore.AutoMsgOrderListHelper), err
+	}
+	return bookstore.AutoMsgOrderListHelper{}, err
+
+}
 func (e *eBookstoreV1Endpoints) AutoListPublisher(ctx context.Context, t api.ListWatchOptions) (bookstore.AutoMsgPublisherListHelper, error) {
 	r, err := e.fnAutoListPublisher(ctx, t)
 	if err == nil {
 		return r.(bookstore.AutoMsgPublisherListHelper), err
 	}
 	return bookstore.AutoMsgPublisherListHelper{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoUpdateBook(ctx context.Context, t bookstore.Book) (bookstore.Book, error) {
+	r, err := e.fnAutoUpdateBook(ctx, t)
+	if err == nil {
+		return r.(bookstore.Book), err
+	}
+	return bookstore.Book{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoUpdateOrder(ctx context.Context, t bookstore.Order) (bookstore.Order, error) {
+	r, err := e.fnAutoUpdateOrder(ctx, t)
+	if err == nil {
+		return r.(bookstore.Order), err
+	}
+	return bookstore.Order{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoUpdatePublisher(ctx context.Context, t bookstore.Publisher) (bookstore.Publisher, error) {
+	r, err := e.fnAutoUpdatePublisher(ctx, t)
+	if err == nil {
+		return r.(bookstore.Publisher), err
+	}
+	return bookstore.Publisher{}, err
 
 }
 

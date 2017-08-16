@@ -6,8 +6,8 @@ Package {{.GoPkg.Name}} is a auto generated package.
 Input file: {{.Name}}
 
 The following Messages are defined. 
-  {{ range .Messages}}
-  {{.Name}}{{end}}
+  {{ range .Messages}}{{if isNestedMessage .}}{{else}}
+  {{.Name}}{{end}}{{end}}
 
 The following Services and Methods are defined.
 {{range .Services}} 

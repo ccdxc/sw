@@ -7,42 +7,42 @@ Input file: protos/example.proto
 
 The following Messages are defined.
 
-  Publisher
-  PublisherSpec
+  AutoMsgBookListHelper
+  AutoMsgBookWatchHelper
+  AutoMsgOrderListHelper
+  AutoMsgOrderWatchHelper
+  AutoMsgPublisherListHelper
+  AutoMsgPublisherWatchHelper
   Book
   BookSpec
   BookStatus
   Order
-  OrderSpec
   OrderItem
+  OrderSpec
   OrderStatus
-  AutoMsgOrderWatchHelper
-  AutoMsgOrderListHelper
-  AutoMsgBookWatchHelper
-  AutoMsgBookListHelper
-  AutoMsgPublisherWatchHelper
-  AutoMsgPublisherListHelper
+  Publisher
+  PublisherSpec
 
 The following Services and Methods are defined.
 
  Service: BookstoreV1
-   AutoAddOrder
-   AutoUpdateOrder
-   AutoGetOrder
-   AutoDeleteOrder
-   AutoListOrder
-   AutoWatchOrder
    AutoAddBook
-   AutoUpdateBook
-   AutoGetBook
-   AutoDeleteBook
-   AutoListBook
-   AutoWatchBook
+   AutoAddOrder
    AutoAddPublisher
-   AutoUpdatePublisher
-   AutoGetPublisher
+   AutoDeleteBook
+   AutoDeleteOrder
    AutoDeletePublisher
+   AutoGetBook
+   AutoGetOrder
+   AutoGetPublisher
+   AutoListBook
+   AutoListOrder
    AutoListPublisher
+   AutoUpdateBook
+   AutoUpdateOrder
+   AutoUpdatePublisher
+   AutoWatchBook
+   AutoWatchOrder
    AutoWatchPublisher
 
 */

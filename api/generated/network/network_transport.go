@@ -55,908 +55,14 @@ func recoverVersion(ctx context.Context, md metadata.MD) context.Context {
 	return ctx
 }
 
-type grpcServerTenantV1 struct {
-	Endpoints EndpointsTenantV1Server
-
-	AutoAddTenantHdlr    grpctransport.Handler
-	AutoUpdateTenantHdlr grpctransport.Handler
-	AutoGetTenantHdlr    grpctransport.Handler
-	AutoDeleteTenantHdlr grpctransport.Handler
-	AutoListTenantHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerTenantV1 creates a GRPC server for TenantV1 service
-func MakeGRPCServerTenantV1(ctx context.Context, endpoints EndpointsTenantV1Server, logger log.Logger) TenantV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerTenantV1{
-		Endpoints: endpoints,
-		AutoAddTenantHdlr: grpctransport.NewServer(
-			endpoints.AutoAddTenantEndpoint,
-			DecodeGrpcReqTenant,
-			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddTenant", logger)))...,
-		),
-
-		AutoUpdateTenantHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateTenantEndpoint,
-			DecodeGrpcReqTenant,
-			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateTenant", logger)))...,
-		),
-
-		AutoGetTenantHdlr: grpctransport.NewServer(
-			endpoints.AutoGetTenantEndpoint,
-			DecodeGrpcReqTenant,
-			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetTenant", logger)))...,
-		),
-
-		AutoDeleteTenantHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteTenantEndpoint,
-			DecodeGrpcReqTenant,
-			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteTenant", logger)))...,
-		),
-
-		AutoListTenantHdlr: grpctransport.NewServer(
-			endpoints.AutoListTenantEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgTenantListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListTenant", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerTenantV1) AutoAddTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
-	_, resp, err := s.AutoAddTenantHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respTenantV1AutoAddTenant).V
-	return &r, resp.(respTenantV1AutoAddTenant).Err
-}
-
-func decodeHTTPrespTenantV1AutoAddTenant(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Tenant
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerTenantV1) AutoUpdateTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
-	_, resp, err := s.AutoUpdateTenantHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respTenantV1AutoUpdateTenant).V
-	return &r, resp.(respTenantV1AutoUpdateTenant).Err
-}
-
-func decodeHTTPrespTenantV1AutoUpdateTenant(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Tenant
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerTenantV1) AutoGetTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
-	_, resp, err := s.AutoGetTenantHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respTenantV1AutoGetTenant).V
-	return &r, resp.(respTenantV1AutoGetTenant).Err
-}
-
-func decodeHTTPrespTenantV1AutoGetTenant(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Tenant
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerTenantV1) AutoDeleteTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
-	_, resp, err := s.AutoDeleteTenantHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respTenantV1AutoDeleteTenant).V
-	return &r, resp.(respTenantV1AutoDeleteTenant).Err
-}
-
-func decodeHTTPrespTenantV1AutoDeleteTenant(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Tenant
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerTenantV1) AutoListTenant(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
-	_, resp, err := s.AutoListTenantHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respTenantV1AutoListTenant).V
-	return &r, resp.(respTenantV1AutoListTenant).Err
-}
-
-func decodeHTTPrespTenantV1AutoListTenant(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgTenantListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerTenantV1) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) error {
-	return s.Endpoints.AutoWatchTenant(in, stream)
-}
-
-type grpcServerNetworkV1 struct {
-	Endpoints EndpointsNetworkV1Server
-
-	AutoAddNetworkHdlr    grpctransport.Handler
-	AutoUpdateNetworkHdlr grpctransport.Handler
-	AutoGetNetworkHdlr    grpctransport.Handler
-	AutoDeleteNetworkHdlr grpctransport.Handler
-	AutoListNetworkHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerNetworkV1 creates a GRPC server for NetworkV1 service
-func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Server, logger log.Logger) NetworkV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerNetworkV1{
-		Endpoints: endpoints,
-		AutoAddNetworkHdlr: grpctransport.NewServer(
-			endpoints.AutoAddNetworkEndpoint,
-			DecodeGrpcReqNetwork,
-			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddNetwork", logger)))...,
-		),
-
-		AutoUpdateNetworkHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateNetworkEndpoint,
-			DecodeGrpcReqNetwork,
-			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateNetwork", logger)))...,
-		),
-
-		AutoGetNetworkHdlr: grpctransport.NewServer(
-			endpoints.AutoGetNetworkEndpoint,
-			DecodeGrpcReqNetwork,
-			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetNetwork", logger)))...,
-		),
-
-		AutoDeleteNetworkHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteNetworkEndpoint,
-			DecodeGrpcReqNetwork,
-			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteNetwork", logger)))...,
-		),
-
-		AutoListNetworkHdlr: grpctransport.NewServer(
-			endpoints.AutoListNetworkEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgNetworkListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListNetwork", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerNetworkV1) AutoAddNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
-	_, resp, err := s.AutoAddNetworkHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respNetworkV1AutoAddNetwork).V
-	return &r, resp.(respNetworkV1AutoAddNetwork).Err
-}
-
-func decodeHTTPrespNetworkV1AutoAddNetwork(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Network
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerNetworkV1) AutoUpdateNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
-	_, resp, err := s.AutoUpdateNetworkHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respNetworkV1AutoUpdateNetwork).V
-	return &r, resp.(respNetworkV1AutoUpdateNetwork).Err
-}
-
-func decodeHTTPrespNetworkV1AutoUpdateNetwork(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Network
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerNetworkV1) AutoGetNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
-	_, resp, err := s.AutoGetNetworkHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respNetworkV1AutoGetNetwork).V
-	return &r, resp.(respNetworkV1AutoGetNetwork).Err
-}
-
-func decodeHTTPrespNetworkV1AutoGetNetwork(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Network
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerNetworkV1) AutoDeleteNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
-	_, resp, err := s.AutoDeleteNetworkHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respNetworkV1AutoDeleteNetwork).V
-	return &r, resp.(respNetworkV1AutoDeleteNetwork).Err
-}
-
-func decodeHTTPrespNetworkV1AutoDeleteNetwork(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Network
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerNetworkV1) AutoListNetwork(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error) {
-	_, resp, err := s.AutoListNetworkHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respNetworkV1AutoListNetwork).V
-	return &r, resp.(respNetworkV1AutoListNetwork).Err
-}
-
-func decodeHTTPrespNetworkV1AutoListNetwork(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgNetworkListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerNetworkV1) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
-	return s.Endpoints.AutoWatchNetwork(in, stream)
-}
-
-type grpcServerSecurityGroupV1 struct {
-	Endpoints EndpointsSecurityGroupV1Server
-
-	AutoAddSecurityGroupHdlr    grpctransport.Handler
-	AutoUpdateSecurityGroupHdlr grpctransport.Handler
-	AutoGetSecurityGroupHdlr    grpctransport.Handler
-	AutoDeleteSecurityGroupHdlr grpctransport.Handler
-	AutoListSecurityGroupHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerSecurityGroupV1 creates a GRPC server for SecurityGroupV1 service
-func MakeGRPCServerSecurityGroupV1(ctx context.Context, endpoints EndpointsSecurityGroupV1Server, logger log.Logger) SecurityGroupV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerSecurityGroupV1{
-		Endpoints: endpoints,
-		AutoAddSecurityGroupHdlr: grpctransport.NewServer(
-			endpoints.AutoAddSecurityGroupEndpoint,
-			DecodeGrpcReqSecurityGroup,
-			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSecurityGroup", logger)))...,
-		),
-
-		AutoUpdateSecurityGroupHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateSecurityGroupEndpoint,
-			DecodeGrpcReqSecurityGroup,
-			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSecurityGroup", logger)))...,
-		),
-
-		AutoGetSecurityGroupHdlr: grpctransport.NewServer(
-			endpoints.AutoGetSecurityGroupEndpoint,
-			DecodeGrpcReqSecurityGroup,
-			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSecurityGroup", logger)))...,
-		),
-
-		AutoDeleteSecurityGroupHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteSecurityGroupEndpoint,
-			DecodeGrpcReqSecurityGroup,
-			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSecurityGroup", logger)))...,
-		),
-
-		AutoListSecurityGroupHdlr: grpctransport.NewServer(
-			endpoints.AutoListSecurityGroupEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgSecurityGroupListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSecurityGroup", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerSecurityGroupV1) AutoAddSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
-	_, resp, err := s.AutoAddSecurityGroupHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityGroupV1AutoAddSecurityGroup).V
-	return &r, resp.(respSecurityGroupV1AutoAddSecurityGroup).Err
-}
-
-func decodeHTTPrespSecurityGroupV1AutoAddSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityGroupV1) AutoUpdateSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
-	_, resp, err := s.AutoUpdateSecurityGroupHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityGroupV1AutoUpdateSecurityGroup).V
-	return &r, resp.(respSecurityGroupV1AutoUpdateSecurityGroup).Err
-}
-
-func decodeHTTPrespSecurityGroupV1AutoUpdateSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityGroupV1) AutoGetSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
-	_, resp, err := s.AutoGetSecurityGroupHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityGroupV1AutoGetSecurityGroup).V
-	return &r, resp.(respSecurityGroupV1AutoGetSecurityGroup).Err
-}
-
-func decodeHTTPrespSecurityGroupV1AutoGetSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityGroupV1) AutoDeleteSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
-	_, resp, err := s.AutoDeleteSecurityGroupHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityGroupV1AutoDeleteSecurityGroup).V
-	return &r, resp.(respSecurityGroupV1AutoDeleteSecurityGroup).Err
-}
-
-func decodeHTTPrespSecurityGroupV1AutoDeleteSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityGroupV1) AutoListSecurityGroup(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error) {
-	_, resp, err := s.AutoListSecurityGroupHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityGroupV1AutoListSecurityGroup).V
-	return &r, resp.(respSecurityGroupV1AutoListSecurityGroup).Err
-}
-
-func decodeHTTPrespSecurityGroupV1AutoListSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgSecurityGroupListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityGroupV1) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityGroupV1_AutoWatchSecurityGroupServer) error {
-	return s.Endpoints.AutoWatchSecurityGroup(in, stream)
-}
-
-type grpcServerSgpolicyV1 struct {
-	Endpoints EndpointsSgpolicyV1Server
-
-	AutoAddSgpolicyHdlr    grpctransport.Handler
-	AutoUpdateSgpolicyHdlr grpctransport.Handler
-	AutoGetSgpolicyHdlr    grpctransport.Handler
-	AutoDeleteSgpolicyHdlr grpctransport.Handler
-	AutoListSgpolicyHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerSgpolicyV1 creates a GRPC server for SgpolicyV1 service
-func MakeGRPCServerSgpolicyV1(ctx context.Context, endpoints EndpointsSgpolicyV1Server, logger log.Logger) SgpolicyV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerSgpolicyV1{
-		Endpoints: endpoints,
-		AutoAddSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoAddSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSgpolicy", logger)))...,
-		),
-
-		AutoUpdateSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSgpolicy", logger)))...,
-		),
-
-		AutoGetSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoGetSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSgpolicy", logger)))...,
-		),
-
-		AutoDeleteSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSgpolicy", logger)))...,
-		),
-
-		AutoListSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoListSgpolicyEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgSgpolicyListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSgpolicy", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerSgpolicyV1) AutoAddSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoAddSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSgpolicyV1AutoAddSgpolicy).V
-	return &r, resp.(respSgpolicyV1AutoAddSgpolicy).Err
-}
-
-func decodeHTTPrespSgpolicyV1AutoAddSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSgpolicyV1) AutoUpdateSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoUpdateSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSgpolicyV1AutoUpdateSgpolicy).V
-	return &r, resp.(respSgpolicyV1AutoUpdateSgpolicy).Err
-}
-
-func decodeHTTPrespSgpolicyV1AutoUpdateSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSgpolicyV1) AutoGetSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoGetSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSgpolicyV1AutoGetSgpolicy).V
-	return &r, resp.(respSgpolicyV1AutoGetSgpolicy).Err
-}
-
-func decodeHTTPrespSgpolicyV1AutoGetSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSgpolicyV1) AutoDeleteSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoDeleteSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSgpolicyV1AutoDeleteSgpolicy).V
-	return &r, resp.(respSgpolicyV1AutoDeleteSgpolicy).Err
-}
-
-func decodeHTTPrespSgpolicyV1AutoDeleteSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSgpolicyV1) AutoListSgpolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
-	_, resp, err := s.AutoListSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSgpolicyV1AutoListSgpolicy).V
-	return &r, resp.(respSgpolicyV1AutoListSgpolicy).Err
-}
-
-func decodeHTTPrespSgpolicyV1AutoListSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgSgpolicyListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSgpolicyV1) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) error {
-	return s.Endpoints.AutoWatchSgpolicy(in, stream)
-}
-
-type grpcServerServiceV1 struct {
-	Endpoints EndpointsServiceV1Server
-
-	AutoAddServiceHdlr    grpctransport.Handler
-	AutoUpdateServiceHdlr grpctransport.Handler
-	AutoGetServiceHdlr    grpctransport.Handler
-	AutoDeleteServiceHdlr grpctransport.Handler
-	AutoListServiceHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerServiceV1 creates a GRPC server for ServiceV1 service
-func MakeGRPCServerServiceV1(ctx context.Context, endpoints EndpointsServiceV1Server, logger log.Logger) ServiceV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerServiceV1{
-		Endpoints: endpoints,
-		AutoAddServiceHdlr: grpctransport.NewServer(
-			endpoints.AutoAddServiceEndpoint,
-			DecodeGrpcReqService,
-			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddService", logger)))...,
-		),
-
-		AutoUpdateServiceHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateServiceEndpoint,
-			DecodeGrpcReqService,
-			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateService", logger)))...,
-		),
-
-		AutoGetServiceHdlr: grpctransport.NewServer(
-			endpoints.AutoGetServiceEndpoint,
-			DecodeGrpcReqService,
-			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetService", logger)))...,
-		),
-
-		AutoDeleteServiceHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteServiceEndpoint,
-			DecodeGrpcReqService,
-			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteService", logger)))...,
-		),
-
-		AutoListServiceHdlr: grpctransport.NewServer(
-			endpoints.AutoListServiceEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgServiceListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListService", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerServiceV1) AutoAddService(ctx oldcontext.Context, req *Service) (*Service, error) {
-	_, resp, err := s.AutoAddServiceHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respServiceV1AutoAddService).V
-	return &r, resp.(respServiceV1AutoAddService).Err
-}
-
-func decodeHTTPrespServiceV1AutoAddService(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Service
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerServiceV1) AutoUpdateService(ctx oldcontext.Context, req *Service) (*Service, error) {
-	_, resp, err := s.AutoUpdateServiceHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respServiceV1AutoUpdateService).V
-	return &r, resp.(respServiceV1AutoUpdateService).Err
-}
-
-func decodeHTTPrespServiceV1AutoUpdateService(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Service
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerServiceV1) AutoGetService(ctx oldcontext.Context, req *Service) (*Service, error) {
-	_, resp, err := s.AutoGetServiceHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respServiceV1AutoGetService).V
-	return &r, resp.(respServiceV1AutoGetService).Err
-}
-
-func decodeHTTPrespServiceV1AutoGetService(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Service
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerServiceV1) AutoDeleteService(ctx oldcontext.Context, req *Service) (*Service, error) {
-	_, resp, err := s.AutoDeleteServiceHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respServiceV1AutoDeleteService).V
-	return &r, resp.(respServiceV1AutoDeleteService).Err
-}
-
-func decodeHTTPrespServiceV1AutoDeleteService(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Service
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerServiceV1) AutoListService(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgServiceListHelper, error) {
-	_, resp, err := s.AutoListServiceHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respServiceV1AutoListService).V
-	return &r, resp.(respServiceV1AutoListService).Err
-}
-
-func decodeHTTPrespServiceV1AutoListService(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgServiceListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerServiceV1) AutoWatchService(in *api.ListWatchOptions, stream ServiceV1_AutoWatchServiceServer) error {
-	return s.Endpoints.AutoWatchService(in, stream)
-}
-
-type grpcServerLbPolicyV1 struct {
-	Endpoints EndpointsLbPolicyV1Server
-
-	AutoAddLbPolicyHdlr    grpctransport.Handler
-	AutoUpdateLbPolicyHdlr grpctransport.Handler
-	AutoGetLbPolicyHdlr    grpctransport.Handler
-	AutoDeleteLbPolicyHdlr grpctransport.Handler
-	AutoListLbPolicyHdlr   grpctransport.Handler
-}
-
-// MakeGRPCServerLbPolicyV1 creates a GRPC server for LbPolicyV1 service
-func MakeGRPCServerLbPolicyV1(ctx context.Context, endpoints EndpointsLbPolicyV1Server, logger log.Logger) LbPolicyV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
-	return &grpcServerLbPolicyV1{
-		Endpoints: endpoints,
-		AutoAddLbPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoAddLbPolicyEndpoint,
-			DecodeGrpcReqLbPolicy,
-			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddLbPolicy", logger)))...,
-		),
-
-		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateLbPolicyEndpoint,
-			DecodeGrpcReqLbPolicy,
-			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateLbPolicy", logger)))...,
-		),
-
-		AutoGetLbPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoGetLbPolicyEndpoint,
-			DecodeGrpcReqLbPolicy,
-			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetLbPolicy", logger)))...,
-		),
-
-		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteLbPolicyEndpoint,
-			DecodeGrpcReqLbPolicy,
-			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteLbPolicy", logger)))...,
-		),
-
-		AutoListLbPolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoListLbPolicyEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgLbPolicyListHelper,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListLbPolicy", logger)))...,
-		),
-	}
-}
-
-func (s *grpcServerLbPolicyV1) AutoAddLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
-	_, resp, err := s.AutoAddLbPolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respLbPolicyV1AutoAddLbPolicy).V
-	return &r, resp.(respLbPolicyV1AutoAddLbPolicy).Err
-}
-
-func decodeHTTPrespLbPolicyV1AutoAddLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp LbPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerLbPolicyV1) AutoUpdateLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
-	_, resp, err := s.AutoUpdateLbPolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respLbPolicyV1AutoUpdateLbPolicy).V
-	return &r, resp.(respLbPolicyV1AutoUpdateLbPolicy).Err
-}
-
-func decodeHTTPrespLbPolicyV1AutoUpdateLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp LbPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerLbPolicyV1) AutoGetLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
-	_, resp, err := s.AutoGetLbPolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respLbPolicyV1AutoGetLbPolicy).V
-	return &r, resp.(respLbPolicyV1AutoGetLbPolicy).Err
-}
-
-func decodeHTTPrespLbPolicyV1AutoGetLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp LbPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerLbPolicyV1) AutoDeleteLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
-	_, resp, err := s.AutoDeleteLbPolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respLbPolicyV1AutoDeleteLbPolicy).V
-	return &r, resp.(respLbPolicyV1AutoDeleteLbPolicy).Err
-}
-
-func decodeHTTPrespLbPolicyV1AutoDeleteLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp LbPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerLbPolicyV1) AutoListLbPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
-	_, resp, err := s.AutoListLbPolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respLbPolicyV1AutoListLbPolicy).V
-	return &r, resp.(respLbPolicyV1AutoListLbPolicy).Err
-}
-
-func decodeHTTPrespLbPolicyV1AutoListLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AutoMsgLbPolicyListHelper
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerLbPolicyV1) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) error {
-	return s.Endpoints.AutoWatchLbPolicy(in, stream)
-}
-
 type grpcServerEndpointV1 struct {
 	Endpoints EndpointsEndpointV1Server
 
 	AutoAddEndpointHdlr    grpctransport.Handler
-	AutoUpdateEndpointHdlr grpctransport.Handler
-	AutoGetEndpointHdlr    grpctransport.Handler
 	AutoDeleteEndpointHdlr grpctransport.Handler
+	AutoGetEndpointHdlr    grpctransport.Handler
 	AutoListEndpointHdlr   grpctransport.Handler
+	AutoUpdateEndpointHdlr grpctransport.Handler
 }
 
 // MakeGRPCServerEndpointV1 creates a GRPC server for EndpointV1 service
@@ -974,11 +80,11 @@ func MakeGRPCServerEndpointV1(ctx context.Context, endpoints EndpointsEndpointV1
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddEndpoint", logger)))...,
 		),
 
-		AutoUpdateEndpointHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateEndpointEndpoint,
+		AutoDeleteEndpointHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteEndpoint", logger)))...,
 		),
 
 		AutoGetEndpointHdlr: grpctransport.NewServer(
@@ -988,18 +94,18 @@ func MakeGRPCServerEndpointV1(ctx context.Context, endpoints EndpointsEndpointV1
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetEndpoint", logger)))...,
 		),
 
-		AutoDeleteEndpointHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteEndpointEndpoint,
-			DecodeGrpcReqEndpoint,
-			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteEndpoint", logger)))...,
-		),
-
 		AutoListEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoListEndpointEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAutoMsgEndpointListHelper,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListEndpoint", logger)))...,
+		),
+
+		AutoUpdateEndpointHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateEndpointEndpoint,
+			DecodeGrpcReqEndpoint,
+			EncodeGrpcRespEndpoint,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateEndpoint", logger)))...,
 		),
 	}
 }
@@ -1014,42 +120,6 @@ func (s *grpcServerEndpointV1) AutoAddEndpoint(ctx oldcontext.Context, req *Endp
 }
 
 func decodeHTTPrespEndpointV1AutoAddEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Endpoint
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEndpointV1) AutoUpdateEndpoint(ctx oldcontext.Context, req *Endpoint) (*Endpoint, error) {
-	_, resp, err := s.AutoUpdateEndpointHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEndpointV1AutoUpdateEndpoint).V
-	return &r, resp.(respEndpointV1AutoUpdateEndpoint).Err
-}
-
-func decodeHTTPrespEndpointV1AutoUpdateEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Endpoint
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerEndpointV1) AutoGetEndpoint(ctx oldcontext.Context, req *Endpoint) (*Endpoint, error) {
-	_, resp, err := s.AutoGetEndpointHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respEndpointV1AutoGetEndpoint).V
-	return &r, resp.(respEndpointV1AutoGetEndpoint).Err
-}
-
-func decodeHTTPrespEndpointV1AutoGetEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
@@ -1076,6 +146,24 @@ func decodeHTTPrespEndpointV1AutoDeleteEndpoint(_ context.Context, r *http.Respo
 	return &resp, err
 }
 
+func (s *grpcServerEndpointV1) AutoGetEndpoint(ctx oldcontext.Context, req *Endpoint) (*Endpoint, error) {
+	_, resp, err := s.AutoGetEndpointHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respEndpointV1AutoGetEndpoint).V
+	return &r, resp.(respEndpointV1AutoGetEndpoint).Err
+}
+
+func decodeHTTPrespEndpointV1AutoGetEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Endpoint
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerEndpointV1) AutoListEndpoint(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
 	_, resp, err := s.AutoListEndpointHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1094,959 +182,1157 @@ func decodeHTTPrespEndpointV1AutoListEndpoint(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerEndpointV1) AutoUpdateEndpoint(ctx oldcontext.Context, req *Endpoint) (*Endpoint, error) {
+	_, resp, err := s.AutoUpdateEndpointHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respEndpointV1AutoUpdateEndpoint).V
+	return &r, resp.(respEndpointV1AutoUpdateEndpoint).Err
+}
+
+func decodeHTTPrespEndpointV1AutoUpdateEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Endpoint
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerEndpointV1) AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) error {
 	return s.Endpoints.AutoWatchEndpoint(in, stream)
 }
 
-func encodeHTTPTenantSpec(ctx context.Context, req *http.Request, request interface{}) error {
+type grpcServerLbPolicyV1 struct {
+	Endpoints EndpointsLbPolicyV1Server
+
+	AutoAddLbPolicyHdlr    grpctransport.Handler
+	AutoDeleteLbPolicyHdlr grpctransport.Handler
+	AutoGetLbPolicyHdlr    grpctransport.Handler
+	AutoListLbPolicyHdlr   grpctransport.Handler
+	AutoUpdateLbPolicyHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerLbPolicyV1 creates a GRPC server for LbPolicyV1 service
+func MakeGRPCServerLbPolicyV1(ctx context.Context, endpoints EndpointsLbPolicyV1Server, logger log.Logger) LbPolicyV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerLbPolicyV1{
+		Endpoints: endpoints,
+		AutoAddLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddLbPolicyEndpoint,
+			DecodeGrpcReqLbPolicy,
+			EncodeGrpcRespLbPolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddLbPolicy", logger)))...,
+		),
+
+		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteLbPolicyEndpoint,
+			DecodeGrpcReqLbPolicy,
+			EncodeGrpcRespLbPolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteLbPolicy", logger)))...,
+		),
+
+		AutoGetLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetLbPolicyEndpoint,
+			DecodeGrpcReqLbPolicy,
+			EncodeGrpcRespLbPolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetLbPolicy", logger)))...,
+		),
+
+		AutoListLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListLbPolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgLbPolicyListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListLbPolicy", logger)))...,
+		),
+
+		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateLbPolicyEndpoint,
+			DecodeGrpcReqLbPolicy,
+			EncodeGrpcRespLbPolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateLbPolicy", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerLbPolicyV1) AutoAddLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
+	_, resp, err := s.AutoAddLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respLbPolicyV1AutoAddLbPolicy).V
+	return &r, resp.(respLbPolicyV1AutoAddLbPolicy).Err
+}
+
+func decodeHTTPrespLbPolicyV1AutoAddLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LbPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerLbPolicyV1) AutoDeleteLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
+	_, resp, err := s.AutoDeleteLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respLbPolicyV1AutoDeleteLbPolicy).V
+	return &r, resp.(respLbPolicyV1AutoDeleteLbPolicy).Err
+}
+
+func decodeHTTPrespLbPolicyV1AutoDeleteLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LbPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerLbPolicyV1) AutoGetLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
+	_, resp, err := s.AutoGetLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respLbPolicyV1AutoGetLbPolicy).V
+	return &r, resp.(respLbPolicyV1AutoGetLbPolicy).Err
+}
+
+func decodeHTTPrespLbPolicyV1AutoGetLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LbPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerLbPolicyV1) AutoListLbPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
+	_, resp, err := s.AutoListLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respLbPolicyV1AutoListLbPolicy).V
+	return &r, resp.(respLbPolicyV1AutoListLbPolicy).Err
+}
+
+func decodeHTTPrespLbPolicyV1AutoListLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgLbPolicyListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerLbPolicyV1) AutoUpdateLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
+	_, resp, err := s.AutoUpdateLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respLbPolicyV1AutoUpdateLbPolicy).V
+	return &r, resp.(respLbPolicyV1AutoUpdateLbPolicy).Err
+}
+
+func decodeHTTPrespLbPolicyV1AutoUpdateLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LbPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerLbPolicyV1) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) error {
+	return s.Endpoints.AutoWatchLbPolicy(in, stream)
+}
+
+type grpcServerNetworkV1 struct {
+	Endpoints EndpointsNetworkV1Server
+
+	AutoAddNetworkHdlr    grpctransport.Handler
+	AutoDeleteNetworkHdlr grpctransport.Handler
+	AutoGetNetworkHdlr    grpctransport.Handler
+	AutoListNetworkHdlr   grpctransport.Handler
+	AutoUpdateNetworkHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerNetworkV1 creates a GRPC server for NetworkV1 service
+func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Server, logger log.Logger) NetworkV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerNetworkV1{
+		Endpoints: endpoints,
+		AutoAddNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoAddNetworkEndpoint,
+			DecodeGrpcReqNetwork,
+			EncodeGrpcRespNetwork,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddNetwork", logger)))...,
+		),
+
+		AutoDeleteNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteNetworkEndpoint,
+			DecodeGrpcReqNetwork,
+			EncodeGrpcRespNetwork,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteNetwork", logger)))...,
+		),
+
+		AutoGetNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoGetNetworkEndpoint,
+			DecodeGrpcReqNetwork,
+			EncodeGrpcRespNetwork,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetNetwork", logger)))...,
+		),
+
+		AutoListNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoListNetworkEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgNetworkListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListNetwork", logger)))...,
+		),
+
+		AutoUpdateNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateNetworkEndpoint,
+			DecodeGrpcReqNetwork,
+			EncodeGrpcRespNetwork,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateNetwork", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerNetworkV1) AutoAddNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
+	_, resp, err := s.AutoAddNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddNetwork).V
+	return &r, resp.(respNetworkV1AutoAddNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoDeleteNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
+	_, resp, err := s.AutoDeleteNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteNetwork).V
+	return &r, resp.(respNetworkV1AutoDeleteNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoGetNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
+	_, resp, err := s.AutoGetNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetNetwork).V
+	return &r, resp.(respNetworkV1AutoGetNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoListNetwork(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error) {
+	_, resp, err := s.AutoListNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListNetwork).V
+	return &r, resp.(respNetworkV1AutoListNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgNetworkListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoUpdateNetwork(ctx oldcontext.Context, req *Network) (*Network, error) {
+	_, resp, err := s.AutoUpdateNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateNetwork).V
+	return &r, resp.(respNetworkV1AutoUpdateNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
+	return s.Endpoints.AutoWatchNetwork(in, stream)
+}
+
+type grpcServerSecurityGroupV1 struct {
+	Endpoints EndpointsSecurityGroupV1Server
+
+	AutoAddSecurityGroupHdlr    grpctransport.Handler
+	AutoDeleteSecurityGroupHdlr grpctransport.Handler
+	AutoGetSecurityGroupHdlr    grpctransport.Handler
+	AutoListSecurityGroupHdlr   grpctransport.Handler
+	AutoUpdateSecurityGroupHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerSecurityGroupV1 creates a GRPC server for SecurityGroupV1 service
+func MakeGRPCServerSecurityGroupV1(ctx context.Context, endpoints EndpointsSecurityGroupV1Server, logger log.Logger) SecurityGroupV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerSecurityGroupV1{
+		Endpoints: endpoints,
+		AutoAddSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoAddSecurityGroupEndpoint,
+			DecodeGrpcReqSecurityGroup,
+			EncodeGrpcRespSecurityGroup,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSecurityGroup", logger)))...,
+		),
+
+		AutoDeleteSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteSecurityGroupEndpoint,
+			DecodeGrpcReqSecurityGroup,
+			EncodeGrpcRespSecurityGroup,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSecurityGroup", logger)))...,
+		),
+
+		AutoGetSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoGetSecurityGroupEndpoint,
+			DecodeGrpcReqSecurityGroup,
+			EncodeGrpcRespSecurityGroup,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSecurityGroup", logger)))...,
+		),
+
+		AutoListSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoListSecurityGroupEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgSecurityGroupListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSecurityGroup", logger)))...,
+		),
+
+		AutoUpdateSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateSecurityGroupEndpoint,
+			DecodeGrpcReqSecurityGroup,
+			EncodeGrpcRespSecurityGroup,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSecurityGroup", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerSecurityGroupV1) AutoAddSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
+	_, resp, err := s.AutoAddSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityGroupV1AutoAddSecurityGroup).V
+	return &r, resp.(respSecurityGroupV1AutoAddSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityGroupV1AutoAddSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SecurityGroup
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityGroupV1) AutoDeleteSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
+	_, resp, err := s.AutoDeleteSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityGroupV1AutoDeleteSecurityGroup).V
+	return &r, resp.(respSecurityGroupV1AutoDeleteSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityGroupV1AutoDeleteSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SecurityGroup
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityGroupV1) AutoGetSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
+	_, resp, err := s.AutoGetSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityGroupV1AutoGetSecurityGroup).V
+	return &r, resp.(respSecurityGroupV1AutoGetSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityGroupV1AutoGetSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SecurityGroup
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityGroupV1) AutoListSecurityGroup(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error) {
+	_, resp, err := s.AutoListSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityGroupV1AutoListSecurityGroup).V
+	return &r, resp.(respSecurityGroupV1AutoListSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityGroupV1AutoListSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgSecurityGroupListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityGroupV1) AutoUpdateSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
+	_, resp, err := s.AutoUpdateSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityGroupV1AutoUpdateSecurityGroup).V
+	return &r, resp.(respSecurityGroupV1AutoUpdateSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityGroupV1AutoUpdateSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SecurityGroup
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityGroupV1) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityGroupV1_AutoWatchSecurityGroupServer) error {
+	return s.Endpoints.AutoWatchSecurityGroup(in, stream)
+}
+
+type grpcServerServiceV1 struct {
+	Endpoints EndpointsServiceV1Server
+
+	AutoAddServiceHdlr    grpctransport.Handler
+	AutoDeleteServiceHdlr grpctransport.Handler
+	AutoGetServiceHdlr    grpctransport.Handler
+	AutoListServiceHdlr   grpctransport.Handler
+	AutoUpdateServiceHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerServiceV1 creates a GRPC server for ServiceV1 service
+func MakeGRPCServerServiceV1(ctx context.Context, endpoints EndpointsServiceV1Server, logger log.Logger) ServiceV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerServiceV1{
+		Endpoints: endpoints,
+		AutoAddServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoAddServiceEndpoint,
+			DecodeGrpcReqService,
+			EncodeGrpcRespService,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddService", logger)))...,
+		),
+
+		AutoDeleteServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteServiceEndpoint,
+			DecodeGrpcReqService,
+			EncodeGrpcRespService,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteService", logger)))...,
+		),
+
+		AutoGetServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoGetServiceEndpoint,
+			DecodeGrpcReqService,
+			EncodeGrpcRespService,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetService", logger)))...,
+		),
+
+		AutoListServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoListServiceEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgServiceListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListService", logger)))...,
+		),
+
+		AutoUpdateServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateServiceEndpoint,
+			DecodeGrpcReqService,
+			EncodeGrpcRespService,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateService", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerServiceV1) AutoAddService(ctx oldcontext.Context, req *Service) (*Service, error) {
+	_, resp, err := s.AutoAddServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respServiceV1AutoAddService).V
+	return &r, resp.(respServiceV1AutoAddService).Err
+}
+
+func decodeHTTPrespServiceV1AutoAddService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerServiceV1) AutoDeleteService(ctx oldcontext.Context, req *Service) (*Service, error) {
+	_, resp, err := s.AutoDeleteServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respServiceV1AutoDeleteService).V
+	return &r, resp.(respServiceV1AutoDeleteService).Err
+}
+
+func decodeHTTPrespServiceV1AutoDeleteService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerServiceV1) AutoGetService(ctx oldcontext.Context, req *Service) (*Service, error) {
+	_, resp, err := s.AutoGetServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respServiceV1AutoGetService).V
+	return &r, resp.(respServiceV1AutoGetService).Err
+}
+
+func decodeHTTPrespServiceV1AutoGetService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerServiceV1) AutoListService(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgServiceListHelper, error) {
+	_, resp, err := s.AutoListServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respServiceV1AutoListService).V
+	return &r, resp.(respServiceV1AutoListService).Err
+}
+
+func decodeHTTPrespServiceV1AutoListService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgServiceListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerServiceV1) AutoUpdateService(ctx oldcontext.Context, req *Service) (*Service, error) {
+	_, resp, err := s.AutoUpdateServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respServiceV1AutoUpdateService).V
+	return &r, resp.(respServiceV1AutoUpdateService).Err
+}
+
+func decodeHTTPrespServiceV1AutoUpdateService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerServiceV1) AutoWatchService(in *api.ListWatchOptions, stream ServiceV1_AutoWatchServiceServer) error {
+	return s.Endpoints.AutoWatchService(in, stream)
+}
+
+type grpcServerSgpolicyV1 struct {
+	Endpoints EndpointsSgpolicyV1Server
+
+	AutoAddSgpolicyHdlr    grpctransport.Handler
+	AutoDeleteSgpolicyHdlr grpctransport.Handler
+	AutoGetSgpolicyHdlr    grpctransport.Handler
+	AutoListSgpolicyHdlr   grpctransport.Handler
+	AutoUpdateSgpolicyHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerSgpolicyV1 creates a GRPC server for SgpolicyV1 service
+func MakeGRPCServerSgpolicyV1(ctx context.Context, endpoints EndpointsSgpolicyV1Server, logger log.Logger) SgpolicyV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerSgpolicyV1{
+		Endpoints: endpoints,
+		AutoAddSgpolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddSgpolicyEndpoint,
+			DecodeGrpcReqSgpolicy,
+			EncodeGrpcRespSgpolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSgpolicy", logger)))...,
+		),
+
+		AutoDeleteSgpolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteSgpolicyEndpoint,
+			DecodeGrpcReqSgpolicy,
+			EncodeGrpcRespSgpolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSgpolicy", logger)))...,
+		),
+
+		AutoGetSgpolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetSgpolicyEndpoint,
+			DecodeGrpcReqSgpolicy,
+			EncodeGrpcRespSgpolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSgpolicy", logger)))...,
+		),
+
+		AutoListSgpolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListSgpolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgSgpolicyListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSgpolicy", logger)))...,
+		),
+
+		AutoUpdateSgpolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateSgpolicyEndpoint,
+			DecodeGrpcReqSgpolicy,
+			EncodeGrpcRespSgpolicy,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSgpolicy", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerSgpolicyV1) AutoAddSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
+	_, resp, err := s.AutoAddSgpolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSgpolicyV1AutoAddSgpolicy).V
+	return &r, resp.(respSgpolicyV1AutoAddSgpolicy).Err
+}
+
+func decodeHTTPrespSgpolicyV1AutoAddSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Sgpolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSgpolicyV1) AutoDeleteSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
+	_, resp, err := s.AutoDeleteSgpolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSgpolicyV1AutoDeleteSgpolicy).V
+	return &r, resp.(respSgpolicyV1AutoDeleteSgpolicy).Err
+}
+
+func decodeHTTPrespSgpolicyV1AutoDeleteSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Sgpolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSgpolicyV1) AutoGetSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
+	_, resp, err := s.AutoGetSgpolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSgpolicyV1AutoGetSgpolicy).V
+	return &r, resp.(respSgpolicyV1AutoGetSgpolicy).Err
+}
+
+func decodeHTTPrespSgpolicyV1AutoGetSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Sgpolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSgpolicyV1) AutoListSgpolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
+	_, resp, err := s.AutoListSgpolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSgpolicyV1AutoListSgpolicy).V
+	return &r, resp.(respSgpolicyV1AutoListSgpolicy).Err
+}
+
+func decodeHTTPrespSgpolicyV1AutoListSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgSgpolicyListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSgpolicyV1) AutoUpdateSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
+	_, resp, err := s.AutoUpdateSgpolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSgpolicyV1AutoUpdateSgpolicy).V
+	return &r, resp.(respSgpolicyV1AutoUpdateSgpolicy).Err
+}
+
+func decodeHTTPrespSgpolicyV1AutoUpdateSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Sgpolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSgpolicyV1) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) error {
+	return s.Endpoints.AutoWatchSgpolicy(in, stream)
+}
+
+type grpcServerTenantV1 struct {
+	Endpoints EndpointsTenantV1Server
+
+	AutoAddTenantHdlr    grpctransport.Handler
+	AutoDeleteTenantHdlr grpctransport.Handler
+	AutoGetTenantHdlr    grpctransport.Handler
+	AutoListTenantHdlr   grpctransport.Handler
+	AutoUpdateTenantHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerTenantV1 creates a GRPC server for TenantV1 service
+func MakeGRPCServerTenantV1(ctx context.Context, endpoints EndpointsTenantV1Server, logger log.Logger) TenantV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerTenantV1{
+		Endpoints: endpoints,
+		AutoAddTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoAddTenantEndpoint,
+			DecodeGrpcReqTenant,
+			EncodeGrpcRespTenant,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddTenant", logger)))...,
+		),
+
+		AutoDeleteTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteTenantEndpoint,
+			DecodeGrpcReqTenant,
+			EncodeGrpcRespTenant,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteTenant", logger)))...,
+		),
+
+		AutoGetTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoGetTenantEndpoint,
+			DecodeGrpcReqTenant,
+			EncodeGrpcRespTenant,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetTenant", logger)))...,
+		),
+
+		AutoListTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoListTenantEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgTenantListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListTenant", logger)))...,
+		),
+
+		AutoUpdateTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateTenantEndpoint,
+			DecodeGrpcReqTenant,
+			EncodeGrpcRespTenant,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateTenant", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerTenantV1) AutoAddTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
+	_, resp, err := s.AutoAddTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTenantV1AutoAddTenant).V
+	return &r, resp.(respTenantV1AutoAddTenant).Err
+}
+
+func decodeHTTPrespTenantV1AutoAddTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerTenantV1) AutoDeleteTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
+	_, resp, err := s.AutoDeleteTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTenantV1AutoDeleteTenant).V
+	return &r, resp.(respTenantV1AutoDeleteTenant).Err
+}
+
+func decodeHTTPrespTenantV1AutoDeleteTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerTenantV1) AutoGetTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
+	_, resp, err := s.AutoGetTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTenantV1AutoGetTenant).V
+	return &r, resp.(respTenantV1AutoGetTenant).Err
+}
+
+func decodeHTTPrespTenantV1AutoGetTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerTenantV1) AutoListTenant(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
+	_, resp, err := s.AutoListTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTenantV1AutoListTenant).V
+	return &r, resp.(respTenantV1AutoListTenant).Err
+}
+
+func decodeHTTPrespTenantV1AutoListTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgTenantListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerTenantV1) AutoUpdateTenant(ctx oldcontext.Context, req *Tenant) (*Tenant, error) {
+	_, resp, err := s.AutoUpdateTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTenantV1AutoUpdateTenant).V
+	return &r, resp.(respTenantV1AutoUpdateTenant).Err
+}
+
+func decodeHTTPrespTenantV1AutoUpdateTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerTenantV1) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) error {
+	return s.Endpoints.AutoWatchTenant(in, stream)
+}
+
+func encodeHTTPAutoMsgEndpointListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPTenantSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req TenantSpec
+func decodeHTTPAutoMsgEndpointListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgEndpointListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqTenantSpec encodes GRPC request
-func EncodeGrpcReqTenantSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantSpec)
+// EncodeGrpcReqAutoMsgEndpointListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgEndpointListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgEndpointListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqTenantSpec decodes GRPC request
-func DecodeGrpcReqTenantSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantSpec)
+// DecodeGrpcReqAutoMsgEndpointListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgEndpointListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgEndpointListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespTenantSpec encodes GRC response
-func EncodeGrpcRespTenantSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgEndpointListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgEndpointListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespTenantSpec decodes GRPC response
-func DecodeGrpcRespTenantSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgEndpointListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgEndpointListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPTenantStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgLbPolicyListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPTenantStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req TenantStatus
+func decodeHTTPAutoMsgLbPolicyListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgLbPolicyListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqTenantStatus encodes GRPC request
-func EncodeGrpcReqTenantStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantStatus)
+// EncodeGrpcReqAutoMsgLbPolicyListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgLbPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgLbPolicyListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqTenantStatus decodes GRPC request
-func DecodeGrpcReqTenantStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantStatus)
+// DecodeGrpcReqAutoMsgLbPolicyListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgLbPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgLbPolicyListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespTenantStatus encodes GRC response
-func EncodeGrpcRespTenantStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgLbPolicyListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgLbPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespTenantStatus decodes GRPC response
-func DecodeGrpcRespTenantStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgLbPolicyListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgLbPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPTenant(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgNetworkListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPTenant(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Tenant
+func decodeHTTPAutoMsgNetworkListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgNetworkListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqTenant encodes GRPC request
-func EncodeGrpcReqTenant(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Tenant)
+// EncodeGrpcReqAutoMsgNetworkListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgNetworkListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqTenant decodes GRPC request
-func DecodeGrpcReqTenant(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Tenant)
+// DecodeGrpcReqAutoMsgNetworkListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgNetworkListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespTenant encodes GRC response
-func EncodeGrpcRespTenant(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgNetworkListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespTenant decodes GRPC response
-func DecodeGrpcRespTenant(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgNetworkListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPTenantList(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgSecurityGroupListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPTenantList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req TenantList
+func decodeHTTPAutoMsgSecurityGroupListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgSecurityGroupListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqTenantList encodes GRPC request
-func EncodeGrpcReqTenantList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantList)
+// EncodeGrpcReqAutoMsgSecurityGroupListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgSecurityGroupListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSecurityGroupListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqTenantList decodes GRPC request
-func DecodeGrpcReqTenantList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TenantList)
+// DecodeGrpcReqAutoMsgSecurityGroupListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgSecurityGroupListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSecurityGroupListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespTenantList encodes GRC response
-func EncodeGrpcRespTenantList(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgSecurityGroupListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgSecurityGroupListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespTenantList decodes GRPC response
-func DecodeGrpcRespTenantList(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgSecurityGroupListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgSecurityGroupListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPNetworkSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgServiceListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPNetworkSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req NetworkSpec
+func decodeHTTPAutoMsgServiceListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgServiceListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqNetworkSpec encodes GRPC request
-func EncodeGrpcReqNetworkSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkSpec)
+// EncodeGrpcReqAutoMsgServiceListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgServiceListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgServiceListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqNetworkSpec decodes GRPC request
-func DecodeGrpcReqNetworkSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkSpec)
+// DecodeGrpcReqAutoMsgServiceListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgServiceListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgServiceListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespNetworkSpec encodes GRC response
-func EncodeGrpcRespNetworkSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgServiceListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgServiceListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespNetworkSpec decodes GRPC response
-func DecodeGrpcRespNetworkSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgServiceListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgServiceListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPNetworkStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgSgpolicyListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPNetworkStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req NetworkStatus
+func decodeHTTPAutoMsgSgpolicyListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgSgpolicyListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqNetworkStatus encodes GRPC request
-func EncodeGrpcReqNetworkStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkStatus)
+// EncodeGrpcReqAutoMsgSgpolicyListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgSgpolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSgpolicyListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqNetworkStatus decodes GRPC request
-func DecodeGrpcReqNetworkStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkStatus)
+// DecodeGrpcReqAutoMsgSgpolicyListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgSgpolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSgpolicyListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespNetworkStatus encodes GRC response
-func EncodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgSgpolicyListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgSgpolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespNetworkStatus decodes GRPC response
-func DecodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgSgpolicyListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgSgpolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPNetwork(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPAutoMsgTenantListHelper(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPNetwork(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Network
+func decodeHTTPAutoMsgTenantListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgTenantListHelper
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqNetwork encodes GRPC request
-func EncodeGrpcReqNetwork(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Network)
+// EncodeGrpcReqAutoMsgTenantListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgTenantListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgTenantListHelper)
 	return req, nil
 }
 
-// DecodeGrpcReqNetwork decodes GRPC request
-func DecodeGrpcReqNetwork(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Network)
+// DecodeGrpcReqAutoMsgTenantListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgTenantListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgTenantListHelper)
 	return req, nil
 }
 
-// EncodeGrpcRespNetwork encodes GRC response
-func EncodeGrpcRespNetwork(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespAutoMsgTenantListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespNetwork decodes GRPC response
-func DecodeGrpcRespNetwork(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPNetworkList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPNetworkList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req NetworkList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqNetworkList encodes GRPC request
-func EncodeGrpcReqNetworkList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkList)
-	return req, nil
-}
-
-// DecodeGrpcReqNetworkList decodes GRPC request
-func DecodeGrpcReqNetworkList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NetworkList)
-	return req, nil
-}
-
-// EncodeGrpcRespNetworkList encodes GRC response
-func EncodeGrpcRespNetworkList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespNetworkList decodes GRPC response
-func DecodeGrpcRespNetworkList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSecurityGroupSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSecurityGroupSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SecurityGroupSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSecurityGroupSpec encodes GRPC request
-func EncodeGrpcReqSecurityGroupSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqSecurityGroupSpec decodes GRPC request
-func DecodeGrpcReqSecurityGroupSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespSecurityGroupSpec encodes GRC response
-func EncodeGrpcRespSecurityGroupSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSecurityGroupSpec decodes GRPC response
-func DecodeGrpcRespSecurityGroupSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSecurityGroupStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSecurityGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SecurityGroupStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSecurityGroupStatus encodes GRPC request
-func EncodeGrpcReqSecurityGroupStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSecurityGroupStatus decodes GRPC request
-func DecodeGrpcReqSecurityGroupStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSecurityGroupStatus encodes GRC response
-func EncodeGrpcRespSecurityGroupStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSecurityGroupStatus decodes GRPC response
-func DecodeGrpcRespSecurityGroupStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSecurityGroup(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSecurityGroup(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SecurityGroup
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSecurityGroup encodes GRPC request
-func EncodeGrpcReqSecurityGroup(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroup)
-	return req, nil
-}
-
-// DecodeGrpcReqSecurityGroup decodes GRPC request
-func DecodeGrpcReqSecurityGroup(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroup)
-	return req, nil
-}
-
-// EncodeGrpcRespSecurityGroup encodes GRC response
-func EncodeGrpcRespSecurityGroup(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSecurityGroup decodes GRPC response
-func DecodeGrpcRespSecurityGroup(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSecurityGroupList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSecurityGroupList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SecurityGroupList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSecurityGroupList encodes GRPC request
-func EncodeGrpcReqSecurityGroupList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupList)
-	return req, nil
-}
-
-// DecodeGrpcReqSecurityGroupList decodes GRPC request
-func DecodeGrpcReqSecurityGroupList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SecurityGroupList)
-	return req, nil
-}
-
-// EncodeGrpcRespSecurityGroupList encodes GRC response
-func EncodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSecurityGroupList decodes GRPC response
-func DecodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSGRule(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSGRule(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SGRule
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSGRule encodes GRPC request
-func EncodeGrpcReqSGRule(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SGRule)
-	return req, nil
-}
-
-// DecodeGrpcReqSGRule decodes GRPC request
-func DecodeGrpcReqSGRule(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SGRule)
-	return req, nil
-}
-
-// EncodeGrpcRespSGRule encodes GRC response
-func EncodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSGRule decodes GRPC response
-func DecodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicySpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicySpec encodes GRPC request
-func EncodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicySpec)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicySpec decodes GRPC request
-func DecodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicySpec)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicySpec encodes GRC response
-func EncodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicySpec decodes GRPC response
-func DecodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicyStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicyStatus encodes GRPC request
-func EncodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicyStatus decodes GRPC request
-func DecodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicyStatus encodes GRC response
-func EncodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicyStatus decodes GRPC response
-func DecodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicy(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicy(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Sgpolicy
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicy encodes GRPC request
-func EncodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Sgpolicy)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicy decodes GRPC request
-func DecodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Sgpolicy)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicy encodes GRC response
-func EncodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicy decodes GRPC response
-func DecodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicyList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicyList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicyList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicyList encodes GRPC request
-func EncodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyList)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicyList decodes GRPC request
-func DecodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyList)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicyList encodes GRC response
-func EncodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicyList decodes GRPC response
-func DecodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPServiceSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPServiceSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ServiceSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqServiceSpec encodes GRPC request
-func EncodeGrpcReqServiceSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqServiceSpec decodes GRPC request
-func DecodeGrpcReqServiceSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespServiceSpec encodes GRC response
-func EncodeGrpcRespServiceSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespServiceSpec decodes GRPC response
-func DecodeGrpcRespServiceSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPServiceStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPServiceStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ServiceStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqServiceStatus encodes GRPC request
-func EncodeGrpcReqServiceStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqServiceStatus decodes GRPC request
-func DecodeGrpcReqServiceStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespServiceStatus encodes GRC response
-func EncodeGrpcRespServiceStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespServiceStatus decodes GRPC response
-func DecodeGrpcRespServiceStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPService(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPService(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Service
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqService encodes GRPC request
-func EncodeGrpcReqService(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Service)
-	return req, nil
-}
-
-// DecodeGrpcReqService decodes GRPC request
-func DecodeGrpcReqService(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Service)
-	return req, nil
-}
-
-// EncodeGrpcRespService encodes GRC response
-func EncodeGrpcRespService(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespService decodes GRPC response
-func DecodeGrpcRespService(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPServiceList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPServiceList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ServiceList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqServiceList encodes GRPC request
-func EncodeGrpcReqServiceList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceList)
-	return req, nil
-}
-
-// DecodeGrpcReqServiceList decodes GRPC request
-func DecodeGrpcReqServiceList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ServiceList)
-	return req, nil
-}
-
-// EncodeGrpcRespServiceList encodes GRC response
-func EncodeGrpcRespServiceList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespServiceList decodes GRPC response
-func DecodeGrpcRespServiceList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPHealthCheckSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPHealthCheckSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req HealthCheckSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqHealthCheckSpec encodes GRPC request
-func EncodeGrpcReqHealthCheckSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HealthCheckSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqHealthCheckSpec decodes GRPC request
-func DecodeGrpcReqHealthCheckSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HealthCheckSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespHealthCheckSpec encodes GRC response
-func EncodeGrpcRespHealthCheckSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespHealthCheckSpec decodes GRPC response
-func DecodeGrpcRespHealthCheckSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPLbPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPLbPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req LbPolicySpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqLbPolicySpec encodes GRPC request
-func EncodeGrpcReqLbPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicySpec)
-	return req, nil
-}
-
-// DecodeGrpcReqLbPolicySpec decodes GRPC request
-func DecodeGrpcReqLbPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicySpec)
-	return req, nil
-}
-
-// EncodeGrpcRespLbPolicySpec encodes GRC response
-func EncodeGrpcRespLbPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespLbPolicySpec decodes GRPC response
-func DecodeGrpcRespLbPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPLbPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPLbPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req LbPolicyStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqLbPolicyStatus encodes GRPC request
-func EncodeGrpcReqLbPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicyStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqLbPolicyStatus decodes GRPC request
-func DecodeGrpcReqLbPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicyStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespLbPolicyStatus encodes GRC response
-func EncodeGrpcRespLbPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespLbPolicyStatus decodes GRPC response
-func DecodeGrpcRespLbPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPLbPolicy(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPLbPolicy(_ context.Context, r *http.Request) (interface{}, error) {
-	var req LbPolicy
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqLbPolicy encodes GRPC request
-func EncodeGrpcReqLbPolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicy)
-	return req, nil
-}
-
-// DecodeGrpcReqLbPolicy decodes GRPC request
-func DecodeGrpcReqLbPolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicy)
-	return req, nil
-}
-
-// EncodeGrpcRespLbPolicy encodes GRC response
-func EncodeGrpcRespLbPolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespLbPolicy decodes GRPC response
-func DecodeGrpcRespLbPolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPLbPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPLbPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req LbPolicyList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqLbPolicyList encodes GRPC request
-func EncodeGrpcReqLbPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicyList)
-	return req, nil
-}
-
-// DecodeGrpcReqLbPolicyList decodes GRPC request
-func DecodeGrpcReqLbPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*LbPolicyList)
-	return req, nil
-}
-
-// EncodeGrpcRespLbPolicyList encodes GRC response
-func EncodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespLbPolicyList decodes GRPC response
-func DecodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEndpointSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEndpointSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EndpointSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEndpointSpec encodes GRPC request
-func EncodeGrpcReqEndpointSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EndpointSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqEndpointSpec decodes GRPC request
-func DecodeGrpcReqEndpointSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EndpointSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespEndpointSpec encodes GRC response
-func EncodeGrpcRespEndpointSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEndpointSpec decodes GRPC response
-func DecodeGrpcRespEndpointSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEndpointStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEndpointStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EndpointStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEndpointStatus encodes GRPC request
-func EncodeGrpcReqEndpointStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EndpointStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqEndpointStatus decodes GRPC request
-func DecodeGrpcReqEndpointStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EndpointStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespEndpointStatus encodes GRC response
-func EncodeGrpcRespEndpointStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEndpointStatus decodes GRPC response
-func DecodeGrpcRespEndpointStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespAutoMsgTenantListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -2118,241 +1404,955 @@ func DecodeGrpcRespEndpointList(ctx context.Context, response interface{}) (inte
 	return response, nil
 }
 
-func encodeHTTPAutoMsgSgpolicyListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPEndpointSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgSgpolicyListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgSgpolicyListHelper
+func decodeHTTPEndpointSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req EndpointSpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgSgpolicyListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgSgpolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgSgpolicyListHelper)
+// EncodeGrpcReqEndpointSpec encodes GRPC request
+func EncodeGrpcReqEndpointSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointSpec)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgSgpolicyListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgSgpolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgSgpolicyListHelper)
+// DecodeGrpcReqEndpointSpec decodes GRPC request
+func DecodeGrpcReqEndpointSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointSpec)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgSgpolicyListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgSgpolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespEndpointSpec encodes GRC response
+func EncodeGrpcRespEndpointSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgSgpolicyListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgSgpolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespEndpointSpec decodes GRPC response
+func DecodeGrpcRespEndpointSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgServiceListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPEndpointStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgServiceListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgServiceListHelper
+func decodeHTTPEndpointStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req EndpointStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgServiceListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgServiceListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgServiceListHelper)
+// EncodeGrpcReqEndpointStatus encodes GRPC request
+func EncodeGrpcReqEndpointStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgServiceListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgServiceListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgServiceListHelper)
+// DecodeGrpcReqEndpointStatus decodes GRPC request
+func DecodeGrpcReqEndpointStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EndpointStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgServiceListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgServiceListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespEndpointStatus encodes GRC response
+func EncodeGrpcRespEndpointStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgServiceListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgServiceListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespEndpointStatus decodes GRPC response
+func DecodeGrpcRespEndpointStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgLbPolicyListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPHealthCheckSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgLbPolicyListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgLbPolicyListHelper
+func decodeHTTPHealthCheckSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req HealthCheckSpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgLbPolicyListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgLbPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgLbPolicyListHelper)
+// EncodeGrpcReqHealthCheckSpec encodes GRPC request
+func EncodeGrpcReqHealthCheckSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*HealthCheckSpec)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgLbPolicyListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgLbPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgLbPolicyListHelper)
+// DecodeGrpcReqHealthCheckSpec decodes GRPC request
+func DecodeGrpcReqHealthCheckSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*HealthCheckSpec)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgLbPolicyListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgLbPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespHealthCheckSpec encodes GRC response
+func EncodeGrpcRespHealthCheckSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgLbPolicyListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgLbPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespHealthCheckSpec decodes GRPC response
+func DecodeGrpcRespHealthCheckSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgEndpointListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPLbPolicy(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgEndpointListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgEndpointListHelper
+func decodeHTTPLbPolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LbPolicy
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgEndpointListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgEndpointListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgEndpointListHelper)
+// EncodeGrpcReqLbPolicy encodes GRPC request
+func EncodeGrpcReqLbPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicy)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgEndpointListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgEndpointListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgEndpointListHelper)
+// DecodeGrpcReqLbPolicy decodes GRPC request
+func DecodeGrpcReqLbPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicy)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgEndpointListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgEndpointListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespLbPolicy encodes GRC response
+func EncodeGrpcRespLbPolicy(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgEndpointListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgEndpointListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespLbPolicy decodes GRPC response
+func DecodeGrpcRespLbPolicy(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgTenantListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPLbPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgTenantListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgTenantListHelper
+func decodeHTTPLbPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LbPolicyList
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgTenantListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgTenantListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgTenantListHelper)
+// EncodeGrpcReqLbPolicyList encodes GRPC request
+func EncodeGrpcReqLbPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicyList)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgTenantListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgTenantListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgTenantListHelper)
+// DecodeGrpcReqLbPolicyList decodes GRPC request
+func DecodeGrpcReqLbPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicyList)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgTenantListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespLbPolicyList encodes GRC response
+func EncodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgTenantListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgTenantListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespLbPolicyList decodes GRPC response
+func DecodeGrpcRespLbPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgNetworkListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPLbPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgNetworkListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgNetworkListHelper
+func decodeHTTPLbPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LbPolicySpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgNetworkListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgNetworkListHelper)
+// EncodeGrpcReqLbPolicySpec encodes GRPC request
+func EncodeGrpcReqLbPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicySpec)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgNetworkListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgNetworkListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgNetworkListHelper)
+// DecodeGrpcReqLbPolicySpec decodes GRPC request
+func DecodeGrpcReqLbPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicySpec)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgNetworkListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespLbPolicySpec encodes GRC response
+func EncodeGrpcRespLbPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgNetworkListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgNetworkListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespLbPolicySpec decodes GRPC response
+func DecodeGrpcRespLbPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAutoMsgSecurityGroupListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPLbPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAutoMsgSecurityGroupListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgSecurityGroupListHelper
+func decodeHTTPLbPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LbPolicyStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAutoMsgSecurityGroupListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgSecurityGroupListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgSecurityGroupListHelper)
+// EncodeGrpcReqLbPolicyStatus encodes GRPC request
+func EncodeGrpcReqLbPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicyStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqAutoMsgSecurityGroupListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgSecurityGroupListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgSecurityGroupListHelper)
+// DecodeGrpcReqLbPolicyStatus decodes GRPC request
+func DecodeGrpcReqLbPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LbPolicyStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespAutoMsgSecurityGroupListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgSecurityGroupListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespLbPolicyStatus encodes GRC response
+func EncodeGrpcRespLbPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAutoMsgSecurityGroupListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgSecurityGroupListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespLbPolicyStatus decodes GRPC response
+func DecodeGrpcRespLbPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPNetwork(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNetwork(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Network
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNetwork encodes GRPC request
+func EncodeGrpcReqNetwork(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Network)
+	return req, nil
+}
+
+// DecodeGrpcReqNetwork decodes GRPC request
+func DecodeGrpcReqNetwork(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Network)
+	return req, nil
+}
+
+// EncodeGrpcRespNetwork encodes GRC response
+func EncodeGrpcRespNetwork(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNetwork decodes GRPC response
+func DecodeGrpcRespNetwork(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPNetworkList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNetworkList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req NetworkList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNetworkList encodes GRPC request
+func EncodeGrpcReqNetworkList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkList)
+	return req, nil
+}
+
+// DecodeGrpcReqNetworkList decodes GRPC request
+func DecodeGrpcReqNetworkList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkList)
+	return req, nil
+}
+
+// EncodeGrpcRespNetworkList encodes GRC response
+func EncodeGrpcRespNetworkList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNetworkList decodes GRPC response
+func DecodeGrpcRespNetworkList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPNetworkSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNetworkSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req NetworkSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNetworkSpec encodes GRPC request
+func EncodeGrpcReqNetworkSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqNetworkSpec decodes GRPC request
+func DecodeGrpcReqNetworkSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespNetworkSpec encodes GRC response
+func EncodeGrpcRespNetworkSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNetworkSpec decodes GRPC response
+func DecodeGrpcRespNetworkSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPNetworkStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNetworkStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req NetworkStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNetworkStatus encodes GRPC request
+func EncodeGrpcReqNetworkStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqNetworkStatus decodes GRPC request
+func DecodeGrpcReqNetworkStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NetworkStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespNetworkStatus encodes GRC response
+func EncodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNetworkStatus decodes GRPC response
+func DecodeGrpcRespNetworkStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSGRule(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGRule(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGRule
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGRule encodes GRPC request
+func EncodeGrpcReqSGRule(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGRule)
+	return req, nil
+}
+
+// DecodeGrpcReqSGRule decodes GRPC request
+func DecodeGrpcReqSGRule(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGRule)
+	return req, nil
+}
+
+// EncodeGrpcRespSGRule encodes GRC response
+func EncodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGRule decodes GRPC response
+func DecodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSecurityGroup(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSecurityGroup(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SecurityGroup
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSecurityGroup encodes GRPC request
+func EncodeGrpcReqSecurityGroup(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroup)
+	return req, nil
+}
+
+// DecodeGrpcReqSecurityGroup decodes GRPC request
+func DecodeGrpcReqSecurityGroup(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroup)
+	return req, nil
+}
+
+// EncodeGrpcRespSecurityGroup encodes GRC response
+func EncodeGrpcRespSecurityGroup(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSecurityGroup decodes GRPC response
+func DecodeGrpcRespSecurityGroup(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSecurityGroupList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSecurityGroupList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SecurityGroupList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSecurityGroupList encodes GRPC request
+func EncodeGrpcReqSecurityGroupList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupList)
+	return req, nil
+}
+
+// DecodeGrpcReqSecurityGroupList decodes GRPC request
+func DecodeGrpcReqSecurityGroupList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupList)
+	return req, nil
+}
+
+// EncodeGrpcRespSecurityGroupList encodes GRC response
+func EncodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSecurityGroupList decodes GRPC response
+func DecodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSecurityGroupSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSecurityGroupSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SecurityGroupSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSecurityGroupSpec encodes GRPC request
+func EncodeGrpcReqSecurityGroupSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqSecurityGroupSpec decodes GRPC request
+func DecodeGrpcReqSecurityGroupSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespSecurityGroupSpec encodes GRC response
+func EncodeGrpcRespSecurityGroupSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSecurityGroupSpec decodes GRPC response
+func DecodeGrpcRespSecurityGroupSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSecurityGroupStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSecurityGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SecurityGroupStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSecurityGroupStatus encodes GRPC request
+func EncodeGrpcReqSecurityGroupStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqSecurityGroupStatus decodes GRPC request
+func DecodeGrpcReqSecurityGroupStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityGroupStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespSecurityGroupStatus encodes GRC response
+func EncodeGrpcRespSecurityGroupStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSecurityGroupStatus decodes GRPC response
+func DecodeGrpcRespSecurityGroupStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPService(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPService(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Service
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqService encodes GRPC request
+func EncodeGrpcReqService(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Service)
+	return req, nil
+}
+
+// DecodeGrpcReqService decodes GRPC request
+func DecodeGrpcReqService(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Service)
+	return req, nil
+}
+
+// EncodeGrpcRespService encodes GRC response
+func EncodeGrpcRespService(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespService decodes GRPC response
+func DecodeGrpcRespService(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPServiceList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPServiceList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ServiceList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqServiceList encodes GRPC request
+func EncodeGrpcReqServiceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceList)
+	return req, nil
+}
+
+// DecodeGrpcReqServiceList decodes GRPC request
+func DecodeGrpcReqServiceList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceList)
+	return req, nil
+}
+
+// EncodeGrpcRespServiceList encodes GRC response
+func EncodeGrpcRespServiceList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespServiceList decodes GRPC response
+func DecodeGrpcRespServiceList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPServiceSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPServiceSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ServiceSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqServiceSpec encodes GRPC request
+func EncodeGrpcReqServiceSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqServiceSpec decodes GRPC request
+func DecodeGrpcReqServiceSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespServiceSpec encodes GRC response
+func EncodeGrpcRespServiceSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespServiceSpec decodes GRPC response
+func DecodeGrpcRespServiceSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPServiceStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPServiceStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ServiceStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqServiceStatus encodes GRPC request
+func EncodeGrpcReqServiceStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqServiceStatus decodes GRPC request
+func DecodeGrpcReqServiceStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ServiceStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespServiceStatus encodes GRC response
+func EncodeGrpcRespServiceStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespServiceStatus decodes GRPC response
+func DecodeGrpcRespServiceStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSgpolicy(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSgpolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Sgpolicy
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSgpolicy encodes GRPC request
+func EncodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Sgpolicy)
+	return req, nil
+}
+
+// DecodeGrpcReqSgpolicy decodes GRPC request
+func DecodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Sgpolicy)
+	return req, nil
+}
+
+// EncodeGrpcRespSgpolicy encodes GRC response
+func EncodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSgpolicy decodes GRPC response
+func DecodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSgpolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSgpolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SgpolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSgpolicyList encodes GRPC request
+func EncodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqSgpolicyList decodes GRPC request
+func DecodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespSgpolicyList encodes GRC response
+func EncodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSgpolicyList decodes GRPC response
+func DecodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSgpolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSgpolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SgpolicySpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSgpolicySpec encodes GRPC request
+func EncodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicySpec)
+	return req, nil
+}
+
+// DecodeGrpcReqSgpolicySpec decodes GRPC request
+func DecodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicySpec)
+	return req, nil
+}
+
+// EncodeGrpcRespSgpolicySpec encodes GRC response
+func EncodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSgpolicySpec decodes GRPC response
+func DecodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSgpolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSgpolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SgpolicyStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSgpolicyStatus encodes GRPC request
+func EncodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicyStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqSgpolicyStatus decodes GRPC request
+func DecodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SgpolicyStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespSgpolicyStatus encodes GRC response
+func EncodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSgpolicyStatus decodes GRPC response
+func DecodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenant(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenant(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Tenant
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenant encodes GRPC request
+func EncodeGrpcReqTenant(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Tenant)
+	return req, nil
+}
+
+// DecodeGrpcReqTenant decodes GRPC request
+func DecodeGrpcReqTenant(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Tenant)
+	return req, nil
+}
+
+// EncodeGrpcRespTenant encodes GRC response
+func EncodeGrpcRespTenant(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenant decodes GRPC response
+func DecodeGrpcRespTenant(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenantList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenantList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TenantList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenantList encodes GRPC request
+func EncodeGrpcReqTenantList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantList)
+	return req, nil
+}
+
+// DecodeGrpcReqTenantList decodes GRPC request
+func DecodeGrpcReqTenantList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantList)
+	return req, nil
+}
+
+// EncodeGrpcRespTenantList encodes GRC response
+func EncodeGrpcRespTenantList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenantList decodes GRPC response
+func DecodeGrpcRespTenantList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenantSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenantSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TenantSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenantSpec encodes GRPC request
+func EncodeGrpcReqTenantSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqTenantSpec decodes GRPC request
+func DecodeGrpcReqTenantSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespTenantSpec encodes GRC response
+func EncodeGrpcRespTenantSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenantSpec decodes GRPC response
+func DecodeGrpcRespTenantSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTenantStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTenantStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TenantStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTenantStatus encodes GRPC request
+func EncodeGrpcReqTenantStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqTenantStatus decodes GRPC request
+func DecodeGrpcReqTenantStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TenantStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespTenantStatus encodes GRC response
+func EncodeGrpcRespTenantStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTenantStatus decodes GRPC response
+func DecodeGrpcRespTenantStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

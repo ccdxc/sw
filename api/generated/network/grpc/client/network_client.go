@@ -48,94 +48,185 @@ func addVersion(ctx context.Context, version string) context.Context {
 	return metadata.NewContext(ctx, outmd)
 }
 
-// NewTenantV1 sets up a new client for TenantV1
-func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenantV1Client {
+// NewEndpointV1 sets up a new client for EndpointV1
+func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndpointV1Client {
 
-	var lAutoAddTenantEndpoint endpoint.Endpoint
+	var lAutoAddEndpointEndpoint endpoint.Endpoint
 	{
-		lAutoAddTenantEndpoint = grpctransport.NewClient(
+		lAutoAddEndpointEndpoint = grpctransport.NewClient(
 			conn,
-			"network.TenantV1",
-			"AutoAddTenant",
-			network.EncodeGrpcReqTenant,
-			network.DecodeGrpcRespTenant,
-			&network.Tenant{},
+			"network.EndpointV1",
+			"AutoAddEndpoint",
+			network.EncodeGrpcReqEndpoint,
+			network.DecodeGrpcRespEndpoint,
+			&network.Endpoint{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(lAutoAddTenantEndpoint)
+		lAutoAddEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(lAutoAddEndpointEndpoint)
 	}
-	var lAutoUpdateTenantEndpoint endpoint.Endpoint
+	var lAutoDeleteEndpointEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateTenantEndpoint = grpctransport.NewClient(
+		lAutoDeleteEndpointEndpoint = grpctransport.NewClient(
 			conn,
-			"network.TenantV1",
-			"AutoUpdateTenant",
-			network.EncodeGrpcReqTenant,
-			network.DecodeGrpcRespTenant,
-			&network.Tenant{},
+			"network.EndpointV1",
+			"AutoDeleteEndpoint",
+			network.EncodeGrpcReqEndpoint,
+			network.DecodeGrpcRespEndpoint,
+			&network.Endpoint{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
+		lAutoDeleteEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(lAutoDeleteEndpointEndpoint)
 	}
-	var lAutoGetTenantEndpoint endpoint.Endpoint
+	var lAutoGetEndpointEndpoint endpoint.Endpoint
 	{
-		lAutoGetTenantEndpoint = grpctransport.NewClient(
+		lAutoGetEndpointEndpoint = grpctransport.NewClient(
 			conn,
-			"network.TenantV1",
-			"AutoGetTenant",
-			network.EncodeGrpcReqTenant,
-			network.DecodeGrpcRespTenant,
-			&network.Tenant{},
+			"network.EndpointV1",
+			"AutoGetEndpoint",
+			network.EncodeGrpcReqEndpoint,
+			network.DecodeGrpcRespEndpoint,
+			&network.Endpoint{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(lAutoGetTenantEndpoint)
+		lAutoGetEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(lAutoGetEndpointEndpoint)
 	}
-	var lAutoDeleteTenantEndpoint endpoint.Endpoint
+	var lAutoListEndpointEndpoint endpoint.Endpoint
 	{
-		lAutoDeleteTenantEndpoint = grpctransport.NewClient(
+		lAutoListEndpointEndpoint = grpctransport.NewClient(
 			conn,
-			"network.TenantV1",
-			"AutoDeleteTenant",
-			network.EncodeGrpcReqTenant,
-			network.DecodeGrpcRespTenant,
-			&network.Tenant{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(lAutoDeleteTenantEndpoint)
-	}
-	var lAutoListTenantEndpoint endpoint.Endpoint
-	{
-		lAutoListTenantEndpoint = grpctransport.NewClient(
-			conn,
-			"network.TenantV1",
-			"AutoListTenant",
+			"network.EndpointV1",
+			"AutoListEndpoint",
 			network.EncodeGrpcReqListWatchOptions,
-			network.DecodeGrpcRespAutoMsgTenantListHelper,
-			&network.AutoMsgTenantListHelper{},
+			network.DecodeGrpcRespAutoMsgEndpointListHelper,
+			&network.AutoMsgEndpointListHelper{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(lAutoListTenantEndpoint)
+		lAutoListEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(lAutoListEndpointEndpoint)
 	}
-	return network.EndpointsTenantV1Client{
-		Client: network.NewTenantV1Client(conn),
+	var lAutoUpdateEndpointEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateEndpointEndpoint = grpctransport.NewClient(
+			conn,
+			"network.EndpointV1",
+			"AutoUpdateEndpoint",
+			network.EncodeGrpcReqEndpoint,
+			network.DecodeGrpcRespEndpoint,
+			&network.Endpoint{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(lAutoUpdateEndpointEndpoint)
+	}
+	return network.EndpointsEndpointV1Client{
+		Client: network.NewEndpointV1Client(conn),
 
-		AutoAddTenantEndpoint:    lAutoAddTenantEndpoint,
-		AutoUpdateTenantEndpoint: lAutoUpdateTenantEndpoint,
-		AutoGetTenantEndpoint:    lAutoGetTenantEndpoint,
-		AutoDeleteTenantEndpoint: lAutoDeleteTenantEndpoint,
-		AutoListTenantEndpoint:   lAutoListTenantEndpoint,
+		AutoAddEndpointEndpoint:    lAutoAddEndpointEndpoint,
+		AutoDeleteEndpointEndpoint: lAutoDeleteEndpointEndpoint,
+		AutoGetEndpointEndpoint:    lAutoGetEndpointEndpoint,
+		AutoListEndpointEndpoint:   lAutoListEndpointEndpoint,
+		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
 	}
 }
 
-// NewTenantV1Backend creates an instrumented client with middleware
-func NewTenantV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenantV1Client {
-	cl := NewTenantV1(conn, logger)
-	cl = network.LoggingTenantV1MiddlewareClient(logger)(cl)
+// NewEndpointV1Backend creates an instrumented client with middleware
+func NewEndpointV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndpointV1Client {
+	cl := NewEndpointV1(conn, logger)
+	cl = network.LoggingEndpointV1MiddlewareClient(logger)(cl)
+	return cl
+}
+
+// NewLbPolicyV1 sets up a new client for LbPolicyV1
+func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPolicyV1Client {
+
+	var lAutoAddLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.LbPolicyV1",
+			"AutoAddLbPolicy",
+			network.EncodeGrpcReqLbPolicy,
+			network.DecodeGrpcRespLbPolicy,
+			&network.LbPolicy{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(lAutoAddLbPolicyEndpoint)
+	}
+	var lAutoDeleteLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.LbPolicyV1",
+			"AutoDeleteLbPolicy",
+			network.EncodeGrpcReqLbPolicy,
+			network.DecodeGrpcRespLbPolicy,
+			&network.LbPolicy{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(lAutoDeleteLbPolicyEndpoint)
+	}
+	var lAutoGetLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.LbPolicyV1",
+			"AutoGetLbPolicy",
+			network.EncodeGrpcReqLbPolicy,
+			network.DecodeGrpcRespLbPolicy,
+			&network.LbPolicy{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(lAutoGetLbPolicyEndpoint)
+	}
+	var lAutoListLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.LbPolicyV1",
+			"AutoListLbPolicy",
+			network.EncodeGrpcReqListWatchOptions,
+			network.DecodeGrpcRespAutoMsgLbPolicyListHelper,
+			&network.AutoMsgLbPolicyListHelper{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(lAutoListLbPolicyEndpoint)
+	}
+	var lAutoUpdateLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.LbPolicyV1",
+			"AutoUpdateLbPolicy",
+			network.EncodeGrpcReqLbPolicy,
+			network.DecodeGrpcRespLbPolicy,
+			&network.LbPolicy{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(lAutoUpdateLbPolicyEndpoint)
+	}
+	return network.EndpointsLbPolicyV1Client{
+		Client: network.NewLbPolicyV1Client(conn),
+
+		AutoAddLbPolicyEndpoint:    lAutoAddLbPolicyEndpoint,
+		AutoDeleteLbPolicyEndpoint: lAutoDeleteLbPolicyEndpoint,
+		AutoGetLbPolicyEndpoint:    lAutoGetLbPolicyEndpoint,
+		AutoListLbPolicyEndpoint:   lAutoListLbPolicyEndpoint,
+		AutoUpdateLbPolicyEndpoint: lAutoUpdateLbPolicyEndpoint,
+	}
+}
+
+// NewLbPolicyV1Backend creates an instrumented client with middleware
+func NewLbPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPolicyV1Client {
+	cl := NewLbPolicyV1(conn, logger)
+	cl = network.LoggingLbPolicyV1MiddlewareClient(logger)(cl)
 	return cl
 }
 
@@ -156,19 +247,19 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoAddNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoAddNetwork")(lAutoAddNetworkEndpoint)
 	}
-	var lAutoUpdateNetworkEndpoint endpoint.Endpoint
+	var lAutoDeleteNetworkEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateNetworkEndpoint = grpctransport.NewClient(
+		lAutoDeleteNetworkEndpoint = grpctransport.NewClient(
 			conn,
 			"network.NetworkV1",
-			"AutoUpdateNetwork",
+			"AutoDeleteNetwork",
 			network.EncodeGrpcReqNetwork,
 			network.DecodeGrpcRespNetwork,
 			&network.Network{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(lAutoUpdateNetworkEndpoint)
+		lAutoDeleteNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(lAutoDeleteNetworkEndpoint)
 	}
 	var lAutoGetNetworkEndpoint endpoint.Endpoint
 	{
@@ -184,20 +275,6 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoGetNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoGetNetwork")(lAutoGetNetworkEndpoint)
 	}
-	var lAutoDeleteNetworkEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteNetworkEndpoint = grpctransport.NewClient(
-			conn,
-			"network.NetworkV1",
-			"AutoDeleteNetwork",
-			network.EncodeGrpcReqNetwork,
-			network.DecodeGrpcRespNetwork,
-			&network.Network{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(lAutoDeleteNetworkEndpoint)
-	}
 	var lAutoListNetworkEndpoint endpoint.Endpoint
 	{
 		lAutoListNetworkEndpoint = grpctransport.NewClient(
@@ -212,14 +289,28 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoListNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoListNetwork")(lAutoListNetworkEndpoint)
 	}
+	var lAutoUpdateNetworkEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateNetworkEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoUpdateNetwork",
+			network.EncodeGrpcReqNetwork,
+			network.DecodeGrpcRespNetwork,
+			&network.Network{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(lAutoUpdateNetworkEndpoint)
+	}
 	return network.EndpointsNetworkV1Client{
 		Client: network.NewNetworkV1Client(conn),
 
 		AutoAddNetworkEndpoint:    lAutoAddNetworkEndpoint,
-		AutoUpdateNetworkEndpoint: lAutoUpdateNetworkEndpoint,
-		AutoGetNetworkEndpoint:    lAutoGetNetworkEndpoint,
 		AutoDeleteNetworkEndpoint: lAutoDeleteNetworkEndpoint,
+		AutoGetNetworkEndpoint:    lAutoGetNetworkEndpoint,
 		AutoListNetworkEndpoint:   lAutoListNetworkEndpoint,
+		AutoUpdateNetworkEndpoint: lAutoUpdateNetworkEndpoint,
 	}
 }
 
@@ -247,19 +338,19 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 		).Endpoint()
 		lAutoAddSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoAddSecurityGroup")(lAutoAddSecurityGroupEndpoint)
 	}
-	var lAutoUpdateSecurityGroupEndpoint endpoint.Endpoint
+	var lAutoDeleteSecurityGroupEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateSecurityGroupEndpoint = grpctransport.NewClient(
+		lAutoDeleteSecurityGroupEndpoint = grpctransport.NewClient(
 			conn,
 			"network.SecurityGroupV1",
-			"AutoUpdateSecurityGroup",
+			"AutoDeleteSecurityGroup",
 			network.EncodeGrpcReqSecurityGroup,
 			network.DecodeGrpcRespSecurityGroup,
 			&network.SecurityGroup{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(lAutoUpdateSecurityGroupEndpoint)
+		lAutoDeleteSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(lAutoDeleteSecurityGroupEndpoint)
 	}
 	var lAutoGetSecurityGroupEndpoint endpoint.Endpoint
 	{
@@ -275,20 +366,6 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 		).Endpoint()
 		lAutoGetSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoGetSecurityGroup")(lAutoGetSecurityGroupEndpoint)
 	}
-	var lAutoDeleteSecurityGroupEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteSecurityGroupEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SecurityGroupV1",
-			"AutoDeleteSecurityGroup",
-			network.EncodeGrpcReqSecurityGroup,
-			network.DecodeGrpcRespSecurityGroup,
-			&network.SecurityGroup{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(lAutoDeleteSecurityGroupEndpoint)
-	}
 	var lAutoListSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoListSecurityGroupEndpoint = grpctransport.NewClient(
@@ -303,14 +380,28 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 		).Endpoint()
 		lAutoListSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoListSecurityGroup")(lAutoListSecurityGroupEndpoint)
 	}
+	var lAutoUpdateSecurityGroupEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateSecurityGroupEndpoint = grpctransport.NewClient(
+			conn,
+			"network.SecurityGroupV1",
+			"AutoUpdateSecurityGroup",
+			network.EncodeGrpcReqSecurityGroup,
+			network.DecodeGrpcRespSecurityGroup,
+			&network.SecurityGroup{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(lAutoUpdateSecurityGroupEndpoint)
+	}
 	return network.EndpointsSecurityGroupV1Client{
 		Client: network.NewSecurityGroupV1Client(conn),
 
 		AutoAddSecurityGroupEndpoint:    lAutoAddSecurityGroupEndpoint,
-		AutoUpdateSecurityGroupEndpoint: lAutoUpdateSecurityGroupEndpoint,
-		AutoGetSecurityGroupEndpoint:    lAutoGetSecurityGroupEndpoint,
 		AutoDeleteSecurityGroupEndpoint: lAutoDeleteSecurityGroupEndpoint,
+		AutoGetSecurityGroupEndpoint:    lAutoGetSecurityGroupEndpoint,
 		AutoListSecurityGroupEndpoint:   lAutoListSecurityGroupEndpoint,
+		AutoUpdateSecurityGroupEndpoint: lAutoUpdateSecurityGroupEndpoint,
 	}
 }
 
@@ -318,97 +409,6 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 func NewSecurityGroupV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceSecurityGroupV1Client {
 	cl := NewSecurityGroupV1(conn, logger)
 	cl = network.LoggingSecurityGroupV1MiddlewareClient(logger)(cl)
-	return cl
-}
-
-// NewSgpolicyV1 sets up a new client for SgpolicyV1
-func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpolicyV1Client {
-
-	var lAutoAddSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoAddSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SgpolicyV1",
-			"AutoAddSgpolicy",
-			network.EncodeGrpcReqSgpolicy,
-			network.DecodeGrpcRespSgpolicy,
-			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(lAutoAddSgpolicyEndpoint)
-	}
-	var lAutoUpdateSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SgpolicyV1",
-			"AutoUpdateSgpolicy",
-			network.EncodeGrpcReqSgpolicy,
-			network.DecodeGrpcRespSgpolicy,
-			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(lAutoUpdateSgpolicyEndpoint)
-	}
-	var lAutoGetSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoGetSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SgpolicyV1",
-			"AutoGetSgpolicy",
-			network.EncodeGrpcReqSgpolicy,
-			network.DecodeGrpcRespSgpolicy,
-			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(lAutoGetSgpolicyEndpoint)
-	}
-	var lAutoDeleteSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SgpolicyV1",
-			"AutoDeleteSgpolicy",
-			network.EncodeGrpcReqSgpolicy,
-			network.DecodeGrpcRespSgpolicy,
-			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(lAutoDeleteSgpolicyEndpoint)
-	}
-	var lAutoListSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoListSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.SgpolicyV1",
-			"AutoListSgpolicy",
-			network.EncodeGrpcReqListWatchOptions,
-			network.DecodeGrpcRespAutoMsgSgpolicyListHelper,
-			&network.AutoMsgSgpolicyListHelper{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(lAutoListSgpolicyEndpoint)
-	}
-	return network.EndpointsSgpolicyV1Client{
-		Client: network.NewSgpolicyV1Client(conn),
-
-		AutoAddSgpolicyEndpoint:    lAutoAddSgpolicyEndpoint,
-		AutoUpdateSgpolicyEndpoint: lAutoUpdateSgpolicyEndpoint,
-		AutoGetSgpolicyEndpoint:    lAutoGetSgpolicyEndpoint,
-		AutoDeleteSgpolicyEndpoint: lAutoDeleteSgpolicyEndpoint,
-		AutoListSgpolicyEndpoint:   lAutoListSgpolicyEndpoint,
-	}
-}
-
-// NewSgpolicyV1Backend creates an instrumented client with middleware
-func NewSgpolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpolicyV1Client {
-	cl := NewSgpolicyV1(conn, logger)
-	cl = network.LoggingSgpolicyV1MiddlewareClient(logger)(cl)
 	return cl
 }
 
@@ -429,19 +429,19 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 		).Endpoint()
 		lAutoAddServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoAddService")(lAutoAddServiceEndpoint)
 	}
-	var lAutoUpdateServiceEndpoint endpoint.Endpoint
+	var lAutoDeleteServiceEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateServiceEndpoint = grpctransport.NewClient(
+		lAutoDeleteServiceEndpoint = grpctransport.NewClient(
 			conn,
 			"network.ServiceV1",
-			"AutoUpdateService",
+			"AutoDeleteService",
 			network.EncodeGrpcReqService,
 			network.DecodeGrpcRespService,
 			&network.Service{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(lAutoUpdateServiceEndpoint)
+		lAutoDeleteServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(lAutoDeleteServiceEndpoint)
 	}
 	var lAutoGetServiceEndpoint endpoint.Endpoint
 	{
@@ -457,20 +457,6 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 		).Endpoint()
 		lAutoGetServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoGetService")(lAutoGetServiceEndpoint)
 	}
-	var lAutoDeleteServiceEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteServiceEndpoint = grpctransport.NewClient(
-			conn,
-			"network.ServiceV1",
-			"AutoDeleteService",
-			network.EncodeGrpcReqService,
-			network.DecodeGrpcRespService,
-			&network.Service{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(lAutoDeleteServiceEndpoint)
-	}
 	var lAutoListServiceEndpoint endpoint.Endpoint
 	{
 		lAutoListServiceEndpoint = grpctransport.NewClient(
@@ -485,14 +471,28 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 		).Endpoint()
 		lAutoListServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoListService")(lAutoListServiceEndpoint)
 	}
+	var lAutoUpdateServiceEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateServiceEndpoint = grpctransport.NewClient(
+			conn,
+			"network.ServiceV1",
+			"AutoUpdateService",
+			network.EncodeGrpcReqService,
+			network.DecodeGrpcRespService,
+			&network.Service{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(lAutoUpdateServiceEndpoint)
+	}
 	return network.EndpointsServiceV1Client{
 		Client: network.NewServiceV1Client(conn),
 
 		AutoAddServiceEndpoint:    lAutoAddServiceEndpoint,
-		AutoUpdateServiceEndpoint: lAutoUpdateServiceEndpoint,
-		AutoGetServiceEndpoint:    lAutoGetServiceEndpoint,
 		AutoDeleteServiceEndpoint: lAutoDeleteServiceEndpoint,
+		AutoGetServiceEndpoint:    lAutoGetServiceEndpoint,
 		AutoListServiceEndpoint:   lAutoListServiceEndpoint,
+		AutoUpdateServiceEndpoint: lAutoUpdateServiceEndpoint,
 	}
 }
 
@@ -503,257 +503,257 @@ func NewServiceV1Backend(conn *grpc.ClientConn, logger log.Logger) network.Servi
 	return cl
 }
 
-// NewLbPolicyV1 sets up a new client for LbPolicyV1
-func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPolicyV1Client {
+// NewSgpolicyV1 sets up a new client for SgpolicyV1
+func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpolicyV1Client {
 
-	var lAutoAddLbPolicyEndpoint endpoint.Endpoint
+	var lAutoAddSgpolicyEndpoint endpoint.Endpoint
 	{
-		lAutoAddLbPolicyEndpoint = grpctransport.NewClient(
+		lAutoAddSgpolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"network.LbPolicyV1",
-			"AutoAddLbPolicy",
-			network.EncodeGrpcReqLbPolicy,
-			network.DecodeGrpcRespLbPolicy,
-			&network.LbPolicy{},
+			"network.SgpolicyV1",
+			"AutoAddSgpolicy",
+			network.EncodeGrpcReqSgpolicy,
+			network.DecodeGrpcRespSgpolicy,
+			&network.Sgpolicy{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(lAutoAddLbPolicyEndpoint)
+		lAutoAddSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(lAutoAddSgpolicyEndpoint)
 	}
-	var lAutoUpdateLbPolicyEndpoint endpoint.Endpoint
+	var lAutoDeleteSgpolicyEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateLbPolicyEndpoint = grpctransport.NewClient(
+		lAutoDeleteSgpolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"network.LbPolicyV1",
-			"AutoUpdateLbPolicy",
-			network.EncodeGrpcReqLbPolicy,
-			network.DecodeGrpcRespLbPolicy,
-			&network.LbPolicy{},
+			"network.SgpolicyV1",
+			"AutoDeleteSgpolicy",
+			network.EncodeGrpcReqSgpolicy,
+			network.DecodeGrpcRespSgpolicy,
+			&network.Sgpolicy{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(lAutoUpdateLbPolicyEndpoint)
+		lAutoDeleteSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(lAutoDeleteSgpolicyEndpoint)
 	}
-	var lAutoGetLbPolicyEndpoint endpoint.Endpoint
+	var lAutoGetSgpolicyEndpoint endpoint.Endpoint
 	{
-		lAutoGetLbPolicyEndpoint = grpctransport.NewClient(
+		lAutoGetSgpolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"network.LbPolicyV1",
-			"AutoGetLbPolicy",
-			network.EncodeGrpcReqLbPolicy,
-			network.DecodeGrpcRespLbPolicy,
-			&network.LbPolicy{},
+			"network.SgpolicyV1",
+			"AutoGetSgpolicy",
+			network.EncodeGrpcReqSgpolicy,
+			network.DecodeGrpcRespSgpolicy,
+			&network.Sgpolicy{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(lAutoGetLbPolicyEndpoint)
+		lAutoGetSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(lAutoGetSgpolicyEndpoint)
 	}
-	var lAutoDeleteLbPolicyEndpoint endpoint.Endpoint
+	var lAutoListSgpolicyEndpoint endpoint.Endpoint
 	{
-		lAutoDeleteLbPolicyEndpoint = grpctransport.NewClient(
+		lAutoListSgpolicyEndpoint = grpctransport.NewClient(
 			conn,
-			"network.LbPolicyV1",
-			"AutoDeleteLbPolicy",
-			network.EncodeGrpcReqLbPolicy,
-			network.DecodeGrpcRespLbPolicy,
-			&network.LbPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(lAutoDeleteLbPolicyEndpoint)
-	}
-	var lAutoListLbPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoListLbPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"network.LbPolicyV1",
-			"AutoListLbPolicy",
+			"network.SgpolicyV1",
+			"AutoListSgpolicy",
 			network.EncodeGrpcReqListWatchOptions,
-			network.DecodeGrpcRespAutoMsgLbPolicyListHelper,
-			&network.AutoMsgLbPolicyListHelper{},
+			network.DecodeGrpcRespAutoMsgSgpolicyListHelper,
+			&network.AutoMsgSgpolicyListHelper{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(lAutoListLbPolicyEndpoint)
+		lAutoListSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(lAutoListSgpolicyEndpoint)
 	}
-	return network.EndpointsLbPolicyV1Client{
-		Client: network.NewLbPolicyV1Client(conn),
+	var lAutoUpdateSgpolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateSgpolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.SgpolicyV1",
+			"AutoUpdateSgpolicy",
+			network.EncodeGrpcReqSgpolicy,
+			network.DecodeGrpcRespSgpolicy,
+			&network.Sgpolicy{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(lAutoUpdateSgpolicyEndpoint)
+	}
+	return network.EndpointsSgpolicyV1Client{
+		Client: network.NewSgpolicyV1Client(conn),
 
-		AutoAddLbPolicyEndpoint:    lAutoAddLbPolicyEndpoint,
-		AutoUpdateLbPolicyEndpoint: lAutoUpdateLbPolicyEndpoint,
-		AutoGetLbPolicyEndpoint:    lAutoGetLbPolicyEndpoint,
-		AutoDeleteLbPolicyEndpoint: lAutoDeleteLbPolicyEndpoint,
-		AutoListLbPolicyEndpoint:   lAutoListLbPolicyEndpoint,
+		AutoAddSgpolicyEndpoint:    lAutoAddSgpolicyEndpoint,
+		AutoDeleteSgpolicyEndpoint: lAutoDeleteSgpolicyEndpoint,
+		AutoGetSgpolicyEndpoint:    lAutoGetSgpolicyEndpoint,
+		AutoListSgpolicyEndpoint:   lAutoListSgpolicyEndpoint,
+		AutoUpdateSgpolicyEndpoint: lAutoUpdateSgpolicyEndpoint,
 	}
 }
 
-// NewLbPolicyV1Backend creates an instrumented client with middleware
-func NewLbPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPolicyV1Client {
-	cl := NewLbPolicyV1(conn, logger)
-	cl = network.LoggingLbPolicyV1MiddlewareClient(logger)(cl)
+// NewSgpolicyV1Backend creates an instrumented client with middleware
+func NewSgpolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpolicyV1Client {
+	cl := NewSgpolicyV1(conn, logger)
+	cl = network.LoggingSgpolicyV1MiddlewareClient(logger)(cl)
 	return cl
 }
 
-// NewEndpointV1 sets up a new client for EndpointV1
-func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndpointV1Client {
+// NewTenantV1 sets up a new client for TenantV1
+func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenantV1Client {
 
-	var lAutoAddEndpointEndpoint endpoint.Endpoint
+	var lAutoAddTenantEndpoint endpoint.Endpoint
 	{
-		lAutoAddEndpointEndpoint = grpctransport.NewClient(
+		lAutoAddTenantEndpoint = grpctransport.NewClient(
 			conn,
-			"network.EndpointV1",
-			"AutoAddEndpoint",
-			network.EncodeGrpcReqEndpoint,
-			network.DecodeGrpcRespEndpoint,
-			&network.Endpoint{},
+			"network.TenantV1",
+			"AutoAddTenant",
+			network.EncodeGrpcReqTenant,
+			network.DecodeGrpcRespTenant,
+			&network.Tenant{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(lAutoAddEndpointEndpoint)
+		lAutoAddTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(lAutoAddTenantEndpoint)
 	}
-	var lAutoUpdateEndpointEndpoint endpoint.Endpoint
+	var lAutoDeleteTenantEndpoint endpoint.Endpoint
 	{
-		lAutoUpdateEndpointEndpoint = grpctransport.NewClient(
+		lAutoDeleteTenantEndpoint = grpctransport.NewClient(
 			conn,
-			"network.EndpointV1",
-			"AutoUpdateEndpoint",
-			network.EncodeGrpcReqEndpoint,
-			network.DecodeGrpcRespEndpoint,
-			&network.Endpoint{},
+			"network.TenantV1",
+			"AutoDeleteTenant",
+			network.EncodeGrpcReqTenant,
+			network.DecodeGrpcRespTenant,
+			&network.Tenant{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(lAutoUpdateEndpointEndpoint)
+		lAutoDeleteTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(lAutoDeleteTenantEndpoint)
 	}
-	var lAutoGetEndpointEndpoint endpoint.Endpoint
+	var lAutoGetTenantEndpoint endpoint.Endpoint
 	{
-		lAutoGetEndpointEndpoint = grpctransport.NewClient(
+		lAutoGetTenantEndpoint = grpctransport.NewClient(
 			conn,
-			"network.EndpointV1",
-			"AutoGetEndpoint",
-			network.EncodeGrpcReqEndpoint,
-			network.DecodeGrpcRespEndpoint,
-			&network.Endpoint{},
+			"network.TenantV1",
+			"AutoGetTenant",
+			network.EncodeGrpcReqTenant,
+			network.DecodeGrpcRespTenant,
+			&network.Tenant{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(lAutoGetEndpointEndpoint)
+		lAutoGetTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(lAutoGetTenantEndpoint)
 	}
-	var lAutoDeleteEndpointEndpoint endpoint.Endpoint
+	var lAutoListTenantEndpoint endpoint.Endpoint
 	{
-		lAutoDeleteEndpointEndpoint = grpctransport.NewClient(
+		lAutoListTenantEndpoint = grpctransport.NewClient(
 			conn,
-			"network.EndpointV1",
-			"AutoDeleteEndpoint",
-			network.EncodeGrpcReqEndpoint,
-			network.DecodeGrpcRespEndpoint,
-			&network.Endpoint{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(lAutoDeleteEndpointEndpoint)
-	}
-	var lAutoListEndpointEndpoint endpoint.Endpoint
-	{
-		lAutoListEndpointEndpoint = grpctransport.NewClient(
-			conn,
-			"network.EndpointV1",
-			"AutoListEndpoint",
+			"network.TenantV1",
+			"AutoListTenant",
 			network.EncodeGrpcReqListWatchOptions,
-			network.DecodeGrpcRespAutoMsgEndpointListHelper,
-			&network.AutoMsgEndpointListHelper{},
+			network.DecodeGrpcRespAutoMsgTenantListHelper,
+			&network.AutoMsgTenantListHelper{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(lAutoListEndpointEndpoint)
+		lAutoListTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(lAutoListTenantEndpoint)
 	}
-	return network.EndpointsEndpointV1Client{
-		Client: network.NewEndpointV1Client(conn),
+	var lAutoUpdateTenantEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateTenantEndpoint = grpctransport.NewClient(
+			conn,
+			"network.TenantV1",
+			"AutoUpdateTenant",
+			network.EncodeGrpcReqTenant,
+			network.DecodeGrpcRespTenant,
+			&network.Tenant{},
+			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
+	}
+	return network.EndpointsTenantV1Client{
+		Client: network.NewTenantV1Client(conn),
 
-		AutoAddEndpointEndpoint:    lAutoAddEndpointEndpoint,
-		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
-		AutoGetEndpointEndpoint:    lAutoGetEndpointEndpoint,
-		AutoDeleteEndpointEndpoint: lAutoDeleteEndpointEndpoint,
-		AutoListEndpointEndpoint:   lAutoListEndpointEndpoint,
+		AutoAddTenantEndpoint:    lAutoAddTenantEndpoint,
+		AutoDeleteTenantEndpoint: lAutoDeleteTenantEndpoint,
+		AutoGetTenantEndpoint:    lAutoGetTenantEndpoint,
+		AutoListTenantEndpoint:   lAutoListTenantEndpoint,
+		AutoUpdateTenantEndpoint: lAutoUpdateTenantEndpoint,
 	}
 }
 
-// NewEndpointV1Backend creates an instrumented client with middleware
-func NewEndpointV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndpointV1Client {
-	cl := NewEndpointV1(conn, logger)
-	cl = network.LoggingEndpointV1MiddlewareClient(logger)(cl)
+// NewTenantV1Backend creates an instrumented client with middleware
+func NewTenantV1Backend(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenantV1Client {
+	cl := NewTenantV1(conn, logger)
+	cl = network.LoggingTenantV1MiddlewareClient(logger)(cl)
 	return cl
 }
 
-type grpcObjTenantV1Tenant struct {
+type grpcObjEndpointV1Endpoint struct {
 	logger log.Logger
-	client network.ServiceTenantV1Client
+	client network.ServiceEndpointV1Client
 }
 
-func (a *grpcObjTenantV1Tenant) Create(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Tenant", "oper", "create")
+func (a *grpcObjEndpointV1Endpoint) Create(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "Endpoint", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddTenant(nctx, in)
+	return a.client.AutoAddEndpoint(nctx, in)
 }
 
-func (a *grpcObjTenantV1Tenant) Update(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "update")
+func (a *grpcObjEndpointV1Endpoint) Update(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "update")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateTenant(nctx, in)
+	return a.client.AutoUpdateEndpoint(nctx, in)
 }
 
-func (a *grpcObjTenantV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "get")
+func (a *grpcObjEndpointV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "get")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Tenant{}
+	in := network.Endpoint{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetTenant(nctx, &in)
+	return a.client.AutoGetEndpoint(nctx, &in)
 }
 
-func (a *grpcObjTenantV1Tenant) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "delete")
+func (a *grpcObjEndpointV1Endpoint) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "delete")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Tenant{}
+	in := network.Endpoint{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteTenant(nctx, &in)
+	return a.client.AutoDeleteEndpoint(nctx, &in)
 }
 
-func (a *grpcObjTenantV1Tenant) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Tenant, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "list")
+func (a *grpcObjEndpointV1Endpoint) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "list")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListTenant(nctx, options)
+	r, err := a.client.AutoListEndpoint(nctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *grpcObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "WatchOper")
+func (a *grpcObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	stream, err := a.client.AutoWatchTenant(nctx, options)
+	stream, err := a.client.AutoWatchEndpoint(nctx, options)
 	if err != nil {
 		return nil, err
 	}
-	wstream := stream.(network.TenantV1_AutoWatchTenantClient)
+	wstream := stream.(network.EndpointV1_AutoWatchEndpointClient)
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			r, err := wstream.Recv()
@@ -774,63 +774,227 @@ func (a *grpcObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatc
 	return lw, nil
 }
 
-func (a *grpcObjTenantV1Tenant) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjEndpointV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
 
-type restObjTenantV1Tenant struct {
-	endpoints network.EndpointsTenantV1RestClient
+type restObjEndpointV1Endpoint struct {
+	endpoints network.EndpointsEndpointV1RestClient
 	instance  string
 }
 
-func (a *restObjTenantV1Tenant) Create(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
+func (a *restObjEndpointV1Endpoint) Create(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoAddTenant(ctx, in)
+	return a.endpoints.AutoAddEndpoint(ctx, in)
 }
 
-func (a *restObjTenantV1Tenant) Update(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
+func (a *restObjEndpointV1Endpoint) Update(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoUpdateTenant(ctx, in)
+	return a.endpoints.AutoUpdateEndpoint(ctx, in)
 }
 
-func (a *restObjTenantV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
+func (a *restObjEndpointV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Tenant{}
+	in := network.Endpoint{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetTenant(ctx, &in)
+	return a.endpoints.AutoGetEndpoint(ctx, &in)
 }
 
-func (a *restObjTenantV1Tenant) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
+func (a *restObjEndpointV1Endpoint) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Tenant{}
+	in := network.Endpoint{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteTenant(ctx, &in)
+	return a.endpoints.AutoDeleteEndpoint(ctx, &in)
 }
 
-func (a *restObjTenantV1Tenant) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Tenant, error) {
+func (a *restObjEndpointV1Endpoint) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Endpoint, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	r, err := a.endpoints.AutoListTenant(ctx, options)
+	r, err := a.endpoints.AutoListEndpoint(ctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *restObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *restObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("not allowed")
 }
 
-func (a *restObjTenantV1Tenant) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjEndpointV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
+type grpcObjLbPolicyV1LbPolicy struct {
+	logger log.Logger
+	client network.ServiceLbPolicyV1Client
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Create(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "LbPolicy", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddLbPolicy(nctx, in)
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Update(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateLbPolicy(nctx, in)
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.LbPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetLbPolicy(nctx, &in)
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.LbPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteLbPolicy(nctx, &in)
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListLbPolicy(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchLbPolicy(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.LbPolicyV1_AutoWatchLbPolicyClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			lw.OutCh <- &ev
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjLbPolicyV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjLbPolicyV1LbPolicy struct {
+	endpoints network.EndpointsLbPolicyV1RestClient
+	instance  string
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Create(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddLbPolicy(ctx, in)
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Update(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateLbPolicy(ctx, in)
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.LbPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetLbPolicy(ctx, &in)
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.LbPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteLbPolicy(ctx, &in)
+}
+
+func (a *restObjLbPolicyV1LbPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.LbPolicy, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListLbPolicy(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjLbPolicyV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -1177,170 +1341,6 @@ func (a *restObjSecurityGroupV1SecurityGroup) Allowed(oper apiserver.APIOperType
 	}
 }
 
-type grpcObjSgpolicyV1Sgpolicy struct {
-	logger log.Logger
-	client network.ServiceSgpolicyV1Client
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Create(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Sgpolicy", "oper", "create")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddSgpolicy(nctx, in)
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Update(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateSgpolicy(nctx, in)
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "get")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := network.Sgpolicy{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetSgpolicy(nctx, &in)
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "delete")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := network.Sgpolicy{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteSgpolicy(nctx, &in)
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "list")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListSgpolicy(nctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchSgpolicy(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(network.SgpolicyV1_AutoWatchSgpolicyClient)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
-				close(lw.OutCh)
-				return
-			}
-			ev := kvstore.WatchEvent{
-				Type:   kvstore.WatchEventType(r.Type),
-				Object: r.Object,
-			}
-			lw.OutCh <- &ev
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
-func (a *grpcObjSgpolicyV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
-	return true
-}
-
-type restObjSgpolicyV1Sgpolicy struct {
-	endpoints network.EndpointsSgpolicyV1RestClient
-	instance  string
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Create(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoAddSgpolicy(ctx, in)
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Update(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoUpdateSgpolicy(ctx, in)
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := network.Sgpolicy{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetSgpolicy(ctx, &in)
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := network.Sgpolicy{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteSgpolicy(ctx, &in)
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Sgpolicy, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	r, err := a.endpoints.AutoListSgpolicy(ctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
-}
-
-func (a *restObjSgpolicyV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
-	switch oper {
-	case apiserver.CreateOper:
-		return true
-	case apiserver.UpdateOper:
-		return true
-	case apiserver.GetOper:
-		return true
-	case apiserver.DeleteOper:
-		return true
-	case apiserver.ListOper:
-		return true
-	case apiserver.WatchOper:
-		return false
-	default:
-		return false
-	}
-}
-
 type grpcObjServiceV1Service struct {
 	logger log.Logger
 	client network.ServiceServiceV1Client
@@ -1505,75 +1505,75 @@ func (a *restObjServiceV1Service) Allowed(oper apiserver.APIOperType) bool {
 	}
 }
 
-type grpcObjLbPolicyV1LbPolicy struct {
+type grpcObjSgpolicyV1Sgpolicy struct {
 	logger log.Logger
-	client network.ServiceLbPolicyV1Client
+	client network.ServiceSgpolicyV1Client
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Create(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "LbPolicy", "oper", "create")
+func (a *grpcObjSgpolicyV1Sgpolicy) Create(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "Sgpolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddLbPolicy(nctx, in)
+	return a.client.AutoAddSgpolicy(nctx, in)
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Update(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "update")
+func (a *grpcObjSgpolicyV1Sgpolicy) Update(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "update")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateLbPolicy(nctx, in)
+	return a.client.AutoUpdateSgpolicy(nctx, in)
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "get")
+func (a *grpcObjSgpolicyV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "get")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.LbPolicy{}
+	in := network.Sgpolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetLbPolicy(nctx, &in)
+	return a.client.AutoGetSgpolicy(nctx, &in)
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "delete")
+func (a *grpcObjSgpolicyV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "delete")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.LbPolicy{}
+	in := network.Sgpolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteLbPolicy(nctx, &in)
+	return a.client.AutoDeleteSgpolicy(nctx, &in)
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "list")
+func (a *grpcObjSgpolicyV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Sgpolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "list")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListLbPolicy(nctx, options)
+	r, err := a.client.AutoListSgpolicy(nctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "WatchOper")
+func (a *grpcObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	stream, err := a.client.AutoWatchLbPolicy(nctx, options)
+	stream, err := a.client.AutoWatchSgpolicy(nctx, options)
 	if err != nil {
 		return nil, err
 	}
-	wstream := stream.(network.LbPolicyV1_AutoWatchLbPolicyClient)
+	wstream := stream.(network.SgpolicyV1_AutoWatchSgpolicyClient)
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			r, err := wstream.Recv()
@@ -1594,63 +1594,63 @@ func (a *grpcObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.List
 	return lw, nil
 }
 
-func (a *grpcObjLbPolicyV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjSgpolicyV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
 
-type restObjLbPolicyV1LbPolicy struct {
-	endpoints network.EndpointsLbPolicyV1RestClient
+type restObjSgpolicyV1Sgpolicy struct {
+	endpoints network.EndpointsSgpolicyV1RestClient
 	instance  string
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Create(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+func (a *restObjSgpolicyV1Sgpolicy) Create(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoAddLbPolicy(ctx, in)
+	return a.endpoints.AutoAddSgpolicy(ctx, in)
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Update(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+func (a *restObjSgpolicyV1Sgpolicy) Update(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoUpdateLbPolicy(ctx, in)
+	return a.endpoints.AutoUpdateSgpolicy(ctx, in)
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+func (a *restObjSgpolicyV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.LbPolicy{}
+	in := network.Sgpolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetLbPolicy(ctx, &in)
+	return a.endpoints.AutoGetSgpolicy(ctx, &in)
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
+func (a *restObjSgpolicyV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Sgpolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.LbPolicy{}
+	in := network.Sgpolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteLbPolicy(ctx, &in)
+	return a.endpoints.AutoDeleteSgpolicy(ctx, &in)
 }
 
-func (a *restObjLbPolicyV1LbPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.LbPolicy, error) {
+func (a *restObjSgpolicyV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Sgpolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	r, err := a.endpoints.AutoListLbPolicy(ctx, options)
+	r, err := a.endpoints.AutoListSgpolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *restObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("not allowed")
 }
 
-func (a *restObjLbPolicyV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjSgpolicyV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -1669,75 +1669,75 @@ func (a *restObjLbPolicyV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
 	}
 }
 
-type grpcObjEndpointV1Endpoint struct {
+type grpcObjTenantV1Tenant struct {
 	logger log.Logger
-	client network.ServiceEndpointV1Client
+	client network.ServiceTenantV1Client
 }
 
-func (a *grpcObjEndpointV1Endpoint) Create(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Endpoint", "oper", "create")
+func (a *grpcObjTenantV1Tenant) Create(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "Tenant", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddEndpoint(nctx, in)
+	return a.client.AutoAddTenant(nctx, in)
 }
 
-func (a *grpcObjEndpointV1Endpoint) Update(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "update")
+func (a *grpcObjTenantV1Tenant) Update(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "update")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateEndpoint(nctx, in)
+	return a.client.AutoUpdateTenant(nctx, in)
 }
 
-func (a *grpcObjEndpointV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "get")
+func (a *grpcObjTenantV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "get")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Endpoint{}
+	in := network.Tenant{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetEndpoint(nctx, &in)
+	return a.client.AutoGetTenant(nctx, &in)
 }
 
-func (a *grpcObjEndpointV1Endpoint) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "delete")
+func (a *grpcObjTenantV1Tenant) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "delete")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Endpoint{}
+	in := network.Tenant{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteEndpoint(nctx, &in)
+	return a.client.AutoDeleteTenant(nctx, &in)
 }
 
-func (a *grpcObjEndpointV1Endpoint) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "list")
+func (a *grpcObjTenantV1Tenant) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "list")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListEndpoint(nctx, options)
+	r, err := a.client.AutoListTenant(nctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *grpcObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "WatchOper")
+func (a *grpcObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	stream, err := a.client.AutoWatchEndpoint(nctx, options)
+	stream, err := a.client.AutoWatchTenant(nctx, options)
 	if err != nil {
 		return nil, err
 	}
-	wstream := stream.(network.EndpointV1_AutoWatchEndpointClient)
+	wstream := stream.(network.TenantV1_AutoWatchTenantClient)
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			r, err := wstream.Recv()
@@ -1758,63 +1758,63 @@ func (a *grpcObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.List
 	return lw, nil
 }
 
-func (a *grpcObjEndpointV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjTenantV1Tenant) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
 
-type restObjEndpointV1Endpoint struct {
-	endpoints network.EndpointsEndpointV1RestClient
+type restObjTenantV1Tenant struct {
+	endpoints network.EndpointsTenantV1RestClient
 	instance  string
 }
 
-func (a *restObjEndpointV1Endpoint) Create(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
+func (a *restObjTenantV1Tenant) Create(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoAddEndpoint(ctx, in)
+	return a.endpoints.AutoAddTenant(ctx, in)
 }
 
-func (a *restObjEndpointV1Endpoint) Update(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
+func (a *restObjTenantV1Tenant) Update(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoUpdateEndpoint(ctx, in)
+	return a.endpoints.AutoUpdateTenant(ctx, in)
 }
 
-func (a *restObjEndpointV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
+func (a *restObjTenantV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Endpoint{}
+	in := network.Tenant{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetEndpoint(ctx, &in)
+	return a.endpoints.AutoGetTenant(ctx, &in)
 }
 
-func (a *restObjEndpointV1Endpoint) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Endpoint, error) {
+func (a *restObjTenantV1Tenant) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.Tenant, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := network.Endpoint{}
+	in := network.Tenant{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteEndpoint(ctx, &in)
+	return a.endpoints.AutoDeleteTenant(ctx, &in)
 }
 
-func (a *restObjEndpointV1Endpoint) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Endpoint, error) {
+func (a *restObjTenantV1Tenant) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.Tenant, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	r, err := a.endpoints.AutoListEndpoint(ctx, options)
+	r, err := a.endpoints.AutoListTenant(ctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *restObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *restObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("not allowed")
 }
 
-func (a *restObjEndpointV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjTenantV1Tenant) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -1833,41 +1833,78 @@ func (a *restObjEndpointV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	}
 }
 
-type crudClientTenantV1 struct {
-	grpcTenant network.TenantInterface
+type crudClientEndpointV1 struct {
+	grpcEndpoint network.EndpointInterface
 }
 
-// NewGrpcCrudClientTenantV1 creates a GRPC client for the service
-func NewGrpcCrudClientTenantV1(conn *grpc.ClientConn, logger log.Logger) network.TenantV1Interface {
-	client := NewTenantV1Backend(conn, logger)
-	return &crudClientTenantV1{
+// NewGrpcCrudClientEndpointV1 creates a GRPC client for the service
+func NewGrpcCrudClientEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.EndpointV1Interface {
+	client := NewEndpointV1Backend(conn, logger)
+	return &crudClientEndpointV1{
 
-		grpcTenant: &grpcObjTenantV1Tenant{client: client, logger: logger},
+		grpcEndpoint: &grpcObjEndpointV1Endpoint{client: client, logger: logger},
 	}
 }
 
-func (a *crudClientTenantV1) Tenant() network.TenantInterface {
-	return a.grpcTenant
+func (a *crudClientEndpointV1) Endpoint() network.EndpointInterface {
+	return a.grpcEndpoint
 }
 
-type crudRestClientTenantV1 struct {
-	restTenant network.TenantInterface
+type crudRestClientEndpointV1 struct {
+	restEndpoint network.EndpointInterface
 }
 
-// NewRestCrudClientTenantV1 creates a REST client for the service.
-func NewRestCrudClientTenantV1(url string) network.TenantV1Interface {
-	endpoints, err := network.MakeTenantV1RestClientEndpoints(url)
+// NewRestCrudClientEndpointV1 creates a REST client for the service.
+func NewRestCrudClientEndpointV1(url string) network.EndpointV1Interface {
+	endpoints, err := network.MakeEndpointV1RestClientEndpoints(url)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
-	return &crudRestClientTenantV1{
+	return &crudRestClientEndpointV1{
 
-		restTenant: &restObjTenantV1Tenant{endpoints: endpoints, instance: url},
+		restEndpoint: &restObjEndpointV1Endpoint{endpoints: endpoints, instance: url},
 	}
 }
 
-func (a *crudRestClientTenantV1) Tenant() network.TenantInterface {
-	return a.restTenant
+func (a *crudRestClientEndpointV1) Endpoint() network.EndpointInterface {
+	return a.restEndpoint
+}
+
+type crudClientLbPolicyV1 struct {
+	grpcLbPolicy network.LbPolicyInterface
+}
+
+// NewGrpcCrudClientLbPolicyV1 creates a GRPC client for the service
+func NewGrpcCrudClientLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.LbPolicyV1Interface {
+	client := NewLbPolicyV1Backend(conn, logger)
+	return &crudClientLbPolicyV1{
+
+		grpcLbPolicy: &grpcObjLbPolicyV1LbPolicy{client: client, logger: logger},
+	}
+}
+
+func (a *crudClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
+	return a.grpcLbPolicy
+}
+
+type crudRestClientLbPolicyV1 struct {
+	restLbPolicy network.LbPolicyInterface
+}
+
+// NewRestCrudClientLbPolicyV1 creates a REST client for the service.
+func NewRestCrudClientLbPolicyV1(url string) network.LbPolicyV1Interface {
+	endpoints, err := network.MakeLbPolicyV1RestClientEndpoints(url)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientLbPolicyV1{
+
+		restLbPolicy: &restObjLbPolicyV1LbPolicy{endpoints: endpoints, instance: url},
+	}
+}
+
+func (a *crudRestClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
+	return a.restLbPolicy
 }
 
 type crudClientNetworkV1 struct {
@@ -1944,43 +1981,6 @@ func (a *crudRestClientSecurityGroupV1) SecurityGroup() network.SecurityGroupInt
 	return a.restSecurityGroup
 }
 
-type crudClientSgpolicyV1 struct {
-	grpcSgpolicy network.SgpolicyInterface
-}
-
-// NewGrpcCrudClientSgpolicyV1 creates a GRPC client for the service
-func NewGrpcCrudClientSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.SgpolicyV1Interface {
-	client := NewSgpolicyV1Backend(conn, logger)
-	return &crudClientSgpolicyV1{
-
-		grpcSgpolicy: &grpcObjSgpolicyV1Sgpolicy{client: client, logger: logger},
-	}
-}
-
-func (a *crudClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
-	return a.grpcSgpolicy
-}
-
-type crudRestClientSgpolicyV1 struct {
-	restSgpolicy network.SgpolicyInterface
-}
-
-// NewRestCrudClientSgpolicyV1 creates a REST client for the service.
-func NewRestCrudClientSgpolicyV1(url string) network.SgpolicyV1Interface {
-	endpoints, err := network.MakeSgpolicyV1RestClientEndpoints(url)
-	if err != nil {
-		oldlog.Fatal("failed to create client")
-	}
-	return &crudRestClientSgpolicyV1{
-
-		restSgpolicy: &restObjSgpolicyV1Sgpolicy{endpoints: endpoints, instance: url},
-	}
-}
-
-func (a *crudRestClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
-	return a.restSgpolicy
-}
-
 type crudClientServiceV1 struct {
 	grpcService network.ServiceInterface
 }
@@ -2018,76 +2018,76 @@ func (a *crudRestClientServiceV1) Service() network.ServiceInterface {
 	return a.restService
 }
 
-type crudClientLbPolicyV1 struct {
-	grpcLbPolicy network.LbPolicyInterface
+type crudClientSgpolicyV1 struct {
+	grpcSgpolicy network.SgpolicyInterface
 }
 
-// NewGrpcCrudClientLbPolicyV1 creates a GRPC client for the service
-func NewGrpcCrudClientLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.LbPolicyV1Interface {
-	client := NewLbPolicyV1Backend(conn, logger)
-	return &crudClientLbPolicyV1{
+// NewGrpcCrudClientSgpolicyV1 creates a GRPC client for the service
+func NewGrpcCrudClientSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.SgpolicyV1Interface {
+	client := NewSgpolicyV1Backend(conn, logger)
+	return &crudClientSgpolicyV1{
 
-		grpcLbPolicy: &grpcObjLbPolicyV1LbPolicy{client: client, logger: logger},
+		grpcSgpolicy: &grpcObjSgpolicyV1Sgpolicy{client: client, logger: logger},
 	}
 }
 
-func (a *crudClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
-	return a.grpcLbPolicy
+func (a *crudClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
+	return a.grpcSgpolicy
 }
 
-type crudRestClientLbPolicyV1 struct {
-	restLbPolicy network.LbPolicyInterface
+type crudRestClientSgpolicyV1 struct {
+	restSgpolicy network.SgpolicyInterface
 }
 
-// NewRestCrudClientLbPolicyV1 creates a REST client for the service.
-func NewRestCrudClientLbPolicyV1(url string) network.LbPolicyV1Interface {
-	endpoints, err := network.MakeLbPolicyV1RestClientEndpoints(url)
+// NewRestCrudClientSgpolicyV1 creates a REST client for the service.
+func NewRestCrudClientSgpolicyV1(url string) network.SgpolicyV1Interface {
+	endpoints, err := network.MakeSgpolicyV1RestClientEndpoints(url)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
-	return &crudRestClientLbPolicyV1{
+	return &crudRestClientSgpolicyV1{
 
-		restLbPolicy: &restObjLbPolicyV1LbPolicy{endpoints: endpoints, instance: url},
+		restSgpolicy: &restObjSgpolicyV1Sgpolicy{endpoints: endpoints, instance: url},
 	}
 }
 
-func (a *crudRestClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
-	return a.restLbPolicy
+func (a *crudRestClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
+	return a.restSgpolicy
 }
 
-type crudClientEndpointV1 struct {
-	grpcEndpoint network.EndpointInterface
+type crudClientTenantV1 struct {
+	grpcTenant network.TenantInterface
 }
 
-// NewGrpcCrudClientEndpointV1 creates a GRPC client for the service
-func NewGrpcCrudClientEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.EndpointV1Interface {
-	client := NewEndpointV1Backend(conn, logger)
-	return &crudClientEndpointV1{
+// NewGrpcCrudClientTenantV1 creates a GRPC client for the service
+func NewGrpcCrudClientTenantV1(conn *grpc.ClientConn, logger log.Logger) network.TenantV1Interface {
+	client := NewTenantV1Backend(conn, logger)
+	return &crudClientTenantV1{
 
-		grpcEndpoint: &grpcObjEndpointV1Endpoint{client: client, logger: logger},
+		grpcTenant: &grpcObjTenantV1Tenant{client: client, logger: logger},
 	}
 }
 
-func (a *crudClientEndpointV1) Endpoint() network.EndpointInterface {
-	return a.grpcEndpoint
+func (a *crudClientTenantV1) Tenant() network.TenantInterface {
+	return a.grpcTenant
 }
 
-type crudRestClientEndpointV1 struct {
-	restEndpoint network.EndpointInterface
+type crudRestClientTenantV1 struct {
+	restTenant network.TenantInterface
 }
 
-// NewRestCrudClientEndpointV1 creates a REST client for the service.
-func NewRestCrudClientEndpointV1(url string) network.EndpointV1Interface {
-	endpoints, err := network.MakeEndpointV1RestClientEndpoints(url)
+// NewRestCrudClientTenantV1 creates a REST client for the service.
+func NewRestCrudClientTenantV1(url string) network.TenantV1Interface {
+	endpoints, err := network.MakeTenantV1RestClientEndpoints(url)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
-	return &crudRestClientEndpointV1{
+	return &crudRestClientTenantV1{
 
-		restEndpoint: &restObjEndpointV1Endpoint{endpoints: endpoints, instance: url},
+		restTenant: &restObjTenantV1Tenant{endpoints: endpoints, instance: url},
 	}
 }
 
-func (a *crudRestClientEndpointV1) Endpoint() network.EndpointInterface {
-	return a.restEndpoint
+func (a *crudRestClientTenantV1) Tenant() network.TenantInterface {
+	return a.restTenant
 }

@@ -7,33 +7,33 @@ Input file: protos/cmd.proto
 
 The following Messages are defined.
 
-  NodeSpec
-  NodeStatus
-  Node
-  NodeList
+  AutoMsgClusterListHelper
+  AutoMsgClusterWatchHelper
+  AutoMsgNodeListHelper
+  AutoMsgNodeWatchHelper
+  Cluster
   ClusterSpec
   ClusterStatus
-  Cluster
-  AutoMsgNodeWatchHelper
-  AutoMsgNodeListHelper
-  AutoMsgClusterWatchHelper
-  AutoMsgClusterListHelper
+  Node
+  NodeList
+  NodeSpec
+  NodeStatus
 
 The following Services and Methods are defined.
 
  Service: CmdV1
-   AutoAddNode
-   AutoUpdateNode
-   AutoGetNode
-   AutoDeleteNode
-   AutoListNode
-   AutoWatchNode
    AutoAddCluster
-   AutoUpdateCluster
-   AutoGetCluster
+   AutoAddNode
    AutoDeleteCluster
+   AutoDeleteNode
+   AutoGetCluster
+   AutoGetNode
    AutoListCluster
+   AutoListNode
+   AutoUpdateCluster
+   AutoUpdateNode
    AutoWatchCluster
+   AutoWatchNode
 
 */
 package cmd

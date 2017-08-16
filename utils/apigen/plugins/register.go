@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/golang/glog"
@@ -605,6 +606,7 @@ func getPackageCrudObjects(file *descriptor.File) ([]string, error) {
 	for k := range crudmap {
 		ret = append(ret, k)
 	}
+	sort.Strings(ret)
 	return ret, nil
 }
 
@@ -629,6 +631,16 @@ func isRestMethod(svc *descriptor.Service, oper, object string) bool {
 		if *v.Name == method {
 			return isRestExposed(v)
 		}
+	}
+	return false
+}
+
+// isNestedMessage checks if the message is a nested message
+//  TODO(sanjayt): make this generic for all nested message definitions.
+func isNestedMessage(msg *descriptor.Message) bool {
+	glog.V(1).Infof("Looking for map_entry in %s)", *msg.Name)
+	if opt := msg.GetOptions(); opt != nil {
+		return opt.GetMapEntry()
 	}
 	return false
 }
@@ -706,6 +718,7 @@ func init() {
 	reg.RegisterFunc("getAutoRestOper", getAutoRestOper)
 	reg.RegisterFunc("isRestExposed", isRestExposed)
 	reg.RegisterFunc("isRestMethod", isRestMethod)
+	reg.RegisterFunc("isNestedMessage", isNestedMessage)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

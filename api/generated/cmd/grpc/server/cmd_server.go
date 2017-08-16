@@ -41,16 +41,16 @@ type scmdBackend struct {
 type eCmdV1Endpoints struct {
 	Svc scmdBackend
 
-	fnAutoAddNode       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateNode    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetNode       func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteNode    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListNode      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCluster    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateCluster func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetCluster    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddNode       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteCluster func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteNode    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetCluster    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetNode       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCluster   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListNode      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateCluster func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateNode    func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchNode    func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchCluster func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -60,64 +60,30 @@ func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logge
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"cmd.NodeSpec":   apisrvpkg.NewMessage("cmd.NodeSpec"),
-		"cmd.NodeStatus": apisrvpkg.NewMessage("cmd.NodeStatus"),
-		"cmd.Node": apisrvpkg.NewMessage("cmd.Node").WithKeyGenerator(func(i interface{}, prefix string) string {
-			if i == nil {
-				r := cmd.Node{}
-				return r.MakeKey(prefix)
-			}
-			r := i.(cmd.Node)
-			return r.MakeKey(prefix)
-		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(cmd.Node)
-			r.APIVersion = version
-			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
-			r := i.(cmd.Node)
+		"cmd.AutoMsgClusterListHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cmd.AutoMsgClusterListHelper{}
+			r := cmd.Cluster{}
 			key := r.MakeKey(prefix)
-			r.Kind = "Node"
-			var err error
-			if create {
-				err = kvs.Create(ctx, key, &r)
-				err = errors.Wrap(err, "KV create failed")
-			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
-				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				err = errors.Wrap(err, "KV update failed")
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
 			}
-			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(cmd.Node)
-			key := r.MakeKey(prefix)
-			var err error
-			if create {
-				err = txn.Create(key, &r)
-				err = errors.Wrap(err, "KV transaction create failed")
-			} else {
-				err = txn.Update(key, &r)
-				err = errors.Wrap(err, "KV transaction update failed")
-			}
-			return err
-		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := cmd.Node{}
-			err := kvs.Get(ctx, key, &r)
-			err = errors.Wrap(err, "KV get failed")
-			return r, err
-		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := cmd.Node{}
-			err := kvs.Delete(ctx, key, &r)
-			return r, err
-		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
-			return txn.Delete(key)
+			return into, nil
 		}),
-		"cmd.NodeList":      apisrvpkg.NewMessage("cmd.NodeList"),
-		"cmd.ClusterSpec":   apisrvpkg.NewMessage("cmd.ClusterSpec"),
-		"cmd.ClusterStatus": apisrvpkg.NewMessage("cmd.ClusterStatus"),
+		"cmd.AutoMsgClusterWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterWatchHelper"),
+		"cmd.AutoMsgNodeListHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cmd.AutoMsgNodeListHelper{}
+			r := cmd.Node{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"cmd.AutoMsgNodeWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeWatchHelper"),
 		"cmd.Cluster": apisrvpkg.NewMessage("cmd.Cluster").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cmd.Cluster{}
@@ -171,37 +137,71 @@ func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logge
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"cmd.AutoMsgNodeWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeWatchHelper"),
-		"cmd.AutoMsgNodeListHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cmd.AutoMsgNodeListHelper{}
+		"cmd.ClusterSpec":   apisrvpkg.NewMessage("cmd.ClusterSpec"),
+		"cmd.ClusterStatus": apisrvpkg.NewMessage("cmd.ClusterStatus"),
+		"cmd.Node": apisrvpkg.NewMessage("cmd.Node").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := cmd.Node{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(cmd.Node)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(cmd.Node)
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+			r := i.(cmd.Node)
+			key := r.MakeKey(prefix)
+			r.Kind = "Node"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				err = errors.Wrap(err, "KV create failed")
+			} else {
+				if r.ResourceVersion != "" {
+					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				err = errors.Wrap(err, "KV update failed")
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(cmd.Node)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				err = errors.Wrap(err, "KV transaction create failed")
+			} else {
+				err = txn.Update(key, &r)
+				err = errors.Wrap(err, "KV transaction update failed")
+			}
+			return err
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.Node{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
+			err := kvs.Get(ctx, key, &r)
+			err = errors.Wrap(err, "KV get failed")
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := cmd.Node{}
+			err := kvs.Delete(ctx, key, &r)
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			return txn.Delete(key)
 		}),
-		"cmd.AutoMsgClusterWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterWatchHelper"),
-		"cmd.AutoMsgClusterListHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cmd.AutoMsgClusterListHelper{}
-			r := cmd.Cluster{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"cmd.NodeList":   apisrvpkg.NewMessage("cmd.NodeList"),
+		"cmd.NodeSpec":   apisrvpkg.NewMessage("cmd.NodeSpec"),
+		"cmd.NodeStatus": apisrvpkg.NewMessage("cmd.NodeStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
 
 	scheme.AddKnownTypes(
-		&cmd.Node{},
 		&cmd.Cluster{},
+		&cmd.Node{},
 	)
 
 	apisrv.RegisterMessages("cmd", s.Messages)
@@ -209,35 +209,35 @@ func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logge
 	{
 		srv := apisrvpkg.NewService("CmdV1")
 
-		s.endpointsCmdV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoAddNode")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsCmdV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoUpdateNode")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsCmdV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoGetNode")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsCmdV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoDeleteNode")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsCmdV1.fnAutoListNode = srv.AddMethod("AutoListNode",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgNodeListHelper"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
-
 		s.endpointsCmdV1.fnAutoAddCluster = srv.AddMethod("AutoAddCluster",
 			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
-		s.endpointsCmdV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
-
-		s.endpointsCmdV1.fnAutoGetCluster = srv.AddMethod("AutoGetCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoGetCluster")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+		s.endpointsCmdV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoAddNode")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoDeleteCluster = srv.AddMethod("AutoDeleteCluster",
 			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoDeleteCluster")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
 
+		s.endpointsCmdV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoDeleteNode")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsCmdV1.fnAutoGetCluster = srv.AddMethod("AutoGetCluster",
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoGetCluster")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsCmdV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoGetNode")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
 		s.endpointsCmdV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
 			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgClusterListHelper"], "cmd", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsCmdV1.fnAutoListNode = srv.AddMethod("AutoListNode",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgNodeListHelper"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsCmdV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsCmdV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoUpdateNode")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoWatchNode = s.Messages["cmd.Node"].WatchFromKv
 
@@ -361,46 +361,6 @@ func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logge
 	return nil
 }
 
-func (e *eCmdV1Endpoints) AutoAddNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
-	r, err := e.fnAutoAddNode(ctx, t)
-	if err == nil {
-		return r.(cmd.Node), err
-	}
-	return cmd.Node{}, err
-
-}
-func (e *eCmdV1Endpoints) AutoUpdateNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
-	r, err := e.fnAutoUpdateNode(ctx, t)
-	if err == nil {
-		return r.(cmd.Node), err
-	}
-	return cmd.Node{}, err
-
-}
-func (e *eCmdV1Endpoints) AutoGetNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
-	r, err := e.fnAutoGetNode(ctx, t)
-	if err == nil {
-		return r.(cmd.Node), err
-	}
-	return cmd.Node{}, err
-
-}
-func (e *eCmdV1Endpoints) AutoDeleteNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
-	r, err := e.fnAutoDeleteNode(ctx, t)
-	if err == nil {
-		return r.(cmd.Node), err
-	}
-	return cmd.Node{}, err
-
-}
-func (e *eCmdV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgNodeListHelper, error) {
-	r, err := e.fnAutoListNode(ctx, t)
-	if err == nil {
-		return r.(cmd.AutoMsgNodeListHelper), err
-	}
-	return cmd.AutoMsgNodeListHelper{}, err
-
-}
 func (e *eCmdV1Endpoints) AutoAddCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
 	r, err := e.fnAutoAddCluster(ctx, t)
 	if err == nil {
@@ -409,20 +369,12 @@ func (e *eCmdV1Endpoints) AutoAddCluster(ctx context.Context, t cmd.Cluster) (cm
 	return cmd.Cluster{}, err
 
 }
-func (e *eCmdV1Endpoints) AutoUpdateCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
-	r, err := e.fnAutoUpdateCluster(ctx, t)
+func (e *eCmdV1Endpoints) AutoAddNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
+	r, err := e.fnAutoAddNode(ctx, t)
 	if err == nil {
-		return r.(cmd.Cluster), err
+		return r.(cmd.Node), err
 	}
-	return cmd.Cluster{}, err
-
-}
-func (e *eCmdV1Endpoints) AutoGetCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
-	r, err := e.fnAutoGetCluster(ctx, t)
-	if err == nil {
-		return r.(cmd.Cluster), err
-	}
-	return cmd.Cluster{}, err
+	return cmd.Node{}, err
 
 }
 func (e *eCmdV1Endpoints) AutoDeleteCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
@@ -433,12 +385,60 @@ func (e *eCmdV1Endpoints) AutoDeleteCluster(ctx context.Context, t cmd.Cluster) 
 	return cmd.Cluster{}, err
 
 }
+func (e *eCmdV1Endpoints) AutoDeleteNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
+	r, err := e.fnAutoDeleteNode(ctx, t)
+	if err == nil {
+		return r.(cmd.Node), err
+	}
+	return cmd.Node{}, err
+
+}
+func (e *eCmdV1Endpoints) AutoGetCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
+	r, err := e.fnAutoGetCluster(ctx, t)
+	if err == nil {
+		return r.(cmd.Cluster), err
+	}
+	return cmd.Cluster{}, err
+
+}
+func (e *eCmdV1Endpoints) AutoGetNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
+	r, err := e.fnAutoGetNode(ctx, t)
+	if err == nil {
+		return r.(cmd.Node), err
+	}
+	return cmd.Node{}, err
+
+}
 func (e *eCmdV1Endpoints) AutoListCluster(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgClusterListHelper, error) {
 	r, err := e.fnAutoListCluster(ctx, t)
 	if err == nil {
 		return r.(cmd.AutoMsgClusterListHelper), err
 	}
 	return cmd.AutoMsgClusterListHelper{}, err
+
+}
+func (e *eCmdV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgNodeListHelper, error) {
+	r, err := e.fnAutoListNode(ctx, t)
+	if err == nil {
+		return r.(cmd.AutoMsgNodeListHelper), err
+	}
+	return cmd.AutoMsgNodeListHelper{}, err
+
+}
+func (e *eCmdV1Endpoints) AutoUpdateCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {
+	r, err := e.fnAutoUpdateCluster(ctx, t)
+	if err == nil {
+		return r.(cmd.Cluster), err
+	}
+	return cmd.Cluster{}, err
+
+}
+func (e *eCmdV1Endpoints) AutoUpdateNode(ctx context.Context, t cmd.Node) (cmd.Node, error) {
+	r, err := e.fnAutoUpdateNode(ctx, t)
+	if err == nil {
+		return r.(cmd.Node), err
+	}
+	return cmd.Node{}, err
 
 }
 

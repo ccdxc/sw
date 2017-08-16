@@ -19,8 +19,13 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
-func (m *Tenant) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "tenant/", m.Name)
+func (m *Endpoint) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "endpoint/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *LbPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "lb-policy/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -34,41 +39,18 @@ func (m *SecurityGroup) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *Sgpolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "sgpolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *Service) MakeKey(prefix string) string {
 	return fmt.Sprint("/venice/", prefix, "/", "service/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *LbPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "lb-policy/", m.Name)
+func (m *Sgpolicy) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "sgpolicy/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *Endpoint) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "endpoint/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgSgpolicyListHelper) MakeKey(prefix string) string {
-	obj := Sgpolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgServiceListHelper) MakeKey(prefix string) string {
-	obj := Service{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgLbPolicyListHelper) MakeKey(prefix string) string {
-	obj := LbPolicy{}
-	return obj.MakeKey(prefix)
+func (m *Tenant) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "tenant/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -78,8 +60,8 @@ func (m *AutoMsgEndpointListHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgTenantListHelper) MakeKey(prefix string) string {
-	obj := Tenant{}
+func (m *AutoMsgLbPolicyListHelper) MakeKey(prefix string) string {
+	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -96,20 +78,20 @@ func (m *AutoMsgSecurityGroupListHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSgpolicyWatchHelper) MakeKey(prefix string) string {
-	obj := Sgpolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgServiceWatchHelper) MakeKey(prefix string) string {
+func (m *AutoMsgServiceListHelper) MakeKey(prefix string) string {
 	obj := Service{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgLbPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := LbPolicy{}
+func (m *AutoMsgSgpolicyListHelper) MakeKey(prefix string) string {
+	obj := Sgpolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgTenantListHelper) MakeKey(prefix string) string {
+	obj := Tenant{}
 	return obj.MakeKey(prefix)
 }
 
@@ -120,8 +102,8 @@ func (m *AutoMsgEndpointWatchHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgTenantWatchHelper) MakeKey(prefix string) string {
-	obj := Tenant{}
+func (m *AutoMsgLbPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -134,5 +116,23 @@ func (m *AutoMsgNetworkWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgSecurityGroupWatchHelper) MakeKey(prefix string) string {
 	obj := SecurityGroup{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgServiceWatchHelper) MakeKey(prefix string) string {
+	obj := Service{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgSgpolicyWatchHelper) MakeKey(prefix string) string {
+	obj := Sgpolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgTenantWatchHelper) MakeKey(prefix string) string {
+	obj := Tenant{}
 	return obj.MakeKey(prefix)
 }

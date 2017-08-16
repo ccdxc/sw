@@ -10,21 +10,21 @@
 		example.proto
 
 	It has these top-level messages:
-		Publisher
-		PublisherSpec
+		AutoMsgBookListHelper
+		AutoMsgBookWatchHelper
+		AutoMsgOrderListHelper
+		AutoMsgOrderWatchHelper
+		AutoMsgPublisherListHelper
+		AutoMsgPublisherWatchHelper
 		Book
 		BookSpec
 		BookStatus
 		Order
-		OrderSpec
 		OrderItem
+		OrderSpec
 		OrderStatus
-		AutoMsgOrderWatchHelper
-		AutoMsgOrderListHelper
-		AutoMsgBookWatchHelper
-		AutoMsgBookListHelper
-		AutoMsgPublisherWatchHelper
-		AutoMsgPublisherListHelper
+		Publisher
+		PublisherSpec
 */
 package bookstore
 
@@ -81,49 +81,137 @@ func (x OrderStatus_OrderStatus) String() string {
 	return proto.EnumName(OrderStatus_OrderStatus_name, int32(x))
 }
 func (OrderStatus_OrderStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorExample, []int{8, 0}
+	return fileDescriptorExample, []int{12, 0}
 }
 
-type Publisher struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,inline"`
-	Spec           PublisherSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+type AutoMsgBookListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Book `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
-func (m *Publisher) Reset()                    { *m = Publisher{} }
-func (m *Publisher) String() string            { return proto.CompactTextString(m) }
-func (*Publisher) ProtoMessage()               {}
-func (*Publisher) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{0} }
+func (m *AutoMsgBookListHelper) Reset()                    { *m = AutoMsgBookListHelper{} }
+func (m *AutoMsgBookListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgBookListHelper) ProtoMessage()               {}
+func (*AutoMsgBookListHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{0} }
 
-func (m *Publisher) GetSpec() PublisherSpec {
+func (m *AutoMsgBookListHelper) GetItems() []*Book {
 	if m != nil {
-		return m.Spec
+		return m.Items
 	}
-	return PublisherSpec{}
+	return nil
 }
 
-type PublisherSpec struct {
-	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`
-	Address string `protobuf:"bytes,3,opt,name=Address,proto3" json:"Address,omitempty"`
+type AutoMsgBookWatchHelper struct {
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Book  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
-func (m *PublisherSpec) Reset()                    { *m = PublisherSpec{} }
-func (m *PublisherSpec) String() string            { return proto.CompactTextString(m) }
-func (*PublisherSpec) ProtoMessage()               {}
-func (*PublisherSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{1} }
+func (m *AutoMsgBookWatchHelper) Reset()                    { *m = AutoMsgBookWatchHelper{} }
+func (m *AutoMsgBookWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgBookWatchHelper) ProtoMessage()               {}
+func (*AutoMsgBookWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{1} }
 
-func (m *PublisherSpec) GetId() string {
+func (m *AutoMsgBookWatchHelper) GetType() string {
 	if m != nil {
-		return m.Id
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgBookWatchHelper) GetObject() *Book {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgOrderListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Order `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgOrderListHelper) Reset()                    { *m = AutoMsgOrderListHelper{} }
+func (m *AutoMsgOrderListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgOrderListHelper) ProtoMessage()               {}
+func (*AutoMsgOrderListHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{2} }
+
+func (m *AutoMsgOrderListHelper) GetItems() []*Order {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgOrderWatchHelper struct {
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Order `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgOrderWatchHelper) Reset()                    { *m = AutoMsgOrderWatchHelper{} }
+func (m *AutoMsgOrderWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgOrderWatchHelper) ProtoMessage()               {}
+func (*AutoMsgOrderWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{3} }
+
+func (m *AutoMsgOrderWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
 	}
 	return ""
 }
 
-func (m *PublisherSpec) GetAddress() string {
+func (m *AutoMsgOrderWatchHelper) GetObject() *Order {
 	if m != nil {
-		return m.Address
+		return m.Object
+	}
+	return nil
+}
+
+type AutoMsgPublisherListHelper struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Publisher `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgPublisherListHelper) Reset()         { *m = AutoMsgPublisherListHelper{} }
+func (m *AutoMsgPublisherListHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgPublisherListHelper) ProtoMessage()    {}
+func (*AutoMsgPublisherListHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorExample, []int{4}
+}
+
+func (m *AutoMsgPublisherListHelper) GetItems() []*Publisher {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type AutoMsgPublisherWatchHelper struct {
+	Type   string     `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Publisher `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgPublisherWatchHelper) Reset()         { *m = AutoMsgPublisherWatchHelper{} }
+func (m *AutoMsgPublisherWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgPublisherWatchHelper) ProtoMessage()    {}
+func (*AutoMsgPublisherWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorExample, []int{5}
+}
+
+func (m *AutoMsgPublisherWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
 	}
 	return ""
+}
+
+func (m *AutoMsgPublisherWatchHelper) GetObject() *Publisher {
+	if m != nil {
+		return m.Object
+	}
+	return nil
 }
 
 type Book struct {
@@ -136,7 +224,7 @@ type Book struct {
 func (m *Book) Reset()                    { *m = Book{} }
 func (m *Book) String() string            { return proto.CompactTextString(m) }
 func (*Book) ProtoMessage()               {}
-func (*Book) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{2} }
+func (*Book) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
 
 func (m *Book) GetSpec() BookSpec {
 	if m != nil {
@@ -153,16 +241,15 @@ func (m *Book) GetStatus() BookStatus {
 }
 
 type BookSpec struct {
-	ISBNId string `protobuf:"bytes,2,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
-	Author string `protobuf:"bytes,3,opt,name=Author,proto3" json:"Author,omitempty"`
-	// Added in  version 2 of the API.
+	ISBNId     string `protobuf:"bytes,2,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
+	Author     string `protobuf:"bytes,3,opt,name=Author,proto3" json:"Author,omitempty"`
 	IdProvider string `protobuf:"bytes,4,opt,name=IdProvider,proto3" json:"IdProvider,omitempty"`
 }
 
 func (m *BookSpec) Reset()                    { *m = BookSpec{} }
 func (m *BookSpec) String() string            { return proto.CompactTextString(m) }
 func (*BookSpec) ProtoMessage()               {}
-func (*BookSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{3} }
+func (*BookSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{7} }
 
 func (m *BookSpec) GetISBNId() string {
 	if m != nil {
@@ -192,7 +279,7 @@ type BookStatus struct {
 func (m *BookStatus) Reset()                    { *m = BookStatus{} }
 func (m *BookStatus) String() string            { return proto.CompactTextString(m) }
 func (*BookStatus) ProtoMessage()               {}
-func (*BookStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{4} }
+func (*BookStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{8} }
 
 func (m *BookStatus) GetInventory() int32 {
 	if m != nil {
@@ -204,15 +291,14 @@ func (m *BookStatus) GetInventory() int32 {
 type Order struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,inline"`
-	// Spec is not allowed to be Null hence disabling nullable.
-	Spec   OrderSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	Spec           OrderSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	Status         OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Order) Reset()                    { *m = Order{} }
 func (m *Order) String() string            { return proto.CompactTextString(m) }
 func (*Order) ProtoMessage()               {}
-func (*Order) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
+func (*Order) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{9} }
 
 func (m *Order) GetSpec() OrderSpec {
 	if m != nil {
@@ -228,30 +314,6 @@ func (m *Order) GetStatus() OrderStatus {
 	return OrderStatus{}
 }
 
-type OrderSpec struct {
-	Id    string       `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty"`
-	Order []*OrderItem `protobuf:"bytes,2,rep,name=Order" json:"Order,omitempty"`
-}
-
-func (m *OrderSpec) Reset()                    { *m = OrderSpec{} }
-func (m *OrderSpec) String() string            { return proto.CompactTextString(m) }
-func (*OrderSpec) ProtoMessage()               {}
-func (*OrderSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
-
-func (m *OrderSpec) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *OrderSpec) GetOrder() []*OrderItem {
-	if m != nil {
-		return m.Order
-	}
-	return nil
-}
-
 type OrderItem struct {
 	ISBNId   string `protobuf:"bytes,1,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
 	Quantity uint32 `protobuf:"varint,2,opt,name=Quantity,proto3" json:"Quantity,omitempty"`
@@ -260,7 +322,7 @@ type OrderItem struct {
 func (m *OrderItem) Reset()                    { *m = OrderItem{} }
 func (m *OrderItem) String() string            { return proto.CompactTextString(m) }
 func (*OrderItem) ProtoMessage()               {}
-func (*OrderItem) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{7} }
+func (*OrderItem) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{10} }
 
 func (m *OrderItem) GetISBNId() string {
 	if m != nil {
@@ -276,6 +338,30 @@ func (m *OrderItem) GetQuantity() uint32 {
 	return 0
 }
 
+type OrderSpec struct {
+	Id    string       `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Order []*OrderItem `protobuf:"bytes,2,rep,name=Order" json:"Order,omitempty"`
+}
+
+func (m *OrderSpec) Reset()                    { *m = OrderSpec{} }
+func (m *OrderSpec) String() string            { return proto.CompactTextString(m) }
+func (*OrderSpec) ProtoMessage()               {}
+func (*OrderSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{11} }
+
+func (m *OrderSpec) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *OrderSpec) GetOrder() []*OrderItem {
+	if m != nil {
+		return m.Order
+	}
+	return nil
+}
+
 type OrderStatus struct {
 	Status OrderStatus_OrderStatus `protobuf:"varint,3,opt,name=Status,proto3,enum=bookstore.OrderStatus_OrderStatus" json:"Status,omitempty"`
 	Filled []*OrderSpec            `protobuf:"bytes,4,rep,name=Filled" json:"Filled,omitempty"`
@@ -284,7 +370,7 @@ type OrderStatus struct {
 func (m *OrderStatus) Reset()                    { *m = OrderStatus{} }
 func (m *OrderStatus) String() string            { return proto.CompactTextString(m) }
 func (*OrderStatus) ProtoMessage()               {}
-func (*OrderStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{8} }
+func (*OrderStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{12} }
 
 func (m *OrderStatus) GetStatus() OrderStatus_OrderStatus {
 	if m != nil {
@@ -300,152 +386,64 @@ func (m *OrderStatus) GetFilled() []*OrderSpec {
 	return nil
 }
 
-type AutoMsgOrderWatchHelper struct {
-	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *Order `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+type Publisher struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,inline"`
+	Spec           PublisherSpec `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
 }
 
-func (m *AutoMsgOrderWatchHelper) Reset()                    { *m = AutoMsgOrderWatchHelper{} }
-func (m *AutoMsgOrderWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgOrderWatchHelper) ProtoMessage()               {}
-func (*AutoMsgOrderWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{9} }
+func (m *Publisher) Reset()                    { *m = Publisher{} }
+func (m *Publisher) String() string            { return proto.CompactTextString(m) }
+func (*Publisher) ProtoMessage()               {}
+func (*Publisher) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{13} }
 
-func (m *AutoMsgOrderWatchHelper) GetType() string {
+func (m *Publisher) GetSpec() PublisherSpec {
 	if m != nil {
-		return m.Type
+		return m.Spec
+	}
+	return PublisherSpec{}
+}
+
+type PublisherSpec struct {
+	Id      string `protobuf:"bytes,2,opt,name=Id,proto3" json:"Id,omitempty"`
+	Address string `protobuf:"bytes,3,opt,name=Address,proto3" json:"Address,omitempty"`
+}
+
+func (m *PublisherSpec) Reset()                    { *m = PublisherSpec{} }
+func (m *PublisherSpec) String() string            { return proto.CompactTextString(m) }
+func (*PublisherSpec) ProtoMessage()               {}
+func (*PublisherSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{14} }
+
+func (m *PublisherSpec) GetId() string {
+	if m != nil {
+		return m.Id
 	}
 	return ""
 }
 
-func (m *AutoMsgOrderWatchHelper) GetObject() *Order {
+func (m *PublisherSpec) GetAddress() string {
 	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgOrderListHelper struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Order `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AutoMsgOrderListHelper) Reset()                    { *m = AutoMsgOrderListHelper{} }
-func (m *AutoMsgOrderListHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgOrderListHelper) ProtoMessage()               {}
-func (*AutoMsgOrderListHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{10} }
-
-func (m *AutoMsgOrderListHelper) GetItems() []*Order {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-type AutoMsgBookWatchHelper struct {
-	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *Book  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgBookWatchHelper) Reset()                    { *m = AutoMsgBookWatchHelper{} }
-func (m *AutoMsgBookWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgBookWatchHelper) ProtoMessage()               {}
-func (*AutoMsgBookWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{11} }
-
-func (m *AutoMsgBookWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
+		return m.Address
 	}
 	return ""
-}
-
-func (m *AutoMsgBookWatchHelper) GetObject() *Book {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgBookListHelper struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Book `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AutoMsgBookListHelper) Reset()                    { *m = AutoMsgBookListHelper{} }
-func (m *AutoMsgBookListHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgBookListHelper) ProtoMessage()               {}
-func (*AutoMsgBookListHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{12} }
-
-func (m *AutoMsgBookListHelper) GetItems() []*Book {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-type AutoMsgPublisherWatchHelper struct {
-	Type   string     `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *Publisher `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgPublisherWatchHelper) Reset()         { *m = AutoMsgPublisherWatchHelper{} }
-func (m *AutoMsgPublisherWatchHelper) String() string { return proto.CompactTextString(m) }
-func (*AutoMsgPublisherWatchHelper) ProtoMessage()    {}
-func (*AutoMsgPublisherWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorExample, []int{13}
-}
-
-func (m *AutoMsgPublisherWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgPublisherWatchHelper) GetObject() *Publisher {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-type AutoMsgPublisherListHelper struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Publisher `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AutoMsgPublisherListHelper) Reset()         { *m = AutoMsgPublisherListHelper{} }
-func (m *AutoMsgPublisherListHelper) String() string { return proto.CompactTextString(m) }
-func (*AutoMsgPublisherListHelper) ProtoMessage()    {}
-func (*AutoMsgPublisherListHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorExample, []int{14}
-}
-
-func (m *AutoMsgPublisherListHelper) GetItems() []*Publisher {
-	if m != nil {
-		return m.Items
-	}
-	return nil
 }
 
 func init() {
-	proto.RegisterType((*Publisher)(nil), "bookstore.Publisher")
-	proto.RegisterType((*PublisherSpec)(nil), "bookstore.PublisherSpec")
+	proto.RegisterType((*AutoMsgBookListHelper)(nil), "bookstore.AutoMsgBookListHelper")
+	proto.RegisterType((*AutoMsgBookWatchHelper)(nil), "bookstore.AutoMsgBookWatchHelper")
+	proto.RegisterType((*AutoMsgOrderListHelper)(nil), "bookstore.AutoMsgOrderListHelper")
+	proto.RegisterType((*AutoMsgOrderWatchHelper)(nil), "bookstore.AutoMsgOrderWatchHelper")
+	proto.RegisterType((*AutoMsgPublisherListHelper)(nil), "bookstore.AutoMsgPublisherListHelper")
+	proto.RegisterType((*AutoMsgPublisherWatchHelper)(nil), "bookstore.AutoMsgPublisherWatchHelper")
 	proto.RegisterType((*Book)(nil), "bookstore.Book")
 	proto.RegisterType((*BookSpec)(nil), "bookstore.BookSpec")
 	proto.RegisterType((*BookStatus)(nil), "bookstore.BookStatus")
 	proto.RegisterType((*Order)(nil), "bookstore.Order")
-	proto.RegisterType((*OrderSpec)(nil), "bookstore.OrderSpec")
 	proto.RegisterType((*OrderItem)(nil), "bookstore.OrderItem")
+	proto.RegisterType((*OrderSpec)(nil), "bookstore.OrderSpec")
 	proto.RegisterType((*OrderStatus)(nil), "bookstore.OrderStatus")
-	proto.RegisterType((*AutoMsgOrderWatchHelper)(nil), "bookstore.AutoMsgOrderWatchHelper")
-	proto.RegisterType((*AutoMsgOrderListHelper)(nil), "bookstore.AutoMsgOrderListHelper")
-	proto.RegisterType((*AutoMsgBookWatchHelper)(nil), "bookstore.AutoMsgBookWatchHelper")
-	proto.RegisterType((*AutoMsgBookListHelper)(nil), "bookstore.AutoMsgBookListHelper")
-	proto.RegisterType((*AutoMsgPublisherWatchHelper)(nil), "bookstore.AutoMsgPublisherWatchHelper")
-	proto.RegisterType((*AutoMsgPublisherListHelper)(nil), "bookstore.AutoMsgPublisherListHelper")
+	proto.RegisterType((*Publisher)(nil), "bookstore.Publisher")
+	proto.RegisterType((*PublisherSpec)(nil), "bookstore.PublisherSpec")
 	proto.RegisterEnum("bookstore.OrderStatus_OrderStatus", OrderStatus_OrderStatus_name, OrderStatus_OrderStatus_value)
 }
 
@@ -460,23 +458,23 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for BookstoreV1 service
 
 type BookstoreV1Client interface {
-	AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgOrderListHelper, error)
-	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
 	AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgBookListHelper, error)
-	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
+	AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
-	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
-	AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgBookListHelper, error)
+	AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgOrderListHelper, error)
 	AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgPublisherListHelper, error)
+	AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
+	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error)
 }
 
@@ -488,83 +486,6 @@ func NewBookstoreV1Client(cc *grpc.ClientConn) BookstoreV1Client {
 	return &bookstoreV1Client{cc}
 }
 
-func (c *bookstoreV1Client) AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
-	out := new(Order)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddOrder", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
-	out := new(Order)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateOrder", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
-	out := new(Order)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetOrder", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
-	out := new(Order)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeleteOrder", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgOrderListHelper, error) {
-	out := new(AutoMsgOrderListHelper)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListOrder", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_BookstoreV1_serviceDesc.Streams[0], c.cc, "/bookstore.BookstoreV1/AutoWatchOrder", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &bookstoreV1AutoWatchOrderClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type BookstoreV1_AutoWatchOrderClient interface {
-	Recv() (*AutoMsgOrderWatchHelper, error)
-	grpc.ClientStream
-}
-
-type bookstoreV1AutoWatchOrderClient struct {
-	grpc.ClientStream
-}
-
-func (x *bookstoreV1AutoWatchOrderClient) Recv() (*AutoMsgOrderWatchHelper, error) {
-	m := new(AutoMsgOrderWatchHelper)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *bookstoreV1Client) AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
 	out := new(Book)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddBook", in, out, c.cc, opts...)
@@ -574,18 +495,18 @@ func (c *bookstoreV1Client) AutoAddBook(ctx context.Context, in *Book, opts ...g
 	return out, nil
 }
 
-func (c *bookstoreV1Client) AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
-	out := new(Book)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateBook", in, out, c.cc, opts...)
+func (c *bookstoreV1Client) AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddOrder", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bookstoreV1Client) AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
-	out := new(Book)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetBook", in, out, c.cc, opts...)
+func (c *bookstoreV1Client) AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
+	out := new(Publisher)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddPublisher", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -601,6 +522,51 @@ func (c *bookstoreV1Client) AutoDeleteBook(ctx context.Context, in *Book, opts .
 	return out, nil
 }
 
+func (c *bookstoreV1Client) AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeleteOrder", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
+	out := new(Publisher)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeletePublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetBook", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetOrder", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
+	out := new(Publisher)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetPublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bookstoreV1Client) AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgBookListHelper, error) {
 	out := new(AutoMsgBookListHelper)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListBook", in, out, c.cc, opts...)
@@ -610,8 +576,53 @@ func (c *bookstoreV1Client) AutoListBook(ctx context.Context, in *api.ListWatchO
 	return out, nil
 }
 
+func (c *bookstoreV1Client) AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgOrderListHelper, error) {
+	out := new(AutoMsgOrderListHelper)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListOrder", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgPublisherListHelper, error) {
+	out := new(AutoMsgPublisherListHelper)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListPublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateBook", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateOrder", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
+	out := new(Publisher)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdatePublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bookstoreV1Client) AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_BookstoreV1_serviceDesc.Streams[1], c.cc, "/bookstore.BookstoreV1/AutoWatchBook", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_BookstoreV1_serviceDesc.Streams[0], c.cc, "/bookstore.BookstoreV1/AutoWatchBook", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -642,49 +653,36 @@ func (x *bookstoreV1AutoWatchBookClient) Recv() (*AutoMsgBookWatchHelper, error)
 	return m, nil
 }
 
-func (c *bookstoreV1Client) AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
-	out := new(Publisher)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddPublisher", in, out, c.cc, opts...)
+func (c *bookstoreV1Client) AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_BookstoreV1_serviceDesc.Streams[1], c.cc, "/bookstore.BookstoreV1/AutoWatchOrder", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &bookstoreV1AutoWatchOrderClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *bookstoreV1Client) AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
-	out := new(Publisher)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdatePublisher", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+type BookstoreV1_AutoWatchOrderClient interface {
+	Recv() (*AutoMsgOrderWatchHelper, error)
+	grpc.ClientStream
 }
 
-func (c *bookstoreV1Client) AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
-	out := new(Publisher)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetPublisher", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+type bookstoreV1AutoWatchOrderClient struct {
+	grpc.ClientStream
 }
 
-func (c *bookstoreV1Client) AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
-	out := new(Publisher)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeletePublisher", in, out, c.cc, opts...)
-	if err != nil {
+func (x *bookstoreV1AutoWatchOrderClient) Recv() (*AutoMsgOrderWatchHelper, error) {
+	m := new(AutoMsgOrderWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	return out, nil
-}
-
-func (c *bookstoreV1Client) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgPublisherListHelper, error) {
-	out := new(AutoMsgPublisherListHelper)
-	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListPublisher", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return m, nil
 }
 
 func (c *bookstoreV1Client) AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error) {
@@ -722,139 +720,28 @@ func (x *bookstoreV1AutoWatchPublisherClient) Recv() (*AutoMsgPublisherWatchHelp
 // Server API for BookstoreV1 service
 
 type BookstoreV1Server interface {
-	AutoAddOrder(context.Context, *Order) (*Order, error)
-	AutoUpdateOrder(context.Context, *Order) (*Order, error)
-	AutoGetOrder(context.Context, *Order) (*Order, error)
-	AutoDeleteOrder(context.Context, *Order) (*Order, error)
-	AutoListOrder(context.Context, *api.ListWatchOptions) (*AutoMsgOrderListHelper, error)
-	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
 	AutoAddBook(context.Context, *Book) (*Book, error)
-	AutoUpdateBook(context.Context, *Book) (*Book, error)
-	AutoGetBook(context.Context, *Book) (*Book, error)
-	AutoDeleteBook(context.Context, *Book) (*Book, error)
-	AutoListBook(context.Context, *api.ListWatchOptions) (*AutoMsgBookListHelper, error)
-	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
+	AutoAddOrder(context.Context, *Order) (*Order, error)
 	AutoAddPublisher(context.Context, *Publisher) (*Publisher, error)
-	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
-	AutoGetPublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoDeleteBook(context.Context, *Book) (*Book, error)
+	AutoDeleteOrder(context.Context, *Order) (*Order, error)
 	AutoDeletePublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoGetBook(context.Context, *Book) (*Book, error)
+	AutoGetOrder(context.Context, *Order) (*Order, error)
+	AutoGetPublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoListBook(context.Context, *api.ListWatchOptions) (*AutoMsgBookListHelper, error)
+	AutoListOrder(context.Context, *api.ListWatchOptions) (*AutoMsgOrderListHelper, error)
 	AutoListPublisher(context.Context, *api.ListWatchOptions) (*AutoMsgPublisherListHelper, error)
+	AutoUpdateBook(context.Context, *Book) (*Book, error)
+	AutoUpdateOrder(context.Context, *Order) (*Order, error)
+	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
+	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
 	AutoWatchPublisher(*api.ListWatchOptions, BookstoreV1_AutoWatchPublisherServer) error
 }
 
 func RegisterBookstoreV1Server(s *grpc.Server, srv BookstoreV1Server) {
 	s.RegisterService(&_BookstoreV1_serviceDesc, srv)
-}
-
-func _BookstoreV1_AutoAddOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Order)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoAddOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoAddOrder",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoAddOrder(ctx, req.(*Order))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoUpdateOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Order)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoUpdateOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoUpdateOrder",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoUpdateOrder(ctx, req.(*Order))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoGetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Order)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoGetOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoGetOrder",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoGetOrder(ctx, req.(*Order))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoDeleteOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Order)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoDeleteOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoDeleteOrder",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoDeleteOrder(ctx, req.(*Order))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoListOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoListOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoListOrder",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoListOrder(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoWatchOrder_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(BookstoreV1Server).AutoWatchOrder(m, &bookstoreV1AutoWatchOrderServer{stream})
-}
-
-type BookstoreV1_AutoWatchOrderServer interface {
-	Send(*AutoMsgOrderWatchHelper) error
-	grpc.ServerStream
-}
-
-type bookstoreV1AutoWatchOrderServer struct {
-	grpc.ServerStream
-}
-
-func (x *bookstoreV1AutoWatchOrderServer) Send(m *AutoMsgOrderWatchHelper) error {
-	return x.ServerStream.SendMsg(m)
 }
 
 func _BookstoreV1_AutoAddBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -875,38 +762,38 @@ func _BookstoreV1_AutoAddBook_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BookstoreV1_AutoUpdateBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Book)
+func _BookstoreV1_AutoAddOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Order)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoUpdateBook(ctx, in)
+		return srv.(BookstoreV1Server).AutoAddOrder(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoUpdateBook",
+		FullMethod: "/bookstore.BookstoreV1/AutoAddOrder",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoUpdateBook(ctx, req.(*Book))
+		return srv.(BookstoreV1Server).AutoAddOrder(ctx, req.(*Order))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BookstoreV1_AutoGetBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Book)
+func _BookstoreV1_AutoAddPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Publisher)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoGetBook(ctx, in)
+		return srv.(BookstoreV1Server).AutoAddPublisher(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoGetBook",
+		FullMethod: "/bookstore.BookstoreV1/AutoAddPublisher",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoGetBook(ctx, req.(*Book))
+		return srv.(BookstoreV1Server).AutoAddPublisher(ctx, req.(*Publisher))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -929,6 +816,96 @@ func _BookstoreV1_AutoDeleteBook_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookstoreV1_AutoDeleteOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Order)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoDeleteOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoDeleteOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoDeleteOrder(ctx, req.(*Order))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoDeletePublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Publisher)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoDeletePublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoDeletePublisher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoDeletePublisher(ctx, req.(*Publisher))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoGetBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Book)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoGetBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoGetBook",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoGetBook(ctx, req.(*Book))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoGetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Order)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoGetOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoGetOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoGetOrder(ctx, req.(*Order))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoGetPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Publisher)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoGetPublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoGetPublisher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoGetPublisher(ctx, req.(*Publisher))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BookstoreV1_AutoListBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -943,6 +920,96 @@ func _BookstoreV1_AutoListBook_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BookstoreV1Server).AutoListBook(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoListOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoListOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoListOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoListOrder(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoListPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoListPublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoListPublisher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoListPublisher(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoUpdateBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Book)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoUpdateBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoUpdateBook",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoUpdateBook(ctx, req.(*Book))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoUpdateOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Order)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoUpdateOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoUpdateOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoUpdateOrder(ctx, req.(*Order))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoUpdatePublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Publisher)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoUpdatePublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoUpdatePublisher",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoUpdatePublisher(ctx, req.(*Publisher))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -968,94 +1035,25 @@ func (x *bookstoreV1AutoWatchBookServer) Send(m *AutoMsgBookWatchHelper) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _BookstoreV1_AutoAddPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Publisher)
-	if err := dec(in); err != nil {
-		return nil, err
+func _BookstoreV1_AutoWatchOrder_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoAddPublisher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoAddPublisher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoAddPublisher(ctx, req.(*Publisher))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(BookstoreV1Server).AutoWatchOrder(m, &bookstoreV1AutoWatchOrderServer{stream})
 }
 
-func _BookstoreV1_AutoUpdatePublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Publisher)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoUpdatePublisher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoUpdatePublisher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoUpdatePublisher(ctx, req.(*Publisher))
-	}
-	return interceptor(ctx, in, info, handler)
+type BookstoreV1_AutoWatchOrderServer interface {
+	Send(*AutoMsgOrderWatchHelper) error
+	grpc.ServerStream
 }
 
-func _BookstoreV1_AutoGetPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Publisher)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoGetPublisher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoGetPublisher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoGetPublisher(ctx, req.(*Publisher))
-	}
-	return interceptor(ctx, in, info, handler)
+type bookstoreV1AutoWatchOrderServer struct {
+	grpc.ServerStream
 }
 
-func _BookstoreV1_AutoDeletePublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Publisher)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoDeletePublisher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoDeletePublisher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoDeletePublisher(ctx, req.(*Publisher))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BookstoreV1_AutoListPublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(api.ListWatchOptions)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BookstoreV1Server).AutoListPublisher(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bookstore.BookstoreV1/AutoListPublisher",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookstoreV1Server).AutoListPublisher(ctx, req.(*api.ListWatchOptions))
-	}
-	return interceptor(ctx, in, info, handler)
+func (x *bookstoreV1AutoWatchOrderServer) Send(m *AutoMsgOrderWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _BookstoreV1_AutoWatchPublisher_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -1084,75 +1082,75 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*BookstoreV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AutoAddOrder",
-			Handler:    _BookstoreV1_AutoAddOrder_Handler,
-		},
-		{
-			MethodName: "AutoUpdateOrder",
-			Handler:    _BookstoreV1_AutoUpdateOrder_Handler,
-		},
-		{
-			MethodName: "AutoGetOrder",
-			Handler:    _BookstoreV1_AutoGetOrder_Handler,
-		},
-		{
-			MethodName: "AutoDeleteOrder",
-			Handler:    _BookstoreV1_AutoDeleteOrder_Handler,
-		},
-		{
-			MethodName: "AutoListOrder",
-			Handler:    _BookstoreV1_AutoListOrder_Handler,
-		},
-		{
 			MethodName: "AutoAddBook",
 			Handler:    _BookstoreV1_AutoAddBook_Handler,
 		},
 		{
-			MethodName: "AutoUpdateBook",
-			Handler:    _BookstoreV1_AutoUpdateBook_Handler,
-		},
-		{
-			MethodName: "AutoGetBook",
-			Handler:    _BookstoreV1_AutoGetBook_Handler,
-		},
-		{
-			MethodName: "AutoDeleteBook",
-			Handler:    _BookstoreV1_AutoDeleteBook_Handler,
-		},
-		{
-			MethodName: "AutoListBook",
-			Handler:    _BookstoreV1_AutoListBook_Handler,
+			MethodName: "AutoAddOrder",
+			Handler:    _BookstoreV1_AutoAddOrder_Handler,
 		},
 		{
 			MethodName: "AutoAddPublisher",
 			Handler:    _BookstoreV1_AutoAddPublisher_Handler,
 		},
 		{
-			MethodName: "AutoUpdatePublisher",
-			Handler:    _BookstoreV1_AutoUpdatePublisher_Handler,
+			MethodName: "AutoDeleteBook",
+			Handler:    _BookstoreV1_AutoDeleteBook_Handler,
 		},
 		{
-			MethodName: "AutoGetPublisher",
-			Handler:    _BookstoreV1_AutoGetPublisher_Handler,
+			MethodName: "AutoDeleteOrder",
+			Handler:    _BookstoreV1_AutoDeleteOrder_Handler,
 		},
 		{
 			MethodName: "AutoDeletePublisher",
 			Handler:    _BookstoreV1_AutoDeletePublisher_Handler,
 		},
 		{
+			MethodName: "AutoGetBook",
+			Handler:    _BookstoreV1_AutoGetBook_Handler,
+		},
+		{
+			MethodName: "AutoGetOrder",
+			Handler:    _BookstoreV1_AutoGetOrder_Handler,
+		},
+		{
+			MethodName: "AutoGetPublisher",
+			Handler:    _BookstoreV1_AutoGetPublisher_Handler,
+		},
+		{
+			MethodName: "AutoListBook",
+			Handler:    _BookstoreV1_AutoListBook_Handler,
+		},
+		{
+			MethodName: "AutoListOrder",
+			Handler:    _BookstoreV1_AutoListOrder_Handler,
+		},
+		{
 			MethodName: "AutoListPublisher",
 			Handler:    _BookstoreV1_AutoListPublisher_Handler,
+		},
+		{
+			MethodName: "AutoUpdateBook",
+			Handler:    _BookstoreV1_AutoUpdateBook_Handler,
+		},
+		{
+			MethodName: "AutoUpdateOrder",
+			Handler:    _BookstoreV1_AutoUpdateOrder_Handler,
+		},
+		{
+			MethodName: "AutoUpdatePublisher",
+			Handler:    _BookstoreV1_AutoUpdatePublisher_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "AutoWatchOrder",
-			Handler:       _BookstoreV1_AutoWatchOrder_Handler,
+			StreamName:    "AutoWatchBook",
+			Handler:       _BookstoreV1_AutoWatchBook_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "AutoWatchBook",
-			Handler:       _BookstoreV1_AutoWatchBook_Handler,
+			StreamName:    "AutoWatchOrder",
+			Handler:       _BookstoreV1_AutoWatchOrder_Handler,
 			ServerStreams: true,
 		},
 		{
@@ -1164,7 +1162,7 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 	Metadata: "example.proto",
 }
 
-func (m *Publisher) Marshal() (dAtA []byte, err error) {
+func (m *AutoMsgBookListHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1174,12 +1172,12 @@ func (m *Publisher) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Publisher) MarshalTo(dAtA []byte) (int, error) {
+func (m *AutoMsgBookListHelper) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
+	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
 	n1, err := m.TypeMeta.MarshalTo(dAtA[i:])
@@ -1187,26 +1185,30 @@ func (m *Publisher) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n1
-	dAtA[i] = 0x12
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n2, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n2, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n2
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n3, err := m.Spec.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
-	i += n3
 	return i, nil
 }
 
-func (m *PublisherSpec) Marshal() (dAtA []byte, err error) {
+func (m *AutoMsgBookWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1216,22 +1218,186 @@ func (m *PublisherSpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PublisherSpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *AutoMsgBookWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Id) > 0 {
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
 		dAtA[i] = 0x12
 		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
+		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
+		n3, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
 	}
-	if len(m.Address) > 0 {
-		dAtA[i] = 0x1a
+	return i, nil
+}
+
+func (m *AutoMsgOrderListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgOrderListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
+	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n5, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgOrderWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgOrderWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
 		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Address)))
-		i += copy(dAtA[i:], m.Address)
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
+		n6, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+
+func (m *AutoMsgPublisherListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgPublisherListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgPublisherWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgPublisherWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
+		n9, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
 	}
 	return i, nil
 }
@@ -1254,35 +1420,35 @@ func (m *Book) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n4
+	i += n10
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n5, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n11, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n5
+	i += n11
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n6, err := m.Spec.MarshalTo(dAtA[i:])
+	n12, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n12
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
-	n7, err := m.Status.MarshalTo(dAtA[i:])
+	n13, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n13
 	return i, nil
 }
 
@@ -1363,35 +1529,64 @@ func (m *Order) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n8
+	i += n14
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n9, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n15, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n15
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n10, err := m.Spec.MarshalTo(dAtA[i:])
+	n16, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n16
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
-	n11, err := m.Status.MarshalTo(dAtA[i:])
+	n17, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n17
+	return i, nil
+}
+
+func (m *OrderItem) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OrderItem) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ISBNId) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.ISBNId)))
+		i += copy(dAtA[i:], m.ISBNId)
+	}
+	if m.Quantity != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.Quantity))
+	}
 	return i, nil
 }
 
@@ -1431,35 +1626,6 @@ func (m *OrderSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *OrderItem) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *OrderItem) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ISBNId) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.ISBNId)))
-		i += copy(dAtA[i:], m.ISBNId)
-	}
-	if m.Quantity != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Quantity))
-	}
-	return i, nil
-}
-
 func (m *OrderStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1495,7 +1661,7 @@ func (m *OrderStatus) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *AutoMsgOrderWatchHelper) Marshal() (dAtA []byte, err error) {
+func (m *Publisher) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1505,232 +1671,64 @@ func (m *AutoMsgOrderWatchHelper) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AutoMsgOrderWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+func (m *Publisher) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
-		n12, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	return i, nil
-}
-
-func (m *AutoMsgOrderListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgOrderListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
+	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n13, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n18, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n13
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n14, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n14
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *AutoMsgBookWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgBookWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
-		n15, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n15
-	}
-	return i, nil
-}
-
-func (m *AutoMsgBookListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgBookListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
+	i += n18
 	dAtA[i] = 0x12
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n16, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n16
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n17, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n17
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *AutoMsgPublisherWatchHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgPublisherWatchHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Type) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
-	}
-	if m.Object != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
-		n18, err := m.Object.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n18
-	}
-	return i, nil
-}
-
-func (m *AutoMsgPublisherListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgPublisherListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n19, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n19, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n19
 	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n20, err := m.ListMeta.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
+	n20, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n20
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
+	return i, nil
+}
+
+func (m *PublisherSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PublisherSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Id) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Id)))
+		i += copy(dAtA[i:], m.Id)
+	}
+	if len(m.Address) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Address)))
+		i += copy(dAtA[i:], m.Address)
 	}
 	return i, nil
 }
@@ -1762,27 +1760,91 @@ func encodeVarintExample(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Publisher) Size() (n int) {
+func (m *AutoMsgBookListHelper) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
 	n += 1 + l + sovExample(uint64(l))
-	l = m.ObjectMeta.Size()
+	l = m.ListMeta.Size()
 	n += 1 + l + sovExample(uint64(l))
-	l = m.Spec.Size()
-	n += 1 + l + sovExample(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovExample(uint64(l))
+		}
+	}
 	return n
 }
 
-func (m *PublisherSpec) Size() (n int) {
+func (m *AutoMsgBookWatchHelper) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Id)
+	l = len(m.Type)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
 	}
-	l = len(m.Address)
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgOrderListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovExample(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgOrderWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
 	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgPublisherListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovExample(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgPublisherWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
 		n += 1 + l + sovExample(uint64(l))
 	}
 	return n
@@ -1843,6 +1905,19 @@ func (m *Order) Size() (n int) {
 	return n
 }
 
+func (m *OrderItem) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ISBNId)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.Quantity != 0 {
+		n += 1 + sovExample(uint64(m.Quantity))
+	}
+	return n
+}
+
 func (m *OrderSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -1855,19 +1930,6 @@ func (m *OrderSpec) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovExample(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *OrderItem) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.ISBNId)
-	if l > 0 {
-		n += 1 + l + sovExample(uint64(l))
-	}
-	if m.Quantity != 0 {
-		n += 1 + sovExample(uint64(m.Quantity))
 	}
 	return n
 }
@@ -1887,92 +1949,28 @@ func (m *OrderStatus) Size() (n int) {
 	return n
 }
 
-func (m *AutoMsgOrderWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovExample(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovExample(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgOrderListHelper) Size() (n int) {
+func (m *Publisher) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
 	n += 1 + l + sovExample(uint64(l))
-	l = m.ListMeta.Size()
+	l = m.ObjectMeta.Size()
 	n += 1 + l + sovExample(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovExample(uint64(l))
-		}
-	}
+	l = m.Spec.Size()
+	n += 1 + l + sovExample(uint64(l))
 	return n
 }
 
-func (m *AutoMsgBookWatchHelper) Size() (n int) {
+func (m *PublisherSpec) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Type)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
 	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovExample(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgBookListHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovExample(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovExample(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovExample(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *AutoMsgPublisherWatchHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Type)
+	l = len(m.Address)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
-	}
-	if m.Object != nil {
-		l = m.Object.Size()
-		n += 1 + l + sovExample(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgPublisherListHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovExample(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovExample(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovExample(uint64(l))
-		}
 	}
 	return n
 }
@@ -1990,7 +1988,7 @@ func sovExample(x uint64) (n int) {
 func sozExample(x uint64) (n int) {
 	return sovExample(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Publisher) Unmarshal(dAtA []byte) error {
+func (m *AutoMsgBookListHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2013,13 +2011,13 @@ func (m *Publisher) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Publisher: wiretype end group for non-group")
+			return fmt.Errorf("proto: AutoMsgBookListHelper: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Publisher: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AutoMsgBookListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
 			}
@@ -2049,9 +2047,9 @@ func (m *Publisher) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2075,13 +2073,13 @@ func (m *Publisher) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2105,7 +2103,8 @@ func (m *Publisher) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Items = append(m.Items, &Book{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2130,7 +2129,7 @@ func (m *Publisher) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
+func (m *AutoMsgBookWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2153,17 +2152,129 @@ func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PublisherSpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: AutoMsgBookWatchHelper: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PublisherSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AutoMsgBookWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Book{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgOrderListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgOrderListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowExample
@@ -2173,24 +2284,136 @@ func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthExample
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Id = string(dAtA[iNdEx:postIndex])
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Order{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgOrderWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgOrderWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgOrderWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2215,7 +2438,293 @@ func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Order{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgPublisherListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgPublisherListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgPublisherListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Publisher{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgPublisherWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgPublisherWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgPublisherWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Publisher{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2784,6 +3293,104 @@ func (m *Order) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *OrderItem) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OrderItem: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OrderItem: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ISBNId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ISBNId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quantity", wireType)
+			}
+			m.Quantity = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Quantity |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *OrderSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2873,104 +3480,6 @@ func (m *OrderSpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipExample(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthExample
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *OrderItem) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowExample
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: OrderItem: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: OrderItem: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ISBNId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ISBNId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Quantity", wireType)
-			}
-			m.Quantity = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Quantity |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipExample(dAtA[iNdEx:])
@@ -3092,7 +3601,7 @@ func (m *OrderStatus) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AutoMsgOrderWatchHelper) Unmarshal(dAtA []byte) error {
+func (m *Publisher) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3115,125 +3624,13 @@ func (m *AutoMsgOrderWatchHelper) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgOrderWatchHelper: wiretype end group for non-group")
+			return fmt.Errorf("proto: Publisher: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgOrderWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Publisher: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &Order{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipExample(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthExample
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowExample
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgOrderListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgOrderListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
 			}
@@ -3263,9 +3660,9 @@ func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3289,13 +3686,13 @@ func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3319,8 +3716,7 @@ func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Items = append(m.Items, &Order{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3345,7 +3741,7 @@ func (m *AutoMsgOrderListHelper) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AutoMsgBookWatchHelper) Unmarshal(dAtA []byte) error {
+func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3368,15 +3764,15 @@ func (m *AutoMsgBookWatchHelper) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgBookWatchHelper: wiretype end group for non-group")
+			return fmt.Errorf("proto: PublisherSpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgBookWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PublisherSpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3401,235 +3797,11 @@ func (m *AutoMsgBookWatchHelper) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &Book{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipExample(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthExample
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgBookListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowExample
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgBookListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgBookListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &Book{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipExample(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthExample
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgPublisherWatchHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowExample
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgPublisherWatchHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgPublisherWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3654,181 +3826,7 @@ func (m *AutoMsgPublisherWatchHelper) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Object == nil {
-				m.Object = &Publisher{}
-			}
-			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipExample(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthExample
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgPublisherListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowExample
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgPublisherListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgPublisherListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowExample
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthExample
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &Publisher{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Address = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3959,85 +3957,85 @@ var (
 func init() { proto.RegisterFile("example.proto", fileDescriptorExample) }
 
 var fileDescriptorExample = []byte{
-	// 1277 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xdf, 0x6f, 0xd3, 0x56,
-	0x14, 0xae, 0xd3, 0x34, 0x6d, 0x4e, 0x48, 0x9a, 0x5d, 0x4a, 0x89, 0x0d, 0x6a, 0x8b, 0x37, 0xf6,
-	0xa3, 0xb0, 0x04, 0xca, 0x1e, 0x58, 0x1e, 0x86, 0x1a, 0x5a, 0x4a, 0xb4, 0xd2, 0x04, 0xb7, 0xb0,
-	0x89, 0x21, 0x4d, 0x4e, 0x7c, 0xd5, 0x18, 0x5c, 0xdb, 0x8a, 0x6f, 0x60, 0x08, 0xf1, 0x42, 0xc6,
-	0x3f, 0xb0, 0xa1, 0x69, 0xe2, 0x69, 0x42, 0xda, 0x0b, 0x8f, 0x7b, 0xdf, 0x3b, 0xd2, 0x5e, 0x10,
-	0x7b, 0x99, 0x78, 0x60, 0x13, 0x9b, 0x34, 0x69, 0x7f, 0xc5, 0x74, 0x7f, 0xd8, 0x71, 0x6c, 0xa7,
-	0xa3, 0x43, 0xf0, 0x96, 0x5c, 0x9f, 0xf3, 0x9d, 0xef, 0x9c, 0xef, 0xf3, 0xf5, 0xbd, 0x90, 0xc7,
-	0x5f, 0xe9, 0x3b, 0xae, 0x85, 0xcb, 0x6e, 0xd7, 0x21, 0x0e, 0xca, 0xb6, 0x1c, 0xe7, 0xba, 0x47,
-	0x9c, 0x2e, 0x56, 0x3e, 0xd9, 0x36, 0x49, 0xa7, 0xd7, 0x2a, 0xb7, 0x9d, 0x9d, 0x8a, 0x8b, 0x6d,
-	0x4f, 0xb7, 0x0d, 0xa7, 0xe2, 0xdd, 0xac, 0xf4, 0x88, 0x69, 0x79, 0x15, 0xdd, 0x35, 0xb7, 0xb1,
-	0x5d, 0xd1, 0x6d, 0xdb, 0x21, 0x3a, 0x31, 0x1d, 0xdb, 0xab, 0x98, 0x76, 0xdb, 0xea, 0x19, 0xd8,
-	0xe3, 0x50, 0xca, 0xd1, 0x11, 0xf9, 0xba, 0x6b, 0x56, 0x76, 0x30, 0xd1, 0x79, 0x98, 0xfa, 0xb3,
-	0x04, 0xd9, 0x66, 0xaf, 0x65, 0x99, 0x5e, 0x07, 0x77, 0xd1, 0x09, 0x90, 0xb6, 0x4a, 0xd2, 0x82,
-	0xf4, 0x7e, 0x6e, 0x29, 0x5f, 0xd6, 0x5d, 0xb3, 0xbc, 0x75, 0xcb, 0xc5, 0x17, 0x30, 0xd1, 0x6b,
-	0xfb, 0x1f, 0x3f, 0x9f, 0x1f, 0x7b, 0xf2, 0x7c, 0x5e, 0xfa, 0xe7, 0xf9, 0xfc, 0xe4, 0x71, 0xd3,
-	0xb6, 0x4c, 0x1b, 0x6b, 0xd2, 0x16, 0xaa, 0x82, 0xd4, 0x28, 0xa5, 0x58, 0xc6, 0x34, 0xcb, 0x68,
-	0xb4, 0xae, 0xe1, 0x36, 0x61, 0x39, 0x87, 0x42, 0x39, 0xd3, 0xb4, 0xa6, 0xa1, 0x13, 0x3d, 0xc8,
-	0x6d, 0xa0, 0x25, 0x48, 0x6f, 0xba, 0xb8, 0x5d, 0x1a, 0x67, 0xe9, 0xa5, 0x72, 0xd0, 0x7c, 0x39,
-	0x60, 0x44, 0x9f, 0xd7, 0xd2, 0x14, 0x47, 0x63, 0xb1, 0xd5, 0xc2, 0xd3, 0x7b, 0x32, 0xb8, 0xfe,
-	0x63, 0x4f, 0xfd, 0x18, 0xf2, 0x43, 0xc1, 0xa8, 0x00, 0xa9, 0xba, 0xc1, 0x18, 0x65, 0xb5, 0x54,
-	0xdd, 0x40, 0x25, 0x98, 0x5c, 0x36, 0x8c, 0x2e, 0xf6, 0x3c, 0x56, 0x27, 0xab, 0xf9, 0x7f, 0xd5,
-	0x3f, 0x25, 0x48, 0xd7, 0x1c, 0xe7, 0xfa, 0x1b, 0xee, 0xfa, 0xc3, 0xa1, 0xae, 0xf7, 0x87, 0xba,
-	0xa6, 0x64, 0xa2, 0x0d, 0xa3, 0x53, 0x90, 0xd9, 0x24, 0x3a, 0xe9, 0x79, 0xa5, 0x34, 0x4b, 0x38,
-	0x10, 0x4d, 0x60, 0x0f, 0x45, 0x8a, 0x08, 0xad, 0x66, 0x9f, 0xde, 0x93, 0x27, 0x58, 0x9c, 0x7a,
-	0x05, 0xa6, 0x7c, 0x5c, 0x34, 0x0b, 0x99, 0xfa, 0x66, 0x6d, 0x23, 0x98, 0x8f, 0xf8, 0x47, 0xd7,
-	0x97, 0x7b, 0xa4, 0xe3, 0x74, 0xc5, 0x88, 0xc4, 0x3f, 0x34, 0x07, 0x50, 0x37, 0x9a, 0x5d, 0xe7,
-	0x86, 0x69, 0xe0, 0x2e, 0xab, 0x9f, 0xd5, 0x42, 0x2b, 0xea, 0x22, 0xc0, 0x80, 0x02, 0x3a, 0x0c,
-	0xd9, 0xba, 0x7d, 0x03, 0xdb, 0xc4, 0xe9, 0xde, 0x62, 0xe3, 0x9c, 0xd0, 0x06, 0x0b, 0xea, 0xdf,
-	0x12, 0x4c, 0x34, 0xba, 0xc6, 0x1b, 0x37, 0x59, 0x79, 0x68, 0xdc, 0x33, 0xa1, 0xe9, 0x31, 0x36,
-	0xb1, 0x79, 0x7f, 0x14, 0x99, 0xf7, 0x6c, 0x2c, 0x23, 0x69, 0xe0, 0xf0, 0xf4, 0x9e, 0x9c, 0x71,
-	0xe8, 0x63, 0x4f, 0x5d, 0x83, 0x6c, 0x00, 0x2d, 0xec, 0x28, 0x05, 0x76, 0x5c, 0x14, 0x53, 0x28,
-	0xa5, 0x16, 0xc6, 0x93, 0xf8, 0xd4, 0x09, 0xde, 0xd1, 0x78, 0x88, 0x7a, 0x46, 0x00, 0xd1, 0xb5,
-	0x90, 0x76, 0xd2, 0x90, 0x76, 0x0a, 0x4c, 0x5d, 0xec, 0xe9, 0x36, 0x31, 0xc9, 0x2d, 0x36, 0xa2,
-	0xbc, 0x16, 0xfc, 0x57, 0x7f, 0x91, 0x20, 0x17, 0xe2, 0x8c, 0xaa, 0x41, 0x6f, 0x74, 0x1a, 0x85,
-	0x25, 0x35, 0xb9, 0xb7, 0xf0, 0x6f, 0xbf, 0x43, 0x74, 0x1c, 0x32, 0xe7, 0x4c, 0xcb, 0xc2, 0x46,
-	0x29, 0x9d, 0xcc, 0x9c, 0xb6, 0xab, 0x89, 0x18, 0x55, 0x1b, 0x2e, 0x9c, 0x83, 0xc9, 0xb3, 0xda,
-	0xea, 0xf2, 0xd6, 0xea, 0x4a, 0x71, 0x0c, 0x15, 0x00, 0x9a, 0x5a, 0xe3, 0xec, 0xea, 0xe6, 0x66,
-	0x7d, 0x63, 0xad, 0x28, 0x21, 0x80, 0xcc, 0xb9, 0xfa, 0xfa, 0xfa, 0xea, 0x4a, 0x31, 0x45, 0x03,
-	0x37, 0xcf, 0xd7, 0x9b, 0xcd, 0xd5, 0x95, 0xe2, 0x38, 0xca, 0x43, 0xf6, 0x6c, 0xe3, 0x42, 0x73,
-	0x7d, 0x95, 0xe6, 0xa5, 0xd5, 0x2b, 0x70, 0x70, 0xb9, 0x47, 0x9c, 0x0b, 0xde, 0x36, 0x83, 0xfe,
-	0x4c, 0x27, 0xed, 0xce, 0x79, 0x6c, 0xb9, 0xb8, 0x8b, 0xf6, 0x41, 0x9a, 0x9a, 0x88, 0x8f, 0x06,
-	0x2d, 0x40, 0x86, 0x1b, 0x44, 0x78, 0xa6, 0x18, 0xa5, 0x5a, 0x9d, 0x7e, 0x76, 0x7f, 0x26, 0x77,
-	0x93, 0x02, 0x74, 0x18, 0x80, 0xfa, 0xbd, 0x04, 0xb3, 0x61, 0xf0, 0x75, 0xd3, 0x23, 0x02, 0x5b,
-	0xa5, 0x76, 0x4d, 0x25, 0xd9, 0x75, 0xca, 0xb7, 0x1e, 0xfa, 0x00, 0xa6, 0x68, 0x06, 0x5d, 0x15,
-	0x46, 0xe3, 0xa1, 0xfe, 0x62, 0x28, 0x74, 0x1e, 0x26, 0xa8, 0x9e, 0x9e, 0x18, 0x63, 0x9c, 0x5b,
-	0xe1, 0xd9, 0xfd, 0x19, 0xb0, 0x4c, 0x8f, 0x08, 0x6a, 0x9f, 0x07, 0xcc, 0xe8, 0xbb, 0x36, 0xba,
-	0xeb, 0xf9, 0x48, 0xd7, 0xd3, 0x91, 0x8d, 0x22, 0xde, 0xf4, 0x77, 0x12, 0x1c, 0x08, 0x41, 0xbf,
-	0xbe, 0x9e, 0xe7, 0x86, 0x7b, 0x8e, 0x31, 0x8b, 0xb6, 0xdc, 0x82, 0x43, 0x82, 0x57, 0xb0, 0xb7,
-	0x8f, 0xee, 0xfb, 0x9d, 0x48, 0xdf, 0x33, 0x49, 0xdf, 0x91, 0x78, 0xf3, 0x3f, 0x48, 0xa0, 0x44,
-	0x8b, 0xbc, 0xbe, 0x09, 0xbc, 0x3d, 0x3c, 0x81, 0x64, 0x8e, 0x91, 0x31, 0x2c, 0xfd, 0x9e, 0x87,
-	0x5c, 0xcd, 0x8f, 0xbb, 0x7c, 0x12, 0x5d, 0x86, 0x7d, 0x94, 0xf1, 0xb2, 0x61, 0xf0, 0x8d, 0x34,
-	0xe6, 0x1d, 0x25, 0xb6, 0xa2, 0xaa, 0xbf, 0xdd, 0x9f, 0x91, 0x7e, 0xfa, 0x5a, 0xce, 0xb4, 0xbb,
-	0x58, 0x27, 0xf8, 0xee, 0xaf, 0x7f, 0x7d, 0x9b, 0x2a, 0xc0, 0x58, 0x55, 0x5a, 0x54, 0x27, 0x2b,
-	0x7c, 0xc3, 0x42, 0x2d, 0x98, 0xa6, 0xb8, 0x97, 0x5c, 0x43, 0x27, 0xf8, 0xe5, 0xa1, 0x8f, 0xf9,
-	0xd0, 0x3d, 0x96, 0xc8, 0xa0, 0x0f, 0x32, 0x68, 0xa5, 0x28, 0xa0, 0x2b, 0xb7, 0x1b, 0xe5, 0x0d,
-	0x7d, 0x07, 0xdf, 0x41, 0x5f, 0x70, 0xee, 0x6b, 0x98, 0xbc, 0x7c, 0x81, 0xf7, 0x44, 0x81, 0xf1,
-	0x6d, 0x4c, 0x18, 0xfa, 0x2c, 0x8c, 0x55, 0xc7, 0x50, 0x1c, 0x5c, 0xe7, 0x0d, 0xac, 0x60, 0x0b,
-	0xef, 0xa5, 0x81, 0x45, 0xbf, 0x01, 0x83, 0x25, 0x0e, 0x4a, 0x2c, 0xc6, 0x4b, 0x5c, 0x83, 0x3c,
-	0x2d, 0x41, 0xa5, 0xe5, 0x05, 0x0e, 0x04, 0x52, 0x33, 0x6b, 0x36, 0x5c, 0x76, 0x0a, 0x53, 0x8e,
-	0x84, 0xaa, 0x24, 0x6f, 0x28, 0xea, 0xbc, 0x28, 0x9b, 0xa6, 0x52, 0xb3, 0xa2, 0x79, 0xd6, 0x57,
-	0xa0, 0xc7, 0x55, 0x28, 0xd0, 0x54, 0x8e, 0xbb, 0x5b, 0x31, 0x75, 0x44, 0xb1, 0xd0, 0xcb, 0xa2,
-	0xe6, 0x45, 0xb5, 0x09, 0x66, 0xfe, 0x13, 0x12, 0x3a, 0x03, 0x39, 0xe1, 0x22, 0x76, 0xf8, 0x89,
-	0xbe, 0x8c, 0x4a, 0x74, 0x41, 0x2d, 0x0c, 0x5b, 0x08, 0xd5, 0x38, 0x3d, 0x6e, 0x97, 0xbd, 0x62,
-	0x70, 0xaf, 0xa0, 0xab, 0x9c, 0xc4, 0x1a, 0x26, 0x2f, 0x09, 0x70, 0x2c, 0xea, 0x05, 0x85, 0xcd,
-	0x6c, 0xa6, 0xc2, 0xe2, 0x2a, 0xb7, 0xe9, 0xd7, 0xa7, 0xcc, 0x3f, 0x89, 0x77, 0x7c, 0x86, 0xdc,
-	0x0f, 0x7b, 0x65, 0xc8, 0xcd, 0x80, 0x2e, 0x71, 0xc3, 0xd2, 0x99, 0x33, 0x84, 0x11, 0x12, 0x2c,
-	0xc4, 0x25, 0x18, 0xde, 0x4b, 0xd5, 0x7d, 0x61, 0xb9, 0xd1, 0x15, 0xee, 0x23, 0x86, 0xb1, 0x1b,
-	0xee, 0x91, 0x64, 0xdc, 0x5d, 0x95, 0xdd, 0x80, 0xa2, 0x50, 0x76, 0x70, 0xa2, 0x4f, 0xdc, 0x69,
-	0x94, 0xc4, 0xd5, 0x98, 0xd0, 0x17, 0x61, 0xff, 0x40, 0xe8, 0x57, 0x84, 0x14, 0xba, 0x7f, 0xca,
-	0x29, 0xae, 0x61, 0xf2, 0xff, 0xf0, 0x72, 0x21, 0x1b, 0xf8, 0xfc, 0xb8, 0xcc, 0xaf, 0xc8, 0x4f,
-	0xa8, 0xfe, 0x25, 0xbc, 0xe5, 0xab, 0x3e, 0x00, 0x1c, 0x21, 0xd1, 0xd1, 0xb8, 0x44, 0x09, 0x5f,
-	0x92, 0x88, 0xfe, 0x06, 0xa0, 0x40, 0xff, 0xff, 0xac, 0xf0, 0xee, 0x2e, 0x15, 0x76, 0x73, 0x82,
-	0xf2, 0xa3, 0xf4, 0x4d, 0x5f, 0x4e, 0xdd, 0x38, 0xf9, 0xa0, 0x2f, 0x0f, 0xae, 0x94, 0x0f, 0xfb,
-	0x32, 0x3f, 0x58, 0x3e, 0xec, 0xcb, 0xec, 0xe2, 0xf3, 0xb0, 0x2f, 0x0f, 0xee, 0x7e, 0x8f, 0xfa,
-	0xf2, 0x11, 0x71, 0x1f, 0xa2, 0xc3, 0x55, 0x12, 0xdf, 0xac, 0x47, 0x7d, 0xf9, 0x98, 0x7f, 0x8c,
-	0x1f, 0x77, 0x7b, 0x84, 0x85, 0x22, 0x31, 0xbc, 0xf8, 0xae, 0xff, 0xa8, 0x2f, 0x1f, 0xf6, 0xc3,
-	0xd3, 0xae, 0xe3, 0x11, 0xc4, 0x86, 0xa0, 0xf8, 0x3b, 0x5d, 0x6d, 0xee, 0xc1, 0x5d, 0xb9, 0x60,
-	0x39, 0x6d, 0xdd, 0xea, 0x38, 0x1e, 0xa9, 0x9e, 0x3e, 0x71, 0x7a, 0xe9, 0xf1, 0x8b, 0x39, 0xe9,
-	0xc9, 0x8b, 0x39, 0xe9, 0x8f, 0x17, 0x73, 0x52, 0x73, 0xac, 0x95, 0x61, 0xd7, 0xd4, 0x53, 0xff,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0x70, 0x15, 0x21, 0x6b, 0x29, 0x0f, 0x00, 0x00,
+	// 1276 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xd1, 0x6f, 0xd3, 0xd6,
+	0x17, 0xee, 0x4d, 0xd3, 0xb4, 0x39, 0x21, 0x69, 0x7e, 0x97, 0x52, 0x62, 0x83, 0xda, 0xe2, 0xdf,
+	0xd8, 0x58, 0x61, 0x09, 0x94, 0x3d, 0xb0, 0x3c, 0x0c, 0x35, 0xb4, 0x94, 0x68, 0xa5, 0x09, 0x6e,
+	0x61, 0x13, 0x43, 0x9a, 0x9c, 0xf8, 0xaa, 0x31, 0xb8, 0xb6, 0x15, 0xdf, 0xc0, 0x10, 0xe2, 0x85,
+	0x8c, 0x7f, 0x60, 0x43, 0xd3, 0xc4, 0xd3, 0x84, 0xb4, 0x17, 0x1e, 0xf7, 0xbe, 0x77, 0xa4, 0xbd,
+	0x20, 0xf6, 0x32, 0xf1, 0xc0, 0x26, 0x36, 0x69, 0xd2, 0xfe, 0x8a, 0xe9, 0x5e, 0x5f, 0x3b, 0x8e,
+	0xed, 0x74, 0x65, 0x08, 0xde, 0xe2, 0xeb, 0x73, 0xbe, 0x73, 0xbe, 0xef, 0x9e, 0x73, 0x7c, 0x02,
+	0x79, 0xf2, 0xa5, 0xb6, 0xe3, 0x98, 0xa4, 0xec, 0x74, 0x6d, 0x6a, 0xe3, 0x6c, 0xcb, 0xb6, 0x6f,
+	0xb8, 0xd4, 0xee, 0x12, 0xf9, 0xe3, 0x6d, 0x83, 0x76, 0x7a, 0xad, 0x72, 0xdb, 0xde, 0xa9, 0x38,
+	0xc4, 0x72, 0x35, 0x4b, 0xb7, 0x2b, 0xee, 0xad, 0x4a, 0x8f, 0x1a, 0xa6, 0x5b, 0xd1, 0x1c, 0x63,
+	0x9b, 0x58, 0x15, 0xcd, 0xb2, 0x6c, 0xaa, 0x51, 0xc3, 0xb6, 0xdc, 0x8a, 0x61, 0xb5, 0xcd, 0x9e,
+	0x4e, 0x5c, 0x0f, 0x4a, 0x3e, 0x3a, 0xc2, 0x5f, 0x73, 0x8c, 0xca, 0x0e, 0xa1, 0x9a, 0x67, 0xa6,
+	0x7c, 0x8b, 0xe0, 0xc0, 0x72, 0x8f, 0xda, 0x17, 0xdd, 0xed, 0x9a, 0x6d, 0xdf, 0x58, 0x37, 0x5c,
+	0x7a, 0x81, 0x98, 0x0e, 0xe9, 0x62, 0x05, 0xd0, 0x56, 0x29, 0xb5, 0x80, 0x8e, 0xe5, 0x96, 0xf2,
+	0x65, 0xcd, 0x31, 0xca, 0x5b, 0xb7, 0x1d, 0x72, 0x91, 0x50, 0xad, 0x36, 0xf5, 0xe4, 0xc5, 0xfc,
+	0xd8, 0xd3, 0x17, 0xf3, 0x08, 0xbf, 0x0f, 0x53, 0xcc, 0x83, 0x9d, 0x96, 0xc6, 0x43, 0xa6, 0xfe,
+	0x61, 0xc8, 0x74, 0x0e, 0x26, 0xea, 0x94, 0xec, 0xb8, 0xa5, 0xf4, 0xc2, 0xf8, 0xb1, 0xdc, 0xd2,
+	0x74, 0x39, 0xa0, 0x5a, 0x66, 0x81, 0xab, 0x85, 0xe7, 0x0f, 0x66, 0xc0, 0x34, 0x5c, 0xda, 0xe1,
+	0xe1, 0x95, 0xcf, 0x60, 0x36, 0x94, 0xd7, 0xa7, 0x1a, 0x6d, 0x77, 0x44, 0x62, 0xfb, 0x20, 0xcd,
+	0x52, 0x29, 0xa1, 0x05, 0x74, 0x2c, 0x8b, 0xe7, 0x21, 0xd3, 0x68, 0x5d, 0x27, 0x6d, 0x2a, 0x72,
+	0x8d, 0x01, 0x4f, 0x3f, 0x7f, 0x30, 0x93, 0xbb, 0xc5, 0xfc, 0x05, 0xf2, 0x77, 0x28, 0x80, 0x6e,
+	0x74, 0x75, 0xd2, 0x7d, 0x73, 0x9c, 0xe7, 0x87, 0x39, 0x17, 0x43, 0xa9, 0xf1, 0xc8, 0x31, 0xd2,
+	0x57, 0xe1, 0x60, 0x38, 0xb3, 0xd1, 0xac, 0x17, 0x22, 0xac, 0xe3, 0xd0, 0x31, 0xda, 0xdf, 0x23,
+	0x90, 0x05, 0x78, 0xb3, 0xd7, 0x32, 0x0d, 0xb7, 0xf3, 0x26, 0xa9, 0xff, 0x7f, 0x98, 0xfa, 0x4c,
+	0x28, 0xbf, 0x20, 0x7a, 0x8c, 0x7e, 0x0b, 0x0e, 0x45, 0x33, 0x1c, 0x2d, 0xc1, 0x3b, 0x11, 0x09,
+	0x92, 0x43, 0xc4, 0x64, 0xf8, 0x03, 0x41, 0x9a, 0xd5, 0x05, 0x3e, 0xc9, 0x08, 0xa3, 0x24, 0xc2,
+	0xfb, 0x7d, 0x16, 0x7f, 0xbf, 0x98, 0x9f, 0x3c, 0x61, 0x58, 0xa6, 0x61, 0x11, 0x15, 0x6d, 0xe1,
+	0x2a, 0xa0, 0x46, 0x50, 0x65, 0xcc, 0xc3, 0x8b, 0xcf, 0x7d, 0x0e, 0x85, 0x7c, 0xa6, 0x59, 0x7f,
+	0xe9, 0x1a, 0xd5, 0x02, 0xdf, 0x06, 0xfe, 0x00, 0xd2, 0x9b, 0x0e, 0x69, 0x0b, 0xd9, 0xf6, 0x47,
+	0x8a, 0x94, 0xbd, 0xaa, 0xa5, 0x19, 0x84, 0xca, 0xcd, 0xf0, 0x69, 0xc8, 0x6c, 0x52, 0x8d, 0xf6,
+	0x98, 0x7e, 0xcc, 0xe1, 0x40, 0xd4, 0x81, 0xbf, 0x14, 0x2e, 0xc2, 0xb4, 0x9a, 0x7d, 0x76, 0x5f,
+	0x9a, 0xe0, 0x76, 0xca, 0x55, 0x98, 0xf2, 0x71, 0xf1, 0x2c, 0x64, 0xea, 0x9b, 0xb5, 0x8d, 0xba,
+	0xce, 0x73, 0xcf, 0xaa, 0xe2, 0x89, 0x9d, 0x2f, 0xf7, 0x68, 0xc7, 0xee, 0xf2, 0xa4, 0xb2, 0xaa,
+	0x78, 0xc2, 0x73, 0x00, 0x75, 0xbd, 0xd9, 0xb5, 0x6f, 0x1a, 0x3a, 0xe9, 0xf2, 0xf8, 0x59, 0x35,
+	0x74, 0xa2, 0x2c, 0x02, 0x0c, 0x52, 0xc0, 0x87, 0x21, 0x5b, 0xb7, 0x6e, 0x12, 0x8b, 0xda, 0xdd,
+	0xdb, 0x5c, 0xce, 0x09, 0x75, 0x70, 0xa0, 0xfc, 0x85, 0x60, 0x82, 0xd7, 0xe3, 0x5b, 0x96, 0xbb,
+	0x3c, 0x24, 0xf7, 0x4c, 0xb4, 0x3b, 0x62, 0x7a, 0x7f, 0x18, 0xd1, 0x7b, 0x36, 0xe6, 0x91, 0x24,
+	0x38, 0x3c, 0xbb, 0x2f, 0x65, 0x6c, 0xf6, 0xda, 0x55, 0xce, 0x42, 0x96, 0x1b, 0xb2, 0xaa, 0x0f,
+	0x49, 0x8e, 0x86, 0x24, 0x97, 0x61, 0xea, 0x52, 0x4f, 0xb3, 0xa8, 0x41, 0x6f, 0x73, 0x66, 0x79,
+	0x35, 0x78, 0x56, 0xd6, 0x04, 0x00, 0xcf, 0xa7, 0x00, 0xa9, 0xc0, 0x39, 0x55, 0xd7, 0xf1, 0xa2,
+	0x90, 0xb1, 0x94, 0x8a, 0xb5, 0x53, 0x10, 0x55, 0xf5, 0x4c, 0x94, 0x9f, 0x11, 0xe4, 0x42, 0x39,
+	0xe3, 0x6a, 0xc0, 0x8d, 0xa9, 0x51, 0x58, 0x52, 0x92, 0xb9, 0x85, 0x7f, 0xfb, 0x0c, 0xf1, 0x09,
+	0xc8, 0x9c, 0x37, 0x4c, 0x93, 0xe8, 0x09, 0x7d, 0x1c, 0x64, 0xab, 0x0a, 0x1b, 0x45, 0x1d, 0x0e,
+	0x9c, 0x83, 0xc9, 0x73, 0xea, 0xea, 0xf2, 0xd6, 0xea, 0x4a, 0x71, 0x0c, 0x17, 0x00, 0x9a, 0x6a,
+	0xe3, 0xdc, 0xea, 0xe6, 0x66, 0x7d, 0x63, 0xad, 0x88, 0x30, 0x40, 0xe6, 0x7c, 0x7d, 0x7d, 0x7d,
+	0x75, 0xa5, 0x98, 0x62, 0x86, 0x9b, 0x17, 0xea, 0xcd, 0xe6, 0xea, 0x4a, 0x71, 0x1c, 0xe7, 0x21,
+	0x7b, 0xae, 0x71, 0xb1, 0xb9, 0xbe, 0xca, 0xfc, 0xd2, 0xca, 0x4f, 0x08, 0xb2, 0x41, 0x3b, 0xbf,
+	0xe5, 0x2a, 0x5a, 0x1a, 0xaa, 0xa2, 0x52, 0xd2, 0x80, 0x89, 0x56, 0x52, 0xb5, 0xf0, 0xec, 0xbe,
+	0x04, 0x8e, 0xff, 0xda, 0x55, 0x3e, 0x82, 0xfc, 0x90, 0xb1, 0xb8, 0xda, 0x54, 0x70, 0xb5, 0x25,
+	0x98, 0x5c, 0xd6, 0xf5, 0x2e, 0x71, 0x5d, 0xd1, 0x87, 0xfe, 0xe3, 0xd2, 0x6f, 0x79, 0xc8, 0xd5,
+	0xfc, 0x90, 0x57, 0x4e, 0xe1, 0xb3, 0x90, 0x63, 0xe3, 0x71, 0x59, 0xd7, 0xf9, 0x00, 0x8b, 0x7e,
+	0xe9, 0xe4, 0xe8, 0x81, 0x52, 0xf8, 0xf5, 0xc1, 0x0c, 0xfa, 0xf1, 0x2b, 0x29, 0xd3, 0xee, 0x12,
+	0x8d, 0x12, 0x7c, 0x05, 0xf6, 0x09, 0x00, 0xaf, 0x27, 0x63, 0x5f, 0x0d, 0x39, 0x76, 0xa2, 0x28,
+	0xc3, 0x18, 0xf7, 0x7e, 0xf9, 0xf3, 0x9b, 0x54, 0x01, 0xc6, 0xaa, 0x68, 0x51, 0x99, 0xac, 0x78,
+	0xb5, 0x8f, 0x37, 0xa0, 0x28, 0x70, 0x07, 0x37, 0x95, 0x38, 0x8e, 0xe5, 0xc4, 0xd3, 0x58, 0x9e,
+	0x35, 0x28, 0x30, 0xbc, 0x15, 0x62, 0x12, 0x4a, 0x5e, 0x95, 0xab, 0xce, 0xbd, 0xb0, 0x06, 0xd3,
+	0x03, 0x8c, 0xbd, 0xd3, 0x5d, 0x1c, 0x86, 0xe1, 0x74, 0x67, 0x61, 0xac, 0x3a, 0xb6, 0x58, 0x14,
+	0x6c, 0x2b, 0x77, 0x1a, 0xe5, 0x0d, 0x6d, 0x87, 0xdc, 0xc5, 0x97, 0x60, 0xff, 0x20, 0xc4, 0x6b,
+	0x32, 0x17, 0x59, 0x5f, 0xf3, 0xae, 0x78, 0x8d, 0xd0, 0x3d, 0xd2, 0x3e, 0x2e, 0x00, 0xc6, 0xb7,
+	0x09, 0xe5, 0xc9, 0xca, 0x2c, 0x59, 0x3c, 0x53, 0xe1, 0x76, 0x95, 0x3b, 0xac, 0xe4, 0xca, 0xde,
+	0xf4, 0xb9, 0x8b, 0x3f, 0xf7, 0xee, 0x7f, 0x8d, 0xd0, 0xbd, 0x0b, 0xf2, 0x5e, 0x34, 0x00, 0x57,
+	0x03, 0xc7, 0xd5, 0xf8, 0xc4, 0x2b, 0x82, 0x35, 0x42, 0xff, 0x9b, 0x14, 0xb9, 0x50, 0x20, 0x7c,
+	0xd9, 0xcb, 0x94, 0x2d, 0x16, 0x5c, 0x88, 0x03, 0xc1, 0x9e, 0xc1, 0x17, 0x82, 0x86, 0xc3, 0x77,
+	0x5e, 0x79, 0x21, 0x84, 0x94, 0xb8, 0xc5, 0x2a, 0xfb, 0x04, 0x6a, 0x9a, 0xad, 0x19, 0xf8, 0x3a,
+	0xe4, 0x7d, 0x58, 0x4f, 0x81, 0x11, 0xb8, 0x47, 0xe2, 0xb8, 0x91, 0x55, 0x51, 0x99, 0x0f, 0x03,
+	0x73, 0x61, 0xf2, 0x5c, 0x98, 0xa0, 0x29, 0xbe, 0x80, 0xff, 0xf9, 0xb1, 0x06, 0x82, 0x8c, 0x88,
+	0x77, 0x34, 0x1e, 0x2f, 0x61, 0x47, 0x8b, 0x90, 0x11, 0x5d, 0x72, 0xd9, 0xd1, 0xb5, 0x57, 0xef,
+	0x92, 0x1e, 0xf7, 0xc2, 0x2d, 0xaf, 0x4b, 0x3c, 0x8c, 0xbd, 0x17, 0xc5, 0xf1, 0x61, 0x18, 0x4e,
+	0xff, 0x20, 0x1f, 0x0a, 0xf2, 0xc8, 0x36, 0xf1, 0x62, 0xbc, 0x66, 0x9b, 0x88, 0xb4, 0xaf, 0x7a,
+	0xf7, 0xc8, 0x35, 0xdc, 0xad, 0x3e, 0x8e, 0x24, 0xd7, 0x47, 0x68, 0xa9, 0x54, 0xf2, 0x02, 0x7a,
+	0x82, 0x2f, 0x89, 0x27, 0x11, 0xbe, 0xe6, 0xc9, 0xea, 0xe1, 0xec, 0x56, 0x24, 0xca, 0x88, 0x22,
+	0xd9, 0x15, 0x5d, 0x07, 0x1c, 0xa0, 0xff, 0x6b, 0x59, 0xbc, 0xbb, 0x4b, 0x59, 0xec, 0x16, 0x45,
+	0xfe, 0x01, 0x7d, 0xdd, 0x97, 0x52, 0x37, 0x4f, 0x3d, 0xec, 0x4b, 0x83, 0xbf, 0x94, 0x8f, 0xfa,
+	0x92, 0xb7, 0x21, 0x3c, 0xea, 0x4b, 0x7c, 0x05, 0x7e, 0xd4, 0x97, 0x06, 0x9f, 0xd6, 0xc7, 0x7d,
+	0xe9, 0x88, 0xd8, 0x8c, 0x59, 0x07, 0xca, 0x89, 0x13, 0xe4, 0x71, 0x5f, 0x3a, 0xee, 0x2f, 0x74,
+	0xe3, 0x4e, 0x8f, 0x72, 0x53, 0x2c, 0x86, 0x57, 0xfc, 0xea, 0x1f, 0xf7, 0xa5, 0xc3, 0xbe, 0x79,
+	0xda, 0xb1, 0x5d, 0x8a, 0x79, 0xe5, 0xca, 0x7e, 0x8f, 0xd4, 0xe6, 0x1e, 0xde, 0x93, 0x0a, 0xa6,
+	0xdd, 0xd6, 0xcc, 0x8e, 0xed, 0xd2, 0xea, 0x99, 0x93, 0x67, 0x96, 0x9e, 0xbc, 0x9c, 0x43, 0x4f,
+	0x5f, 0xce, 0xa1, 0xdf, 0x5f, 0xce, 0xa1, 0xe6, 0x58, 0x2b, 0xc3, 0xff, 0xa6, 0x9e, 0xfe, 0x27,
+	0x00, 0x00, 0xff, 0xff, 0x7c, 0x09, 0x46, 0xc7, 0x29, 0x0f, 0x00, 0x00,
 }

@@ -3,6 +3,7 @@ package autogrpc
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"reflect"
@@ -373,6 +374,19 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 			// Insert new message type for WatchEvents and List
 			for v := range crudMsgMap {
 				insertGrpcAutoMsgs(f, v)
+			}
+
+			// Sort the slices of interest to maintain stability in code.
+			sort.Slice(f.Service, func(x, y int) bool {
+				return *f.Service[x].Name < *f.Service[y].Name
+			})
+			sort.Slice(f.MessageType, func(x, y int) bool {
+				return *f.MessageType[x].Name < *f.MessageType[y].Name
+			})
+			for _, s := range f.Service {
+				sort.Slice(s.Method, func(x, y int) bool {
+					return *s.Method[x].Name < *s.Method[y].Name
+				})
 			}
 		}
 	}

@@ -1,7 +1,9 @@
 package autogrpc
 
 import (
+	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -185,6 +187,27 @@ func TestMutator(t *testing.T) {
 					s.autoWatch++
 				}
 			}
+			methStr := fmt.Sprintf("%v", svcs.Method)
+			sort.Slice(svcs.Method, func(x, y int) bool {
+				return *svcs.Method[x].Name < *svcs.Method[y].Name
+			})
+			if methStr != fmt.Sprintf("%v", svcs.Method) {
+				t.Errorf("Methods list is not sorted")
+			}
+		}
+		msgStr := fmt.Sprintf("%v", file.MessageType)
+		sort.Slice(file.MessageType, func(x, y int) bool {
+			return *file.MessageType[x].Name < *file.MessageType[y].Name
+		})
+		if msgStr != fmt.Sprintf("%v", file.MessageType) {
+			t.Errorf("Messages list is not sorted")
+		}
+		svcStr := fmt.Sprintf("%v", file.Service)
+		sort.Slice(file.Service, func(x, y int) bool {
+			return *file.Service[x].Name < *file.Service[y].Name
+		})
+		if svcStr != fmt.Sprintf("%v", file.Service) {
+			t.Errorf("Services list is not sorted")
 		}
 	}
 	if !reflect.DeepEqual(expected, found) {

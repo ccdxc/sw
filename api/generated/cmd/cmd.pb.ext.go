@@ -19,19 +19,13 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
-func (m *Node) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "nodes/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
 	return fmt.Sprint("/venice/", prefix, "/", "cluster/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgNodeListHelper) MakeKey(prefix string) string {
-	obj := Node{}
-	return obj.MakeKey(prefix)
+func (m *Node) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "nodes/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -41,7 +35,7 @@ func (m *AutoMsgClusterListHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
+func (m *AutoMsgNodeListHelper) MakeKey(prefix string) string {
 	obj := Node{}
 	return obj.MakeKey(prefix)
 }
@@ -49,5 +43,11 @@ func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 	obj := Cluster{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
+	obj := Node{}
 	return obj.MakeKey(prefix)
 }

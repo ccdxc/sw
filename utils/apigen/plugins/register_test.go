@@ -1021,6 +1021,16 @@ func TestGetAutoTypes(t *testing.T) {
 				number: 1
 			>
 		>
+		message_type <
+			name: 'MapMessage'
+			field <
+				name: 'key'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			options:<map_entry:true>
+		>
 		service <
 			name: 'crudservice'
 			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest2">
@@ -1103,6 +1113,11 @@ func TestGetAutoTypes(t *testing.T) {
 		if str != "example.Nest1" {
 			t.Errorf("watch type expected [example.Nest1] got [%s]", str)
 		}
+	}
+	t.Logf("Test map_entry message")
+	testmsg, err := r.LookupMsg("", ".example.MapMessage")
+	if !isNestedMessage(testmsg) {
+		t.Errorf("Nested message returned false")
 	}
 }
 

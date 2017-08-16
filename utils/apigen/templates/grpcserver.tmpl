@@ -49,7 +49,7 @@ type e{{.Name}}Endpoints struct {
 func (s *s{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
-		{{range .Messages}}
+		{{range .Messages}}{{if isNestedMessage .}}{{else}}
 		"{{$pkgname}}.{{.Name}}":     apisrvpkg.NewMessage("{{$pkgname}}.{{.Name}}"){{if ne (len (getDbKey .)) 0}}.WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := {{$pkgname}}.{{.Name}}{}
@@ -112,7 +112,7 @@ func (s *s{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger 
 				return nil, err
 			}
 			return into, nil
-		}){{end}},{{end}}{{end}}
+		}){{end}},{{end}}{{end}}{{end}}
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions":                      apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

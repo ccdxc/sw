@@ -16,16 +16,16 @@ var _ api.ObjectMeta
 
 // ServiceCmdV1Client  is the client interface for the service.
 type ServiceCmdV1Client interface {
-	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
-	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
-	AutoGetNode(ctx context.Context, t *Node) (*Node, error)
-	AutoDeleteNode(ctx context.Context, t *Node) (*Node, error)
-	AutoListNode(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
 	AutoAddCluster(ctx context.Context, t *Cluster) (*Cluster, error)
-	AutoUpdateCluster(ctx context.Context, t *Cluster) (*Cluster, error)
-	AutoGetCluster(ctx context.Context, t *Cluster) (*Cluster, error)
+	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
 	AutoDeleteCluster(ctx context.Context, t *Cluster) (*Cluster, error)
+	AutoDeleteNode(ctx context.Context, t *Node) (*Node, error)
+	AutoGetCluster(ctx context.Context, t *Cluster) (*Cluster, error)
+	AutoGetNode(ctx context.Context, t *Node) (*Node, error)
 	AutoListCluster(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgClusterListHelper, error)
+	AutoListNode(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
+	AutoUpdateCluster(ctx context.Context, t *Cluster) (*Cluster, error)
+	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
 
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchNodeClient, error)
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchClusterClient, error)
@@ -33,16 +33,16 @@ type ServiceCmdV1Client interface {
 
 // ServiceCmdV1Server is the server interface for the service.
 type ServiceCmdV1Server interface {
-	AutoAddNode(ctx context.Context, t Node) (Node, error)
-	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
-	AutoGetNode(ctx context.Context, t Node) (Node, error)
-	AutoDeleteNode(ctx context.Context, t Node) (Node, error)
-	AutoListNode(ctx context.Context, t api.ListWatchOptions) (AutoMsgNodeListHelper, error)
 	AutoAddCluster(ctx context.Context, t Cluster) (Cluster, error)
-	AutoUpdateCluster(ctx context.Context, t Cluster) (Cluster, error)
-	AutoGetCluster(ctx context.Context, t Cluster) (Cluster, error)
+	AutoAddNode(ctx context.Context, t Node) (Node, error)
 	AutoDeleteCluster(ctx context.Context, t Cluster) (Cluster, error)
+	AutoDeleteNode(ctx context.Context, t Node) (Node, error)
+	AutoGetCluster(ctx context.Context, t Cluster) (Cluster, error)
+	AutoGetNode(ctx context.Context, t Node) (Node, error)
 	AutoListCluster(ctx context.Context, t api.ListWatchOptions) (AutoMsgClusterListHelper, error)
+	AutoListNode(ctx context.Context, t api.ListWatchOptions) (AutoMsgNodeListHelper, error)
+	AutoUpdateCluster(ctx context.Context, t Cluster) (Cluster, error)
+	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
 
 	AutoWatchNode(in *api.ListWatchOptions, stream CmdV1_AutoWatchNodeServer) error
 	AutoWatchCluster(in *api.ListWatchOptions, stream CmdV1_AutoWatchClusterServer) error

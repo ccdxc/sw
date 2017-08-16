@@ -30,50 +30,50 @@ var _ api.TypeMeta
 
 const codecSize = 1024 * 1024
 
-type sTenantV1GwService struct {
+type sEndpointV1GwService struct {
 	logger log.Logger
 }
 
-type adapterTenantV1 struct {
-	service network.ServiceTenantV1Client
+type adapterEndpointV1 struct {
+	service network.ServiceEndpointV1Client
 }
 
-func (a adapterTenantV1) AutoAddTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
+func (a adapterEndpointV1) AutoAddEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddTenant(ctx, t)
+	return a.service.AutoAddEndpoint(ctx, t)
 }
 
-func (a adapterTenantV1) AutoUpdateTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
+func (a adapterEndpointV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateTenant(ctx, t)
+	return a.service.AutoDeleteEndpoint(ctx, t)
 }
 
-func (a adapterTenantV1) AutoGetTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
+func (a adapterEndpointV1) AutoGetEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetTenant(ctx, t)
+	return a.service.AutoGetEndpoint(ctx, t)
 }
 
-func (a adapterTenantV1) AutoDeleteTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
+func (a adapterEndpointV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgEndpointListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteTenant(ctx, t)
+	return a.service.AutoListEndpoint(ctx, t)
 }
 
-func (a adapterTenantV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgTenantListHelper, error) {
+func (a adapterEndpointV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListTenant(ctx, t)
+	return a.service.AutoUpdateEndpoint(ctx, t)
 }
 
-func (a adapterTenantV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.TenantV1_AutoWatchTenantClient, error) {
+func (a adapterEndpointV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.EndpointV1_AutoWatchEndpointClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchTenant(ctx, in)
+	return a.service.AutoWatchEndpoint(ctx, in)
 }
 
-func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
+func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux) error {
@@ -92,18 +92,18 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
 	mux := runtime.NewServeMux(opts)
-	err = network.RegisterTenantV1HandlerWithClient(ctx, mux, cl)
+	err = network.RegisterEndpointV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
-	logger.InfoLog("msg", "registered service network.TenantV1")
-	m.Handle("/v1/tenants/", http.StripPrefix("/v1/tenants", mux))
+	logger.InfoLog("msg", "registered service network.EndpointV1")
+	m.Handle("/v1/endpoints/", http.StripPrefix("/v1/endpoints", mux))
 	err = registerSwaggerDef(m, logger)
 	return err
 }
 
-func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.TenantV1Client, error) {
+func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.EndpointV1Client, error) {
 	conn, err := grpc.Dial(grpcAddr, opts...)
 	if err != nil {
 		err = errors.Wrap(err, "dial failed")
@@ -122,7 +122,103 @@ func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, opt
 		}()
 	}()
 
-	cl := adapterTenantV1{grpcclient.NewTenantV1Backend(conn, e.logger)}
+	cl := adapterEndpointV1{grpcclient.NewEndpointV1Backend(conn, e.logger)}
+	return cl, nil
+}
+
+type sLbPolicyV1GwService struct {
+	logger log.Logger
+}
+
+type adapterLbPolicyV1 struct {
+	service network.ServiceLbPolicyV1Client
+}
+
+func (a adapterLbPolicyV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoAddLbPolicy(ctx, t)
+}
+
+func (a adapterLbPolicyV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoDeleteLbPolicy(ctx, t)
+}
+
+func (a adapterLbPolicyV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetLbPolicy(ctx, t)
+}
+
+func (a adapterLbPolicyV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgLbPolicyListHelper, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoListLbPolicy(ctx, t)
+}
+
+func (a adapterLbPolicyV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateLbPolicy(ctx, t)
+}
+
+func (a adapterLbPolicyV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.LbPolicyV1_AutoWatchLbPolicyClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchLbPolicy(ctx, in)
+}
+
+func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
+	logger log.Logger,
+	grpcserver *grpc.Server,
+	m *http.ServeMux) error {
+	apigw := apigwpkg.MustGetAPIGateway()
+	// IP:port destination or service discovery key.
+
+	grpcaddr := "localhost:8082"
+	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
+	e.logger = logger
+	codec := gogocodec.New(codecSize)
+	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	if cl == nil || err != nil {
+		err = errors.Wrap(err, "could not create client")
+		return err
+	}
+	marshaller := runtime.JSONBuiltin{}
+	opts := runtime.WithMarshalerOption("*", &marshaller)
+	mux := runtime.NewServeMux(opts)
+	err = network.RegisterLbPolicyV1HandlerWithClient(ctx, mux, cl)
+	if err != nil {
+		err = errors.Wrap(err, "service registration failed")
+		return err
+	}
+	logger.InfoLog("msg", "registered service network.LbPolicyV1")
+	m.Handle("/v1/lb-policy/", http.StripPrefix("/v1/lb-policy", mux))
+
+	return err
+}
+
+func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.LbPolicyV1Client, error) {
+	conn, err := grpc.Dial(grpcAddr, opts...)
+	if err != nil {
+		err = errors.Wrap(err, "dial failed")
+		if cerr := conn.Close(); cerr != nil {
+			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
+		}
+		return nil, err
+	}
+	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
+	defer func() {
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
+			}
+		}()
+	}()
+
+	cl := adapterLbPolicyV1{grpcclient.NewLbPolicyV1Backend(conn, e.logger)}
 	return cl, nil
 }
 
@@ -140,10 +236,10 @@ func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.N
 	return a.service.AutoAddNetwork(ctx, t)
 }
 
-func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
+func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateNetwork(ctx, t)
+	return a.service.AutoDeleteNetwork(ctx, t)
 }
 
 func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
@@ -152,16 +248,16 @@ func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.N
 	return a.service.AutoGetNetwork(ctx, t)
 }
 
-func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteNetwork(ctx, t)
-}
-
 func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgNetworkListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListNetwork(ctx, t)
+}
+
+func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *network.Network, options ...grpc.CallOption) (*network.Network, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateNetwork(ctx, t)
 }
 
 func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchNetworkClient, error) {
@@ -236,10 +332,10 @@ func (a adapterSecurityGroupV1) AutoAddSecurityGroup(oldctx oldcontext.Context, 
 	return a.service.AutoAddSecurityGroup(ctx, t)
 }
 
-func (a adapterSecurityGroupV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
+func (a adapterSecurityGroupV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateSecurityGroup(ctx, t)
+	return a.service.AutoDeleteSecurityGroup(ctx, t)
 }
 
 func (a adapterSecurityGroupV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
@@ -248,16 +344,16 @@ func (a adapterSecurityGroupV1) AutoGetSecurityGroup(oldctx oldcontext.Context, 
 	return a.service.AutoGetSecurityGroup(ctx, t)
 }
 
-func (a adapterSecurityGroupV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteSecurityGroup(ctx, t)
-}
-
 func (a adapterSecurityGroupV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgSecurityGroupListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListSecurityGroup(ctx, t)
+}
+
+func (a adapterSecurityGroupV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t *network.SecurityGroup, options ...grpc.CallOption) (*network.SecurityGroup, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateSecurityGroup(ctx, t)
 }
 
 func (a adapterSecurityGroupV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.SecurityGroupV1_AutoWatchSecurityGroupClient, error) {
@@ -318,102 +414,6 @@ func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr stri
 	return cl, nil
 }
 
-type sSgpolicyV1GwService struct {
-	logger log.Logger
-}
-
-type adapterSgpolicyV1 struct {
-	service network.ServiceSgpolicyV1Client
-}
-
-func (a adapterSgpolicyV1) AutoAddSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoAddSgpolicy(ctx, t)
-}
-
-func (a adapterSgpolicyV1) AutoUpdateSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateSgpolicy(ctx, t)
-}
-
-func (a adapterSgpolicyV1) AutoGetSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoGetSgpolicy(ctx, t)
-}
-
-func (a adapterSgpolicyV1) AutoDeleteSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteSgpolicy(ctx, t)
-}
-
-func (a adapterSgpolicyV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgSgpolicyListHelper, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoListSgpolicy(ctx, t)
-}
-
-func (a adapterSgpolicyV1) AutoWatchSgpolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.SgpolicyV1_AutoWatchSgpolicyClient, error) {
-	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSgpolicy(ctx, in)
-}
-
-func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
-	logger log.Logger,
-	grpcserver *grpc.Server,
-	m *http.ServeMux) error {
-	apigw := apigwpkg.MustGetAPIGateway()
-	// IP:port destination or service discovery key.
-
-	grpcaddr := "localhost:8082"
-	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
-	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
-	marshaller := runtime.JSONBuiltin{}
-	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
-	err = network.RegisterSgpolicyV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service network.SgpolicyV1")
-	m.Handle("/v1/sgpolicy/", http.StripPrefix("/v1/sgpolicy", mux))
-
-	return err
-}
-
-func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.SgpolicyV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
-	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
-		return nil, err
-	}
-	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
-	defer func() {
-		go func() {
-			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
-				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
-			}
-		}()
-	}()
-
-	cl := adapterSgpolicyV1{grpcclient.NewSgpolicyV1Backend(conn, e.logger)}
-	return cl, nil
-}
-
 type sServiceV1GwService struct {
 	logger log.Logger
 }
@@ -428,10 +428,10 @@ func (a adapterServiceV1) AutoAddService(oldctx oldcontext.Context, t *network.S
 	return a.service.AutoAddService(ctx, t)
 }
 
-func (a adapterServiceV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
+func (a adapterServiceV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateService(ctx, t)
+	return a.service.AutoDeleteService(ctx, t)
 }
 
 func (a adapterServiceV1) AutoGetService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
@@ -440,16 +440,16 @@ func (a adapterServiceV1) AutoGetService(oldctx oldcontext.Context, t *network.S
 	return a.service.AutoGetService(ctx, t)
 }
 
-func (a adapterServiceV1) AutoDeleteService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteService(ctx, t)
-}
-
 func (a adapterServiceV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgServiceListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListService(ctx, t)
+}
+
+func (a adapterServiceV1) AutoUpdateService(oldctx oldcontext.Context, t *network.Service, options ...grpc.CallOption) (*network.Service, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateService(ctx, t)
 }
 
 func (a adapterServiceV1) AutoWatchService(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.ServiceV1_AutoWatchServiceClient, error) {
@@ -510,50 +510,50 @@ func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, op
 	return cl, nil
 }
 
-type sLbPolicyV1GwService struct {
+type sSgpolicyV1GwService struct {
 	logger log.Logger
 }
 
-type adapterLbPolicyV1 struct {
-	service network.ServiceLbPolicyV1Client
+type adapterSgpolicyV1 struct {
+	service network.ServiceSgpolicyV1Client
 }
 
-func (a adapterLbPolicyV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+func (a adapterSgpolicyV1) AutoAddSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddLbPolicy(ctx, t)
+	return a.service.AutoAddSgpolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+func (a adapterSgpolicyV1) AutoDeleteSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateLbPolicy(ctx, t)
+	return a.service.AutoDeleteSgpolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+func (a adapterSgpolicyV1) AutoGetSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetLbPolicy(ctx, t)
+	return a.service.AutoGetSgpolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
+func (a adapterSgpolicyV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgSgpolicyListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteLbPolicy(ctx, t)
+	return a.service.AutoListSgpolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgLbPolicyListHelper, error) {
+func (a adapterSgpolicyV1) AutoUpdateSgpolicy(oldctx oldcontext.Context, t *network.Sgpolicy, options ...grpc.CallOption) (*network.Sgpolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListLbPolicy(ctx, t)
+	return a.service.AutoUpdateSgpolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.LbPolicyV1_AutoWatchLbPolicyClient, error) {
+func (a adapterSgpolicyV1) AutoWatchSgpolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.SgpolicyV1_AutoWatchSgpolicyClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchLbPolicy(ctx, in)
+	return a.service.AutoWatchSgpolicy(ctx, in)
 }
 
-func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
+func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux) error {
@@ -572,18 +572,18 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
 	mux := runtime.NewServeMux(opts)
-	err = network.RegisterLbPolicyV1HandlerWithClient(ctx, mux, cl)
+	err = network.RegisterSgpolicyV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
-	logger.InfoLog("msg", "registered service network.LbPolicyV1")
-	m.Handle("/v1/lb-policy/", http.StripPrefix("/v1/lb-policy", mux))
+	logger.InfoLog("msg", "registered service network.SgpolicyV1")
+	m.Handle("/v1/sgpolicy/", http.StripPrefix("/v1/sgpolicy", mux))
 
 	return err
 }
 
-func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.LbPolicyV1Client, error) {
+func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.SgpolicyV1Client, error) {
 	conn, err := grpc.Dial(grpcAddr, opts...)
 	if err != nil {
 		err = errors.Wrap(err, "dial failed")
@@ -602,54 +602,54 @@ func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, o
 		}()
 	}()
 
-	cl := adapterLbPolicyV1{grpcclient.NewLbPolicyV1Backend(conn, e.logger)}
+	cl := adapterSgpolicyV1{grpcclient.NewSgpolicyV1Backend(conn, e.logger)}
 	return cl, nil
 }
 
-type sEndpointV1GwService struct {
+type sTenantV1GwService struct {
 	logger log.Logger
 }
 
-type adapterEndpointV1 struct {
-	service network.ServiceEndpointV1Client
+type adapterTenantV1 struct {
+	service network.ServiceTenantV1Client
 }
 
-func (a adapterEndpointV1) AutoAddEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
+func (a adapterTenantV1) AutoAddTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoAddEndpoint(ctx, t)
+	return a.service.AutoAddTenant(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
+func (a adapterTenantV1) AutoDeleteTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoUpdateEndpoint(ctx, t)
+	return a.service.AutoDeleteTenant(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoGetEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
+func (a adapterTenantV1) AutoGetTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoGetEndpoint(ctx, t)
+	return a.service.AutoGetTenant(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *network.Endpoint, options ...grpc.CallOption) (*network.Endpoint, error) {
+func (a adapterTenantV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgTenantListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoDeleteEndpoint(ctx, t)
+	return a.service.AutoListTenant(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgEndpointListHelper, error) {
+func (a adapterTenantV1) AutoUpdateTenant(oldctx oldcontext.Context, t *network.Tenant, options ...grpc.CallOption) (*network.Tenant, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoListEndpoint(ctx, t)
+	return a.service.AutoUpdateTenant(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.EndpointV1_AutoWatchEndpointClient, error) {
+func (a adapterTenantV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.TenantV1_AutoWatchTenantClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchEndpoint(ctx, in)
+	return a.service.AutoWatchTenant(ctx, in)
 }
 
-func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
+func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux) error {
@@ -668,18 +668,18 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
 	mux := runtime.NewServeMux(opts)
-	err = network.RegisterEndpointV1HandlerWithClient(ctx, mux, cl)
+	err = network.RegisterTenantV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
-	logger.InfoLog("msg", "registered service network.EndpointV1")
-	m.Handle("/v1/endpoints/", http.StripPrefix("/v1/endpoints", mux))
+	logger.InfoLog("msg", "registered service network.TenantV1")
+	m.Handle("/v1/tenants/", http.StripPrefix("/v1/tenants", mux))
 
 	return err
 }
 
-func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.EndpointV1Client, error) {
+func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.TenantV1Client, error) {
 	conn, err := grpc.Dial(grpcAddr, opts...)
 	if err != nil {
 		err = errors.Wrap(err, "dial failed")
@@ -698,7 +698,7 @@ func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, o
 		}()
 	}()
 
-	cl := adapterEndpointV1{grpcclient.NewEndpointV1Backend(conn, e.logger)}
+	cl := adapterTenantV1{grpcclient.NewTenantV1Backend(conn, e.logger)}
 	return cl, nil
 }
 
@@ -722,18 +722,18 @@ func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
 func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
-	svcTenantV1 := sTenantV1GwService{}
-	apigw.Register("network.TenantV1", "tenants/", &svcTenantV1)
+	svcEndpointV1 := sEndpointV1GwService{}
+	apigw.Register("network.EndpointV1", "endpoints/", &svcEndpointV1)
+	svcLbPolicyV1 := sLbPolicyV1GwService{}
+	apigw.Register("network.LbPolicyV1", "lb-policy/", &svcLbPolicyV1)
 	svcNetworkV1 := sNetworkV1GwService{}
 	apigw.Register("network.NetworkV1", "networks/", &svcNetworkV1)
 	svcSecurityGroupV1 := sSecurityGroupV1GwService{}
 	apigw.Register("network.SecurityGroupV1", "security-groups/", &svcSecurityGroupV1)
-	svcSgpolicyV1 := sSgpolicyV1GwService{}
-	apigw.Register("network.SgpolicyV1", "sgpolicy/", &svcSgpolicyV1)
 	svcServiceV1 := sServiceV1GwService{}
 	apigw.Register("network.ServiceV1", "services/", &svcServiceV1)
-	svcLbPolicyV1 := sLbPolicyV1GwService{}
-	apigw.Register("network.LbPolicyV1", "lb-policy/", &svcLbPolicyV1)
-	svcEndpointV1 := sEndpointV1GwService{}
-	apigw.Register("network.EndpointV1", "endpoints/", &svcEndpointV1)
+	svcSgpolicyV1 := sSgpolicyV1GwService{}
+	apigw.Register("network.SgpolicyV1", "sgpolicy/", &svcSgpolicyV1)
+	svcTenantV1 := sTenantV1GwService{}
+	apigw.Register("network.TenantV1", "tenants/", &svcTenantV1)
 }

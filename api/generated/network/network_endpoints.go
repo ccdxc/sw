@@ -29,291 +29,291 @@ var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
 
-// MiddlewareTenantV1Client add middleware to the client
-type MiddlewareTenantV1Client func(ServiceTenantV1Client) ServiceTenantV1Client
+// MiddlewareEndpointV1Client add middleware to the client
+type MiddlewareEndpointV1Client func(ServiceEndpointV1Client) ServiceEndpointV1Client
 
-// EndpointsTenantV1Client is the endpoints for the client
-type EndpointsTenantV1Client struct {
-	Client TenantV1Client
+// EndpointsEndpointV1Client is the endpoints for the client
+type EndpointsEndpointV1Client struct {
+	Client EndpointV1Client
 
-	AutoAddTenantEndpoint    endpoint.Endpoint
-	AutoUpdateTenantEndpoint endpoint.Endpoint
-	AutoGetTenantEndpoint    endpoint.Endpoint
-	AutoDeleteTenantEndpoint endpoint.Endpoint
-	AutoListTenantEndpoint   endpoint.Endpoint
+	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoUpdateEndpointEndpoint endpoint.Endpoint
 }
 
-// EndpointsTenantV1RestClient is the REST client
-type EndpointsTenantV1RestClient struct {
+// EndpointsEndpointV1RestClient is the REST client
+type EndpointsEndpointV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
 
-	AutoAddTenantEndpoint    endpoint.Endpoint
-	AutoUpdateTenantEndpoint endpoint.Endpoint
-	AutoGetTenantEndpoint    endpoint.Endpoint
-	AutoDeleteTenantEndpoint endpoint.Endpoint
-	AutoListTenantEndpoint   endpoint.Endpoint
-	AutoWatchTenantEndpoint  endpoint.Endpoint
+	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoUpdateEndpointEndpoint endpoint.Endpoint
+	AutoWatchEndpointEndpoint  endpoint.Endpoint
 }
 
-// MiddlewareTenantV1Server adds middle ware to the server
-type MiddlewareTenantV1Server func(ServiceTenantV1Server) ServiceTenantV1Server
+// MiddlewareEndpointV1Server adds middle ware to the server
+type MiddlewareEndpointV1Server func(ServiceEndpointV1Server) ServiceEndpointV1Server
 
-// EndpointsTenantV1Server is the server endpoints
-type EndpointsTenantV1Server struct {
-	AutoAddTenantEndpoint    endpoint.Endpoint
-	AutoUpdateTenantEndpoint endpoint.Endpoint
-	AutoGetTenantEndpoint    endpoint.Endpoint
-	AutoDeleteTenantEndpoint endpoint.Endpoint
-	AutoListTenantEndpoint   endpoint.Endpoint
+// EndpointsEndpointV1Server is the server endpoints
+type EndpointsEndpointV1Server struct {
+	AutoAddEndpointEndpoint    endpoint.Endpoint
+	AutoDeleteEndpointEndpoint endpoint.Endpoint
+	AutoGetEndpointEndpoint    endpoint.Endpoint
+	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoUpdateEndpointEndpoint endpoint.Endpoint
 
-	watchHandlerTenant func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerEndpoint func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
-// AutoAddTenant is endpoint for AutoAddTenant
-func (e EndpointsTenantV1Client) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	resp, err := e.AutoAddTenantEndpoint(ctx, in)
+// AutoAddEndpoint is endpoint for AutoAddEndpoint
+func (e EndpointsEndpointV1Client) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	resp, err := e.AutoAddEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &Tenant{}, err
+		return &Endpoint{}, err
 	}
-	return resp.(*Tenant), nil
+	return resp.(*Endpoint), nil
 }
 
-type respTenantV1AutoAddTenant struct {
-	V   Tenant
+type respEndpointV1AutoAddEndpoint struct {
+	V   Endpoint
 	Err error
 }
 
-// AutoUpdateTenant is endpoint for AutoUpdateTenant
-func (e EndpointsTenantV1Client) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
+// AutoDeleteEndpoint is endpoint for AutoDeleteEndpoint
+func (e EndpointsEndpointV1Client) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	resp, err := e.AutoDeleteEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &Tenant{}, err
+		return &Endpoint{}, err
 	}
-	return resp.(*Tenant), nil
+	return resp.(*Endpoint), nil
 }
 
-type respTenantV1AutoUpdateTenant struct {
-	V   Tenant
+type respEndpointV1AutoDeleteEndpoint struct {
+	V   Endpoint
 	Err error
 }
 
-// AutoGetTenant is endpoint for AutoGetTenant
-func (e EndpointsTenantV1Client) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	resp, err := e.AutoGetTenantEndpoint(ctx, in)
+// AutoGetEndpoint is endpoint for AutoGetEndpoint
+func (e EndpointsEndpointV1Client) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	resp, err := e.AutoGetEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &Tenant{}, err
+		return &Endpoint{}, err
 	}
-	return resp.(*Tenant), nil
+	return resp.(*Endpoint), nil
 }
 
-type respTenantV1AutoGetTenant struct {
-	V   Tenant
+type respEndpointV1AutoGetEndpoint struct {
+	V   Endpoint
 	Err error
 }
 
-// AutoDeleteTenant is endpoint for AutoDeleteTenant
-func (e EndpointsTenantV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
+// AutoListEndpoint is endpoint for AutoListEndpoint
+func (e EndpointsEndpointV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
+	resp, err := e.AutoListEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &Tenant{}, err
+		return &AutoMsgEndpointListHelper{}, err
 	}
-	return resp.(*Tenant), nil
+	return resp.(*AutoMsgEndpointListHelper), nil
 }
 
-type respTenantV1AutoDeleteTenant struct {
-	V   Tenant
+type respEndpointV1AutoListEndpoint struct {
+	V   AutoMsgEndpointListHelper
 	Err error
 }
 
-// AutoListTenant is endpoint for AutoListTenant
-func (e EndpointsTenantV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
-	resp, err := e.AutoListTenantEndpoint(ctx, in)
+// AutoUpdateEndpoint is endpoint for AutoUpdateEndpoint
+func (e EndpointsEndpointV1Client) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	resp, err := e.AutoUpdateEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgTenantListHelper{}, err
+		return &Endpoint{}, err
 	}
-	return resp.(*AutoMsgTenantListHelper), nil
+	return resp.(*Endpoint), nil
 }
 
-type respTenantV1AutoListTenant struct {
-	V   AutoMsgTenantListHelper
+type respEndpointV1AutoUpdateEndpoint struct {
+	V   Endpoint
 	Err error
 }
 
-// AutoWatchTenant performs Watch for Tenant
-func (e EndpointsTenantV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (TenantV1_AutoWatchTenantClient, error) {
-	return e.Client.AutoWatchTenant(ctx, in)
+// AutoWatchEndpoint performs Watch for Endpoint
+func (e EndpointsEndpointV1Client) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (EndpointV1_AutoWatchEndpointClient, error) {
+	return e.Client.AutoWatchEndpoint(ctx, in)
 }
 
-// AutoAddTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoAddTenant(ctx context.Context, in Tenant) (Tenant, error) {
-	resp, err := e.AutoAddTenantEndpoint(ctx, in)
+// AutoAddEndpoint implementation on server Endpoint
+func (e EndpointsEndpointV1Server) AutoAddEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
+	resp, err := e.AutoAddEndpointEndpoint(ctx, in)
 	if err != nil {
-		return Tenant{}, err
+		return Endpoint{}, err
 	}
-	return *resp.(*Tenant), nil
+	return *resp.(*Endpoint), nil
 }
 
-// MakeTenantV1AutoAddTenantEndpoint creates  AutoAddTenant endpoints for the service
-func MakeTenantV1AutoAddTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeEndpointV1AutoAddEndpointEndpoint creates  AutoAddEndpoint endpoints for the service
+func MakeEndpointV1AutoAddEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Tenant)
-		v, err := s.AutoAddTenant(ctx, *req)
-		return respTenantV1AutoAddTenant{
+		req := request.(*Endpoint)
+		v, err := s.AutoAddEndpoint(ctx, *req)
+		return respEndpointV1AutoAddEndpoint{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(f)
 }
 
-// AutoUpdateTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoUpdateTenant(ctx context.Context, in Tenant) (Tenant, error) {
-	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
+// AutoDeleteEndpoint implementation on server Endpoint
+func (e EndpointsEndpointV1Server) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
+	resp, err := e.AutoDeleteEndpointEndpoint(ctx, in)
 	if err != nil {
-		return Tenant{}, err
+		return Endpoint{}, err
 	}
-	return *resp.(*Tenant), nil
+	return *resp.(*Endpoint), nil
 }
 
-// MakeTenantV1AutoUpdateTenantEndpoint creates  AutoUpdateTenant endpoints for the service
-func MakeTenantV1AutoUpdateTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeEndpointV1AutoDeleteEndpointEndpoint creates  AutoDeleteEndpoint endpoints for the service
+func MakeEndpointV1AutoDeleteEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Tenant)
-		v, err := s.AutoUpdateTenant(ctx, *req)
-		return respTenantV1AutoUpdateTenant{
+		req := request.(*Endpoint)
+		v, err := s.AutoDeleteEndpoint(ctx, *req)
+		return respEndpointV1AutoDeleteEndpoint{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(f)
 }
 
-// AutoGetTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoGetTenant(ctx context.Context, in Tenant) (Tenant, error) {
-	resp, err := e.AutoGetTenantEndpoint(ctx, in)
+// AutoGetEndpoint implementation on server Endpoint
+func (e EndpointsEndpointV1Server) AutoGetEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
+	resp, err := e.AutoGetEndpointEndpoint(ctx, in)
 	if err != nil {
-		return Tenant{}, err
+		return Endpoint{}, err
 	}
-	return *resp.(*Tenant), nil
+	return *resp.(*Endpoint), nil
 }
 
-// MakeTenantV1AutoGetTenantEndpoint creates  AutoGetTenant endpoints for the service
-func MakeTenantV1AutoGetTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeEndpointV1AutoGetEndpointEndpoint creates  AutoGetEndpoint endpoints for the service
+func MakeEndpointV1AutoGetEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Tenant)
-		v, err := s.AutoGetTenant(ctx, *req)
-		return respTenantV1AutoGetTenant{
+		req := request.(*Endpoint)
+		v, err := s.AutoGetEndpoint(ctx, *req)
+		return respEndpointV1AutoGetEndpoint{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(f)
 }
 
-// AutoDeleteTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoDeleteTenant(ctx context.Context, in Tenant) (Tenant, error) {
-	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
+// AutoListEndpoint implementation on server Endpoint
+func (e EndpointsEndpointV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (AutoMsgEndpointListHelper, error) {
+	resp, err := e.AutoListEndpointEndpoint(ctx, in)
 	if err != nil {
-		return Tenant{}, err
+		return AutoMsgEndpointListHelper{}, err
 	}
-	return *resp.(*Tenant), nil
+	return *resp.(*AutoMsgEndpointListHelper), nil
 }
 
-// MakeTenantV1AutoDeleteTenantEndpoint creates  AutoDeleteTenant endpoints for the service
-func MakeTenantV1AutoDeleteTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Tenant)
-		v, err := s.AutoDeleteTenant(ctx, *req)
-		return respTenantV1AutoDeleteTenant{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(f)
-}
-
-// AutoListTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (AutoMsgTenantListHelper, error) {
-	resp, err := e.AutoListTenantEndpoint(ctx, in)
-	if err != nil {
-		return AutoMsgTenantListHelper{}, err
-	}
-	return *resp.(*AutoMsgTenantListHelper), nil
-}
-
-// MakeTenantV1AutoListTenantEndpoint creates  AutoListTenant endpoints for the service
-func MakeTenantV1AutoListTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeEndpointV1AutoListEndpointEndpoint creates  AutoListEndpoint endpoints for the service
+func MakeEndpointV1AutoListEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListTenant(ctx, *req)
-		return respTenantV1AutoListTenant{
+		v, err := s.AutoListEndpoint(ctx, *req)
+		return respEndpointV1AutoListEndpoint{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(f)
 }
 
-// AutoWatchTenant is the watch handler for Tenant on the server side.
-func (e EndpointsTenantV1Server) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) error {
-	return e.watchHandlerTenant(in, stream)
+// AutoUpdateEndpoint implementation on server Endpoint
+func (e EndpointsEndpointV1Server) AutoUpdateEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
+	resp, err := e.AutoUpdateEndpointEndpoint(ctx, in)
+	if err != nil {
+		return Endpoint{}, err
+	}
+	return *resp.(*Endpoint), nil
 }
 
-// MakeAutoWatchTenantEndpoint creates the Watch endpoint
-func MakeAutoWatchTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+// MakeEndpointV1AutoUpdateEndpointEndpoint creates  AutoUpdateEndpoint endpoints for the service
+func MakeEndpointV1AutoUpdateEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Endpoint)
+		v, err := s.AutoUpdateEndpoint(ctx, *req)
+		return respEndpointV1AutoUpdateEndpoint{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(f)
+}
+
+// AutoWatchEndpoint is the watch handler for Endpoint on the server side.
+func (e EndpointsEndpointV1Server) AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) error {
+	return e.watchHandlerEndpoint(in, stream)
+}
+
+// MakeAutoWatchEndpointEndpoint creates the Watch endpoint
+func MakeAutoWatchEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
 	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(TenantV1_AutoWatchTenantServer)
-		return s.AutoWatchTenant(options, wstream)
+		wstream := stream.(EndpointV1_AutoWatchEndpointServer)
+		return s.AutoWatchEndpoint(options, wstream)
 	}
 }
 
-// MakeTenantV1ServerEndpoints creates server endpoints
-func MakeTenantV1ServerEndpoints(s ServiceTenantV1Server, logger log.Logger) EndpointsTenantV1Server {
-	return EndpointsTenantV1Server{
+// MakeEndpointV1ServerEndpoints creates server endpoints
+func MakeEndpointV1ServerEndpoints(s ServiceEndpointV1Server, logger log.Logger) EndpointsEndpointV1Server {
+	return EndpointsEndpointV1Server{
 
-		AutoAddTenantEndpoint:    MakeTenantV1AutoAddTenantEndpoint(s, logger),
-		AutoUpdateTenantEndpoint: MakeTenantV1AutoUpdateTenantEndpoint(s, logger),
-		AutoGetTenantEndpoint:    MakeTenantV1AutoGetTenantEndpoint(s, logger),
-		AutoDeleteTenantEndpoint: MakeTenantV1AutoDeleteTenantEndpoint(s, logger),
-		AutoListTenantEndpoint:   MakeTenantV1AutoListTenantEndpoint(s, logger),
+		AutoAddEndpointEndpoint:    MakeEndpointV1AutoAddEndpointEndpoint(s, logger),
+		AutoDeleteEndpointEndpoint: MakeEndpointV1AutoDeleteEndpointEndpoint(s, logger),
+		AutoGetEndpointEndpoint:    MakeEndpointV1AutoGetEndpointEndpoint(s, logger),
+		AutoListEndpointEndpoint:   MakeEndpointV1AutoListEndpointEndpoint(s, logger),
+		AutoUpdateEndpointEndpoint: MakeEndpointV1AutoUpdateEndpointEndpoint(s, logger),
 
-		watchHandlerTenant: MakeAutoWatchTenantEndpoint(s, logger),
+		watchHandlerEndpoint: MakeAutoWatchEndpointEndpoint(s, logger),
 	}
 }
 
-// LoggingTenantV1MiddlewareClient adds middleware for the client
-func LoggingTenantV1MiddlewareClient(logger log.Logger) MiddlewareTenantV1Client {
-	return func(next ServiceTenantV1Client) ServiceTenantV1Client {
-		return loggingTenantV1MiddlewareClient{
+// LoggingEndpointV1MiddlewareClient adds middleware for the client
+func LoggingEndpointV1MiddlewareClient(logger log.Logger) MiddlewareEndpointV1Client {
+	return func(next ServiceEndpointV1Client) ServiceEndpointV1Client {
+		return loggingEndpointV1MiddlewareClient{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingTenantV1MiddlewareClient struct {
+type loggingEndpointV1MiddlewareClient struct {
 	logger log.Logger
-	next   ServiceTenantV1Client
+	next   ServiceEndpointV1Client
 }
 
-// LoggingTenantV1MiddlewareServer adds middleware for the client
-func LoggingTenantV1MiddlewareServer(logger log.Logger) MiddlewareTenantV1Server {
-	return func(next ServiceTenantV1Server) ServiceTenantV1Server {
-		return loggingTenantV1MiddlewareServer{
+// LoggingEndpointV1MiddlewareServer adds middleware for the client
+func LoggingEndpointV1MiddlewareServer(logger log.Logger) MiddlewareEndpointV1Server {
+	return func(next ServiceEndpointV1Server) ServiceEndpointV1Server {
+		return loggingEndpointV1MiddlewareServer{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingTenantV1MiddlewareServer struct {
+type loggingEndpointV1MiddlewareServer struct {
 	logger log.Logger
-	next   ServiceTenantV1Server
+	next   ServiceEndpointV1Server
 }
 
-func (m loggingTenantV1MiddlewareClient) AutoAddTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -321,12 +321,12 @@ func (m loggingTenantV1MiddlewareClient) AutoAddTenant(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddTenant(ctx, in)
+	resp, err = m.next.AutoAddEndpoint(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -334,12 +334,12 @@ func (m loggingTenantV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareClient) AutoGetTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -347,12 +347,12 @@ func (m loggingTenantV1MiddlewareClient) AutoGetTenant(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoGetTenant(ctx, in)
+	resp, err = m.next.AutoGetEndpoint(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgEndpointListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -360,12 +360,12 @@ func (m loggingTenantV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoDeleteTenant(ctx, in)
+	resp, err = m.next.AutoListEndpoint(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareClient) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgTenantListHelper, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -373,27 +373,13 @@ func (m loggingTenantV1MiddlewareClient) AutoListTenant(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoListTenant(ctx, in)
-	return
-}
-
-func (m loggingTenantV1MiddlewareClient) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (resp TenantV1_AutoWatchTenantClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchTenant(ctx, in)
+	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
 	return
 }
 
-func (m loggingTenantV1MiddlewareServer) AutoAddTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp EndpointV1_AutoWatchEndpointClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -401,65 +387,13 @@ func (m loggingTenantV1MiddlewareServer) AutoAddTenant(ctx context.Context, in T
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddTenant(ctx, in)
-	return
-}
-func (m loggingTenantV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateTenant(ctx, in)
-	return
-}
-func (m loggingTenantV1MiddlewareServer) AutoGetTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetTenant(ctx, in)
-	return
-}
-func (m loggingTenantV1MiddlewareServer) AutoDeleteTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteTenant(ctx, in)
-	return
-}
-func (m loggingTenantV1MiddlewareServer) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgTenantListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListTenant(ctx, in)
+	resp, err = m.next.AutoWatchEndpoint(ctx, in)
 	return
 }
 
-func (m loggingTenantV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) (err error) {
+func (m loggingEndpointV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -467,12 +401,78 @@ func (m loggingTenantV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOption
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(stream.Context(), "service", "TenantV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	err = m.next.AutoWatchTenant(in, stream)
+	resp, err = m.next.AutoAddEndpoint(ctx, in)
 	return
 }
-func (r *EndpointsTenantV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+func (m loggingEndpointV1MiddlewareServer) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
+	return
+}
+func (m loggingEndpointV1MiddlewareServer) AutoGetEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetEndpoint(ctx, in)
+	return
+}
+func (m loggingEndpointV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgEndpointListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListEndpoint(ctx, in)
+	return
+}
+func (m loggingEndpointV1MiddlewareServer) AutoUpdateEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
+	return
+}
+
+func (m loggingEndpointV1MiddlewareServer) AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "EndpointV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchEndpoint(in, stream)
+	return
+}
+func (r *EndpointsEndpointV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid instance %s", r.instance)
@@ -489,33 +489,33 @@ func (r *EndpointsTenantV1RestClient) getHTTPRequest(ctx context.Context, in int
 }
 
 //
-func makeURITenantV1AutoAddTenantCreateOper(in *Tenant) string {
-	return fmt.Sprint("/v1/tenants", "/tenants")
+func makeURIEndpointV1AutoAddEndpointCreateOper(in *Endpoint) string {
+	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints")
 }
 
 //
-func makeURITenantV1AutoUpdateTenantUpdateOper(in *Tenant) string {
-	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
+func makeURIEndpointV1AutoDeleteEndpointDeleteOper(in *Endpoint) string {
+	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
 }
 
 //
-func makeURITenantV1AutoGetTenantGetOper(in *Tenant) string {
-	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
+func makeURIEndpointV1AutoGetEndpointGetOper(in *Endpoint) string {
+	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
 }
 
 //
-func makeURITenantV1AutoDeleteTenantDeleteOper(in *Tenant) string {
-	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
+func makeURIEndpointV1AutoListEndpointListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints")
 }
 
 //
-func makeURITenantV1AutoListTenantListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/tenants", "/tenants")
+func makeURIEndpointV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
+	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
 }
 
-// AutoAddTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	path := makeURITenantV1AutoAddTenantCreateOper(in)
+// AutoAddEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	path := makeURIEndpointV1AutoAddEndpointCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -524,16 +524,16 @@ func (r *EndpointsTenantV1RestClient) AutoAddTenant(ctx context.Context, in *Ten
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespTenantV1AutoAddTenant(ctx, httpresp)
+	ret, err := decodeHTTPrespEndpointV1AutoAddEndpoint(ctx, httpresp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Tenant), nil
+	return ret.(*Endpoint), nil
 }
 
-// AutoUpdateTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	path := makeURITenantV1AutoUpdateTenantUpdateOper(in)
+// AutoUpdateEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	path := makeURIEndpointV1AutoUpdateEndpointUpdateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -542,16 +542,16 @@ func (r *EndpointsTenantV1RestClient) AutoUpdateTenant(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespTenantV1AutoUpdateTenant(ctx, resp)
+	ret, err := decodeHTTPrespEndpointV1AutoUpdateEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Tenant), err
+	return ret.(*Endpoint), err
 }
 
-// AutoGetTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	path := makeURITenantV1AutoGetTenantGetOper(in)
+// AutoGetEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	path := makeURIEndpointV1AutoGetEndpointGetOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -560,16 +560,16 @@ func (r *EndpointsTenantV1RestClient) AutoGetTenant(ctx context.Context, in *Ten
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespTenantV1AutoGetTenant(ctx, resp)
+	ret, err := decodeHTTPrespEndpointV1AutoGetEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Tenant), err
+	return ret.(*Endpoint), err
 }
 
-// AutoDeleteTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	path := makeURITenantV1AutoDeleteTenantDeleteOper(in)
+// AutoDeleteEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	path := makeURIEndpointV1AutoDeleteEndpointDeleteOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -578,16 +578,16 @@ func (r *EndpointsTenantV1RestClient) AutoDeleteTenant(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespTenantV1AutoDeleteTenant(ctx, resp)
+	ret, err := decodeHTTPrespEndpointV1AutoDeleteEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Tenant), err
+	return ret.(*Endpoint), err
 }
 
-// AutoListTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
-	path := makeURITenantV1AutoListTenantListOper(options)
+// AutoListEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
+	path := makeURIEndpointV1AutoListEndpointListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -596,25 +596,617 @@ func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, option
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespTenantV1AutoListTenant(ctx, resp)
+	ret, err := decodeHTTPrespEndpointV1AutoListEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgTenantListHelper), err
+	return ret.(*AutoMsgEndpointListHelper), err
 }
 
-// AutoWatchTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoWatchTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+// AutoWatchEndpoint CRUD method for Endpoint
+func (r *EndpointsEndpointV1RestClient) AutoWatchEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	return nil, errors.New("not allowed")
 }
 
-// MakeTenantV1RestClientEndpoints make REST client endpoints
-func MakeTenantV1RestClientEndpoints(instance string) (EndpointsTenantV1RestClient, error) {
+// MakeEndpointV1RestClientEndpoints make REST client endpoints
+func MakeEndpointV1RestClientEndpoints(instance string) (EndpointsEndpointV1RestClient, error) {
 	if !strings.HasPrefix(instance, "http") {
 		instance = "http://" + instance
 	}
 
-	return EndpointsTenantV1RestClient{
+	return EndpointsEndpointV1RestClient{
+		instance: instance,
+		client:   http.DefaultClient,
+	}, nil
+
+}
+
+// MiddlewareLbPolicyV1Client add middleware to the client
+type MiddlewareLbPolicyV1Client func(ServiceLbPolicyV1Client) ServiceLbPolicyV1Client
+
+// EndpointsLbPolicyV1Client is the endpoints for the client
+type EndpointsLbPolicyV1Client struct {
+	Client LbPolicyV1Client
+
+	AutoAddLbPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
+	AutoGetLbPolicyEndpoint    endpoint.Endpoint
+	AutoListLbPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
+}
+
+// EndpointsLbPolicyV1RestClient is the REST client
+type EndpointsLbPolicyV1RestClient struct {
+	logger   log.Logger
+	client   *http.Client
+	instance string
+
+	AutoAddLbPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
+	AutoGetLbPolicyEndpoint    endpoint.Endpoint
+	AutoListLbPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
+	AutoWatchLbPolicyEndpoint  endpoint.Endpoint
+}
+
+// MiddlewareLbPolicyV1Server adds middle ware to the server
+type MiddlewareLbPolicyV1Server func(ServiceLbPolicyV1Server) ServiceLbPolicyV1Server
+
+// EndpointsLbPolicyV1Server is the server endpoints
+type EndpointsLbPolicyV1Server struct {
+	AutoAddLbPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
+	AutoGetLbPolicyEndpoint    endpoint.Endpoint
+	AutoListLbPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
+
+	watchHandlerLbPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AutoAddLbPolicy is endpoint for AutoAddLbPolicy
+func (e EndpointsLbPolicyV1Client) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	resp, err := e.AutoAddLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &LbPolicy{}, err
+	}
+	return resp.(*LbPolicy), nil
+}
+
+type respLbPolicyV1AutoAddLbPolicy struct {
+	V   LbPolicy
+	Err error
+}
+
+// AutoDeleteLbPolicy is endpoint for AutoDeleteLbPolicy
+func (e EndpointsLbPolicyV1Client) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	resp, err := e.AutoDeleteLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &LbPolicy{}, err
+	}
+	return resp.(*LbPolicy), nil
+}
+
+type respLbPolicyV1AutoDeleteLbPolicy struct {
+	V   LbPolicy
+	Err error
+}
+
+// AutoGetLbPolicy is endpoint for AutoGetLbPolicy
+func (e EndpointsLbPolicyV1Client) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	resp, err := e.AutoGetLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &LbPolicy{}, err
+	}
+	return resp.(*LbPolicy), nil
+}
+
+type respLbPolicyV1AutoGetLbPolicy struct {
+	V   LbPolicy
+	Err error
+}
+
+// AutoListLbPolicy is endpoint for AutoListLbPolicy
+func (e EndpointsLbPolicyV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
+	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &AutoMsgLbPolicyListHelper{}, err
+	}
+	return resp.(*AutoMsgLbPolicyListHelper), nil
+}
+
+type respLbPolicyV1AutoListLbPolicy struct {
+	V   AutoMsgLbPolicyListHelper
+	Err error
+}
+
+// AutoUpdateLbPolicy is endpoint for AutoUpdateLbPolicy
+func (e EndpointsLbPolicyV1Client) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	resp, err := e.AutoUpdateLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &LbPolicy{}, err
+	}
+	return resp.(*LbPolicy), nil
+}
+
+type respLbPolicyV1AutoUpdateLbPolicy struct {
+	V   LbPolicy
+	Err error
+}
+
+// AutoWatchLbPolicy performs Watch for LbPolicy
+func (e EndpointsLbPolicyV1Client) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (LbPolicyV1_AutoWatchLbPolicyClient, error) {
+	return e.Client.AutoWatchLbPolicy(ctx, in)
+}
+
+// AutoAddLbPolicy implementation on server Endpoint
+func (e EndpointsLbPolicyV1Server) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
+	resp, err := e.AutoAddLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return LbPolicy{}, err
+	}
+	return *resp.(*LbPolicy), nil
+}
+
+// MakeLbPolicyV1AutoAddLbPolicyEndpoint creates  AutoAddLbPolicy endpoints for the service
+func MakeLbPolicyV1AutoAddLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*LbPolicy)
+		v, err := s.AutoAddLbPolicy(ctx, *req)
+		return respLbPolicyV1AutoAddLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(f)
+}
+
+// AutoDeleteLbPolicy implementation on server Endpoint
+func (e EndpointsLbPolicyV1Server) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
+	resp, err := e.AutoDeleteLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return LbPolicy{}, err
+	}
+	return *resp.(*LbPolicy), nil
+}
+
+// MakeLbPolicyV1AutoDeleteLbPolicyEndpoint creates  AutoDeleteLbPolicy endpoints for the service
+func MakeLbPolicyV1AutoDeleteLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*LbPolicy)
+		v, err := s.AutoDeleteLbPolicy(ctx, *req)
+		return respLbPolicyV1AutoDeleteLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(f)
+}
+
+// AutoGetLbPolicy implementation on server Endpoint
+func (e EndpointsLbPolicyV1Server) AutoGetLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
+	resp, err := e.AutoGetLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return LbPolicy{}, err
+	}
+	return *resp.(*LbPolicy), nil
+}
+
+// MakeLbPolicyV1AutoGetLbPolicyEndpoint creates  AutoGetLbPolicy endpoints for the service
+func MakeLbPolicyV1AutoGetLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*LbPolicy)
+		v, err := s.AutoGetLbPolicy(ctx, *req)
+		return respLbPolicyV1AutoGetLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(f)
+}
+
+// AutoListLbPolicy implementation on server Endpoint
+func (e EndpointsLbPolicyV1Server) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgLbPolicyListHelper, error) {
+	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return AutoMsgLbPolicyListHelper{}, err
+	}
+	return *resp.(*AutoMsgLbPolicyListHelper), nil
+}
+
+// MakeLbPolicyV1AutoListLbPolicyEndpoint creates  AutoListLbPolicy endpoints for the service
+func MakeLbPolicyV1AutoListLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListLbPolicy(ctx, *req)
+		return respLbPolicyV1AutoListLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(f)
+}
+
+// AutoUpdateLbPolicy implementation on server Endpoint
+func (e EndpointsLbPolicyV1Server) AutoUpdateLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
+	resp, err := e.AutoUpdateLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return LbPolicy{}, err
+	}
+	return *resp.(*LbPolicy), nil
+}
+
+// MakeLbPolicyV1AutoUpdateLbPolicyEndpoint creates  AutoUpdateLbPolicy endpoints for the service
+func MakeLbPolicyV1AutoUpdateLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*LbPolicy)
+		v, err := s.AutoUpdateLbPolicy(ctx, *req)
+		return respLbPolicyV1AutoUpdateLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(f)
+}
+
+// AutoWatchLbPolicy is the watch handler for LbPolicy on the server side.
+func (e EndpointsLbPolicyV1Server) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) error {
+	return e.watchHandlerLbPolicy(in, stream)
+}
+
+// MakeAutoWatchLbPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(LbPolicyV1_AutoWatchLbPolicyServer)
+		return s.AutoWatchLbPolicy(options, wstream)
+	}
+}
+
+// MakeLbPolicyV1ServerEndpoints creates server endpoints
+func MakeLbPolicyV1ServerEndpoints(s ServiceLbPolicyV1Server, logger log.Logger) EndpointsLbPolicyV1Server {
+	return EndpointsLbPolicyV1Server{
+
+		AutoAddLbPolicyEndpoint:    MakeLbPolicyV1AutoAddLbPolicyEndpoint(s, logger),
+		AutoDeleteLbPolicyEndpoint: MakeLbPolicyV1AutoDeleteLbPolicyEndpoint(s, logger),
+		AutoGetLbPolicyEndpoint:    MakeLbPolicyV1AutoGetLbPolicyEndpoint(s, logger),
+		AutoListLbPolicyEndpoint:   MakeLbPolicyV1AutoListLbPolicyEndpoint(s, logger),
+		AutoUpdateLbPolicyEndpoint: MakeLbPolicyV1AutoUpdateLbPolicyEndpoint(s, logger),
+
+		watchHandlerLbPolicy: MakeAutoWatchLbPolicyEndpoint(s, logger),
+	}
+}
+
+// LoggingLbPolicyV1MiddlewareClient adds middleware for the client
+func LoggingLbPolicyV1MiddlewareClient(logger log.Logger) MiddlewareLbPolicyV1Client {
+	return func(next ServiceLbPolicyV1Client) ServiceLbPolicyV1Client {
+		return loggingLbPolicyV1MiddlewareClient{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingLbPolicyV1MiddlewareClient struct {
+	logger log.Logger
+	next   ServiceLbPolicyV1Client
+}
+
+// LoggingLbPolicyV1MiddlewareServer adds middleware for the client
+func LoggingLbPolicyV1MiddlewareServer(logger log.Logger) MiddlewareLbPolicyV1Server {
+	return func(next ServiceLbPolicyV1Server) ServiceLbPolicyV1Server {
+		return loggingLbPolicyV1MiddlewareServer{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingLbPolicyV1MiddlewareServer struct {
+	logger log.Logger
+	next   ServiceLbPolicyV1Server
+}
+
+func (m loggingLbPolicyV1MiddlewareClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgLbPolicyListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateLbPolicy(ctx, in)
+	return
+}
+
+func (m loggingLbPolicyV1MiddlewareClient) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp LbPolicyV1_AutoWatchLbPolicyClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchLbPolicy(ctx, in)
+	return
+}
+
+func (m loggingLbPolicyV1MiddlewareServer) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareServer) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareServer) AutoGetLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareServer) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgLbPolicyListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListLbPolicy(ctx, in)
+	return
+}
+func (m loggingLbPolicyV1MiddlewareServer) AutoUpdateLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateLbPolicy(ctx, in)
+	return
+}
+
+func (m loggingLbPolicyV1MiddlewareServer) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "LbPolicyV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchLbPolicy(in, stream)
+	return
+}
+func (r *EndpointsLbPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+	target, err := url.Parse(r.instance)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance %s", r.instance)
+	}
+	target.Path = path
+	req, err := http.NewRequest(method, target.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	if err = encodeHTTPRequest(ctx, req, in); err != nil {
+		return nil, fmt.Errorf("could not encode request (%s)", err)
+	}
+	return req, nil
+}
+
+//
+func makeURILbPolicyV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
+	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy")
+}
+
+//
+func makeURILbPolicyV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
+	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+}
+
+//
+func makeURILbPolicyV1AutoGetLbPolicyGetOper(in *LbPolicy) string {
+	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+}
+
+//
+func makeURILbPolicyV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy")
+}
+
+//
+func makeURILbPolicyV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
+	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+}
+
+// AutoAddLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	path := makeURILbPolicyV1AutoAddLbPolicyCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespLbPolicyV1AutoAddLbPolicy(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*LbPolicy), nil
+}
+
+// AutoUpdateLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	path := makeURILbPolicyV1AutoUpdateLbPolicyUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespLbPolicyV1AutoUpdateLbPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*LbPolicy), err
+}
+
+// AutoGetLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	path := makeURILbPolicyV1AutoGetLbPolicyGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespLbPolicyV1AutoGetLbPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*LbPolicy), err
+}
+
+// AutoDeleteLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	path := makeURILbPolicyV1AutoDeleteLbPolicyDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespLbPolicyV1AutoDeleteLbPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*LbPolicy), err
+}
+
+// AutoListLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
+	path := makeURILbPolicyV1AutoListLbPolicyListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespLbPolicyV1AutoListLbPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AutoMsgLbPolicyListHelper), err
+}
+
+// AutoWatchLbPolicy CRUD method for LbPolicy
+func (r *EndpointsLbPolicyV1RestClient) AutoWatchLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// MakeLbPolicyV1RestClientEndpoints make REST client endpoints
+func MakeLbPolicyV1RestClientEndpoints(instance string) (EndpointsLbPolicyV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsLbPolicyV1RestClient{
 		instance: instance,
 		client:   http.DefaultClient,
 	}, nil
@@ -629,10 +1221,10 @@ type EndpointsNetworkV1Client struct {
 	Client NetworkV1Client
 
 	AutoAddNetworkEndpoint    endpoint.Endpoint
-	AutoUpdateNetworkEndpoint endpoint.Endpoint
-	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoDeleteNetworkEndpoint endpoint.Endpoint
+	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoListNetworkEndpoint   endpoint.Endpoint
+	AutoUpdateNetworkEndpoint endpoint.Endpoint
 }
 
 // EndpointsNetworkV1RestClient is the REST client
@@ -642,10 +1234,10 @@ type EndpointsNetworkV1RestClient struct {
 	instance string
 
 	AutoAddNetworkEndpoint    endpoint.Endpoint
-	AutoUpdateNetworkEndpoint endpoint.Endpoint
-	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoDeleteNetworkEndpoint endpoint.Endpoint
+	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoListNetworkEndpoint   endpoint.Endpoint
+	AutoUpdateNetworkEndpoint endpoint.Endpoint
 	AutoWatchNetworkEndpoint  endpoint.Endpoint
 }
 
@@ -655,10 +1247,10 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 // EndpointsNetworkV1Server is the server endpoints
 type EndpointsNetworkV1Server struct {
 	AutoAddNetworkEndpoint    endpoint.Endpoint
-	AutoUpdateNetworkEndpoint endpoint.Endpoint
-	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoDeleteNetworkEndpoint endpoint.Endpoint
+	AutoGetNetworkEndpoint    endpoint.Endpoint
 	AutoListNetworkEndpoint   endpoint.Endpoint
+	AutoUpdateNetworkEndpoint endpoint.Endpoint
 
 	watchHandlerNetwork func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
@@ -677,16 +1269,16 @@ type respNetworkV1AutoAddNetwork struct {
 	Err error
 }
 
-// AutoUpdateNetwork is endpoint for AutoUpdateNetwork
-func (e EndpointsNetworkV1Client) AutoUpdateNetwork(ctx context.Context, in *Network) (*Network, error) {
-	resp, err := e.AutoUpdateNetworkEndpoint(ctx, in)
+// AutoDeleteNetwork is endpoint for AutoDeleteNetwork
+func (e EndpointsNetworkV1Client) AutoDeleteNetwork(ctx context.Context, in *Network) (*Network, error) {
+	resp, err := e.AutoDeleteNetworkEndpoint(ctx, in)
 	if err != nil {
 		return &Network{}, err
 	}
 	return resp.(*Network), nil
 }
 
-type respNetworkV1AutoUpdateNetwork struct {
+type respNetworkV1AutoDeleteNetwork struct {
 	V   Network
 	Err error
 }
@@ -705,20 +1297,6 @@ type respNetworkV1AutoGetNetwork struct {
 	Err error
 }
 
-// AutoDeleteNetwork is endpoint for AutoDeleteNetwork
-func (e EndpointsNetworkV1Client) AutoDeleteNetwork(ctx context.Context, in *Network) (*Network, error) {
-	resp, err := e.AutoDeleteNetworkEndpoint(ctx, in)
-	if err != nil {
-		return &Network{}, err
-	}
-	return resp.(*Network), nil
-}
-
-type respNetworkV1AutoDeleteNetwork struct {
-	V   Network
-	Err error
-}
-
 // AutoListNetwork is endpoint for AutoListNetwork
 func (e EndpointsNetworkV1Client) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error) {
 	resp, err := e.AutoListNetworkEndpoint(ctx, in)
@@ -730,6 +1308,20 @@ func (e EndpointsNetworkV1Client) AutoListNetwork(ctx context.Context, in *api.L
 
 type respNetworkV1AutoListNetwork struct {
 	V   AutoMsgNetworkListHelper
+	Err error
+}
+
+// AutoUpdateNetwork is endpoint for AutoUpdateNetwork
+func (e EndpointsNetworkV1Client) AutoUpdateNetwork(ctx context.Context, in *Network) (*Network, error) {
+	resp, err := e.AutoUpdateNetworkEndpoint(ctx, in)
+	if err != nil {
+		return &Network{}, err
+	}
+	return resp.(*Network), nil
+}
+
+type respNetworkV1AutoUpdateNetwork struct {
+	V   Network
 	Err error
 }
 
@@ -760,26 +1352,26 @@ func MakeNetworkV1AutoAddNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoAddNetwork")(f)
 }
 
-// AutoUpdateNetwork implementation on server Endpoint
-func (e EndpointsNetworkV1Server) AutoUpdateNetwork(ctx context.Context, in Network) (Network, error) {
-	resp, err := e.AutoUpdateNetworkEndpoint(ctx, in)
+// AutoDeleteNetwork implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoDeleteNetwork(ctx context.Context, in Network) (Network, error) {
+	resp, err := e.AutoDeleteNetworkEndpoint(ctx, in)
 	if err != nil {
 		return Network{}, err
 	}
 	return *resp.(*Network), nil
 }
 
-// MakeNetworkV1AutoUpdateNetworkEndpoint creates  AutoUpdateNetwork endpoints for the service
-func MakeNetworkV1AutoUpdateNetworkEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeNetworkV1AutoDeleteNetworkEndpoint creates  AutoDeleteNetwork endpoints for the service
+func MakeNetworkV1AutoDeleteNetworkEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Network)
-		v, err := s.AutoUpdateNetwork(ctx, *req)
-		return respNetworkV1AutoUpdateNetwork{
+		v, err := s.AutoDeleteNetwork(ctx, *req)
+		return respNetworkV1AutoDeleteNetwork{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(f)
 }
 
 // AutoGetNetwork implementation on server Endpoint
@@ -804,28 +1396,6 @@ func MakeNetworkV1AutoGetNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoGetNetwork")(f)
 }
 
-// AutoDeleteNetwork implementation on server Endpoint
-func (e EndpointsNetworkV1Server) AutoDeleteNetwork(ctx context.Context, in Network) (Network, error) {
-	resp, err := e.AutoDeleteNetworkEndpoint(ctx, in)
-	if err != nil {
-		return Network{}, err
-	}
-	return *resp.(*Network), nil
-}
-
-// MakeNetworkV1AutoDeleteNetworkEndpoint creates  AutoDeleteNetwork endpoints for the service
-func MakeNetworkV1AutoDeleteNetworkEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Network)
-		v, err := s.AutoDeleteNetwork(ctx, *req)
-		return respNetworkV1AutoDeleteNetwork{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(f)
-}
-
 // AutoListNetwork implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (AutoMsgNetworkListHelper, error) {
 	resp, err := e.AutoListNetworkEndpoint(ctx, in)
@@ -848,6 +1418,28 @@ func MakeNetworkV1AutoListNetworkEndpoint(s ServiceNetworkV1Server, logger log.L
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoListNetwork")(f)
 }
 
+// AutoUpdateNetwork implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoUpdateNetwork(ctx context.Context, in Network) (Network, error) {
+	resp, err := e.AutoUpdateNetworkEndpoint(ctx, in)
+	if err != nil {
+		return Network{}, err
+	}
+	return *resp.(*Network), nil
+}
+
+// MakeNetworkV1AutoUpdateNetworkEndpoint creates  AutoUpdateNetwork endpoints for the service
+func MakeNetworkV1AutoUpdateNetworkEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Network)
+		v, err := s.AutoUpdateNetwork(ctx, *req)
+		return respNetworkV1AutoUpdateNetwork{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(f)
+}
+
 // AutoWatchNetwork is the watch handler for Network on the server side.
 func (e EndpointsNetworkV1Server) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
 	return e.watchHandlerNetwork(in, stream)
@@ -866,10 +1458,10 @@ func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) E
 	return EndpointsNetworkV1Server{
 
 		AutoAddNetworkEndpoint:    MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
-		AutoUpdateNetworkEndpoint: MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
-		AutoGetNetworkEndpoint:    MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
 		AutoDeleteNetworkEndpoint: MakeNetworkV1AutoDeleteNetworkEndpoint(s, logger),
+		AutoGetNetworkEndpoint:    MakeNetworkV1AutoGetNetworkEndpoint(s, logger),
 		AutoListNetworkEndpoint:   MakeNetworkV1AutoListNetworkEndpoint(s, logger),
+		AutoUpdateNetworkEndpoint: MakeNetworkV1AutoUpdateNetworkEndpoint(s, logger),
 
 		watchHandlerNetwork: MakeAutoWatchNetworkEndpoint(s, logger),
 	}
@@ -918,7 +1510,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddNetwork(ctx context.Context, in
 	resp, err = m.next.AutoAddNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetwork(ctx context.Context, in *Network) (resp *Network, err error) {
+func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetwork(ctx context.Context, in *Network) (resp *Network, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -926,9 +1518,9 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetwork(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateNetwork(ctx, in)
+	resp, err = m.next.AutoDeleteNetwork(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoGetNetwork(ctx context.Context, in *Network) (resp *Network, err error) {
@@ -944,19 +1536,6 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetNetwork(ctx context.Context, in
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetwork(ctx context.Context, in *Network) (resp *Network, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteNetwork(ctx, in)
-	return
-}
 func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgNetworkListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -968,6 +1547,19 @@ func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetwork(ctx context.Context, in *Network) (resp *Network, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNetwork(ctx, in)
 	return
 }
 
@@ -998,7 +1590,7 @@ func (m loggingNetworkV1MiddlewareServer) AutoAddNetwork(ctx context.Context, in
 	resp, err = m.next.AutoAddNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetwork(ctx context.Context, in Network) (resp Network, err error) {
+func (m loggingNetworkV1MiddlewareServer) AutoDeleteNetwork(ctx context.Context, in Network) (resp Network, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1006,9 +1598,9 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetwork(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateNetwork(ctx, in)
+	resp, err = m.next.AutoDeleteNetwork(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareServer) AutoGetNetwork(ctx context.Context, in Network) (resp Network, err error) {
@@ -1024,19 +1616,6 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetNetwork(ctx context.Context, in
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareServer) AutoDeleteNetwork(ctx context.Context, in Network) (resp Network, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteNetwork(ctx, in)
-	return
-}
 func (m loggingNetworkV1MiddlewareServer) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgNetworkListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1048,6 +1627,19 @@ func (m loggingNetworkV1MiddlewareServer) AutoListNetwork(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetwork", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoUpdateNetwork(ctx context.Context, in Network) (resp Network, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateNetwork(ctx, in)
 	return
 }
 
@@ -1086,7 +1678,7 @@ func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
 }
 
 //
-func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
+func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
 	return fmt.Sprint("/v1/networks", "/", in.Tenant, "/networks/", in.Name)
 }
 
@@ -1096,13 +1688,13 @@ func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
 }
 
 //
-func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
-	return fmt.Sprint("/v1/networks", "/", in.Tenant, "/networks/", in.Name)
+func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/networks", "/", in.Tenant, "/networks")
 }
 
 //
-func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/networks", "/", in.Tenant, "/networks")
+func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
+	return fmt.Sprint("/v1/networks", "/", in.Tenant, "/networks/", in.Name)
 }
 
 // AutoAddNetwork CRUD method for Network
@@ -1221,10 +1813,10 @@ type EndpointsSecurityGroupV1Client struct {
 	Client SecurityGroupV1Client
 
 	AutoAddSecurityGroupEndpoint    endpoint.Endpoint
-	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
-	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint endpoint.Endpoint
+	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoListSecurityGroupEndpoint   endpoint.Endpoint
+	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
 }
 
 // EndpointsSecurityGroupV1RestClient is the REST client
@@ -1234,10 +1826,10 @@ type EndpointsSecurityGroupV1RestClient struct {
 	instance string
 
 	AutoAddSecurityGroupEndpoint    endpoint.Endpoint
-	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
-	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint endpoint.Endpoint
+	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoListSecurityGroupEndpoint   endpoint.Endpoint
+	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
 	AutoWatchSecurityGroupEndpoint  endpoint.Endpoint
 }
 
@@ -1247,10 +1839,10 @@ type MiddlewareSecurityGroupV1Server func(ServiceSecurityGroupV1Server) ServiceS
 // EndpointsSecurityGroupV1Server is the server endpoints
 type EndpointsSecurityGroupV1Server struct {
 	AutoAddSecurityGroupEndpoint    endpoint.Endpoint
-	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
-	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint endpoint.Endpoint
+	AutoGetSecurityGroupEndpoint    endpoint.Endpoint
 	AutoListSecurityGroupEndpoint   endpoint.Endpoint
+	AutoUpdateSecurityGroupEndpoint endpoint.Endpoint
 
 	watchHandlerSecurityGroup func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
@@ -1269,16 +1861,16 @@ type respSecurityGroupV1AutoAddSecurityGroup struct {
 	Err error
 }
 
-// AutoUpdateSecurityGroup is endpoint for AutoUpdateSecurityGroup
-func (e EndpointsSecurityGroupV1Client) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
-	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
+// AutoDeleteSecurityGroup is endpoint for AutoDeleteSecurityGroup
+func (e EndpointsSecurityGroupV1Client) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
+	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
 	if err != nil {
 		return &SecurityGroup{}, err
 	}
 	return resp.(*SecurityGroup), nil
 }
 
-type respSecurityGroupV1AutoUpdateSecurityGroup struct {
+type respSecurityGroupV1AutoDeleteSecurityGroup struct {
 	V   SecurityGroup
 	Err error
 }
@@ -1297,20 +1889,6 @@ type respSecurityGroupV1AutoGetSecurityGroup struct {
 	Err error
 }
 
-// AutoDeleteSecurityGroup is endpoint for AutoDeleteSecurityGroup
-func (e EndpointsSecurityGroupV1Client) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
-	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
-	if err != nil {
-		return &SecurityGroup{}, err
-	}
-	return resp.(*SecurityGroup), nil
-}
-
-type respSecurityGroupV1AutoDeleteSecurityGroup struct {
-	V   SecurityGroup
-	Err error
-}
-
 // AutoListSecurityGroup is endpoint for AutoListSecurityGroup
 func (e EndpointsSecurityGroupV1Client) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
@@ -1322,6 +1900,20 @@ func (e EndpointsSecurityGroupV1Client) AutoListSecurityGroup(ctx context.Contex
 
 type respSecurityGroupV1AutoListSecurityGroup struct {
 	V   AutoMsgSecurityGroupListHelper
+	Err error
+}
+
+// AutoUpdateSecurityGroup is endpoint for AutoUpdateSecurityGroup
+func (e EndpointsSecurityGroupV1Client) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
+	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
+	if err != nil {
+		return &SecurityGroup{}, err
+	}
+	return resp.(*SecurityGroup), nil
+}
+
+type respSecurityGroupV1AutoUpdateSecurityGroup struct {
+	V   SecurityGroup
 	Err error
 }
 
@@ -1352,26 +1944,26 @@ func MakeSecurityGroupV1AutoAddSecurityGroupEndpoint(s ServiceSecurityGroupV1Ser
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoAddSecurityGroup")(f)
 }
 
-// AutoUpdateSecurityGroup implementation on server Endpoint
-func (e EndpointsSecurityGroupV1Server) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
-	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
+// AutoDeleteSecurityGroup implementation on server Endpoint
+func (e EndpointsSecurityGroupV1Server) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
+	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
 	if err != nil {
 		return SecurityGroup{}, err
 	}
 	return *resp.(*SecurityGroup), nil
 }
 
-// MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint creates  AutoUpdateSecurityGroup endpoints for the service
-func MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint(s ServiceSecurityGroupV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint creates  AutoDeleteSecurityGroup endpoints for the service
+func MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint(s ServiceSecurityGroupV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*SecurityGroup)
-		v, err := s.AutoUpdateSecurityGroup(ctx, *req)
-		return respSecurityGroupV1AutoUpdateSecurityGroup{
+		v, err := s.AutoDeleteSecurityGroup(ctx, *req)
+		return respSecurityGroupV1AutoDeleteSecurityGroup{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(f)
 }
 
 // AutoGetSecurityGroup implementation on server Endpoint
@@ -1396,28 +1988,6 @@ func MakeSecurityGroupV1AutoGetSecurityGroupEndpoint(s ServiceSecurityGroupV1Ser
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoGetSecurityGroup")(f)
 }
 
-// AutoDeleteSecurityGroup implementation on server Endpoint
-func (e EndpointsSecurityGroupV1Server) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
-	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
-	if err != nil {
-		return SecurityGroup{}, err
-	}
-	return *resp.(*SecurityGroup), nil
-}
-
-// MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint creates  AutoDeleteSecurityGroup endpoints for the service
-func MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint(s ServiceSecurityGroupV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*SecurityGroup)
-		v, err := s.AutoDeleteSecurityGroup(ctx, *req)
-		return respSecurityGroupV1AutoDeleteSecurityGroup{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(f)
-}
-
 // AutoListSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityGroupV1Server) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (AutoMsgSecurityGroupListHelper, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
@@ -1440,6 +2010,28 @@ func MakeSecurityGroupV1AutoListSecurityGroupEndpoint(s ServiceSecurityGroupV1Se
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoListSecurityGroup")(f)
 }
 
+// AutoUpdateSecurityGroup implementation on server Endpoint
+func (e EndpointsSecurityGroupV1Server) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
+	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
+	if err != nil {
+		return SecurityGroup{}, err
+	}
+	return *resp.(*SecurityGroup), nil
+}
+
+// MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint creates  AutoUpdateSecurityGroup endpoints for the service
+func MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint(s ServiceSecurityGroupV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SecurityGroup)
+		v, err := s.AutoUpdateSecurityGroup(ctx, *req)
+		return respSecurityGroupV1AutoUpdateSecurityGroup{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(f)
+}
+
 // AutoWatchSecurityGroup is the watch handler for SecurityGroup on the server side.
 func (e EndpointsSecurityGroupV1Server) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityGroupV1_AutoWatchSecurityGroupServer) error {
 	return e.watchHandlerSecurityGroup(in, stream)
@@ -1458,10 +2050,10 @@ func MakeSecurityGroupV1ServerEndpoints(s ServiceSecurityGroupV1Server, logger l
 	return EndpointsSecurityGroupV1Server{
 
 		AutoAddSecurityGroupEndpoint:    MakeSecurityGroupV1AutoAddSecurityGroupEndpoint(s, logger),
-		AutoUpdateSecurityGroupEndpoint: MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint(s, logger),
-		AutoGetSecurityGroupEndpoint:    MakeSecurityGroupV1AutoGetSecurityGroupEndpoint(s, logger),
 		AutoDeleteSecurityGroupEndpoint: MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint(s, logger),
+		AutoGetSecurityGroupEndpoint:    MakeSecurityGroupV1AutoGetSecurityGroupEndpoint(s, logger),
 		AutoListSecurityGroupEndpoint:   MakeSecurityGroupV1AutoListSecurityGroupEndpoint(s, logger),
+		AutoUpdateSecurityGroupEndpoint: MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint(s, logger),
 
 		watchHandlerSecurityGroup: MakeAutoWatchSecurityGroupEndpoint(s, logger),
 	}
@@ -1510,7 +2102,7 @@ func (m loggingSecurityGroupV1MiddlewareClient) AutoAddSecurityGroup(ctx context
 	resp, err = m.next.AutoAddSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareClient) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
+func (m loggingSecurityGroupV1MiddlewareClient) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1518,9 +2110,9 @@ func (m loggingSecurityGroupV1MiddlewareClient) AutoUpdateSecurityGroup(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
+	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
 	return
 }
 func (m loggingSecurityGroupV1MiddlewareClient) AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
@@ -1536,19 +2128,6 @@ func (m loggingSecurityGroupV1MiddlewareClient) AutoGetSecurityGroup(ctx context
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareClient) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
-	return
-}
 func (m loggingSecurityGroupV1MiddlewareClient) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSecurityGroupListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1560,6 +2139,19 @@ func (m loggingSecurityGroupV1MiddlewareClient) AutoListSecurityGroup(ctx contex
 		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListSecurityGroup(ctx, in)
+	return
+}
+func (m loggingSecurityGroupV1MiddlewareClient) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
 	return
 }
 
@@ -1590,7 +2182,7 @@ func (m loggingSecurityGroupV1MiddlewareServer) AutoAddSecurityGroup(ctx context
 	resp, err = m.next.AutoAddSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareServer) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
+func (m loggingSecurityGroupV1MiddlewareServer) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1598,9 +2190,9 @@ func (m loggingSecurityGroupV1MiddlewareServer) AutoUpdateSecurityGroup(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
+	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
 	return
 }
 func (m loggingSecurityGroupV1MiddlewareServer) AutoGetSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
@@ -1616,19 +2208,6 @@ func (m loggingSecurityGroupV1MiddlewareServer) AutoGetSecurityGroup(ctx context
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareServer) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
-	return
-}
 func (m loggingSecurityGroupV1MiddlewareServer) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSecurityGroupListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1640,6 +2219,19 @@ func (m loggingSecurityGroupV1MiddlewareServer) AutoListSecurityGroup(ctx contex
 		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListSecurityGroup(ctx, in)
+	return
+}
+func (m loggingSecurityGroupV1MiddlewareServer) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityGroupV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
 	return
 }
 
@@ -1678,7 +2270,7 @@ func makeURISecurityGroupV1AutoAddSecurityGroupCreateOper(in *SecurityGroup) str
 }
 
 //
-func makeURISecurityGroupV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) string {
+func makeURISecurityGroupV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) string {
 	return fmt.Sprint("/v1/security-groups", "/", in.Tenant, "/security-groups/", in.Name)
 }
 
@@ -1688,13 +2280,13 @@ func makeURISecurityGroupV1AutoGetSecurityGroupGetOper(in *SecurityGroup) string
 }
 
 //
-func makeURISecurityGroupV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) string {
-	return fmt.Sprint("/v1/security-groups", "/", in.Tenant, "/security-groups/", in.Name)
+func makeURISecurityGroupV1AutoListSecurityGroupListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/security-groups", "/", in.Tenant, "/security-groups")
 }
 
 //
-func makeURISecurityGroupV1AutoListSecurityGroupListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security-groups", "/", in.Tenant, "/security-groups")
+func makeURISecurityGroupV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) string {
+	return fmt.Sprint("/v1/security-groups", "/", in.Tenant, "/security-groups/", in.Name)
 }
 
 // AutoAddSecurityGroup CRUD method for SecurityGroup
@@ -1805,598 +2397,6 @@ func MakeSecurityGroupV1RestClientEndpoints(instance string) (EndpointsSecurityG
 
 }
 
-// MiddlewareSgpolicyV1Client add middleware to the client
-type MiddlewareSgpolicyV1Client func(ServiceSgpolicyV1Client) ServiceSgpolicyV1Client
-
-// EndpointsSgpolicyV1Client is the endpoints for the client
-type EndpointsSgpolicyV1Client struct {
-	Client SgpolicyV1Client
-
-	AutoAddSgpolicyEndpoint    endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
-	AutoGetSgpolicyEndpoint    endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
-	AutoListSgpolicyEndpoint   endpoint.Endpoint
-}
-
-// EndpointsSgpolicyV1RestClient is the REST client
-type EndpointsSgpolicyV1RestClient struct {
-	logger   log.Logger
-	client   *http.Client
-	instance string
-
-	AutoAddSgpolicyEndpoint    endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
-	AutoGetSgpolicyEndpoint    endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
-	AutoListSgpolicyEndpoint   endpoint.Endpoint
-	AutoWatchSgpolicyEndpoint  endpoint.Endpoint
-}
-
-// MiddlewareSgpolicyV1Server adds middle ware to the server
-type MiddlewareSgpolicyV1Server func(ServiceSgpolicyV1Server) ServiceSgpolicyV1Server
-
-// EndpointsSgpolicyV1Server is the server endpoints
-type EndpointsSgpolicyV1Server struct {
-	AutoAddSgpolicyEndpoint    endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
-	AutoGetSgpolicyEndpoint    endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
-	AutoListSgpolicyEndpoint   endpoint.Endpoint
-
-	watchHandlerSgpolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-}
-
-// AutoAddSgpolicy is endpoint for AutoAddSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSgpolicyV1AutoAddSgpolicy struct {
-	V   Sgpolicy
-	Err error
-}
-
-// AutoUpdateSgpolicy is endpoint for AutoUpdateSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSgpolicyV1AutoUpdateSgpolicy struct {
-	V   Sgpolicy
-	Err error
-}
-
-// AutoGetSgpolicy is endpoint for AutoGetSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSgpolicyV1AutoGetSgpolicy struct {
-	V   Sgpolicy
-	Err error
-}
-
-// AutoDeleteSgpolicy is endpoint for AutoDeleteSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSgpolicyV1AutoDeleteSgpolicy struct {
-	V   Sgpolicy
-	Err error
-}
-
-// AutoListSgpolicy is endpoint for AutoListSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
-	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &AutoMsgSgpolicyListHelper{}, err
-	}
-	return resp.(*AutoMsgSgpolicyListHelper), nil
-}
-
-type respSgpolicyV1AutoListSgpolicy struct {
-	V   AutoMsgSgpolicyListHelper
-	Err error
-}
-
-// AutoWatchSgpolicy performs Watch for Sgpolicy
-func (e EndpointsSgpolicyV1Client) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (SgpolicyV1_AutoWatchSgpolicyClient, error) {
-	return e.Client.AutoWatchSgpolicy(ctx, in)
-}
-
-// AutoAddSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSgpolicyV1AutoAddSgpolicyEndpoint creates  AutoAddSgpolicy endpoints for the service
-func MakeSgpolicyV1AutoAddSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoAddSgpolicy(ctx, *req)
-		return respSgpolicyV1AutoAddSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(f)
-}
-
-// AutoUpdateSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSgpolicyV1AutoUpdateSgpolicyEndpoint creates  AutoUpdateSgpolicy endpoints for the service
-func MakeSgpolicyV1AutoUpdateSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoUpdateSgpolicy(ctx, *req)
-		return respSgpolicyV1AutoUpdateSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(f)
-}
-
-// AutoGetSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSgpolicyV1AutoGetSgpolicyEndpoint creates  AutoGetSgpolicy endpoints for the service
-func MakeSgpolicyV1AutoGetSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoGetSgpolicy(ctx, *req)
-		return respSgpolicyV1AutoGetSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(f)
-}
-
-// AutoDeleteSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSgpolicyV1AutoDeleteSgpolicyEndpoint creates  AutoDeleteSgpolicy endpoints for the service
-func MakeSgpolicyV1AutoDeleteSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoDeleteSgpolicy(ctx, *req)
-		return respSgpolicyV1AutoDeleteSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(f)
-}
-
-// AutoListSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgSgpolicyListHelper, error) {
-	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return AutoMsgSgpolicyListHelper{}, err
-	}
-	return *resp.(*AutoMsgSgpolicyListHelper), nil
-}
-
-// MakeSgpolicyV1AutoListSgpolicyEndpoint creates  AutoListSgpolicy endpoints for the service
-func MakeSgpolicyV1AutoListSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListSgpolicy(ctx, *req)
-		return respSgpolicyV1AutoListSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(f)
-}
-
-// AutoWatchSgpolicy is the watch handler for Sgpolicy on the server side.
-func (e EndpointsSgpolicyV1Server) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) error {
-	return e.watchHandlerSgpolicy(in, stream)
-}
-
-// MakeAutoWatchSgpolicyEndpoint creates the Watch endpoint
-func MakeAutoWatchSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(SgpolicyV1_AutoWatchSgpolicyServer)
-		return s.AutoWatchSgpolicy(options, wstream)
-	}
-}
-
-// MakeSgpolicyV1ServerEndpoints creates server endpoints
-func MakeSgpolicyV1ServerEndpoints(s ServiceSgpolicyV1Server, logger log.Logger) EndpointsSgpolicyV1Server {
-	return EndpointsSgpolicyV1Server{
-
-		AutoAddSgpolicyEndpoint:    MakeSgpolicyV1AutoAddSgpolicyEndpoint(s, logger),
-		AutoUpdateSgpolicyEndpoint: MakeSgpolicyV1AutoUpdateSgpolicyEndpoint(s, logger),
-		AutoGetSgpolicyEndpoint:    MakeSgpolicyV1AutoGetSgpolicyEndpoint(s, logger),
-		AutoDeleteSgpolicyEndpoint: MakeSgpolicyV1AutoDeleteSgpolicyEndpoint(s, logger),
-		AutoListSgpolicyEndpoint:   MakeSgpolicyV1AutoListSgpolicyEndpoint(s, logger),
-
-		watchHandlerSgpolicy: MakeAutoWatchSgpolicyEndpoint(s, logger),
-	}
-}
-
-// LoggingSgpolicyV1MiddlewareClient adds middleware for the client
-func LoggingSgpolicyV1MiddlewareClient(logger log.Logger) MiddlewareSgpolicyV1Client {
-	return func(next ServiceSgpolicyV1Client) ServiceSgpolicyV1Client {
-		return loggingSgpolicyV1MiddlewareClient{
-			logger: logger,
-			next:   next,
-		}
-	}
-}
-
-type loggingSgpolicyV1MiddlewareClient struct {
-	logger log.Logger
-	next   ServiceSgpolicyV1Client
-}
-
-// LoggingSgpolicyV1MiddlewareServer adds middleware for the client
-func LoggingSgpolicyV1MiddlewareServer(logger log.Logger) MiddlewareSgpolicyV1Server {
-	return func(next ServiceSgpolicyV1Server) ServiceSgpolicyV1Server {
-		return loggingSgpolicyV1MiddlewareServer{
-			logger: logger,
-			next:   next,
-		}
-	}
-}
-
-type loggingSgpolicyV1MiddlewareServer struct {
-	logger log.Logger
-	next   ServiceSgpolicyV1Server
-}
-
-func (m loggingSgpolicyV1MiddlewareClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareClient) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSgpolicyListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListSgpolicy(ctx, in)
-	return
-}
-
-func (m loggingSgpolicyV1MiddlewareClient) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp SgpolicyV1_AutoWatchSgpolicyClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchSgpolicy(ctx, in)
-	return
-}
-
-func (m loggingSgpolicyV1MiddlewareServer) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareServer) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareServer) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareServer) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
-	return
-}
-func (m loggingSgpolicyV1MiddlewareServer) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSgpolicyListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListSgpolicy(ctx, in)
-	return
-}
-
-func (m loggingSgpolicyV1MiddlewareServer) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) (err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(stream.Context(), "service", "SgpolicyV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	err = m.next.AutoWatchSgpolicy(in, stream)
-	return
-}
-func (r *EndpointsSgpolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
-	target, err := url.Parse(r.instance)
-	if err != nil {
-		return nil, fmt.Errorf("invalid instance %s", r.instance)
-	}
-	target.Path = path
-	req, err := http.NewRequest(method, target.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not create request (%s)", err)
-	}
-	if err = encodeHTTPRequest(ctx, req, in); err != nil {
-		return nil, fmt.Errorf("could not encode request (%s)", err)
-	}
-	return req, nil
-}
-
-//
-func makeURISgpolicyV1AutoAddSgpolicyCreateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy")
-}
-
-//
-func makeURISgpolicyV1AutoUpdateSgpolicyUpdateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
-}
-
-//
-func makeURISgpolicyV1AutoGetSgpolicyGetOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
-}
-
-//
-func makeURISgpolicyV1AutoDeleteSgpolicyDeleteOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
-}
-
-//
-func makeURISgpolicyV1AutoListSgpolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy")
-}
-
-// AutoAddSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISgpolicyV1AutoAddSgpolicyCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSgpolicyV1AutoAddSgpolicy(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Sgpolicy), nil
-}
-
-// AutoUpdateSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISgpolicyV1AutoUpdateSgpolicyUpdateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSgpolicyV1AutoUpdateSgpolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Sgpolicy), err
-}
-
-// AutoGetSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISgpolicyV1AutoGetSgpolicyGetOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSgpolicyV1AutoGetSgpolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Sgpolicy), err
-}
-
-// AutoDeleteSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISgpolicyV1AutoDeleteSgpolicyDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSgpolicyV1AutoDeleteSgpolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Sgpolicy), err
-}
-
-// AutoListSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoListSgpolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
-	path := makeURISgpolicyV1AutoListSgpolicyListOper(options)
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSgpolicyV1AutoListSgpolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AutoMsgSgpolicyListHelper), err
-}
-
-// AutoWatchSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoWatchSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	return nil, errors.New("not allowed")
-}
-
-// MakeSgpolicyV1RestClientEndpoints make REST client endpoints
-func MakeSgpolicyV1RestClientEndpoints(instance string) (EndpointsSgpolicyV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
-	}
-
-	return EndpointsSgpolicyV1RestClient{
-		instance: instance,
-		client:   http.DefaultClient,
-	}, nil
-
-}
-
 // MiddlewareServiceV1Client add middleware to the client
 type MiddlewareServiceV1Client func(ServiceServiceV1Client) ServiceServiceV1Client
 
@@ -2405,10 +2405,10 @@ type EndpointsServiceV1Client struct {
 	Client ServiceV1Client
 
 	AutoAddServiceEndpoint    endpoint.Endpoint
-	AutoUpdateServiceEndpoint endpoint.Endpoint
-	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint endpoint.Endpoint
+	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoListServiceEndpoint   endpoint.Endpoint
+	AutoUpdateServiceEndpoint endpoint.Endpoint
 }
 
 // EndpointsServiceV1RestClient is the REST client
@@ -2418,10 +2418,10 @@ type EndpointsServiceV1RestClient struct {
 	instance string
 
 	AutoAddServiceEndpoint    endpoint.Endpoint
-	AutoUpdateServiceEndpoint endpoint.Endpoint
-	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint endpoint.Endpoint
+	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoListServiceEndpoint   endpoint.Endpoint
+	AutoUpdateServiceEndpoint endpoint.Endpoint
 	AutoWatchServiceEndpoint  endpoint.Endpoint
 }
 
@@ -2431,10 +2431,10 @@ type MiddlewareServiceV1Server func(ServiceServiceV1Server) ServiceServiceV1Serv
 // EndpointsServiceV1Server is the server endpoints
 type EndpointsServiceV1Server struct {
 	AutoAddServiceEndpoint    endpoint.Endpoint
-	AutoUpdateServiceEndpoint endpoint.Endpoint
-	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoDeleteServiceEndpoint endpoint.Endpoint
+	AutoGetServiceEndpoint    endpoint.Endpoint
 	AutoListServiceEndpoint   endpoint.Endpoint
+	AutoUpdateServiceEndpoint endpoint.Endpoint
 
 	watchHandlerService func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
@@ -2453,16 +2453,16 @@ type respServiceV1AutoAddService struct {
 	Err error
 }
 
-// AutoUpdateService is endpoint for AutoUpdateService
-func (e EndpointsServiceV1Client) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
-	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
+// AutoDeleteService is endpoint for AutoDeleteService
+func (e EndpointsServiceV1Client) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
+	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
 	if err != nil {
 		return &Service{}, err
 	}
 	return resp.(*Service), nil
 }
 
-type respServiceV1AutoUpdateService struct {
+type respServiceV1AutoDeleteService struct {
 	V   Service
 	Err error
 }
@@ -2481,20 +2481,6 @@ type respServiceV1AutoGetService struct {
 	Err error
 }
 
-// AutoDeleteService is endpoint for AutoDeleteService
-func (e EndpointsServiceV1Client) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
-	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
-	if err != nil {
-		return &Service{}, err
-	}
-	return resp.(*Service), nil
-}
-
-type respServiceV1AutoDeleteService struct {
-	V   Service
-	Err error
-}
-
 // AutoListService is endpoint for AutoListService
 func (e EndpointsServiceV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgServiceListHelper, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -2506,6 +2492,20 @@ func (e EndpointsServiceV1Client) AutoListService(ctx context.Context, in *api.L
 
 type respServiceV1AutoListService struct {
 	V   AutoMsgServiceListHelper
+	Err error
+}
+
+// AutoUpdateService is endpoint for AutoUpdateService
+func (e EndpointsServiceV1Client) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
+	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
+	if err != nil {
+		return &Service{}, err
+	}
+	return resp.(*Service), nil
+}
+
+type respServiceV1AutoUpdateService struct {
+	V   Service
 	Err error
 }
 
@@ -2536,26 +2536,26 @@ func MakeServiceV1AutoAddServiceEndpoint(s ServiceServiceV1Server, logger log.Lo
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoAddService")(f)
 }
 
-// AutoUpdateService implementation on server Endpoint
-func (e EndpointsServiceV1Server) AutoUpdateService(ctx context.Context, in Service) (Service, error) {
-	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
+// AutoDeleteService implementation on server Endpoint
+func (e EndpointsServiceV1Server) AutoDeleteService(ctx context.Context, in Service) (Service, error) {
+	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
 	if err != nil {
 		return Service{}, err
 	}
 	return *resp.(*Service), nil
 }
 
-// MakeServiceV1AutoUpdateServiceEndpoint creates  AutoUpdateService endpoints for the service
-func MakeServiceV1AutoUpdateServiceEndpoint(s ServiceServiceV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeServiceV1AutoDeleteServiceEndpoint creates  AutoDeleteService endpoints for the service
+func MakeServiceV1AutoDeleteServiceEndpoint(s ServiceServiceV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Service)
-		v, err := s.AutoUpdateService(ctx, *req)
-		return respServiceV1AutoUpdateService{
+		v, err := s.AutoDeleteService(ctx, *req)
+		return respServiceV1AutoDeleteService{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(f)
 }
 
 // AutoGetService implementation on server Endpoint
@@ -2580,28 +2580,6 @@ func MakeServiceV1AutoGetServiceEndpoint(s ServiceServiceV1Server, logger log.Lo
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoGetService")(f)
 }
 
-// AutoDeleteService implementation on server Endpoint
-func (e EndpointsServiceV1Server) AutoDeleteService(ctx context.Context, in Service) (Service, error) {
-	resp, err := e.AutoDeleteServiceEndpoint(ctx, in)
-	if err != nil {
-		return Service{}, err
-	}
-	return *resp.(*Service), nil
-}
-
-// MakeServiceV1AutoDeleteServiceEndpoint creates  AutoDeleteService endpoints for the service
-func MakeServiceV1AutoDeleteServiceEndpoint(s ServiceServiceV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Service)
-		v, err := s.AutoDeleteService(ctx, *req)
-		return respServiceV1AutoDeleteService{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(f)
-}
-
 // AutoListService implementation on server Endpoint
 func (e EndpointsServiceV1Server) AutoListService(ctx context.Context, in api.ListWatchOptions) (AutoMsgServiceListHelper, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
@@ -2624,6 +2602,28 @@ func MakeServiceV1AutoListServiceEndpoint(s ServiceServiceV1Server, logger log.L
 	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoListService")(f)
 }
 
+// AutoUpdateService implementation on server Endpoint
+func (e EndpointsServiceV1Server) AutoUpdateService(ctx context.Context, in Service) (Service, error) {
+	resp, err := e.AutoUpdateServiceEndpoint(ctx, in)
+	if err != nil {
+		return Service{}, err
+	}
+	return *resp.(*Service), nil
+}
+
+// MakeServiceV1AutoUpdateServiceEndpoint creates  AutoUpdateService endpoints for the service
+func MakeServiceV1AutoUpdateServiceEndpoint(s ServiceServiceV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Service)
+		v, err := s.AutoUpdateService(ctx, *req)
+		return respServiceV1AutoUpdateService{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(f)
+}
+
 // AutoWatchService is the watch handler for Service on the server side.
 func (e EndpointsServiceV1Server) AutoWatchService(in *api.ListWatchOptions, stream ServiceV1_AutoWatchServiceServer) error {
 	return e.watchHandlerService(in, stream)
@@ -2642,10 +2642,10 @@ func MakeServiceV1ServerEndpoints(s ServiceServiceV1Server, logger log.Logger) E
 	return EndpointsServiceV1Server{
 
 		AutoAddServiceEndpoint:    MakeServiceV1AutoAddServiceEndpoint(s, logger),
-		AutoUpdateServiceEndpoint: MakeServiceV1AutoUpdateServiceEndpoint(s, logger),
-		AutoGetServiceEndpoint:    MakeServiceV1AutoGetServiceEndpoint(s, logger),
 		AutoDeleteServiceEndpoint: MakeServiceV1AutoDeleteServiceEndpoint(s, logger),
+		AutoGetServiceEndpoint:    MakeServiceV1AutoGetServiceEndpoint(s, logger),
 		AutoListServiceEndpoint:   MakeServiceV1AutoListServiceEndpoint(s, logger),
+		AutoUpdateServiceEndpoint: MakeServiceV1AutoUpdateServiceEndpoint(s, logger),
 
 		watchHandlerService: MakeAutoWatchServiceEndpoint(s, logger),
 	}
@@ -2694,7 +2694,7 @@ func (m loggingServiceV1MiddlewareClient) AutoAddService(ctx context.Context, in
 	resp, err = m.next.AutoAddService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareClient) AutoUpdateService(ctx context.Context, in *Service) (resp *Service, err error) {
+func (m loggingServiceV1MiddlewareClient) AutoDeleteService(ctx context.Context, in *Service) (resp *Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2702,9 +2702,9 @@ func (m loggingServiceV1MiddlewareClient) AutoUpdateService(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateService(ctx, in)
+	resp, err = m.next.AutoDeleteService(ctx, in)
 	return
 }
 func (m loggingServiceV1MiddlewareClient) AutoGetService(ctx context.Context, in *Service) (resp *Service, err error) {
@@ -2720,19 +2720,6 @@ func (m loggingServiceV1MiddlewareClient) AutoGetService(ctx context.Context, in
 	resp, err = m.next.AutoGetService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareClient) AutoDeleteService(ctx context.Context, in *Service) (resp *Service, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteService(ctx, in)
-	return
-}
 func (m loggingServiceV1MiddlewareClient) AutoListService(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgServiceListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2744,6 +2731,19 @@ func (m loggingServiceV1MiddlewareClient) AutoListService(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoListService", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListService(ctx, in)
+	return
+}
+func (m loggingServiceV1MiddlewareClient) AutoUpdateService(ctx context.Context, in *Service) (resp *Service, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateService(ctx, in)
 	return
 }
 
@@ -2774,7 +2774,7 @@ func (m loggingServiceV1MiddlewareServer) AutoAddService(ctx context.Context, in
 	resp, err = m.next.AutoAddService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareServer) AutoUpdateService(ctx context.Context, in Service) (resp Service, err error) {
+func (m loggingServiceV1MiddlewareServer) AutoDeleteService(ctx context.Context, in Service) (resp Service, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2782,9 +2782,9 @@ func (m loggingServiceV1MiddlewareServer) AutoUpdateService(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateService(ctx, in)
+	resp, err = m.next.AutoDeleteService(ctx, in)
 	return
 }
 func (m loggingServiceV1MiddlewareServer) AutoGetService(ctx context.Context, in Service) (resp Service, err error) {
@@ -2800,19 +2800,6 @@ func (m loggingServiceV1MiddlewareServer) AutoGetService(ctx context.Context, in
 	resp, err = m.next.AutoGetService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareServer) AutoDeleteService(ctx context.Context, in Service) (resp Service, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteService(ctx, in)
-	return
-}
 func (m loggingServiceV1MiddlewareServer) AutoListService(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgServiceListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2824,6 +2811,19 @@ func (m loggingServiceV1MiddlewareServer) AutoListService(ctx context.Context, i
 		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoListService", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListService(ctx, in)
+	return
+}
+func (m loggingServiceV1MiddlewareServer) AutoUpdateService(ctx context.Context, in Service) (resp Service, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ServiceV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateService(ctx, in)
 	return
 }
 
@@ -2862,7 +2862,7 @@ func makeURIServiceV1AutoAddServiceCreateOper(in *Service) string {
 }
 
 //
-func makeURIServiceV1AutoUpdateServiceUpdateOper(in *Service) string {
+func makeURIServiceV1AutoDeleteServiceDeleteOper(in *Service) string {
 	return fmt.Sprint("/v1/services", "/", in.Tenant, "/services/", in.Name)
 }
 
@@ -2872,13 +2872,13 @@ func makeURIServiceV1AutoGetServiceGetOper(in *Service) string {
 }
 
 //
-func makeURIServiceV1AutoDeleteServiceDeleteOper(in *Service) string {
-	return fmt.Sprint("/v1/services", "/", in.Tenant, "/services/", in.Name)
+func makeURIServiceV1AutoListServiceListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/services", "/", in.Tenant, "/services")
 }
 
 //
-func makeURIServiceV1AutoListServiceListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/services", "/", in.Tenant, "/services")
+func makeURIServiceV1AutoUpdateServiceUpdateOper(in *Service) string {
+	return fmt.Sprint("/v1/services", "/", in.Tenant, "/services/", in.Name)
 }
 
 // AutoAddService CRUD method for Service
@@ -2989,291 +2989,291 @@ func MakeServiceV1RestClientEndpoints(instance string) (EndpointsServiceV1RestCl
 
 }
 
-// MiddlewareLbPolicyV1Client add middleware to the client
-type MiddlewareLbPolicyV1Client func(ServiceLbPolicyV1Client) ServiceLbPolicyV1Client
+// MiddlewareSgpolicyV1Client add middleware to the client
+type MiddlewareSgpolicyV1Client func(ServiceSgpolicyV1Client) ServiceSgpolicyV1Client
 
-// EndpointsLbPolicyV1Client is the endpoints for the client
-type EndpointsLbPolicyV1Client struct {
-	Client LbPolicyV1Client
+// EndpointsSgpolicyV1Client is the endpoints for the client
+type EndpointsSgpolicyV1Client struct {
+	Client SgpolicyV1Client
 
-	AutoAddLbPolicyEndpoint    endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
-	AutoListLbPolicyEndpoint   endpoint.Endpoint
+	AutoAddSgpolicyEndpoint    endpoint.Endpoint
+	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
+	AutoGetSgpolicyEndpoint    endpoint.Endpoint
+	AutoListSgpolicyEndpoint   endpoint.Endpoint
+	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
 }
 
-// EndpointsLbPolicyV1RestClient is the REST client
-type EndpointsLbPolicyV1RestClient struct {
+// EndpointsSgpolicyV1RestClient is the REST client
+type EndpointsSgpolicyV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
 
-	AutoAddLbPolicyEndpoint    endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
-	AutoListLbPolicyEndpoint   endpoint.Endpoint
-	AutoWatchLbPolicyEndpoint  endpoint.Endpoint
+	AutoAddSgpolicyEndpoint    endpoint.Endpoint
+	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
+	AutoGetSgpolicyEndpoint    endpoint.Endpoint
+	AutoListSgpolicyEndpoint   endpoint.Endpoint
+	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
+	AutoWatchSgpolicyEndpoint  endpoint.Endpoint
 }
 
-// MiddlewareLbPolicyV1Server adds middle ware to the server
-type MiddlewareLbPolicyV1Server func(ServiceLbPolicyV1Server) ServiceLbPolicyV1Server
+// MiddlewareSgpolicyV1Server adds middle ware to the server
+type MiddlewareSgpolicyV1Server func(ServiceSgpolicyV1Server) ServiceSgpolicyV1Server
 
-// EndpointsLbPolicyV1Server is the server endpoints
-type EndpointsLbPolicyV1Server struct {
-	AutoAddLbPolicyEndpoint    endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
-	AutoGetLbPolicyEndpoint    endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
-	AutoListLbPolicyEndpoint   endpoint.Endpoint
+// EndpointsSgpolicyV1Server is the server endpoints
+type EndpointsSgpolicyV1Server struct {
+	AutoAddSgpolicyEndpoint    endpoint.Endpoint
+	AutoDeleteSgpolicyEndpoint endpoint.Endpoint
+	AutoGetSgpolicyEndpoint    endpoint.Endpoint
+	AutoListSgpolicyEndpoint   endpoint.Endpoint
+	AutoUpdateSgpolicyEndpoint endpoint.Endpoint
 
-	watchHandlerLbPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerSgpolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
-// AutoAddLbPolicy is endpoint for AutoAddLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	resp, err := e.AutoAddLbPolicyEndpoint(ctx, in)
+// AutoAddSgpolicy is endpoint for AutoAddSgpolicy
+func (e EndpointsSgpolicyV1Client) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &LbPolicy{}, err
+		return &Sgpolicy{}, err
 	}
-	return resp.(*LbPolicy), nil
+	return resp.(*Sgpolicy), nil
 }
 
-type respLbPolicyV1AutoAddLbPolicy struct {
-	V   LbPolicy
+type respSgpolicyV1AutoAddSgpolicy struct {
+	V   Sgpolicy
 	Err error
 }
 
-// AutoUpdateLbPolicy is endpoint for AutoUpdateLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	resp, err := e.AutoUpdateLbPolicyEndpoint(ctx, in)
+// AutoDeleteSgpolicy is endpoint for AutoDeleteSgpolicy
+func (e EndpointsSgpolicyV1Client) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &LbPolicy{}, err
+		return &Sgpolicy{}, err
 	}
-	return resp.(*LbPolicy), nil
+	return resp.(*Sgpolicy), nil
 }
 
-type respLbPolicyV1AutoUpdateLbPolicy struct {
-	V   LbPolicy
+type respSgpolicyV1AutoDeleteSgpolicy struct {
+	V   Sgpolicy
 	Err error
 }
 
-// AutoGetLbPolicy is endpoint for AutoGetLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	resp, err := e.AutoGetLbPolicyEndpoint(ctx, in)
+// AutoGetSgpolicy is endpoint for AutoGetSgpolicy
+func (e EndpointsSgpolicyV1Client) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &LbPolicy{}, err
+		return &Sgpolicy{}, err
 	}
-	return resp.(*LbPolicy), nil
+	return resp.(*Sgpolicy), nil
 }
 
-type respLbPolicyV1AutoGetLbPolicy struct {
-	V   LbPolicy
+type respSgpolicyV1AutoGetSgpolicy struct {
+	V   Sgpolicy
 	Err error
 }
 
-// AutoDeleteLbPolicy is endpoint for AutoDeleteLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	resp, err := e.AutoDeleteLbPolicyEndpoint(ctx, in)
+// AutoListSgpolicy is endpoint for AutoListSgpolicy
+func (e EndpointsSgpolicyV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
+	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &LbPolicy{}, err
+		return &AutoMsgSgpolicyListHelper{}, err
 	}
-	return resp.(*LbPolicy), nil
+	return resp.(*AutoMsgSgpolicyListHelper), nil
 }
 
-type respLbPolicyV1AutoDeleteLbPolicy struct {
-	V   LbPolicy
+type respSgpolicyV1AutoListSgpolicy struct {
+	V   AutoMsgSgpolicyListHelper
 	Err error
 }
 
-// AutoListLbPolicy is endpoint for AutoListLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
-	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
+// AutoUpdateSgpolicy is endpoint for AutoUpdateSgpolicy
+func (e EndpointsSgpolicyV1Client) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgLbPolicyListHelper{}, err
+		return &Sgpolicy{}, err
 	}
-	return resp.(*AutoMsgLbPolicyListHelper), nil
+	return resp.(*Sgpolicy), nil
 }
 
-type respLbPolicyV1AutoListLbPolicy struct {
-	V   AutoMsgLbPolicyListHelper
+type respSgpolicyV1AutoUpdateSgpolicy struct {
+	V   Sgpolicy
 	Err error
 }
 
-// AutoWatchLbPolicy performs Watch for LbPolicy
-func (e EndpointsLbPolicyV1Client) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (LbPolicyV1_AutoWatchLbPolicyClient, error) {
-	return e.Client.AutoWatchLbPolicy(ctx, in)
+// AutoWatchSgpolicy performs Watch for Sgpolicy
+func (e EndpointsSgpolicyV1Client) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (SgpolicyV1_AutoWatchSgpolicyClient, error) {
+	return e.Client.AutoWatchSgpolicy(ctx, in)
 }
 
-// AutoAddLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
-	resp, err := e.AutoAddLbPolicyEndpoint(ctx, in)
+// AutoAddSgpolicy implementation on server Endpoint
+func (e EndpointsSgpolicyV1Server) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
+	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return LbPolicy{}, err
+		return Sgpolicy{}, err
 	}
-	return *resp.(*LbPolicy), nil
+	return *resp.(*Sgpolicy), nil
 }
 
-// MakeLbPolicyV1AutoAddLbPolicyEndpoint creates  AutoAddLbPolicy endpoints for the service
-func MakeLbPolicyV1AutoAddLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeSgpolicyV1AutoAddSgpolicyEndpoint creates  AutoAddSgpolicy endpoints for the service
+func MakeSgpolicyV1AutoAddSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*LbPolicy)
-		v, err := s.AutoAddLbPolicy(ctx, *req)
-		return respLbPolicyV1AutoAddLbPolicy{
+		req := request.(*Sgpolicy)
+		v, err := s.AutoAddSgpolicy(ctx, *req)
+		return respSgpolicyV1AutoAddSgpolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(f)
 }
 
-// AutoUpdateLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoUpdateLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
-	resp, err := e.AutoUpdateLbPolicyEndpoint(ctx, in)
+// AutoDeleteSgpolicy implementation on server Endpoint
+func (e EndpointsSgpolicyV1Server) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
+	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return LbPolicy{}, err
+		return Sgpolicy{}, err
 	}
-	return *resp.(*LbPolicy), nil
+	return *resp.(*Sgpolicy), nil
 }
 
-// MakeLbPolicyV1AutoUpdateLbPolicyEndpoint creates  AutoUpdateLbPolicy endpoints for the service
-func MakeLbPolicyV1AutoUpdateLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeSgpolicyV1AutoDeleteSgpolicyEndpoint creates  AutoDeleteSgpolicy endpoints for the service
+func MakeSgpolicyV1AutoDeleteSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*LbPolicy)
-		v, err := s.AutoUpdateLbPolicy(ctx, *req)
-		return respLbPolicyV1AutoUpdateLbPolicy{
+		req := request.(*Sgpolicy)
+		v, err := s.AutoDeleteSgpolicy(ctx, *req)
+		return respSgpolicyV1AutoDeleteSgpolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(f)
 }
 
-// AutoGetLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoGetLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
-	resp, err := e.AutoGetLbPolicyEndpoint(ctx, in)
+// AutoGetSgpolicy implementation on server Endpoint
+func (e EndpointsSgpolicyV1Server) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
+	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return LbPolicy{}, err
+		return Sgpolicy{}, err
 	}
-	return *resp.(*LbPolicy), nil
+	return *resp.(*Sgpolicy), nil
 }
 
-// MakeLbPolicyV1AutoGetLbPolicyEndpoint creates  AutoGetLbPolicy endpoints for the service
-func MakeLbPolicyV1AutoGetLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeSgpolicyV1AutoGetSgpolicyEndpoint creates  AutoGetSgpolicy endpoints for the service
+func MakeSgpolicyV1AutoGetSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*LbPolicy)
-		v, err := s.AutoGetLbPolicy(ctx, *req)
-		return respLbPolicyV1AutoGetLbPolicy{
+		req := request.(*Sgpolicy)
+		v, err := s.AutoGetSgpolicy(ctx, *req)
+		return respSgpolicyV1AutoGetSgpolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(f)
 }
 
-// AutoDeleteLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (LbPolicy, error) {
-	resp, err := e.AutoDeleteLbPolicyEndpoint(ctx, in)
+// AutoListSgpolicy implementation on server Endpoint
+func (e EndpointsSgpolicyV1Server) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgSgpolicyListHelper, error) {
+	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return LbPolicy{}, err
+		return AutoMsgSgpolicyListHelper{}, err
 	}
-	return *resp.(*LbPolicy), nil
+	return *resp.(*AutoMsgSgpolicyListHelper), nil
 }
 
-// MakeLbPolicyV1AutoDeleteLbPolicyEndpoint creates  AutoDeleteLbPolicy endpoints for the service
-func MakeLbPolicyV1AutoDeleteLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*LbPolicy)
-		v, err := s.AutoDeleteLbPolicy(ctx, *req)
-		return respLbPolicyV1AutoDeleteLbPolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(f)
-}
-
-// AutoListLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgLbPolicyListHelper, error) {
-	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
-	if err != nil {
-		return AutoMsgLbPolicyListHelper{}, err
-	}
-	return *resp.(*AutoMsgLbPolicyListHelper), nil
-}
-
-// MakeLbPolicyV1AutoListLbPolicyEndpoint creates  AutoListLbPolicy endpoints for the service
-func MakeLbPolicyV1AutoListLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeSgpolicyV1AutoListSgpolicyEndpoint creates  AutoListSgpolicy endpoints for the service
+func MakeSgpolicyV1AutoListSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListLbPolicy(ctx, *req)
-		return respLbPolicyV1AutoListLbPolicy{
+		v, err := s.AutoListSgpolicy(ctx, *req)
+		return respSgpolicyV1AutoListSgpolicy{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(f)
 }
 
-// AutoWatchLbPolicy is the watch handler for LbPolicy on the server side.
-func (e EndpointsLbPolicyV1Server) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) error {
-	return e.watchHandlerLbPolicy(in, stream)
+// AutoUpdateSgpolicy implementation on server Endpoint
+func (e EndpointsSgpolicyV1Server) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
+	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
+	if err != nil {
+		return Sgpolicy{}, err
+	}
+	return *resp.(*Sgpolicy), nil
 }
 
-// MakeAutoWatchLbPolicyEndpoint creates the Watch endpoint
-func MakeAutoWatchLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+// MakeSgpolicyV1AutoUpdateSgpolicyEndpoint creates  AutoUpdateSgpolicy endpoints for the service
+func MakeSgpolicyV1AutoUpdateSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Sgpolicy)
+		v, err := s.AutoUpdateSgpolicy(ctx, *req)
+		return respSgpolicyV1AutoUpdateSgpolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(f)
+}
+
+// AutoWatchSgpolicy is the watch handler for Sgpolicy on the server side.
+func (e EndpointsSgpolicyV1Server) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) error {
+	return e.watchHandlerSgpolicy(in, stream)
+}
+
+// MakeAutoWatchSgpolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
 	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(LbPolicyV1_AutoWatchLbPolicyServer)
-		return s.AutoWatchLbPolicy(options, wstream)
+		wstream := stream.(SgpolicyV1_AutoWatchSgpolicyServer)
+		return s.AutoWatchSgpolicy(options, wstream)
 	}
 }
 
-// MakeLbPolicyV1ServerEndpoints creates server endpoints
-func MakeLbPolicyV1ServerEndpoints(s ServiceLbPolicyV1Server, logger log.Logger) EndpointsLbPolicyV1Server {
-	return EndpointsLbPolicyV1Server{
+// MakeSgpolicyV1ServerEndpoints creates server endpoints
+func MakeSgpolicyV1ServerEndpoints(s ServiceSgpolicyV1Server, logger log.Logger) EndpointsSgpolicyV1Server {
+	return EndpointsSgpolicyV1Server{
 
-		AutoAddLbPolicyEndpoint:    MakeLbPolicyV1AutoAddLbPolicyEndpoint(s, logger),
-		AutoUpdateLbPolicyEndpoint: MakeLbPolicyV1AutoUpdateLbPolicyEndpoint(s, logger),
-		AutoGetLbPolicyEndpoint:    MakeLbPolicyV1AutoGetLbPolicyEndpoint(s, logger),
-		AutoDeleteLbPolicyEndpoint: MakeLbPolicyV1AutoDeleteLbPolicyEndpoint(s, logger),
-		AutoListLbPolicyEndpoint:   MakeLbPolicyV1AutoListLbPolicyEndpoint(s, logger),
+		AutoAddSgpolicyEndpoint:    MakeSgpolicyV1AutoAddSgpolicyEndpoint(s, logger),
+		AutoDeleteSgpolicyEndpoint: MakeSgpolicyV1AutoDeleteSgpolicyEndpoint(s, logger),
+		AutoGetSgpolicyEndpoint:    MakeSgpolicyV1AutoGetSgpolicyEndpoint(s, logger),
+		AutoListSgpolicyEndpoint:   MakeSgpolicyV1AutoListSgpolicyEndpoint(s, logger),
+		AutoUpdateSgpolicyEndpoint: MakeSgpolicyV1AutoUpdateSgpolicyEndpoint(s, logger),
 
-		watchHandlerLbPolicy: MakeAutoWatchLbPolicyEndpoint(s, logger),
+		watchHandlerSgpolicy: MakeAutoWatchSgpolicyEndpoint(s, logger),
 	}
 }
 
-// LoggingLbPolicyV1MiddlewareClient adds middleware for the client
-func LoggingLbPolicyV1MiddlewareClient(logger log.Logger) MiddlewareLbPolicyV1Client {
-	return func(next ServiceLbPolicyV1Client) ServiceLbPolicyV1Client {
-		return loggingLbPolicyV1MiddlewareClient{
+// LoggingSgpolicyV1MiddlewareClient adds middleware for the client
+func LoggingSgpolicyV1MiddlewareClient(logger log.Logger) MiddlewareSgpolicyV1Client {
+	return func(next ServiceSgpolicyV1Client) ServiceSgpolicyV1Client {
+		return loggingSgpolicyV1MiddlewareClient{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingLbPolicyV1MiddlewareClient struct {
+type loggingSgpolicyV1MiddlewareClient struct {
 	logger log.Logger
-	next   ServiceLbPolicyV1Client
+	next   ServiceSgpolicyV1Client
 }
 
-// LoggingLbPolicyV1MiddlewareServer adds middleware for the client
-func LoggingLbPolicyV1MiddlewareServer(logger log.Logger) MiddlewareLbPolicyV1Server {
-	return func(next ServiceLbPolicyV1Server) ServiceLbPolicyV1Server {
-		return loggingLbPolicyV1MiddlewareServer{
+// LoggingSgpolicyV1MiddlewareServer adds middleware for the client
+func LoggingSgpolicyV1MiddlewareServer(logger log.Logger) MiddlewareSgpolicyV1Server {
+	return func(next ServiceSgpolicyV1Server) ServiceSgpolicyV1Server {
+		return loggingSgpolicyV1MiddlewareServer{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingLbPolicyV1MiddlewareServer struct {
+type loggingSgpolicyV1MiddlewareServer struct {
 	logger log.Logger
-	next   ServiceLbPolicyV1Server
+	next   ServiceSgpolicyV1Server
 }
 
-func (m loggingLbPolicyV1MiddlewareClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3281,12 +3281,12 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoAddLbPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddLbPolicy(ctx, in)
+	resp, err = m.next.AutoAddSgpolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3294,12 +3294,12 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoUpdateLbPolicy(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateLbPolicy(ctx, in)
+	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3307,12 +3307,12 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoGetLbPolicy(ctx, in)
+	resp, err = m.next.AutoGetSgpolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (resp *LbPolicy, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSgpolicyListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3320,12 +3320,12 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoDeleteLbPolicy(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoDeleteLbPolicy(ctx, in)
+	resp, err = m.next.AutoListSgpolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgLbPolicyListHelper, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3333,27 +3333,13 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoListLbPolicy(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoListLbPolicy(ctx, in)
-	return
-}
-
-func (m loggingLbPolicyV1MiddlewareClient) AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp LbPolicyV1_AutoWatchLbPolicyClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchLbPolicy(ctx, in)
+	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
 	return
 }
 
-func (m loggingLbPolicyV1MiddlewareServer) AutoAddLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp SgpolicyV1_AutoWatchSgpolicyClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3361,65 +3347,13 @@ func (m loggingLbPolicyV1MiddlewareServer) AutoAddLbPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddLbPolicy(ctx, in)
-	return
-}
-func (m loggingLbPolicyV1MiddlewareServer) AutoUpdateLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateLbPolicy(ctx, in)
-	return
-}
-func (m loggingLbPolicyV1MiddlewareServer) AutoGetLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetLbPolicy(ctx, in)
-	return
-}
-func (m loggingLbPolicyV1MiddlewareServer) AutoDeleteLbPolicy(ctx context.Context, in LbPolicy) (resp LbPolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteLbPolicy(ctx, in)
-	return
-}
-func (m loggingLbPolicyV1MiddlewareServer) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgLbPolicyListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "LbPolicyV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListLbPolicy(ctx, in)
+	resp, err = m.next.AutoWatchSgpolicy(ctx, in)
 	return
 }
 
-func (m loggingLbPolicyV1MiddlewareServer) AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) (err error) {
+func (m loggingSgpolicyV1MiddlewareServer) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3427,12 +3361,78 @@ func (m loggingLbPolicyV1MiddlewareServer) AutoWatchLbPolicy(in *api.ListWatchOp
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(stream.Context(), "service", "LbPolicyV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	err = m.next.AutoWatchLbPolicy(in, stream)
+	resp, err = m.next.AutoAddSgpolicy(ctx, in)
 	return
 }
-func (r *EndpointsLbPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+func (m loggingSgpolicyV1MiddlewareServer) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
+	return
+}
+func (m loggingSgpolicyV1MiddlewareServer) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetSgpolicy(ctx, in)
+	return
+}
+func (m loggingSgpolicyV1MiddlewareServer) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSgpolicyListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListSgpolicy(ctx, in)
+	return
+}
+func (m loggingSgpolicyV1MiddlewareServer) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SgpolicyV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
+	return
+}
+
+func (m loggingSgpolicyV1MiddlewareServer) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "SgpolicyV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSgpolicy(in, stream)
+	return
+}
+func (r *EndpointsSgpolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid instance %s", r.instance)
@@ -3449,33 +3449,33 @@ func (r *EndpointsLbPolicyV1RestClient) getHTTPRequest(ctx context.Context, in i
 }
 
 //
-func makeURILbPolicyV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy")
+func makeURISgpolicyV1AutoAddSgpolicyCreateOper(in *Sgpolicy) string {
+	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy")
 }
 
 //
-func makeURILbPolicyV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+func makeURISgpolicyV1AutoDeleteSgpolicyDeleteOper(in *Sgpolicy) string {
+	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
-func makeURILbPolicyV1AutoGetLbPolicyGetOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+func makeURISgpolicyV1AutoGetSgpolicyGetOper(in *Sgpolicy) string {
+	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
-func makeURILbPolicyV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy/", in.Name)
+func makeURISgpolicyV1AutoListSgpolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy")
 }
 
 //
-func makeURILbPolicyV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/lb-policy", "/", in.Tenant, "/lb-policy")
+func makeURISgpolicyV1AutoUpdateSgpolicyUpdateOper(in *Sgpolicy) string {
+	return fmt.Sprint("/v1/sgpolicy", "/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
-// AutoAddLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURILbPolicyV1AutoAddLbPolicyCreateOper(in)
+// AutoAddSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	path := makeURISgpolicyV1AutoAddSgpolicyCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -3484,16 +3484,16 @@ func (r *EndpointsLbPolicyV1RestClient) AutoAddLbPolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespLbPolicyV1AutoAddLbPolicy(ctx, httpresp)
+	ret, err := decodeHTTPrespSgpolicyV1AutoAddSgpolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*LbPolicy), nil
+	return ret.(*Sgpolicy), nil
 }
 
-// AutoUpdateLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURILbPolicyV1AutoUpdateLbPolicyUpdateOper(in)
+// AutoUpdateSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	path := makeURISgpolicyV1AutoUpdateSgpolicyUpdateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3502,16 +3502,16 @@ func (r *EndpointsLbPolicyV1RestClient) AutoUpdateLbPolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespLbPolicyV1AutoUpdateLbPolicy(ctx, resp)
+	ret, err := decodeHTTPrespSgpolicyV1AutoUpdateSgpolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*LbPolicy), err
+	return ret.(*Sgpolicy), err
 }
 
-// AutoGetLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURILbPolicyV1AutoGetLbPolicyGetOper(in)
+// AutoGetSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	path := makeURISgpolicyV1AutoGetSgpolicyGetOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3520,16 +3520,16 @@ func (r *EndpointsLbPolicyV1RestClient) AutoGetLbPolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespLbPolicyV1AutoGetLbPolicy(ctx, resp)
+	ret, err := decodeHTTPrespSgpolicyV1AutoGetSgpolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*LbPolicy), err
+	return ret.(*Sgpolicy), err
 }
 
-// AutoDeleteLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURILbPolicyV1AutoDeleteLbPolicyDeleteOper(in)
+// AutoDeleteSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
+	path := makeURISgpolicyV1AutoDeleteSgpolicyDeleteOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -3538,16 +3538,16 @@ func (r *EndpointsLbPolicyV1RestClient) AutoDeleteLbPolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespLbPolicyV1AutoDeleteLbPolicy(ctx, resp)
+	ret, err := decodeHTTPrespSgpolicyV1AutoDeleteSgpolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*LbPolicy), err
+	return ret.(*Sgpolicy), err
 }
 
-// AutoListLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
-	path := makeURILbPolicyV1AutoListLbPolicyListOper(options)
+// AutoListSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoListSgpolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
+	path := makeURISgpolicyV1AutoListSgpolicyListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3556,316 +3556,316 @@ func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespLbPolicyV1AutoListLbPolicy(ctx, resp)
+	ret, err := decodeHTTPrespSgpolicyV1AutoListSgpolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgLbPolicyListHelper), err
+	return ret.(*AutoMsgSgpolicyListHelper), err
 }
 
-// AutoWatchLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoWatchLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+// AutoWatchSgpolicy CRUD method for Sgpolicy
+func (r *EndpointsSgpolicyV1RestClient) AutoWatchSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
 	return nil, errors.New("not allowed")
 }
 
-// MakeLbPolicyV1RestClientEndpoints make REST client endpoints
-func MakeLbPolicyV1RestClientEndpoints(instance string) (EndpointsLbPolicyV1RestClient, error) {
+// MakeSgpolicyV1RestClientEndpoints make REST client endpoints
+func MakeSgpolicyV1RestClientEndpoints(instance string) (EndpointsSgpolicyV1RestClient, error) {
 	if !strings.HasPrefix(instance, "http") {
 		instance = "http://" + instance
 	}
 
-	return EndpointsLbPolicyV1RestClient{
+	return EndpointsSgpolicyV1RestClient{
 		instance: instance,
 		client:   http.DefaultClient,
 	}, nil
 
 }
 
-// MiddlewareEndpointV1Client add middleware to the client
-type MiddlewareEndpointV1Client func(ServiceEndpointV1Client) ServiceEndpointV1Client
+// MiddlewareTenantV1Client add middleware to the client
+type MiddlewareTenantV1Client func(ServiceTenantV1Client) ServiceTenantV1Client
 
-// EndpointsEndpointV1Client is the endpoints for the client
-type EndpointsEndpointV1Client struct {
-	Client EndpointV1Client
+// EndpointsTenantV1Client is the endpoints for the client
+type EndpointsTenantV1Client struct {
+	Client TenantV1Client
 
-	AutoAddEndpointEndpoint    endpoint.Endpoint
-	AutoUpdateEndpointEndpoint endpoint.Endpoint
-	AutoGetEndpointEndpoint    endpoint.Endpoint
-	AutoDeleteEndpointEndpoint endpoint.Endpoint
-	AutoListEndpointEndpoint   endpoint.Endpoint
+	AutoAddTenantEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint endpoint.Endpoint
+	AutoGetTenantEndpoint    endpoint.Endpoint
+	AutoListTenantEndpoint   endpoint.Endpoint
+	AutoUpdateTenantEndpoint endpoint.Endpoint
 }
 
-// EndpointsEndpointV1RestClient is the REST client
-type EndpointsEndpointV1RestClient struct {
+// EndpointsTenantV1RestClient is the REST client
+type EndpointsTenantV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
 
-	AutoAddEndpointEndpoint    endpoint.Endpoint
-	AutoUpdateEndpointEndpoint endpoint.Endpoint
-	AutoGetEndpointEndpoint    endpoint.Endpoint
-	AutoDeleteEndpointEndpoint endpoint.Endpoint
-	AutoListEndpointEndpoint   endpoint.Endpoint
-	AutoWatchEndpointEndpoint  endpoint.Endpoint
+	AutoAddTenantEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint endpoint.Endpoint
+	AutoGetTenantEndpoint    endpoint.Endpoint
+	AutoListTenantEndpoint   endpoint.Endpoint
+	AutoUpdateTenantEndpoint endpoint.Endpoint
+	AutoWatchTenantEndpoint  endpoint.Endpoint
 }
 
-// MiddlewareEndpointV1Server adds middle ware to the server
-type MiddlewareEndpointV1Server func(ServiceEndpointV1Server) ServiceEndpointV1Server
+// MiddlewareTenantV1Server adds middle ware to the server
+type MiddlewareTenantV1Server func(ServiceTenantV1Server) ServiceTenantV1Server
 
-// EndpointsEndpointV1Server is the server endpoints
-type EndpointsEndpointV1Server struct {
-	AutoAddEndpointEndpoint    endpoint.Endpoint
-	AutoUpdateEndpointEndpoint endpoint.Endpoint
-	AutoGetEndpointEndpoint    endpoint.Endpoint
-	AutoDeleteEndpointEndpoint endpoint.Endpoint
-	AutoListEndpointEndpoint   endpoint.Endpoint
+// EndpointsTenantV1Server is the server endpoints
+type EndpointsTenantV1Server struct {
+	AutoAddTenantEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint endpoint.Endpoint
+	AutoGetTenantEndpoint    endpoint.Endpoint
+	AutoListTenantEndpoint   endpoint.Endpoint
+	AutoUpdateTenantEndpoint endpoint.Endpoint
 
-	watchHandlerEndpoint func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerTenant func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
-// AutoAddEndpoint is endpoint for AutoAddEndpoint
-func (e EndpointsEndpointV1Client) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	resp, err := e.AutoAddEndpointEndpoint(ctx, in)
+// AutoAddTenant is endpoint for AutoAddTenant
+func (e EndpointsTenantV1Client) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	resp, err := e.AutoAddTenantEndpoint(ctx, in)
 	if err != nil {
-		return &Endpoint{}, err
+		return &Tenant{}, err
 	}
-	return resp.(*Endpoint), nil
+	return resp.(*Tenant), nil
 }
 
-type respEndpointV1AutoAddEndpoint struct {
-	V   Endpoint
+type respTenantV1AutoAddTenant struct {
+	V   Tenant
 	Err error
 }
 
-// AutoUpdateEndpoint is endpoint for AutoUpdateEndpoint
-func (e EndpointsEndpointV1Client) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	resp, err := e.AutoUpdateEndpointEndpoint(ctx, in)
+// AutoDeleteTenant is endpoint for AutoDeleteTenant
+func (e EndpointsTenantV1Client) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
 	if err != nil {
-		return &Endpoint{}, err
+		return &Tenant{}, err
 	}
-	return resp.(*Endpoint), nil
+	return resp.(*Tenant), nil
 }
 
-type respEndpointV1AutoUpdateEndpoint struct {
-	V   Endpoint
+type respTenantV1AutoDeleteTenant struct {
+	V   Tenant
 	Err error
 }
 
-// AutoGetEndpoint is endpoint for AutoGetEndpoint
-func (e EndpointsEndpointV1Client) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	resp, err := e.AutoGetEndpointEndpoint(ctx, in)
+// AutoGetTenant is endpoint for AutoGetTenant
+func (e EndpointsTenantV1Client) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	resp, err := e.AutoGetTenantEndpoint(ctx, in)
 	if err != nil {
-		return &Endpoint{}, err
+		return &Tenant{}, err
 	}
-	return resp.(*Endpoint), nil
+	return resp.(*Tenant), nil
 }
 
-type respEndpointV1AutoGetEndpoint struct {
-	V   Endpoint
+type respTenantV1AutoGetTenant struct {
+	V   Tenant
 	Err error
 }
 
-// AutoDeleteEndpoint is endpoint for AutoDeleteEndpoint
-func (e EndpointsEndpointV1Client) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	resp, err := e.AutoDeleteEndpointEndpoint(ctx, in)
+// AutoListTenant is endpoint for AutoListTenant
+func (e EndpointsTenantV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
+	resp, err := e.AutoListTenantEndpoint(ctx, in)
 	if err != nil {
-		return &Endpoint{}, err
+		return &AutoMsgTenantListHelper{}, err
 	}
-	return resp.(*Endpoint), nil
+	return resp.(*AutoMsgTenantListHelper), nil
 }
 
-type respEndpointV1AutoDeleteEndpoint struct {
-	V   Endpoint
+type respTenantV1AutoListTenant struct {
+	V   AutoMsgTenantListHelper
 	Err error
 }
 
-// AutoListEndpoint is endpoint for AutoListEndpoint
-func (e EndpointsEndpointV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
-	resp, err := e.AutoListEndpointEndpoint(ctx, in)
+// AutoUpdateTenant is endpoint for AutoUpdateTenant
+func (e EndpointsTenantV1Client) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgEndpointListHelper{}, err
+		return &Tenant{}, err
 	}
-	return resp.(*AutoMsgEndpointListHelper), nil
+	return resp.(*Tenant), nil
 }
 
-type respEndpointV1AutoListEndpoint struct {
-	V   AutoMsgEndpointListHelper
+type respTenantV1AutoUpdateTenant struct {
+	V   Tenant
 	Err error
 }
 
-// AutoWatchEndpoint performs Watch for Endpoint
-func (e EndpointsEndpointV1Client) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (EndpointV1_AutoWatchEndpointClient, error) {
-	return e.Client.AutoWatchEndpoint(ctx, in)
+// AutoWatchTenant performs Watch for Tenant
+func (e EndpointsTenantV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (TenantV1_AutoWatchTenantClient, error) {
+	return e.Client.AutoWatchTenant(ctx, in)
 }
 
-// AutoAddEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoAddEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
-	resp, err := e.AutoAddEndpointEndpoint(ctx, in)
+// AutoAddTenant implementation on server Endpoint
+func (e EndpointsTenantV1Server) AutoAddTenant(ctx context.Context, in Tenant) (Tenant, error) {
+	resp, err := e.AutoAddTenantEndpoint(ctx, in)
 	if err != nil {
-		return Endpoint{}, err
+		return Tenant{}, err
 	}
-	return *resp.(*Endpoint), nil
+	return *resp.(*Tenant), nil
 }
 
-// MakeEndpointV1AutoAddEndpointEndpoint creates  AutoAddEndpoint endpoints for the service
-func MakeEndpointV1AutoAddEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeTenantV1AutoAddTenantEndpoint creates  AutoAddTenant endpoints for the service
+func MakeTenantV1AutoAddTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Endpoint)
-		v, err := s.AutoAddEndpoint(ctx, *req)
-		return respEndpointV1AutoAddEndpoint{
+		req := request.(*Tenant)
+		v, err := s.AutoAddTenant(ctx, *req)
+		return respTenantV1AutoAddTenant{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(f)
 }
 
-// AutoUpdateEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoUpdateEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
-	resp, err := e.AutoUpdateEndpointEndpoint(ctx, in)
+// AutoDeleteTenant implementation on server Endpoint
+func (e EndpointsTenantV1Server) AutoDeleteTenant(ctx context.Context, in Tenant) (Tenant, error) {
+	resp, err := e.AutoDeleteTenantEndpoint(ctx, in)
 	if err != nil {
-		return Endpoint{}, err
+		return Tenant{}, err
 	}
-	return *resp.(*Endpoint), nil
+	return *resp.(*Tenant), nil
 }
 
-// MakeEndpointV1AutoUpdateEndpointEndpoint creates  AutoUpdateEndpoint endpoints for the service
-func MakeEndpointV1AutoUpdateEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeTenantV1AutoDeleteTenantEndpoint creates  AutoDeleteTenant endpoints for the service
+func MakeTenantV1AutoDeleteTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Endpoint)
-		v, err := s.AutoUpdateEndpoint(ctx, *req)
-		return respEndpointV1AutoUpdateEndpoint{
+		req := request.(*Tenant)
+		v, err := s.AutoDeleteTenant(ctx, *req)
+		return respTenantV1AutoDeleteTenant{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(f)
 }
 
-// AutoGetEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoGetEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
-	resp, err := e.AutoGetEndpointEndpoint(ctx, in)
+// AutoGetTenant implementation on server Endpoint
+func (e EndpointsTenantV1Server) AutoGetTenant(ctx context.Context, in Tenant) (Tenant, error) {
+	resp, err := e.AutoGetTenantEndpoint(ctx, in)
 	if err != nil {
-		return Endpoint{}, err
+		return Tenant{}, err
 	}
-	return *resp.(*Endpoint), nil
+	return *resp.(*Tenant), nil
 }
 
-// MakeEndpointV1AutoGetEndpointEndpoint creates  AutoGetEndpoint endpoints for the service
-func MakeEndpointV1AutoGetEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeTenantV1AutoGetTenantEndpoint creates  AutoGetTenant endpoints for the service
+func MakeTenantV1AutoGetTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Endpoint)
-		v, err := s.AutoGetEndpoint(ctx, *req)
-		return respEndpointV1AutoGetEndpoint{
+		req := request.(*Tenant)
+		v, err := s.AutoGetTenant(ctx, *req)
+		return respTenantV1AutoGetTenant{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(f)
 }
 
-// AutoDeleteEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (Endpoint, error) {
-	resp, err := e.AutoDeleteEndpointEndpoint(ctx, in)
+// AutoListTenant implementation on server Endpoint
+func (e EndpointsTenantV1Server) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (AutoMsgTenantListHelper, error) {
+	resp, err := e.AutoListTenantEndpoint(ctx, in)
 	if err != nil {
-		return Endpoint{}, err
+		return AutoMsgTenantListHelper{}, err
 	}
-	return *resp.(*Endpoint), nil
+	return *resp.(*AutoMsgTenantListHelper), nil
 }
 
-// MakeEndpointV1AutoDeleteEndpointEndpoint creates  AutoDeleteEndpoint endpoints for the service
-func MakeEndpointV1AutoDeleteEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Endpoint)
-		v, err := s.AutoDeleteEndpoint(ctx, *req)
-		return respEndpointV1AutoDeleteEndpoint{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(f)
-}
-
-// AutoListEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (AutoMsgEndpointListHelper, error) {
-	resp, err := e.AutoListEndpointEndpoint(ctx, in)
-	if err != nil {
-		return AutoMsgEndpointListHelper{}, err
-	}
-	return *resp.(*AutoMsgEndpointListHelper), nil
-}
-
-// MakeEndpointV1AutoListEndpointEndpoint creates  AutoListEndpoint endpoints for the service
-func MakeEndpointV1AutoListEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) endpoint.Endpoint {
+// MakeTenantV1AutoListTenantEndpoint creates  AutoListTenant endpoints for the service
+func MakeTenantV1AutoListTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListEndpoint(ctx, *req)
-		return respEndpointV1AutoListEndpoint{
+		v, err := s.AutoListTenant(ctx, *req)
+		return respTenantV1AutoListTenant{
 			V:   v,
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(f)
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(f)
 }
 
-// AutoWatchEndpoint is the watch handler for Endpoint on the server side.
-func (e EndpointsEndpointV1Server) AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) error {
-	return e.watchHandlerEndpoint(in, stream)
+// AutoUpdateTenant implementation on server Endpoint
+func (e EndpointsTenantV1Server) AutoUpdateTenant(ctx context.Context, in Tenant) (Tenant, error) {
+	resp, err := e.AutoUpdateTenantEndpoint(ctx, in)
+	if err != nil {
+		return Tenant{}, err
+	}
+	return *resp.(*Tenant), nil
 }
 
-// MakeAutoWatchEndpointEndpoint creates the Watch endpoint
-func MakeAutoWatchEndpointEndpoint(s ServiceEndpointV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+// MakeTenantV1AutoUpdateTenantEndpoint creates  AutoUpdateTenant endpoints for the service
+func MakeTenantV1AutoUpdateTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Tenant)
+		v, err := s.AutoUpdateTenant(ctx, *req)
+		return respTenantV1AutoUpdateTenant{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(f)
+}
+
+// AutoWatchTenant is the watch handler for Tenant on the server side.
+func (e EndpointsTenantV1Server) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) error {
+	return e.watchHandlerTenant(in, stream)
+}
+
+// MakeAutoWatchTenantEndpoint creates the Watch endpoint
+func MakeAutoWatchTenantEndpoint(s ServiceTenantV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
 	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(EndpointV1_AutoWatchEndpointServer)
-		return s.AutoWatchEndpoint(options, wstream)
+		wstream := stream.(TenantV1_AutoWatchTenantServer)
+		return s.AutoWatchTenant(options, wstream)
 	}
 }
 
-// MakeEndpointV1ServerEndpoints creates server endpoints
-func MakeEndpointV1ServerEndpoints(s ServiceEndpointV1Server, logger log.Logger) EndpointsEndpointV1Server {
-	return EndpointsEndpointV1Server{
+// MakeTenantV1ServerEndpoints creates server endpoints
+func MakeTenantV1ServerEndpoints(s ServiceTenantV1Server, logger log.Logger) EndpointsTenantV1Server {
+	return EndpointsTenantV1Server{
 
-		AutoAddEndpointEndpoint:    MakeEndpointV1AutoAddEndpointEndpoint(s, logger),
-		AutoUpdateEndpointEndpoint: MakeEndpointV1AutoUpdateEndpointEndpoint(s, logger),
-		AutoGetEndpointEndpoint:    MakeEndpointV1AutoGetEndpointEndpoint(s, logger),
-		AutoDeleteEndpointEndpoint: MakeEndpointV1AutoDeleteEndpointEndpoint(s, logger),
-		AutoListEndpointEndpoint:   MakeEndpointV1AutoListEndpointEndpoint(s, logger),
+		AutoAddTenantEndpoint:    MakeTenantV1AutoAddTenantEndpoint(s, logger),
+		AutoDeleteTenantEndpoint: MakeTenantV1AutoDeleteTenantEndpoint(s, logger),
+		AutoGetTenantEndpoint:    MakeTenantV1AutoGetTenantEndpoint(s, logger),
+		AutoListTenantEndpoint:   MakeTenantV1AutoListTenantEndpoint(s, logger),
+		AutoUpdateTenantEndpoint: MakeTenantV1AutoUpdateTenantEndpoint(s, logger),
 
-		watchHandlerEndpoint: MakeAutoWatchEndpointEndpoint(s, logger),
+		watchHandlerTenant: MakeAutoWatchTenantEndpoint(s, logger),
 	}
 }
 
-// LoggingEndpointV1MiddlewareClient adds middleware for the client
-func LoggingEndpointV1MiddlewareClient(logger log.Logger) MiddlewareEndpointV1Client {
-	return func(next ServiceEndpointV1Client) ServiceEndpointV1Client {
-		return loggingEndpointV1MiddlewareClient{
+// LoggingTenantV1MiddlewareClient adds middleware for the client
+func LoggingTenantV1MiddlewareClient(logger log.Logger) MiddlewareTenantV1Client {
+	return func(next ServiceTenantV1Client) ServiceTenantV1Client {
+		return loggingTenantV1MiddlewareClient{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingEndpointV1MiddlewareClient struct {
+type loggingTenantV1MiddlewareClient struct {
 	logger log.Logger
-	next   ServiceEndpointV1Client
+	next   ServiceTenantV1Client
 }
 
-// LoggingEndpointV1MiddlewareServer adds middleware for the client
-func LoggingEndpointV1MiddlewareServer(logger log.Logger) MiddlewareEndpointV1Server {
-	return func(next ServiceEndpointV1Server) ServiceEndpointV1Server {
-		return loggingEndpointV1MiddlewareServer{
+// LoggingTenantV1MiddlewareServer adds middleware for the client
+func LoggingTenantV1MiddlewareServer(logger log.Logger) MiddlewareTenantV1Server {
+	return func(next ServiceTenantV1Server) ServiceTenantV1Server {
+		return loggingTenantV1MiddlewareServer{
 			logger: logger,
 			next:   next,
 		}
 	}
 }
 
-type loggingEndpointV1MiddlewareServer struct {
+type loggingTenantV1MiddlewareServer struct {
 	logger log.Logger
-	next   ServiceEndpointV1Server
+	next   ServiceTenantV1Server
 }
 
-func (m loggingEndpointV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoAddTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3873,12 +3873,12 @@ func (m loggingEndpointV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddEndpoint(ctx, in)
+	resp, err = m.next.AutoAddTenant(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3886,12 +3886,12 @@ func (m loggingEndpointV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
+	resp, err = m.next.AutoDeleteTenant(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoGetTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3899,12 +3899,12 @@ func (m loggingEndpointV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoGetEndpoint(ctx, in)
+	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgTenantListHelper, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3912,12 +3912,12 @@ func (m loggingEndpointV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
+	resp, err = m.next.AutoListTenant(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgEndpointListHelper, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (resp *Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3925,27 +3925,13 @@ func (m loggingEndpointV1MiddlewareClient) AutoListEndpoint(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoListEndpoint(ctx, in)
-	return
-}
-
-func (m loggingEndpointV1MiddlewareClient) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp EndpointV1_AutoWatchEndpointClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchEndpoint(ctx, in)
+	resp, err = m.next.AutoUpdateTenant(ctx, in)
 	return
 }
 
-func (m loggingEndpointV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (resp TenantV1_AutoWatchTenantClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3953,65 +3939,13 @@ func (m loggingEndpointV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoAddEndpoint(ctx, in)
-	return
-}
-func (m loggingEndpointV1MiddlewareServer) AutoUpdateEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
-	return
-}
-func (m loggingEndpointV1MiddlewareServer) AutoGetEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetEndpoint(ctx, in)
-	return
-}
-func (m loggingEndpointV1MiddlewareServer) AutoDeleteEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
-	return
-}
-func (m loggingEndpointV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgEndpointListHelper, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "EndpointV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListEndpoint(ctx, in)
+	resp, err = m.next.AutoWatchTenant(ctx, in)
 	return
 }
 
-func (m loggingEndpointV1MiddlewareServer) AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) (err error) {
+func (m loggingTenantV1MiddlewareServer) AutoAddTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -4019,12 +3953,78 @@ func (m loggingEndpointV1MiddlewareServer) AutoWatchEndpoint(in *api.ListWatchOp
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(stream.Context(), "service", "EndpointV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	err = m.next.AutoWatchEndpoint(in, stream)
+	resp, err = m.next.AutoAddTenant(ctx, in)
 	return
 }
-func (r *EndpointsEndpointV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+func (m loggingTenantV1MiddlewareServer) AutoDeleteTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteTenant(ctx, in)
+	return
+}
+func (m loggingTenantV1MiddlewareServer) AutoGetTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetTenant(ctx, in)
+	return
+}
+func (m loggingTenantV1MiddlewareServer) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgTenantListHelper, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListTenant(ctx, in)
+	return
+}
+func (m loggingTenantV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, in Tenant) (resp Tenant, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TenantV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+
+func (m loggingTenantV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "TenantV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchTenant(in, stream)
+	return
+}
+func (r *EndpointsTenantV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
 		return nil, fmt.Errorf("invalid instance %s", r.instance)
@@ -4041,33 +4041,33 @@ func (r *EndpointsEndpointV1RestClient) getHTTPRequest(ctx context.Context, in i
 }
 
 //
-func makeURIEndpointV1AutoAddEndpointCreateOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints")
+func makeURITenantV1AutoAddTenantCreateOper(in *Tenant) string {
+	return fmt.Sprint("/v1/tenants", "/tenants")
 }
 
 //
-func makeURIEndpointV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
+func makeURITenantV1AutoDeleteTenantDeleteOper(in *Tenant) string {
+	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
 }
 
 //
-func makeURIEndpointV1AutoGetEndpointGetOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
+func makeURITenantV1AutoGetTenantGetOper(in *Tenant) string {
+	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
 }
 
 //
-func makeURIEndpointV1AutoDeleteEndpointDeleteOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints/", in.Name)
+func makeURITenantV1AutoListTenantListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/tenants", "/tenants")
 }
 
 //
-func makeURIEndpointV1AutoListEndpointListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/endpoints", "/", in.Tenant, "/endpoints")
+func makeURITenantV1AutoUpdateTenantUpdateOper(in *Tenant) string {
+	return fmt.Sprint("/v1/tenants", "/tenants/", in.Name)
 }
 
-// AutoAddEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIEndpointV1AutoAddEndpointCreateOper(in)
+// AutoAddTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	path := makeURITenantV1AutoAddTenantCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -4076,16 +4076,16 @@ func (r *EndpointsEndpointV1RestClient) AutoAddEndpoint(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespEndpointV1AutoAddEndpoint(ctx, httpresp)
+	ret, err := decodeHTTPrespTenantV1AutoAddTenant(ctx, httpresp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Endpoint), nil
+	return ret.(*Tenant), nil
 }
 
-// AutoUpdateEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIEndpointV1AutoUpdateEndpointUpdateOper(in)
+// AutoUpdateTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	path := makeURITenantV1AutoUpdateTenantUpdateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4094,16 +4094,16 @@ func (r *EndpointsEndpointV1RestClient) AutoUpdateEndpoint(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespEndpointV1AutoUpdateEndpoint(ctx, resp)
+	ret, err := decodeHTTPrespTenantV1AutoUpdateTenant(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Endpoint), err
+	return ret.(*Tenant), err
 }
 
-// AutoGetEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIEndpointV1AutoGetEndpointGetOper(in)
+// AutoGetTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	path := makeURITenantV1AutoGetTenantGetOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4112,16 +4112,16 @@ func (r *EndpointsEndpointV1RestClient) AutoGetEndpoint(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespEndpointV1AutoGetEndpoint(ctx, resp)
+	ret, err := decodeHTTPrespTenantV1AutoGetTenant(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Endpoint), err
+	return ret.(*Tenant), err
 }
 
-// AutoDeleteEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIEndpointV1AutoDeleteEndpointDeleteOper(in)
+// AutoDeleteTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
+	path := makeURITenantV1AutoDeleteTenantDeleteOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4130,16 +4130,16 @@ func (r *EndpointsEndpointV1RestClient) AutoDeleteEndpoint(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespEndpointV1AutoDeleteEndpoint(ctx, resp)
+	ret, err := decodeHTTPrespTenantV1AutoDeleteTenant(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Endpoint), err
+	return ret.(*Tenant), err
 }
 
-// AutoListEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
-	path := makeURIEndpointV1AutoListEndpointListOper(options)
+// AutoListTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
+	path := makeURITenantV1AutoListTenantListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4148,25 +4148,25 @@ func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespEndpointV1AutoListEndpoint(ctx, resp)
+	ret, err := decodeHTTPrespTenantV1AutoListTenant(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgEndpointListHelper), err
+	return ret.(*AutoMsgTenantListHelper), err
 }
 
-// AutoWatchEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoWatchEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+// AutoWatchTenant CRUD method for Tenant
+func (r *EndpointsTenantV1RestClient) AutoWatchTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	return nil, errors.New("not allowed")
 }
 
-// MakeEndpointV1RestClientEndpoints make REST client endpoints
-func MakeEndpointV1RestClientEndpoints(instance string) (EndpointsEndpointV1RestClient, error) {
+// MakeTenantV1RestClientEndpoints make REST client endpoints
+func MakeTenantV1RestClientEndpoints(instance string) (EndpointsTenantV1RestClient, error) {
 	if !strings.HasPrefix(instance, "http") {
 		instance = "http://" + instance
 	}
 
-	return EndpointsEndpointV1RestClient{
+	return EndpointsTenantV1RestClient{
 		instance: instance,
 		client:   http.DefaultClient,
 	}, nil

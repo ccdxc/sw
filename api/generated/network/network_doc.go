@@ -7,108 +7,108 @@ Input file: protos/network.proto
 
 The following Messages are defined.
 
-  TenantSpec
-  TenantStatus
-  Tenant
-  TenantList
-  NetworkSpec
-  NetworkStatus
-  Network
-  NetworkList
-  SecurityGroupSpec
-  SecurityGroupStatus
-  SecurityGroup
-  SecurityGroupList
-  SGRule
-  SgpolicySpec
-  SgpolicyStatus
-  Sgpolicy
-  SgpolicyList
-  ServiceSpec
-  ServiceStatus
-  Service
-  ServiceList
-  HealthCheckSpec
-  LbPolicySpec
-  LbPolicyStatus
-  LbPolicy
-  LbPolicyList
-  EndpointSpec
-  EndpointStatus
+  AutoMsgEndpointListHelper
+  AutoMsgEndpointWatchHelper
+  AutoMsgLbPolicyListHelper
+  AutoMsgLbPolicyWatchHelper
+  AutoMsgNetworkListHelper
+  AutoMsgNetworkWatchHelper
+  AutoMsgSecurityGroupListHelper
+  AutoMsgSecurityGroupWatchHelper
+  AutoMsgServiceListHelper
+  AutoMsgServiceWatchHelper
+  AutoMsgSgpolicyListHelper
+  AutoMsgSgpolicyWatchHelper
+  AutoMsgTenantListHelper
+  AutoMsgTenantWatchHelper
   Endpoint
   EndpointList
-  AutoMsgSgpolicyWatchHelper
-  AutoMsgSgpolicyListHelper
-  AutoMsgServiceWatchHelper
-  AutoMsgServiceListHelper
-  AutoMsgLbPolicyWatchHelper
-  AutoMsgLbPolicyListHelper
-  AutoMsgEndpointWatchHelper
-  AutoMsgEndpointListHelper
-  AutoMsgTenantWatchHelper
-  AutoMsgTenantListHelper
-  AutoMsgNetworkWatchHelper
-  AutoMsgNetworkListHelper
-  AutoMsgSecurityGroupWatchHelper
-  AutoMsgSecurityGroupListHelper
+  EndpointSpec
+  EndpointStatus
+  HealthCheckSpec
+  LbPolicy
+  LbPolicyList
+  LbPolicySpec
+  LbPolicyStatus
+  Network
+  NetworkList
+  NetworkSpec
+  NetworkStatus
+  SGRule
+  SecurityGroup
+  SecurityGroupList
+  SecurityGroupSpec
+  SecurityGroupStatus
+  Service
+  ServiceList
+  ServiceSpec
+  ServiceStatus
+  Sgpolicy
+  SgpolicyList
+  SgpolicySpec
+  SgpolicyStatus
+  Tenant
+  TenantList
+  TenantSpec
+  TenantStatus
 
 The following Services and Methods are defined.
 
- Service: TenantV1
-   AutoAddTenant
-   AutoUpdateTenant
-   AutoGetTenant
-   AutoDeleteTenant
-   AutoListTenant
-   AutoWatchTenant
+ Service: EndpointV1
+   AutoAddEndpoint
+   AutoDeleteEndpoint
+   AutoGetEndpoint
+   AutoListEndpoint
+   AutoUpdateEndpoint
+   AutoWatchEndpoint
+
+ Service: LbPolicyV1
+   AutoAddLbPolicy
+   AutoDeleteLbPolicy
+   AutoGetLbPolicy
+   AutoListLbPolicy
+   AutoUpdateLbPolicy
+   AutoWatchLbPolicy
 
  Service: NetworkV1
    AutoAddNetwork
-   AutoUpdateNetwork
-   AutoGetNetwork
    AutoDeleteNetwork
+   AutoGetNetwork
    AutoListNetwork
+   AutoUpdateNetwork
    AutoWatchNetwork
 
  Service: SecurityGroupV1
    AutoAddSecurityGroup
-   AutoUpdateSecurityGroup
-   AutoGetSecurityGroup
    AutoDeleteSecurityGroup
+   AutoGetSecurityGroup
    AutoListSecurityGroup
+   AutoUpdateSecurityGroup
    AutoWatchSecurityGroup
-
- Service: SgpolicyV1
-   AutoAddSgpolicy
-   AutoUpdateSgpolicy
-   AutoGetSgpolicy
-   AutoDeleteSgpolicy
-   AutoListSgpolicy
-   AutoWatchSgpolicy
 
  Service: ServiceV1
    AutoAddService
-   AutoUpdateService
-   AutoGetService
    AutoDeleteService
+   AutoGetService
    AutoListService
+   AutoUpdateService
    AutoWatchService
 
- Service: LbPolicyV1
-   AutoAddLbPolicy
-   AutoUpdateLbPolicy
-   AutoGetLbPolicy
-   AutoDeleteLbPolicy
-   AutoListLbPolicy
-   AutoWatchLbPolicy
+ Service: SgpolicyV1
+   AutoAddSgpolicy
+   AutoDeleteSgpolicy
+   AutoGetSgpolicy
+   AutoListSgpolicy
+   AutoUpdateSgpolicy
+   AutoWatchSgpolicy
 
- Service: EndpointV1
-   AutoAddEndpoint
-   AutoUpdateEndpoint
-   AutoGetEndpoint
-   AutoDeleteEndpoint
-   AutoListEndpoint
-   AutoWatchEndpoint
+ Service: TenantV1
+   AutoAddTenant
+   AutoDeleteTenant
+   AutoGetTenant
+   AutoListTenant
+   AutoUpdateTenant
+   AutoWatchTenant
 
 */
 package network

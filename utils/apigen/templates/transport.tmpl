@@ -103,7 +103,7 @@ func (s *grpcServer{{$svcname}}) AutoWatch{{.}}(in *api.ListWatchOptions, stream
 	return s.Endpoints.AutoWatch{{.}}(in, stream)
 }
 {{end}}{{end}}{{end}}
-{{range .Messages}}{{if (hasExtension "venice.objectAutoGen" .)}}{{$autotype := (getExtension "venice.objectAutoGen" .)}}{{if strEq $autotype "watchhelper"}}{{else}}
+{{range .Messages}}{{if isNestedMessage .}}{{else}}{{if (hasExtension "venice.objectAutoGen" .)}}{{$autotype := (getExtension "venice.objectAutoGen" .)}}{{if strEq $autotype "watchhelper"}}{{else}}
 func encodeHTTP{{.Name}}(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -171,7 +171,7 @@ func EncodeGrpcResp{{.Name}}(ctx context.Context, response interface{}) (interfa
 func DecodeGrpcResp{{.Name}}(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
-{{end}}{{end}}
+{{end}}{{end}}{{end}}
 
 func encodeHTTPListWatchOptions(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
