@@ -30,8 +30,6 @@ message TcpCbSpec {
   uint32                rcv_nxt                    = 2;
   uint32                snd_nxt                    = 3;
   uint32                snd_una                    = 4;
-  uint32                rcv_tsval                  = 5;
-  uint32                ts_recent                  = 6;
   fixed64               serq_base                  = 7;
 }
 

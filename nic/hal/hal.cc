@@ -226,6 +226,10 @@ hal_init (hal_cfg_t *hal_cfg)
 
     tcp_lif_create();
 
+    tcp_lif_create();
+    
+    tcpcb_create_default_entry();
+
     return HAL_RET_OK;
 }
 
