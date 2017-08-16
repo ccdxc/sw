@@ -156,7 +156,7 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
                         sizeof(uint64_t))) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");    
     }
-    wring->slot_value = value;
+    wring->slot_value = ntohll(value);
     return ret;
 }
 
