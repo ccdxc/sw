@@ -510,7 +510,7 @@ metadata dma_cmd_phv2mem_t dma_cmd4;
 /*
  * Stage 0 table 0 action
  */
-action read_tx2rx(rsvd, prr_out, snd_nxt, ecn_flags_tx, packets_out) {
+action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, prr_out, snd_nxt, ecn_flags_tx, packets_out) {
     // k + i for stage 0
 
     // from intrinsic
@@ -543,7 +543,15 @@ action read_tx2rx(rsvd, prr_out, snd_nxt, ecn_flags_tx, packets_out) {
     modify_field(tcp_scratch_app.tcp_pad, tcp_app_header.tcp_pad);
 
     // d for stage 0
+    modify_field(read_tx2rxd.pc, pc);
     modify_field(read_tx2rxd.rsvd, rsvd);
+    modify_field(read_tx2rxd.cosA, cosA);
+    modify_field(read_tx2rxd.cosB, cosB);
+    modify_field(read_tx2rxd.cos_sel, cos_sel);
+    modify_field(read_tx2rxd.eval_last, eval_last);
+    modify_field(read_tx2rxd.host, host);
+    modify_field(read_tx2rxd.total, total);
+    modify_field(read_tx2rxd.pid, pid);
     modify_field(read_tx2rxd.prr_out, prr_out);
     modify_field(read_tx2rxd.snd_nxt, snd_nxt);
     modify_field(read_tx2rxd.ecn_flags_tx, ecn_flags_tx);

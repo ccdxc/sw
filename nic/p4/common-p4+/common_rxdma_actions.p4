@@ -45,7 +45,7 @@ action rx_table_dummy_action(data0, data1,
                              data4, data5, 
                              data6, data7)
 {
-    SCRATCH_METADATA_INIT(scratch_metadata1)
+    SCRATCH_METADATA_INIT_7(scratch_metadata1)
 }
 
 action common_p4plus_stage0_app_header_table_action() {

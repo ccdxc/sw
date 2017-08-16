@@ -1070,6 +1070,7 @@ table common_p4plus_stage0_app_header_table {
         p4_rxdma_intr.qstate_addr : exact;
     }
     actions {
+        rx_table_dummy_action;
         common_p4plus_stage0_app_header_table_action;
         common_p4plus_stage0_app_header_table_action_dummy;
     }

@@ -58,7 +58,7 @@ p4pd_get_stage0_prog_addr(uint64_t* offset)
 static hal_ret_t 
 p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    tcp_rx_read_tx2rx_actiondata_d  data = {0};
+    tcp_rx_read_tx2rx_read_tx2rx_d  data = {0};
     hal_ret_t                       ret = HAL_RET_OK;
     uint64_t                        pc_offset;
 
@@ -68,15 +68,19 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         // get pc address
-        if(p4pd_get_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to get pc address");
+        //if(p4pd_get_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+        //    HAL_TRACE_ERR("Failed to get pc address");
             //ret = HAL_RET_HW_FAIL;
-        }
+        //}
         HAL_TRACE_DEBUG("Received pc address", pc_offset);
-        data.pc = pc_offset;
+        data.pc = 0x0;
+        
+        data.snd_nxt = tcpcb_pd->tcpcb->snd_nxt;
+        data.prr_out = 0xFEEDBABA;
+        HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.snd_nxt);
     }
-
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
+    
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -98,7 +102,10 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.snd_una = tcpcb_pd->tcpcb->snd_una;
         data.u.tcp_rx_d.rcv_tsval = tcpcb_pd->tcpcb->rcv_tsval;
         data.u.tcp_rx_d.ts_recent = tcpcb_pd->tcpcb->ts_recent;
-        
+        HAL_TRACE_DEBUG("TCPCB rcv_nxt: 0x{0:x}", data.u.tcp_rx_d.rcv_nxt);
+        HAL_TRACE_DEBUG("TCPCB snd_una: 0x{0:x}", data.u.tcp_rx_d.snd_una);
+        HAL_TRACE_DEBUG("TCPCB rcv_tsval: 0x{0:x}", data.u.tcp_rx_d.rcv_tsval);
+        HAL_TRACE_DEBUG("TCPCB ts_recent: 0x{0:x}", data.u.tcp_rx_d.ts_recent);
         // Get Serq address
         wring_hw_id_t  serq_base;
         ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
