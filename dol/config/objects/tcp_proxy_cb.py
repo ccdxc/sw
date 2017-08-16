@@ -44,6 +44,10 @@ class TcpCbObject(base.ConfigObjectBase):
         req_spec.key_or_handle.tcpcb_id    = self.id
         if req_spec.__class__.__name__ != 'TcpCbGetRequest':
            req_spec.rcv_nxt                   = self.rcv_nxt
+           req_spec.snd_nxt                   = self.snd_nxt
+           req_spec.snd_una                   = self.snd_una
+           req_spec.rcv_tsval                 = self.rcv_tsval
+           req_spec.ts_recent                 = self.ts_recent
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -52,6 +56,10 @@ class TcpCbObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TcpCbResponse':
             self.rcv_nxt = resp_spec.spec.rcv_nxt
+            self.snd_nxt = resp_spec.spec.snd_nxt
+            self.snd_una = resp_spec.spec.snd_una
+            self.rcv_tsval = resp_spec.spec.rcv_tsval
+            self.ts_recent = resp_spec.spec.ts_recent
         return
 
     def GetObjValPd(self):
