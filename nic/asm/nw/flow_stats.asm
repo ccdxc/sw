@@ -9,7 +9,7 @@ struct phv_         p;
 %%
 
 flow_stats:
-  seq         c1, k.flow_info_metadata_flow_index, 0
+  seq         c1, k.{flow_info_metadata_flow_index_sbit0_ebit3, flow_info_metadata_flow_index_sbit4_ebit19}, 0
   b.c1.e      flow_stats_index_zero
   seq         c1, k.capri_intrinsic_drop, TRUE
   bcf         [c1], flow_stats_dropped

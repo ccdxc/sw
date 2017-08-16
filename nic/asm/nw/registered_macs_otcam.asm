@@ -10,12 +10,12 @@ struct phv_                    p;
 
 registered_macs_otcam_miss:
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
-  smeqb       c2, k.control_metadata_lif_filter, LIF_FILTER_ALL_MULTICAST, LIF_FILTER_ALL_MULTICAST
+  smeqb       c2, k.{control_metadata_lif_filter_sbit0_ebit0, control_metadata_lif_filter_sbit1_ebit5}, LIF_FILTER_ALL_MULTICAST, LIF_FILTER_ALL_MULTICAST
   bcf         [c1&c2], registered_macs_otcam_all_multicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
-  smeqb       c2, k.control_metadata_lif_filter, LIF_FILTER_BROADCAST, LIF_FILTER_BROADCAST
+  smeqb       c2, k.{control_metadata_lif_filter_sbit0_ebit0, control_metadata_lif_filter_sbit1_ebit5}, LIF_FILTER_BROADCAST, LIF_FILTER_BROADCAST
   bcf         [c1&c2], registered_macs_otcam_broadcast
-  smeqb       c2, k.control_metadata_lif_filter, LIF_FILTER_PROMISCUOUS, LIF_FILTER_PROMISCUOUS
+  smeqb       c2, k.{control_metadata_lif_filter_sbit0_ebit0, control_metadata_lif_filter_sbit1_ebit5}, LIF_FILTER_PROMISCUOUS, LIF_FILTER_PROMISCUOUS
   bcf         [c2], registered_macs_otcam_promiscuous
   phvwr.!c2.e p.capri_intrinsic_drop, TRUE
   nop

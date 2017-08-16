@@ -51,7 +51,7 @@
 //::            pad_to_512 = 0
 struct ${table}_k {
 //::            for fields in pddict['tables'][table]['asm_ki_fields']:
-//::                if len(fields) == 2:
+//::                if fields[0] == 'unionized':
 //::                    ustr, uflds = fields
 //::                    all_fields_of_header_in_same_byte = {}
 //::                    for fields in uflds:
@@ -121,7 +121,7 @@ struct ${table}_k {
 struct ${table}_${actionname}_d {
 //::                if pddict['tables'][table]['type'] == 'Hash':
 //::                    for fields in pddict['tables'][table]['asm_kd_fields']:
-//::                        if len(fields) == 2:
+//::                        if fields[0] == 'unionized':
 //::                            ustr, uflds = fields
 //::                            all_fields_of_header_in_same_byte = {}
 //::                            for fields in uflds:

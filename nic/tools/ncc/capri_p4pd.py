@@ -621,13 +621,19 @@ class capri_p4pd:
             for kbit in bit_extractors:
                 cflist = ki_or_kd_to_cf_map[kbit]
                 for cfs in cflist:
-                    (cf, cf_startbit, width, ftype) = cfs
+                    if cfs[0] == None:
+                        (cf, cf_startbit, width, ftype, hdr) = cfs
+                    else:
+                        (cf, cf_startbit, width, ftype) = cfs
                     # check if cf 
                     for k, v  in ki_or_kd_to_cf_map.items():
                         if k == kbit:
                             continue
                         for dict_cfs in v:
-                            (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                            if dict_cfs[0] == None:
+                                (cf_, cf_startbit_ , width_, ftype_, hdr)  =  dict_cfs
+                            else:
+                                (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
                             if cf == cf_:
                                 if cf_startbit >= cf_startbit_ and cf_startbit < (cf_startbit_ + width_):
                                     # Duplicate; Convert to pad
@@ -639,7 +645,7 @@ class capri_p4pd:
                                     pad_list.append(kbit) 
             if len(pad_list):
                 for kbit in pad_list:
-                    ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+                    ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
         
     def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
         covered_bits = 0
@@ -647,14 +653,20 @@ class capri_p4pd:
             if len(v) > 1:
                 max_width = 0
                 for dict_cfs in v:
-                    (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                    if dict_cfs[0] == None:
+                        (cf_, cf_startbit_ , width_, ftype_, hdr)  =  dict_cfs
+                    else:
+                        (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
                     max_width += width_
                 covered_bits = k + max_width
             else:
                 # check if this field is already covered
                 if k < covered_bits:
                     for dict_cfs in v:
-                        (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                        if dict_cfs[0] == None:
+                            (cf_, cf_startbit_ , width_, ftype_, hdr)  =  dict_cfs
+                        else:
+                            (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
                         if cf_ == None:
                             del ki_or_kd_to_cf_map[k]
 
@@ -703,7 +715,7 @@ class capri_p4pd:
                     if km_byte_pos != km_cprofile.bit_loc and \
                        km_byte_pos != km_cprofile.bit_loc1:
                         # PAD unused byte
-                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
+                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
                         continue
 
 
@@ -768,12 +780,12 @@ class capri_p4pd:
                             if phv_bit_found:
                                 break
                         if not phv_bit_found and is_tcam:
-                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
                         elif not phv_bit_found and not kd:
                             # In case of KI, pad unused bit; However in case of KD
                             # unused bit when packing as KD will be used by D bit
                             # in entry packing.
-                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P")]
+                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
 
                         kbit += 1
 
@@ -782,7 +794,7 @@ class capri_p4pd:
                         # In case of KD unfilled bits (trailing or leading)
                         # will be used by data.
                         if not kd or is_tcam:
-                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8 - kbit % 8, "P")]
+                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8 - kbit % 8, "P", "__NoHdr")]
                         
                 elif phv_byte != -1 and len(self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields) == 1:
                     phv_byte_found = False
@@ -835,13 +847,11 @@ class capri_p4pd:
                                     else:
                                         ki_or_kd_to_cf_map[kbit].append((cf, cf_startbit, min(8, cf.width), "K"))
                     if not phv_byte_found and is_tcam:
-                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
+                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
                     elif not phv_byte_found and not kd:
-                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P")]
+                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
                 elif phv_byte != -1:
-                    fields_of_same_header_in_byte_i = {}
-                    fields_of_same_header_in_byte_k = {}
-                    fields_of_same_header_in_byte_other = {}
+                    fields_of_same_header_in_byte = {}
 
                     total_p4_fld_width = 0
                     for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
@@ -856,9 +866,9 @@ class capri_p4pd:
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
                                 cf_hname = cf_get_hname(cf)
-                                if cf_hname not in fields_of_same_header_in_byte_i.keys():
-                                    fields_of_same_header_in_byte_i[cf_hname] = containerstart
-                                cs = fields_of_same_header_in_byte_i[cf_hname]
+                                if cf_hname not in fields_of_same_header_in_byte.keys():
+                                    fields_of_same_header_in_byte[cf_hname] = containerstart
+                                cs = fields_of_same_header_in_byte[cf_hname]
                                 if kbit+cs not in ki_or_kd_to_cf_map.keys():
                                     ki_or_kd_to_cf_map[kbit+cs] = [(cf, cf_startbit, width, "I")]
                                     total_p4_fld_width += width
@@ -884,9 +894,9 @@ class capri_p4pd:
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
                                 cf_hname = cf_get_hname(cf)
-                                if cf_hname not in fields_of_same_header_in_byte_k.keys():
-                                    fields_of_same_header_in_byte_k[cf_hname] = containerstart
-                                cs = fields_of_same_header_in_byte_k[cf_hname]
+                                if cf_hname not in fields_of_same_header_in_byte.keys():
+                                    fields_of_same_header_in_byte[cf_hname] = containerstart
+                                cs = fields_of_same_header_in_byte[cf_hname]
                                 if kbit+cs not in ki_or_kd_to_cf_map.keys():
                                     ki_or_kd_to_cf_map[kbit+cs] = [(cf, cf_startbit, width, "K")]
                                     total_p4_fld_width += width
@@ -904,17 +914,18 @@ class capri_p4pd:
                             put_pad = True
                         if put_pad:
                             containerstart, cf_startbit, width = v
-                            cf_hname = "__Other"
-                            if cf_hname not in fields_of_same_header_in_byte_other.keys():
-                                fields_of_same_header_in_byte_other[cf_hname] = containerstart
-                                cs = fields_of_same_header_in_byte_other[cf_hname]
-                            else:
-                                cs = containerstart
+                            #cf_hname = "__Other"
+                            cf_hname = k.split('.')[0]
+                            if cf_hname not in fields_of_same_header_in_byte.keys():
+                                fields_of_same_header_in_byte[cf_hname] = containerstart
+                            cs = fields_of_same_header_in_byte[cf_hname]
                             if kbit+cs not in ki_or_kd_to_cf_map.keys():
-                                #if ctable.p4_table.name == 'tunnel_encap_update_inner':
-                                #    pdb.set_trace()
                                 if cs >= total_p4_fld_width:
-                                    ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+containerstart, width, "P")]
+                                    ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+containerstart, width, "P", cf_hname)]
+                                    total_p4_fld_width += width
+                            else:
+                                if (None, kbit+containerstart, width, "P", cf_hname) not in ki_or_kd_to_cf_map[kbit+cs]:
+                                    ki_or_kd_to_cf_map[kbit+cs].append((None, kbit+containerstart, width, "P", cf_hname))
                                     total_p4_fld_width += width
 
                     # Since a list of p4fields shared same phv byte, get max field width and 
@@ -926,15 +937,15 @@ class capri_p4pd:
                         if put_pad:
                             cs = total_p4_fld_width # Set container start bit from where padding is needed
                             if kbit+cs not in ki_or_kd_to_cf_map.keys():
-                                ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+cs, (8 - total_p4_fld_width), "P")]
+                                ki_or_kd_to_cf_map[kbit+cs] = [(None, kbit+cs, (8 - total_p4_fld_width), "P", "__NoHdr")]
 
             # Pad each KM instance so as to cover unused bytes
             for km_byte_pos in range(len(km_cprofile.byte_sel), 32):
                 kbit_ = (km_inst * (km_width/8) + km_byte_pos) * 8
                 if is_tcam:
-                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P")]
+                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P", "__NoHdr")]
                 elif not kd:
-                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P")]
+                    ki_or_kd_to_cf_map[kbit_] = [(None, kbit_, 8, "P", "__NoHdr")]
 
         # remove any duplicate cf that are extracted as bit as well as
         # byte or multibit in a byte
@@ -977,15 +988,17 @@ class capri_p4pd:
     def build_table_asm_fields_helper(self, cf_value_list, p4f_size, asm_field_info, ctable):
         flit_sz = self.be.hw_model['phv']['flit_size']
         if len(cf_value_list) == 1:
+
+            if cf_value_list[0][0] == None:
+                cf, cf_startbit, width, ftype, hdr = cf_value_list[0]
+                # Pad byte/bit
+                asm_field_info.append(("__pad_" + hdr + "_" + str(cf_startbit), "__pad_" + hdr + "_" + str(cf_startbit), \
+                                      p4f_size, 0, 0, 0, ftype, hdr))
+                return
+
             cf, cf_startbit, width, ftype = cf_value_list[0]
             if p4f_size == -1:
                 p4f_size = width
-
-            if cf == None:
-                # Pad byte/bit
-                asm_field_info.append(("__pad_" + str(cf_startbit), "__pad_" + str(cf_startbit), \
-                                      p4f_size, 0, 0, 0, ftype, "__NoHdr"))
-                return
 
             p4fldname, _ = self.cfield_get_p4name_width(cf)
             if CHECK_INVALID_C_VARIABLE.search(p4fldname):
@@ -1045,9 +1058,13 @@ class capri_p4pd:
 
                 un_ki_field_info = []
                 for u in range(len(cf_value_list)):
-                    _cf, _cf_start, _width, _t = cf_value_list[u]
                     cflist = []
-                    cflist.append((_cf, _cf_start, _width, _t))
+                    if cf_value_list[u][0] == None:
+                        _cf, _cf_start, _width, _t, hdr = cf_value_list[u]
+                        cflist.append((_cf, _cf_start, _width, _t, hdr))
+                    else:
+                        _cf, _cf_start, _width, _t = cf_value_list[u]
+                        cflist.append((_cf, _cf_start, _width, _t))
                     self.build_table_asm_fields_helper(cflist, k_p4f_size[u], un_ki_field_info, ctable)
                     dict_lines[f] = -1
                 ki_field_info.append(("unionized", un_ki_field_info))

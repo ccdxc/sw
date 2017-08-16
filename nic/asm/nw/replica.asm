@@ -19,5 +19,5 @@ set_replica_rewrites:
   phvwr.c1    p.capri_rxdma_intrinsic_qid, k.tm_replication_data_qid_or_vnid
   phvwr.!c1   p.rewrite_metadata_tunnel_rewrite_index, k.{tm_replication_data_tunnel_rewrite_index_sbit0_ebit1,tm_replication_data_tunnel_rewrite_index_sbit2_ebit9}
   phvwr.!c1   p.rewrite_metadata_tunnel_vnid, k.tm_replication_data_qid_or_vnid
-  phvwr.e     p.rewrite_metadata_rewrite_index, k.tm_replication_data_rewrite_index
+  phvwr.e     p.rewrite_metadata_rewrite_index, k.{tm_replication_data_rewrite_index_sbit0_ebit3, tm_replication_data_rewrite_index_sbit4_ebit11}
   phvwr       p.tm_replication_data_valid, FALSE

@@ -23,6 +23,6 @@ input_properties:
 
   seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
   cmov        r1, c1, 15, 20
-  sub.e       r1, k.capri_p4_intrinsic_frame_size, r1
+  sub.e       r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
   phvwr       p.control_metadata_packet_len, r1
 

@@ -21,7 +21,7 @@ ipsg_hit:
   sne         c1, k.control_metadata_src_lif, d.u.ipsg_hit_d.lif
   sne         c2, k.ethernet_srcAddr, d.u.ipsg_hit_d.mac
   sne         c3, k.vlan_tag_valid, d.u.ipsg_hit_d.vlan_valid
-  sne         c4, k.vlan_tag_vid, d.u.ipsg_hit_d.vlan_id
+  sne         c4, k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}, d.u.ipsg_hit_d.vlan_id
   setcf       c5, [c1|c2|c3|c4]
   bcf         [c5], ipsg_drop
   nop.!c5.e
