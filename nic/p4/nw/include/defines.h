@@ -292,9 +292,9 @@
 #define IPSEC_HEADER_ESP               2
 
 //Normalization
-#define NORMALIZATION_ACTION_NONE      0
-#define NORMALIZATION_ACTION_DROP      1
-#define NORMALIZATION_ACTION_EDIT      2
+#define NORMALIZATION_ACTION_ALLOW     1
+#define NORMALIZATION_ACTION_DROP      2
+#define NORMALIZATION_ACTION_EDIT      3
 
 #define TCP_NORMALIZATION_REASON_TCP_RES              100
 #define TCP_NORMALIZATION_REASON_TCP_NOSYN_MSS        101
@@ -321,9 +321,9 @@
 #define ICMP_NORMALIZATION_REASON_CODE_NON_ZERO       132
 #define ICMP_NORMALIZATION_REASON_CODE_REDIRECT       133
 
-#define IP_FLAGS_RSVD_MASK             1
+#define IP_FLAGS_RSVD_MASK             4
 #define IP_FLAGS_DF_MASK               2
-#define IP_FLAGS_MF_MASK               4
+#define IP_FLAGS_MF_MASK               1
 
 // Different types of DDoS attacks that can be configured.
 #define DDOS_TYPE_ANY                  1

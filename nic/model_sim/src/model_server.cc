@@ -17,6 +17,8 @@
 
 #include "../../utils/host_mem/params.hpp"
 
+#define MODEL_ZMQ_BUFF_SIZE   12288
+
 namespace utils {
 
 class HostMem : public pen_mem_base {
@@ -57,21 +59,6 @@ class HostMem : public pen_mem_base {
 
 }  // namespace utils
 
-
-static void show_pkt(const std::vector<uint8_t> &pkt)
-{
-    auto itr = pkt.begin();
-    int k = 0;
-    for (int i = pkt.size(); i > 0; i-=16,k+=16) {
-        std::cout << setw(10) << setfill(' ') << k << ": " << std::hex;
-        for (uint32_t j = 0; j < ((i < 16) ? i : 16); ++j, ++itr) {
-            std::cout << setw(2) << setfill('0') << (unsigned) *itr;
-        }
-        std::cout << std::dec << std::endl;
-    }
-}
-
-
 static void dumpHBM (void) {
       auto it = HBM::access()->begin();
       auto lst = HBM::access()->end();
@@ -84,7 +71,6 @@ static void dumpHBM (void) {
       }
       return;
 }
-
 
 void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
     switch (buff->type) {
@@ -160,7 +146,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t addr = buff->addr;
             bool ret = env->read_mem(addr, buff->data, buff->size);
             ret = true;
-            if ((buff->size > 12288) || !ret) {
+            if ((buff->size > MODEL_ZMQ_BUFF_SIZE) || !ret) {
     	        std::cout << "ERROR: Reading memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
@@ -174,7 +160,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t addr = buff->addr;
             bool ret = env->write_mem(addr, buff->data, buff->size);
             ret = true;
-            if ((buff->size > 12288) || !ret) {
+            if ((buff->size > MODEL_ZMQ_BUFF_SIZE) || !ret) {
     	        std::cout << "ERROR: Writing memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
@@ -200,13 +186,10 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
     return;
 }
 
-
 int main (int argc, char ** argv)
 {
-    std::vector<uint8_t> out_pkt;
-    char tmpdir[100];
-    char zmqsockstr[100];
-    struct stat st = {0};
+    char zmqsockstr[200];
+    char recv_buff[MODEL_ZMQ_BUFF_SIZE];
     buffer_hdr_t *buff;
 
     utils::HostMem host_mem;
@@ -218,7 +201,7 @@ int main (int argc, char ** argv)
     env->load_debug();
 
     const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
@@ -227,15 +210,10 @@ int main (int argc, char ** argv)
 
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
-        char recv_buff[12288];
-        zmq_recv (responder, recv_buff, 12288, 0);
+        zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
         buff = (buffer_hdr_t *) recv_buff;
         process_buff(buff, env);
-        zmq_send (responder, recv_buff, 12288, 0);
-        //std::cout << "*************** HBM dump START ***************" << std::endl;
-        //dumpHBM();
-        //std::cout << "*************** HBM dump END ***************" << std::endl;
+        zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
     }
     return 0;
 }
-

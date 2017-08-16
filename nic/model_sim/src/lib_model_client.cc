@@ -18,7 +18,7 @@
 void *__zmq_sock;
 void *__zmq_context;
 const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
-const char* __write_verify_disable = getenv("CAPRI_WRITE_VERIFY_DISABLE");
+const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
 
 int lib_model_connect ()
 {
@@ -81,7 +81,7 @@ int lib_model_conn_close ()
 
 void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
-    char buffer[12288] = {0};
+    char buffer[2048] = {0};
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_PKT;
@@ -93,23 +93,23 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
     if (pkt.size() > 4000)
         assert(0);
     memcpy(buff->data, pkt.data(), buff->size);
-    zmq_send(__zmq_sock, buffer, 12288, 0);
-    zmq_recv(__zmq_sock, buffer, 12288, 0);
+    zmq_send(__zmq_sock, buffer, 2048, 0);
+    zmq_recv(__zmq_sock, buffer, 2048, 0);
     return;
 }
 
 
 bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 {
-    char buffer[12288] = {0};
+    char buffer[2048] = {0};
     buffer_hdr_t *buff;
 
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_GET_NEXT_PKT;
-    zmq_send(__zmq_sock, buffer, 12288, 0);
-    zmq_recv(__zmq_sock, buffer, 12288, 0);
+    zmq_send(__zmq_sock, buffer, 2048, 0);
+    zmq_recv(__zmq_sock, buffer, 2048, 0);
     port = buff->port;
     cos = buff->cos;
     pkt.resize(buff->size);
@@ -120,7 +120,7 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 
 bool read_reg (uint64_t addr, uint32_t& data)
 {
-    char buffer[12288] = {0};
+    char buffer[2048] = {0};
     buffer_hdr_t *buff;
 
     if (__lmodel_env)
@@ -129,8 +129,8 @@ bool read_reg (uint64_t addr, uint32_t& data)
     buff->type = BUFF_TYPE_REG_READ;
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
-    zmq_send(__zmq_sock, buffer, 12288, 0);
-    zmq_recv(__zmq_sock, buffer, 12288, 0);
+    zmq_send(__zmq_sock, buffer, 2048, 0);
+    zmq_recv(__zmq_sock, buffer, 2048, 0);
     memcpy(&data, buff->data, sizeof(uint32_t));
     return true;
 }
@@ -138,7 +138,7 @@ bool read_reg (uint64_t addr, uint32_t& data)
 
 bool write_reg (uint64_t addr, uint32_t data)
 {
-    char buffer[12288] = {0};
+    char buffer[2048] = {0};
     buffer_hdr_t *buff;
 
     if (__lmodel_env)
@@ -148,8 +148,8 @@ bool write_reg (uint64_t addr, uint32_t data)
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
     memcpy(buff->data, &data, sizeof(uint32_t));
-    zmq_send(__zmq_sock, buffer, 12288, 0);
-    zmq_recv(__zmq_sock, buffer, 12288, 0);
+    zmq_send(__zmq_sock, buffer, 2048, 0);
+    zmq_recv(__zmq_sock, buffer, 2048, 0);
 
     return true;
 }
@@ -190,7 +190,7 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
     zmq_send(__zmq_sock, buffer, 12288, 0);
     zmq_recv(__zmq_sock, buffer, 12288, 0);
 
-    if (__write_verify_disable)
+    if (!__write_verify_enable)
         return true;
 
     uint8_t obuff[12288] = {0};
@@ -204,13 +204,13 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
 bool dump_hbm ()
 {
-    char buffer[12288] = {0};
+    char buffer[1024] = {0};
     buffer_hdr_t *buff;
 
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_HBM_DUMP;
-    zmq_send(__zmq_sock, buffer, 12288, 0);
+    zmq_send(__zmq_sock, buffer, 1024, 0);
     return true;
 }

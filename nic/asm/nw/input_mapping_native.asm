@@ -150,6 +150,7 @@ malformed_native_packet:
   phvwr       p.capri_intrinsic_drop, 1
 
 .align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
   nop.e
   nop

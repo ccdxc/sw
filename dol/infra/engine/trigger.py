@@ -327,7 +327,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     STATUS_QUEUED = 0
     STATUS_COMPLETED = 1
     STATUS_RUNNING = 2
-    TEST_STEP_TIMEOUT = 5
+    TEST_STEP_TIMEOUT = 30
 
     class ExpectedReceivedData(object):
 

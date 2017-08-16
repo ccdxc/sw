@@ -169,6 +169,7 @@ table l4_profile {
     }
     actions {
         l4_profile;
+        nop;
     }
     size : L4_PROFILE_TABLE_SIZE;
 }
@@ -202,7 +203,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                        rflow_tcp_ack_num,
                        rflow_tcp_win_sz, rflow_tcp_win_scale,
                        rflow_tcp_mss,
-		       rflow_tcp_state,
+                       rflow_tcp_state,
                        syn_cookie_delta,
                        rflow_exceptions_seen,
                        flow_rtt_seq_check_enabled,
@@ -411,7 +412,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
       // state with no SYN, FIN and RST should go through fast processing
       if ((tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_FIN|TCP_FLAG_RST) == 0) and
           scratch_metadata.iflow_tcp_state == FLOW_STATE_ESTABLISHED) {
-      
+
           // goto INITIATOR_TCP_SESSION_UPDATE
        }
        // RST Handling
@@ -705,7 +706,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
       // state with no SYN, FIN and RST should go through fast processing
       if ((tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_FIN|TCP_FLAG_RST) == 0) and
           scratch_metadata.iflow_tcp_state == FLOW_STATE_ESTABLISHED) {
-      
+
           // goto INITIATOR_TCP_SESSION_UPDATE
        }
        // RST Handling
@@ -965,9 +966,35 @@ table session_state {
 }
 
 /*****************************************************************************/
-/* TCP normalization checks                                                  */
+/* IP normalization checks                                                  */
+/* 1. We cannot edit the flow_lkp_** fields here. That wont reflect the packet.
+   2. We need to handle IPv4 and IPv6
+   3. For edit option we need to check for Tunnel terminate or not and update
+      the appropriate field.
+        ip_rsvd_flags_action    -     IPv4
+        ip_df_action            -     IPv4
+        ip_options_action       -     IPv4 only (TBD)
+        ip_invalid_len_action   -     IPv4 & IPv6
+        ip_normalize_ttl        -     IPv4 & IPv6
+*/
 /*****************************************************************************/
 action ip_normalization_checks() {
+
+    if (l4_metadata.ip_normalization_en == FALSE) {
+        // return
+    }
+
+    if (l4_metadata.tcp_normalization_en == FALSE) {
+        // return
+    }
+
+    if ((flow_lkp_metadata.lkp_type != FLOW_KEY_LOOKUP_TYPE_IPV4) and
+        (flow_lkp_metadata.lkp_type != FLOW_KEY_LOOKUP_TYPE_IPV6)) {
+        // Return
+    }
+    if (tunnel_metadata.tunnel_terminate == TRUE) {
+        // Act on inner fields otherwise outer fields
+    }
 
     // Reserved bit in ip header non-zero
     if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
@@ -976,8 +1003,15 @@ action ip_normalization_checks() {
     }
 
     if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_and(flow_lkp_metadata.ipv4_flags, flow_lkp_metadata.ipv4_flags, 6);
+        bit_and(ipv4.flags, ipv4.flags, 6);
+    }
+
+    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
+        bit_and(inner_ipv4.flags, inner_ipv4.flags, 6);
     }
 
     // DF bit in ip header non-zero
@@ -1016,6 +1050,11 @@ action ip_normalization_checks() {
         ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 14)))) {
         modify_field(ipv4.totalLen, (control_metadata.packet_len - 14));
     }
+
+    // IP Normalize TTL: If the configured value is non-zero then every
+    // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
+    // ip_normalize_ttl
+    //
 }
 
 action icmp_normalization_checks() {

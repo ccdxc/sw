@@ -9,5 +9,12 @@ struct phv_         p;
 k = {
   inner_ipv4_srcAddr = 192.168.1.1;
   inner_ipv4_dstAddr = 192.168.1.2;
+  flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
   tunnel_metadata_tunnel_terminate = 1;
+  flow_lkp_metadata_ipv4_flags = 1;
+};
+
+d = {
+  l4_profile_d.ip_normalization_en = 1;
+  l4_profile_d.ip_rsvd_flags_action = NORMALIZATION_ACTION_EDIT;
 };

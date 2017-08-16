@@ -5,7 +5,7 @@ meta:
 profiles:
     - id: SEC_PROF_DEFAULT
       fields:
-        ip_rsvd_flags_action: DROP
+        ip_rsvd_flags_action: EDIT
 
 #    - id: SEC_PROF_1
 #      fields:

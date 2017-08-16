@@ -61,7 +61,7 @@ def build():
 
 # ASIC model
 
-def run_model():
+def run_model(args):
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64"
 
     model_dir = nic_dir + "/model_sim/build"
@@ -69,7 +69,10 @@ def run_model():
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
-    p = Popen(["./cap_model", "+plog=info", "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
+    if args.modellogs: 
+        p = Popen(["./cap_model", "+plog=info", "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
+    else:
+        p = Popen(["./cap_model"], stdout=log, stderr=log)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 
@@ -220,8 +223,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--build", action="store_true", help="run build")
     parser.add_argument("-c", "--cleanup", action="store_true", help="cleanup running process")
+    parser.add_argument("--modellogs", action="store_true", help="run with model logs enabled")
     args = parser.parse_args()
-
+    
     if args.cleanup:
         if os.path.isfile(lock_file):
             cleanup(keep_logs = False)
@@ -240,7 +244,7 @@ def main():
         print "* Using port (" + str(port) + ") for HAL\n"
         os.environ["HAL_GRPC_PORT"] = str(port)
 
-        run_model()
+        run_model(args)
         run_hal()
         status = run_dol()
         cleanup(keep_logs = True)

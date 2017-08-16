@@ -31,7 +31,7 @@ class TenantObject(base.ConfigObjectBase):
         self.spec = spec
         self.type = spec.type.upper()
         self.overlay = spec.overlay.upper()
-        #self.security_profile = spec.security_profile.Get(Store)
+        self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
             self.subnet             = resmgr.TepIpSubnetAllocator.get()
             self.ip_addr_allocator  = resmgr.CreateIpAddrAllocator(self.subnet.get())
@@ -129,7 +129,7 @@ class TenantObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id
         reqspec.key_or_handle.tenant_id = self.id
-        #reqspec.security_profile_handle = self.security_profile.hal_handle
+        reqspec.security_profile_handle = self.security_profile.hal_handle
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -170,5 +170,6 @@ class TenantObjectHelper:
         self.Generate(topospec)
         self.Configure()
         return
+
 
 TenantHelper = TenantObjectHelper()

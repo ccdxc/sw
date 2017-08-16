@@ -46,6 +46,13 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             ipv4    :
+                flags   :   0
+
+match_profiles:
+    - profile:
+        id          : CSUM
+        ign_fields  :
+            - chksum 
 
 session:
     - step:
@@ -60,3 +67,4 @@ session:
                 - packet:
                     object  : ref://testcase/packets/id=PKT2
                     port    : ref://testcase/config/dst/endpoint/intf/ports
+                    match_profile: CSUM
