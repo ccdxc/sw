@@ -50,6 +50,7 @@ SOURCES = \
 		  tlscb_pd.cc \
 		  tcpcb_pd.cc \
 		  wring_pd.cc \
+		  descriptor_aol_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

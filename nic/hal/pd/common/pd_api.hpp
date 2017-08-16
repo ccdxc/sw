@@ -289,6 +289,23 @@ hal_ret_t pd_wring_update(pd_wring_args_t *wring);
 hal_ret_t pd_wring_delete(pd_wring_args_t *wring);
 hal_ret_t pd_wring_get(pd_wring_args_t *wring);
 
+
+typedef struct pd_descr_aol_s {
+    uint64_t    a0;
+    uint32_t    o0;
+    uint32_t    l0;
+    uint64_t    a1;
+    uint32_t    o1;
+    uint32_t    l1;
+    uint64_t    a2;
+    uint32_t    o2;
+    uint32_t    l2;
+    uint64_t    next_addr;
+} __attribute__ ((__packed__)) pd_descr_aol_t;
+
+hal_ret_t
+pd_descriptor_aol_get(pd_descr_aol_t *src, pd_descr_aol_t *dst);
+
 }    // namespace pd
 }    // namespace hal
 

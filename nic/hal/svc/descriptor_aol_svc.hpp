@@ -1,5 +1,5 @@
-#ifndef __DESCRIPTOR_AOL_HPP__
-#define __DESCRIPTOR_AOL_HPP__
+#ifndef __DESCRIPTOR_AOL_SVC_HPP__
+#define __DESCRIPTOR_AOL_SVC_HPP__
 
 #include <base.h>
 #include <grpc++/grpc++.h>
@@ -22,5 +22,4 @@ public:
                         DescrAolResponseMsg* response) override;
 };
 
-
-#endif  /* __DESCRIPTOR_AOL_HPP__ */
+#endif /* __DESCRIPTOR_AOL_SVC_HPP__ */

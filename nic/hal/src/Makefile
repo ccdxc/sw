@@ -36,6 +36,7 @@ SOURCES = \
 		  lif_manager.cc \
 		  wring.cc \
 		  proxy.cc \
+		  descriptor_aol.cc \
 		  $(NULL)
 
 
