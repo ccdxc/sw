@@ -167,6 +167,9 @@ hbm_semaphore_init(void)
         return HAL_RET_OK;
 }
 
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+
 static hal_ret_t
 hbm_ring_init(char *ring_name, char *object_name, uint32_t num_objects,
               uint32_t object_size, uint64_t **ring_ptr, void **object_ptr)
