@@ -44,7 +44,7 @@ wring_pd_meta_init() {
 }
 
 hal_ret_t
-get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
+get_default_slot_value(types::WRingType type, uint32_t index, uint64_t* value)
 {
     pd_wring_meta_t     *meta = &g_meta[type];
 
@@ -114,7 +114,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
 
         uint64_t slot_addr = wring_base + (index * WRING_SLOT_SIZE);
         
-        get_default_slot_value(type, index, (uint8_t *)&value);
+        get_default_slot_value(type, index, &value);
         
         p4plus_hbm_write(slot_addr, (uint8_t *)&value, WRING_SLOT_SIZE);
     }
