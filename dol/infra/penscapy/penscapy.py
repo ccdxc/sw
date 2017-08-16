@@ -96,7 +96,7 @@ class BTH(Packet):
         BitField("rsvd2",       0,      7),
         BitField("psn",         0,      24),
     ]
-
+bind_layers(UDP, BTH, dport=4791)
 
 class RDETH(Packet):
     name = "RDETH"

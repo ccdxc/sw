@@ -1,7 +1,7 @@
 meta:
     id      : BTH
     scapy   : BTH
-    size    : None
+    size    : 12
 
 fields:
     opcode  : const/0x0

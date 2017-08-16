@@ -86,3 +86,11 @@ modules:
         args    :
             flow: filter://type=IPV6,proto=UDP
 
+    - module:
+        name    : RDMA_BTH_BASIC
+        enable  : True
+        package : test.rdma
+        module  : None
+        spec    : firstpacket.testspec
+        ignore  : True
+
