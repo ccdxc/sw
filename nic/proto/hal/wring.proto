@@ -28,7 +28,6 @@ message WRingSpec {
   types.ObjectMeta      meta                      = 1;    // common object meta
   WRingKeyHandle        key_or_handle             = 2;
   types.WRingType       type                      = 3;
-  fixed64               value                     = 4;
 }
 
 // WRingRequestMsg is batched add or modify wring request
@@ -89,9 +88,11 @@ message WRingStats {
 // only if api_status indicates success, other fields are valid
 message WRingGetResponse {
   types.ApiStatus    api_status = 1;    // API status code
-  WRingSpec         spec       = 2;    // wring configuration
-  WRingStatus       status     = 3;    // operational state 
-  WRingStats        stats      = 4;    // stats 
+  WRingSpec         spec        = 2;    // wring configuration
+  uint32            index       = 3;
+  fixed64           value       = 4;
+  WRingStatus       status      = 5;    // operational state 
+  WRingStats        stats       = 6;    // stats 
 }
 
 // WRingGetResponseMsg is batched response to WRingGetRequestMsg

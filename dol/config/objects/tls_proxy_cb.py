@@ -26,7 +26,8 @@ class TlsCbObject(base.ConfigObjectBase):
         self.GID(gid)
         cfglogger.info("  - %s" % self)
         self.tcpcb = tcpcb 
-        self.pre_barco_serq = SwDscrRingHelper.main("SERQ", gid)
+        
+        self.pre_barco_serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         """
         TODO:
         self.spec = spec_obj

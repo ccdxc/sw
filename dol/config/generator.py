@@ -13,6 +13,7 @@ from config.objects.security_profile    import SecurityProfileHelper
 from    config.objects.tcp_proxy_cb     import TcpCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
+from config.objects.swdr                import SwDscrRingHelper
 
 def process(topospec):
     # Security Profiles
@@ -31,6 +32,10 @@ def process(topospec):
     # Generate all sessions
     SessionHelper.main()
     
+    # Global descriptors and page rings
+    SwDscrRingHelper.main("NMDR")
+    SwDscrRingHelper.main("NMPR")
+
     TcpCbHelper.Configure(TcpCbHelper.objlist)
     return
 
