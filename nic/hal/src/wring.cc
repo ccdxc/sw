@@ -189,7 +189,8 @@ wring_get (WRingGetRequest& req, WRingGetResponse *rsp)
     rsp->mutable_spec()->mutable_key_or_handle()->set_wring_id(wring.wring_id);
     rsp->set_index(wring.slot_index);
     rsp->set_value(wring.slot_value);
-
+    
+    HAL_TRACE_DEBUG("Ring slot_index: {}", wring.slot_index);
     // fill operational state of this WRING
     //rsp->mutable_status()->set_wring_handle(wring->hal_handle);
 

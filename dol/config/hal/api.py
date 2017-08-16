@@ -169,6 +169,13 @@ def UpdateTcpCbs(objlist):
              stub.TcpCbUpdate)
     return
 
+def GetTcpCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
+    __config(objlist, tcpcb_pb2.TcpCbGetRequestMsg,
+             stub.TcpCbGet)
+    return
+
 def ConfigureTlsCbs(objlist):
     if IsHalDisabled(): return
     stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <trace.hpp>
-
+#include <arpa/inet.h>
 
 #define __IN__
 #define __OUT__
@@ -182,6 +182,9 @@ do {                                                       \
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 
 #undef HAL_RET_ENTRIES
+
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 #endif    // __BASE_H__
 
