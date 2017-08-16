@@ -58,7 +58,7 @@ get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
             return HAL_RET_ENTRY_NOT_FOUND;
         }
         // get the addr of the object
-        *value = htonll(obj_addr_base + (index * meta->obj_size));    
+        *value = (obj_addr_base + (index * meta->obj_size));    
     }
     return HAL_RET_OK;
 }
@@ -150,7 +150,7 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
                         WRING_SLOT_SIZE)) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");    
     }
-    wring->slot_value = ntohll(value);
+    wring->slot_value = value;
     return ret;
 }
 
