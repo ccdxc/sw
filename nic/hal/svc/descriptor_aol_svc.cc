@@ -17,7 +17,9 @@ DescrAolServiceImpl::DescrAolGet(ServerContext* context,
     for (idx = 0; idx < nreqs; idx++) {
         resp = response->add_response();
         DescrAolRequest  req = request->request(idx);
+
         hal::descriptor_aol_get(req, resp);
+
         resp->set_api_status(types::API_STATUS_OK);
     }
     return Status::OK;

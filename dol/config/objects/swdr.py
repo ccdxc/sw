@@ -29,7 +29,7 @@ class SwDscrAolObject(base.ConfigObjectBase):
         return
     def PrepareHALRequestSpec(self, reqspec):
         # FIXME, this should really be an index into the ring
-        reqspec.descr_aol_handle = 543210
+        reqspec.descr_aol_handle = self.DescAddr
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.DescAddr   = resp_spec.descr_aol_handle
@@ -42,10 +42,13 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.Addr3      = resp_spec.Address3
         self.Offset3    = resp_spec.Offset3
         self.Len3       = resp_spec.Length3
-        #cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
-        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
-        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
-        #cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
+        cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
+        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
+        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
+        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
+        return
+    def SetHandle(self, handle):
+        self.DescAddr = handle
         return
     def GetHandle(self):
         return self.DescAddr
@@ -76,6 +79,9 @@ class SwDscrPageObject(base.ConfigObjectBase):
         # FIXME, query address of the page
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
+        return
+    def SetHandle(self, handle):
+        self.pageaddr = handle
         return
 
 class SwPageObjectHelper:
@@ -121,7 +127,7 @@ class SwDscrRingEntry(base.ConfigObjectBase):
             assert(0)
 
         self.handle = resp_spec.value
-        #cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
+        cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
         return
     def GetHandle(self):
         return self.handle
@@ -177,6 +183,12 @@ class SwDscrRingObject(base.ConfigObjectBase):
     def Configure(self):
         # Configure generic ring entries
         halapi.GetRingEntries(self.ringentries)
+
+        # Setup handles
+        obj_count = len(self.ringentries)
+        for idx in range(obj_count):
+            handle = self.ringentries[idx].GetHandle()
+            self.swdre_list[idx].SetHandle(handle)
 
         # Configure entry specific information
         RingEntryHelper = HelperDB[self.swdr_type]
