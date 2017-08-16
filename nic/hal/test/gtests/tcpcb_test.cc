@@ -108,6 +108,21 @@ TEST_F(tcpcb_test, test1)
 // Creating muliple TCPCBs
 // ----------------------------------------------------------------------------
 /*
+TEST_F(tcpcb_test, test2) 
+{
+    hal_ret_t           ret;
+    TcpCbSpec           spec;
+    TcpCbResponse       rsp;
+
+    for (int i = 0; i < 10; i++) {
+        spec.mutable_key_or_handle()->set_tcpcb_id(i);
+
+        ret = hal::tcpcb_create(spec, &rsp);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+}
+*/
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
