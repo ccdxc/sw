@@ -26,6 +26,7 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
     tcb.rcv_nxt = 0xbabababa
+    tcb.snd_nxt = 0xefefefef
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
