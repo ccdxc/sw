@@ -3,7 +3,7 @@
 
 
 struct s1_tbl_k k;
-struct s1_tbl_nvme_sq_entry_pop_d d;
+struct s1_tbl_nvme_sq_handler_d d;
 struct phv_ p;
 
 params = {

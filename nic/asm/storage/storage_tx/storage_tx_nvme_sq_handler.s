@@ -1,8 +1,8 @@
 /*****************************************************************************
- *  nvme_sq_entry_pop: Save the NVME command in SQ entry to PHV. Increment
- *                     working consumer index in NVME VF's SQ context to pop
- *                     the entry. Check to see if we can do PRP assist and
- *                     load the address for the next stage based on that.
+ *  nvme_sq_handler: Save the NVME command in SQ entry to PHV. DMA the
+ *                   working consumer index to the consumer index in the
+ *                   queue state. Check to see if we can do PRP assist and
+ *                   load the address for the next stage based on that.
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -10,7 +10,7 @@
 #include "INGRESS_p.h"
 
 struct s1_tbl_k k;
-struct s1_tbl_nvme_sq_entry_pop_d d;
+struct s1_tbl_nvme_sq_handler_d d;
 struct phv_ p;
 
 %%

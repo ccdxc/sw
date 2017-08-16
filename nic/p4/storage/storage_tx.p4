@@ -4,11 +4,12 @@
 #define tx_table_s0_t0 s0_tbl
 #define tx_table_s1_t0 s1_tbl
 #define tx_table_s2_t0 s2_tbl
+#define tx_table_s3_t0 s3_tbl
 
-#define tx_table_s0_t0_action q_state_check
-#define tx_table_s1_t0_action nvme_sq_entry_pop
+#define tx_table_s0_t0_action q_state_pop
+#define tx_table_s1_t0_action nvme_sq_handler
 #define tx_table_s2_t0_action q_state_push
-#define tx_table_s3_t0_action dummy
+#define tx_table_s3_t0_action pvm_cq_handler
 #define tx_table_s4_t0_action dummy
 #define tx_table_s5_t0_action dummy
 #define tx_table_s6_t0_action dummy
@@ -31,6 +32,8 @@ metadata storage_kivec0_t storage_kivec0_scratch;
 // PVM Command metadata
 @pragma dont_trim
 metadata pvm_cmd_t pvm_cmd;
+@pragma dont_trim
+metadata pvm_status_t pvm_status;
 
 // Push doorbell
 @pragma scratch_metadata
@@ -62,15 +65,15 @@ metadata dma_cmd_phv2mem_t dma_p2m_2;
 metadata dma_cmd_mem2mem_t dma_m2m_2;
 
 /*****************************************************************************
- *  q_state_check : Check the queue state and see if there's anything to be 
- *                  popped. If so increment the working index and load the
- *                  queue entry.
+ *  q_state_pop : Check the queue state and see if there's anything to be 
+ *                popped. If so increment the working index and load the
+ *                queue entry.
  *****************************************************************************/
 
-action q_state_check(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
-                     total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                     num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                     dst_lif, dst_qtype, dst_qid, vf_id, sq_id, pad) {
+action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                   total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                   num_entries, base_addr, entry_size, next_pc, dst_qaddr,
+                   dst_lif, dst_qtype, dst_qid, vf_id, sq_id, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY(q_state_scratch)
@@ -105,15 +108,15 @@ action q_state_check(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 }
 
 /*****************************************************************************
- *  nvme_sq_entry_pop: Save the NVME command in SQ entry to PHV. Increment 
- *                     working consumer index in NVME VF's SQ context to pop 
- *                     the entry. Check to see if we can do PRP assist and 
- *                     load the address for the next stage based on that.
+ *  nvme_sq_handler: Save the NVME command in SQ entry to PHV. DMA the 
+ *                   working consumer index to the consumer index in the 
+ *                   queue state. Check to see if we can do PRP assist and 
+ *                   load the address for the next stage based on that.
  *****************************************************************************/
 
-action nvme_sq_entry_pop(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
-                         mptr, dptr1, dptr2, slba, nlb, rsvd12, prinfo,
-                         fua, lr, dsm, rsvd13, dw14, dw15) {
+action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
+                       mptr, dptr1, dptr2, slba, nlb, rsvd12, prinfo,
+                       fua, lr, dsm, rsvd13, dw14, dw15) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -197,9 +200,51 @@ action nvme_sq_entry_pop(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
 #endif
 
   // Load the PVM VF SQ context for the next stage to push the NVME command
-  // TODO: FIXME on the third param if the queue selection is using some hash
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
-                       Q_STATE_SIZE, pvm_sq_entry_push_start)
+                        Q_STATE_SIZE, q_state_push_start)
+}
+
+/*****************************************************************************
+ *  pvm_cq_handler: Save the NVME command in SQ entry to PHV. DMA the 
+ *                  working consumer index to the consumer index in the 
+ *                  queue state. Check to see if we can do PRP assist and 
+ *                  load the address for the next stage based on that.
+ *****************************************************************************/
+
+action pvm_cq_handler(cspec, rsvd0, sq_head, sq_id, cid, phase, status,
+                      dst_qaddr) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+
+  // Setup the DMA command to pop the entry by writing w_ndx to c_ndx
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_0, 
+                           storage_kivec0.src_qaddr + Q_STATE_C_NDX_OFFSET,
+                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
+                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
+                           0, 0, 0, 0)
+
+  // Carry forward NVME status information to be sent to driver in the PHV 
+  modify_field(pvm_status.cspec, cspec);
+  modify_field(pvm_status.rsvd0, rsvd0);
+  modify_field(pvm_status.sq_head, sq_head);
+  modify_field(pvm_status.sq_id, sq_id);
+  modify_field(pvm_status.cid, cid);
+  modify_field(pvm_status.phase, phase);
+  modify_field(pvm_status.status, status);
+  modify_field(pvm_status.dst_qaddr, dst_qaddr);
+
+  // Setup the DMA command to push the NVME status entry
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
+                           0,
+                           PHV_FIELD_OFFSET(pvm_status.cspec),
+                           PHV_FIELD_OFFSET(pvm_status.status),
+                           0, 0, 0, 0)
+
+  // Load the PVM VF SQ context for the next stage to push the NVME command
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        0, // In ASM: Use d.dst_qaddr,
+                        Q_STATE_SIZE, q_state_push_start)
 }
 
 /*****************************************************************************

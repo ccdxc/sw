@@ -1,7 +1,7 @@
 /*****************************************************************************
- *  q_state_check : Check the queue state and see if there's anything to be 
- *                  popped. If so increment the working index and load the
- *                  queue entry.
+ *  q_state_pop : Check the queue state and see if there's anything to be
+ *                popped. If so increment the working index and load the
+ *                queue entry.
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -10,7 +10,7 @@
 
 
 struct s0_tbl_k k;
-struct s0_tbl_q_state_check_d d;
+struct s0_tbl_q_state_pop_d d;
 struct phv_ p;
 
 %%

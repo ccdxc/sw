@@ -26,7 +26,8 @@
   modify_field(i.table_addr, _table_addr); 				\
   modify_field(i.table_raw_table_size, _load_size);			\
 
-#define pvm_sq_entry_push_start		0x80000000
+// Macros for ASM param addresses (hardcoded in P4)
+#define q_state_push_start		0x80000000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -135,59 +136,82 @@ header_type storage_kivec0_t {
 header_type pvm_cmd_t {
   fields {
     // NVME command Dword 0
-    opc          : 8;    // Opcode
-    fuse         : 2;    // Fusing 2 simple commands
-    rsvd0        : 4; 
-    psdt         : 2;    // PRP or SGL
-    cid          : 16;   // Command identifier
+    opc		: 8;	// Opcode
+    fuse	: 2;	// Fusing 2 simple commands
+    rsvd0	: 4; 
+    psdt	: 2;	// PRP or SGL
+    cid		: 16;	// Command identifier
   
     // NVME command Dword 1
-    nsid         : 32;   // Namespace identifier
+    nsid	: 32;	// Namespace identifier
 
     // NVME command Dword 2
-    rsvd2        : 32;
+    rsvd2	: 32;
 
     // NVME command Dword 3
-    rsvd3        : 32;
+    rsvd3	: 32;
 
     // NVME command Dwords 4 and 5 
-    mptr         : 64;   // Metadata pointer
+    mptr	: 64;	// Metadata pointer
 
     // NVME command Dwords 6,7,8 & 9 form the data pointer (PRP or SGL)
-    dptr1        : 64;   // PRP1 or address of SGL
-    dptr2        : 64;   // PRP2 or size/type/sub_type in SGL
+    dptr1	: 64;	// PRP1 or address of SGL
+    dptr2	: 64;	// PRP2 or size/type/sub_type in SGL
 
     // NVME command Dwords 10 and 11 
-    slba         : 64;   // Starting LBA (for Read/Write) commands
+    slba	: 64;	// Starting LBA (for Read/Write) commands
 
     // NVME command Dword 12
-    nlb          : 16;   // Number of logical blocks
-    rsvd12       : 10;   
-    prinfo       : 4;    // Protection information field
-    fua          : 1;    // Force unit access
-    lr           : 1;    // Limited retry
+    nlb		: 16;	// Number of logical blocks
+    rsvd12	: 10;	
+    prinfo	: 4;	// Protection information field
+    fua		: 1;	// Force unit access
+    lr		: 1;	// Limited retry
  
     // NVME command Dword 13
-    dsm          : 8;    // Dataset management
-    rsvd13       : 24;
+    dsm		: 8;	// Dataset management
+    rsvd13	: 24;
 
     // NVME command Dword 14
-    dw14         : 32;
+    dw14	: 32;
 
     // NVME command Dword 15
-    dw15         : 32;
+    dw15	: 32;
 
     // Information passed to PVM
-    tickreg      : 64;   // Microsecond reg from NIC
-    vf_id        : 16;   // VF number
-    sq_id        : 16;   // Submission queue id
-    num_prps     : 8;    // Number of additional PRPs
+    tickreg	: 64;	// Microsecond reg from NIC
+    vf_id	: 16;	// VF number
+    sq_id	: 16;	// Submission queue id
+    num_prps	: 8;	// Number of additional PRPs
+  }
+}
+
+// NVME status obtained from PVM
+header_type pvm_status_t {
+  fields {
+    // NVME status Dword 0
+    cspec	: 32;	// Command specific
+
+    // NVME status Dword 1
+    rsvd0	: 32;
+
+    // NVME status Dword 2
+    sq_head	: 16;	// Submission queue head pointer
+    sq_id	: 16;	// Submission queue identifier
+	
+    // NVME status Dword 3
+    cid		: 16;	// Command identifier
+    phase	: 1;	// Phase bit
+    status	: 15;	// Status
+
+    // Information passed back by PVM
+    dst_qaddr	: 34;	// Destination queue state address
   }
 }
 
 header_type storage_pad_t {
   fields {
-    pad		: 88;	// Align DMA commands to 16 byte to boundary
+    pad		: 48;	// Align DMA commands to 16 byte to boundary
   }
 }
 
