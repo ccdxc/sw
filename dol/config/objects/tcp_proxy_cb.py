@@ -35,6 +35,7 @@ class TcpCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
         self.tlscb = TlsCbHelper.main(self)
+
         return
 
 
