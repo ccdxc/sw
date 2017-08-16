@@ -58,12 +58,6 @@ tcp_rx_read_shared_stage0_start:
 
 
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
-#if 1
-	phvwri		p.to_s6_payload_len, 24
-	phvwri		p.to_s6_page, 0xa6ec6200
-	phvwri		p.to_s6_descr, 0xa6ec7000
-#endif
-
 	
 table_read_RX:	
 	CAPRI_NEXT_TABLE0_READ(k.p4_rxdma_intr_qid, TABLE_LOCK_EN,
