@@ -315,7 +315,6 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
     int tbl_col = index % tblctx->sram_layout.num_buckets;
     /* entry_width is in units of SRAM word  -- 16b */
 
-#if 1 /* Kevin confirmed column wise addressing is correct for both TCAM and SRAM */
     *entry_start_word = (tblctx->sram_layout.top_left_x + (tbl_col * tblctx->sram_layout.entry_width)) 
                         % CAPRI_SRAM_WORDS_PER_BLOCK;
     /* Capri 16b word within a 128b block is numbered from right to left.*/
@@ -328,22 +327,9 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
                          + (index/tblctx->sram_layout.num_buckets);
 
     *entry_end_block = *entry_start_block + 
-                       (tblctx->sram_layout.entry_width
+                       (((tblctx->sram_layout.entry_width - 1) + 
+                         (*entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK))
                         / CAPRI_SRAM_WORDS_PER_BLOCK) * CAPRI_SRAM_ROWS;
-#else
-    *entry_start_word = (tblctx->sram_layout.top_left_x + (tbl_col * tblctx->sram_layout.entry_width)) 
-                        % CAPRI_SRAM_WORDS_PER_BLOCK;
-    /* Capri 16b word within a 128b block is numbered from right to left.*/
-    *entry_start_word = (CAPRI_SRAM_WORDS_PER_BLOCK - 1) - *entry_start_word;
-
-    *entry_start_block = (*sram_row * CAPRI_SRAM_BLOCK_COUNT) + tblctx->sram_layout.top_left_block; 
-               + ((tblctx->sram_layout.top_left_x + (tbl_col * tblctx->sram_layout.entry_width)) / CAPRI_SRAM_WORDS_PER_BLOCK);
-
-    *entry_end_block = *entry_start_block + 
-                       (tblctx->sram_layout.entry_width
-                        / CAPRI_SRAM_WORDS_PER_BLOCK) * CAPRI_SRAM_ROWS;
-
-#endif
 
     *entry_words = tblctx->sram_layout.entry_width;
     *entry_bit_len = tblctx->sram_layout.entry_width_bits;
@@ -580,7 +566,8 @@ static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
                          + tblctx->tcam_layout.top_left_y 
                          + (index/tblctx->tcam_layout.num_buckets);
     *entry_end_block = *entry_start_block 
-                         + (tblctx->tcam_layout.entry_width / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
+                         + (tblctx->tcam_layout.entry_width
+                            / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
 
     *entry_words = tblctx->tcam_layout.entry_width;
     *entry_bit_len = tblctx->tcam_layout.entry_width_bits;
