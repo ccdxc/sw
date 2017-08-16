@@ -216,8 +216,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
     ep->l2_key.l2_segid = l2seg->seg_id;
     MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.mac_address());
-    HAL_TRACE_DEBUG("PI-EP:{}: Mac: {}", __FUNCTION__, 
-                    ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)));
+    HAL_TRACE_DEBUG("PI-EP:{}: Seg Id:{}, Mac: {} If: {}", __FUNCTION__, 
+                    l2seg->seg_id, 
+                    ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
+                    hal_if->if_id);
     ep->l2seg_handle = l2seg_handle;
     ep->if_handle = if_handle;
     ep->tenant_id = tid;

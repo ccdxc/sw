@@ -803,11 +803,16 @@ hal_ret_t uplinkpc_create(InterfaceSpec& spec, InterfaceResponse *rsp,
         goto end;
     }
 
+    HAL_TRACE_DEBUG("PI-UplinkPC:{}: Adding {} no. of members", __FUNCTION__,
+                    spec.if_uplink_pc_info().member_if_handle_size());
     // Walk through member uplinks
     utils::dllist_reset(&hal_if->mbr_if_list_head);
     for (int i = 0; i < spec.if_uplink_pc_info().member_if_handle_size(); i++) {
         mbr_if_hdl = spec.if_uplink_pc_info().member_if_handle(i);
         mbr_if = find_if_by_handle(mbr_if_hdl);
+        HAL_ASSERT_RETURN(mbr_if != NULL, HAL_RET_INVALID_ARG);
+        HAL_TRACE_DEBUG("PI-UplinkPC:{}: Trying to add mbr_if_id:{}",
+                __FUNCTION__, mbr_if->if_id);
         if (mbr_if->if_type != intf::IF_TYPE_UPLINK) {
             HAL_TRACE_ERR("PI-UplinkPC:{}: Unable to add non-uplinkif. "
                           "Skipping if id: {}", __FUNCTION__, mbr_if->if_id);

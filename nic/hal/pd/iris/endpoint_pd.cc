@@ -7,6 +7,7 @@
 #include <endpoint_pd.hpp>
 #include <lif_pd.hpp>
 #include <uplinkif_pd.hpp>
+#include <uplinkpc_pd.hpp>
 #include <l2segment.hpp>
 #include <network.hpp>
 #include <l2seg_pd.hpp>
@@ -443,6 +444,7 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
     lif_t           *pi_lif;
     pd_lif_t        *pd_lif;
     pd_uplinkif_t   *pd_upif;
+    pd_uplinkpc_t   *pd_uppc;
     intf::IfType    if_type;
 
     pi_if = ep_find_if_by_handle(pi_ep);
@@ -466,6 +468,10 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
             return pd_upif->hw_lif_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
+            pd_uppc = (pd_uplinkpc_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_uppc != NULL);
+
+            return pd_uppc->hw_lif_id;
             break;
         case intf::IF_TYPE_TUNNEL:
             break;

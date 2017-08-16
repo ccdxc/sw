@@ -31,16 +31,17 @@ ReplEntry::~ReplEntry()
 hal_ret_t
 ReplEntry::trace_repl_entry()
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
+    fmt::MemoryWriter   buf;
 
     HAL_TRACE_DEBUG("Repl_entry: data_len: {}", data_len_);
     HAL_TRACE_DEBUG("Data: ");
 
-    uint8_t     *ptr = NULL;
-    ptr = (uint8_t *)data_;
+    uint8_t     *ptr = (uint8_t *)data_;
     for (uint32_t i = 0; i < data_len_; i++, ptr++) {
-        HAL_TRACE_DEBUG("{:#x} ", (*ptr));
+        buf.write("{:#x} ", (uint8_t)*ptr);
     }
+    HAL_TRACE_DEBUG(buf.c_str());
 
     return ret;
 }

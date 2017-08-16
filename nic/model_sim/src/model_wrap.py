@@ -18,7 +18,7 @@ def zmq_close (socket):
 
 def step_network_pkt (pkt, port):
     socket = zmq_connect()
-    buff = pack('iiiiiq', 0, len(pkt), port, 0, 0, 0) + pkt
+    buff = pack('iiiiiq', 0, len(pkt), port-1, 0, 0, 0) + pkt
     socket.send(buff)
     msg = socket.recv()
     zmq_close(socket)
