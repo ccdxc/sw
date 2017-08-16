@@ -4,8 +4,8 @@ import pdb
 
 from config.store               import Store
 
-tnmdr = 0
-tnmpr = 0
+rnmdr = 0
+rnmpr = 0
 serq = 0
 
 def Setup(infra, module):
@@ -17,8 +17,8 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global tnmdr
-    global tnmpr
+    global rnmdr
+    global rnmpr
     global serq
 
     print("TestCaseSetup(): Sample Implementation.")
@@ -33,15 +33,15 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    tnmdr = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmpr = tc.infra_data.ConfigStore.objects.db["TNMPR"]
+    rnmdr = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmpr = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     serq = tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"]
     
     return
 
 def TestCaseVerify(tc):
-    global tnmdr
-    global tnmpr
+    global rnmdr
+    global rnmpr
     global serq
 
     # 1. Verify rcv_nxt got updated
@@ -54,32 +54,27 @@ def TestCaseVerify(tc):
         #return False
     print("rcv_nxt as expected")
 
-    # 2. Verify tnmdr
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.Configure()
-    print("tnmdr.pi:%s tnmdr_cur.pi:%s" % (tnmdr.pi, tnmdr_cur.pi))
-    if tnmdr_cur.pi != 1 or tnmdr.pi != 0:
-        print("tnmdr.pi not as expected")
-        #return False
-    print("tnmdr.pi as expected")
-
-    # 3. Verify tnmpr
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.Configure()
-    print("tnmpr.pi:%s tnmpr_cur.pi:%s" % (tnmpr.pi, tnmpr_cur.pi))
-    if tnmpr_cur.pi != 1 or tnmpr.pi != 0:
-        print("tnmpr.pi not as expected")
-        #return False
-    print("tnmpr.pi as expected")
-
-    # 3. Verify serq
+    # 2. Fetch current values from Platform
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr_cur.Configure()
+    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
+    rnmpr_cur.Configure()
     serq_cur = tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"]
     serq_cur.Configure()
-    print("serq.pi:%s serq_cur.pi:%s" % (serq.pi, serq_cur.pi))
-    if serq_cur.pi != 1 or serq.pi != 0:
-        print("serq.pi not as expected")
-        #return False
-    print("serq.pi as expected")
+
+    # 3. Verify descriptor 
+    if rnmdr.ringentries[0].handle != serq_cur.ringentries[0].handle:
+        print("Descriptor handle not as expected in ringentries") 
+        return False
+
+    if rnmdr.swdre_list[0].DescAddr != serq_cur.swdre_list[0].DescAddr:
+        print("Descriptor handle not as expected in swdre_list")
+        return False
+
+    # 4. Verify page
+    if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
+        print("Page handle not as expected in serq_cur.swdre_list")
+        return False
 
     return True
 
