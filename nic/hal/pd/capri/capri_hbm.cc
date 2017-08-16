@@ -24,7 +24,7 @@ uint64_t                    *g_hbm_nmpr_small;
 #define HBM_OFFSET(x)       (0x80000000 + (x))
 
 hal_ret_t
-capri_hbm_parse()
+capri_hbm_parse() 
 {
     char             		*cfg_path;
     char                    cfgfile[] = "hbm_mem.json";
