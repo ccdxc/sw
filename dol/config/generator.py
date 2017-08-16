@@ -36,7 +36,8 @@ def process(topospec):
     SwDscrRingHelper.main("NMDR")
     SwDscrRingHelper.main("NMPR")
 
-    TcpCbHelper.Configure(TcpCbHelper.objlist)
+    TcpCbHelper.main()    
+    #TcpCbHelper.Configure(TcpCbHelper.objlist)
     return
 
 def main(topofile):
