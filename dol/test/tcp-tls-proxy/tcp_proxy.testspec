@@ -4,12 +4,12 @@ config_filter:
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
-        tenant  : filter://any
+        tenant      : filter://overlay=VLAN,type=TENANT
         segment : filter://any
         endpoint    : filter://remote=True
         qpair   : filter://any # Local QPair
     dst:
-        tenant  : filter://any
+        tenant      : filter://overlay=VLAN,type=TENANT
         segment : filter://any
         endpoint    : filter://remote=True
         qpair   : filter://any 
@@ -28,16 +28,16 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                smac : ref://testcase/config/src/endpoint/macaddr
-                dmac : ref://testcase/config/dst/endpoint/macaddr
+                src : callback://tcpcb/tcpcb/GetSMac
+                dst : callback://tcpcb/tcpcb/GetDMac
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://tcpcb/tcpcb/GetVlanId
             ipv4:
-                sip : ref://testcase/config/flow/sip
-                dip : ref://testcase/config/flow/dip
+                src : callback://tcpcb/tcpcb/GetSip
+                dst : callback://tcpcb/tcpcb/GetDip
             tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                sport   : callback://tcpcb/tcpcb/GetSPort
+                dport   : callback://tcpcb/tcpcb/GetDPort
                 seq     : callback://tcpcb/tcpcb/GetSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
