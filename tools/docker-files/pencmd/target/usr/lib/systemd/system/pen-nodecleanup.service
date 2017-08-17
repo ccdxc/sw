@@ -1,0 +1,9 @@
+[Unit]
+Description=Pensando node cleanup script to reset node
+Documentation=http://pensando.io/
+
+[Service]
+ExecStartPre=/bin/sh -c '/bin/rm -fr /etc/pensando/* /var/lib/kubelet/* /etc/kubernetes/* ; exit 0'
+ExecStartPre=/bin/sh -c 'cat /proc/mounts | awk "{print $2}" | grep "/var/lib/kubelet" | xargs umount >/dev/null 2>&1 ; exit 0'
+ExecStart=/bin/sh -c 'CONS=`/usr/bin/docker ps -q -f "name=k8s*"` ; if [ "$CONS" != "" ]; then /usr/bin/docker rm --force --volumes  $CONS ; fi'
+Type=oneshot

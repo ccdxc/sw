@@ -542,40 +542,6 @@ func DecodeGrpcRespNode(ctx context.Context, response interface{}) (interface{},
 	return response, nil
 }
 
-func encodeHTTPNodeList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPNodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req NodeList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqNodeList encodes GRPC request
-func EncodeGrpcReqNodeList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NodeList)
-	return req, nil
-}
-
-// DecodeGrpcReqNodeList decodes GRPC request
-func DecodeGrpcReqNodeList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*NodeList)
-	return req, nil
-}
-
-// EncodeGrpcRespNodeList encodes GRC response
-func EncodeGrpcRespNodeList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespNodeList decodes GRPC response
-func DecodeGrpcRespNodeList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPNodeSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

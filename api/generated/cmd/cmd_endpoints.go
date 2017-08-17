@@ -866,11 +866,6 @@ func (r *EndpointsCmdV1RestClient) getHTTPRequest(ctx context.Context, in interf
 }
 
 //
-func makeURICmdV1AutoAddClusterCreateOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cmd", "/cluster")
-}
-
-//
 func makeURICmdV1AutoAddNodeCreateOper(in *Node) string {
 	return fmt.Sprint("/v1/cmd", "/nodes")
 }
@@ -1012,20 +1007,7 @@ func (r *EndpointsCmdV1RestClient) AutoWatchNode(ctx context.Context, in *Node) 
 
 // AutoAddCluster CRUD method for Cluster
 func (r *EndpointsCmdV1RestClient) AutoAddCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
-	path := makeURICmdV1AutoAddClusterCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespCmdV1AutoAddCluster(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Cluster), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateCluster CRUD method for Cluster

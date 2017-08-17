@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Initialize logger config
-	log.SetConfig(logConfig)
+	env.Logger = log.SetConfig(logConfig)
 
 	env.Scheme = runtime.NewScheme()
 	env.Scheme.AddKnownTypes(&cmd.Cluster{}, &cmd.Node{})

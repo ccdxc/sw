@@ -20,7 +20,6 @@ import (
 const (
 	uRLPrefix   = "/api/v1"
 	clusterURL  = "/cluster"
-	nodesURL    = "/nodes"
 	servicesURL = "/services"
 )
 
@@ -32,11 +31,7 @@ func NewRESTServer() *martini.ClassicMartini {
 
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
-
-	m.Get(uRLPrefix+nodesURL, NodeListHandler)
-
 	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
-
 	return m
 }
 
@@ -88,33 +83,6 @@ func ClusterGetHandler(w http.ResponseWriter, params martini.Params) {
 	encoder := json.NewEncoder(w)
 
 	if err := encoder.Encode(&cluster); err != nil {
-		log.Errorf("Failed to encode with error: %v", err)
-	}
-}
-
-// NodeListHandler returns the nodes belonging to the cluster.
-func NodeListHandler(w http.ResponseWriter, req *http.Request) {
-	nodes := cmd.NodeList{}
-
-	if env.KVStore == nil {
-		errors.SendNotFound(w, "NodeList", "")
-		return
-	}
-
-	if err := env.KVStore.List(context.Background(), globals.NodesKey, &nodes); err != nil {
-		if kvstore.IsKeyNotFoundError(err) {
-			errors.SendNotFound(w, "NodeList", "")
-			return
-		}
-		errors.SendInternalError(w, err)
-		return
-	}
-
-	nodes.Kind = "NodeList"
-
-	encoder := json.NewEncoder(w)
-
-	if err := encoder.Encode(&nodes); err != nil {
 		log.Errorf("Failed to encode with error: %v", err)
 	}
 }

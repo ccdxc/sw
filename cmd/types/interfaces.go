@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/pensando/sw/api/generated/cmd"
 	"k8s.io/api/core/v1"
 )
 
@@ -236,4 +237,16 @@ type ResolverService interface {
 
 	// List all service instances.
 	ListInstances() *ServiceInstanceList
+}
+
+// CfgWatcherService watches for changes to config from API Server
+type CfgWatcherService interface {
+	// Start the service
+	Start()
+	// Stop the service
+	Stop()
+
+	// APIClient returns a valid interface once the APIServer is good and
+	// accepting requests
+	APIClient() cmd.CmdV1Interface
 }

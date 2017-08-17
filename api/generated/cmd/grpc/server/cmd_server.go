@@ -192,7 +192,6 @@ func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logge
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
-		"cmd.NodeList":   apisrvpkg.NewMessage("cmd.NodeList"),
 		"cmd.NodeSpec":   apisrvpkg.NewMessage("cmd.NodeSpec"),
 		"cmd.NodeStatus": apisrvpkg.NewMessage("cmd.NodeStatus"),
 		// Add a message handler for ListWatch options

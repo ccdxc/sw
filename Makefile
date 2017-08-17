@@ -37,7 +37,10 @@ qbuild:
 	$(info +++ go install $(TO_BUILD))
 	go install -v $(TO_BUILD)
 
-build: deps ws-tools checks
+build:
+	$(MAKE) deps
+	$(MAKE) ws-tools
+	$(MAKE) checks
 	$(MAKE) qbuild
 
 c-start:
@@ -79,10 +82,10 @@ helper-containers:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.3 .
 
 container-qcompile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
 
 container-compile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
 
 ws-tools:
 	$(info +++ building WS tools)

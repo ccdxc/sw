@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/pensando/sw/cmd/env"
-	"github.com/pensando/sw/cmd/grpc"
+	grpcserver "github.com/pensando/sw/cmd/grpc/server"
 	"github.com/pensando/sw/cmd/rest"
 	"github.com/pensando/sw/cmd/server/options"
 )
@@ -19,5 +19,5 @@ func Run(options *options.ServerRunOptions) {
 	go func() {
 		s.RunOnAddr(":" + options.RESTPort)
 	}()
-	grpc.RunServer(":"+options.GRPCPort, "", "", "", nil)
+	grpcserver.RunServer(":"+options.GRPCPort, "", "", "", nil)
 }

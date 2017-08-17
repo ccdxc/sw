@@ -526,7 +526,7 @@ func (a *restObjCmdV1Cluster) Watch(ctx context.Context, options *api.ListWatchO
 func (a *restObjCmdV1Cluster) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return true
+		return false
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:

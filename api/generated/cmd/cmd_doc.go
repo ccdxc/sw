@@ -15,7 +15,6 @@ The following Messages are defined.
   ClusterSpec
   ClusterStatus
   Node
-  NodeList
   NodeSpec
   NodeStatus
 

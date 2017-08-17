@@ -5,6 +5,7 @@ package grpc;
 service Cluster {
 	rpc PreJoin (ClusterPreJoinReq)  returns (ClusterPreJoinResp) {};
 	rpc Join (ClusterJoinReq)  returns (ClusterJoinResp) {};
+	rpc Disjoin (ClusterDisjoinReq)  returns (ClusterDisjoinResp) {};
 }
 
 // Cluster PreJoin request
@@ -45,4 +46,11 @@ message ClusterJoinReq {
 // Cluster Join response
 message ClusterJoinResp {
 
+}
+// Cluster Disjoin request
+message ClusterDisjoinReq {
+}
+
+// Cluster Disjoin response
+message ClusterDisjoinResp {
 }

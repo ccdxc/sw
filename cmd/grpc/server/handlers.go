@@ -1,4 +1,4 @@
-package grpc
+package server
 
 import (
 	"fmt"
@@ -10,7 +10,9 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 
+	"github.com/pensando/sw/cmd/apiclient"
 	"github.com/pensando/sw/cmd/env"
+	"github.com/pensando/sw/cmd/grpc"
 	"github.com/pensando/sw/cmd/grpc/service"
 	"github.com/pensando/sw/cmd/services"
 	"github.com/pensando/sw/cmd/types"
@@ -38,18 +40,18 @@ type clusterRPCHandler struct {
 
 // PreJoin handles the prejoin request for joining a cluster. Will fail if
 // already part of a cluster.
-func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *ClusterPreJoinReq) (*ClusterPreJoinResp, error) {
+func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoinReq) (*grpc.ClusterPreJoinResp, error) {
 	if cluster, err := utils.GetCluster(); err != nil {
 		return nil, err
 	} else if cluster != nil {
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
-	return &ClusterPreJoinResp{SwVersion: version.Version}, nil
+	return &grpc.ClusterPreJoinResp{SwVersion: version.Version}, nil
 }
 
 // Join handles the join request for a cluster. If part of quorum, it will
 // start the K/V store process with the provided configuration.
-func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*ClusterJoinResp, error) {
+func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) (*grpc.ClusterJoinResp, error) {
 	// Check again if not in cluster.
 	if cluster, err := utils.GetCluster(); err != nil {
 		return nil, err
@@ -108,8 +110,8 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 
 		ii := 0
 		for ; ii < maxIters; ii++ {
-			members, err := env.Quorum.List()
-			if err == nil {
+			members, errL := env.Quorum.List()
+			if errL == nil {
 				if len(members) == len(req.QuorumConfig.QuorumMembers) {
 					break
 				}
@@ -155,18 +157,22 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
+		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, env.LeaderService)
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)
 		env.MasterService.Start()
 		env.LeaderService.Start()
 		env.NtpService.Start()
+		env.CfgWatcherService.Start()
 
 		// create and register the RPC handler for service object.
 		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
+		env.SystemdService = services.NewSystemdService()
+		env.SystemdService.Start() // must be called before dependent services
 	}
 
 	env.NodeService = services.NewNodeService(req.VirtualIp)
@@ -175,5 +181,20 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *ClusterJoinReq) (*Clu
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
 
-	return &ClusterJoinResp{}, nil
+	return &grpc.ClusterJoinResp{}, nil
+}
+
+func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {
+	err := env.SystemdService.StopUnit("pen-kubelet.service")
+	if err != nil {
+		env.Logger.Infof("Error %v while stopping pen-kubelet", err)
+	}
+	err2 := env.SystemdService.StartUnit("pen-nodecleanup.service")
+	if err2 != nil {
+		env.Logger.Infof("Error %v while cleaning up node", err2)
+	}
+	if err == nil {
+		err = err2
+	}
+	return &grpc.ClusterDisjoinResp{}, err
 }

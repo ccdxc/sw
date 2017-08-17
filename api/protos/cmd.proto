@@ -14,7 +14,7 @@ message NodeSpec {
 
 // NodeStatus contains the current state of the node.
 message NodeStatus {
-  string Name = 1; // TODO
+  string Status = 1; // TODO
 }
 
 // Node is representation of a single node in the cluster.
@@ -28,15 +28,6 @@ message Node {
 
     // Status contains the current state of the node.
     NodeStatus Status = 4 [(gogoproto.jsontag) = "status,omitempty"];
-}
-
-// NodeList is representation of all nodes in the cluster.
-message NodeList {
-    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
-
-    // Items is the list of nodes in the cluster.
-    repeated Node Items = 3;
 }
 
 // ClusterSpec contains the configuration of the cluster.
@@ -100,7 +91,7 @@ service CmdV1 {
 
     option(venice.apiRestService) = {
         Object: "Cluster"
-        Method: ["post", "list"]
+        Method: [ "list"]
         Pattern: "/cluster"
     };
     option(venice.apiRestService) = {

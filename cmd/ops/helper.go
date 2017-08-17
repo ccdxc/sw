@@ -58,6 +58,8 @@ func sendByMsgType(client grpc.ClusterClient, msgType string, req interface{}) (
 		return client.PreJoin(context.Background(), req.(*grpc.ClusterPreJoinReq))
 	case "join":
 		return client.Join(context.Background(), req.(*grpc.ClusterJoinReq))
+	case "disjoin":
+		return client.Disjoin(context.Background(), req.(*grpc.ClusterDisjoinReq))
 	}
 	return nil, fmt.Errorf("Unknown msg type: %v", msgType)
 }
@@ -207,6 +209,6 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string) er
 
 // sendDisjoins sends disjoin gRPC message to provided nodes.
 func sendDisjoins(cFn clusterClientFn, nodes []string) (map[string]response, error) {
-	// FIXME: To be implemented.
-	return nil, nil
+	req := grpc.ClusterDisjoinReq{}
+	return sendClusterGRPCs(cFn, "disjoin", nodes, &req, nil, nil)
 }
