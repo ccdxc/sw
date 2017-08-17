@@ -144,6 +144,11 @@ func (srv *RPCServer) GetRPCStats() map[string]int64 {
 	return srv.stats.rpcStats
 }
 
+// GetListenURL returns the listen URL for the server (for testing).
+func (srv *RPCServer) GetListenURL() string {
+	return srv.listenURL
+}
+
 // Stop stops grpc server and closes the listener
 func (srv *RPCServer) Stop() error {
 	// stop the server
