@@ -58,7 +58,11 @@ class UplinkPcObject(base.ConfigObjectBase):
         req_spec.admin_status = self.status
 
         req_spec.if_uplink_pc_info.uplink_pc_num = self.port
-        req_spec.if_uplink_pc_info.native_l2segment_id = 1
+        if self.native_segment:
+            req_spec.if_uplink_pc_info.native_l2segment_id = self.native_segment.id
+        for mbr in self.members:
+            req_spec.if_uplink_pc_info.member_if_handle.append(mbr.hal_handle)
+
         segments = Store.objects.GetAllByClass(segment.SegmentObject)
         for seg in segments:
             req_spec.if_uplink_pc_info.l2segment_id.append(seg.id)

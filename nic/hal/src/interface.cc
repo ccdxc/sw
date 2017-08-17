@@ -6,6 +6,7 @@
 #include <pd.hpp>
 #include <pd_api.hpp>
 #include <l2segment.pb.h>
+#include <if_utils.hpp>
 
 namespace hal {
 
@@ -745,7 +746,9 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
                     spec.key_or_handle().interface_id());
 
     // TODO: for a member port, we can have valid pc#
-    hal_if->uplink_port_num = spec.if_uplink_info().port_num() - 1;
+    ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(), &hal_if->uplink_port_num);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
+
     hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->vlans = bitmap::factory(4096);

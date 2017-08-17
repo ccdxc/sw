@@ -13,6 +13,7 @@ LCXXFLAGS = \
 
 SOURCES = \
 		  utils.cc \
+		  if_utils.cc \
 		  tenant.cc \
 		  network.cc \
 		  interface.cc \

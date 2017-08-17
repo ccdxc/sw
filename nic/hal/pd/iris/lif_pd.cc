@@ -17,7 +17,7 @@ pd_lif_create (pd_lif_args_t *args)
     hal_ret_t            ret;
     pd_lif_t             *pd_lif;
 
-    HAL_TRACE_DEBUG("PD-LIF::{}: Creating pd state for Lif: {}", 
+    HAL_TRACE_DEBUG("PD-LIF::{}: lif_id:{} Creating pd state for Lif", 
             __FUNCTION__, lif_get_lif_id(args->lif));
 
     // Create lif PD
@@ -34,7 +34,7 @@ pd_lif_create (pd_lif_args_t *args)
     ret = lif_pd_alloc_res(pd_lif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-LIF::{}: Unable to alloc. resources for Lif: {}",
+        HAL_TRACE_ERR("PD-LIF::{}: lif_id:{} Unable to alloc. resources for Lif",
                 __FUNCTION__, lif_get_lif_id(args->lif));
         goto end;
     }
@@ -104,8 +104,10 @@ lif_pd_alloc_res(pd_lif_t *pd_lif)
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-LIF::{}: Programmed for Lif HW-ID: {}",
-                    __FUNCTION__, pd_lif->hw_lif_id);
+    HAL_TRACE_DEBUG("PD-LIF:{}: lif_id:{} Allocated hw_lif_id:{}", 
+                    __FUNCTION__, 
+                    lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                    pd_lif->hw_lif_id);
 
     return ret;
 }
@@ -153,10 +155,10 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     ret = dm_omap->insert_withid(&data, pd_lif->hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-LIF::{}: Unable to program for Lif: {}",
+        HAL_TRACE_ERR("PD-LIF::{}: lif_id:{} Unable to program",
                 __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     } else {
-        HAL_TRACE_DEBUG("PD-LIF::{}: Programmed for Lif: {}",
+        HAL_TRACE_DEBUG("PD-LIF::{}: lif_id:{} Success",
                 __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     }
     return ret;

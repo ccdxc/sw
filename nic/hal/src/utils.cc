@@ -4,6 +4,9 @@
 
 namespace hal {
 
+// ----------------------------------------------------------------------------
+// Convert ip address spec in proto to ip_addr used in HAL
+// ----------------------------------------------------------------------------
 hal_ret_t
 ip_addr_spec_to_ip_addr (ip_addr_t *out_ipaddr,
                          const types::IPAddress& in_ipaddr)
@@ -23,6 +26,9 @@ ip_addr_spec_to_ip_addr (ip_addr_t *out_ipaddr,
     return HAL_RET_OK;
 }
 
+// ----------------------------------------------------------------------------
+// Convert ip prefix spec in proto to ip_addr used in HAL
+// ----------------------------------------------------------------------------
 hal_ret_t
 ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx, 
                         const types::IPPrefix& in_ippfx)
@@ -36,7 +42,9 @@ ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx,
 
 }
 
-
+// ----------------------------------------------------------------------------
+// check if ip address is in ip prefix
+// ----------------------------------------------------------------------------
 bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
 {
     int num_bytes = 0;

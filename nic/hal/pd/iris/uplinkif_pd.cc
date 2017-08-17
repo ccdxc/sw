@@ -108,16 +108,20 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Allocated hw_lif_id: {}", 
-                    __FUNCTION__, pd_upif->hw_lif_id);
+    HAL_TRACE_DEBUG("PD-Uplinkif:{}: if_id:{} Allocated hw_lif_id: {}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_upif->pi_if),
+                    pd_upif->hw_lif_id);
 
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Allocated Uplink ifpc_id: {}", 
-                    __FUNCTION__, pd_upif->up_ifpc_id);
+    HAL_TRACE_DEBUG("PD-Uplinkif:{}: if_id:{} Allocated Uplink ifpc_id: {}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_upif->pi_if),
+                    pd_upif->up_ifpc_id);
 
     return ret;
 }

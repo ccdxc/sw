@@ -20,7 +20,7 @@ pd_uplinkpc_create(pd_if_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_uplinkpc_t      *pd_upif;
 
-    HAL_TRACE_DEBUG("PD-UplinkPC:{}: Creating pd state for if_id: {}", 
+    HAL_TRACE_DEBUG("PD-UplinkPC:{}: if_id:{} Creating pd state for if_id", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create lif PD
@@ -37,7 +37,7 @@ pd_uplinkpc_create(pd_if_args_t *args)
     ret = uplinkpc_pd_alloc_res(pd_upif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-UplinkPC::{}: Unable to alloc. resources for if_id: {}",
+        HAL_TRACE_ERR("PD-UplinkPC::{}: if_id:{} Unable to alloc. resources",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -108,16 +108,20 @@ uplinkpc_pd_alloc_res(pd_uplinkpc_t *pd_upif)
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-Uplinkif:{}: Allocated hw_lif_id: {}", 
-                    __FUNCTION__, pd_upif->hw_lif_id);
+    HAL_TRACE_DEBUG("PD-UplinkPC:{}: if_id:{} Allocated hw_lif_id:{}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_upif->pi_if),
+                    pd_upif->hw_lif_id);
 
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("PD-UplinkPC:{}: Allocated Uplink ifpc_id: {}", 
-                    __FUNCTION__, pd_upif->up_ifpc_id);
+    HAL_TRACE_DEBUG("PD-UplinkPC:{}: if_id:{} Allocated Uplink ifpc_id: {}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_upif->pi_if),
+                    pd_upif->up_ifpc_id);
 
     return ret;
 }
@@ -195,10 +199,10 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
 
     ret = capri_tm_uplink_lif_set(tm_oport, hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-UplinkPC::{}: Unable to program for if_id: {}",
+        HAL_TRACE_ERR("PD-UplinkPC::{}: if_id:{} Unable to program for if_id",
                 __FUNCTION__, if_get_if_id(pi_if));
     } else {
-        HAL_TRACE_DEBUG("PD-UplinkPC::{}: Programmed for if_id: {} "
+        HAL_TRACE_DEBUG("PD-UplinkPC::{}: if_id:{} Programmed "
                         "iport:{} => hwlif: {}",
                         __FUNCTION__, if_get_if_id(pi_if), tm_oport, hw_lif_id);
     }
@@ -250,10 +254,10 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
 
     ret = dm_omap->insert_withid(&data, pd_uppcif->hw_lif_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-UplinkPC::{}: Unable to program for if_id: {}",
+        HAL_TRACE_ERR("PD-UplinkPC::{}: if_id:{} Unable to program",
                 __FUNCTION__, if_get_if_id((if_t *)pd_uppcif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("PD-UplinkPC::{}: Programmed for if_id: {}",
+        HAL_TRACE_DEBUG("PD-UplinkPC::{}: if_id:{} Success",
                 __FUNCTION__, if_get_if_id((if_t *)pd_uppcif->pi_if));
         p4_err = p4pd_table_ds_decoded_string_get(P4TBL_ID_OUTPUT_MAPPING, 
                                                 NULL, NULL, &data, buff, 

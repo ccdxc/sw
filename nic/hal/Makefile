@@ -54,6 +54,7 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/hal_mem.o \
 				$(OBJ_DIR)/hal_pd.o \
 				$(OBJ_DIR)/utils.o \
+				$(OBJ_DIR)/if_utils.o \
 				$(OBJ_DIR)/types.pb.o \
 				$(OBJ_DIR)/tenant.pb.o \
 				$(OBJ_DIR)/tenant.o \
