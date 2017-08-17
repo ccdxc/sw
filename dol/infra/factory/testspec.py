@@ -9,6 +9,23 @@ import infra.common.utils   as utils
 
 from infra.factory.store import FactoryStore as FactoryStore
 
+class TestSpecConfigFilter(objects.FrameworkObject):
+    def __init__(self, spec):
+        super().__init__()
+        self.Clone(spec)
+        return
+
+    def IsFlowBased(self):
+        return self.Valid() and self.flow != None
+
+    def IsSessionBased(self):
+        return self.Valid() and self.session != None
+
+    def Valid(self):
+        if self.flow and self.session:
+            return False
+        return True
+
 class TestSpecSessionStepEntry(objects.FrameworkObject):
     def __init__(self):
         super().__init__()
@@ -44,6 +61,7 @@ class TestSpecObject(objects.FrameworkObject):
             self.session[0].step = step
 
         self.__merge()
+        self.config_filter = TestSpecConfigFilter(self.config_filter)
         return
 
     def __merge_section(self, sec_name):

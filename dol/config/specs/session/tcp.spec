@@ -9,8 +9,26 @@ entries:
         label: networking
         responder: 
             port : const/80
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                seq_num     : 1000
+                ack_num     : 5000
+                win_sz      : 8192
+                win_scale   : 1
+                mss         : 16384
         initiator: 
             port : const/42000
+            flow_info:
+                action  : allow
+                state   : established
+            tracking_info:
+                seq_num     : 1000
+                ack_num     : 5000
+                win_sz      : 8192
+                win_scale   : 1
+                mss         : 16384
 
     - entry:
         label: span

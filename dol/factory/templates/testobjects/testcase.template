@@ -9,6 +9,29 @@ logpfx  : None  # Logger Prefix for all logs of this Testcase.
 module  : None  # Module
 
 config:
+    session:
+        iflow:
+            src:
+                tenant  : None
+                segment : None
+                endpoint: None
+                lif     : None
+            dst:
+                tenant  : None
+                segment : None
+                endpoint: None
+                lif     : None
+        rflow:
+            src:
+                tenant  : None
+                segment : None
+                endpoint: None
+                lif     : None
+            dst:
+                tenant  : None
+                segment : None
+                endpoint: None
+                lif     : None
     src:
         tenant  : None
         segment : None

@@ -32,7 +32,6 @@ def CreateInfraData():
     obj.Logger          = None
     obj.Factory         = factory
     obj.ConfigStore     = Store
-    obj.Flows           = None
     obj.TestCases       = []
     obj.TrigExpEngine   = TrigExpEngine
     obj.UserData        = None

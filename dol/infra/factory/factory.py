@@ -30,13 +30,13 @@ def init():
     return
 
 def Generate(infra_data, module):
-    for flow in infra_data.Flows:
+    for obj in module.testspec.config_filter.matching_objects:
         tcid = TestCaseIdAllocator.get()
         if GlobalOptions.tcid != None:
             gl_opt_tcid = utils.ParseInteger(GlobalOptions.tcid)
             if gl_opt_tcid != tcid:
                 continue
-        tc = testcase.TestCase(tcid, flow, infra_data, module)
+        tc = testcase.TestCase(tcid, obj, infra_data, module)
         infra_data.TestCases.append(tc)
     return defs.status.SUCCESS
 

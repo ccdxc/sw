@@ -18,6 +18,8 @@ class ConfigObjectBase(objects.FrameworkObject):
 
     def IsFilterMatch(self, filters):
         cfglogger.verbose("IsFilterMatch(): Object %s" % self.GID())
+        if filters == None:
+            return True
         for f in filters:
             attr = f[0]
             value = f[1]

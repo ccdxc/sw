@@ -70,6 +70,22 @@ class SessionObject(base.ConfigObjectBase):
         self.hal_handle = resp_spec.status.session_handle
         return
 
+    def IsFilterMatch(self, config_filter):
+        assert(config_filter.flow == None)
+        # Match on Initiator Flow
+        match = self.iflow.IsFilterMatch(config_filter)
+        if match == False: return match
+        # Match on Responder Flow
+        match = self.rflow.IsFilterMatch(config_filter)
+        if match == False: return match
+        # Match on the Session
+        return super().IsFilterMatch(config_filter.session.filters)
+
+    def SetupTestcaseConfig(self, obj):
+        self.iflow.SetupTestCaseConfig(obj.session.iflow)
+        self.rflow.SetupTestCaseConfig(obj.session.rflow)
+        return
+
 class SessionObjectHelper:
     def __init__(self):
         self.objlist = []
@@ -225,7 +241,18 @@ class SessionObjectHelper:
     def GetAll(self):
         return self.objlist
 
-    def GetFlows(self, config_filter = None):
+    def __get_matching_sessions(self, config_filter = None):
+        ssns = []
+        for ssn in self.objlist:
+            if ssn.IsFilterMatch(config_filter):
+                ssns.append(ssn)
+        if config_filter.maxsessions == None:
+            return ssns
+        if config_filter.maxsessions >= len(ssns):
+            return ssns
+        return ssns[:config_filter.maxsessions]
+
+    def __get_matching_flows(self, config_filter = None):
         flows = []
         for ssn in self.objlist:
             if ssn.iflow.IsFilterMatch(config_filter):
@@ -237,5 +264,14 @@ class SessionObjectHelper:
         if config_filter.maxflows >= len(flows):
             return flows
         return flows[:config_filter.maxflows]
+
+    def GetMatchingConfigObjects(self, config_filter = None):
+        if config_filter.IsFlowBased():
+            return self.__get_matching_flows(config_filter)
+        elif config_filter.IsSessionBased():
+            return self.__get_matching_sessions(config_filter)
+        
+        cfglogger.error("INVALID Config Filter in testspec.")
+        return []
 
 SessionHelper = SessionObjectHelper()

@@ -94,24 +94,6 @@ class FlowObject(base.ConfigObjectBase):
     def HasL4Ports(self):
         return self.IsTCP() or self.IsUDP()
 
-    def GetSrcTenant(self):
-        return self.sten
-
-    def GetDstTenant(self):
-        return self.dten
-
-    def GetSrcSegment(self):
-        return self.sseg
-
-    def GetDstSegment(self):
-        return self.dseg
-
-    def GetSrcEndpoint(self):
-        return self.sep
-
-    def GetDstEndpoint(self):
-        return self.dep
-
     def __configure_l4_info(self, l4_info):
         if self.HasL4Ports():
             l4_info.tcp_udp.sport = self.sport
@@ -206,3 +188,13 @@ class FlowObject(base.ConfigObjectBase):
         match = super().IsFilterMatch(config_filter.flow.filters)
         if match == False: return match
         return True
+
+    def SetupTestcaseConfig(self, obj):
+        obj.flow = self
+        obj.src.tenant = self.sten 
+        obj.dst.tenant = self.dten
+        obj.src.segment = self.sseg
+        obj.dst.segment = self.dseg
+        obj.src.endpoint = self.sep
+        obj.dst.endpoint = self.dep
+        return

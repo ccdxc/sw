@@ -54,14 +54,14 @@ class TestCaseSessionStepObject:
         return
 
 class TestCase(objects.FrameworkObject):
-    def __init__(self, tcid, flow, infra_data, module):
+    def __init__(self, tcid, config_root_obj, infra_data, module):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
         self.LockAttributes()
         
         self.GID(tcid)
-        self.__init_config(flow)
+        self.__setup_config(config_root_obj)
 
         self.packets        = objects.ObjectDatabase(logger = self)
         self.descriptors    = objects.ObjectDatabase(logger = self)
@@ -77,17 +77,8 @@ class TestCase(objects.FrameworkObject):
         self.__generate()
         return
 
-    def __init_config(self, flow):
-        self.config.flow    = flow
-        
-        self.config.src.tenant  = flow.GetSrcTenant()
-        self.config.dst.tenant  = flow.GetDstTenant()
-       
-        self.config.src.segment = flow.GetSrcSegment()
-        self.config.dst.segment = flow.GetDstSegment()
-
-        self.config.src.endpoint = flow.GetSrcEndpoint()
-        self.config.dst.endpoint = flow.GetDstEndpoint()
+    def __setup_config(self, config_root_obj):
+        config_root_obj.SetupTestcaseConfig(self.config)
         return
 
     def info(self, *args, **kwargs):
