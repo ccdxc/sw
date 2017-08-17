@@ -40,11 +40,11 @@ tcp_rx_read_shared_stage0_start:
 	 */
 
 	phvwr		p.to_s1_seq, k.tcp_app_header_seqNo
-        add             r1, r0, k.tcp_app_header_ackNo_sbit24_ebit31
-        sll             r1, r1, 24
-        or              r1, r1, k.tcp_app_header_ackNo_sbit0_ebit23
-	phvwr		p.to_s1_ack_seq, r1
-	//phvwr		p.to_s1_ack_seq, k.tcp_app_header_ackNo
+        //add             r1, r0, k.tcp_app_header_ackNo_sbit24_ebit31
+        //sll             r1, r1, 24
+        //or              r1, r1, k.tcp_app_header_ackNo_sbit0_ebit23
+	//phvwr		p.to_s1_ack_seq, r1
+	phvwr		p.to_s1_ack_seq, k.tcp_app_header_ackNo
 	add		r1, k.tcp_app_header_seqNo, k.tcp_app_header_payload_len
 	phvwr		p.s1_s2s_end_seq, r1
 	

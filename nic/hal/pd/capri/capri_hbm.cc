@@ -198,8 +198,9 @@ hbm_ring_init(char *ring_name, char *object_name, uint32_t num_objects,
 
         for (i = 0; i < num_objects; i++) {
                 uint64_t taddr;
+                addr = (uint64_t)((char *)(*object_ptr) + i * object_size);
                 taddr = htonll(addr);
-                write_mem((uint64_t)(*ring_ptr + i), (uint8_t *)&taddr, sizeof(uint64_t));
+                write_mem((uint64_t)(*ring_ptr + i), (uint8_t *)&addr, sizeof(uint64_t));
                 if (i % 100 == 0) {
                         HAL_TRACE_DEBUG("i = {} initializing 0x{:x} to 0x{:x}, 0x{:x}",
                                         i, (uint64_t)(*ring_ptr + i), addr, taddr);

@@ -29,7 +29,7 @@
 #define rx_table_s0_t0_action tcp_proxy_dummy_action
 
 #define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
-#define common_p4plus_stage0_app_header_table_action read_tx2rx
+#define common_p4plus_stage0_app_header_table_action_dummy read_tx2rx
 
 #define rx_table_s1_t0 tcp_rx_tcp_rx
 #define rx_table_s1_t0_action tcp_rx
@@ -210,6 +210,7 @@ header_type tcp_fra_d_t {
 header_type rdesc_alloc_d_t {
     fields {
         desc                    : 64;
+        pad                     : 448;
     }
 }
 
@@ -217,6 +218,7 @@ header_type rdesc_alloc_d_t {
 header_type rpage_alloc_d_t {
     fields {
         page                    : 64;
+        pad                     : 448;
     }
 }
 
@@ -539,6 +541,7 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pr
     modify_field(tcp_scratch_app.window, tcp_app_header.window);
     modify_field(tcp_scratch_app.urgentPtr, tcp_app_header.urgentPtr);
     modify_field(tcp_scratch_app.ts, tcp_app_header.ts);
+    modify_field(tcp_scratch_app.tcp_pad1, tcp_app_header.tcp_pad1);
     modify_field(tcp_scratch_app.prev_echo_ts, tcp_app_header.prev_echo_ts);
     modify_field(tcp_scratch_app.tcp_pad, tcp_app_header.tcp_pad);
 
@@ -711,7 +714,7 @@ action tcp_fra(curr_ts, reordering, retx_head_ts, high_seq, undo_marker,
 /*
  * Stage 3 table 1 action
  */
-action rdesc_alloc(desc) {
+action rdesc_alloc(desc, pad) {
     // k + i for stage 3 table 1
 
     // from to_stage 3
@@ -724,12 +727,13 @@ action rdesc_alloc(desc) {
 
     // d for stage 3 table 1
     modify_field(rdesc_alloc_d.desc, desc);
+    modify_field(rdesc_alloc_d.pad, pad);
 }
 
 /*
  * Stage 3 table 2 action
  */
-action rpage_alloc(page) {
+action rpage_alloc(page, pad) {
     // k + i for stage 3 table 2
 
     // from to_stage 3
@@ -742,6 +746,7 @@ action rpage_alloc(page) {
 
     // d for stage 3 table 2
     modify_field(rpage_alloc_d.page, page);
+    modify_field(rpage_alloc_d.pad, pad);
 }
 
 /*

@@ -21,13 +21,13 @@
 #define TNMDR_TABLE_SIZE                255
 #define TNMDR_TABLE_SIZE_SHFT           8
 
-#define RNMDR_TABLE_BASE                0xa4102000 
+#define RNMDR_TABLE_BASE                0xa5502000
 #define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
 #define RNMDR_TABLE_SIZE                255
 #define RNMDR_TABLE_SIZE_SHFT           8
 
-#define RNMPR_TABLE_BASE                0xa4234000 
+#define RNMPR_TABLE_BASE                0xa5634000
 #define RNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
 #define RNMPR_TABLE_SIZE                255
