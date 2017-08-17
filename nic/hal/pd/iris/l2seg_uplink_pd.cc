@@ -76,6 +76,7 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
     inp_prop.vrf = l2seg_pd->hw_id;
     inp_prop.dir = FLOW_DIR_FROM_UPLINK;
     inp_prop.l4_profile_idx = pd_l2seg_get_l4_prof_idx(l2seg_pd);
+    inp_prop.ipsg_enable = l2seg_get_ipsg_en(args->l2seg);
 
     if (!is_native) {
         // Install one entry

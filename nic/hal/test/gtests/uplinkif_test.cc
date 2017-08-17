@@ -153,6 +153,7 @@ TEST_F(uplinkif_test, test3)
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
