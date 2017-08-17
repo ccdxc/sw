@@ -20,6 +20,10 @@ function createNPMContainer() {
     docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/npm/Dockerfile tools/docker-files/npm
 }
 
+function createVCSimContainer() {
+    docker build --rm --no-cache -t pen-vcsim:latest -f tools/docker-files/vcsim/Dockerfile tools/docker-files/vcsim
+}
+
 function createBinContainerTarBall() {
     staticimages="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
         srv1.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
@@ -34,7 +38,7 @@ function createBinContainerTarBall() {
         fi
     done
     mkdir -p bin/tars
-    dynamicimages="pen-base:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest"
+    dynamicimages="pen-base:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest pen-vcsim:latest"
     for i in $staticimages $dynamicimages
     do
         # i is srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -57,6 +61,7 @@ case $1 in
     apiserver) createApiSrvContainer;;
     vchub) createVCHubContainer;;
     npm) createNPMContainer;;
+    vcsim) createVCSimContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

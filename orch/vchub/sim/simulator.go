@@ -8,22 +8,18 @@
 package sim
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
-	"net/http"
 	"reflect"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/orch/simapi"
 	"github.com/pensando/sw/utils/log"
+	n "github.com/pensando/sw/utils/netutils"
 	"github.com/pensando/vic/pkg/vsphere/simulator"
 	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
@@ -289,7 +285,7 @@ func (s *Inventory) SetHostURL(snicMac, hostURL string) error {
 	srv.simURL = hostURL
 	r := &simapi.NwIFSetReq{}
 	resp := &simapi.NwIFSetResp{}
-	httpPost(hostURL+"/nwifs/cleanup", r, resp)
+	n.HTTPPost(hostURL+"/nwifs/cleanup", r, resp)
 	return nil
 }
 
@@ -316,7 +312,7 @@ func (s *Inventory) CreateNwIF(hostURL string, r *simapi.NwIFSetReq) (*simapi.Nw
 			}
 
 			resp := &simapi.NwIFSetResp{}
-			err = httpPost(hostURL+"/nwifs/create", r, resp)
+			err = n.HTTPPost(hostURL+"/nwifs/create", r, resp)
 			if err != nil {
 				vm.RemoveVeth(name)
 			}
@@ -349,7 +345,7 @@ func (s *Inventory) DeleteNwIF(hostURL string, id string) *simapi.NwIFDelResp {
 			r := &simapi.NwIFSetReq{}
 			resp := &simapi.NwIFDelResp{}
 			u1 := fmt.Sprintf("%s/nwifs/%s/delete", hostURL, id)
-			err := httpPost(u1, r, resp)
+			err := n.HTTPPost(u1, r, resp)
 			if err != nil {
 				log.Errorf("DeleteNwIF %s, %s failed on host", hostURL, id)
 				return nil
@@ -360,55 +356,6 @@ func (s *Inventory) DeleteNwIF(hostURL string, id string) *simapi.NwIFDelResp {
 			return resp
 		}
 	}
-	return nil
-}
-
-// httpPost performs http POST operation
-func httpPost(url string, req interface{}, resp interface{}) error {
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return err
-	}
-
-	// Perform HTTP POST operation
-	res, err := http.Post(url, "application/json", strings.NewReader(string(jsonStr)))
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return err
-	}
-
-	defer res.Body.Close()
-
-	// Check the response code
-	if res.StatusCode == http.StatusInternalServerError {
-		eBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return errors.New("HTTP StatusInternalServerError" + err.Error())
-		}
-		return errors.New(string(eBody))
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return errors.New("HTTP Error response")
-	}
-
-	// Read the entire response
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return err
-	}
-
-	// Convert response json to struct
-	err = json.Unmarshal(body, resp)
-	if err != nil {
-		log.Errorf("Error during json unmarshall. Err: %v", err)
-		return err
-	}
-
 	return nil
 }
 

@@ -9,9 +9,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/orch/simapi"
+	n "github.com/pensando/sw/utils/netutils"
 )
-
-type restAPIFunc func(r *http.Request) (interface{}, error)
 
 func main() {
 	log.Infof("Starting simulator...")
@@ -23,9 +22,9 @@ func main() {
 
 func serveHTTP() {
 	r := mux.NewRouter()
-	r.HandleFunc("/nwifs/create", makeHTTPHandler(restAPIFunc(createNwIF))).Methods("POST")
-	r.HandleFunc("/nwifs/{id}/delete", makeHTTPHandler(restAPIFunc(deleteNwIF))).Methods("POST")
-	r.HandleFunc("/nwifs/cleanup", makeHTTPHandler(restAPIFunc(cleanup))).Methods("POST")
+	r.HandleFunc("/nwifs/create", n.MakeHTTPHandler(n.RestAPIFunc(createNwIF))).Methods("POST")
+	r.HandleFunc("/nwifs/{id}/delete", n.MakeHTTPHandler(n.RestAPIFunc(deleteNwIF))).Methods("POST")
+	r.HandleFunc("/nwifs/cleanup", n.MakeHTTPHandler(n.RestAPIFunc(cleanup))).Methods("POST")
 	log.Infof("Starting server at :5050")
 	http.ListenAndServe(":5050", r)
 }
@@ -72,40 +71,4 @@ func cleanup(r *http.Request) (interface{}, error) {
 	res := CleanUp()
 	resp := simapi.NwIFDelResp{ErrorMsg: res}
 	return resp, nil
-}
-
-// Simple Wrapper for http handlers
-func makeHTTPHandler(handlerFunc restAPIFunc) http.HandlerFunc {
-	// Create a closure and return an anonymous function
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Call the handler
-		resp, err := handlerFunc(r)
-		if err != nil {
-			// Log error
-			log.Errorf("Handler for %s %s returned error: %s", r.Method, r.URL, err)
-
-			if resp == nil {
-				// Send HTTP response
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			} else {
-				// Send HTTP response as Json
-				content, err1 := json.Marshal(resp)
-				if err1 != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write(content)
-			}
-		} else {
-			// Send HTTP response as Json
-			content, err := json.Marshal(resp)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Write(content)
-		}
-	}
 }

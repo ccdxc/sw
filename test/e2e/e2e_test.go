@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	. "testing"
@@ -12,29 +13,25 @@ import (
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/orch"
 	"github.com/pensando/sw/orch/simapi"
-	"github.com/pensando/sw/orch/vchub/sim"
 	"github.com/pensando/sw/utils/log"
+	n "github.com/pensando/sw/utils/netutils"
 	tu "github.com/pensando/sw/utils/testutils"
 )
 
 const (
-	vmsPerHost       = 2
-	vchContainerName = "vcHub"
-	vchApiAddr       = "127.0.0.1:" + globals.VCHubAPIPort
+	vmsPerHost         = 2
+	vchContainerName   = "vcHub"
+	vcSimContainerName = "vcSim"
+	vchApiAddr         = "127.0.0.1:" + globals.VCHubAPIPort
+	defVCSimURL        = "http://127.0.0.1:18086"
+	defSoapURL         = "http://user:pass@127.0.0.1:8989/sdk"
+	hostSimURL         = "http://192.168.30.121:5050"
+	hostMac            = "02:02:02:02:02:01"
 )
 
 type e2eSuite struct {
 	name string
 }
-
-// TODO auto generate based on hostsim wired_mac
-var hostMacs = []string{
-	"020202020201",
-	"020202020202",
-	"020202020203",
-}
-
-var vcSim simapi.OrchSim
 
 var sts = &e2eSuite{}
 var _ = Suite(sts)
@@ -48,15 +45,15 @@ func TestMain(m *M) {
 }
 
 func (s *e2eSuite) SetUpSuite(c *C) {
-	// start a vc simulator
-	vcSim = sim.New()
-	vcURL, err := vcSim.Run("127.0.0.1:8989", hostMacs, vmsPerHost)
+	dockerPath, err := exec.LookPath("docker")
 	if err != nil {
-		log.Fatalf("vcSim.Run returned %v", err)
+		log.Fatalf("docker not found %v", err)
 	}
 
+	runVCSim(dockerPath)
+
 	// start a vchub binary
-	runVCH(vcURL)
+	runVCH(dockerPath, defSoapURL)
 }
 
 func TestE2E(t *T) {
@@ -66,11 +63,15 @@ func TestE2E(t *T) {
 	TestingT(t)
 }
 
-func runVCH(url string) {
-	dockerPath, err := exec.LookPath("docker")
+func runVCSim(dockerPath string) {
+	out, err := exec.Command(dockerPath, "run", "--net=host", "--name", vcSimContainerName, "-d", "pen-vcsim", "-hostsim-urls", hostSimURL, "-snic-list", hostMac).CombinedOutput()
 	if err != nil {
-		log.Fatalf("docker not found %v", err)
+		log.Infof("runVCSim: %v, %s", err, string(out))
 	}
+
+}
+
+func runVCH(dockerPath, url string) {
 	out, err := exec.Command(dockerPath, "run", "--net=host", "--name", vchContainerName, "-d", "pen-vchub", "-vcenter-list", url).CombinedOutput()
 	if err != nil {
 		log.Infof("runVCH: %v, %s", err, string(out))
@@ -94,24 +95,26 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 			return false
 		}
 		nics := nicList.GetItems()
-		if len(nics) == len(hostMacs) {
+		if len(nics) == 1 {
+			for _, nic := range nics {
+				log.Infof("nic: %+v", nic.Status)
+			}
 			return true
 		}
 		return false
 	}, "50ms", "10s")
 
 	// Add a NwIF
-	u1 := "http://192.168.30.121:5050"
-	err = vcSim.SetHostURL(hostMacs[0], u1)
-	c.Assert(err, IsNil)
 
 	nwReq := &simapi.NwIFSetReq{
 		Name:      "testNwIF",
 		IPAddr:    "111.11.11.11",
 		Vlan:      "115",
 		PortGroup: "dvportGroup-13",
+		SmartNIC:  hostMac,
 	}
-	resp, err := vcSim.CreateNwIF(u1, nwReq)
+	resp := &simapi.NwIFSetResp{}
+	err = n.HTTPPost(defVCSimURL+"/nwifs/create", nwReq, resp)
 	c.Assert(err, IsNil)
 	log.Infof("Response: %+v", resp)
 
@@ -123,7 +126,8 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 		}
 		nwIfs := ifList.GetItems()
 		for _, nwif := range nwIfs {
-			if nwif.Status.IpAddress == nwReq.IPAddr {
+			if nwif.Status.IpAddress == nwReq.IPAddr && nwif.Status.SmartNIC_ID == hostMac {
+				log.Infof("%+v", nwif.Status)
 				return true
 			} else {
 				log.Infof("%s", nwif.Status.IpAddress)
@@ -133,8 +137,12 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 	}, "50ms", "10s")
 
 	// delete the ep and verify
-	del := vcSim.DeleteNwIF(u1, resp.UUID)
-	c.Assert(del, NotNil)
+	r := &simapi.NwIFSetReq{}
+	del := &simapi.NwIFDelResp{}
+	u1 := fmt.Sprintf("%s/nwifs/%s/delete", defVCSimURL, resp.UUID)
+	err = n.HTTPPost(u1, r, del)
+	c.Assert(err, IsNil)
+
 	tu.AssertEventually(c, func() bool {
 		filter := &orch.Filter{}
 		ifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
@@ -157,4 +165,5 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 func (s *e2eSuite) TearDownSuite(c *C) {
 	dockerPath, _ := exec.LookPath("docker")
 	exec.Command(dockerPath, "rm", "-f", vchContainerName).CombinedOutput()
+	exec.Command(dockerPath, "rm", "-f", vcSimContainerName).CombinedOutput()
 }

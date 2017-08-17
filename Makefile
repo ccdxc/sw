@@ -5,7 +5,7 @@ PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */))
 TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... \
 ./apiserver/... ./globals/... ./ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/...
-TO_DOCKERIZE := apigw apiserver vchub npm
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l

@@ -529,6 +529,7 @@ func (vm *VirtualMachine) AddVeth(mac, pgKey string) (string, error) {
 				Backing: &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
 					VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
 					Port: types.DistributedVirtualSwitchPortConnection{
+						SwitchUuid: esx.DvsUuid,
 						PortgroupKey: pgKey,
 					},
 				},

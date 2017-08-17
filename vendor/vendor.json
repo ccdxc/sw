@@ -1297,10 +1297,10 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "vIh3LnXzJ2pQl9iZdWfZftbg4Xw=",
+			"checksumSHA1": "evc0WqVQO/RXJlSE096rr+pBh7w=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator",
-			"revision": "032086dd56b39b73c3b72d8758ad9ab2b3557a64",
-			"revisionTime": "2017-08-01T01:44:48Z"
+			"revision": "f721f477e1977b695a8476ee6d89df7fd3c55088",
+			"revisionTime": "2017-08-15T22:34:32Z"
 		},
 		{
 			"checksumSHA1": "h0ZnuRkQke+V5NsTBUa/M6ZuuG0=",

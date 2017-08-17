@@ -184,7 +184,7 @@ func (ts *TestSuite) teardown(t *testing.T) {
 }
 
 func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 100; i++ {
 		if suite.testStore.IsWatchActive(prefix) == active {
 			break
 		}
