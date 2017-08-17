@@ -14,6 +14,7 @@ run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 
 PIP2_PACKAGES = %w[
   ply==3.9
+  cmd2
 ]
 
 PIP3_PACKAGES = %w[
@@ -25,6 +26,7 @@ PIP3_PACKAGES = %w[
   protobuf
   grpcio
   zmq
+  cmd2
 ]
 
 PACKAGES = %w[
@@ -58,6 +60,7 @@ PACKAGES = %w[
   which
   python-setuptools
   python-enum34
+  swig
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -166,8 +169,6 @@ run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is
 
 run "echo /usr/local/lib >>/etc/ld.so.conf"
 run "ldconfig -v"
-
-after { tag "srv1.pensando.io:5000/pensando/nic:dependencies" }
 
 if getenv("RELEASE") != ""
   flatten

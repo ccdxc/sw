@@ -54,24 +54,41 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 include $(TOPDIR)/make/Makefile.inc
 
-shell: build-image
+# get a shell with the dependencies image loaded, with the host filesystem mounted.
+shell: build-runtime-image
 	docker run -it --privileged -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash
 
-test: build-image
+# run `make gtest` with the dependencies image.
+test: build-runtime-image
 	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash -c 'make gtest'
 
-build: build-image
+# run a build with the dependencies image.
+build: build-runtime-image
 	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic sh -c 'make -j$$(grep -c processor /proc/cpuinfo)'
 
-clean-docker: build-image
+clean-docker: build-runtime-image
 	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic make clean
 
-build-image: install_box
-	docker pull srv1.pensando.io:5000/pensando/nic:dependencies
+build-runtime-image: install_box
+	if [ "x${NO_PULL}" = "x" ]; then docker pull srv1.pensando.io:5000/pensando/nic:dependencies; fi
 	BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box box.rb
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
+# make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
+# do a release build.
 deps: install_box
-	RELEASE=${RELEASE} box box-deps.rb
+	RELEASE=${RELEASE} box -t 'srv1.pensando.io:5000/pensando/nic:dependencies' box-deps.rb
+
+# make a release build of the dependencies image
+deps-release:
+	RELEASE=1 make deps
+
+# make a shell based on the local build of the dependencies image, for testing
+deps-test-shell:
+	NO_PULL=1 make shell
+
+# do a test build with a local build of the dependencies image.
+deps-test-build:
+	NO_PULL=1 make build
