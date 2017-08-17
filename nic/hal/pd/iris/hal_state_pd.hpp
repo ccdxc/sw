@@ -48,6 +48,12 @@ public:
     static hal_state_pd *factory(void);
     ~hal_state_pd();
 
+    // get APIs for global variables
+    uint32_t tnnl_rwr_tbl_encap_vlan_idx(void) const { 
+        return tnnl_rewr_tbl_enc_vlan_idx_; }
+    void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) { 
+        tnnl_rewr_tbl_enc_vlan_idx_ = idx; }
+
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return tenant_slab_; }
     indexer *tenant_hwid_idxr(void) const { return tenant_hwid_idxr_; }
@@ -141,6 +147,11 @@ public:
 private:
     bool init(void);
     hal_state_pd();
+
+    // global variables
+    struct {
+        uint32_t  tnnl_rewr_tbl_enc_vlan_idx_;
+    } __PACK__;
 
     // tenant related state
     struct {

@@ -502,12 +502,33 @@ ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, rewrite_actions_en rw_act)
 
     return ep_pd_get_rw_tbl_idx(pd_ep, rw_act);
 }
+
+// ----------------------------------------------------------------------------
+// Input: Dest PD EP and Rewrite Action
+// Retuns: RW idx in flow table
+// ----------------------------------------------------------------------------
 uint32_t
 ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act)
 {
     HAL_ASSERT(rw_act < REWRITE_MAX_ID);
 
     return pd_ep->rw_tbl_idx[rw_act];
+}
+
+// ----------------------------------------------------------------------------
+// Input: Dest EP and Tunnel Rewrite Action
+// Retuns: Tunnel RW idx in flow table
+// ----------------------------------------------------------------------------
+uint32_t
+ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
+                          tunnel_rewrite_actions_en tnnl_rw_act) {
+    HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
+
+    if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+        return g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+    }
+
+    return 0;
 }
 
 network_t *

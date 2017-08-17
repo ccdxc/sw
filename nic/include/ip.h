@@ -91,6 +91,7 @@ typedef struct ip_prefix_s {
 extern char *ipv4addr2str(ipv4_addr_t v4_addr);
 extern char *ipv6addr2str(ipv6_addr_t v6_addr);
 extern char *ipaddr2str(const ip_addr_t *ip_addr);
+extern char *ippfx2str(const ip_prefix_t *ip_pfx);
 
 //spdlog formatter for ip_addr_t
 inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {

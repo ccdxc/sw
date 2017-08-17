@@ -126,7 +126,8 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
     ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
 
-    HAL_TRACE_DEBUG("Rmac: {}", macaddr2str(nw->rmac_addr));
+    HAL_TRACE_DEBUG("Nw: {}, Rmac: {}", ippfx2str(&nw->nw_key.ip_pfx),
+            macaddr2str(nw->rmac_addr));
 
     // nw->gw_ep_handle = 
     nw->hal_handle = hal_alloc_handle();

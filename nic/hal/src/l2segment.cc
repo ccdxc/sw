@@ -135,7 +135,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-L2Seg:{}: L2Seg Create for id {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("PI-L2Seg:{}: L2Seg Create for seg_id:{}", __FUNCTION__, 
                     spec.key_or_handle().segment_id());
 
     // validate the request message
@@ -183,6 +183,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg->hal_handle = hal_alloc_handle();
 
     // consume network handles
+    HAL_TRACE_DEBUG("PI-L2Seg:{}: Received {} networks", 
+            __FUNCTION__, spec.network_handle_size());
     utils::dllist_reset(&l2seg->nw_list_head);
     for (int i = 0; i < spec.network_handle_size(); i++) {
         nw_handle = spec.network_handle(i);        
@@ -192,6 +194,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
             rsp->set_api_status(types::API_STATUS_NETWORK_NOT_FOUND);
             goto end;
         }
+        HAL_TRACE_DEBUG("PI-L2Seg:{}: Adding network: {}", __FUNCTION__, 
+                        ippfx2str(&nw->nw_key.ip_pfx));
 
         // add nw to list
         utils::dllist_add(&l2seg->nw_list_head, &nw->l2seg_nw_lentry);

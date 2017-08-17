@@ -295,11 +295,6 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     //d.flow_info_action_u.flow_info_flow_info.rewrite_index =
         //ep_get_rewrite_index(dst_ep);
         //ep_pd_get_rw_tbl_idx_from_pi_ep(dst_ep, REWRITE_L3_REWRITE_ID);
-    //d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = 0;
-    if (is_l2seg_fabric_encap_vxlan(l2seg_d)) {
-        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid =
-            l2seg_d->fabric_encap.val;
-    }
 
     // there is no transit case for us, so this is always FALSE
     if (is_if_type_tunnel(dif) && (sif->if_type != dif->if_type)) {
@@ -362,6 +357,9 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.ttl_dec = flow->ttl_dec;
     d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd, 
             flow->rw_act);
+    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->tnnl_vnid;
+    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = ep_pd_get_tnnl_rw_tbl_idx(dep->pd,
+            flow->tnnl_rw_act);
 
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;

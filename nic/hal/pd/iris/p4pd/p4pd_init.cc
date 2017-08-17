@@ -688,10 +688,29 @@ p4pd_tunnel_encap_update_inner (void)
     return HAL_RET_OK;
 }
 
+// ----------------------------------------------------------------------------
+// Init entries for EGRESS tunnel rewrite table
+//
+//  0: No-op Entry
+//  1: To encap vlan entry. Flow will drive this whenever a flow needs to add
+//     or modify a vlan encap. 
+//
+//  Bridging:
+//     Ingress Untag/Ingress Tag:
+//          -> Flow[rewr_id: 0] (No-op on tags)
+//
+//  Routing:
+//     Ingress Untag 
+//          -> Flow[rewr_idx: l3_rewr_act, tnnl_rewr: 1](Nothing to decap) 
+//          -> Tnnl_Rewrite(Adds Vlan)
+//     Ingress Tag   
+//          -> Flow[rewr_idx: l3_rwr_act, tnnl_rewr: 1](Decaps Vlan)
+//          -> Tnnl_Rewrite(Adds Vlan Header)
+// ----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)
 {
-    uint32_t                     idx = 0;
+    uint32_t                     noop_idx = 0, enc_vlan_idx = 1;
     hal_ret_t                    ret;
     DirectMap                    *dm;
     tunnel_rewrite_actiondata    data = { 0 };
@@ -701,12 +720,22 @@ p4pd_tunnel_rewrite_init (void)
 
     // "catch-all" nop entry
     data.actionid = TUNNEL_REWRITE_NOP_ID;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, noop_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
-                      idx, ret);
+                      noop_idx, ret);
         return ret;
     }
+
+    // "encap_vlan" entry
+    data.actionid = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+    ret = dm->insert_withid(&data, enc_vlan_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
+                      enc_vlan_idx, ret);
+        return ret;
+    }
+    g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(enc_vlan_idx);
     return HAL_RET_OK;
 }
 

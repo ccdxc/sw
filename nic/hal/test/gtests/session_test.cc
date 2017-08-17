@@ -584,7 +584,7 @@ TEST_F(session_test, test4)
     hal_ret_t                   ret;
     TenantSpec                  ten_spec;
     TenantResponse              ten_rsp;
-    L2SegmentSpec               l2seg_spec;
+    L2SegmentSpec               l2seg_spec, l2seg_spec1;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
     InterfaceResponse           up_rsp;
@@ -618,9 +618,9 @@ TEST_F(session_test, test4)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
@@ -632,12 +632,12 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(1);
-    l2seg_spec.add_network_handle(nw_hdl1);
-    l2seg_spec.mutable_key_or_handle()->set_segment_id(42);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(12);
-    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    l2seg_spec1.mutable_meta()->set_tenant_id(1);
+    l2seg_spec1.add_network_handle(nw_hdl1);
+    l2seg_spec1.mutable_key_or_handle()->set_segment_id(42);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_value(12);
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 

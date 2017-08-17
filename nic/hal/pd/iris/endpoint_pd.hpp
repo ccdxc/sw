@@ -40,6 +40,9 @@ uint32_t ep_pd_get_hw_lif_id(ep_t *pi_ep);
 intf::IfType ep_pd_get_if_type(ep_t *pi_ep);
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
                                          rewrite_actions_en rw_act);
+uint32_t
+ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
+                          tunnel_rewrite_actions_en tnnl_rw_act);
 uint32_t ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act);
 network_t *ep_pd_get_nw(ep_t *pi_ep, l2seg_t *l2seg);
 }   // namespace pd

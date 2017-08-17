@@ -4,6 +4,7 @@
 #include <session_svc.hpp>
 #include <interface.hpp>
 #include <endpoint.hpp>
+#include <endpoint_api.hpp>
 #include <session.hpp>
 #include <utils.hpp>
 #include <pd_api.hpp>
@@ -420,22 +421,26 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
 {
     hal_ret_t   ret = HAL_RET_OK;
     flow_cfg_t  *flow = NULL;
-    // ep_t        *sep = NULL, *dep = NULL;
+    ep_t        /**sep = NULL, */*dep = NULL;
     l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
+    if_t        *dif = NULL;
 
     if (is_initiator_flow) {
         flow = args->iflow;
         // sep = args->sep;
-        // dep = args->dep;
+        dep = args->dep;
         sl2seg = args->sl2seg;
         dl2seg = args->dl2seg;
     } else {
         flow = args->rflow;
         // sep = args->dep;
-        // dep = args->sep;
+        dep = args->sep;
         sl2seg = args->dl2seg;
         dl2seg = args->sl2seg;
     }
+
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
 
     // Routing case only if nat type is NONE
     if (flow->nat_type != NAT_TYPE_NONE) {
@@ -448,8 +453,20 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
         flow->mac_sa_rewrite = true;
         flow->mac_da_rewrite = true;
         flow->rw_act = REWRITE_L3_REWRITE_ID;
-    }
 
+        // check if egress pkt needs vlan encap
+        if (dif->if_type == intf::IF_TYPE_ENIC) {
+            flow->tnnl_vnid = dif->encap_vlan;
+            flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+        } else if (dif->if_type == intf::IF_TYPE_UPLINK ||
+                dif->if_type == intf::IF_TYPE_UPLINK_PC) {
+            flow->tnnl_vnid = dl2seg->fabric_encap.val;
+            // Check if dl2seg is native
+            if (dif->native_l2seg != dl2seg->fabric_encap.val) {
+                flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+            }
+        }
+    }
 
     return ret;
 }
