@@ -10,6 +10,7 @@
 #define JKEY_START_OFF           "start_offset"
 
 #define JP4_PRGM                 "p4_program"
+#define JP4_ATOMIC_STATS         "atomic_stats"
 
 #include <base.h>
 

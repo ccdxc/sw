@@ -7,6 +7,7 @@ struct copp_action_d d;
 struct phv_          p;
 
 k = {
+  copp_metadata_policer_index = 50;
   copp_metadata_policer_color = POLICER_COLOR_GREEN;
   control_metadata_packet_len = 0x80;
 };
@@ -18,4 +19,4 @@ d = {
   copp_action_d.denied_bytes = 0x2345;
 };
 
-r5 = 0x12345600abcdef00;
+r5 = 0x12345600;

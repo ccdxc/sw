@@ -14,10 +14,11 @@ d = {
     };
 
 k = {
+    vlan_tag_vid_sbit0_ebit3        = 0x0;
+    vlan_tag_vid_sbit4_ebit11       = 0x1;
     vlan_tag_valid                  = 0x1;
     control_metadata_src_lif        = 0x1;
     ethernet_srcAddr                = 0x1;
-    vlan_tag_vid                    = 0x1;
     flow_lkp_metadata_lkp_type      = 0x1;
     flow_lkp_metadata_lkp_vrf       = 0x1;
     flow_lkp_metadata_lkp_src       = 0x1;

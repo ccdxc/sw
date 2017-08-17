@@ -18,4 +18,4 @@ d = {
   egress_policer_action_d.denied_bytes = 0x2345;
 };
 
-r5 = 0x12345600abcdef00;
+r5 = 0x12345600;

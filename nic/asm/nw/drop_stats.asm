@@ -25,3 +25,9 @@ drop_stats_overflow:
   add         r5, r5, d.u.drop_stats_d.stats_idx, 3
   memwr.d.e   r5, r6
   tblwr       d.u.drop_stats_d.drop_pkts, r0
+
+/*
+ * stats allocation in the atomic add region:
+ * 8B drop packet count
+ * total per index = 8B
+ */

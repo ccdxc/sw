@@ -11,15 +11,8 @@ namespace pt = boost::property_tree;
 
 static capri_hbm_region_t *hbm_regions_;
 
-#define JKEY_REGIONS             "regions"
-#define JKEY_REGION_NAME         "name"
-#define JKEY_SIZE_KB             "size_kb"
-#define JKEY_START_OFF           "start_offset"
-
-#define JP4_PRGM                 "p4_program"
-
 hal_ret_t
-capri_hbm_parse() 
+capri_hbm_parse()
 {
 	char             		*cfg_path;
     char					cfgfile[] = "hbm_mem.json";

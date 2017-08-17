@@ -19,9 +19,10 @@ egress_policer_action:
 
 egress_policer_permitted_stats_overflow:
   add         r7, d.egress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
-  memwr.d     r5[31:0], r7
-  add         r6, r5[31:0], 8
-  memwr.d.e   r6, 0xF
+  addi        r6, r0, 0x10000F
+  or          r7, r7, r6, 32
+  add         r5, r5, k.policer_metadata_egress_policer_index, 5
+  memwr.d.e   r5, r7
   tblwr       d.egress_policer_action_d.permitted_bytes, 0
 
 egress_policer_deny:
@@ -33,7 +34,15 @@ egress_policer_deny:
 
 egress_policer_denied_stats_overflow:
   add         r7, d.egress_policer_action_d.denied_bytes, k.control_metadata_packet_len
-  memwr.d     r5[63:32], r7
-  add         r6, r5[63:32], 8
-  memwr.d.e   r6, 0xF
+  addi        r6, r0, 0x10000F
+  or          r7, r7, r6, 32
+  add         r5, r5, k.policer_metadata_egress_policer_index, 5
+  add         r5, r5, 16
+  memwr.d.e   r5, r7
   tblwr       d.egress_policer_action_d.denied_bytes, 0
+
+/*
+ * stats allocation in the atomic add region:
+ * 8B permit bytes, 8B permit packets, 8B deny bytes, 8B deby packets
+ * total per policer index = 32B
+ */

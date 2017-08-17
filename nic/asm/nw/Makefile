@@ -105,7 +105,7 @@ $(TMP_FILES): %.x: %.ctl
 	@echo $<
 	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIRS) $< $(OBJ_DIR)/$(patsubst %.x,%.bin,$@)
 
-test: $(TMP_FILES)
+gtest: $(TMP_FILES)
 
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin

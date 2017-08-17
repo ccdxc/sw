@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 
-#define TX_UCAST_BYTES_OVERFLOW_ADDRESS  0xabcd0000
+#define TX_UCAST_BYTES_OVERFLOW_ADDRESS  0
 #define TX_MCAST_BYTES_OVERFLOW_ADDRESS  TX_UCAST_BYTES_OVERFLOW_ADDRESS + 16
 #define TX_BCAST_BYTES_OVERFLOW_ADDRESS  TX_UCAST_BYTES_OVERFLOW_ADDRESS + 32
 #define TX_EGRESS_DROPS_OVERFLOW_ADDRESS TX_UCAST_BYTES_OVERFLOW_ADDRESS + 46
@@ -50,7 +50,7 @@ tx_egress_drops:
   nop
 
 tx_ucast_bytes_overflow:
-  addi        r5, r4, TX_UCAST_BYTES_OVERFLOW_ADDRESS
+  add         r5, r5, r4
   memwr.d     r5, r6
   add         r5, r5, 8
   memwr.d     r5, d.tx_stats_d.tx_ucast_pkts
@@ -58,7 +58,8 @@ tx_ucast_bytes_overflow:
   tblwr       d.tx_stats_d.tx_ucast_pkts, r0
 
 tx_mcast_bytes_overflow:
-  addi        r5, r4, TX_MCAST_BYTES_OVERFLOW_ADDRESS
+  add         r5, r5, r4
+  add         r5, r5, TX_MCAST_BYTES_OVERFLOW_ADDRESS
   memwr.d     r5, r6
   add         r5, r5, 8
   memwr.d     r5, d.tx_stats_d.tx_mcast_pkts
@@ -66,7 +67,8 @@ tx_mcast_bytes_overflow:
   tblwr       d.tx_stats_d.tx_mcast_pkts, r0
 
 tx_bcast_bytes_overflow:
-  addi        r5, r4, TX_BCAST_BYTES_OVERFLOW_ADDRESS
+  add         r5, r5, r4
+  add         r5, r5, TX_BCAST_BYTES_OVERFLOW_ADDRESS
   memwr.d     r5, r6
   add         r5, r5, 8
   memwr.d     r5, d.tx_stats_d.tx_bcast_pkts
@@ -74,7 +76,14 @@ tx_bcast_bytes_overflow:
   tblwr       d.tx_stats_d.tx_bcast_pkts, r0
 
 tx_egress_drops_overflow:
-  addi        r5, r4, TX_EGRESS_DROPS_OVERFLOW_ADDRESS
+  add         r5, r5, r4
+  addi        r5, r5, TX_EGRESS_DROPS_OVERFLOW_ADDRESS
   memwr.d.e   r5, r6
   tblwr       d.tx_stats_d.tx_egress_drops, r0
 
+/*
+ * stats allocation in the atomic add region:
+ * Unicast : 8B bytes, 8B packets, Multicast : 8B bytes, 8B packets,
+ * Broadcast : 8B bytes, 8B packets, Drops : 8B
+ * total per index = 56B
+ */

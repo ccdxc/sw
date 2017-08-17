@@ -846,15 +846,16 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
 
-    // initialize all P4 ingress tables with default entries, if any
+    // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_twice_nat_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
     HAL_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
+
     return HAL_RET_OK;
 }
 

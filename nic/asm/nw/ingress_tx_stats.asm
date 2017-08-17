@@ -19,3 +19,9 @@ ingress_tx_stats:
 ingress_tx_stats_overflow:
   memwr.d.e   r5, r6
   tblwr       d.ingress_tx_stats_d.tx_ingress_drops, r0
+
+/*
+ * stats allocation in the atomic add region:
+ * 8B drop packet count
+ * total per lif index = 8B
+ */

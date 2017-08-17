@@ -15,6 +15,6 @@ k = {
 };
 
 d = {
-  l4_profile_d.ip_normalization_en = 1;
-  l4_profile_d.ip_rsvd_flags_action = NORMALIZATION_ACTION_EDIT;
+  u.l4_profile_d.ip_normalization_en = 1;
+  u.l4_profile_d.ip_rsvd_flags_action = NORMALIZATION_ACTION_EDIT;
 };

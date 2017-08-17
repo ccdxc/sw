@@ -207,6 +207,49 @@ capri_program_table_mpu_pc(void)
 #endif
 }
 
+static int capri_stats_region_init()
+{
+    p4pd_table_properties_t       tbl_ctx;
+    uint32_t                      stats_base_addr;
+    uint32_t                      stats_region_start;
+    uint32_t                      stats_region_size;
+
+    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
+    stats_region_size = get_size_kb(JP4_ATOMIC_STATS) * 1024;
+
+    capri_table_constant_write(P4TBL_ID_FLOW_STATS, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth * 32;
+
+    capri_table_constant_write(P4TBL_ID_INGRESS_POLICER_ACTION,
+                               stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_INGRESS_POLICER_ACTION, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth * 32;
+
+    capri_table_constant_write(P4TBL_ID_EGRESS_POLICER_ACTION, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_EGRESS_POLICER_ACTION, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth * 32;
+
+    capri_table_constant_write(P4TBL_ID_COPP_ACTION, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth * 32;
+
+    capri_table_constant_write(P4TBL_ID_DROP_STATS, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth;
+
+    capri_table_constant_write(P4TBL_ID_TX_STATS, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth * 56;
+
+    capri_table_constant_write(P4TBL_ID_INGRESS_TX_STATS, stats_base_addr);
+    p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
+    stats_base_addr += tbl_ctx.tabledepth;
+
+    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
+    return CAPRI_OK;
+}
+
 
 int capri_table_rw_init()
 {
@@ -258,6 +301,7 @@ int capri_table_rw_init()
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
+    capri_stats_region_init();
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
 #endif
     return (CAPRI_OK);
@@ -794,3 +838,38 @@ int capri_hbm_table_entry_read(uint32_t tableid,
     return (CAPRI_OK);
 }
 
+int capri_table_constant_write(uint32_t tableid, uint64_t val)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    if (tbl_ctx.gress == P4_GRESS_INGRESS) {
+        cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].write();
+    } else {
+        cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].write();
+    }
+    return (CAPRI_OK);
+}
+
+int capri_table_constant_read(uint32_t tableid, uint64_t *val)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    if (tbl_ctx.gress == P4_GRESS_INGRESS) {
+        cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].
+            value().convert_to<uint64_t>();
+    } else {
+        cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
+        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].
+            value().convert_to<uint64_t>();
+    }
+    return (CAPRI_OK);
+}
