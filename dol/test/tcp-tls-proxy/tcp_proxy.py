@@ -52,7 +52,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb.rcv_nxt)
     if tcb.rcv_nxt is not 0xbababb16:
         print("rcv_nxt not as expected")
-        #return False
+        return False
     print("rcv_nxt as expected")
 
     # 2. Fetch current values from Platform
