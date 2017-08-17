@@ -58,9 +58,9 @@ p4pd_get_stage0_prog_addr(uint64_t* offset)
 static hal_ret_t 
 p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    tcp_rx_read_tx2rx_read_tx2rx_d  data = {0};
+    tcp_rx_read_tx2rx_d             data = {0};
     hal_ret_t                       ret = HAL_RET_OK;
-    uint64_t                        pc_offset;
+    //uint64_t                        pc_offset;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
@@ -72,14 +72,14 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         //    HAL_TRACE_ERR("Failed to get pc address");
             //ret = HAL_RET_HW_FAIL;
         //}
-        HAL_TRACE_DEBUG("Received pc address", pc_offset);
-        data.pc = 0x0;
+        //HAL_TRACE_DEBUG("Received pc address", pc_offset);
+        data.u.read_tx2rx_d.pc = 0x0;
         
-        data.snd_nxt = tcpcb_pd->tcpcb->snd_nxt;
-        data.prr_out = 0xFEEDBABA;
-        HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.snd_nxt);
+        data.u.read_tx2rx_d.snd_nxt = tcpcb_pd->tcpcb->snd_nxt;
+        data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
+        HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.u.read_tx2rx_d.snd_nxt);
     }
-    
+    HAL_TRACE_DEBUG("Programming tx2rx at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
@@ -120,6 +120,7 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
     }
     int size = sizeof(tcp_rx_tcp_rx_d);
+    HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: 0x{0:x}", hwid); 
     
     if(!p4plus_hbm_write(hwid, (uint8_t *)&data, size)) {
         HAL_TRACE_ERR("Failed to create rx: tcp_rx entry for TCP CB");
