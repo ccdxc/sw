@@ -7,6 +7,7 @@ infra_data  : None  # Hanlde of FrameworkData
 logger  : None  # Logger Instance
 logpfx  : None  # Logger Prefix for all logs of this Testcase.
 module  : None  # Module
+step_id : None
 
 config:
     session:

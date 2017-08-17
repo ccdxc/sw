@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import copy
 
 import infra.common.defs        as defs
 import infra.common.parser      as parser
@@ -72,6 +73,7 @@ class TestCase(objects.FrameworkObject):
         self.testspec       = module.testspec
         self.logger         = infra_data.Logger
         self.session        = []
+        self.step_id        = 0
 
         self.logpfx         = "TC%06d:" % self.ID()
         self.__generate()
@@ -102,7 +104,7 @@ class TestCase(objects.FrameworkObject):
         memfactory.GenerateBuffers(self)
         return
         
-    def __setup_packets(self, tc_section, spec_section):
+    def __setup_packets(self, step_id, tc_section, spec_section):
         for spec_pkt in spec_section.packets:
             if spec_pkt.packet.object == None: continue
             tc_pkt = TestCaseTrigExpPacketObject()
@@ -112,6 +114,9 @@ class TestCase(objects.FrameworkObject):
                 if tc_pkt.packet == None: return
             else:
                 tc_pkt.packet = spec_pkt.packet.object.Get(self)
+            
+            tc_pkt.packet = copy.deepcopy(tc_pkt.packet)
+            tc_pkt.packet.SetStepId(step_id)
 
             # Resolve the ports
             if objects.IsReference(spec_pkt.packet.port):
@@ -137,7 +142,8 @@ class TestCase(objects.FrameworkObject):
     
     def __setup_trigger(self, tc_ssn_step, spec_ssn_step):
         self.info("- Setting up Trigger.")
-        self.__setup_packets(tc_ssn_step.trigger,
+        self.__setup_packets(tc_ssn_step.step_id, 
+                             tc_ssn_step.trigger,
                              spec_ssn_step.trigger)
         self.__setup_descriptors(tc_ssn_step.trigger,
                                  spec_ssn_step.trigger)
@@ -145,7 +151,8 @@ class TestCase(objects.FrameworkObject):
 
     def __setup_expect(self, tc_ssn_step, spec_ssn_step):
         self.info("- Setting up Expect.")
-        self.__setup_packets(tc_ssn_step.expect,
+        self.__setup_packets(tc_ssn_step.step_id,
+                             tc_ssn_step.expect,
                              spec_ssn_step.expect)
         self.__setup_descriptors(tc_ssn_step.expect,
                                  spec_ssn_step.expect)
@@ -159,7 +166,9 @@ class TestCase(objects.FrameworkObject):
         for spec_ssn_entry in self.testspec.session:
             tc_ssn_entry = TestCaseSessionEntryObject()
             tc_ssn_entry.step = TestCaseSessionStepObject()
-            
+            tc_ssn_entry.step.step_id = self.step_id
+            self.step_id += 1
+
             self.info("- Setting Up Session Step")
             self.__setup_trigger(tc_ssn_entry.step,
                                  spec_ssn_entry.step)

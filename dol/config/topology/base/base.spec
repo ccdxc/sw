@@ -17,7 +17,7 @@ uplink:
     - entry: 
         id      : Uplink3
         port    : 3
-        mode    : TRUNK
+        mode    : PC_MEMBER
         sriov   : False
         status  : UP
         pc      : 1
@@ -25,24 +25,24 @@ uplink:
     - entry:
         id      : Uplink4
         port    : 4
-        mode    : TRUNK
+        mode    : PC_MEMBER
         sriov   : False
         status  : UP
         pc      : 1
 
 uplinkpc:
-#    - entry:
-#        id      : UplinkPc1
-#        port    : 1
-#        mode    : TRUNK
-#        members :
-#            - ref://store/objects/id=Uplink1
-#    - entry:
-#        id      : UplinkPc2
-#        port    : 2
-#        mode    : TRUNK
-#        members :
-#            - ref://store/objects/id=Uplink2
+    - entry:
+        id      : UplinkPc1
+        port    : 3
+        mode    : TRUNK
+        members :
+            - ref://store/objects/id=Uplink3
+    - entry:
+        id      : UplinkPc2
+        port    : 4
+        mode    : TRUNK
+        members :
+            - ref://store/objects/id=Uplink4
 
 tenants:
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN

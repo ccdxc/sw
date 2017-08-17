@@ -40,18 +40,16 @@ class CRC(Packet):
 
 
 class PENDOL(Packet):
-    name = "DOL"
+    name = "PENDOL"
     fields_desc = [
-        XIntField("ts", 0),
-        XLongField("id", 0),
-        XIntField("opcode", 0),
-        FlagsField("flags", 0, 8, ['LOG', 'LOGDROP',
-                                   "R0", "R1", "R2", "R3", "R4"]),
-        ByteField("s0", 0),
-        ByteField("s1", 0),
-        ByteField("s2", 0),
+        BitField("ts",          0,      32),
+        BitField("id",          0,      32),
+        BitField("opcode",      0,      8),
+        BitField("step_id",     0,      8),
+        BitField("log",         0,      1),
+        BitField("log_on_drop", 0,      1),
+        BitField("rsvd",        0,      14),
     ]
-
 
 class GRH(Packet):
     name = "GRH"

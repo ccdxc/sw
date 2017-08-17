@@ -197,6 +197,10 @@ class Packet(objects.FrameworkObject):
         self.pktsize        = None
         return
 
+    def SetStepId(self, step_id):
+        self.headers.pendol.step_id = step_id
+        return
+
     def __get_payload_size(self, tc):
         if self.spec.payloadsize == None:
             return

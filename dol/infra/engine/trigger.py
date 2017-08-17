@@ -865,7 +865,7 @@ class Trigger(InfraThreadHandler):
                 pkt_ctx = event
                 try:
                     tc_id = pkt_ctx.packet[PEN_REF].id
-                    step_id = pkt_ctx.packet[PEN_REF].s1
+                    step_id = pkt_ctx.packet[PEN_REF].step_id
                     with self._tc_db_lock:
                         if tc_id in self._tc_db:
                             trigger_test_case = self._tc_db[tc_id]
