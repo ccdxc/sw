@@ -296,16 +296,11 @@ uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc)
 
 static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
                                          int *sram_row, int *entry_start_block,
-                                         int *entry_end_block, int *entry_start_word,
-                                         int *entry_words, int *entry_bit_len,
-                                         p4pd_table_dir_en *dir,
-                                         p4pd_table_location_en *loc)
+                                         int *entry_end_block, int *entry_start_word)
 {
     p4pd_table_properties_t       tbl_ctx, *tblctx = &tbl_ctx;
 
     p4pd_table_properties_get(tableid, &tbl_ctx);
-
-    *loc = tbl_ctx.table_location;
 
     *sram_row = tblctx->sram_layout.top_left_y +
                          (index/tblctx->sram_layout.num_buckets);
@@ -329,9 +324,6 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
                          (*entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK))
                         / CAPRI_SRAM_WORDS_PER_BLOCK) * CAPRI_SRAM_ROWS;
 
-    *entry_words = tblctx->sram_layout.entry_width;
-    *entry_bit_len = tblctx->sram_layout.entry_width_bits;
-    *dir = tblctx->gress;
 }
 
 int capri_table_entry_write(uint32_t tableid,
@@ -361,46 +353,35 @@ int capri_table_entry_write(uint32_t tableid,
     // Entry cannot be wider than entire row (10 x 128bits)
 
     int sram_row, entry_start_block, entry_end_block;
-    int entry_start_word, entry_words, entry_bit_len;
-    p4pd_table_dir_en dir;
-    p4pd_table_location_en loc;
-
+    int entry_start_word;
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_sram_entry_details_get(tableid, index,
                                  &sram_row, &entry_start_block,
-                                 &entry_end_block, &entry_start_word,
-                                 &entry_words, &entry_bit_len, &dir, &loc);
-
-    assert(loc != P4_TBL_LOCATION_HBM);
-    
-    int block = entry_start_block;
-    int start_word = entry_start_word;
+                                 &entry_end_block, &entry_start_word);
+    p4pd_table_dir_en dir = tbl_ctx.gress;
+    int tbl_col = index % tbl_ctx.sram_layout.num_buckets;
+    int blk = tbl_ctx.sram_layout.top_left_block
+                 + ((tbl_col * tbl_ctx.sram_layout.entry_width) /
+                     CAPRI_SRAM_WORDS_PER_BLOCK);
+    int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_hwentry = (uint16_t*)hwentry;
-    for (int j = 0; j < entry_words; j++) {
+    for (int j = 0; j < tbl_ctx.sram_layout.entry_width; j++) {
         if (copy_bits >= 16) {
-            g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word] = *_hwentry;
+            g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
             _hwentry++;
             copy_bits -= 16;
-        } else if (copy_bits) {
-            if (copy_bits > 8) {
-                g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word] 
-                    = (*_hwentry << (16 - copy_bits));
-            } else {
-                g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word] 
-                    = (*(uint8_t*)_hwentry << (16 - copy_bits));
-            }
-            copy_bits = 0;
         } else {
-            // clear out remaining bits from end of entry bits to next 16b
-            // aligned word
-            g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word] = 0;
+            assert(0);
         }
-        start_word++;
-        if (start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
+        entry_start_word++;
+        if (entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
             //block += CAPRI_SRAM_ROWS;
             block++;
-            start_word = 0;
+            entry_start_word = 0;
         }
     }
 
@@ -408,7 +389,7 @@ int capri_table_entry_write(uint32_t tableid,
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> sram_block_data;
-    uint8_t temp[16]; int blk = entry_start_block % CAPRI_SRAM_BLOCK_COUNT;
+    uint8_t temp[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_SRAM_ROWS, blk++) {
         //all g_shadow_sram->mem[sram_row][i] to be pushed to capri..
         uint8_t *s = (uint8_t*)(g_shadow_sram->mem[sram_row][blk]);
@@ -463,44 +444,38 @@ int capri_table_entry_read(uint32_t tableid,
      */
 
     int sram_row, entry_start_block, entry_end_block;
-    int entry_start_word, entry_words, entry_bit_len;
-    p4pd_table_dir_en dir;
-    p4pd_table_location_en loc;
-
+    int entry_start_word;
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_sram_entry_details_get(tableid, index,
-                                &sram_row, &entry_start_block,
-                                &entry_end_block, &entry_start_word,
-                                &entry_words, &entry_bit_len, &dir, &loc);
-
-    assert(loc != P4_TBL_LOCATION_HBM);
-
-    int block = entry_start_block;
-    int start_word = entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK;
+                                 &sram_row, &entry_start_block,
+                                 &entry_end_block, &entry_start_word);
+    int tbl_col = index % tbl_ctx.sram_layout.num_buckets;
+    int blk = tbl_ctx.sram_layout.top_left_block
+                 + ((tbl_col * tbl_ctx.sram_layout.entry_width) /
+                     CAPRI_SRAM_WORDS_PER_BLOCK);
+    int block = blk;
+    int copy_bits = tbl_ctx.sram_layout.entry_width_bits;
     uint16_t *_hwentry = (uint16_t*)hwentry;
-    int copy_bits = entry_bit_len;
+
     while(copy_bits) {
         if (copy_bits >= 16) {
-            *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word];
+            *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
             _hwentry++;
             copy_bits -= 16;
-        } else if (copy_bits) {
-            if (copy_bits > 8) {
-                *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word]; 
-            } else {
-                *(uint8_t*)_hwentry =
-                    g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][start_word];
-            }
-            copy_bits = 0;
+        } else {
+            assert(0);
         }
-        start_word++;
-        if (start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
+        entry_start_word++;
+        if (entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
             block++;
-            start_word = 0;
+            entry_start_word = 0;
         }
     }
 
-    *hwentry_bit_len = entry_bit_len;
+    *hwentry_bit_len = tbl_ctx.sram_layout.entry_width_bits;
 
     // TODO : Read from HW is also needed... (not just returning from shadow)
 
@@ -533,16 +508,11 @@ int capri_table_entry_read(uint32_t tableid,
 
 static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index, 
                                          int *tcam_row, int *entry_start_block,
-                                         int *entry_end_block, int *entry_start_word,
-                                         int *entry_words, int *entry_bit_len,
-                                         p4pd_table_dir_en *dir,
-                                         p4pd_table_location_en *loc)
+                                         int *entry_end_block, int *entry_start_word)
 {
     p4pd_table_properties_t       tbl_ctx, *tblctx = &tbl_ctx;
 
     p4pd_table_properties_get(tableid, &tbl_ctx);
-
-    *loc = tbl_ctx.table_location;
 
     *tcam_row = tblctx->tcam_layout.top_left_y + 
                          (index/tblctx->tcam_layout.num_buckets);
@@ -565,10 +535,6 @@ static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
     *entry_end_block = *entry_start_block 
                          + (tblctx->tcam_layout.entry_width
                             / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
-
-    *entry_words = tblctx->tcam_layout.entry_width;
-    *entry_bit_len = tblctx->tcam_layout.entry_width_bits;
-    *dir = tblctx->gress;
 }
 
 int capri_tcam_table_entry_write(uint32_t tableid,
@@ -596,53 +562,55 @@ int capri_tcam_table_entry_write(uint32_t tableid,
      *    as before.
      */
     int tcam_row, entry_start_block, entry_end_block;
-    int entry_start_word, entry_words, entry_bit_len;
-    p4pd_table_dir_en dir;
-    p4pd_table_location_en loc;
+    int entry_start_word;
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
 
     capri_tcam_entry_details_get(tableid, index,
                                  &tcam_row, &entry_start_block,
-                                 &entry_end_block, &entry_start_word,
-                                 &entry_words, &entry_bit_len, &dir, &loc);
-    assert(loc != P4_TBL_LOCATION_HBM);
-    
-    int block = entry_start_block;
-    int start_word = entry_start_word;
+                                 &entry_end_block, &entry_start_word);
+    p4pd_table_dir_en dir = tbl_ctx.gress;
+    int tbl_col = index % tbl_ctx.tcam_layout.num_buckets;
+    int blk = tbl_ctx.tcam_layout.top_left_block
+                 + ((tbl_col * tbl_ctx.tcam_layout.entry_width) /
+                     CAPRI_TCAM_WORDS_PER_BLOCK);
+    int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_trit_x = (uint16_t*)trit_x;
     uint16_t *_trit_y = (uint16_t*)trit_y;
-    for (int j = 0; j < entry_words; j++) {
+    for (int j = 0; j < tbl_ctx.tcam_layout.entry_width; j++) {
         if (copy_bits >= 16) {
-            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] = *_trit_x;
-            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] = *_trit_y;
+            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
+            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
             _trit_x++;
             _trit_y++;
             copy_bits -= 16;
         } else if (copy_bits) {
             if (copy_bits > 8) {
-                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] 
+                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
                     = (*_trit_x << (16 - copy_bits));
-                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] 
+                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
                     = (*_trit_y << (16 - copy_bits));
             } else {
-                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] 
+                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
                     = (*(uint8_t*)_trit_x << (16 - copy_bits));
-                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] 
+                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
                     = (*(uint8_t*)_trit_y << (16 - copy_bits));
             }
             copy_bits = 0;
         } else {
             // do not match remaining bits from end of entry bits to next 16b
             // aligned word
-            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] = 0;
-            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][start_word] = 0;
+            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
+            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
         }
-        start_word++;
-        if (start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
+        entry_start_word++;
+        if (entry_start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
             //block += CAPRI_TCAM_ROWS;
             block++;
-            start_word = 0;
+            entry_start_word = 0;
         }
     }
 
@@ -652,7 +620,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     pu_cpp_int<128> tcam_block_data_x;
     pu_cpp_int<128> tcam_block_data_y;
     uint8_t temp_x[16];
-    uint8_t temp_y[16]; int blk = entry_start_block % CAPRI_TCAM_BLOCK_COUNT;
+    uint8_t temp_y[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
         uint8_t *s = (uint8_t*)(g_shadow_tcam->mem_x[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
@@ -718,20 +686,23 @@ int capri_tcam_table_entry_read(uint32_t tableid,
 {
 
     int tcam_row, entry_start_block, entry_end_block;
-    int entry_start_word, entry_words, entry_bit_len;
-    p4pd_table_dir_en dir;
-    p4pd_table_location_en loc;
+    int entry_start_word;
 
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_tcam_entry_details_get(tableid, index,
                                 &tcam_row, &entry_start_block,
-                                &entry_end_block, &entry_start_word,
-                                &entry_words, &entry_bit_len, &dir, &loc);
-    assert(loc != P4_TBL_LOCATION_HBM);
-    int block = entry_start_block;
+                                &entry_end_block, &entry_start_word);
+    int tbl_col = index % tbl_ctx.tcam_layout.num_buckets;
+    int blk = tbl_ctx.tcam_layout.top_left_block
+                 + ((tbl_col * tbl_ctx.tcam_layout.entry_width) /
+                     CAPRI_TCAM_WORDS_PER_BLOCK);
+    int block = blk;
+    int copy_bits = tbl_ctx.tcam_layout.entry_width_bits;
     int start_word = entry_start_word;
     uint16_t *_trit_x = (uint16_t*)trit_x;
     uint16_t *_trit_y = (uint16_t*)trit_y;
-    int copy_bits = entry_bit_len;
     while(copy_bits) {
         if (copy_bits >= 16) {
             *_trit_x = g_shadow_tcam->mem_x[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word];
@@ -752,13 +723,13 @@ int capri_tcam_table_entry_read(uint32_t tableid,
         start_word++;
         if (start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
-            //block++;
-            block += CAPRI_TCAM_ROWS;
+            block++;
+            //block += CAPRI_TCAM_ROWS;
             start_word = 0;
         }
     }
 
-    *hwentry_bit_len = entry_bit_len;
+    *hwentry_bit_len = tbl_ctx.tcam_layout.entry_width_bits;;
 
     // TODO : Read from HW is also needed... (not just returning from shadow)
 
