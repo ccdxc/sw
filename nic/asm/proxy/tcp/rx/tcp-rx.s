@@ -584,10 +584,12 @@ table_read_RTT:
 	                    TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)
 table_read_RNMDR_ALLOC_IDX:
 	addi 		r3, r0, RNMDR_ALLOC_IDX
+        add             r1, r0, d.u.tcp_rx_d.rnmdr_base
 	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
 	                    r3, TABLE_SIZE_16_BITS)
 table_read_RNMPR_ALLOC_IDX:
 	addi 		r3, r0, RNMPR_ALLOC_IDX
+        add             r1, r0, d.u.tcp_rx_d.rnmpr_base
 	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
 	                    r3, TABLE_SIZE_16_BITS)
 table_read_SERQ_PRODUCER_IDX:
