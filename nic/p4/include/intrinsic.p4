@@ -26,9 +26,10 @@ header_type cap_phv_intr_p4_t {
         no_data            : 1;
         recirc             : 1;
         frame_size         : 14;
+        p4_pad0            : 2;
         packet_len         : 14;
         recirc_count       : 3;
-        p4_pad             : 7;
+        p4_pad             : 5;
     }
 }
 
