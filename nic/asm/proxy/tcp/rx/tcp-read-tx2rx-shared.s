@@ -19,18 +19,8 @@ struct tcp_rx_read_tx2rx_read_tx2rx_d d;
 	.align
 tcp_rx_read_shared_stage0_start:
 
-        add r1, r0, k.p4_rxdma_intr_qstate_addr
-        add r1, r0, k.p4_intr_global_lif_sbit0_ebit2
-        add r1, r0, k.p4_intr_global_lif_sbit3_ebit10
-        add r1, r0, k.p4_rxdma_intr_qid
-        add r1, r0, k.tcp_app_header_p4plus_app_id
-        add r1, r0, k.tcp_app_header_table0_valid
-        add r1, r0, k.tcp_app_header_table1_valid
-        add r1, r0, k.tcp_app_header_table2_valid
-        add r1, r0, k.tcp_app_header_table3_valid
-        add r1, r0, k.tcp_app_header_srcPort
         CAPRI_CLEAR_TABLE0_VALID
-        add r1, r0, k.p4_rxdma_intr_qstate_addr
+        add r1, r0, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
 	/* Write all the tx to rx shared state from table data into phv */
 
@@ -64,7 +54,7 @@ tcp_rx_read_shared_stage0_start:
 	//phvwr		p.ecn_flags_tx, d.ecn_flags_tx
 	phvwr		p.common_phv_ecn_flags, d.ecn_flags_tx
 	phvwr		p.s1_s2s_packets_out, d.packets_out
-        phvwr           p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
+        phvwr           p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
 
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
@@ -77,7 +67,7 @@ tcp_rx_read_shared_stage0_start:
 	
 table_read_RX:	
 	CAPRI_NEXT_TABLE0_READ(k.p4_rxdma_intr_qid, TABLE_LOCK_EN,
-                            tcp_rx_process_stage1_start, k.p4_rxdma_intr_qstate_addr,
+                            tcp_rx_process_stage1_start, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33},
                             TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_RX_OFFSET,
                             TABLE_SIZE_512_BITS)
         nop.e
