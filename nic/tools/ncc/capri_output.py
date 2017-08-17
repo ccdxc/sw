@@ -2340,55 +2340,52 @@ def capri_get_top_level_path(cur_dir):
     return top_dir
 
 def capri_p4pd_create_swig_makefile(be):
-    
+
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-    
+
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    
+
     top_dir = capri_get_top_level_path(out_dir)
 
     content_str = '# This Makefile is auto-generated. Changes will be overwritten!\n'
     content_str += 'TOP_DIR = ' + top_dir + '\n'
     content_str += 'CXX = g++\n'
     content_str += 'SWG = swig\n'
-    content_str += 'SWGFLAGS = -python\n'
+    content_str += 'SWGFLAGS = -python -c++\n'
     content_str += 'CPPFLAGS = -g -c -pthread -std=c++11 -fPIC\n'
-    content_str += 'LNKFLAGS = -Wl,-rpath,$(TOP_DIR)/obj -shared\n'
-    content_str += 'BLDFLAGS = -Wl,-rpath,$(TOP_DIR)/obj\n'
-    content_str += 'INC_DIRS = -I.\n'
-    content_str += 'INC_DIRS += -I./../include\n'
-    content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/hal/pd/capri -I$(TOP_DIR)/model_sim/include\n'
-    content_str += 'INC_DIRS += -I/usr/local/include -I/usr/include/boost\n'
-    content_str += 'INC_DIRS += -I/usr/include/python2.7 -I/usr/include/x86_64-linux-gnu/python2.7\n'
+    content_str += 'LNKFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs\n'
+    content_str += 'LNKFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs -shared\n'
+    content_str += 'BLDFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs\n'
+    content_str += 'BLDFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs\n'
+    content_str += 'INC_DIRS = -I./../include\n'
+    content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/model_sim/include\n'
+    content_str += 'INC_DIRS += -I/usr/include/python2.7\n'
     content_str += 'LIB_DIRS = -L$(TOP_DIR)/obj -L$(TOP_DIR)/model_sim/build -L$(TOP_DIR)/model_sim/libs\n'
-    content_str += 'LIB_DIRS += -L/home/asic/tools/src/0.25/x86_64/lib64/\n'
-    content_str += 'LIB_DIRS += -L/usr/local/lib -L/usr/lib/python2.7/dist-packages -L.\n'
-    content_str += 'LIBS = -lpython2.7 -lcapri -lcapricsr -lzmq -lmodelclient -ltrace\n'
+    content_str += 'LIBS = -lpython2.7 -lmodelclient -lzmq -lcapri -lcapricsr -lp4pd -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
     content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o p4pd_wrap.c p4pd.i\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd.o ../src/p4pd.c\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_wrap.o p4pd_wrap.c\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n'
-    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so p4pd.o p4pd_wrap.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so p4pd_wrap.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
     content_str += '\n'
     content_str += 'main:\n'
     content_str += '\t$(CXX) $(CPPFLAGS) -DP4PD_CLI $(INC_DIRS) -o main.o main.cc\n'
-    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o p4pd.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
     content_str += '\n'
     content_str += 'clean:\n'
     content_str += '\trm *.o *.so main p4pd.py p4pd_wrap.c\n'
-    
+
     out_file = out_dir + 'Makefile'
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
 
 def capri_p4pd_create_swig_interface(be):
-    
+
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-    
+
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -2399,16 +2396,16 @@ def capri_p4pd_create_swig_interface(be):
 /* This file is auto-generated. Changes will be overwritten! */
 /* p4pd.i */
 %module p4pd
-%include "cpointer.i"
 %include "carrays.i"
 %include "cmalloc.i"
+%include "cpointer.i"
+%include "std_vector.i"
 %{
     #include <thread>
     #include "p4pd.h"
     #include "p4pd_api.hpp"
     #include "lib_model_client.h"
     extern int capri_init(void);
-    extern const char *__lmodel_env;
     namespace hal {
         thread_local std::thread *t_curr_thread;
     }
@@ -2420,6 +2417,7 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long uint64_t;
+%template(vector_uint8_t) std::vector<unsigned char>;
 %pointer_functions(uint8_t, uint8_ptr_t);
 %pointer_functions(uint16_t, uint16_ptr_t);
 %pointer_functions(uint32_t, uint32_ptr_t);
@@ -2439,6 +2437,7 @@ typedef unsigned long long uint64_t;
 %include "p4pd.h"
 %include "p4pd_api.hpp"
 %include "lib_model_client.h"
+extern int capri_init(void);
 %inline %{
     int p4pd_cli_init()
     {
@@ -2446,25 +2445,24 @@ typedef unsigned long long uint64_t;
         """ + \
         """
         setenv("HAL_CONFIG_PATH", "%s", 1);
-        """ % (top_dir + '/conf') + \
+        """ % ('./conf') + \
         """
-        
-        if (ret = lib_model_connect())
-        {
-            return ret;
-        }
+
+        lib_model_connect();
 
         if (ret = p4pd_init())
         {
+            printf("Error! p4pd_init() returned %d\\n", ret);
             return ret;
         }
         
         if (ret = capri_init())
         {
+            printf("Error! capri_init() returned %d\\n", ret);
             return ret;
         }
         
-        return (P4PD_SUCCESS);
+        return 0;
     }
 
     void p4pd_cli_cleanup()
@@ -2480,9 +2478,9 @@ typedef unsigned long long uint64_t;
         of.close()
 
 def capri_p4pd_create_swig_main(be):
-    
+
     out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
-    
+
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -2501,7 +2499,6 @@ def capri_p4pd_create_swig_main(be):
 #include "lib_model_client.h"
 
 extern int capri_init(void);
-extern const char* __lmodel_env;
 
 namespace hal {
     thread_local std::thread *t_curr_thread;
@@ -2510,30 +2507,32 @@ namespace hal {
 int main()
 {
     int ret;
-    uint32_t tableid = 15;
+    uint32_t tableid = P4TBL_ID_INPUT_PROPERTIES_OTCAM;
     uint32_t index = 11;
     uint32_t hwkey_len;
     uint32_t hwkeymask_len;
     uint32_t hwactiondata_len;
     uint8_t *hwkey_p;
     uint8_t *hwkeymask_p;
-    uint8_t *hwactiondata_p;
-    uint8_t *swkeyp = NULL;
-    uint8_t *swkey_maskp = NULL;
     p4pd_table_properties_t tbl_ctx;
-    twice_nat_actiondata actiondata;
+    input_properties_otcam_swkey_t sw_key;
+    input_properties_otcam_swkey_mask_t swkey_mask;
+    input_properties_otcam_actiondata actiondata;
+    uint8_t *swkeyp = (uint8_t *)&sw_key;
+    uint8_t *swkey_maskp = (uint8_t *)&swkey_mask;
+    uint8_t *hwactiondata_p = (uint8_t *)&actiondata;
 
     """ + \
     """
     setenv("HAL_CONFIG_PATH", "%s", 1);
-    """ % (top_dir + '/conf') + \
+    """ % ('./conf') + \
     """
     lib_model_connect();
     p4pd_init();
     capri_init();
-    read_reg(300, hwactiondata_len);
+    read_reg(0x3408010, hwactiondata_len);
 
-    p4pd_table_properties_get(1, &tbl_ctx);
+    p4pd_table_properties_get(tableid, &tbl_ctx);
     printf("%s\\n", tbl_ctx.tablename);
     
     p4pd_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &hwactiondata_len);
@@ -2549,8 +2548,8 @@ int main()
         return 1;
     }
     
-    actiondata.actionid = 5;
-    actiondata.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.l4_port = 80;
+    actiondata.actionid = INPUT_PROPERTIES_OTCAM_NOP_ID;
+    actiondata.input_properties_otcam_action_u.input_properties_otcam_input_properties.vrf = 80;
     
     ret = p4pd_entry_write(tableid, index, hwkey_p, hwkeymask_p, &actiondata);
     
@@ -2579,7 +2578,7 @@ int main()
     return 0;
 }    
 """
-    
+
     out_file = out_dir + 'main.cc'
     with open(out_file, "w") as of:
         of.write(content_str)

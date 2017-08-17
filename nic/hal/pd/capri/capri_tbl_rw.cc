@@ -294,13 +294,11 @@ uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc)
     return (0xff);
 }
 
-
-
-static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index, 
+static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
                                          int *sram_row, int *entry_start_block,
                                          int *entry_end_block, int *entry_start_word,
-                                         int *entry_words, int *entry_bit_len, 
-                                         p4pd_table_dir_en *dir, 
+                                         int *entry_words, int *entry_bit_len,
+                                         p4pd_table_dir_en *dir,
                                          p4pd_table_location_en *loc)
 {
     p4pd_table_properties_t       tbl_ctx, *tblctx = &tbl_ctx;
@@ -309,13 +307,13 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
 
     *loc = tbl_ctx.table_location;
 
-    *sram_row = tblctx->sram_layout.top_left_y + 
+    *sram_row = tblctx->sram_layout.top_left_y +
                          (index/tblctx->sram_layout.num_buckets);
     assert(*sram_row <= tblctx->sram_layout.btm_right_y);
     int tbl_col = index % tblctx->sram_layout.num_buckets;
     /* entry_width is in units of SRAM word  -- 16b */
 
-    *entry_start_word = (tblctx->sram_layout.top_left_x + (tbl_col * tblctx->sram_layout.entry_width)) 
+    *entry_start_word = (tblctx->sram_layout.top_left_x + (tbl_col * tblctx->sram_layout.entry_width))
                         % CAPRI_SRAM_WORDS_PER_BLOCK;
     /* Capri 16b word within a 128b block is numbered from right to left.*/
     //*entry_start_word = (CAPRI_SRAM_WORDS_PER_BLOCK - 1) - *entry_start_word;
@@ -326,8 +324,8 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
                          + tblctx->sram_layout.top_left_y
                          + (index/tblctx->sram_layout.num_buckets);
 
-    *entry_end_block = *entry_start_block + 
-                       (((tblctx->sram_layout.entry_width - 1) + 
+    *entry_end_block = *entry_start_block +
+                       (((tblctx->sram_layout.entry_width - 1) +
                          (*entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK))
                         / CAPRI_SRAM_WORDS_PER_BLOCK) * CAPRI_SRAM_ROWS;
 
@@ -335,7 +333,6 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
     *entry_bit_len = tblctx->sram_layout.entry_width_bits;
     *dir = tblctx->gress;
 }
-
 
 int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,

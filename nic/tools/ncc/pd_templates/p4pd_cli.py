@@ -8,6 +8,7 @@
 # p4pd CLI
 #
 
+import glob
 from cmd2 import Cmd
 import p4pd
 //::    tabledict = {}
@@ -126,7 +127,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.p4pd.uint8_array_t_setitem(self.swkey.${table}_u${i}.${p4fldname}, i, int(values[i]))
+                p4pd.uint8_array_t_setitem(self.swkey.${table}_u${i}.${p4fldname}, i, int(values[i]))
 //::                        #endif
 
 //::                    #endfor
@@ -177,7 +178,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.p4pd.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i]))
+                p4pd.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 //::                    #endfor
@@ -226,7 +227,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                #endif
 
@@ -267,7 +268,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 
@@ -310,7 +311,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 
@@ -1271,24 +1272,11 @@ class ${table}(Cmd):
 
 class rootCmd(Cmd):
 
-    prompt = "p4pd> "
-    intro = "This is a debug CLI. Theres no protection against bad arguments!"
+    prompt = "${pddict['cli-name']}> "
+    intro = "Interact with ${pddict['cli-name']} P4 tables"
 
     def __init__(self):
         Cmd.__init__(self)
-        self.exclude_from_help.append('do_py')
-        self.exclude_from_help.append('do_set')
-        self.exclude_from_help.append('do_run')
-        self.exclude_from_help.append('do_EOF')
-        self.exclude_from_help.append('do_quit')
-        self.exclude_from_help.append('do_save')
-        self.exclude_from_help.append('do_edit')
-        self.exclude_from_help.append('do_show')
-        self.exclude_from_help.append('do_shell')
-        self.exclude_from_help.append('do_pyscript')
-        self.exclude_from_help.append('do_shortcuts')
-        self.exclude_from_help.append('do__relative_load')
-        self.exclude_from_help.append('do_cmdenvironment')
 
     def do_quit(self, args):
         """Exits to the previous level"""
@@ -1315,7 +1303,8 @@ class rootCmd(Cmd):
         tbl_ctx = p4pd.p4pd_table_properties_t()
         ret = p4pd.p4pd_table_properties_get(tbl_idx, tbl_ctx.this)
         if ret < 0:
-            print('Command returned %d' (ret))
+            print('p4pd_table_properties_get() returned %d' % (ret))
+            return
 
         print 'tableid: ', tbl_ctx.tableid
         print 'stage_tableid: ', tbl_ctx.stage_tableid
@@ -1452,9 +1441,70 @@ class rootCmd(Cmd):
         p4pd.dump_hbm()
         print("Dumped HBM.")
 
+    def do_send_pkt(self, args):
+        """Usage: send_pkt <filename> <port> [cos]"""
+
+        values = args.split()
+        if len(values) < 2 or len(values) > 3:
+            print('Usage: send_pkt <filename> <port> [cos]')
+            return
+
+        filename = values[0]
+        port = int(values[1])
+        if len(values) > 2:
+            cos = int(values[2])
+        else:
+            cos = 0
+
+        try:
+            in_pkt = p4pd.vector_uint8_t()
+            with open(filename, "rb") as pkt_file:
+                pkt_bytes = bytearray(open(filename, "rb").read())
+                pkt_file.close()
+                for i in range(len(pkt_bytes)):
+                    in_pkt.push_back(pkt_bytes[i])
+                p4pd.step_network_pkt(in_pkt, port)
+                print("Sent packet %s to the model on port %d." % (filename, port))
+
+                out_pkt = p4pd.vector_uint8_t()
+                out_cos_p = p4pd.new_uint32_ptr_t()
+                out_port_p = p4pd.new_uint32_ptr_t()
+                p4pd.uint32_ptr_t_assign(out_cos_p, 0)
+                p4pd.uint32_ptr_t_assign(out_port_p, 0)
+                p4pd.get_next_pkt(out_pkt, out_port_p, out_cos_p)
+                if out_pkt.size():
+                    print("Got packet back from the model: %d bytes on port %d with cos %d" % (out_pkt.size(),
+                                                                                               p4pd.uint32_ptr_t_value(out_port_p),
+                                                                                               p4pd.uint32_ptr_t_value(out_cos_p)))
+                else:
+                    print("No packet back from the model.")
+
+        except Exception as error:
+            print(repr(error))
+
+    def complete_send_pkt(self, text, line, begidx, endidx):
+        before_arg = line.rfind(" ", 0, begidx)
+        if before_arg == -1:
+            return # arg not found
+
+        fixed = line[before_arg+1:begidx]  # fixed portion of the arg
+        arg = line[before_arg+1:endidx]
+        pattern = arg + '*'
+
+        completions = []
+        for path in glob.glob(pattern):
+            completions.append(path.replace(fixed, "", 1))
+
+        return completions
+
+def init():
+    p4pd.p4pd_cli_init()
+
+def cleanup():
+    p4pd.p4pd_cli_cleanup()
 
 if __name__ == '__main__':
-    p4pd.p4pd_cli_init()
+    init()
     cmd = rootCmd()
     cmd.cmdloop()
-    p4pd.p4pd_cli_cleanup()
+    cleanup()

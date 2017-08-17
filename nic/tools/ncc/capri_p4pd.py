@@ -1171,6 +1171,7 @@ class capri_p4pd:
         else:
             self.pddict['p4plus'] = 0
 
+        self.pddict['cli-name'] = self.be.prog_name
     
     def verify_table_ki(self):
         '''

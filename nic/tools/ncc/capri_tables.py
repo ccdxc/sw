@@ -4394,7 +4394,6 @@ class capri_table_manager:
 
         pic = capri_pic_csr_load(self) # Load the templates
 
-# 02-p4_tables
         for mem_type in self.mapper.tables:
             for region in self.mapper.tables[mem_type]:
                 for table in self.mapper.tables[mem_type][region]:
