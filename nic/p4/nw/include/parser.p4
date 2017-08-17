@@ -529,9 +529,8 @@ parser parse_ipsec_esp {
 
 parser parse_icmp {
     extract(icmp);
-    set_metadata(flow_lkp_metadata.lkp_sport, latest.icmp_type);
-    set_metadata(flow_lkp_metadata.lkp_dport, latest.icmp_code);
-    return select(latest.icmp_type, latest.icmp_code) {
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.typeCode);
+    return select(latest.typeCode) {
         ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
         ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
         default: ingress;

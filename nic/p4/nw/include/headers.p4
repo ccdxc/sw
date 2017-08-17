@@ -189,8 +189,7 @@ header_type ipv6_extn_ah_esp_t {
 
 header_type icmp_t {
     fields {
-        icmp_type : 8;
-        icmp_code : 8;
+        typeCode : 16;
         hdrChecksum : 16;
     }
 }

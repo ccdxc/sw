@@ -1059,37 +1059,40 @@ action ip_normalization_checks() {
 
 action icmp_normalization_checks() {
 
+    modify_field(scratch_metadata.icmp_code, flow_lkp_metadata.lkp_sport);
+    modify_field(scratch_metadata.icmp_type, flow_lkp_metadata.lkp_sport);
+
     if (icmp.valid == FALSE or
         l4_metadata.icmp_normalization_en == FALSE) {
         // no action needed, exit the routine.
     }
     // ICMP bad request types to be dropped
     if ((l4_metadata.icmp_deprecated_msgs_drop == NORMALIZATION_ACTION_DROP) and
-        (((icmp.icmp_type == 4) or   // information(deprecated)
-          (icmp.icmp_type == 6) or   //address-mask(deprecated)
-          ((icmp.icmp_type >= 15) and  // all types between 15 and 39 are deprecated.
-           (icmp.icmp_type <= 39))))) {
+        (((scratch_metadata.icmp_type == 4) or   // information(deprecated)
+          (scratch_metadata.icmp_type == 6) or   //address-mask(deprecated)
+          ((scratch_metadata.icmp_type >= 15) and  // all types between 15 and 39 are deprecated.
+           (scratch_metadata.icmp_type <= 39))))) {
         modify_field(control_metadata.drop_reason, DROP_ICMP_NORMALIZATION);
     }
     //ICMP redirect
     if ((l4_metadata.icmp_redirect_msg_drop == NORMALIZATION_ACTION_DROP) and
-        (icmp.icmp_type == 5)) {
+        (scratch_metadata.icmp_type == 5)) {
         modify_field(control_metadata.drop_reason, DROP_ICMP_NORMALIZATION);
     }
     // No Edit action
 
     // ICMP code removal
     if ((l4_metadata.icmp_invalid_code_action == NORMALIZATION_ACTION_DROP) and
-        ((icmp.icmp_type == 8) or
-         (icmp.icmp_type == 13)) and
-          (icmp.icmp_code  > 0)) {
+        ((scratch_metadata.icmp_type == 8) or
+         (scratch_metadata.icmp_type == 13)) and
+          (scratch_metadata.icmp_code  > 0)) {
         modify_field(control_metadata.drop_reason, DROP_ICMP_NORMALIZATION);
     }
     if ((l4_metadata.icmp_invalid_code_action == NORMALIZATION_ACTION_EDIT) and
-        ((icmp.icmp_type == 8) or
-         (icmp.icmp_type == 13)) and
-          (icmp.icmp_code  > 0)) {
-       modify_field(icmp.icmp_code, 0);
+        ((scratch_metadata.icmp_type == 8) or
+         (scratch_metadata.icmp_type == 13)) and
+          (scratch_metadata.icmp_code  > 0)) {
+       modify_field(scratch_metadata.icmp_code, 0);
     }
 }
 

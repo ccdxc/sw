@@ -187,6 +187,10 @@ header_type scratch_metadata_t {
         rflow_exceptions_seen         : 14;           // list of exceptions seen
 
         syn_cookie_delta              : 32 (signed);  // TCP seq/ack# adjustment
+
+        // icmp code and type needed for ip normalization
+        icmp_code                     : 8;
+        icmp_type                     : 8;
     }
 }
 
