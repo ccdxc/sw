@@ -12,7 +12,8 @@ from collections import OrderedDict
 from enum import IntEnum
 
 # insert the p4-hlir submodule path
-sys.path.insert(1, '../../p4-hlir')
+_top_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.insert(1, _top_dir + '/p4-hlir')
 
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
