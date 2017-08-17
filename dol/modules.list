@@ -61,18 +61,6 @@ modules:
         ignore  : False
         args    : None
     - module:
-        name    : NORMALIZATION
-        enable  : True
-        package : test.normalization
-        module  : normalization
-        spec    : normalization.testspec
-        ignore  : True
-        iterate :
-            - SEC_PROF_IP_RSVD_FLAG_ALLOW
-            - SEC_PROF_IP_RSVD_FLAG_DROP
-            - SEC_PROF_IP_RSVD_FLAG_EDIT
-
-    - module:
         name    : L3UC_IPV4_UDP
         enable  : True
         package : test.networking
@@ -90,7 +78,6 @@ modules:
         ignore  : True
         args    :
             flow: filter://type=IPV6,proto=UDP
-
     - module:
         name    : RDMA_BTH_BASIC
         enable  : True
@@ -98,3 +85,119 @@ modules:
         module  : rdma
         spec    : firstpacket.testspec
         ignore  : True
+    - module:
+        name    : NORMALIZATION_IP
+        enable  : True
+        package : test.normalization
+        module  : normalization
+        spec    : normalization.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4
+        iterate :
+            - SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
+            - SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
+    - module:
+        name    : NORMALIZATION_IP_IGNORE
+        enable  : True
+        package : test.normalization
+        module  : normalization
+        spec    : normalization.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4
+        iterate :
+            - SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
+            - SEC_PROF_IP_DF_ACTION_ALLOW
+            - SEC_PROF_IP_DF_ACTION_DROP
+            - SEC_PROF_IP_DF_ACTION_EDIT
+            - SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+            - SEC_PROF_IP_OPTIONS_ACTION_DROP
+            - SEC_PROF_IP_OPTIONS_ACTION_EDIT
+            - SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
+            - SEC_PROF_IP_INVALID_LEN_ACTION_DROP
+            - SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
+    - module:
+        name    : NORMALIZATION_ICMP
+        enable  : True
+        package : test.normalization
+        module  : normalization
+        spec    : normalization.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=ICMP
+        iterate :
+            - SEC_PROF_ICMP_INVALID_CODE_ACTION_ALLOW
+            - SEC_PROF_ICMP_INVALID_CODE_ACTION_DROP
+            - SEC_PROF_ICMP_INVALID_CODE_ACTION_EDIT
+            - SEC_PROF_ICMP_DEPRECATED_MSGS_DROP_ENABLE
+            - SEC_PROF_ICMP_DEPRECATED_MSGS_DROP_DISABLE
+            - SEC_PROF_ICMP_REDIRECT_MSG_DROP_ENABLE
+            - SEC_PROF_ICMP_REDIRECT_MSG_DROP_DISABLE
+    - module:
+        name    : NORMALIZATION_TCP_STATELESS
+        enable  : True
+        package : test.normalization
+        module  : normalization
+        spec    : normalization.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - SEC_PROF_TCP_RSVD_FLAGS_ACTION_ALLOW
+            - SEC_PROF_TCP_RSVD_FLAGS_ACTION_DROP
+            - SEC_PROF_TCP_RSVD_FLAGS_ACTION_EDIT
+            - SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_ALLOW
+            - SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_DROP
+            - SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
+            - SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
+            - SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP
+            - SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT
+            - SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_ALLOW
+            - SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_DROP
+            - SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_EDIT
+            - SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
+            - SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
+            - SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT
+            - SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_ALLOW
+            - SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_DROP
+            - SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_EDIT
+            - SEC_PROF_TCP_RST_WITH_DATA_ACTION_ALLOW
+            - SEC_PROF_TCP_RST_WITH_DATA_ACTION_DROP
+            - SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
+            - SEC_PROF_TCP_INVALID_FLAGS_DROP_ENABLE
+            - SEC_PROF_TCP_INVALID_FLAGS_DROP_DISABLE
+            - SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE
+            - SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
+            - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
+            - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
+            - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
+    - module:
+        name    : NORMALIZATION_TCP_STATEFUL
+        enable  : True
+        package : test.normalization
+        module  : normalization
+        spec    : normalization.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_ENABLE
+            - SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE
+            - SEC_PROF_TCP_SYNCOOKIE_EN_ENABLE
+            - SEC_PROF_TCP_SYNCOOKIE_EN_DISABLE
+            - SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_ENABLE
+            - SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_DISABLE
+            - SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
+            - SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE
+            - SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_ALLOW
+            - SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_DROP
+            - SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_EDIT
+            - SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW
+            - SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP
+            - SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT
+            - SEC_PROF_TCP_UNEXPECTED_TS_OPTION_ACTION_ALLOW
+            - SEC_PROF_TCP_UNEXPECTED_TS_OPTION_ACTION_DROP
+            - SEC_PROF_TCP_UNEXPECTED_TS_OPTION_ACTION_EDIT
+            - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
+            - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE

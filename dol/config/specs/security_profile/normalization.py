@@ -21,7 +21,8 @@ knobs_list = [
 #    ('bool', 'tcp_normalization_en', '11'),
 #    ('bool', 'icmp_normalization_en', '12'),
 # IP normalization knobs
-    ('bool', 'ip_ttl_change_detect_en', '20'),
+    # TBD: TTL change detect
+    #('bool', 'ip_ttl_change_detect_en', '20'),
     ('NormalizationAction', 'ip_rsvd_flags_action', '21'),
     ('NormalizationAction', 'ip_df_action', '22'),
     ('NormalizationAction', 'ip_options_action', '23'),
@@ -55,8 +56,11 @@ print 'meta:'
 print '    id: SECURITY_PROFILES'
 print
 print 'profiles:'
+print '    - id: SEC_PROF_ACTIVE'
+print '      fields:'
+print
 print '    - id: SEC_PROF_DEFAULT'
-print '        fields:'
+print '      fields:'
 print
 
 drop_id_offset = 100
@@ -65,27 +69,26 @@ edit_id_offset = 200
 for knob in knobs_list:
     (type, knob, num) = knob
     if type == 'bool':
-        print '    - id: SEC_PROF_%s' % (num)
-        print '        fields:'
-        print '            %s: ALLOW' % (knob)
+        print '    - id: SEC_PROF_%s_ENABLE' % (knob.upper())
+        print '      fields:'
+        print '         %s: 1' % (knob)
         print
-        print '    - id: SEC_PROF_%d' % (int(drop_id_offset) + int(num))
-        print '        fields:'
-        print '            %s: DROP' % (knob)
+        print '    - id: SEC_PROF_%s_DISABLE' % (knob.upper())
+        print '      fields:'
+        print '         %s: 0' % (knob)
         print
     elif type == 'NormalizationAction':
-        print '    - id: SEC_PROF_%s' % (num)
-        print '        fields:'
-        print '            %s: ALLOW' % (knob)
+        print '    - id: SEC_PROF_%s_ALLOW' % (knob.upper())
+        print '      fields:'
+        print '         %s: ALLOW' % (knob)
         print
-        print '    - id: SEC_PROF_%d' % (int(drop_id_offset) + int(num))
-        print '        fields:'
-        print '            %s: DROP' % (knob)
+        print '    - id: SEC_PROF_%s_DROP' % (knob.upper())
+        print '      fields:'
+        print '         %s: DROP' % (knob)
         print
-        print '    - id: SEC_PROF_%d' % (int(edit_id_offset) + int(num))
-        print '        fields:'
-        print '            %s: EDIT' % (knob)
+        print '    - id: SEC_PROF_%s_EDIT' % (knob.upper())
+        print '      fields:'
+        print '         %s: EDIT' % (knob)
         print
-
 
 

@@ -207,6 +207,8 @@ class Packet(objects.FrameworkObject):
                 size = spec_size.Get(FactoryStore)
             else:
                 assert(0)
+        elif objects.IsCallback(spec_size):
+            size = spec_size.call(tc, self)
         elif objects.IsFrameworkFieldObject(spec_size):
             size = spec_size.get()
         elif objects.IsCallback(spec_size):

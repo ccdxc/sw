@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 def Setup(infra, module):
+    module.testspec.config_filter.flow.Extend(module.args.flow)
     asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
     profile = infra.ConfigStore.objects.Get(module.iterator.Get())
     module.logger.info("Updating Active Security Profile --> %s" % module.iterator.Get())

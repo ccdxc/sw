@@ -175,8 +175,7 @@ def ConfigureSecurityProfiles(objlist, update = False):
     stub = nwsec_pb2_grpc.NwSecurityStub(HalChannel)
     api = stub.SecurityProfileCreate
     if update: api = stub.SecurityProfileUpdate
-    __config(objlist, nwsec_pb2.SecurityProfileRequestMsg,
-             stub.SecurityProfileCreate)
+    __config(objlist, nwsec_pb2.SecurityProfileRequestMsg, api)
     return
 
 def ConfigureSpanSessions(objlist):

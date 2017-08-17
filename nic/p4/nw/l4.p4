@@ -984,10 +984,6 @@ action ip_normalization_checks() {
         // return
     }
 
-    if (l4_metadata.tcp_normalization_en == FALSE) {
-        // return
-    }
-
     if ((flow_lkp_metadata.lkp_type != FLOW_KEY_LOOKUP_TYPE_IPV4) and
         (flow_lkp_metadata.lkp_type != FLOW_KEY_LOOKUP_TYPE_IPV6)) {
         // Return
@@ -1037,6 +1033,14 @@ action ip_normalization_checks() {
 
 
     // Outer IP Header length to frame length validation
+    // !!! TODO !!!
+    // According to the SNORT IP4 specification:
+    // trim - truncate packets with excess payload to the datagram length specified in the IP
+    // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
+    //
+    // But, according to the logic below it looks like we are modifying the ipv4.totalLen directly
+    // what is the correct behavior ? According to SNORT, the ipv4.totalLen field is the source of
+    // truth. Do we need to stick with the snort spec ?
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
         (((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18))) or
          ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14))))) {
@@ -1084,13 +1088,13 @@ action icmp_normalization_checks() {
     // ICMP code removal
     if ((l4_metadata.icmp_invalid_code_action == NORMALIZATION_ACTION_DROP) and
         ((scratch_metadata.icmp_type == 8) or
-         (scratch_metadata.icmp_type == 13)) and
+         (scratch_metadata.icmp_type == 0)) and
           (scratch_metadata.icmp_code  > 0)) {
         modify_field(control_metadata.drop_reason, DROP_ICMP_NORMALIZATION);
     }
     if ((l4_metadata.icmp_invalid_code_action == NORMALIZATION_ACTION_EDIT) and
         ((scratch_metadata.icmp_type == 8) or
-         (scratch_metadata.icmp_type == 13)) and
+         (scratch_metadata.icmp_type == 0)) and
           (scratch_metadata.icmp_code  > 0)) {
        modify_field(scratch_metadata.icmp_code, 0);
     }

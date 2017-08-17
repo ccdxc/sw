@@ -8,17 +8,19 @@ config_filter:
         tenant  : filter://overlay=VLAN,type=TENANT
         segment : filter://any
         endpoint: filter://remote=True
-    flow        : filter://fwtype=L2,type=IPV4,proto=UDP
+    flow        : filter://fwtype=L2
     maxflows    : 1
 
 packets:
     - packet:
         id          : BASE_PKT  # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
@@ -28,37 +30,63 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : PKT1     # Input packet 1
+        payloadsize : callback://normalization/callbacks/GetInputPayloadSize
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             ipv4    :
                 flags   : callback://normalization/callbacks/GetInputIpv4Flags
+                options : callback://normalization/callbacks/GetInputIpv4Options
+            icmp:
+                code    : callback://normalization/callbacks/GetInputIcmpCode
+                type    : callback://normalization/callbacks/GetInputIcmpType
+                id      : ref://testcase/config/flow/icmpid
 
     - packet:
-        id          : PKT2     # Input packet 2
+        id          : PKT2     # Expected packet 2
+        payloadsize : callback://normalization/callbacks/GetExpectedPayloadSize
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             ipv4    :
                 flags   : callback://normalization/callbacks/GetExpectedIpv4Flags
+                options : callback://normalization/callbacks/GetExpectedIpv4Options
+            icmp:
+                code    : callback://normalization/callbacks/GetExpectedIcmpCode
+                type    : callback://normalization/callbacks/GetExpectedIcmpType
+                id      : ref://testcase/config/flow/icmpid
 
 session:
     - step:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=PKT1
+                    object  : callback://normalization/callbacks/GetTriggerPacket
                     port    : ref://testcase/config/src/endpoint/intf/ports
 
         expect:
             packets:
                 - packet:
                     object  : callback://normalization/callbacks/GetExpectedPacket
-                    #object : ref://testcase/packets/id=PKT2
                     port    : ref://testcase/config/dst/endpoint/intf/ports
