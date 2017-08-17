@@ -13,7 +13,7 @@ namespace pd {
 #define HAL_MAX_HW_WRING                        2048
 #define WRING_SLOT_SIZE                         sizeof(uint64_t)
 
-typedef uint64_t    wring_hw_id_t;
+typedef uint32_t    wring_hw_id_t;
 
 // wring pd state
 struct pd_wring_s {

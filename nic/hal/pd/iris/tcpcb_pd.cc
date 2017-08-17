@@ -74,8 +74,11 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         //}
         //HAL_TRACE_DEBUG("Received pc address", pc_offset);
         data.u.read_tx2rx_d.pc = 0x0;
-        
+#if 1        
         data.u.read_tx2rx_d.snd_nxt = tcpcb_pd->tcpcb->snd_nxt;
+#else
+	data.u.read_tx2rx_d.snd_nxt = 0xEFEFEFEF;
+#endif
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.u.read_tx2rx_d.snd_nxt);
     }
@@ -98,14 +101,25 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_RX);
 
     if(!del) {
+#if 1
         data.u.tcp_rx_d.rcv_nxt = tcpcb_pd->tcpcb->rcv_nxt;
         data.u.tcp_rx_d.snd_una = tcpcb_pd->tcpcb->snd_una;
         data.u.tcp_rx_d.rcv_tsval = tcpcb_pd->tcpcb->rcv_tsval;
         data.u.tcp_rx_d.ts_recent = tcpcb_pd->tcpcb->ts_recent;
+#else
+        data.u.tcp_rx_d.rcv_nxt = 0xBABABABA;
+        data.u.tcp_rx_d.snd_una = 0xEFEFEFEF;
+        data.u.tcp_rx_d.rcv_tsval = 0xFEFEFEFA;
+        data.u.tcp_rx_d.ts_recent = 0xFEFEFEFE;
+#endif
+        data.u.tcp_rx_d.rnmdr_base = htonl(get_start_offset("nmdr-rx"));
+        data.u.tcp_rx_d.rnmpr_base = htonl(get_start_offset("nmpr-big-rx"));
         HAL_TRACE_DEBUG("TCPCB rcv_nxt: 0x{0:x}", data.u.tcp_rx_d.rcv_nxt);
         HAL_TRACE_DEBUG("TCPCB snd_una: 0x{0:x}", data.u.tcp_rx_d.snd_una);
         HAL_TRACE_DEBUG("TCPCB rcv_tsval: 0x{0:x}", data.u.tcp_rx_d.rcv_tsval);
         HAL_TRACE_DEBUG("TCPCB ts_recent: 0x{0:x}", data.u.tcp_rx_d.ts_recent);
+	HAL_TRACE_DEBUG("TCPCB rnmdr base: 0x{0:x}", data.u.tcp_rx_d.rnmdr_base);
+	HAL_TRACE_DEBUG("TCPCB rnmpr base: 0x{0:x}", data.u.tcp_rx_d.rnmpr_base);
         // Get Serq address
         wring_hw_id_t  serq_base;
         ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
@@ -116,11 +130,12 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                         tcpcb_pd->tcpcb->cb_id);
         } else {
             HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
-            data.u.tcp_rx_d.serq_base = serq_base;    
+            data.u.tcp_rx_d.serq_base = htonl(serq_base);    
         }
     }
     int size = sizeof(tcp_rx_tcp_rx_d);
-    HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: 0x{0:x}", hwid); 
+    HAL_TRACE_DEBUG("Programming tcp_rx at hw-id: 0x{0:x}", hwid);
+    HAL_TRACE_DEBUG("Programming tcp_rx at size: 0x{0:x}", size);
     
     if(!p4plus_hbm_write(hwid, (uint8_t *)&data, size)) {
         HAL_TRACE_ERR("Failed to create rx: tcp_rx entry for TCP CB");
@@ -137,7 +152,7 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RTT_ID);
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RTT);
 
     if(!del) {
         data.u.tcp_rtt_d.rto = 0x30;
@@ -152,72 +167,13 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rtt_d.rtt_seq = 0x20;
     }
     
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: tcp_rtt entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
 }
 
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_read_rnmdr_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_rx_read_rnmdr_d    data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_RNMDR_ID);
-
-    if(!del) {
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_read_rnmpr_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_rx_read_rnmpr_d    data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_RNMPR_ID);
-
-    if(!del) {
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_read_serq_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_rx_read_serq_d     data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_SERQ);
-
-    if(!del) {
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
 
 hal_ret_t 
 p4pd_add_or_del_tcp_rx_tcp_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
@@ -234,53 +190,12 @@ p4pd_add_or_del_tcp_rx_tcp_fra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fra_d.high_seq = 0xEFEFEFEF;
     }
     
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: tcp_fra entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
 }
-
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_rdesc_alloc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_rx_rdesc_alloc_d   data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RDESC_ALLOC);
-
-    if(!del) {
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-
-hal_ret_t 
-p4pd_add_or_del_tcp_rx_rpage_alloc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_rx_rpage_alloc_d   data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RPAGE_ALLOC);
-
-    if(!del) {
-    }
-    
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-
 
 
 hal_ret_t 
@@ -300,7 +215,7 @@ p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_cc_d.last_max_cwnd = 0x16;
     }
     
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -308,24 +223,26 @@ p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 }
 
 hal_ret_t 
-p4pd_add_or_del_tcp_rx_write_serq_entry(pd_tcpcb_t* tcpcb_pd, bool del)
+p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    tcp_rx_write_serq_d    data = {0};
-    hal_ret_t                       ret = HAL_RET_OK;
+    tcp_rx_tcp_fc_d   data = {0};
+    hal_ret_t                  ret = HAL_RET_OK;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_FC);
 
     if(!del) {
+        data.u.tcp_fc_d.page_cnt = 0x1000;
     }
     
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create rx: read_tx2rx entry for read rnmdr TCP CB");
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
 }
+
 
 
 hal_ret_t 
@@ -348,42 +265,17 @@ p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         goto cleanup;
     }
     
-    ret = p4pd_add_or_del_tcp_rx_read_rnmdr_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
-    ret = p4pd_add_or_del_tcp_rx_read_rnmpr_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
-    ret = p4pd_add_or_del_tcp_rx_read_serq_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
     ret = p4pd_add_or_del_tcp_rx_tcp_fra_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
  
-    ret = p4pd_add_or_del_tcp_rx_rdesc_alloc_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
-   ret = p4pd_add_or_del_tcp_rx_rpage_alloc_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
     ret = p4pd_add_or_del_tcp_rx_tcp_cc_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
 
-    ret = p4pd_add_or_del_tcp_rx_write_serq_entry(tcpcb_pd, del);
+    ret = p4pd_add_or_del_tcp_rx_tcp_fc_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

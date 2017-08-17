@@ -81,6 +81,9 @@ metadata cap_phv_intr_p4_t     p4_intr_scratch;
 metadata cap_phv_intr_rxdma_t  p4_rxdma_intr_scratch;
 
 
+@pragma scratch_metadata
+metadata scratch_metadata_t scratch_metadata2;
+
 
 header_type classic_scratch_metadata_t {
     fields {

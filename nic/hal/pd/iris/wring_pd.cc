@@ -115,7 +115,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         uint64_t slot_addr = wring_base + (index * WRING_SLOT_SIZE);
         
         get_default_slot_value(type, index, &value);
-        
+	value = htonll(value);
         p4plus_hbm_write(slot_addr, (uint8_t *)&value, WRING_SLOT_SIZE);
     }
     return HAL_RET_OK;
@@ -150,7 +150,7 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
                         sizeof(uint64_t))) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");    
     }
-    wring->slot_value = value;
+    wring->slot_value = ntohll(value);
     return ret;
 }
 
