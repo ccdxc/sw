@@ -108,6 +108,6 @@ class SpanSessionObjectHelper:
         return
 
     def main(self, tenant, topospec):
-        #self.Generate(tenant, topospec)
+        self.Generate(tenant, topospec)
         #self.Configure()
         return

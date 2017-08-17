@@ -1,6 +1,6 @@
 # Flow generation configuration template.
 
 meta:
-    id: SESSION_L2MC_BASIC
+    id: SESSION_L2MC
 
 entries:

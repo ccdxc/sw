@@ -409,7 +409,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def recv_packet(self, packet_ctx):
         self._logger.info("Received packet on port %s, len:%d" %
                           (packet_ctx.port, len(packet_ctx.packet)))
-        packet_ctx.packet.show2(label_lvl=self._logger.GetLogPrefix())
+        packet_ctx.packet.show2(indent = 0, label_lvl=self._logger.GetLogPrefix())
         self._exp_rcv_data[packet_ctx.port].received.append(packet_ctx)
         # Add to test step received section.
         tc_pkt = TestCaseTrigExpPacketObject()

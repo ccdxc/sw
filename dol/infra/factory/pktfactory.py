@@ -188,7 +188,7 @@ class Packet(objects.FrameworkObject):
                 self.encaps.append(encap)
            
         self.spec = pktspec
-        self.__get_payload_size()
+        self.__get_payload_size(tc)
 
         self.GID(self.spec.id)
         self.__process(tc)
@@ -197,7 +197,7 @@ class Packet(objects.FrameworkObject):
         self.pktsize        = None
         return
 
-    def __get_payload_size(self):
+    def __get_payload_size(self, tc):
         if self.spec.payloadsize == None:
             return
         size = 0
@@ -209,6 +209,8 @@ class Packet(objects.FrameworkObject):
                 assert(0)
         elif objects.IsFrameworkFieldObject(spec_size):
             size = spec_size.get()
+        elif objects.IsCallback(spec_size):
+            size = spec_size.call(tc, self)
         else:
             size = spec_size
         

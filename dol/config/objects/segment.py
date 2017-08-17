@@ -7,6 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 import config.objects.endpoint  as endpoint
 import config.objects.enic      as enic
+import config.objects.network   as nw
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -50,15 +51,18 @@ class SegmentObject(base.ConfigObjectBase):
         policy = "MULTICAST_FWD_POLICY_" + spec.multicast.upper()
         self.multicast_policy = haldefs.segment.MulticastFwdPolicy.Value(policy)
         
-        self.obj_helper_ep     = endpoint.EndpointObjectHelper()
-        self.obj_helper_enic   = enic.EnicObjectHelper()
+        self.obj_helper_ep = endpoint.EndpointObjectHelper()
+        self.obj_helper_enic = enic.EnicObjectHelper()
+        self.obj_helper_nw = nw.NetworkObjectHelper()   
 
         self.hal_handle = None
 
         self.Show()
+        self.obj_helper_nw.Generate(self)
+        self.obj_helper_nw.Configure()
+
         self.obj_helper_enic.Generate(self, self.spec.endpoints)
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
-        
         self.Show(detail = True)
         return
 
@@ -104,6 +108,11 @@ class SegmentObject(base.ConfigObjectBase):
     def ConfigureEnics(self):
         return self.obj_helper_enic.Configure()
 
+    def ConfigureChildren(self):
+        self.ConfigureEnics()
+        self.ConfigureEndpoints()
+        return
+
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id
@@ -113,7 +122,6 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_INFRA
         else:
             assert(0)
-        
         req_spec.access_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
         req_spec.access_encap.encap_value   = self.vlan_id
         if self.tenant.IsOverlayVxlan():
@@ -122,10 +130,12 @@ class SegmentObject(base.ConfigObjectBase):
         else:
             req_spec.fabric_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
             req_spec.fabric_encap.encap_value   = self.vlan_id
-
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
 
+        for nw in self.obj_helper_nw.nws:
+            if nw.hal_handle:
+                req_spec.network_handle.append(nw.hal_handle)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -147,8 +157,7 @@ class SegmentObjectHelper:
         cfglogger.info("Configuring %d Segments." % len(self.segs)) 
         halapi.ConfigureSegments(self.segs)
         for seg in self.segs:
-            seg.ConfigureEnics()
-            seg.ConfigureEndpoints()
+            seg.ConfigureChildren()
         return
 
     def Generate(self, tenant, spec, count):

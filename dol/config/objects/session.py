@@ -25,16 +25,22 @@ class SessionObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('SESSION'))
         return
 
-    def Init(self, initiator, responder):
+    def Init(self, initiator, responder, label,
+             initiator_span, responder_span):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
         self.initiator = initiator
+        self.initiator_span = initiator_span
+        self.responder_span = responder_span
         self.responder = responder
+        self.label = label.upper()
 
         self.iflow = flow.FlowObject(self, self.initiator,
-                                     self.responder, 'IFLOW')
+                                     self.responder, 'IFLOW', 
+                                     self.label, self.initiator_span)
         self.rflow = flow.FlowObject(self, self.responder,
-                                     self.initiator, 'RFLOW')
+                                     self.initiator, 'RFLOW', 
+                                     self.label, self.responder_span)
 
         cfglogger.info("Created Session with GID:%s" % self.GID())
         cfglogger.info("  - Initiator       : %s" % self.initiator)
@@ -85,6 +91,13 @@ class SessionObjectHelper:
     def __process_multidest(self, src_ep, dst_ep):
         return
 
+    def __pre_process_spec_entry(self, entry):
+        if 'span' not in entry.initiator.__dict__:
+            entry.initiator.span = None
+        if 'span' not in entry.responder.__dict__:
+            entry.responder.span = None
+        return
+
     def __process_session_specs(self, flowep1, flowep2, refs):
         for ref in refs:
             spec = ref.Get(Store)
@@ -98,11 +111,15 @@ class SessionObjectHelper:
                 flowep2.proto = None
 
             for t in spec.entries:
+                self.__pre_process_spec_entry(t.entry)
                 flowep1.SetInfo(t.entry.initiator)
                 flowep2.SetInfo(t.entry.responder)
                 session = SessionObject()
                 session.Init(copy.copy(flowep1),
-                             copy.copy(flowep2))
+                             copy.copy(flowep2),
+                             t.entry.label,
+                             t.entry.initiator.span,
+                             t.entry.responder.span)
                 self.objlist.append(session)
         return
             

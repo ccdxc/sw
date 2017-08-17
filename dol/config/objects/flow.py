@@ -16,7 +16,7 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 class FlowObject(base.ConfigObjectBase):
-    def __init__(self, session, sfep, dfep, direction):
+    def __init__(self, session, sfep, dfep, direction, label, span):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         
@@ -33,6 +33,10 @@ class FlowObject(base.ConfigObjectBase):
         self.dseg   = dfep.ep.segment
         self.sten   = self.sseg.tenant
         self.dten   = self.dseg.tenant
+        self.label  = label
+        self.span   = None
+        if span:
+            self.span   = span.Get(Store)
 
         if self.sseg == self.dseg:
             self.fwtype = 'L2'
@@ -149,6 +153,7 @@ class FlowObject(base.ConfigObjectBase):
         req_spec.flow_data.flow_info.flow_action = haldefs.session.FLOW_ACTION_ALLOW
         req_spec.flow_data.flow_info.nat_type = haldefs.session.NAT_TYPE_NONE
         req_spec.flow_data.flow_info.tcp_state = haldefs.session.FLOW_TCP_STATE_ESTABLISHED
+        #req_spec.flow_data.flow_info.egress_mirror_session = self.span.hal_handle
 
         return
 

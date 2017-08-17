@@ -95,6 +95,6 @@ modules:
         name    : RDMA_BTH_BASIC
         enable  : True
         package : test.rdma
-        module  : None
+        module  : rdma
         spec    : firstpacket.testspec
         ignore  : True

@@ -20,7 +20,7 @@ sessions:
     unidest:
         scale: 1
         ipv4:
-            - ref://store/specs/id=SESSION_UDP_BASIC
+            - ref://store/specs/id=SESSION_UDP
         ipv6: None
         mac: None
 lif:

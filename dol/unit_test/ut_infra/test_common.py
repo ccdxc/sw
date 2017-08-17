@@ -8,7 +8,7 @@ mocked_model_modules = ["model_sim", "model_sim.src.model_wrap"]
 mocked_modules = ["l2segment_pb2", "types_pb2", "tenant_pb2", "interface_pb2", "endpoint_pb2", "session_pb2", "endpoint_pb2_grpc",
                   "l2segment_pb2_grpc", "tenant_pb2_grpc", "interface_pb2_grpc", "session_pb2_grpc", "telemetry_pb2_grpc",
                   "telemetry_pb2",
-                  "GlobalOptions", "nwsec_pb2", "nwsec_pb2_grpc",
+                  "GlobalOptions", "nwsec_pb2", "nwsec_pb2_grpc", "nw_pb2", "nw_pb2_grpc",
                   "third_party.scapy.arch.windows"]
 
 

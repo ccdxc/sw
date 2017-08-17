@@ -31,8 +31,8 @@ class FlowEndpointObject:
         self.icmp_id   = None
         return
 
-    def __set_tcpudp_info(self, port):
-        self.port = port.get()
+    def __set_tcpudp_info(self, entry):
+        self.port = entry.port.get()
         return
 
     def __set_icmp_info(self, entry):

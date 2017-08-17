@@ -24,27 +24,27 @@ sessions:
     unidest:
         scale: 16
         ipv4:
-            - ref://store/specs/id=SESSION_TCP_BASIC
-            - ref://store/specs/id=SESSION_UDP_BASIC
-            - ref://store/specs/id=SESSION_ICMP_BASIC
+            - ref://store/specs/id=SESSION_TCP
+            - ref://store/specs/id=SESSION_UDP
+            - ref://store/specs/id=SESSION_ICMP
         ipv6:
-            - ref://store/specs/id=SESSION_TCP_BASIC
-            - ref://store/specs/id=SESSION_UDP_BASIC
-            - ref://store/specs/id=SESSION_ICMPV6_BASIC
+            - ref://store/specs/id=SESSION_TCP
+            - ref://store/specs/id=SESSION_UDP
+            - ref://store/specs/id=SESSION_ICMPV6
         mac:
-            - ref://store/specs/id=SESSION_MAC_BASIC
+            - ref://store/specs/id=SESSION_MAC
 
     multidest:
         scale: 16
         ipv4:
-            - ref://store/specs/id=SESSION_L2MC_BASIC
-            - ref://store/specs/id=SESSION_L2BC_BASIC
+            - ref://store/specs/id=SESSION_L2MC
+            - ref://store/specs/id=SESSION_L2BC
         ipv6:
-            - ref://store/specs/id=SESSION_L2MC_BASIC
-            - ref://store/specs/id=SESSION_L2BC_BASIC
+            - ref://store/specs/id=SESSION_L2MC
+            - ref://store/specs/id=SESSION_L2BC
         mac:
-            - ref://store/specs/id=SESSION_L2MC_BASIC
-            - ref://store/specs/id=SESSION_L2BC_BASIC
+            - ref://store/specs/id=SESSION_L2MC
+            - ref://store/specs/id=SESSION_L2BC
 
 lif:
     spec        : ref://store/specs/id=LIF_ETH

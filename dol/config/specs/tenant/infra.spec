@@ -17,7 +17,7 @@ sessions:
     unidest:
         scale: 16
         ipv4:
-            - ref://store/specs/id=SESSION_UDP_VXLAN
+            - ref://store/specs/id=SESSION_UDP_SERVICES
         ipv6: None
         mac: None
 
