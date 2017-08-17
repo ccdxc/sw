@@ -266,37 +266,42 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     DirectMap                *dm;
     flow_info_actiondata     d = { 0};
     timespec_t               ts;
-
+    bool                     is_tcp_proxy_flow = false;
     HAL_ASSERT(dep != NULL);
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
     // populate the action information
     d.actionid = FLOW_INFO_FLOW_INFO_ID;
+    if (((flow->key.sport == 80) && (flow->key.dport == 47273)) ||
+         ((flow->key.sport == 47273) && (flow->key.dport == 80))) {
+        is_tcp_proxy_flow = true;
+        printf("TCP Proxy FLow  sp %d dp %d\n", flow->key.sport, flow->key.dport);
+    }
 
     if (!mcast) {
         d.flow_info_action_u.flow_info_flow_info.lif =
             ep_pd_get_hw_lif_id(dep);
         printf("xxx: actual lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-#if 1
-        // HACK DO NOT COMMIT
-        d.flow_info_action_u.flow_info_flow_info.lif = 1001;
-        printf("xxx: programmed lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-#endif
+	if (is_tcp_proxy_flow) {
+            // HACK DO NOT COMMIT
+            d.flow_info_action_u.flow_info_flow_info.lif = 1001;
+            printf("xxx: programmed lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
+	}
     } else {
     }
-#if 1
-    // HACK DO NOT COMMIT
-    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
-#endif
+    if (is_tcp_proxy_flow) {
+        // HACK DO NOT COMMIT
+        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+    }
 
     d.flow_info_action_u.flow_info_flow_info.multicast_en = mcast;
     // TBD: where do these come from ?
     d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 0;
-#if 1
-    // HACK DO NOT COMMIT
-    d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 3;
-#endif
+    if (is_tcp_proxy_flow) {
+        // HACK DO NOT COMMIT
+        d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 3;
+    }
     d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
     d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;
@@ -356,10 +361,10 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
-#if 1
-    // HACK DO NOT COMMIT
-    d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
-#endif
+    if (is_tcp_proxy_flow) {
+        // HACK DO NOT COMMIT
+        d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
+    }
     session_pd_fill_queue_info(dep,
                                flow->lif_qtype,
                                &d.flow_info_action_u.flow_info_flow_info.qid_en,
