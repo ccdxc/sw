@@ -43,17 +43,19 @@ message EthSelector {
 
 // UDPSelector is used to specify match criteria for UDP traffic
 message UDPSelector {
-  types.L4PortRange port_range = 1;    // UDP port range
+  types.L4PortRange src_port_range = 1;    // UDP src port range
+  types.L4PortRange dst_port_range = 2;    // UDP dest port range
 }
 
 // TCPSelector is used to specify match criteria for TCP traffic
 message TCPSelector {
-  bool              tcp_syn    = 1;    // TCP SYN flag
-  bool              tcp_ack    = 2;    // TCP ACK flag
-  bool              tcp_fin    = 3;    // TCP FIN flag
-  bool              tcp_rst    = 4;    // TCP RST flag
-  bool              tcp_urg    = 5;    // TCP URG flag
-  types.L4PortRange port_range = 6;    // TCP port range
+  bool              tcp_syn        = 1;    // TCP SYN flag
+  bool              tcp_ack        = 2;    // TCP ACK flag
+  bool              tcp_fin        = 3;    // TCP FIN flag
+  bool              tcp_rst        = 4;    // TCP RST flag
+  bool              tcp_urg        = 5;    // TCP URG flag
+  types.L4PortRange src_port_range = 6;    // TCP src port range
+  types.L4PortRange dst_port_range = 7;    // TCP dest port range
 }
 
 // ICMPSelector has match criteria for ICMP packets
@@ -76,12 +78,12 @@ message IPSelector {
 
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
-  intf.LifKeyHandle            src_lif_key_handle    = 1;    // source lif
-  intf.LifKeyHandle            dst_lif_key_handle    = 2;    // destination lif
-  l2segment.L2SegmentKeyHandle l2_segment_key_handle = 3;    // L2 segment
+  intf.InterfaceKeyHandle      src_if_key_handle    = 1;    // source interface
+  intf.InterfaceKeyHandle      dst_if_key_handle    = 2;    // destination interface
+  l2segment.L2SegmentKeyHandle l2segment_key_handle = 3;    // L2 segment
   oneof pkt_selector {
-    EthSelector                eth_selector          = 4;    // non-IP packet selector
-    IPSelector                 ip_selector           = 5;    // IP packet selector
+    EthSelector                eth_selector         = 4;    // non-IP packet selector
+    IPSelector                 ip_selector          = 5;    // IP packet selector
   }
 }
 

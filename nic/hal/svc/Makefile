@@ -25,6 +25,7 @@ SOURCES = \
 		tlscb_svc.cc \
 		tcpcb_svc.cc \
 		qos_svc.cc \
+		acl_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

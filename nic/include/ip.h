@@ -18,6 +18,18 @@
 #define IP6_ADDR64_LEN                               2
 
 //------------------------------------------------------------------------------
+// TCP Flags 
+//------------------------------------------------------------------------------
+#define TCP_FLAG_CWR                   0x80
+#define TCP_FLAG_ECE                   0x40
+#define TCP_FLAG_URG                   0x20
+#define TCP_FLAG_ACK                   0x10
+#define TCP_FLAG_PSH                   0x08
+#define TCP_FLAG_RST                   0x04
+#define TCP_FLAG_SYN                   0x02
+#define TCP_FLAG_FIN                   0x01
+
+//------------------------------------------------------------------------------
 // IPv4 and IPv6 addresses
 //------------------------------------------------------------------------------
 typedef uint32_t ipv4_addr_t;
@@ -107,6 +119,25 @@ inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {
 //spdlog formatter for ipv6_addr_t
 inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip) {
     return os << ipv6addr2str(ip);
+}
+
+inline ipv4_addr_t ipv4_prefix_len_to_mask(uint8_t len) {
+    if (len > 32) {
+        return 0;
+    }
+    return len == 0 ? 0: ~((1<<(32-len))-1);
+}
+
+inline void ipv6_prefix_len_to_mask(ipv6_addr_t *v6_addr, uint8_t len) {
+    uint8_t wp = 0;
+    if (len > 128) {
+        v6_addr->addr64[0] = 0;
+        v6_addr->addr64[1] = 0;
+    }
+    while (len) {
+        v6_addr->addr8[wp++] = len >= 8 ? 0xff : 0xff & (~((1<<(8-len))-1));
+        len -= 8;
+    }
 }
 
 #endif    // __IP_H__

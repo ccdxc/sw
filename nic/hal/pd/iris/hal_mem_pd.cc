@@ -11,6 +11,7 @@
 #include <buf_pool_pd.hpp>
 #include <queue_pd.hpp>
 #include <policer_pd.hpp>
+#include <acl_pd.hpp>
 #include <pd.hpp>
 #include <p4pd_api.hpp>
 #include <p4pd.h>
@@ -158,11 +159,18 @@ hal_state_pd::init(void)
     egress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_EGRESS_POLICERS);
     HAL_ASSERT_RETURN((egress_policer_hwid_idxr_ != NULL), false);
 
+    // initialize Acl PD related data structures
+    acl_pd_slab_ = slab::factory("ACL_PD", HAL_SLAB_ACL_PD,
+                                 sizeof(hal::pd::pd_acl_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((acl_pd_slab_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
     flow_table_ = NULL;
     met_table_ = NULL;
+    acl_table_ = NULL;
 
     return true;
 }
@@ -217,6 +225,8 @@ hal_state_pd::hal_state_pd()
     policer_pd_slab_ = NULL;
     ingress_policer_hwid_idxr_ = NULL;
     egress_policer_hwid_idxr_ = NULL;
+
+    acl_pd_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -264,6 +274,8 @@ hal_state_pd::~hal_state_pd()
     ingress_policer_hwid_idxr_ ? delete ingress_policer_hwid_idxr_ : HAL_NOP;
     egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
 
+    acl_pd_slab_ ? delete acl_pd_slab_ : HAL_NOP;
+
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
             if (dm_tables_[tid]) {
@@ -298,6 +310,10 @@ hal_state_pd::~hal_state_pd()
 
     if (met_table_) {
         delete met_table_;
+    }
+
+    if (acl_table_) {
+        delete acl_table_;
     }
 }
 
@@ -444,7 +460,7 @@ hal_state_pd::init_tables(void)
     p4pd_table_info_dump_();
 
     // TODO:
-    // 1. take care of instantiating flow_table_ and met_table_
+    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
     // 2. When tables are instantiated proper names are not passed today,
     // waiting for an API from Mahesh that gives table name given table id
 
@@ -467,12 +483,20 @@ hal_state_pd::init_tables(void)
             break;
 
         case P4_TBL_TYPE_TCAM:
-            if (!tinfo.is_oflow_table) {
-                tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                    new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
-                             tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
-                HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
+            if (tid == P4TBL_ID_NACL) {
+                acl_table_ = acl_tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                               tinfo.key_struct_size, 
+                                               tinfo.actiondata_struct_size, true);
+                HAL_ASSERT(acl_table_ != NULL);
+            } else {
+                if (!tinfo.is_oflow_table) {
+                    tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
+                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
+                                 tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
+                    HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
+                }
             }
+
             break;
 
         case P4_TBL_TYPE_INDEX:
@@ -586,6 +610,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_POLICER_PD:
         g_hal_state_pd->policer_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_ACL_PD:
+        g_hal_state_pd->acl_pd_slab()->free_(elem);
         break;
 
     default:

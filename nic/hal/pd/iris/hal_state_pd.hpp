@@ -9,6 +9,7 @@
 #include <tcam.hpp>
 #include <flow.hpp>
 #include <met.hpp>
+#include <acl_tcam.hpp>
 #include <p4pd.h>
 
 using hal::utils::indexer;
@@ -19,6 +20,7 @@ using hal::pd::utils::Hash;
 using hal::pd::utils::Tcam;
 using hal::pd::utils::Flow;
 using hal::pd::utils::Met;
+using hal::pd::utils::acl_tcam;
 
 namespace hal {
 namespace pd {
@@ -36,6 +38,8 @@ namespace pd {
 #define HAL_HW_OQUEUE_NODE_TYPES        3
 #define HAL_MAX_HW_INGRESS_POLICERS     2048
 #define HAL_MAX_HW_EGRESS_POLICERS      2048
+
+#define HAL_MAX_HW_ACLS                 512 
 
 //-----------------------------------------------------------------------------
 // class hal_state_pd
@@ -113,6 +117,9 @@ public:
     indexer *ingress_policer_hwid_idxr(void) const { return ingress_policer_hwid_idxr_; }
     indexer *egress_policer_hwid_idxr(void) const { return egress_policer_hwid_idxr_; }
 
+    // get APIs for Acl related state
+    slab *acl_pd_slab(void) const { return acl_pd_slab_; }
+
     hal_ret_t init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
@@ -142,6 +149,10 @@ public:
 
     Met *met_table(void) const {
         return met_table_;
+    }
+
+    acl_tcam *acl_table(void) const {
+        return acl_table_;
     }
 
 private:
@@ -237,11 +248,17 @@ private:
         indexer    *egress_policer_hwid_idxr_;
     } __PACK__;
 
+    // Acl related state
+    struct {
+        slab       *acl_pd_slab_;
+    } __PACK__;
+
     DirectMap    **dm_tables_;
     Hash         **hash_tcam_tables_;
     Tcam         **tcam_tables_;
     Flow         *flow_table_;
     Met          *met_table_;
+    acl_tcam     *acl_table_;
 };
 
 extern class hal_state_pd    *g_hal_state_pd;

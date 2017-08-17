@@ -11,6 +11,7 @@
 #include <tlscb.hpp>
 #include <tcpcb.hpp>
 #include <qos.hpp>
+#include <acl.hpp>
 
 namespace hal {
 namespace pd {
@@ -29,6 +30,7 @@ using hal::tcpcb_t;
 using hal::buf_pool_t;
 using hal::queue_t;
 using hal::policer_t;
+using hal::acl_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -255,6 +257,19 @@ pd_policer_args_init (pd_policer_args_t *args)
 }
 
 hal_ret_t pd_policer_create(pd_policer_args_t *policer);
+
+typedef struct pd_acl_args_s {
+    acl_t    *acl;
+} __PACK__ pd_acl_args_t;
+
+static inline void
+pd_acl_args_init (pd_acl_args_t *args)
+{
+    args->acl = NULL;
+    return;
+}
+
+hal_ret_t pd_acl_create(pd_acl_args_t *acl);
 
 }    // namespace pd
 }    // namespace hal

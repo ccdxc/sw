@@ -10,6 +10,7 @@
 #include <tlscb.hpp>
 #include <tcpcb.hpp>
 #include <qos.hpp>
+#include <acl.hpp>
  
 namespace hal {
 
@@ -315,6 +316,24 @@ hal_state::init(void)
                                                  hal::policer_compare_handle_key_func);
     HAL_ASSERT_RETURN((egress_policer_hal_handle_ht_ != NULL), false);
 
+    // initialize Acl related data structures
+    acl_slab_ = slab::factory("Acl", HAL_SLAB_ACL,
+                              sizeof(hal::acl_t), 8,
+                              false, true, true, true);
+    HAL_ASSERT_RETURN((acl_slab_ != NULL), false);
+
+    acl_id_ht_ = ht::factory(HAL_MAX_ACLS,
+                             hal::acl_get_key_func,
+                             hal::acl_compute_hash_func,
+                             hal::acl_compare_key_func);
+    HAL_ASSERT_RETURN((acl_id_ht_ != NULL), false);
+
+    acl_hal_handle_ht_ = ht::factory(HAL_MAX_ACLS,
+                                     hal::acl_get_handle_key_func,
+                                     hal::acl_compute_handle_hash_func,
+                                     hal::acl_compare_handle_key_func);
+    HAL_ASSERT_RETURN((acl_hal_handle_ht_ != NULL), false);
+
     return true;
 }
 
@@ -375,6 +394,10 @@ hal_state::hal_state()
     ingress_policer_hal_handle_ht_ = NULL;
     egress_policer_id_ht_ = NULL;
     egress_policer_hal_handle_ht_ = NULL;
+
+    acl_slab_ = NULL;
+    acl_id_ht_ = NULL;
+    acl_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -434,6 +457,10 @@ hal_state::~hal_state()
     ingress_policer_hal_handle_ht_ ? delete ingress_policer_hal_handle_ht_ : HAL_NOP;
     egress_policer_id_ht_ ? delete egress_policer_id_ht_ : HAL_NOP;
     egress_policer_hal_handle_ht_ ? delete egress_policer_hal_handle_ht_ : HAL_NOP;
+
+    acl_slab_ ? delete acl_slab_ : HAL_NOP;
+    acl_id_ht_ ? delete acl_id_ht_ : HAL_NOP;
+    acl_hal_handle_ht_ ? delete acl_hal_handle_ht_ : HAL_NOP;
 
 }
 
@@ -527,6 +554,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_POLICER:
         g_hal_state->policer_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_ACL:
+        g_hal_state->acl_slab()->free_(elem);
         break;
 
     default:

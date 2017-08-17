@@ -39,54 +39,54 @@ using qos::PolicerGetRequestMsg;
 using qos::PolicerGetResponseMsg;
 
 class QOSServiceImpl final : public QOS::Service {
- public:
-  Status BufPoolCreate(ServerContext *context,
-                       const BufPoolRequestMsg *req,
-                       BufPoolResponseMsg *rsp) override;
+public:
+    Status BufPoolCreate(ServerContext *context,
+                         const BufPoolRequestMsg *req,
+                         BufPoolResponseMsg *rsp) override;
 
-  Status BufPoolUpdate(ServerContext *context,
-                       const BufPoolRequestMsg *req,
-                       BufPoolResponseMsg *rsp) override;
+    Status BufPoolUpdate(ServerContext *context,
+                         const BufPoolRequestMsg *req,
+                         BufPoolResponseMsg *rsp) override;
 
-  Status BufPoolDelete(ServerContext *context,
-                       const BufPoolDeleteRequestMsg *req,
-                       BufPoolDeleteResponseMsg *rsp) override;
+    Status BufPoolDelete(ServerContext *context,
+                         const BufPoolDeleteRequestMsg *req,
+                         BufPoolDeleteResponseMsg *rsp) override;
 
-  Status BufPoolGet(ServerContext *context,
-                    const BufPoolGetRequestMsg *req,
-                    BufPoolGetResponseMsg *rsp) override;
+    Status BufPoolGet(ServerContext *context,
+                      const BufPoolGetRequestMsg *req,
+                      BufPoolGetResponseMsg *rsp) override;
 
-  Status QueueCreate(ServerContext *context,
-                     const QueueRequestMsg *req,
-                     QueueResponseMsg *rsp) override;
+    Status QueueCreate(ServerContext *context,
+                       const QueueRequestMsg *req,
+                       QueueResponseMsg *rsp) override;
 
-  Status QueueUpdate(ServerContext *context,
-                     const QueueRequestMsg *req,
-                     QueueResponseMsg *rsp) override;
+    Status QueueUpdate(ServerContext *context,
+                       const QueueRequestMsg *req,
+                       QueueResponseMsg *rsp) override;
 
-  Status QueueDelete(ServerContext *context,
-                     const QueueDeleteRequestMsg *req,
-                     QueueDeleteResponseMsg *rsp) override;
+    Status QueueDelete(ServerContext *context,
+                       const QueueDeleteRequestMsg *req,
+                       QueueDeleteResponseMsg *rsp) override;
 
-  Status QueueGet(ServerContext *context,
-                  const QueueGetRequestMsg *req,
-                  QueueGetResponseMsg *rsp) override;
+    Status QueueGet(ServerContext *context,
+                    const QueueGetRequestMsg *req,
+                    QueueGetResponseMsg *rsp) override;
 
-  Status PolicerCreate(ServerContext *context,
-                       const PolicerRequestMsg *req,
-                       PolicerResponseMsg *rsp) override;
+    Status PolicerCreate(ServerContext *context,
+                         const PolicerRequestMsg *req,
+                         PolicerResponseMsg *rsp) override;
 
-  Status PolicerUpdate(ServerContext *context,
-                       const PolicerRequestMsg *req,
-                       PolicerResponseMsg *rsp) override;
+    Status PolicerUpdate(ServerContext *context,
+                         const PolicerRequestMsg *req,
+                         PolicerResponseMsg *rsp) override;
 
-  Status PolicerDelete(ServerContext *context,
-                       const PolicerDeleteRequestMsg *req,
-                       PolicerDeleteResponseMsg *rsp) override;
+    Status PolicerDelete(ServerContext *context,
+                         const PolicerDeleteRequestMsg *req,
+                         PolicerDeleteResponseMsg *rsp) override;
 
-  Status PolicerGet(ServerContext *context,
-                    const PolicerGetRequestMsg *req,
-                    PolicerGetResponseMsg *rsp) override;
+    Status PolicerGet(ServerContext *context,
+                      const PolicerGetRequestMsg *req,
+                      PolicerGetResponseMsg *rsp) override;
 
 };
 

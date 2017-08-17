@@ -107,6 +107,11 @@ public:
     ht *egress_policer_id_ht(void) const { return egress_policer_id_ht_; }
     ht *egress_policer_hal_handle_ht(void) const { return egress_policer_hal_handle_ht_; }
 
+    // get APIs for acl state
+    slab *acl_slab(void) const { return acl_slab_; }
+    ht *acl_id_ht(void) const { return acl_id_ht_; }
+    ht *acl_hal_handle_ht(void) const { return acl_hal_handle_ht_; }
+
 private:
     bool init(void);
     hal_state();
@@ -214,6 +219,13 @@ private:
         ht         *ingress_policer_hal_handle_ht_;
         ht         *egress_policer_id_ht_;
         ht         *egress_policer_hal_handle_ht_;
+    } __PACK__;
+
+    // acl related state
+    struct {
+        slab       *acl_slab_;
+        ht         *acl_id_ht_;
+        ht         *acl_hal_handle_ht_;
     } __PACK__;
 
 };

@@ -12,6 +12,7 @@ LCXXFLAGS = \
 			-I../../third-party/spdlog/include
 
 SOURCES = \
+		  acl.cc \
 		  utils.cc \
 		  if_utils.cc \
 		  tenant.cc \
@@ -29,6 +30,7 @@ SOURCES = \
 		  endpoint_api.cc \
 		  nwsec_api.cc \
 		  qos_api.cc \
+		  acl_api.cc \
 		  bm_allocator.cc \
 		  lif_manager_base.cc \
 		  lif_manager.cc \

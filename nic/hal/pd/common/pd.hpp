@@ -21,6 +21,7 @@ typedef struct pd_tcpcb_s pd_tcpcb_t;
 typedef struct pd_buf_pool_s pd_buf_pool_t;
 typedef struct pd_queue_s pd_queue_t;
 typedef struct pd_policer_s pd_policer_t;
+typedef struct pd_acl_s pd_acl_t;
 
 }    // namespace pd
 }    // namespace hal

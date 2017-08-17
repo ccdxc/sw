@@ -25,6 +25,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_BUF_POOL,
     HAL_SLAB_QUEUE,
     HAL_SLAB_POLICER,
+    HAL_SLAB_ACL,
     HAL_SLAB_PI_MAX,                 // NOTE: MUST be last PI slab id
 
     // PD Slabs
@@ -43,6 +44,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_BUF_POOL_PD,
     HAL_SLAB_QUEUE_PD,
     HAL_SLAB_POLICER_PD,
+    HAL_SLAB_ACL_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
     HAL_SLAB_RSVD,    // all non-delay delete slabs can use this
