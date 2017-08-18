@@ -32,6 +32,14 @@
             "name": "mcast_repl",
             "size_kb": 4096
         },
+	{
+	    "name": "lif2qstate_map",
+	    "size_kb": 16384
+	},
+        {
+            "name": "semaphore",
+            "size_kb": 8
+        },
         {
             "name": "tcpcb",
             "size_kb": 8192
@@ -41,24 +49,64 @@
             "size_kb": 2048
         },
         {
-            "name": "nmdr",
-            "size_kb": 2048
-        },
-        {
-            "name": "nmpr-small",
-            "size_kb": 16384
-        },
-        {
-            "name": "nmpr-big",
-            "size_kb": 32768
-        },
-        {
             "name": "ipsec-cb",
             "size_kb": 64
         },
-	{
-	    "name": "lif2qstate_map",
-	    "size_kb": 16384
-	}
+        {
+            "name": "nmdr-tx",
+            "size_kb": 128 
+        },
+        {
+            "name": "nmdr-rx",
+            "size_kb": 128 
+        },
+        {
+            "name": "nmpr-small-tx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-small-rx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-big-tx",
+            "size_kb": 128
+        },
+        {
+            "name": "nmpr-big-rx",
+            "size_kb": 128
+        },
+        {
+            "name": "serq",
+            "size_kb": 16384
+        },
+        {
+            "name": "descriptor-tx",
+            "size_kb": 2048
+        },
+        {
+            "name": "descriptor-rx",
+            "size_kb": 2048
+        },
+        {
+            "name": "page-small-tx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-small-rx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-big-tx",
+            "size_kb": 147456
+        },
+        {
+            "name": "page-big-rx",
+            "size_kb": 147456
+        },
+        {
+            "name": "p4plus_program",
+            "size_kb": 131072
+        }
     ]
 }

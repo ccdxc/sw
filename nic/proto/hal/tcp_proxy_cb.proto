@@ -26,27 +26,29 @@ message TcpCbKeyHandle {
 
 // TcpCbSpec captures all the tcp_cb level configuration
 message TcpCbSpec {
-  types.ObjectMeta      meta                       = 1;    // common object meta
-  TcpCbKeyHandle        key_or_handle              = 2;    // tcp_cb being created/updated
-  uint32                rcv_nxt                    = 3;
-  uint32                snd_nxt                    = 4;
-  uint32                snd_una                    = 5;
+  TcpCbKeyHandle        key_or_handle              = 1;    // tcp_cb being created/updated
+  uint32                rcv_nxt                    = 2;
+  uint32                snd_nxt                    = 3;
+  uint32                snd_una                    = 4;
+  uint32                rcv_tsval                  = 5;
+  uint32                ts_recent                  = 6;
+  fixed64               serq_base                  = 7;
 }
 
-// TcpCbRequestMsg is batched add or modify tcp_cb request
+// TcpCbRequestMsg is batched add or modify tcpcb request
 message TcpCbRequestMsg {
   repeated TcpCbSpec    request = 1;    // batched request
 }
 
-// TcpCbStatus is the operational status of a given tcp_cb
+// TcpCbStatus is the operational status of a given tcpcb
 message TcpCbStatus {
-  fixed64    tcpcb_handle     = 1;    // id of tcp_cb returned by HAL
+  fixed64    tcpcb_handle     = 1;    // id of tcpcb returned by HAL
 }
 
 // TcpCbResponse is response to TcpCbSpec
 message TcpCbResponse {
-  types.ApiStatus        api_status     = 1;    // API status code
-  TcpCbStatus            tcpcb_status   = 2;    // tcpcb status, if api succeeded
+  types.ApiStatus        api_status            = 1;    // API status code
+  TcpCbStatus       tcpcb_status   = 2;    // tcpcb status, if api succeeded
 }
 
 // TcpCbResponseMsg is batched response to TcpCbRequestMsg
@@ -57,10 +59,10 @@ message TcpCbResponseMsg {
 // TcpCbDeleteRequest is used to delete a tcpcb
 message TcpCbDeleteRequest {
   types.ObjectMeta        meta          = 1;    // object meta
-  TcpCbKeyHandle          key_or_handle = 2;    // TcpCb key or handle
+  TcpCbKeyHandle     key_or_handle = 2;    // TcpCb key or handle
 }
 
-// TcpCbDeleteRequestMsg is used to delete a batch of tcp_cbs
+// TcpCbDeleteRequestMsg is used to delete a batch of tcpcbs
 message TcpCbDeleteRequestMsg {
   repeated TcpCbDeleteRequest    request = 1;    // batched delete request
 }
@@ -89,7 +91,7 @@ message TcpCbStats {
 // only if api_status indicates success, other fields are valid
 message TcpCbGetResponse {
   types.ApiStatus        api_status = 1;    // API status code
-  TcpCbSpec              spec       = 2;    // tcpcb configuration
+  TcpCbSpec         spec       = 2;    // tcpcb configuration
   TcpCbStatus       status     = 3;    // operational state of tcpcb
   TcpCbStats        stats      = 4;    // stats of the tcpcb
 }

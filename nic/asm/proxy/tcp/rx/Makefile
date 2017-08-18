@@ -6,15 +6,15 @@ CUSTOM_CLEAN = my_clean
 include $(TOPDIR)/make/Makefile.inc
 
 PROJ = tcp_proxy_rxdma
-OBJ_DIR = $(TOPDIR)/obj/asm_bin
+OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include
 SRC_DIR = .
-CAPAS_BIN = $(TOPDIR)/gen/bin/capas
-CAPSIM_BIN = $(TOPDIR)/gen/bin/capsim
+CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
@@ -92,6 +92,7 @@ run: $(BIN_FILES)
 		-P tcp_rx_read_rnpdr_stage2_start=0x300000 \
 		-P tcp_rx_read_serq_stage2_start=0x400000 \
 		-P tcp_rx_sack_stage2_start=0x500000 \
+		-P tcp_rx_read_rnmpr_stage2_start=0x600000 \
 		> $(SRC_DIR)/run/tcp-rx.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-write-serq.ctl $(OBJ_DIR)/tcp-write-serq.bin > $(SRC_DIR)/run/tcp-write-serq.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-cc.ctl $(OBJ_DIR)/tcp-cc.bin \

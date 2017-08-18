@@ -138,7 +138,14 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     memset(&data, 0, sizeof(data));
 
-    tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif)); 
+        HAL_TRACE_ERR("xxx: going to set tm_port = 9");
+    if(((lif_t *)pd_lif->pi_lif)->lif_id != 1001) {
+        tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
+    } else {
+        pd_lif->hw_lif_id = 1001;
+        tm_oport = 9;
+        HAL_TRACE_ERR("xxx: setting tm_port = 9");
+    }
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;

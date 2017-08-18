@@ -7,6 +7,7 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "capri-macros.h"
 	
 /* d is the data returned by lookup result */
 struct d_struct {
@@ -21,7 +22,7 @@ struct d_struct {
 	CAPRI_QSTATE_HEADER_RING(3)
 
 	CAPRI_QSTATE_HEADER_RING(4)	
-	
+
 	TLS_SHARED_STATE
 };
 
@@ -37,7 +38,7 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
-	
+	.align
 tls_s0_process_start:
 #if 0
 	.brbegin

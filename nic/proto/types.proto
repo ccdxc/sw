@@ -76,6 +76,10 @@ enum ApiStatus {
   API_STATUS_NETWORK_NOT_FOUND        = 44;    // network not found
   API_STATUS_ACL_ID_INVALID           = 45;    // invalid ACL id
   API_STATUS_ACL_NOT_FOUND            = 46;    // ACL not found
+  API_STATUS_WRING_ID_INVALID         = 47;    // invalid WRING id
+  API_STATUS_WRING_NOT_FOUND          = 48;    // invalid WRING
+  API_STATUS_WRING_TYPE_INVALID       = 49;    // invalid WRING type
+  API_STATUS_PROXY_TYPE_INVALID       = 50;    // invalid Proxy Service type 
 }
 
 // common meta object that is part of all other top level objects
@@ -137,3 +141,23 @@ message L4PortRange {
   uint32    port_low  = 1;    // source port
   uint32    port_high = 2;    // destination port
 }
+
+// Types of Work Ring
+enum WRingType {
+  WRING_TYPE_NONE           = 0;    
+  WRING_TYPE_SERQ           = 1;    
+  WRING_TYPE_NMDR_TX        = 2;    
+  WRING_TYPE_NMDR_RX        = 3;    
+  WRING_TYPE_NMPR_SMALL_TX  = 4;    
+  WRING_TYPE_NMPR_SMALL_RX  = 5;    
+  WRING_TYPE_NMPR_BIG_TX    = 6;    
+  WRING_TYPE_NMPR_BIG_RX    = 7;    
+}
+
+// Types of Proxy Service
+enum ProxyType {
+  PROXY_TYPE_NONE          = 0;    
+  PROXY_TYPE_TCP           = 1;    
+  PROXY_TYPE_TLS           = 2;    
+}
+

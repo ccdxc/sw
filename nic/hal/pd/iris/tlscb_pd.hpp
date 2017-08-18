@@ -12,6 +12,7 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_TLSCBS                        2048
+#define P4PD_HBM_TCP_CB_ENTRY_SIZE               512
 
 typedef uint32_t    tlscb_hw_id_t;
 

@@ -13,7 +13,7 @@ class MockLIFManager : public LIFManagerBase {
   LIFQState *get_qs(uint32_t lif_id) { return GetLIFQState(lif_id); }
 
   virtual int32_t GetPCOffset(
-      char *prog_name, char *label, uint8_t *offset) {
+      const char *handle, char *prog_name, char *label, uint8_t *offset) {
     return 0;
   }
 

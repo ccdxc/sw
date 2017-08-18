@@ -3,6 +3,7 @@
 /*****************************************************************************/
 action p4plus_app_tcp_proxy() {
     remove_header(ethernet);
+    remove_header(vlan_tag);
     remove_header(ipv4);
     remove_header(ipv6);
     remove_header(tcp);

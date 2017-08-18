@@ -12,6 +12,7 @@
 #include <tcpcb.hpp>
 #include <qos.hpp>
 #include <acl.hpp>
+#include <wring.hpp>
 
 namespace hal {
 namespace pd {
@@ -31,6 +32,7 @@ using hal::buf_pool_t;
 using hal::queue_t;
 using hal::policer_t;
 using hal::acl_t;
+using hal::wring_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -89,6 +91,10 @@ typedef struct pd_tlscb_args_s {
 typedef struct pd_tcpcb_args_s {
     tcpcb_t            *tcpcb;
 } __PACK__ pd_tcpcb_args_t;
+
+typedef struct pd_wring_args_s {
+    wring_t            *wring;
+} __PACK__ pd_wring_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -171,6 +177,13 @@ pd_tcpcb_args_init (pd_tcpcb_args_t *args)
     return;
 }
 
+static inline void
+pd_wring_args_init (pd_wring_args_t *args)
+{
+    args->wring = NULL;
+    return;
+}
+
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
@@ -208,6 +221,7 @@ hal_ret_t pd_tlscb_delete(pd_tlscb_args_t *tlscb);
 hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_delete(pd_tcpcb_args_t *tcpcb);
+hal_ret_t pd_tcpcb_get(pd_tcpcb_args_t *tcpcb);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;
@@ -270,6 +284,27 @@ pd_acl_args_init (pd_acl_args_t *args)
 }
 
 hal_ret_t pd_acl_create(pd_acl_args_t *acl);
+hal_ret_t pd_wring_create(pd_wring_args_t *wring);
+hal_ret_t pd_wring_update(pd_wring_args_t *wring);
+hal_ret_t pd_wring_delete(pd_wring_args_t *wring);
+hal_ret_t pd_wring_get(pd_wring_args_t *wring);
+
+
+typedef struct pd_descr_aol_s {
+    uint64_t    a0;
+    uint32_t    o0;
+    uint32_t    l0;
+    uint64_t    a1;
+    uint32_t    o1;
+    uint32_t    l1;
+    uint64_t    a2;
+    uint32_t    o2;
+    uint32_t    l2;
+    uint64_t    next_addr;
+} __attribute__ ((__packed__)) pd_descr_aol_t;
+
+hal_ret_t
+pd_descriptor_aol_get(pd_descr_aol_t *src, pd_descr_aol_t *dst);
 
 }    // namespace pd
 }    // namespace hal

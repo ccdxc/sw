@@ -45,6 +45,12 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         goto cleanup;
     }
 
+    ret = hal_pd_pgm_def_p4plus_entries();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);
+        goto cleanup;
+    }
+
     return HAL_RET_OK;
 
 cleanup:

@@ -27,8 +27,8 @@
 /* Definition of maximum number of programs and parameters. 
  * TODO: Remove these artificial limits.
  */
-#define MAX_PROGRAMS	64
-#define MAX_PARAMS	64
+#define MAX_PROGRAMS	512
+#define MAX_PARAMS	512
 
 /* Capri loader's MPU program information structure */
 typedef struct {
@@ -41,7 +41,6 @@ typedef struct {
     MpuSymbolTable resolved_params;
     MpuSymbolTable labels;
 } capri_program_info_t;
-
 
 /* Capri loader's initialization parameter structure */
 typedef struct {
@@ -59,6 +58,13 @@ typedef struct {
     capri_param_info_t params[MAX_PARAMS];
 } capri_prog_param_info_t;
 
+/* Capri loader's context structure */
+typedef struct {
+    std::string handle;
+    uint64_t prog_hbm_base_addr;
+    capri_program_info_t *program_info = NULL;
+    int num_programs;
+} capri_loader_ctx_t;
 
 /**
  * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve 
@@ -70,6 +76,7 @@ typedef struct {
  *                                specified by "pathname" will contain only MPU 
  *                                binaries.
  * 
+ * @handle: Handle for loader context
  * @pathname: Fully specified path name of the directory which contains the
  *            MPU programs
  * @hbm_base_addr: Base address in HBM to use when loading the MPU programs
@@ -78,7 +85,8 @@ typedef struct {
  *
  * Return: Index of program on success, < 0 on failure
  */
-int capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr, 
+int capri_load_mpu_programs(const char *handle,
+                            char *pathname, uint64_t hbm_base_addr, 
                             capri_prog_param_info_t *prog_param_info, 
                             int num_prog_params);
 
@@ -86,17 +94,20 @@ int capri_load_mpu_programs(char *pathname, uint64_t hbm_base_addr,
  * capri_program_label_to_offset: Resolve a programs, label to its relative 
  *                                offset
  * 
+ * @handle: Handle for loader context
  * @prog_name: Program name
  * @label_name: Label name
  * @offset: Offset to be filled in if the program, label is found
  *
  * Return: 0 on success, < 0 on failure
  */
-int capri_program_label_to_offset(char *prog_name, char *label_name,
+int capri_program_label_to_offset(const char *handle,
+                                  char *prog_name, char *label_name,
                                   uint64_t *offset);
 /**
  * capri_program_offset_to_label: Resolve a program, relative offset to a label
  * 
+ * @handle: Handle for the loader context
  * @prog_name: Program name
  * @offset: Offset value
  * @label_name: Pointer to the location where label name is to be filled
@@ -104,17 +115,20 @@ int capri_program_label_to_offset(char *prog_name, char *label_name,
  *
  * Return: 0 on success, < 0 on failure
  */
-int capri_program_offset_to_label(char *prog_name, uint64_t offset,
+int capri_program_offset_to_label(const char *handle,
+                                  char *prog_name, uint64_t offset,
                                   char *label_name, size_t label_size);
 
 /**
  * capri_program_to_base_addr: Resolve a program to its base address in HBM
  * 
+ * @handle: Handle for the loader context
  * @prog_name: Program name
  * @base_addr: Pointer to the location where base address is to be filled
  *
  * Return: 0 on success, < 0 on failure
  */
-int capri_program_to_base_addr(char *prog_name, uint64_t *base_addr);
+int capri_program_to_base_addr(const char *handle,
+                               char *prog_name, uint64_t *base_addr);
 
 #endif   // _CAPRI_LOADER_H_

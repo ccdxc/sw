@@ -19,6 +19,12 @@ typedef uint32_t tcpcb_id_t;
 typedef struct tcpcb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id
+    uint32_t              rcv_nxt;
+    uint32_t              snd_nxt;
+    uint32_t              snd_una;
+    uint32_t              rcv_tsval;
+    uint32_t              ts_recent;
+    uint64_t              serq_base;    
     
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
@@ -105,6 +111,9 @@ hal_ret_t tcpcb_create(tcpcb::TcpCbSpec& spec,
 
 hal_ret_t tcpcb_update(tcpcb::TcpCbSpec& spec,
                        tcpcb::TcpCbResponse *rsp);
+
+hal_ret_t tcpcb_delete(tcpcb::TcpCbDeleteRequest& req,
+                       tcpcb::TcpCbDeleteResponseMsg *rsp);
 
 hal_ret_t tcpcb_get(tcpcb::TcpCbGetRequest& req,
                     tcpcb::TcpCbGetResponse *rsp);

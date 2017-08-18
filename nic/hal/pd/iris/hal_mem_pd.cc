@@ -17,6 +17,10 @@
 #include <p4pd.h>
 #include <hal_pd.hpp>
 #include <asic_rw.hpp>
+#include <tlscb_pd.hpp>
+#include <tcpcb_pd.hpp>
+#include <wring_pd.hpp>
+#include <proxy.hpp>
 
 namespace hal {
 namespace pd {
@@ -158,12 +162,49 @@ hal_state_pd::init(void)
 
     egress_policer_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_EGRESS_POLICERS);
     HAL_ASSERT_RETURN((egress_policer_hwid_idxr_ != NULL), false);
+    
+    // initialize TLSCB related data structures
+    tlscb_slab_ = slab::factory("TLSCB PD", HAL_SLAB_TLSCB_PD,
+                                sizeof(hal::pd::pd_tlscb_t), 128,
+                                true, true, true, true);
+    HAL_ASSERT_RETURN((tlscb_slab_ != NULL), false);
+
+    tlscb_hwid_ht_ = ht::factory(HAL_MAX_HW_TLSCBS,
+                                 hal::pd::tlscb_pd_get_hw_key_func,
+                                 hal::pd::tlscb_pd_compute_hw_hash_func,
+                                 hal::pd::tlscb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((tlscb_hwid_ht_ != NULL), false);
+
+    // initialize TCPCB related data structures
+    tcpcb_slab_ = slab::factory("TCPCB PD", HAL_SLAB_TCPCB_PD,
+                                 sizeof(hal::pd::pd_tcpcb_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((tcpcb_slab_ != NULL), false);
+
+    tcpcb_hwid_ht_ = ht::factory(HAL_MAX_HW_TCPCBS,
+                                 hal::pd::tcpcb_pd_get_hw_key_func,
+                                 hal::pd::tcpcb_pd_compute_hw_hash_func,
+                                 hal::pd::tcpcb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((tcpcb_hwid_ht_ != NULL), false);
 
     // initialize Acl PD related data structures
     acl_pd_slab_ = slab::factory("ACL_PD", HAL_SLAB_ACL_PD,
                                  sizeof(hal::pd::pd_acl_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((acl_pd_slab_ != NULL), false);
+
+    // initialize WRING related data structures
+    wring_slab_ = slab::factory("WRING PD", HAL_SLAB_WRING_PD,
+                                 sizeof(hal::pd::pd_wring_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((wring_slab_ != NULL), false);
+
+    wring_hwid_ht_ = ht::factory(HAL_MAX_HW_WRING,
+                                 hal::pd::wring_pd_get_hw_key_func,
+                                 hal::pd::wring_pd_compute_hw_hash_func,
+                                 hal::pd::wring_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
+
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -227,6 +268,15 @@ hal_state_pd::hal_state_pd()
     egress_policer_hwid_idxr_ = NULL;
 
     acl_pd_slab_ = NULL;
+    
+    tlscb_slab_ = NULL;
+    tlscb_hwid_ht_ = NULL;
+    
+    tcpcb_slab_ = NULL;
+    tcpcb_hwid_ht_ = NULL;
+    
+    wring_slab_ = NULL;
+    wring_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -257,6 +307,12 @@ hal_state_pd::~hal_state_pd()
     nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
 
     session_slab_ ? delete session_slab_ : HAL_NOP;
+    
+    tlscb_slab_ ? delete tlscb_slab_ : HAL_NOP;
+    tlscb_hwid_ht_ ? delete tlscb_hwid_ht_ : HAL_NOP;
+    
+    tcpcb_slab_ ? delete tcpcb_slab_ : HAL_NOP;
+    tcpcb_hwid_ht_ ? delete tcpcb_hwid_ht_ : HAL_NOP;
 
     buf_pool_pd_slab_ ? delete buf_pool_pd_slab_ : HAL_NOP;
     for (p = 0; p < HAL_MAX_TM_PORTS; p++) {
@@ -275,6 +331,10 @@ hal_state_pd::~hal_state_pd()
     egress_policer_hwid_idxr_ ? delete egress_policer_hwid_idxr_ : HAL_NOP;
 
     acl_pd_slab_ ? delete acl_pd_slab_ : HAL_NOP;
+
+    wring_slab_ ? delete wring_slab_ : HAL_NOP;
+    wring_hwid_ht_ ? delete wring_hwid_ht_ : HAL_NOP;
+
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -420,7 +480,19 @@ p4pd_table_info_dump_ (void)
 
 //------------------------------------------------------------------------------
 // initializing tables
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------i
+
+hal_ret_t
+tcp_lif_init() {
+    pd_lif_t tcp_lif;
+
+    lif_pd_init(&tcp_lif);
+    tcp_lif.hw_lif_id = 1001;
+
+    lif_pd_pgm_output_mapping_tbl(&tcp_lif);
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 hal_state_pd::init_tables(void)
 {
@@ -566,6 +638,28 @@ hal_pd_pgm_def_entries (void)
 }
 
 //------------------------------------------------------------------------------
+// program default entries for P4Plus tables
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_pd_pgm_def_p4plus_entries (void)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("Programming p4plus default entries ...");
+    ret = wring_pd_init_global_rings();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program default rings, err: {}", ret);
+    }
+
+    ret = hal_init_def_proxy_services();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize default proxy services");
+    }
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
 // free an element back to given PD slab specified by its id
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -599,6 +693,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_SESSION_PD:
         g_hal_state_pd->session_slab()->free_(elem);
         break;
+ 
+    case HAL_SLAB_TLSCB_PD:
+        g_hal_state_pd->tlscb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_TCPCB_PD:
+        g_hal_state_pd->tcpcb_slab()->free_(elem);
+        break;
 
     case HAL_SLAB_BUF_POOL_PD:
         g_hal_state_pd->buf_pool_pd_slab()->free_(elem);
@@ -614,6 +716,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ACL_PD:
         g_hal_state_pd->acl_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_WRING_PD:
+        g_hal_state_pd->wring_slab()->free_(elem);
         break;
 
     default:

@@ -76,11 +76,11 @@ int32_t write_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size) {
   return 0;
 }
 
-int32_t get_pc_offset(char *prog_name, char *label, uint8_t *offset) {
+int32_t get_pc_offset(const char *handle, char *prog_name, char *label, uint8_t *offset) {
 #ifndef HAL_GTEST
   uint64_t off;
 
-  if (capri_program_label_to_offset(prog_name, label, &off) < 0)
+  if (capri_program_label_to_offset(handle, prog_name, label, &off) < 0)
     return -ENOENT;
   if (off > 0xFF)
     return -EIO;

@@ -10,6 +10,8 @@
 #include <lif_manager.hpp>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
+#include <interface.hpp>
+#include <tcpcb.hpp>
 
 namespace hal {
 
@@ -221,6 +223,8 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     g_lif_manager = new LIFManager();
+
+    tcp_lif_create();
 
     return HAL_RET_OK;
 }

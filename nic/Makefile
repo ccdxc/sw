@@ -7,7 +7,7 @@ LIBDIRS = \
 		  proto gen/protobuf \
 		  p4 \
 		  capsim \
-		  asm/nw \
+		  asm \
 		  model_sim/build \
 		  fte \
 		  hal/svc \

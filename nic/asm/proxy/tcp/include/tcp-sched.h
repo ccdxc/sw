@@ -9,7 +9,7 @@
 #define TCP_SCHED_FLAG_PENDING_TSO    0x20
 #define TCP_SCHED_FLAG_PENDING_OOO    0x40
 
-#define TCP_SCHED_RING_DATA           0x0
+#define TCP_SCHED_RING_SESQ           0x0
 #define TCP_SCHED_RING_PENDING        0x1
 #define TCP_SCHED_RING_FT             0x2
 #define TCP_SCHED_RING_ST             0x3

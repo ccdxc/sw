@@ -191,7 +191,7 @@ parser start {
         TM_PORT_INGRESS : parse_recirc;
         TM_PORT_DMA : parse_txdma;
         default : parse_nic;
-        0x0 mask 0 : egress_start;
+        0x1 mask 0 : egress_start;
     }
 }
 

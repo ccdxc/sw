@@ -10,8 +10,10 @@ from config.objects.uplinkpc            import UplinkPcHelper
 from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
+from    config.objects.tcp_proxy_cb     import TcpCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
+from config.objects.swdr                import SwDscrRingHelper
 
 def process(topospec):
     # Security Profiles
@@ -30,12 +32,12 @@ def process(topospec):
     # Generate all sessions
     SessionHelper.main()
     
-    # Generate and Configure TCP and TLS Proxy CBs
-    #tcp_proxy_cb_helper = tcp_proxy_cb.TenantObjectHelper()
-    #tcp_proxy_cb_objlist = tcp_proxy_cb_helper.main(topospec)
-    #tls_proxy_cb_helper = tls_proxy_cb.TenantObjectHelper()
-    #tls_proxy_cb_objlist = tls_proxy_cb_helper.main(topospec)
+    # Global descriptors and page rings
+    SwDscrRingHelper.main("NMDR")
+    SwDscrRingHelper.main("NMPR")
 
+    TcpCbHelper.main()    
+    #TcpCbHelper.Configure(TcpCbHelper.objlist)
     return
 
 def main(topofile):

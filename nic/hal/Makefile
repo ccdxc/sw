@@ -11,7 +11,7 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 CXX = g++
-CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror
+CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
 OBJ_DIR = ../obj
 GEN_DIR = ../gen
 GTEST_DIR = test
@@ -88,7 +88,13 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/tlscb.o \
 				$(OBJ_DIR)/tcp_proxy_cb.pb.o \
 				$(OBJ_DIR)/tcpcb.o \
-	
+				$(OBJ_DIR)/descriptor_aol.pb.o \
+				$(OBJ_DIR)/descriptor_aol.o \
+				$(OBJ_DIR)/wring.pb.o \
+				$(OBJ_DIR)/wring.o \
+				$(OBJ_DIR)/proxy.pb.o \
+				$(OBJ_DIR)/proxy.o \
+
 
 HAL_OBJS := $(OBJ_DIR)/main.o 
 

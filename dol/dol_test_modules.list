@@ -3,6 +3,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TO_PKT_MATCH
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt.testspec
@@ -10,6 +11,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TO_PKT_MISMATCH
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_mismatch.testspec
@@ -17,6 +19,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TO_PKT_MISSING
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_missing.testspec
@@ -24,6 +27,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TO_PKT_EXTRA
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_extra.testspec
@@ -31,6 +35,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TO_PKT
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt.testspec
@@ -38,6 +43,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_SESSION
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_to_pkt_session.testspec
@@ -45,6 +51,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_TCP_OPTS
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_tcp_options.testspec
@@ -52,6 +59,7 @@ modules:
     - module:
         enable  : True
         name    : PKT_VXLAN
+        enable  : True
         package : test.examples
         module  : sample
         spec    : sample_pkt_vxlan.testspec

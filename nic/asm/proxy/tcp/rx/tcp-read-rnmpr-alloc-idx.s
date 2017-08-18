@@ -11,17 +11,23 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
+struct tcp_rx_read_rnmpr_k k;
 struct tcp_rx_read_rnmpr_read_rnmpr_d d;
 	
 %%
         .param          tcp_rx_rpage_alloc_stage3_start
-	
+        .param          RNMPR_TABLE_BASE
+	.align
 tcp_rx_read_rnmpr_stage2_start:
-	phvwr.e		p.s3_t2_s2s_rnmpr_pidx, d.rnmpr_pidx
+
+        CAPRI_CLEAR_TABLE2_VALID
+
+	phvwr		p.s3_t2_s2s_rnmpr_pidx, d.rnmpr_pidx
 table_read_RNMPR_PAGE:
+	addi		r3, r0, RNMPR_TABLE_BASE
 	CAPRI_NEXT_TABLE2_READ(d.rnmpr_pidx, TABLE_TYPE_RAW,
-                    tcp_rx_rpage_alloc_stage3_start, RNMPR_TABLE_BASE,
-                    RNMPR_TABLE_ENTRY_SIZE_SHFT, 0, RNMPR_TABLE_ENTRY_SIZE)
+                    tcp_rx_rpage_alloc_stage3_start, r3,
+                    RNMPR_TABLE_ENTRY_SIZE_SHFT, 0, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 

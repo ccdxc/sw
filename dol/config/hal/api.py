@@ -19,6 +19,10 @@ import session_pb2          as session_pb2
 import nwsec_pb2            as nwsec_pb2
 import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
+import tcp_proxy_cb_pb2     as tcpcb_pb2
+import tls_proxy_cb_pb2     as tlscb_pb2
+import descriptor_aol_pb2   as descriptor_aol_pb2
+import wring_pb2            as wring_pb2
 
 import endpoint_pb2_grpc    as endpoint_pb2_grpc
 import l2segment_pb2_grpc   as l2segment_pb2_grpc
@@ -28,6 +32,16 @@ import session_pb2_grpc     as session_pb2_grpc
 import nwsec_pb2_grpc       as nwsec_pb2_grpc
 import nw_pb2_grpc          as nw_pb2_grpc
 import telemetry_pb2_grpc   as telemetry_pb2_grpc
+import tcp_proxy_cb_pb2_grpc       as tcpcb_pb2_grpc
+import tls_proxy_cb_pb2_grpc       as tls_pb2_grpc
+import descriptor_aol_pb2_grpc as descriptor_aol_pb2_grpc
+import wring_pb2_grpc       as wring_pb2_grpc
+
+HAL_MAX_BATCH_SIZE = 16
+import tcp_proxy_cb_pb2_grpc       as tcpcb_pb2_grpc
+import tls_proxy_cb_pb2_grpc       as tls_pb2_grpc
+import descriptor_aol_pb2_grpc as descriptor_aol_pb2_grpc
+import wring_pb2_grpc       as wring_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 16
 
@@ -141,6 +155,34 @@ def ConfigureTenants(objlist):
              stub.TenantCreate)
     return
 
+def ConfigureTcpCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
+    __config(objlist, tcpcb_pb2.TcpCbRequestMsg,
+             stub.TcpCbCreate)
+    return
+
+def UpdateTcpCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
+    __config(objlist, tcpcb_pb2.TcpCbRequestMsg,
+             stub.TcpCbUpdate)
+    return
+
+def GetTcpCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
+    __config(objlist, tcpcb_pb2.TcpCbGetRequestMsg,
+             stub.TcpCbGet)
+    return
+
+def ConfigureTlsCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)
+    __config(objlist, tlscb_pb2.TlsCbRequestMsg,
+             stub.TlsCbCreate)
+    return
+
 def ConfigureSegments(objlist):
     if IsHalDisabled(): return
     stub = l2segment_pb2_grpc.L2SegmentStub(HalChannel)
@@ -191,3 +233,18 @@ def ConfigureNetworks(objlist):
     __config(objlist, nw_pb2.NetworkRequestMsg,
              stub.NetworkCreate)
     return
+
+def GetDscrAolObjectState(objlist):
+    if IsHalDisabled(): return
+    stub = descriptor_aol_pb2_grpc.DescrAolStub(HalChannel)
+    __config(objlist, descriptor_aol_pb2.DescrAolRequestMsg,
+             stub.DescrAolGet)
+    return
+
+def GetRingEntries(objlist):
+    if IsHalDisabled(): return
+    stub = wring_pb2_grpc.WRingStub(HalChannel)
+    __config(objlist, wring_pb2.WRingGetRequestMsg,
+             stub.WRingGet)
+    return
+

@@ -63,12 +63,6 @@ tlscb_compare_handle_key_func (void *key1, void *key2)
 static hal_ret_t
 validate_tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
 {
-    if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
     // must have key-handle set
     if (!spec.has_key_or_handle()) {
         rsp->set_api_status(types::API_STATUS_TLS_CB_ID_INVALID);

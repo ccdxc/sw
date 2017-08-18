@@ -1,0 +1,8 @@
+# TLS CB Object Template File.
+meta:
+    id: SERQ
+
+id                    : None # TLS CB Local ID
+pi                    : 0
+ci                    : 0
+count                 : 0

@@ -38,3 +38,11 @@ entries:
         initiator: 
             port : const/42001
             span : ref://store/objects/id=SpanSession0002
+
+    - entry:
+        label: tcp-proxy
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47273
+

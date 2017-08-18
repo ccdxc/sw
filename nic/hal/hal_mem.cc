@@ -11,6 +11,8 @@
 #include <tcpcb.hpp>
 #include <qos.hpp>
 #include <acl.hpp>
+#include <wring.hpp>
+#include <proxy.hpp>
  
 namespace hal {
 
@@ -334,6 +336,42 @@ hal_state::init(void)
                                      hal::acl_compare_handle_key_func);
     HAL_ASSERT_RETURN((acl_hal_handle_ht_ != NULL), false);
 
+    // initialize WRing related data structures
+    wring_slab_ = slab::factory("wring", HAL_SLAB_WRING,
+                                sizeof(hal::wring_t), 16,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((wring_slab_ != NULL), false);
+
+    wring_id_ht_ = ht::factory(HAL_MAX_WRING,
+                               hal::wring_get_key_func,
+                               hal::wring_compute_hash_func,
+                               hal::wring_compare_key_func);
+    HAL_ASSERT_RETURN((wring_id_ht_ != NULL), false);
+
+    wring_hal_handle_ht_ = ht::factory(HAL_MAX_WRING,
+                                       hal::wring_get_handle_key_func,
+                                       hal::wring_compute_handle_hash_func,
+                                       hal::wring_compare_handle_key_func);
+    HAL_ASSERT_RETURN((wring_hal_handle_ht_ != NULL), false);
+
+    // initialize proxy service related data structures
+    proxy_slab_ = slab::factory("proxy", HAL_SLAB_PROXY,
+                                sizeof(hal::proxy_t), 16,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((proxy_slab_ != NULL), false);
+
+    proxy_type_ht_ = ht::factory(HAL_MAX_PROXY,
+                               hal::proxy_get_key_func,
+                               hal::proxy_compute_hash_func,
+                               hal::proxy_compare_key_func);
+    HAL_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
+
+    proxy_hal_handle_ht_ = ht::factory(HAL_MAX_PROXY,
+                                       hal::proxy_get_handle_key_func,
+                                       hal::proxy_compute_handle_hash_func,
+                                       hal::proxy_compare_handle_key_func);
+    HAL_ASSERT_RETURN((proxy_hal_handle_ht_ != NULL), false);
+
     return true;
 }
 
@@ -398,6 +436,22 @@ hal_state::hal_state()
     acl_slab_ = NULL;
     acl_id_ht_ = NULL;
     acl_hal_handle_ht_ = NULL;
+    
+    tlscb_slab_ = NULL;
+    tlscb_id_ht_ = NULL;
+    tlscb_hal_handle_ht_ = NULL;
+ 
+    tcpcb_slab_ = NULL;
+    tcpcb_id_ht_ = NULL;
+    tcpcb_hal_handle_ht_ = NULL;
+    
+    wring_slab_ = NULL;
+    wring_id_ht_ = NULL;
+    wring_hal_handle_ht_ = NULL;
+    
+    proxy_slab_ = NULL;
+    proxy_type_ht_ = NULL;
+    proxy_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -462,6 +516,21 @@ hal_state::~hal_state()
     acl_id_ht_ ? delete acl_id_ht_ : HAL_NOP;
     acl_hal_handle_ht_ ? delete acl_hal_handle_ht_ : HAL_NOP;
 
+    tlscb_slab_ ? delete tlscb_slab_ : HAL_NOP;
+    tlscb_id_ht_ ? delete tlscb_id_ht_ : HAL_NOP;
+    tlscb_hal_handle_ht_ ? delete tlscb_hal_handle_ht_ : HAL_NOP;
+ 
+    tcpcb_slab_ ? delete tcpcb_slab_ : HAL_NOP;
+    tcpcb_id_ht_ ? delete tcpcb_id_ht_ : HAL_NOP;
+    tcpcb_hal_handle_ht_ ? delete tcpcb_hal_handle_ht_ : HAL_NOP;
+
+    wring_slab_ ? delete wring_slab_ : HAL_NOP;
+    wring_id_ht_ ? delete wring_id_ht_ : HAL_NOP;
+    wring_hal_handle_ht_ ? delete wring_hal_handle_ht_ : HAL_NOP;
+    
+    proxy_slab_ ? delete proxy_slab_ : HAL_NOP;
+    proxy_type_ht_ ? delete proxy_type_ht_ : HAL_NOP;
+    proxy_hal_handle_ht_ ? delete proxy_hal_handle_ht_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -543,6 +612,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_SECURITY_PROFILE:
         g_hal_state->nwsec_profile_slab()->free_(elem);
         break;
+ 
+    case HAL_SLAB_TLSCB:
+        g_hal_state->tlscb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_TCPCB:
+        g_hal_state->tcpcb_slab()->free_(elem);
+        break;
 
     case HAL_SLAB_BUF_POOL:
         g_hal_state->buf_pool_slab()->free_(elem);
@@ -558,6 +635,13 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ACL:
         g_hal_state->acl_slab()->free_(elem);
+
+    case HAL_SLAB_WRING:
+        g_hal_state->wring_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXY:
+        g_hal_state->proxy_slab()->free_(elem);
         break;
 
     default:

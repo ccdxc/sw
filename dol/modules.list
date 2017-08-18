@@ -17,6 +17,15 @@ modules:
         args    :
             flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : PKT_TCPCB
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : tcp_proxy
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : L2UC_IPV4_ICMP
         enable  : True
         package : test.networking

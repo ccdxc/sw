@@ -16,8 +16,8 @@
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
 
 #define NIC_PAGE_HDR_SIZE                    52         /* sizeof(nic_page_hdr_t) */
-#define NIC_DESC_ENTRY_0_OFFSET              0x20       /* &((nic_desc_t *)0)->entry[0]*/
-#define NIC_DESC_ENTRY_L_OFFSET              0x30       /* &((nic_desc_t *)0)->entry[1]*/
+#define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
+#define NIC_DESC_ENTRY_L_OFFSET              96         /* &((nic_desc_t *)0)->entry[1]*/
 
 #define NIC_DESC_ENTRY_SIZE                  16         /* sizeof(nic_desc_entry_t) */
 #define NIC_DESC_ENTRY_SIZE_SHIFT            3          /* sizeof(nic_desc_entry_t) = 8B */
@@ -144,6 +144,17 @@
 #define TCPF_CA_Recovery (1<<TCP_CA_Recovery)
 #define  TCP_CA_Loss 4
 #define TCPF_CA_Loss    (1<<TCP_CA_Loss)
+
+#define TCPHDR_FIN 0x01
+#define TCPHDR_SYN 0x02
+#define TCPHDR_RST 0x04
+#define TCPHDR_PSH 0x08
+#define TCPHDR_ACK 0x10
+#define TCPHDR_URG 0x20
+#define TCPHDR_ECE 0x40
+#define TCPHDR_CWR 0x80
+
+#define TCPHDR_SYN_ECN  (TCPHDR_SYN | TCPHDR_ECE | TCPHDR_CWR)
 
 
 

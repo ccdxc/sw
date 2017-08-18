@@ -12,7 +12,7 @@ namespace pd {
 
 #define HAL_MAX_HW_TCPCBS                        2048
 
-typedef uint32_t    tcpcb_hw_id_t;
+typedef uint64_t    tcpcb_hw_id_t;
 
 // tcpcb pd state
 struct pd_tcpcb_s {
@@ -74,6 +74,13 @@ static inline hal_ret_t
 add_tcpcb_pd_to_db (pd_tcpcb_t *tcpcb_pd)
 {
     g_hal_state_pd->tcpcb_hwid_ht()->insert(tcpcb_pd, &tcpcb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+del_tcpcb_pd_from_db(pd_tcpcb_t *tcpcb_pd)
+{
+    g_hal_state_pd->tcpcb_hwid_ht()->remove(&tcpcb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 

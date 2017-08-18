@@ -135,10 +135,10 @@ slab::alloc(void)
 {
     void            *elem = NULL;
     slab_block_t    *block;
-
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&slock_);
     }
+
     block = this->block_head_;
     while (block && block->free_head_  == NULL) {
         block = block->next_;

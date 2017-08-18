@@ -1,11 +1,12 @@
-# TLS Proxy CB Object Template File.
+# TLS CB Object Template File.
 meta:
-    id: TLS_PROXY_CB
+    id: TLSCB
 
-id          : None # TLS Proxy CB Local ID
-spec        : None # (REF) TLS Proxy CB Spec from Base Config.
-nic_dec_head     : None
-nic_dec_tail     : None
-
-
+id                    : None # TLS CB Local ID
+spec                  : None # (REF) TLS CB Spec from Base Config.
+nic_dec_head          : None
+nic_dec_tail          : None
+tcpcb                 : None
+pre_barco_serq        : None
+post_barco_serq       : None
 

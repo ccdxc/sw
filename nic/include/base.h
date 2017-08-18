@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <trace.hpp>
-
+#include <arpa/inet.h>
 
 #define __IN__
 #define __OUT__
@@ -173,12 +173,18 @@ do {                                                       \
     ENTRY(HAL_RET_QUEUE_NOT_FOUND,            30,"interface not found") \
     ENTRY(HAL_RET_NETWORK_NOT_FOUND,          31,"network not found") \
                                                                         \
+    ENTRY(HAL_RET_WRING_NOT_FOUND,            32, "Wring not found") \
+    ENTRY(HAL_RET_PROXY_NOT_FOUND,            33, "Proxy Service not found") \
+                                                                            \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 
 #undef HAL_RET_ENTRIES
+
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 #endif    // __BASE_H__
 

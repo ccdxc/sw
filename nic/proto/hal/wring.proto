@@ -1,0 +1,101 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Work Queue Object 
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package wring;
+
+service WRing {
+  rpc WRingCreate (WRingRequestMsg) returns (WRingResponseMsg) {}
+  rpc WRingUpdate (WRingRequestMsg) returns (WRingResponseMsg) {}
+  rpc WRingDelete (WRingDeleteRequestMsg) returns (WRingDeleteResponseMsg) {}
+  rpc WRingGet (WRingGetRequestMsg) returns (WRingGetResponseMsg) {}
+}
+
+// WRingKeyHandle is used to operate either by its key or handle
+message WRingKeyHandle {
+  oneof key_or_handle {
+    uint32     wring_id          = 1;    // unique wring id allocated by app
+    fixed64    wring_handle      = 2;    // wring handle returned by HAL
+  }
+}
+
+// WRingSpec captures all the WRing level configuration
+message WRingSpec {
+  types.ObjectMeta      meta                      = 1;    // common object meta
+  WRingKeyHandle        key_or_handle             = 2;
+  types.WRingType       type                      = 3;
+}
+
+// WRingRequestMsg is batched add or modify wring request
+message WRingRequestMsg {
+  repeated WRingSpec    request = 1;    // batched request
+}
+
+// WRingStatus is the operational status of a given wring
+message WRingStatus {
+  fixed64    wring_handle     = 1;    // id of wring returned by HAL
+}
+
+// WRingResponse is response to WRingSpec
+message WRingResponse {
+  types.ApiStatus       api_status         = 1;    // API status code
+  WRingStatus          wring_status   = 2;    // status
+}
+
+// WRingResponseMsg is batched response to WRingRequestMsg
+message WRingResponseMsg {
+  repeated WRingResponse    response = 1;    // batched response
+}
+
+// WRingDeleteRequest is used to delete a wring
+message WRingDeleteRequest {
+  types.ObjectMeta   meta          = 1;    // object meta
+  WRingKeyHandle     key_or_handle = 2;    // WRing key or handle
+}
+
+// WRingDeleteRequestMsg is used to delete a batch of wrings
+message WRingDeleteRequestMsg {
+  repeated WRingDeleteRequest    request = 1;    // batched delete request
+}
+
+// WRingDeleteResponseMsg is batched response to WRingDeleteRequestMsg
+message WRingDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// WRingGetRequest is used to get information about a wring
+message WRingGetRequest {
+  types.ObjectMeta     meta          = 1;    // object meta
+  WRingKeyHandle       key_or_handle = 2;    // WRing key or handle
+  types.WRingType      type          = 3;    // Wring Type
+  uint32               index         = 4;    // Index of the slot in the ring
+}
+
+// WRingGetRequestMsg is batched GET requests for wrings
+message WRingGetRequestMsg {
+  repeated WRingGetRequest    request = 1;    // batched get request
+}
+
+// WRingStats is the statistics object for each wring
+message WRingStats {
+}
+
+// WRingGetResponse captures all the information about a wring
+// only if api_status indicates success, other fields are valid
+message WRingGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  WRingSpec         spec        = 2;    // wring configuration
+  uint32            index       = 3;
+  fixed64           value       = 4;
+  WRingStatus       status      = 5;    // operational state 
+  WRingStats        stats       = 6;    // stats 
+}
+
+// WRingGetResponseMsg is batched response to WRingGetRequestMsg
+message WRingGetResponseMsg {
+  repeated WRingGetResponse    response = 1;    // batch get response
+}

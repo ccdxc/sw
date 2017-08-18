@@ -71,7 +71,7 @@ struct d_struct d	;
 
 %%
 	
-flow_sack1_process_start:
+tcp_rx_sack_stage2_start:
 	/* Check if ooo rcv processing is needed by rx stage before */
 
 	sne		c1, k.ooo_rcv, r0
