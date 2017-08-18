@@ -48,7 +48,6 @@ metadata parser_metadata_t parser_metadata;
         default: ingress
 
 header cap_phv_intr_global_t capri_intrinsic;
-header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 
 @pragma synthetic_header
@@ -196,12 +195,6 @@ parser start {
     }
 }
 
-@pragma deprase_only
-parser ingress_deparse_only {
-    extract(capri_p4_intrinsic);
-    return ingress;
-}
-
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
@@ -227,7 +220,6 @@ parser parse_i2e_metadata {
 
 @pragma deparse_only
 parser deparse_rxdma {
-    extract(capri_p4_intrinsic);
     extract(capri_rxdma_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_header);
@@ -255,10 +247,7 @@ parser parse_txdma {
 
 parser parse_nic {
     extract(capri_intrinsic);
-    return select(latest.tm_iport) {
-        default : parse_ethernet;
-        0x1 mask 0 : ingress_deparse_only;
-    }
+    return parse_ethernet;
 }
 
 header tm_replication_data_t tm_replication_data;
