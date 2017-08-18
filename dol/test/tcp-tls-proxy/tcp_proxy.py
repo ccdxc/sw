@@ -1,6 +1,7 @@
 # Testcase definition file.
 
 import pdb
+import copy
 
 from config.store               import Store
 
@@ -33,9 +34,9 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmpr = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    serq = tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"]
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"])
     
     return
 
