@@ -1,14 +1,8 @@
-
-
 LIBDIRS = \
-          nw \
-          common-p4+ \
-          proxy \
-          ipsec-p4+ \
+          esp_ipv4_tunnel_host_to_network \
           $(NULL)
 
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
-TOPDIR = ..
+TOPDIR = ../..
 include $(TOPDIR)/make/Makefile.inc
-

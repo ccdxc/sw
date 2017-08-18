@@ -6,6 +6,8 @@ struct rx_table_s2_t1_k k;
 struct rx_table_s2_t1_rx_table_s2_t1_cfg_action_d d;
 struct phv_ p;
 
+%%
+        .align
 
 update_output_desc_aol:
     phvwri p.p42p4plus_hdr_table1_valid, 0

@@ -56,7 +56,7 @@ header_type cap_phv_intr_rxdma_t {
 
 header_type p4_to_p4plus_ipsec_header_t {
     fields {
-        p4plus_app_id       : 4;
+        app_type            : 4;
         table0_valid        : 1;
         table1_valid        : 1;
         table2_valid        : 1;
