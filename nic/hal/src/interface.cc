@@ -6,6 +6,7 @@
 #include <pd.hpp>
 #include <pd_api.hpp>
 #include <l2segment.pb.h>
+#include <lif_manager.hpp>
 #include <if_utils.hpp>
 
 namespace hal {
@@ -204,8 +205,13 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     }
 
     // Allocate a hw lif id
+    hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+    if (((int32_t)hw_lif_id) < 0) {
+      HAL_TRACE_ERR("Failed to allocate lif, ret : {}", hw_lif_id);
+      goto end;
+    }
 
-    // Make P4Plus Call
+    // Init queues
 
     // Make P4 Call
     ret = lif_p4_create(spec, rsp, lif, hw_lif_id);
