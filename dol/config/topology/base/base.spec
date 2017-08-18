@@ -44,6 +44,8 @@ uplinkpc:
         members :
             - ref://store/objects/id=Uplink4
 
+acls: ref://store/specs/id=ACL
+
 tenants:
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
         count   : 1

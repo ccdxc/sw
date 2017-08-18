@@ -151,6 +151,10 @@ class IntegerRange(FrameworkFieldObject):
         self.curr += self.step
         return out
 
+    def GetStart(self):
+        return self.start
+    def GetEnd(self):
+        return self.end
 
 class MacAddressBase(FrameworkFieldObject):
     def __init__(self, string):
