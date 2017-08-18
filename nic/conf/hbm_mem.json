@@ -38,7 +38,7 @@
 	},
         {
             "name": "semaphore",
-            "size_kb": 8,
+            "size_kb": 8
         },
         {
             "name": "tcpcb",

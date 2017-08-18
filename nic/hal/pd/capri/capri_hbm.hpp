@@ -4,6 +4,8 @@
 #define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
 #define CARPI_HBM_MEM_NUM_MEM_REGS 50
 
+#define JP4_ATOMIC_STATS         "atomic_stats" 
+
 #define JKEY_REGIONS             "regions"
 #define JKEY_REGION_NAME         "name"
 #define JKEY_SIZE_KB             "size_kb"
