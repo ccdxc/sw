@@ -29,6 +29,7 @@ struct k_struct k	;
 struct d_struct d	;
 
 %%
+        .param          RNMDR_TABLE_BASE
 	
 flow_read_se_rcv_aol_entry_process_start:
 	sne		c1, d.aol_valid, r0

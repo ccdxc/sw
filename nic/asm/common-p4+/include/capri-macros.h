@@ -244,4 +244,7 @@
         pi_##_x                           : 16;\
         ci_##_x                           : 16;\
         
+#define RNMDR_TABLE_BASE                hbm_rnmdr_table_base
+#define RNMPR_TABLE_BASE                hbm_rnmpr_table_base
+
 #endif /* #ifndef __CAPRI_MACROS_H__ */

@@ -23,20 +23,6 @@ uint64_t                    *g_hbm_nmpr_small;
 
 #define HBM_OFFSET(x)       (0x80000000 + (x))
 
-#define JKEY_REGIONS        "regions"
-#define JKEY_REGION_NAME    "name"
-#define JKEY_SIZE_KB        "size_kb"
-#define JKEY_START_OFF      "start_offset"
-
-#define JP4_PRGM            "p4_program"
-#define JP4_SEMAPHORE       "semaphore"
-#define JNMDR               "nmdr"
-#define JDESCRIPTOR         "descriptor"
-#define JNMPR_BIG           "nmpr-big"
-#define JPAGE_BIG           "page-big"
-#define JNMPR_SMALL         "nmpr-small"
-#define JPAGE_SMALL         "page-small"
-
 hal_ret_t
 capri_hbm_parse()
 {
@@ -167,70 +153,12 @@ hbm_semaphore_init(void)
         return HAL_RET_OK;
 }
 
-static hal_ret_t
-hbm_ring_init(char *ring_name, char *object_name, uint32_t num_objects,
-              uint32_t object_size, uint64_t **ring_ptr, void **object_ptr)
-{
-        capri_hbm_region_t  *ring_reg;
-        capri_hbm_region_t  *obj_reg;
-        uint32_t            i;
-        uint64_t            addr;
-
-        ring_reg = get_hbm_region(ring_name);
-        if (!ring_reg) {
-                HAL_TRACE_ERR("Could not find {} region", ring_name);
-                return HAL_RET_ERR;
-        }
-        assert(ring_reg->size_kb * 1024 >=
-                        num_objects * sizeof(uint64_t));
-        *ring_ptr = (uint64_t *)(uint64_t)HBM_OFFSET(ring_reg->start_offset);
-        HAL_TRACE_DEBUG("{0} 0x{1:x}, size {2}k", ring_name, 
-                        (uint64_t)(*ring_ptr), ring_reg->size_kb);
-        obj_reg = get_hbm_region((char *)object_name);
-        if (!obj_reg) {
-                HAL_TRACE_ERR("Could not find {} region", object_name);
-                return HAL_RET_ERR;
-        }
-        assert(obj_reg->size_kb * 1024 >= num_objects * object_size);
-        *object_ptr = (void *)(uint64_t)HBM_OFFSET(obj_reg->start_offset);
-        HAL_TRACE_DEBUG("{0} 0x{1:x}, size {2}k", object_name,
-                        (uint64_t)(*object_ptr), obj_reg->size_kb);
-
-        for (i = 0; i < num_objects; i++) {
-                uint64_t taddr;
-                addr = (uint64_t)((char *)(*object_ptr) + i * object_size);
-                taddr = htonll(addr);
-                write_mem((uint64_t)(*ring_ptr + i), (uint8_t *)&addr, sizeof(uint64_t));
-                if (i % 100 == 0) {
-                        HAL_TRACE_DEBUG("i = {} initializing 0x{:x} to 0x{:x}, 0x{:x}",
-                                        i, (uint64_t)(*ring_ptr + i), addr, taddr);
-                }
-        }
-
-        return HAL_RET_OK;
-}
-
 hal_ret_t
 capri_hbm_mem_init(void)
 {
         hal_ret_t ret;
 
         ret = hbm_semaphore_init();
-        assert (ret == HAL_RET_OK);
-
-        ret = hbm_ring_init((char *)JNMDR, (char *)JDESCRIPTOR,
-                        CAPRI_NUM_DESCRIPTORS, sizeof(capri_descr_t),
-                        &g_hbm_nmdr, (void **)&g_hbm_descr);
-        assert (ret == HAL_RET_OK);
-
-        ret = hbm_ring_init((char *)JNMPR_BIG, (char *)JPAGE_BIG,
-                        CAPRI_NUM_BIG_PAGES, sizeof(capri_big_page_t),
-                        &g_hbm_nmpr_big, (void **)&g_hbm_big_page);
-        assert (ret == HAL_RET_OK);
-
-        ret = hbm_ring_init((char *)JNMPR_SMALL, (char *)JPAGE_SMALL,
-                        CAPRI_NUM_SMALL_PAGES, sizeof(capri_small_page_t),
-                        &g_hbm_nmpr_small, (void **)&g_hbm_small_page);
         assert (ret == HAL_RET_OK);
 
         return HAL_RET_OK;

@@ -118,8 +118,6 @@ header_type read_tx2rxd_t {
 header_type tcp_rx_d_t {
     fields {
 	serq_base		: 32;
-	rnmdr_base		: 32;
-	rnmpr_base		: 32;
         rcv_nxt                 : 32;
         rcv_tsval               : 32;
         rcv_tstamp              : 32;
@@ -145,7 +143,7 @@ header_type tcp_rx_d_t {
         pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        pad                     : 19;
+        pad                     : 83;
     }
 }
 
@@ -282,8 +280,6 @@ header_type to_stage_2_phv_t {
     fields {
         snd_nxt                 : 32;
         rcv_tsecr               : 32;
-	rnmdr_base		: 32;
-	rnmpr_base		: 32;
     }
 }
 
@@ -568,7 +564,7 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pr
 /*
  * Stage 1 table 0 action
  */
-action tcp_rx(serq_base, rnmdr_base, rnmpr_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, snd_una,
+action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, snd_una,
         snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rto, pred_flags, ecn_flags, ato, quick,
         snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
@@ -595,8 +591,6 @@ action tcp_rx(serq_base, rnmdr_base, rnmpr_base, rcv_nxt, rcv_tsval, rcv_tstamp,
 
     // d for stage 1 tcp-rx
     modify_field(tcp_rx_d.serq_base, serq_base);
-    modify_field(tcp_rx_d.rnmdr_base, rnmdr_base);
-    modify_field(tcp_rx_d.rnmpr_base, rnmpr_base);
     modify_field(tcp_rx_d.rcv_nxt, rcv_nxt);
     modify_field(tcp_rx_d.rcv_tsval, rcv_tsval);
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp);
@@ -659,8 +653,6 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
  * Stage 2 table 1 action
  */
 action read_rnmdr(rnmdr_pidx) {
-    // from to_stage 2
-    modify_field(to_s2_scratch.rnmdr_base, to_s2.rnmdr_base);
     // d for stage 2 table 1 read-rnmdr-idx
     modify_field(read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
 }
@@ -669,8 +661,6 @@ action read_rnmdr(rnmdr_pidx) {
  * Stage 2 table 2 action
  */
 action read_rnmpr(rnmpr_pidx) {
-    // from to_stage 2
-    modify_field(to_s2_scratch.rnmpr_base, to_s2.rnmpr_base);
     // d for stage 2 table 2 read-rnmpr-idx
     modify_field(read_rnmpr_d.rnmpr_pidx, rnmpr_pidx);
 }

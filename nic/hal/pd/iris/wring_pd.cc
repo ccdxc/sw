@@ -23,22 +23,28 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, "serq", 64, "", 0};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
-        (pd_wring_meta_t) {true, "nmdr-tx", 16384, "descriptor-tx", 128};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 16384,
+                                        CAPRI_HBM_REG_DESCRIPTOR_TX, 128};
  
     g_meta[types::WRING_TYPE_NMDR_RX] = 
-        (pd_wring_meta_t) {true, "nmdr-rx", 16384, "descriptor-rx", 128};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 16384,
+                                        CAPRI_HBM_REG_DESCRIPTOR_RX, 128};
     
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
-        (pd_wring_meta_t) {true, "nmpr-small-tx", 16384, "page-small-tx", 2048};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 16384,
+                                        CAPRI_HBM_REG_PAGE_SMALL_TX, 2048};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
-        (pd_wring_meta_t) {true, "nmpr-small-rx", 16384, "page-small-rx", 2048};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 16384,
+                                        CAPRI_HBM_REG_PAGE_SMALL_RX, 2048};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
-        (pd_wring_meta_t) {true, "nmpr-small-tx", 16384, "page-big-tx", 9216};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 16384,
+                                        CAPRI_HBM_REG_PAGE_BIG_TX, 9216};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
-        (pd_wring_meta_t) {true, "nmpr-small-rx", 16384, "page-big-tx", 9216};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384,
+                                        CAPRI_HBM_REG_PAGE_BIG_RX, 9216};
 
     return HAL_RET_OK;
 }

@@ -29,6 +29,7 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
+        .param          RNMPR_TABLE_BASE
 	
 flow_read_aol_entry_process_start:
 	sne		c1, d.aol_free_pending, r0

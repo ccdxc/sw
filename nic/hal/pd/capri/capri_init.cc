@@ -119,8 +119,9 @@ capri_p4p_asm_init()
 {
     hal_ret_t                           ret = HAL_RET_OK;
     uint64_t                            p4plus_prm_base_addr;
-    char                                        *cfg_path;
+    char                                *cfg_path;
     std::string                         full_path;
+    capri_prog_param_info_t             *symbols;
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -137,10 +138,22 @@ capri_p4p_asm_init()
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
+    symbols = (capri_prog_param_info_t *)HAL_CALLOC(capri_prog_param_info_t,
+                        2 * sizeof(capri_prog_param_info_t));
+    symbols[0].name = "tcp-read-rnmdr-alloc-idx.bin";
+    symbols[0].num_params = 1;
+    symbols[0].params[0].name = RNMDR_TABLE_BASE;
+    symbols[0].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[1].name = "tcp-read-rnmpr-alloc-idx.bin";
+    symbols[1].num_params = 1;
+    symbols[1].params[0].name = RNMPR_TABLE_BASE;
+    symbols[1].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
-    printf("xxx: p4plus_prm_base_addr = 0x%lx\n", p4plus_prm_base_addr);
     HAL_TRACE_DEBUG("base addr {#x}", p4plus_prm_base_addr);
-    capri_load_mpu_programs("p4plus", (char *)full_path.c_str(), p4plus_prm_base_addr, NULL, 0);
+    capri_load_mpu_programs("p4plus", (char *)full_path.c_str(), p4plus_prm_base_addr, symbols, 2);
+
+    HAL_FREE(capri_prog_param_info_t, symbols);
 
     return ret;
 }

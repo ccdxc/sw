@@ -16,6 +16,7 @@ struct tcp_rx_read_rnmdr_read_rnmdr_d d;
 	
 %%
         .param          tcp_rx_rdesc_alloc_stage_3_start
+        .param          RNMDR_TABLE_BASE
 	.align
 tcp_rx_read_rnmdr_stage2_start:
 
@@ -24,7 +25,7 @@ tcp_rx_read_rnmdr_stage2_start:
 	phvwr		p.s3_t1_s2s_rnmdr_pidx, d.rnmdr_pidx
 
 table_read_RNMDR_DESC:
-	add		r3, r0, k.to_s2_rnmdr_base
+	addi		r3, r0, RNMDR_TABLE_BASE
 	CAPRI_NEXT_TABLE1_READ(d.rnmdr_pidx, TABLE_LOCK_EN,
                             tcp_rx_rdesc_alloc_stage_3_start,
 	                    r3, RNMDR_TABLE_ENTRY_SIZE_SHFT,

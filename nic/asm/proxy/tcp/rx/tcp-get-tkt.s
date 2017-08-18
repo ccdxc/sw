@@ -43,6 +43,8 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
+        .param          RNMDR_TABLE_BASE
+        .param          RNMPR_TABLE_BASE
 	
 flow_get_tkt_start:
 	phvwr		p.page_idx, d.page_idx

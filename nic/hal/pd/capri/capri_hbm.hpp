@@ -26,15 +26,28 @@ hal_ret_t capri_hbm_parse();
 uint32_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
 
-// TODO: move defines to top level include
-#define CAPRI_NUM_SEMAPHORES            512
-#define CAPRI_NUM_DESCRIPTORS           9216
-#define CAPRI_NUM_BIG_PAGES             3072
-#define CAPRI_NUM_SMALL_PAGES           6144
+#define JKEY_REGIONS        "regions"
+#define JKEY_REGION_NAME    "name"
+#define JKEY_SIZE_KB        "size_kb"
+#define JKEY_START_OFF      "start_offset"
 
-#define CAPRI_DESCRIPTOR_SIZE           128
-#define CAPRI_BIG_PAGE_SIZE             9728
-#define CAPRI_SMALL_PAGE_SIZE           2048
+#define JP4_PRGM            "p4_program"
+#define JP4_SEMAPHORE       "semaphore"
+
+#define CAPRI_HBM_REG_NMDR_RX            "nmdr-rx"
+#define CAPRI_HBM_REG_NMDR_TX            "nmdr-tx"
+#define CAPRI_HBM_REG_DESCRIPTOR_RX      "descriptor-rx"
+#define CAPRI_HBM_REG_DESCRIPTOR_TX      "descriptor-tx"
+#define CAPRI_HBM_REG_NMPR_BIG_RX        "nmpr-big-rx"
+#define CAPRI_HBM_REG_NMPR_BIG_TX        "nmpr-big-tx"
+#define CAPRI_HBM_REG_PAGE_BIG_RX        "page-big-rx"
+#define CAPRI_HBM_REG_PAGE_BIG_TX        "page-big-tx"
+#define CAPRI_HBM_REG_NMPR_SMALL_RX      "nmpr-small-rx"
+#define CAPRI_HBM_REG_NMPR_SMALL_TX      "nmpr-small-tx"
+#define CAPRI_HBM_REG_PAGE_SMALL_RX      "page-small-rx"
+#define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
+
+#define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
 #define PAGE_SCRATCH_SIZE_BYTES         8
@@ -71,5 +84,11 @@ typedef struct capri_semaphore_s {
         uint64_t        pidx;
         uint64_t        cidx;
 } capri_semaphore_t;
+
+// TODO: move defines to top level include that can be included by assembly
+#define RNMDR_TABLE_BASE        "hbm_rnmdr_table_base"
+#define RNMPR_TABLE_BASE        "hbm_rnmpr_table_base"
+
+extern capri_semaphore_t           *g_hbm_semaphore;
 
 #endif    // __CAPRI_HPP__

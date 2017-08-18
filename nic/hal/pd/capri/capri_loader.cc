@@ -7,6 +7,7 @@
  */
 
 #include "capri_loader.h"
+#include "capri_hbm.hpp"
 #include <assert.h>
 #include <lib_model_client.h>
 #include <boost/unordered_map.hpp>
