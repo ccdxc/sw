@@ -171,6 +171,18 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             }
         }
             break;
+        case BUFF_TYPE_DOORBELL:
+        {
+            uint64_t data;
+            uint64_t addr = buff->addr;
+            memcpy(&data, buff->data, sizeof(uint64_t));
+            env->step_doorbell(addr, data);
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+    	    std::cout << "step_doorbell addr: " << std::hex << addr << 
+                         " data: " << std::hex << data << std::endl;
+        }
+            break;
         case BUFF_TYPE_HBM_DUMP:
         {
             std::cout << "*************** HBM dump START ***************" << std::endl;

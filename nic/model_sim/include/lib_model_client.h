@@ -11,6 +11,7 @@ bool read_reg (uint64_t addr, uint32_t& data);
 bool write_reg(uint64_t addr, uint32_t  data);
 bool read_mem(uint64_t addr, uint8_t * data, uint32_t size);
 bool write_mem(uint64_t addr, uint8_t * data, uint32_t size);
+void step_doorbell (uint64_t addr, uint64_t data);
 bool dump_hbm(void);
 
 #endif

@@ -78,7 +78,6 @@ int lib_model_conn_close ()
     return 0;
 }
 
-
 void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
     char buffer[2048] = {0};
@@ -199,6 +198,23 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
         assert(0);
 
     return true;
+}
+
+void step_doorbell (uint64_t addr, uint64_t data)
+{
+    char buffer[2048] = {0};
+    buffer_hdr_t *buff;
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_DOORBELL;
+    buff->size = sizeof(uint64_t);
+
+    if (__lmodel_env)
+        return;
+    buff->addr = addr;
+    memcpy(buff->data, &data, buff->size);
+    zmq_send(__zmq_sock, buffer, 2048, 0);
+    zmq_recv(__zmq_sock, buffer, 2048, 0);
+    return;
 }
 
 
