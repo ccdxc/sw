@@ -486,21 +486,21 @@ metadata rx2tx_extra_pad_t rx2tx_extra_pad;
 @pragma dont_trim
 metadata pkt_descr_t aol; 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_pkt2mem_t dma_cmd0;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd1;
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t dma_cmd0;
+metadata dma_cmd_phv2mem_t dma_cmd2;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_phv2mem_t dma_cmd3;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
+metadata dma_cmd_phv2mem_t dma_cmd4;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd5;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2mem_t dma_cmd6;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd7;
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
