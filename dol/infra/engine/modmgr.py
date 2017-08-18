@@ -87,8 +87,10 @@ class Module:
         utils.LogFunctionEnd(self.logger)
 
     def __unload(self):
-        del self.module_hdl
-        self.module_hdl = None
+        #TODO: Don't unload the modules as verification will
+        # have callbacks to the module.
+        #del self.module_hdl
+        #self.module_hdl = None
         return
 
     def UpdateResult(self, tc):

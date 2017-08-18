@@ -17,7 +17,7 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
     print("TestCaseVerify(): Sample Implementation.")
-    return
+    return True
 
 def TestCaseTeardown(tc):
     print("TestCaseTeardown(): Sample Implementation.")

@@ -159,13 +159,7 @@ class ModelConnector(Connector):
         opkt, port, cos = model_wrap.get_next_pkt()
         if len(opkt) == 0:
             raise Connector.Timeout
-        try:
-            spkt = penscapy.Parse(opkt)
-        except:
-            logger.critical("Received invalid packet...")
-            return
-        # spkt.show()
-        return PacketContext(None, spkt, port)
+        return PacketContext(None, opkt, port)
 
     def recv(self, size=16384):
         try:

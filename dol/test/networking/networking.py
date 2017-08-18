@@ -27,7 +27,7 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
-    return
+    return True
 
 def TestCaseTeardown(tc):
     return

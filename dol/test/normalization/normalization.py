@@ -16,3 +16,6 @@ def Teardown(infra, module):
     asp.CloneFields(profile)
     asp.Update()
     return
+
+def TestCaseVerify(tc):
+    return True

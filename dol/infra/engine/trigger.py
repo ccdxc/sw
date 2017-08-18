@@ -27,6 +27,20 @@ from infra.factory.pktfactory import get_factory_id_from_scapy_id
 
 PEN_REF = getattr(penscapy, "PENDOL")
 
+TC_ID_OFFSET_START_FROM_END = -12
+TC_ID_OFFSET_END_FROM_END = -8
+
+TC_STEP_ID_OFFSET_START_FROM_END = -7
+TC_STEP_ID_OFFSET_END_FROM_END = -6
+
+
+def get_test_case_id_from_packet(packet):
+    ''' Assuming packet in bytes'''
+    return int.from_bytes(
+        packet[TC_ID_OFFSET_START_FROM_END:TC_ID_OFFSET_END_FROM_END], byteorder='big'), \
+        int.from_bytes(
+            packet[TC_STEP_ID_OFFSET_START_FROM_END:TC_STEP_ID_OFFSET_END_FROM_END], byteorder='big')
+
 
 class TestCaseParser(parser.ParserBase):
     def __init__(self, path, filename):
@@ -55,6 +69,7 @@ class TriggerReport(objects.FrameworkObject):
         self.passed_count = 0
         self.failed_count = 0
         self.pending_count = 0
+        self.junk_recvd = False
         self.details = {}
 
 
@@ -409,7 +424,6 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def recv_packet(self, packet_ctx):
         self._logger.info("Received packet on port %s, len:%d" %
                           (packet_ctx.port, len(packet_ctx.packet)))
-        packet_ctx.packet.show2(indent = 0, label_lvl=self._logger.GetLogPrefix())
         self._exp_rcv_data[packet_ctx.port].received.append(packet_ctx)
         # Add to test step received section.
         tc_pkt = TestCaseTrigExpPacketObject()
@@ -482,7 +496,22 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         result = PacketsTestStepResult()
         tmp_mismatch_ref = {}
         for port in self._exp_rcv_data.keys():
-            recvd_packets = self._exp_rcv_data[port].received
+            recvd_packets = []
+            for packet_ctx in self._exp_rcv_data[port].received:
+                try:
+                    new_packet_ctx = PacketContext(
+                        None, penscapy.Parse(packet_ctx.packet), packet_ctx.port)
+                    recvd_packets.append(new_packet_ctx)
+                    new_packet_ctx.packet.show2(
+                        indent=0, label_lvl=self._logger.GetLogPrefix())
+                except:
+                    extra_pkt = PacketResult()
+                    # TODO : Decide how to store this.
+                    extra_pkt.spkt, extra_pkt.port = None, packet_ctx.port
+                    result.extra.append(extra_pkt)
+                    self._logger.info("Received unparsable excess packet on port = %s of len:%s" % (
+                        packet_ctx.port, len(packet_ctx.packet)))
+                    continue
             while recvd_packets:
                 mismatch_result, closest_packet_match = None, None
                 packet_ctx = recvd_packets.pop()
@@ -652,8 +681,14 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         result.verify_callback = VerifyCallbackStepResult()
         if hasattr(self._tc._test_spec, "verify_callback") and self._tc._test_spec.verify_callback:
             cb_result = self._tc._test_spec.verify_callback()
-            result.verify_callback.status = Trigger.TEST_CASE_PASSED if cb_result == defs.status.SUCCESS \
-                else Trigger.TEST_CASE_FAILED
+            if cb_result == defs.status.SUCCESS:
+                self._logger.info(
+                    "Test Spec verify callback returned success.")
+                result.verify_callback.status = Trigger.TEST_CASE_PASSED
+            else:
+                self._logger.info(
+                    "Test spec verify callback returned failure.")
+                result.verify_callback.status = Trigger.TEST_CASE_FAILED
 
         if result.packets.status == Trigger.TEST_CASE_FAILED or \
                 result.descriptors.status == Trigger.TEST_CASE_FAILED or \
@@ -824,6 +859,7 @@ class Trigger(InfraThreadHandler):
         self._tc_status_dict = {}
         self._tc_db_lock = threading.Lock()
         self._tc_db = dict()
+        self._junk_packets = []
 
     def run_test_case(self, test_case):
         if GlobalOptions.dryrun:
@@ -864,8 +900,8 @@ class Trigger(InfraThreadHandler):
             if isinstance(event, PacketContext):
                 pkt_ctx = event
                 try:
-                    tc_id = pkt_ctx.packet[PEN_REF].id
-                    step_id = pkt_ctx.packet[PEN_REF].step_id
+                    tc_id, step_id = get_test_case_id_from_packet(
+                        pkt_ctx.packet)
                     with self._tc_db_lock:
                         if tc_id in self._tc_db:
                             trigger_test_case = self._tc_db[tc_id]
@@ -878,11 +914,16 @@ class Trigger(InfraThreadHandler):
                             if self._current_descriptor_test_case:
                                 self._current_descriptor_test_case.recv_packet(
                                     pkt_ctx)
+                            else:
+                                self._junk_packets.append(pkt_ctx)
                 except:
-                    logger.critical(
-                        "No Pensando header found in the packet, check whether we can ")
                     if self._current_descriptor_test_case:
-                        self._current_descriptor_test_case.recv_packet(pkt_ctx)
+                        self._current_descriptor_test_case.recv_packet(
+                            pkt_ctx, 0)
+                    else:
+                        logger.critical(
+                            "No Pensando header found in the packet")
+                        self._junk_packets.append(pkt_ctx)
             elif isinstance(event, RingContext):
                 if self._current_descriptor_test_case:
                     ring_ctx = event
@@ -1056,6 +1097,9 @@ class Trigger(InfraThreadHandler):
 
             report.details[tc_id] = self.__gen_test_report(tc_id)
 
+        if self._junk_packets:
+            logger.info("Received junk packets in this run.")
+            report.junk_recvd = True
         logger.info("Returning Trigger Report in testcase output format")
         return report
 

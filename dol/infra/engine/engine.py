@@ -72,6 +72,11 @@ def PrintSummaryAndExit(report):
         print("Final Status = FAIL")
         sys.exit(1)
     
+    if report.junk_recvd:
+        print("Some junk packets where received")
+        print("Final Status = FAIL")
+        sys.exit(1)
+    
     print("Final Status = PASS")
     sys.exit(0)   
 
