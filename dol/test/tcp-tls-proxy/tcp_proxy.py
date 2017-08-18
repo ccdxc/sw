@@ -27,7 +27,7 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
     tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
+    tcb.snd_nxt = 0xEFEFEFEF
     tcb.snd_una = 0xEFEFEFEF
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
@@ -65,11 +65,11 @@ def TestCaseVerify(tc):
 
     # 3. Verify descriptor 
     if rnmdr.ringentries[0].handle != serq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries") 
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[0].handle, serq_cur.ringentries[0].handle)) 
         return False
 
     if rnmdr.swdre_list[0].DescAddr != serq_cur.swdre_list[0].DescAddr:
-        print("Descriptor handle not as expected in swdre_list")
+        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[0].DescAddr, serq_cur.swdre_list[0].DescAddr))
         return False
 
     # 4. Verify page
