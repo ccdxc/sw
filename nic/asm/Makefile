@@ -3,7 +3,8 @@
 LIBDIRS = \
           nw \
           common-p4+ \
-		  proxy/tcp/rx \
+	  proxy/tcp/rx \
+          ipsec-p4+ \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
