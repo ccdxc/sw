@@ -10,7 +10,6 @@
 #define JKEY_START_OFF           "start_offset"
 
 #define JP4_PRGM                 "p4_program"
-#define JP4_ATOMIC_STATS         "atomic_stats"
 #define JP4PLUS_PRGM             "p4plus_program"
 #define JLIF_QSTATE              "qstate"
 
@@ -48,6 +47,7 @@ uint32_t get_size_kb(const char *reg_name);
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
 
 #define CAPRI_NUM_SEMAPHORES            512
+
 #define PAGE_SCRATCH_SIZE               512
 #define PAGE_SCRATCH_SIZE_BYTES         8
 

@@ -24,7 +24,7 @@ tcp_rx_read_rnmpr_stage2_start:
 
 	phvwr		p.s3_t2_s2s_rnmpr_pidx, d.rnmpr_pidx
 table_read_RNMPR_PAGE:
-	add		r3, r0, k.to_s2_rnmpr_base
+	addi		r3, r0, RNMPR_TABLE_BASE
 	CAPRI_NEXT_TABLE2_READ(d.rnmpr_pidx, TABLE_TYPE_RAW,
                     tcp_rx_rpage_alloc_stage3_start, r3,
                     RNMPR_TABLE_ENTRY_SIZE_SHFT, 0, TABLE_SIZE_512_BITS)

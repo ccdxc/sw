@@ -150,7 +150,6 @@ capri_p4p_asm_init()
     symbols[1].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
 
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
-    printf("xxx: p4plus_prm_base_addr = 0x%lx\n", p4plus_prm_base_addr);
     HAL_TRACE_DEBUG("base addr {#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(), p4plus_prm_base_addr, symbols, 2);
 
