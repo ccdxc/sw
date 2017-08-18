@@ -68,8 +68,8 @@ dma_cmd_descr:
 	phvwr		p.aol_L2, r0
 	phvwr		p.aol_next_addr, r0
 
-        phvwri          p.dma_cmd1_dma_cmd_phv_start_addr, TCP_PHV_AOL_DESC_START
-	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, TCP_PHV_AOL_DESC_END
+        phvwri          p.dma_cmd1_dma_cmd_phv_start_addr, TCP_PHV_AOL_DESC_END
+	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, TCP_PHV_AOL_DESC_START
 
 	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
         phvwri          p.dma_cmd1_dma_cmd_eop, 0
@@ -86,6 +86,7 @@ dma_cmd_serq_slot:
 	phvwr		p.ring_entry_descr_addr, k.to_s6_descr
 	phvwri		p.dma_cmd2_dma_cmd_phv_start_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_START
 	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_END
+	phvwri		p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
         phvwri          p.dma_cmd2_dma_cmd_eop, 0
 	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
 dma_cmd_write_rx2tx_shared:
@@ -97,8 +98,8 @@ dma_cmd_write_rx2tx_shared:
 	add		r6, r0, TCP_TCB_RX2TX_SHARED_OFFSET
 	add		r5, r5, r6
 	phvwr		p.dma_cmd3_dma_cmd_addr, r5
-	phvwri		p.dma_cmd3_dma_cmd_phv_start_addr, TCP_PHV_RX2TX_SHARED_START
-	phvwri		p.dma_cmd3_dma_cmd_phv_end_addr, TCP_PHV_RX2TX_SHARED_END
+	phvwri		p.dma_cmd3_dma_cmd_phv_start_addr, TCP_PHV_RX2TX_SHARED_END
+	phvwri		p.dma_cmd3_dma_cmd_phv_end_addr, TCP_PHV_RX2TX_SHARED_START
 	phvwri		p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
         phvwri          p.dma_cmd3_dma_cmd_eop, 0
 	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
@@ -114,8 +115,8 @@ tcp_serq_produce:
 
         phvwr           p.db_data_qid, k.common_phv_fid
 
-	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_START
-	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_END
+	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_END
+	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_START
 	phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
         phvwri          p.dma_cmd4_dma_cmd_eop, 1

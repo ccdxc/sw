@@ -26,8 +26,10 @@
 #define TCP_PHV_AOL_DESC_START      512 /* CAPRI_PHV_START_OFFSET(aol_A0) = 4096b = 512B */
 #define TCP_PHV_AOL_DESC_END        568 /* CAPRI_PHV_START_OFFSET(aol_reserved) = 4544b = 568B */
 
-#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
-#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 402 /* CAPRI_PHV_START_OFFSET(rx2tx_pad_rx2tx_pad) = 3216b = 402B */
+//#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
+//#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 402 /* CAPRI_PHV_START_OFFSET(rx2tx_pad_rx2tx_pad) = 3216b = 402B */
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 430 // ((3583 - 3215) + 3072) / 8 = (368 + 3072) / 8 = 430
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 438 // ((3583 - 3151)  + 3072) / 8 = (432 + 3072) / 8 = 438
 
 #define TCP_PHV_ETH_SIZE            112  //14B
 #define TCP_PHV_IP_SIZE             160  //20B
