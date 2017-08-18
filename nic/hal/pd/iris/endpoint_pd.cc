@@ -378,8 +378,8 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     mac = ep_get_mac_addr(pi_ep);
     mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
     memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, &mac_int, 6);
-    data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid = 1;
-    data.ipsg_action_u.ipsg_ipsg_hit.vlan_id = if_get_encap_vlan(pi_if, l2seg);
+    if_l2seg_get_ingress_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
+            &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
      ret = ipsg_tbl->insert(&key, &key_mask, &data,
                                          &(pd_ip_entry->ipsg_tbl_idx));

@@ -58,40 +58,6 @@ if_get_hw_lif_id(if_t *pi_if)
 }
 
 // ----------------------------------------------------------------------------
-// Given a PI If and L2 Seg, get its encap vlan
-// ----------------------------------------------------------------------------
-uint32_t
-if_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
-{
-    intf::IfType    if_type;
-
-    HAL_ASSERT(pi_if != NULL);
-
-    if_type = intf_get_if_type(pi_if);
-    switch(if_type) {
-        case intf::IF_TYPE_ENIC:
-            return pi_if->encap_vlan;
-            break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            // Get fabric encap from l2seg
-            if (pi_l2seg->fabric_encap.type == types::ENCAP_TYPE_DOT1Q) {
-                return pi_l2seg->fabric_encap.val;
-            } else {
-                // TODO: Handle if its VXLAN
-            }
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            // TODO: Handle Tunnels
-            break;
-        default:
-            HAL_ASSERT(0);
-    }
-
-    return 0;
-}
-
-// ----------------------------------------------------------------------------
 // Given an Uplink If or PC, get its ifpc id
 // ----------------------------------------------------------------------------
 uint32_t
