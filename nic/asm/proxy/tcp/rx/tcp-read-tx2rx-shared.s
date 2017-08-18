@@ -18,7 +18,6 @@ struct tcp_rx_read_tx2rx_read_tx2rx_d d;
         .param          tcp_rx_process_stage1_start
 	.align
 tcp_rx_read_shared_stage0_start:
-
         CAPRI_CLEAR_TABLE0_VALID
         add r1, r0, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 

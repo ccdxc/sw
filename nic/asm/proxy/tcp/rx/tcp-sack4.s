@@ -7,6 +7,8 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
  /* d is the data returned by lookup result */
 struct d_struct {
@@ -87,7 +89,7 @@ struct k_struct {
 	serq_pidx			: 8		;
 };
 
-struct p_struct p	;
+struct phv_ p	;
 struct k_struct k	;
 struct d_struct d	;
 	
@@ -103,19 +105,21 @@ flow_sack4_process_start:
 	ffcv		r1, k.rcv_aol_scratch, r0
 	addi		r1, r1, 1
 	seq		c1, r1, r0
-	bcf		[!c1], flow_sack4_process_done
+	//bcf		[!c1], flow_sack4_process_done TODO
 	nop
 
 	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
 	add		r4, r5, r0
-	phvwr		p.dma_cmd_ptr, r4
+	phvwr		p.p4_rxdma_intr_dma_cmd_ptr, r4
 
 
+#if 0
+// TODO
 dma_cmd_descr:	
 	/* Set the DMA_WRITE CMD for descr */
 	add		r1, k.descr, r0
 	addi		r1, r1 ,NIC_DESC_ENTRY_0_OFFSET
-	phvwr		p.dma_cmd0_addr, r1
+	phvwr		p.dma_cmd0_dma_cmd_addr, r1
 
 	phvwr		p.aol_scratch, r0
 	phvwr		p.aol_free_pending,r0
@@ -152,7 +156,4 @@ table_read_CC:
 	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_cc_process,
 	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_CC_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
-
-
-
-
+#endif

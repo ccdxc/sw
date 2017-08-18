@@ -224,11 +224,18 @@
         seq             c7, _pidx, _cidx;\
         tbladd.c1       _cidx, 1
         
-#define CAPRI_PHV_START_OFFSET(_start) \
-        (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3);
+// x = offsetof(_field)
+// flit = x / 512
+// base = flit * 512
+// start_offset = (flit + 1) * 512 - (x + sizeof(x)) + base
+// start_offset = (offsetof(x) / 512 + 1) * 512 - offsetof(x) - sizeof(x) + (offsetof(x) / 512) * 512
+#define CAPRI_PHV_START_OFFSET(_field) \
+        (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
+					 - sizeof(p._field) + (offsetof(p, _field) / 512) * 512) >> 3)
 
-#define CAPRI_PHV_END_OFFSET(_end) \
-        (sizeof(p) >> 3) - (offsetof(p, _end) >> 3); 
+#define CAPRI_PHV_END_OFFSET(_field) \
+        (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
+					 + (offsetof(p, _field) / 512) * 512) >> 3)
 
 #define CAPRI_QSTATE_HEADER_COMMON \
         pc                              : 8;\

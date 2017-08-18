@@ -7,6 +7,8 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
  /* d is the data returned by lookup result */
 struct d_struct {
@@ -74,7 +76,7 @@ struct k_struct {
 	rcv_nxt				: SEQ_NUMBER_WIDTH	;\
 };
 
-struct p_struct p	;
+struct phv_ p	;
 struct k_struct k	;
 struct d_struct d	;
 
@@ -168,21 +170,19 @@ flow_sack2_process_start:
 dma_cmd_ooo_data:	
 	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
 	add		r1, r0, r5
-	phvwr		p.dma_cmd_ptr, r1
+	phvwr		p.p4_rxdma_intr_dma_cmd_ptr, r1
 
 	/* Write A = page + offset + l_cell * PAGE_CELL_SIZE */
 	add		r3, d.l_cell, r0
 	sll		r3, r3, PAGE_CELL_SIZE_SHFT
 	add		r2, d.aol_page, r3
-	phvwr		p.dma_cmd0_addr, r1
-	phvwri		p.dma_cmd0_pad, 0
-
+	phvwr		p.dma_cmd0_dma_cmd_addr, r1
 
 	/* Write L = (r_cell - l_cell + 1) * PAGE_CELL_SIZE */
 	sub		r3, d.r_cell, d.l_cell
 	sll		r3, r3, PAGE_CELL_SIZE_SHFT
-	phvwr		p.dma_cmd0_size, r3
-	phvwri		p.dma_cmd0_cmd, CAPRI_DMA_COMMAND_PKT_TO_MEM
+	phvwr		p.dma_cmd0_dma_cmd_size, r3
+	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
 
 	add		r1, r1, TCP_PHV_DMA_COMMAND_TOTAL_LEN
 
@@ -190,27 +190,32 @@ dma_cmd_ooo_data:
 	nop
 dma_cmd_aol_entry:
 	phvwr		p.aol_scratch, d.aol_scratch
+        // TODO fix this
+#if 0
 	phvwr		p.aol_free_pending, d.aol_free_pending
 	phvwr		p.aol_valid, d.aol_valid
 	phvwr		p.aol_addr, d.aol_page
 	phvwr		p.aol_offset, d.aol_offset
 	phvwr		p.aol_len, d.aol_len
+#endif
 
 	add		r4, k.descr, r0
 	addi		r4, r4, NIC_DESC_ENTRY_0_OFFSET
 
-	phvwr		p.dma_cmd1_addr, r4
-	phvwri		p.dma_cmd1_pad, TCP_PHV_AOL_START
-	phvwri		p.dma_cmd1_size, NIC_DESC_ENTRY_SIZE
-	phvwri		p.dma_cmd1_cmd, CAPRI_DMA_COMMAND_PHV_TO_MEM
+	phvwr		p.dma_cmd1_dma_cmd_addr, r4
+	// TODO : phvwri		p.dma_cmd1_dma_cmd_size, NIC_DESC_ENTRY_SIZE
+	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
 	
 	
 flow_sack2_process_done:
 table_read_SACK3:
+#if 0
+// TODO
 	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_sack3_process,
 	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_SACK_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
+#endif
 
 
 
