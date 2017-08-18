@@ -22,7 +22,7 @@ modules:
         package : test.tcp-tls-proxy
         module  : tcp_proxy
         spec    : tcp_proxy.testspec
-        ignore  : False
+        ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
     - module:
