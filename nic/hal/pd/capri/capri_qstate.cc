@@ -30,7 +30,7 @@ void set_qstate_entry(hal::LIFQState *qstate, T *entry) {
   entry->write();
 }
 
-int clear_qstate_mem(uint32_t base_addr, uint32_t size) {
+int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
   // qstate is a multiple for 4K So it is safe to assume
   // 256 byte boundary.
   static uint8_t zeros[256] = {0};
@@ -60,7 +60,7 @@ void push_qstate_to_capri(hal::LIFQState *qstate) {
 #endif
 }
 
-int32_t read_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size) {
+int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
 #ifndef HAL_GTEST
   if (!read_mem(q_addr, buf, q_size))
     return -EIO;
@@ -68,19 +68,21 @@ int32_t read_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size) {
   return 0;
 }
 
-int32_t write_qstate(uint32_t q_addr, uint8_t *buf, uint32_t q_size) {
+int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
 #ifndef HAL_GTEST
-  if (!write_mem(q_addr, buf, q_size))
+  if (!write_mem(q_addr, (uint8_t *)buf, q_size))
     return -EIO;
 #endif
   return 0;
 }
 
-int32_t get_pc_offset(const char *handle, char *prog_name, char *label, uint8_t *offset) {
+int32_t get_pc_offset(const char *handle, const char *prog_name,
+                      const char *label, uint8_t *offset) {
 #ifndef HAL_GTEST
   uint64_t off;
 
-  if (capri_program_label_to_offset(handle, prog_name, label, &off) < 0)
+  if (capri_program_label_to_offset(handle, (char *)prog_name,
+                                    (char *)label, &off) < 0)
     return -ENOENT;
   if (off > 0xFF)
     return -EIO;

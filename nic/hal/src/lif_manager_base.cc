@@ -102,7 +102,7 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   return ret;
 }
 
-int32_t LIFManagerBase::GetLIFQStateAddr(
+int64_t LIFManagerBase::GetLIFQStateAddr(
     uint32_t lif_id, uint32_t type, uint32_t qid) {
   if ((lif_id >= kNumMaxLIFs) || (type >= kNumQTypes))
     return -EINVAL;
@@ -112,8 +112,8 @@ int32_t LIFManagerBase::GetLIFQStateAddr(
     return -ENOENT;
   if (qid >= qstate->type[type].num_queues)
     return -EINVAL;
-  return qstate->type[type].hbm_offset +
-    (qid * qstate->type[type].qsize);
+  return (int64_t)(qstate->hbm_address + qstate->type[type].hbm_offset +
+    (qid * qstate->type[type].qsize));
 }
 
 int32_t LIFManagerBase::ReadQState(
@@ -131,13 +131,13 @@ int32_t LIFManagerBase::ReadQState(
     return -EINVAL;
   if (bufsize > qstate->type[type].qsize)
     bufsize = qstate->type[type].qsize;
-  uint32_t q_addr = qstate->type[type].hbm_offset +
+  uint64_t q_addr = qstate->hbm_address + qstate->type[type].hbm_offset +
     (qid * qstate->type[type].qsize);
   return ReadQStateImpl(q_addr, buf, bufsize);
 }
 
 int32_t LIFManagerBase::WriteQState(
-    uint32_t lif_id, uint32_t type, uint32_t qid, uint8_t *buf,
+    uint32_t lif_id, uint32_t type, uint32_t qid, const uint8_t *buf,
     uint32_t bufsize) {
   if ((lif_id >= kNumMaxLIFs) || (type >= kNumQTypes) || (bufsize == 0) ||
       (buf == nullptr)) {
@@ -151,7 +151,7 @@ int32_t LIFManagerBase::WriteQState(
     return -EINVAL;
   if (bufsize > qstate->type[type].qsize)
     return -EINVAL;
-  uint32_t q_addr = qstate->type[type].hbm_offset +
+  uint64_t q_addr = qstate->hbm_address + qstate->type[type].hbm_offset +
     (qid * qstate->type[type].qsize);
   return WriteQStateImpl(q_addr, buf, bufsize);
 }

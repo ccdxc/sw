@@ -39,3 +39,5 @@ gtest:
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/policer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/policer_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/session_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/session_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
+	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/bm_allocator_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
+	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/lif_manager_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"

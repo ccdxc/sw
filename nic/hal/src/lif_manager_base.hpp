@@ -62,7 +62,7 @@ class LIFManagerBase {
   // Returns:
   //   Positive address in case of success.
   //   -errno in case of failure.
-  int32_t GetLIFQStateAddr(uint32_t lif_id, uint32_t type, uint32_t qid);
+  int64_t GetLIFQStateAddr(uint32_t lif_id, uint32_t type, uint32_t qid);
 
   // Return QState for a LIF/Type/QID. The user must pass in the buffer
   // to read the state in. Its ok to pass a buffer of smaller size (> 0).
@@ -82,11 +82,12 @@ class LIFManagerBase {
   //   0     - success.
   //   -errno- failure.
   int32_t WriteQState(uint32_t lif_id, uint32_t type, uint32_t qid,
-                      uint8_t *buf, uint32_t bufsize);
+                      const uint8_t *buf, uint32_t bufsize);
 
   // GetPCOffset for a specific P4+ program.
   virtual int32_t GetPCOffset(
-      const char *handle, char *prog_name, char *label, uint8_t *offset) = 0;
+      const char *handle, const char *prog_name,
+      const char *label, uint8_t *offset) = 0;
 
   // Implement later
   // void DestroyLIFToQstate(uint32_t lif_id);
@@ -100,9 +101,9 @@ class LIFManagerBase {
   virtual int32_t InitLIFQStateImpl(LIFQState *qstate) = 0;
 
   virtual int32_t ReadQStateImpl(
-      uint32_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
+      uint64_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
   virtual int32_t WriteQStateImpl(
-      uint32_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
+      uint64_t q_addr, const uint8_t *buf, uint32_t q_size) = 0;
 
  private:
   const uint32_t kNumMaxLIFs = 2048;

@@ -23,8 +23,6 @@ all:
 	@#$(CXX) $(OBJ_DIR)/types.grpc.pb.o $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/tenant.pb.o $(OBJ_DIR)/tenant.grpc.pb.o $(OBJ_DIR)/l2segment.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/interface.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/endpoint.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/session.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/qos.pb.o $(OBJ_DIR)/qos.grpc.pb.o $(OBJ_DIR)/hal_test.o $(LDFLAGS) -o $(OBJ_DIR)/hal_test
 	$(CXX) $(OBJ_DIR)/hal_test.o $(LDFLAGS) -o $(OBJ_DIR)/hal_test
 	@# $(CXX) $(OBJ_DIR)/types.grpc.pb.o $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/tenant.pb.o $(OBJ_DIR)/tenant.grpc.pb.o $(OBJ_DIR)/l2segment.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/interface.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/endpoint.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/session.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/hal_test.o $(LDFLAGS) -o $(OBJ_DIR)/hal_test
-	$(CXX) $(CPPFLAGS) -I../src -o $(OBJ_DIR)/bm_allocator_test bm_allocator_test.cc ../src/bm_allocator.cc
-	$(CXX) $(CPPFLAGS) -I../src -o $(OBJ_DIR)/lif_manager_test lif_manager_test.cc ../src/lif_manager_base.cc ../src/bm_allocator.cc
 
 clean:
-	@rm -rf $(OBJ_DIR)/hal_test $(OBJ_DIR)/bm_allocator_test $(OBJ_DIR)/lif_manager_test
+	@rm -rf $(OBJ_DIR)/hal_test
