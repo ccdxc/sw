@@ -163,8 +163,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.VipService.AddVirtualIPs(req.VirtualIp)
 		env.MasterService.Start()
 		env.LeaderService.Start()
-		env.NtpService.Start()
 		env.CfgWatcherService.Start()
+
+		// We let the quorum nodes use the external NTP server and non-quorum nodes use the VIP for ntp server
+		env.NtpService.NtpConfigFile(req.NTPServers)
 
 		// create and register the RPC handler for service object.
 		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
