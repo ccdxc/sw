@@ -658,6 +658,8 @@ class capri_p4pd:
                     else:
                         (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
                     max_width += width_
+                if max_width > 8:
+                    max_width = 8
                 covered_bits = k + max_width
             else:
                 # check if this field is already covered

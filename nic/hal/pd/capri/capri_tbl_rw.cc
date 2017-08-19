@@ -560,7 +560,13 @@ int capri_table_entry_read(uint32_t tableid,
             _hwentry++;
             copy_bits -= 16;
         } else {
-            assert(0);
+            if (copy_bits > 8) {
+                *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
+            } else {
+                *(uint8_t*)_hwentry =
+                g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
+            }
+            copy_bits = 0;
         }
         entry_start_word++;
         if (entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
