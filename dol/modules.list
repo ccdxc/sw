@@ -64,7 +64,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l3uc.testspec
-        ignore  : False
+        ignore  : True
         args    :
             flow: filter://type=IPV4,proto=UDP
     - module:
@@ -73,7 +73,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l3uc.testspec
-        ignore  : False
+        ignore  : True
         args    :
             flow: filter://type=IPV6,proto=UDP
     - module:
