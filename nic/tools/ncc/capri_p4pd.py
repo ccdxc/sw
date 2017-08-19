@@ -994,6 +994,7 @@ class capri_p4pd:
             if cf_value_list[0][0] == None:
                 cf, cf_startbit, width, ftype, hdr = cf_value_list[0]
                 # Pad byte/bit
+                hdr = hdr.replace('[', '_').replace(']', '_')
                 asm_field_info.append(("__pad_" + hdr + "_" + str(cf_startbit), "__pad_" + hdr + "_" + str(cf_startbit), \
                                       p4f_size, 0, 0, 0, ftype, hdr))
                 return

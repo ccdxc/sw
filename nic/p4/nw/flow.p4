@@ -99,7 +99,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
+action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
@@ -118,7 +118,15 @@ action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
             modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
             modify_field(capri_intrinsic.tm_replicate_ptr, lif);
         } else {
-            modify_field(capri_intrinsic.lif, lif);
+            // if service lif is present and service has not been applied,
+            // send packe to service lif
+            if ((service_lif != 0) and
+                ((p4plus_to_p4.valid == FALSE) or
+                 ((p4plus_to_p4.flags & 0x80) == 0))) {
+                modify_field(capri_intrinsic.lif, service_lif);
+            } else {
+                modify_field(capri_intrinsic.lif, lif);
+            }
         }
     }
 
@@ -131,9 +139,6 @@ action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
         modify_field(control_metadata.qid, tunnel_vnid);
         modify_field(control_metadata.qtype, qtype);
     }
-
-    /* p4plus app id */
-    modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
 
     /* mirror session id */
     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);

@@ -74,10 +74,7 @@ header_type p4_to_p4plus_roce_header_t {
         p4plus_app_id        : 4;
         flags                : 4;  // ecn : 2, cnp : 1, v6 : 0
         rdma_hdr_len         : 8;  // copied directly from p4 rdma table
-        opcode               : 8;  // from rdma.bth
         raw_flags            : 16; // copied directly from p4 rdma table
-        mac_da_inner         : 48; // from inner l2-hdr
-        mac_sa_inner         : 48; // from inner l2-hdr
         payload_len          : 16;
     }
 }
@@ -122,23 +119,40 @@ header_type p4_to_p4plus_tcp_proxy_sack_header_t {
 }
 
 /*
- * flag bits:
- *  0 : forwarding and rewrite complete, just enqueue the packet
- *  1 : perform forwarding lookup, no rewrites
- *  2 : perform forwarding and rewrites
- *  3 : update stats
+ * flags_bits:
+ *  0       : fcs ok
+ *  1       : vlan valid
+ *  2       : ipv4 valid
+ *  3       : ipv6 valid
+ *  4       : frag ?
+ *  5       : tunneled ?
+ *  6       : checksum verified by hardware
+ *  7       : l3 checksum ok
+ *  8       : l4 checksum ok
+ *  9       : inner checksum verified by hardware
+ *  10      : inner l3 checksum ok
+ *  11      : inner l4 checksum ok
+ *  [12-15] : unused
  */
-header_type cpu_to_p4_header_t {
+header_type p4_to_p4plus_classic_nic_header_t {
     fields {
-        p4plus_app_id    : 4;
-        flags            : 4;
-        src_lif          : 11;
-        dst_lif          : 11;
-        iclass           : 4;
-        oclass           : 4;
-        dest_type        : 2;
-        dest             : 16;
-        oqueue           : 5;
+        p4plus_app_id  : 4;
+        pad            : 4;
+        flags          : 16;
+        vlan_pcp       : 3;
+        vlan_dei       : 1;
+        vlan_vid       : 12;
+        l4_checksum    : 16;
+        ip_proto       : 8;
+        l4_sport       : 16;
+        l4_dport       : 16;
+    }
+}
+
+header_type p4_to_p4plus_classic_nic_ip_header_t {
+    fields {
+        ip_sa    : 128;
+        ip_da    : 128;
     }
 }
 
@@ -168,7 +182,7 @@ header_type cpu_to_p4_header_t {
  *  [8-6] : ipv4 flags bits
  *  9     : vlan or vni
  */
-header_type p4_to_p4plus_header_t {
+header_type p4_to_p4plus_cpu_header_t {
     fields {
         p4plus_app_id    : 4;
         src_iport        : 4;
@@ -229,6 +243,7 @@ header_type p4_to_p4plus_header_t {
  *  4 : insert vlan header
  *  5 : computer outer checksums
  *  6 : computer inner checksums
+ *  7 : services applied
  */
 header_type p4plus_to_p4_header_t {
     fields {
@@ -241,6 +256,27 @@ header_type p4plus_to_p4_header_t {
         vlan_pcp         : 3;
         vlan_dei         : 1;
         vlan_id          : 12;
+    }
+}
+
+/*
+ * flag bits:
+ *  0 : forwarding and rewrite complete, just enqueue the packet
+ *  1 : perform forwarding lookup, no rewrites
+ *  2 : perform forwarding and rewrites
+ *  3 : update stats
+ */
+header_type cpu_to_p4_header_t {
+    fields {
+        p4plus_app_id    : 4;
+        flags            : 4;
+        src_lif          : 11;
+        dst_lif          : 11;
+        iclass           : 4;
+        oclass           : 4;
+        dest_type        : 2;
+        dest             : 16;
+        oqueue           : 5;
     }
 }
 

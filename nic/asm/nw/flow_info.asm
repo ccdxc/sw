@@ -16,7 +16,15 @@ flow_info:
   seq         c1, d.u.flow_info_d.multicast_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.lif
-  phvwr.!c1   p.capri_intrinsic_lif, d.u.flow_info_d.lif
+  sne         c2, d.u.flow_info_d.service_lif, r0
+  seq         c3, k.p4plus_to_p4_valid, FALSE
+  smeqb       c4, k.{p4plus_to_p4_flags_sbit0_ebit3, \
+                     p4plus_to_p4_flags_sbit4_ebit7}, 0x80, 0
+  andcf       c2, [c3 | c4]
+  setcf       c6, [!c1 & c2]
+  phvwr.c6    p.capri_intrinsic_lif, d.u.flow_info_d.service_lif
+  setcf       c6, [!c1 & !c2]
+  phvwr.c6    p.capri_intrinsic_lif, d.u.flow_info_d.lif
 
   /* output queue selection */
   phvwr       p.capri_intrinsic_tm_oq, d.u.flow_info_d.ingress_tm_oqueue
@@ -25,9 +33,6 @@ flow_info:
   /* qid */
   seq         c1, d.u.flow_info_d.qid_en, 1
   phvwr.c1    p.control_metadata_qid, d.u.flow_info_d.tunnel_vnid
-
-  /* p4plus app id*/
-  phvwr       p.control_metadata_p4plus_app_id, d.u.flow_info_d.p4plus_app_id
 
   /* mirror session id */
   phvwr       p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id

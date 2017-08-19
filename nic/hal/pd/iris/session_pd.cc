@@ -280,28 +280,17 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     }
 
     if (!mcast) {
-        d.flow_info_action_u.flow_info_flow_info.lif =
-            ep_pd_get_hw_lif_id(dep);
-        printf("xxx: actual lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-	if (is_tcp_proxy_flow) {
-            // HACK DO NOT COMMIT
-            d.flow_info_action_u.flow_info_flow_info.lif = 1001;
-            printf("xxx: programmed lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-	}
-    } else {
+        d.flow_info_action_u.flow_info_flow_info.lif = ep_pd_get_hw_lif_id(dep);
     }
+
     if (is_tcp_proxy_flow) {
         // HACK DO NOT COMMIT
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+        d.flow_info_action_u.flow_info_flow_info.service_lif = 1001;
     }
 
     d.flow_info_action_u.flow_info_flow_info.multicast_en = mcast;
     // TBD: where do these come from ?
-    d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 0;
-    if (is_tcp_proxy_flow) {
-        // HACK DO NOT COMMIT
-        d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 3;
-    }
     d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
     d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;

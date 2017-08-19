@@ -149,9 +149,9 @@ control process_rewrites {
         apply(twice_nat);
         apply(rewrite);
     }
-    apply(p4plus_app);
     if (tunnel_metadata.tunnel_originate_egress == TRUE) {
         apply(tunnel_encap_update_inner);
     }
     apply(tunnel_rewrite);
+    apply(p4plus_app);
 }

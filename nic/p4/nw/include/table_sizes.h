@@ -14,7 +14,6 @@
 #define REGISTERED_MACS_TABLE_SIZE                         16384
 #define REGISTERED_MACS_OTCAM_TABLE_SIZE                   256
 #define NACL_TABLE_SIZE                                    512
-#define LAG_TABLE_SIZE                                     16
 #define INGRESS_POLICER_TABLE_SIZE                         2048
 #define COPP_TABLE_SIZE                                    32
 #define TUNNEL_DECAP_TABLE_SIZE                            32
@@ -29,7 +28,7 @@
 #define TUNNEL_REWRITE_TABLE_SIZE                          1024
 #define EGRESS_POLICER_TABLE_SIZE                          2048
 #define MIRROR_SESSION_TABLE_SIZE                          256
-#define P4PLUS_APP_TABLE_SIZE                              16
+#define P4PLUS_APP_TABLE_SIZE                              256
 
 #define DDOS_SRC_VF_POLICER_TABLE_SIZE                     1024
 #define DDOS_SERVICE_POLICER_TABLE_SIZE                    1024

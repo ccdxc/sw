@@ -32,8 +32,8 @@ copy_inner_ipv4_other:
 
 .align
 copy_inner_ipv6_udp:
-  phvwr       p.{ipv6_version...ipv6_srcAddr[127:48]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit64_ebit79}
-  phvwr       p.{ipv6_srcAddr[47:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit80_ebit95...inner_ipv6_dstAddr}
+  phvwr       p.{ipv6_version...ipv6_srcAddr[127:56]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit56_ebit71}
+  phvwr       p.{ipv6_srcAddr[55:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit72_ebit87...inner_ipv6_dstAddr}
   phvwr       p.{udp_srcPort...udp_checksum}, k.{inner_udp_srcPort...inner_udp_checksum}
   phvwr       p.ipv6_valid, TRUE
   phvwr       p.udp_valid, TRUE
@@ -42,8 +42,8 @@ copy_inner_ipv6_udp:
 
 .align
 copy_inner_ipv6_other:
-  phvwr       p.{ipv6_version...ipv6_srcAddr[127:48]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit64_ebit79}
-  phvwr       p.{ipv6_srcAddr[47:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit80_ebit95...inner_ipv6_dstAddr}
+  phvwr       p.{ipv6_version...ipv6_srcAddr[127:56]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit56_ebit71}
+  phvwr       p.{ipv6_srcAddr[55:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit72_ebit87...inner_ipv6_dstAddr}
   phvwr       p.ipv6_valid, TRUE
   phvwr.e     p.inner_ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
@@ -80,8 +80,8 @@ copy_inner_eth_ipv4_other:
 copy_inner_eth_ipv6_udp:
   phvwr       p.ethernet_dstAddr, k.inner_ethernet_dstAddr
   phvwr       p.{ethernet_srcAddr, ethernet_etherType}, k.{inner_ethernet_srcAddr, inner_ethernet_etherType}
-  phvwr       p.{ipv6_version...ipv6_srcAddr[127:48]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit64_ebit79}
-  phvwr       p.{ipv6_srcAddr[47:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit80_ebit95...inner_ipv6_dstAddr}
+  phvwr       p.{ipv6_version...ipv6_srcAddr[127:56]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit56_ebit71}
+  phvwr       p.{ipv6_srcAddr[55:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit72_ebit87...inner_ipv6_dstAddr}
   phvwr       p.{udp_srcPort...udp_checksum}, k.{inner_udp_srcPort...inner_udp_checksum}
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv6_valid, TRUE
@@ -95,8 +95,8 @@ copy_inner_eth_ipv6_udp:
 copy_inner_eth_ipv6_other:
   phvwr       p.ethernet_dstAddr, k.inner_ethernet_dstAddr
   phvwr       p.{ethernet_srcAddr, ethernet_etherType}, k.{inner_ethernet_srcAddr, inner_ethernet_etherType}
-  phvwr       p.{ipv6_version...ipv6_srcAddr[127:48]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit64_ebit79}
-  phvwr       p.{ipv6_srcAddr[47:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit80_ebit95...inner_ipv6_dstAddr}
+  phvwr       p.{ipv6_version...ipv6_srcAddr[127:56]}, k.{inner_ipv6_version...inner_ipv6_srcAddr_sbit56_ebit71}
+  phvwr       p.{ipv6_srcAddr[55:0]...ipv6_dstAddr}, k.{inner_ipv6_srcAddr_sbit72_ebit87...inner_ipv6_dstAddr}
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv6_valid, TRUE
   phvwr       p.inner_ethernet_valid, FALSE

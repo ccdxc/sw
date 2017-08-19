@@ -39,13 +39,13 @@ encap_inner_ipv4_unknown_rewrite:
 
 .align
 encap_inner_ipv6_udp_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_payloadLen}, k.{ipv6_version,\
+  phvwr       p.{inner_ipv6_version...inner_ipv6_flowLabel}, k.{ipv6_version,\
                                                                  ipv6_trafficClass_sbit0_ebit3,\
                                                                  ipv6_trafficClass_sbit4_ebit7,\
                                                                  ipv6_flowLabel_sbit0_ebit3,\
-                                                                 ipv6_flowLabel_sbit4_ebit19,\
-                                                                 ipv6_payloadLen}
-  phvwr       p.{inner_ipv6_nextHdr...inner_ipv6_dstAddr[127:120]}, k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
+                                                                 ipv6_flowLabel_sbit4_ebit19}
+  phvwr       p.{inner_ipv6_payloadLen...inner_ipv6_dstAddr[127:120]}, \
+                  k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
   phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
   add         r7, k.ipv6_payloadLen, 40
@@ -61,13 +61,13 @@ encap_inner_ipv6_udp_rewrite:
 encap_inner_ipv6_tcp_rewrite:
 encap_inner_ipv6_icmp_rewrite:
 encap_inner_ipv6_unknown_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_payloadLen}, k.{ipv6_version,\
+  phvwr       p.{inner_ipv6_version...inner_ipv6_flowLabel}, k.{ipv6_version,\
                                                                  ipv6_trafficClass_sbit0_ebit3,\
                                                                  ipv6_trafficClass_sbit4_ebit7,\
                                                                  ipv6_flowLabel_sbit0_ebit3,\
-                                                                 ipv6_flowLabel_sbit4_ebit19,\
-                                                                 ipv6_payloadLen}
-  phvwr       p.{inner_ipv6_nextHdr...inner_ipv6_dstAddr[127:120]}, k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
+                                                                 ipv6_flowLabel_sbit4_ebit19}
+  phvwr       p.{inner_ipv6_payloadLen...inner_ipv6_dstAddr[127:120]}, \
+                  k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
   phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
   add         r7, k.ipv6_payloadLen, 40
   phvwr       p.l3_metadata_payload_length, r7

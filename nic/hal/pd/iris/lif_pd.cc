@@ -133,24 +133,26 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
+    uint8_t                     p4plus_app_id = 0;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
 
-        HAL_TRACE_ERR("xxx: going to set tm_port = 9");
     if(((lif_t *)pd_lif->pi_lif)->lif_id != 1001) {
         tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
     } else {
         pd_lif->hw_lif_id = 1001;
         tm_oport = 9;
+        p4plus_app_id = 3;
         HAL_TRACE_ERR("xxx: setting tm_port = 9");
     }
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
     om_tmoport.egress_port1 = tm_oport;
-    
+    om_tmoport.p4plus_app_id = p4plus_app_id;
+
     // Program OutputMapping table
     //  - Get tmoport from PI
     //  - Get vlan_tagid_in_skb from the fwding mode:

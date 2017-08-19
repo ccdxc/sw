@@ -581,7 +581,7 @@ action encap_vlan_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
    //update-splitter-offset here
 }
 
-@pragma stage 5
+@pragma stage 4
 table tunnel_rewrite {
     reads {
         rewrite_metadata.tunnel_rewrite_index : exact;
@@ -678,7 +678,7 @@ action encap_inner_ipv6_unknown_rewrite() {
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
 }
 
-@pragma stage 4
+@pragma stage 3
 table tunnel_encap_update_inner {
     reads {
         ipv4 : valid;
