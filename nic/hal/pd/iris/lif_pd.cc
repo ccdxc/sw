@@ -4,6 +4,7 @@
 #include <pd_api.hpp>
 #include <interface_api.hpp>
 #include <p4pd.h>
+#include <defines.h>
 
 namespace hal {
 namespace pd {
@@ -141,6 +142,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     if(((lif_t *)pd_lif->pi_lif)->lif_id != 1001) {
         tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
+        tm_oport = TM_PORT_DMA;
     } else {
         pd_lif->hw_lif_id = 1001;
         tm_oport = 9;

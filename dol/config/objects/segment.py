@@ -59,7 +59,6 @@ class SegmentObject(base.ConfigObjectBase):
 
         self.Show()
         self.obj_helper_nw.Generate(self)
-        self.obj_helper_nw.Configure()
 
         self.obj_helper_enic.Generate(self, self.spec.endpoints)
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
@@ -108,6 +107,9 @@ class SegmentObject(base.ConfigObjectBase):
     def ConfigureEnics(self):
         return self.obj_helper_enic.Configure()
 
+    def ConfigureNetworks(self):
+        return self.obj_helper_nw.Configure()
+
     def ConfigureChildren(self):
         self.ConfigureEnics()
         self.ConfigureEndpoints()
@@ -155,6 +157,8 @@ class SegmentObjectHelper:
 
     def Configure(self):
         cfglogger.info("Configuring %d Segments." % len(self.segs)) 
+        for seg in self.segs:
+            seg.ConfigureNetworks()
         halapi.ConfigureSegments(self.segs)
         for seg in self.segs:
             seg.ConfigureChildren()

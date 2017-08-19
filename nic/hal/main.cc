@@ -76,6 +76,7 @@ svc_reg (const std::string& server_addr)
 
     // register all services
     server_builder.RegisterService(&tenant_svc);
+    server_builder.RegisterService(&network_svc);
     server_builder.RegisterService(&if_svc);
     server_builder.RegisterService(&l2seg_svc);
     server_builder.RegisterService(&session_svc);

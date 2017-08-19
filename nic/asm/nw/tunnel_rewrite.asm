@@ -227,10 +227,11 @@ encap_mpls:
 
 .align
 encap_vlan:
-  bal         r1, f_encap_vlan
-  add         r6, r0, k.ethernet_etherType
-  nop.e
-  nop
+  phvwr       p.vlan_tag_etherType, k.ethernet_etherType
+  phvwr       p.vlan_tag_vid, k.rewrite_metadata_tunnel_vnid
+  phvwr       p.vlan_tag_valid, 1
+  phvwr.e     p.{vlan_tag_pcp,vlan_tag_dei}, 0
+  phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align
 encap_ipv4_ipsec_tunnel_esp:

@@ -108,6 +108,8 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     tid = spec.meta().tenant_id();
     tenant = find_tenant_by_id(tid);
     if (tenant == NULL) {
+        HAL_TRACE_ERR("PI-Network:{}: Unable to retrieve tenant_id:{}",
+                __FUNCTION__, tid);
         ret = HAL_RET_INVALID_ARG;
         rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
         goto end;

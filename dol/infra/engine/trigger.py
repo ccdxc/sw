@@ -492,6 +492,14 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         return Struct(mismatch_result)
 
     def __packets_process_result(self):
+        # Hack for now, ignore the IPV4 checksum!
+        ignore_pkt_cmp = None
+        if True or hasattr(self._tc._test_spec, "ignore_ipv4_checksum") and self._tc._test_spec.ignore_ipv4_checksum:
+            ignore_pkt_cmp = objects.PacketComparePartial()
+            hdr_ignore_result = objects.HeaderComparePartial()
+            hdr_ignore_result.ignore_fields = ["chksum"]
+            ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
+
         self._logger.verbose("Processing test step packets result")
         result = PacketsTestStepResult()
         tmp_mismatch_ref = {}
@@ -519,7 +527,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 for exp_pkt in self._exp_rcv_data[port].expected[:]:
                     # TODO :Add Partial Match.
                     match, match_result = self._packets_match(
-                        exp_pkt.packet.spkt, packet, None)
+                        exp_pkt.packet.spkt, packet, ignore_pkt_cmp)
                     if not match:
                         if match_result.missing_hdrs or match_result.extra_hdrs:
                                 # If packet has  missing or extra headers
