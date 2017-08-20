@@ -1086,6 +1086,7 @@ action icmp_normalization_checks() {
     // No Edit action
 
     // ICMP code removal
+    // why is ICMP Echo reply not considered here ?
     if ((l4_metadata.icmp_invalid_code_action == NORMALIZATION_ACTION_DROP) and
         ((scratch_metadata.icmp_type == 8) or
          (scratch_metadata.icmp_type == 0)) and
