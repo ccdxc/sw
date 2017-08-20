@@ -867,7 +867,10 @@ class capri_p4pd:
                                     continue
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
-                                cf_hname = cf_get_hname(cf)
+                                if cf.is_hv:
+                                    cf_hname = cf.hfname
+                                else:
+                                    cf_hname = cf_get_hname(cf)
                                 if cf_hname not in fields_of_same_header_in_byte.keys():
                                     fields_of_same_header_in_byte[cf_hname] = containerstart
                                 cs = fields_of_same_header_in_byte[cf_hname]
@@ -895,7 +898,10 @@ class capri_p4pd:
                                     key_encountered = True
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
-                                cf_hname = cf_get_hname(cf)
+                                if cf.is_hv:
+                                    cf_hname = cf.hfname
+                                else:
+                                    cf_hname = cf_get_hname(cf)
                                 if cf_hname not in fields_of_same_header_in_byte.keys():
                                     fields_of_same_header_in_byte[cf_hname] = containerstart
                                 cs = fields_of_same_header_in_byte[cf_hname]
