@@ -95,6 +95,7 @@ modules:
         iterate :
             - SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
             - SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
+            - SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
     - module:
         name    : NORMALIZATION_IP_IGNORE
         enable  : True
@@ -105,7 +106,6 @@ modules:
         args    :
             flow: filter://type=IPV4
         iterate :
-            - SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
             - SEC_PROF_IP_DF_ACTION_ALLOW
             - SEC_PROF_IP_DF_ACTION_DROP
             - SEC_PROF_IP_DF_ACTION_EDIT
