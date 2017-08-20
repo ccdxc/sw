@@ -243,8 +243,11 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
                 // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
                 if (nw) {
                     memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, nw->rmac_addr, 6);
+                    memrev(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, 6);
                 } 
                 memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, *mac, 6);
+                memrev(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, 6);
+
                 break;
             case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
                 break;

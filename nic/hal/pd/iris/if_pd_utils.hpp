@@ -21,6 +21,8 @@ tenant_t *l2seg_get_pi_tenant(l2seg_t *pi_l2seg);
 // Tenant APIs
 uint32_t ten_get_nwsec_prof_hw_id(tenant_t *pi_ten);
 
+// Utils
+uint8_t *memrev(uint8_t *block, size_t elnum);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_IF_PD_UTILS_HPP__

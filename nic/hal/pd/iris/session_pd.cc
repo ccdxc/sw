@@ -478,18 +478,6 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     return ret;
 }
 
-uint8_t *memrev(uint8_t *block, size_t elnum)
-{
-     uint8_t *s, *t, tmp;
-
-    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
-        tmp = *s;
-        *s = *t;
-        *t = tmp;
-    }
-     return block;
-}
-
 //------------------------------------------------------------------------------
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
