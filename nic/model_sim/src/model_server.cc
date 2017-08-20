@@ -17,7 +17,7 @@
 
 #include "../../utils/host_mem/params.hpp"
 
-#define MODEL_ZMQ_BUFF_SIZE   12288
+#define MODEL_ZMQ_BUFF_SIZE             12288
 
 namespace utils {
 
@@ -203,6 +203,7 @@ int main (int argc, char ** argv)
     char zmqsockstr[200];
     char recv_buff[MODEL_ZMQ_BUFF_SIZE];
     buffer_hdr_t *buff;
+    int rc;
 
     utils::HostMem host_mem;
     HOST_MEM::access(&host_mem);
@@ -217,15 +218,15 @@ int main (int argc, char ** argv)
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();
     void *responder = zmq_socket (context, ZMQ_REP);
-    int rc = zmq_bind(responder, zmqsockstr);
+    rc = zmq_bind(responder, zmqsockstr);
     assert (rc == 0);
 
     std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
-        zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
         buff = (buffer_hdr_t *) recv_buff;
         process_buff(buff, env);
-        zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
     }
     return 0;
 }
