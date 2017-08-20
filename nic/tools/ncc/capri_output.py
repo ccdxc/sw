@@ -2341,7 +2341,8 @@ def capri_get_top_level_path(cur_dir):
 
 def capri_p4pd_create_swig_makefile(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -2365,17 +2366,17 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'LIBS = -lpython2.7 -lmodelclient -lzmq -lcapri -lcapricsr -lp4pd -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
-    content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o p4pd_wrap.c p4pd.i\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_wrap.o p4pd_wrap.c\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n'
-    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so p4pd_wrap.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o %s_wrap.c %s.i\n' % (name, name)
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o %s_wrap.o %s_wrap.c\n' % (name, name)
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o %s_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n' % (name)
+    content_str += '\t$(CXX) $(LNKFLAGS) -o _%s.so %s_wrap.o %s_api.o $(LIB_DIRS) $(LIBS)\n' % (name, name, name)
     content_str += '\n'
     content_str += 'main:\n'
     content_str += '\t$(CXX) $(CPPFLAGS) -DP4PD_CLI $(INC_DIRS) -o main.o main.cc\n'
-    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o %s_api.o $(LIB_DIRS) $(LIBS)\n' % (name)
     content_str += '\n'
     content_str += 'clean:\n'
-    content_str += '\trm *.o *.so main p4pd.py p4pd_wrap.c\n'
+    content_str += '\trm *.o *.so *.pyc main %s.py %s_wrap.c\n' % (name, name)
 
     out_file = out_dir + 'Makefile'
     with open(out_file, "w") as of:
@@ -2384,18 +2385,16 @@ def capri_p4pd_create_swig_makefile(be):
 
 def capri_p4pd_create_swig_interface(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    top_dir = capri_get_top_level_path(out_dir)
-
     content_str = \
-"""
-/* This file is auto-generated. Changes will be overwritten! */
-/* p4pd.i */
-%module p4pd
+"""/* This file is auto-generated. Changes will be overwritten! */
+/* %s.i */""" %(name) + """
+%module """ + """%s""" % (name) + """
 %include "carrays.i"
 %include "cmalloc.i"
 %include "cpointer.i"
@@ -2438,15 +2437,12 @@ typedef unsigned long long uint64_t;
 %include "p4pd_api.hpp"
 %include "lib_model_client.h"
 extern int capri_init(void);
-%inline %{
-    int p4pd_cli_init()
+%inline %{""" + """
+    int %s_cli_init()""" % (name) + """
     {
         int ret;
-        """ + \
-        """
-        setenv("HAL_CONFIG_PATH", "%s", 1);
-        """ % ('./conf') + \
-        """
+
+        setenv("HAL_CONFIG_PATH", "./conf", 1);
 
         lib_model_connect();
 
@@ -2464,22 +2460,23 @@ extern int capri_init(void);
         
         return 0;
     }
-
-    void p4pd_cli_cleanup()
+""" + """
+    void %s_cli_cleanup()""" % (name) + """
     {
         lib_model_conn_close();
         p4pd_cleanup();
     }
 %}
 """
-    out_file = out_dir + 'p4pd.i'
+    out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
 
 def capri_p4pd_create_swig_main(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)

@@ -397,6 +397,17 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
 
     p4pd_table_properties_get(tableid, &tbl_ctx);
 
+    //TODO Temporary fix for preventing crash for overflow TCAMs. We need to translate the tableid
+    //TODO to the tableid of the original hash table and add the size of that table to the index.
+    if (tbl_ctx.is_oflow_table)
+    {
+        *sram_row = 0;
+        *entry_start_word = 0;
+        *entry_start_block = 0;
+        *entry_end_block = 0;
+        return;
+    }
+
     *sram_row = tblctx->sram_layout.top_left_y +
                          (index/tblctx->sram_layout.num_buckets);
     assert(*sram_row <= tblctx->sram_layout.btm_right_y);

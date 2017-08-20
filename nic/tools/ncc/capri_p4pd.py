@@ -33,7 +33,8 @@ tenjin_prefix = "//::"
 
 CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
 
-def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
+def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, cli_name):
+
     # file-names in template_dir will be used
     # to generate corresponding .c or .h files and 
     # output to output_dir
@@ -42,20 +43,22 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
 
     pdoutfiles = []
     for f in files:
-        if ".h" in f:
-            output_dir = output_h_dir
-        elif ".c" in f:
-            output_dir = output_c_dir
-        elif ".py":
+        if ".py" in f:
             output_dir = output_py_dir
+            genf = cli_name + '_cli.py'
         else:
-            continue
+            if ".h" in f:
+                output_dir = output_h_dir
+            elif ".c" in f:
+                output_dir = output_c_dir
+            else:
+                continue
 
-        if prog_name != '':
-            genf = prog_name + '_' + f
-        else:
-            genf = f
-            
+            if prog_name != '':
+                genf = prog_name + '_' + f
+            else:
+                genf = f
+
         pdoutfiles.append((os.path.join(template_dir, f), \
                            os.path.join(output_dir, genf)))
     return pdoutfiles
@@ -69,7 +72,7 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
     if output_py_dir and not os.path.exists(output_py_dir):
         os.mkdir(output_py_dir)
 
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name)
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
     for templatefile, outfile in templates_outfiles:
         outputfile_path = os.path.dirname(outfile)
         pdd = {}
