@@ -199,3 +199,18 @@ modules:
             - SEC_PROF_TCP_UNEXPECTED_TS_OPTION_ACTION_EDIT
             - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
             - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
+    - module:
+        name    : ACL_IPV4
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : ipv4.testspec
+        args    : 
+            flow: filter://type=IPV4
+    - module:
+        name    : ACL_ETH
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : eth.testspec
+        args    : None

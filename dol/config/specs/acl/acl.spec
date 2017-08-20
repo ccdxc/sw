@@ -19,12 +19,12 @@ entries:
             ip: None
             l4: None
         action:
-            action: permit
+            action: deny 
             ingress_mirror:
-                enable  : True
+                enable  : False
                 session : ref://store/objects/id=SpanSession0001
             egress_mirror:
-                enable  : True
+                enable  : False 
                 session : ref://store/objects/id=SpanSession0001
     - entry:
         priority:   0
@@ -35,8 +35,8 @@ entries:
             segment: filter://any
             eth: None
             ip:
-                src         : ipaddr/10.0.0.1
-                dst         : ipaddr/10.0.0.2
+                src         : ipaddr/150.0.0.1
+                dst         : ipaddr/150.0.0.2
                 proto       : const/6
             l4:
                 tcp:
@@ -49,12 +49,12 @@ entries:
                 udp: None
                 icmp: None
         action:
-            action: permit
+            action: deny
             ingress_mirror: None
             egress_mirror: None
 
     - entry:
-        priority:   0
+        priority:   0 
         match:
             interface:
                 src: None
@@ -62,8 +62,8 @@ entries:
             segment: filter://any
             eth: None
             ip:
-                src         : ipaddr/10.0.0.1
-                dst         : ipaddr/10.0.0.2
+                src         : ipaddr/150.0.0.1
+                dst         : ipaddr/150.0.0.2
                 proto       : const/17
             l4:
                 tcp: None
@@ -71,7 +71,7 @@ entries:
                     port_range  : range/500/1000
                 icmp: None
         action:
-            action: permit
+            action: deny 
             ingress_mirror: None
             egress_mirror: None
 
@@ -84,8 +84,8 @@ entries:
             segment: filter://any
             eth: None
             ip:
-                src         : ipaddr/10.0.0.1
-                dst         : ipaddr/10.0.0.2
+                src         : ipaddr/150.0.0.1
+                dst         : ipaddr/150.0.0.2
                 proto       : const/1
             l4:
                 tcp: None
@@ -94,6 +94,6 @@ entries:
                     code        : const/1
                     type        : const/0
         action:
-            action: permit
+            action: deny 
             ingress_mirror: None
             egress_mirror: None

@@ -220,13 +220,15 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     if (ms->src_if_match) {
         key.control_metadata_src_lif = 
             if_get_hw_lif_id(find_if_by_handle(ms->src_if_handle));
-        mask.control_metadata_src_lif_mask = 0xffff;
+        mask.control_metadata_src_lif_mask = 
+            ~(mask.control_metadata_src_lif_mask & 0);
     }
 
     if (ms->dest_if_match) {
         key.capri_intrinsic_lif = 
             if_get_hw_lif_id(find_if_by_handle(ms->dest_if_handle));
-        mask.capri_intrinsic_lif_mask = 0xffff;
+        mask.capri_intrinsic_lif_mask = 
+            ~(mask.capri_intrinsic_lif_mask & 0);
     }
 
     switch(ms->acl_type) {
@@ -236,6 +238,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
         case ACL_TYPE_ETH:
             // Mac address needs to be in little-endian format while
             // passing to p4pd. So convert to uint64 and do a memcpy
+            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+            mask.flow_lkp_metadata_lkp_type_mask = 
+                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+
             mac_int = MAC_TO_UINT64(eth_key->mac_sa);
             memcpy(key.flow_lkp_metadata_lkp_src, &mac_int, sizeof(mac_addr_t));
             mac_int = MAC_TO_UINT64(eth_mask->mac_sa);
@@ -250,6 +256,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             mask.flow_lkp_metadata_lkp_sport_mask = eth_mask->ether_type;
             break;
         case ACL_TYPE_IPv4:
+            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+            mask.flow_lkp_metadata_lkp_type_mask = 
+                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+
             memcpy(key.flow_lkp_metadata_lkp_src, 
                    &ip_key->sip.addr.v4_addr, 
                    sizeof(ipv4_addr_t));
@@ -267,6 +277,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             populate_ip_common(&key, &mask, ip_key, ip_mask);
             break;
         case ACL_TYPE_IPv6:
+            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+            mask.flow_lkp_metadata_lkp_type_mask = 
+                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+
             memcpy(key.flow_lkp_metadata_lkp_src, 
                    ip_key->sip.addr.v6_addr.addr8, 
                    IP6_ADDR8_LEN);
@@ -303,8 +317,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.tunnel_metadata_tunnel_terminate_mask = 0;
     key.flow_lkp_metadata_lkp_vrf = 0;
     mask.flow_lkp_metadata_lkp_vrf_mask = 0;
-    key.flow_lkp_metadata_lkp_type = 0;
-    mask.flow_lkp_metadata_lkp_type_mask = 0;
     key.vxlan_vni = 0;
     mask.vxlan_vni_mask = 0;
 

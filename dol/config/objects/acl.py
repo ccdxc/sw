@@ -83,11 +83,33 @@ class AclObject(base.ConfigObjectBase):
                             self.action.egress_mirror.session.GID()))
         return
 
+    def __getEnumValue(self, val):
+        valstr = "ACL_ACTION_" + val.upper()
+        return haldefs.acl.AclAction.Value(valstr)
+
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.key_or_handle.acl_id = self.id
+        reqspec.priority = self.priority
+        if self.match.eth:
+            reqspec.match.eth_selector.eth_type = self.match.eth.ethertype.get()
+            reqspec.match.eth_selector.src_mac = self.match.eth.src.getnum()
+            reqspec.match.eth_selector.src_mac_mask = self.match.eth.src_mask.getnum()
+            reqspec.match.eth_selector.dst_mac = self.match.eth.dst.getnum()
+            reqspec.match.eth_selector.dst_mac_mask = self.match.eth.dst_mask.getnum()
+        elif self.match.ip:
+            reqspec.match.ip_selector.src_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            reqspec.match.ip_selector.src_prefix.address.v4_addr = self.match.ip.src.getnum()
+            reqspec.match.ip_selector.src_prefix.prefix_len = 32 
+            reqspec.match.ip_selector.dst_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            reqspec.match.ip_selector.dst_prefix.address.v4_addr = self.match.ip.dst.getnum()
+            reqspec.match.ip_selector.dst_prefix.prefix_len = 32 
+            reqspec.match.ip_selector.protocol = self.match.ip.proto.get()
+
+        reqspec.action.action = self.__getEnumValue(self.action.action)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+        self.hal_handle = resp_spec.status.acl_handle
         cfglogger.info("  - Acl %s = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
@@ -119,7 +141,7 @@ class AclObjectHelper:
 
     def main(self, topospec):
         self.Generate(topospec)
-        #self.Configure()
+        self.Configure()
         return
 
 AclHelper = AclObjectHelper()

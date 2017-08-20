@@ -117,6 +117,7 @@ private:
 
     hal_ret_t program_table_(TcamEntry *te, uint32_t index, void *data = NULL);
     hal_ret_t deprogram_table_(uint32_t index) ;
+    hal_ret_t entry_trace_(TcamEntry *te, uint32_t index);
 
     void move_chain_state_update_(move_chain_t *move_chain,
                                   uint32_t free_spot,

@@ -1,0 +1,54 @@
+# Test Spec
+config_filter:
+    src:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        interface   : filter://any
+    dst:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        interface   : filter://any
+    flow        : filter://fwtype=L2,type=IPV4,label=NETWORKING
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ipaddr/150.0.0.1
+                dst     : ipaddr/150.0.0.2
+                ttl     : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 1
+
+expect:

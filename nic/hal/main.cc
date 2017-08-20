@@ -38,7 +38,8 @@
 #include <descriptor_aol_svc.hpp>
 #include <wring_svc.hpp>
 #include <proxy_svc.hpp>
- 
+#include <acl_svc.hpp>
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -60,6 +61,7 @@ svc_reg (const std::string& server_addr)
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
     QOSServiceImpl           qos_svc;
+    AclServiceImpl           acl_svc;
     ServerBuilder            server_builder;
     TlsCbServiceImpl         tlscb_svc;
     TcpCbServiceImpl         tcpcb_svc;
@@ -89,7 +91,8 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&descraol_svc);
     server_builder.RegisterService(&wring_svc);
     server_builder.RegisterService(&proxy_svc);
- 
+    server_builder.RegisterService(&acl_svc);
+
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 
     // assemble the server
