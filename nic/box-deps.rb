@@ -61,6 +61,8 @@ PACKAGES = %w[
   python-setuptools
   python-enum34
   swig
+  openssl-devel
+  libpcap-devel
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -147,6 +149,32 @@ inside "#{BASE_BUILD_DIR}/boost_1_62_0" do
   run "./bootstrap.sh"
   run "./b2 --without-python --prefix=/usr -j$(grep -c processor /proc/cpuinfo) link=shared runtime-link=shared install"
   run "ldconfig"
+end
+
+
+inside BASE_BUILD_DIR do
+  run "git clone https://github.com/mfontanini/libtins.git"
+end
+
+inside "#{BASE_BUILD_DIR}/libtins" do
+  run "mkdir build"
+end
+
+inside "#{BASE_BUILD_DIR}/libtins/build" do
+  run "cmake ../ -DLIBTINS_ENABLE_CXX11=1"
+  run "make"
+  run "make install"
+  run "ldconfig"
+end
+
+inside BASE_BUILD_DIR do
+  run "git clone https://source.isc.org/git/bind9.git"
+end
+
+inside "#{BASE_BUILD_DIR}/bind9" do
+  run "./configure --without-openssl"
+  run "make"
+  run "make install"
 end
 
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
