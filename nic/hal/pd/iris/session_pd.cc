@@ -516,6 +516,9 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     if (flow->key.flow_type == FLOW_TYPE_V6) {
         memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
         memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+    } else if (flow->key.flow_type == FLOW_TYPE_L2) {
+        memrev(key.flow_lkp_metadata_lkp_src, 6);
+        memrev(key.flow_lkp_metadata_lkp_dst, 6);
     }
 
     if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {

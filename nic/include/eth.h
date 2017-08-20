@@ -37,16 +37,16 @@ typedef struct eth_dot1q_hdr_ {
              ((mac_addr[4] & 0xFF) << 8) | ((mac_addr[3] & 0xFF) << 16) | \
              ((mac_addr[2] & 0xFF) << 24)                               | \
              ((uint64_t)(mac_addr[1] & 0xFF) << 32ul)                   | \
-             ((uint64_t)(mac_addr[0] & 0xFF) << 48ul))
+             ((uint64_t)(mac_addr[0] & 0xFF) << 40ul))
 
 #define MAC_UINT64_TO_ADDR(mac_addr, mac_uint64)                          \
 {                                                                         \
-     (mac_addr)[0] = mac_uint64 & 0xFF;                                   \
-     (mac_addr)[1] = (mac_uint64 >> 8) & 0xFF;                            \
-     (mac_addr)[2] = (mac_uint64 >> 16) & 0xFF;                           \
-     (mac_addr)[3] = (mac_uint64 >> 24) & 0xFF;                           \
-     (mac_addr)[4] = (mac_uint64 >> 32) & 0xFF;                           \
-     (mac_addr)[5] = (mac_uint64 >> 48) & 0xFF;                           \
+     (mac_addr)[5] = mac_uint64 & 0xFF;                                   \
+     (mac_addr)[4] = (mac_uint64 >> 8) & 0xFF;                            \
+     (mac_addr)[3] = (mac_uint64 >> 16) & 0xFF;                           \
+     (mac_addr)[2] = (mac_uint64 >> 24) & 0xFF;                           \
+     (mac_addr)[1] = (mac_uint64 >> 32) & 0xFF;                           \
+     (mac_addr)[0] = (mac_uint64 >> 40) & 0xFF;                           \
 }
 
 #define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[5] & 0x1)
