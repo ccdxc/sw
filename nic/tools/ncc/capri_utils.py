@@ -62,7 +62,7 @@ def get_i2e_fname(cf):
 
 def cf_get_hname(cfld):
     hname = 'NOHEADER'
-    if cfld.p4_fld and cfld.p4_fld.instance:
+    if cfld and cfld.p4_fld and cfld.p4_fld.instance:
         hname = cfld.p4_fld.instance.name
     return hname
 

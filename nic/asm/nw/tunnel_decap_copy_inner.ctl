@@ -9,8 +9,7 @@ struct phv_                      p;
 k = {
   inner_ipv4_version = 4;
   inner_ipv4_srcAddr = 192.168.100.1;
-  inner_ipv4_dstAddr_sbit0_ebit15 = 0x0a0b;
-  inner_ipv4_dstAddr_sbit16_ebit31 = 0x0c0d;
+  inner_ipv4_dstAddr = 0x0c0d0a0b;
   inner_udp_srcPort = 0xbaba;
   inner_udp_checksum = 0xc0c0;
   inner_ipv4_valid = 1;

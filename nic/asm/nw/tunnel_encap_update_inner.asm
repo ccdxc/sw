@@ -13,9 +13,9 @@ nop:
 
 .align
 encap_inner_ipv4_udp_rewrite:
-  phvwr       p.{inner_ipv4_version...inner_ipv4_totalLen}, k.{ipv4_version...ipv4_totalLen}
-  phvwr       p.{inner_ipv4_identification}, k.{ipv4_identification}
-  phvwr       p.{inner_ipv4_flags...inner_ipv4_dstAddr}, k.{ipv4_flags...ipv4_dstAddr}
+  phvwr       p.{inner_ipv4_version...inner_ipv4_diffserv}, k.{ipv4_version...ipv4_diffserv}
+  phvwr       p.{inner_ipv4_totalLen...inner_ipv4_srcAddr}, k.{ipv4_totalLen...ipv4_srcAddr}
+  phvwr       p.inner_ipv4_dstAddr, k.ipv4_dstAddr
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
   phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4
@@ -28,9 +28,9 @@ encap_inner_ipv4_udp_rewrite:
 encap_inner_ipv4_tcp_rewrite:
 encap_inner_ipv4_icmp_rewrite:
 encap_inner_ipv4_unknown_rewrite:
-  phvwr       p.{inner_ipv4_version...inner_ipv4_totalLen}, k.{ipv4_version...ipv4_totalLen}
-  phvwr       p.{inner_ipv4_identification}, k.{ipv4_identification}
-  phvwr       p.{inner_ipv4_flags...inner_ipv4_dstAddr}, k.{ipv4_flags...ipv4_dstAddr}
+  phvwr       p.{inner_ipv4_version...inner_ipv4_diffserv}, k.{ipv4_version...ipv4_diffserv}
+  phvwr       p.{inner_ipv4_totalLen...inner_ipv4_srcAddr}, k.{ipv4_totalLen...ipv4_srcAddr}
+  phvwr       p.inner_ipv4_dstAddr, k.ipv4_dstAddr
   phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4
   phvwr.e     p.ipv4_valid, FALSE
