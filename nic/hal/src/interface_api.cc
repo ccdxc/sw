@@ -315,5 +315,22 @@ if_l2seg_get_ingress_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
     return HAL_RET_OK;
 }
 
+// ----------------------------------------------------------------------------
+// LIF API: Get LIF's rdma enable status
+// ----------------------------------------------------------------------------
+bool
+lif_get_enable_rdma(lif_t *pi_lif)
+{
+    return pi_lif->enable_rdma;
+}
+
+// ----------------------------------------------------------------------------
+// LIF API: Set rdma enable in PI LIF
+// ----------------------------------------------------------------------------
+void 
+lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma)
+{
+    pi_lif->enable_rdma = enable_rdma;
+}
 
 } // namespace hal

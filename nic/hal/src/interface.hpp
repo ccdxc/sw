@@ -39,6 +39,7 @@ typedef struct lif_s {
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
     bool                allmulti;                    // All multicast enable
+    bool                enable_rdma;                 // enable rdma on this LIF
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle

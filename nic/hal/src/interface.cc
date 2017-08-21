@@ -216,6 +216,7 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     lif->hal_handle = hal_alloc_handle();
     lif->vlan_strip_en = spec.vlan_strip_en();
     lif->allmulti = spec.allmulti();
+    lif->enable_rdma = spec.enable_rdma();
 
     // consume queues
     utils::dllist_reset(&lif->qlist_head);

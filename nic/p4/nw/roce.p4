@@ -29,7 +29,7 @@ action decode_roce_opcode(raw_flags, len, qtype) {
     }
 }
 
-@pragma stage 1
+@pragma stage 4
 table decode_roce_opcode {
     reads {
         roce_bth.opCode : exact;
