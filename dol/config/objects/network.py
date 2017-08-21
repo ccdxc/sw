@@ -75,6 +75,7 @@ class NetworkObjectHelper:
         return
 
     def Configure(self):
+        cfglogger.info("Configuring %d Networks" % len(self.nws)) 
         halapi.ConfigureNetworks(self.nws)
         return
 

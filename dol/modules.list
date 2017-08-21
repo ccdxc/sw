@@ -214,3 +214,10 @@ modules:
         module  : acl
         spec    : eth.testspec
         args    : None
+    - module:
+        name    : SFW_IN_SEQUENCE
+        enable  : True
+        package : test.firewall
+        module  : sfw_in_sequence
+        spec    : sfw_in_sequence.testspec
+        ignore  : True

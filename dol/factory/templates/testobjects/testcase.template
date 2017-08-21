@@ -11,7 +11,7 @@ step_id : None
 
 config:
     session:
-        iflow:
+        iconfig:
             src:
                 tenant  : None
                 segment : None
@@ -22,7 +22,8 @@ config:
                 segment : None
                 endpoint: None
                 lif     : None
-        rflow:
+            flow: None
+        rconfig:
             src:
                 tenant  : None
                 segment : None
@@ -33,6 +34,7 @@ config:
                 segment : None
                 endpoint: None
                 lif     : None
+            flow: None
     src:
         tenant  : None
         segment : None

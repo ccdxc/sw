@@ -34,6 +34,9 @@ class SessionObject(base.ConfigObjectBase):
         self.responder_span = responder_span
         self.responder = responder
         self.label = label.upper()
+        
+        assert(initiator.proto == responder.proto)
+        self.proto = initiator.proto
 
         self.iflow = flow.FlowObject(self, self.initiator,
                                      self.responder, 'IFLOW', 
@@ -43,6 +46,7 @@ class SessionObject(base.ConfigObjectBase):
                                      self.label, self.responder_span)
 
         cfglogger.info("Created Session with GID:%s" % self.GID())
+        cfglogger.info("  - Label           : %s" % self.label)
         cfglogger.info("  - Initiator       : %s" % self.initiator)
         cfglogger.info("  - Responder       : %s" % self.responder)
         cfglogger.info("  - Initiator Flow  : %s" % self.iflow)
@@ -71,19 +75,31 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def IsFilterMatch(self, config_filter):
-        assert(config_filter.flow == None)
+        cfglogger.debug("Matching Session %s" % self.GID())
         # Match on Initiator Flow
+        config_filter.flow = config_filter.session.iflow
         match = self.iflow.IsFilterMatch(config_filter)
+        cfglogger.debug("- IFlow Filter Match =", match)
         if match == False: return match
         # Match on Responder Flow
+        config_filter.flow = config_filter.session.rflow
         match = self.rflow.IsFilterMatch(config_filter)
+        cfglogger.debug("- RFlow Filter Match =", match)
         if match == False: return match
         # Match on the Session
-        return super().IsFilterMatch(config_filter.session.filters)
+        match = super().IsFilterMatch(config_filter.session.base.filters)
+        cfglogger.debug("- Session Filter Match =", match)
+        return match
 
     def SetupTestcaseConfig(self, obj):
-        self.iflow.SetupTestCaseConfig(obj.session.iflow)
-        self.rflow.SetupTestCaseConfig(obj.session.rflow)
+        self.iflow.SetupTestcaseConfig(obj.session.iconfig)
+        self.rflow.SetupTestcaseConfig(obj.session.rconfig)
+        return
+
+    def ShowTestcaseConfig(self, obj, logger):
+        logger.info("- Config Objects for %s" % self.GID())
+        self.iflow.ShowTestcaseConfig(obj.session.iconfig, logger)
+        self.rflow.ShowTestcaseConfig(obj.session.rconfig, logger)
         return
 
 class SessionObjectHelper:

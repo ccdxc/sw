@@ -39,7 +39,7 @@ import descriptor_aol_pb2_grpc  as descriptor_aol_pb2_grpc
 import wring_pb2_grpc           as wring_pb2_grpc
 import acl_pb2_grpc             as acl_pb2_grpc
 
-HAL_MAX_BATCH_SIZE = 16
+HAL_MAX_BATCH_SIZE = 64
 
 HalChannel = None
 class HalInterfaceSegmentAssociation:

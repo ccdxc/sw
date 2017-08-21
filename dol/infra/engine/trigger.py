@@ -691,11 +691,11 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             cb_result = self._tc._test_spec.verify_callback()
             if cb_result == defs.status.SUCCESS:
                 self._logger.info(
-                    "Test Spec verify callback returned success.")
+                    "TestCaseVerify(): Success.")
                 result.verify_callback.status = Trigger.TEST_CASE_PASSED
             else:
                 self._logger.info(
-                    "Test spec verify callback returned failure.")
+                    "TestCaseVerify(): Failure.")
                 result.verify_callback.status = Trigger.TEST_CASE_FAILED
 
         if result.packets.status == Trigger.TEST_CASE_FAILED or \

@@ -59,6 +59,7 @@ class TestCase(objects.FrameworkObject):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
+        self.__config_root_obj = None
         self.LockAttributes()
         
         self.GID(tcid)
@@ -80,6 +81,7 @@ class TestCase(objects.FrameworkObject):
         return
 
     def __setup_config(self, config_root_obj):
+        self.__config_root_obj = config_root_obj
         config_root_obj.SetupTestcaseConfig(self.config)
         return
 
@@ -188,12 +190,7 @@ class TestCase(objects.FrameworkObject):
         return
 
     def __show_config_objects(self):
-        self.info("- Config Objects for TestCase:")
-        self.info("  - Src EP: %s" % self.config.src.endpoint.GID())
-        self.info("  - Src IF: %s" % self.config.src.endpoint.intf.GID())
-        self.info("  - Dst EP: %s" % self.config.dst.endpoint.GID())
-        self.info("  - Dst IF: %s" % self.config.dst.endpoint.intf.GID())
-        self.info("  - Flow  : %s" % self.config.flow)
+        self.__config_root_obj.ShowTestcaseConfig(self.config, self)
         return
     
     def __generate(self):

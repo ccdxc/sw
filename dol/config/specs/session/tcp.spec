@@ -8,27 +8,36 @@ entries:
     - entry:
         label: networking
         responder: 
+            port : const/42001
+        initiator: 
+            port : const/42002
+
+    - entry:
+        label: firewall
+        tracking: True
+        timestamp: True
+        responder: 
             port : const/80
             flow_info:
                 action  : allow
                 state   : established
             tracking_info:
-                seq_num     : 1000
-                ack_num     : 5000
-                win_sz      : 8192
-                win_scale   : 1
-                mss         : 16384
+                tcp_seq_num     : const/1000
+                tcp_ack_num     : const/5000
+                tcp_win_sz      : const/8192
+                tcp_win_scale   : const/1
+                tcp_mss         : const/16384
         initiator: 
-            port : const/42000
+            port : const/40000
             flow_info:
                 action  : allow
                 state   : established
             tracking_info:
-                seq_num     : 1000
-                ack_num     : 5000
-                win_sz      : 8192
-                win_scale   : 1
-                mss         : 16384
+                tcp_seq_num     : const/1000
+                tcp_ack_num     : const/5000
+                tcp_win_sz      : const/8192
+                tcp_win_scale   : const/1
+                tcp_mss         : const/16384
 
     - entry:
         label: span
@@ -36,7 +45,7 @@ entries:
             port : const/81
             span : ref://store/objects/id=SpanSession0002
         initiator: 
-            port : const/42001
+            port : const/41000
             span : ref://store/objects/id=SpanSession0002
 
     - entry:

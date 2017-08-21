@@ -147,6 +147,7 @@ class PacketSpec(objects.FrameworkObject):
         return hdr
 
     def ConvertHeaders(self, spec):
+        if spec.headers == None: return
         for key,data in spec.headers.__dict__.items():
             if objects.IsFrameworkObject(data):
                 hdr = self.ConvertHeader(data)

@@ -184,6 +184,7 @@ class Module:
         self.__load_spec()
         while self.iterator.End() == False:
             self.logger.info("========== Starting Test Module =============")
+            self.logger.info("Iterator @ ", self.iterator.Get())
             self.__setup_callback()
             self.__select_config()
             self.__generate()
