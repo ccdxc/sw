@@ -475,16 +475,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
  *  None
  */
 //::        if pddict['tables'][table]['type'] == 'Ternary':
-//::            if len(pddict['tables'][table]['not_my_key_bytes']):
-//::                for kmbyte in pddict['tables'][table]['not_my_key_bytes']:
-//::                    keylen += 8
-//::                #endfor
-//::            #endif
-//::            if len(pddict['tables'][table]['not_my_key_bits']):
-//::                for kmbyte in pddict['tables'][table]['not_my_key_bits']:
-//::                    keylen += 1
-//::                #endfor
-//::            #endif
+//::            keylen = pddict['tables'][table]['match_key_bit_length']
 static void
 ${table}_hwentry_query(uint32_t tableid, 
                        uint32_t *hwkey_len, 
@@ -494,7 +485,8 @@ ${table}_hwentry_query(uint32_t tableid,
     *hwkey_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
     *hwkeymask_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
     /* Tcam memory line is allocated in chunks of P4PD_TCAM_WORD_CHUNK_LEN */
-    *hwkeymask_len += (*hwkeymask_len % P4PD_TCAM_WORD_CHUNK_LEN); 
+    *hwkeymask_len += P4PD_TCAM_WORD_CHUNK_LEN - (*hwkeymask_len % P4PD_TCAM_WORD_CHUNK_LEN); 
+    *hwkey_len += P4PD_TCAM_WORD_CHUNK_LEN - (*hwkey_len % P4PD_TCAM_WORD_CHUNK_LEN); 
     /* Among all actions of the table, this length is set to maximum
      * action data len so that higher layer can allocate maximum 
      * required memory to handle any action.
@@ -502,6 +494,17 @@ ${table}_hwentry_query(uint32_t tableid,
     *hwactiondata_len = ${max_actionfld_len}; 
     return;
 }
+
+static void
+tcam_${table}_hwkey_len(uint32_t tableid, 
+                        uint32_t *hwkey_len, 
+                        uint32_t *hwkeymask_len)
+{
+    *hwkey_len = ${keylen};
+    *hwkeymask_len = ${keylen};
+    return;
+}
+
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
 static void
 ${table}_hwentry_query(uint32_t tableid, 
@@ -1479,7 +1482,7 @@ ${table}_entry_write(uint32_t tableid,
     capri_table_entry_write(tableid, index, sram_hwentry, entry_size);
 
     // Install Key in TCAM
-    ${table}_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &actiondatalen);
+    tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
     // Swizzle Key installed in TCAM before writing to TCAM memory
     // because TCAM entry is not built using p4pd_p4table_entry_prepare
     // function where bytes are swizzled.
