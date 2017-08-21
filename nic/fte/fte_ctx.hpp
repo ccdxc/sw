@@ -5,28 +5,42 @@
 
 namespace fte {
 
-// Flow update action codes
-#define FTE_FLOW_UPDATE_ACTIONS(ENTRY)                                  \
-    ENTRY(FLOW_ACTION_MODIFY, 0, "update flow action (allow/deny)")     \
-    ENTRY(FLOW_HEADER_MODIFY, 1, "modify the header")                   \
-    ENTRY(FLOW_HEADER_PUSH,   2, "push header")                         \
-    ENTRY(FLOW_HEADER_POP,    3, "pop header")                          \
+// Flow update codes
+#define FTE_FLOW_UPDATE_CODES(ENTRY)                                    \
+    ENTRY(FLOWUPD_ACTION,        0, "update flow action (allow/deny)")  \
+    ENTRY(FLOWUPD_HEADER_MODIFY, 1, "modify the header")                \
+    ENTRY(FLOWUPD_HEADER_PUSH,   2, "push header")                      \
+    ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
+    ENTRY(FLOWUPD_CONN_TRACK,    4, "connection tracking")              \
+    ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
+    
+DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
+#undef FTE_FLOW_UPDATE_CODES
 
-DEFINE_ENUM(flow_action_type_t, FTE_FLOW_UPDATE_ACTIONS)
-#undef FTE_FLOW_UPDATE_ACTIONS
-
-typedef struct flow_action_s flow_action_t;
-struct flow_action_s {
-    flow_action_type_t type;
+typedef struct flow_update_s flow_update_t;
+struct flow_update_s {
+    flow_update_type_t type;
     union {
         struct {
-        } __PACK__ action_modify;
+            uint8_t deny      : 1;     // deny flow
+        } __PACK__ action;
         struct {
         } __PACK__ header_modify;
         struct {
         } __PACK__ header_push;
         struct {
         } __PACK__ header_pop;
+        struct {
+            uint8_t enable: 1;    // enable connection tracking
+            uint8_t state: 4;     // TCP state
+            int32_t syn_ack_delta;
+        } __PACK__ conn_track;
+        struct {
+            uint8_t  qid_en: 1;
+            uint64_t lif : 11;
+            uint64_t qtype: 3;
+            uint64_t qid: 24;
+        } __PACK__ fwding_info;
     };
 }__PACK__;
 
@@ -91,12 +105,12 @@ struct ctx_s {
 } __PACK__;
 
 extern hal_ret_t ctx_init(ctx_t &ctx, phv_t *phv, uint8_t *pkt, size_t pkt_len);
-extern hal_ret_t ctx_update_iflow(ctx_t&, const flow_action_t&);
-extern hal_ret_t ctx_update_rflow(ctx_t&, const flow_action_t&);
+extern hal_ret_t ctx_update_iflow(ctx_t&, const flow_update_t&);
+extern hal_ret_t ctx_update_rflow(ctx_t&, const flow_update_t&);
 
 // Update flow of the current packet (i or r)
-extern hal_ret_t ctx_update_flow(ctx_t&, const flow_action_t&);
+extern hal_ret_t ctx_update_flow(ctx_t&, const flow_update_t&);
 // Update reverse flow of the current packet's flow (i or r)
-extern hal_ret_t ctx_update_reverse_flow(ctx_t&, const flow_action_t&);
+extern hal_ret_t ctx_update_reverse_flow(ctx_t&, const flow_update_t&);
 
 } // namespace fte

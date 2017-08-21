@@ -125,54 +125,6 @@ if_get_pi_tenant(if_t *pi_if)
 }
 
 // ----------------------------------------------------------------------------
-// Get a qid, qoffset from pi if and qtype
-// ----------------------------------------------------------------------------
-hal_ret_t
-if_get_qid_qoff(if_t *pi_if, intf::LifQType qtype, 
-                uint8_t *q_off, uint32_t *qid)
-{
-    hal_ret_t       ret = HAL_RET_QUEUE_NOT_FOUND;
-    intf::IfType    if_type;
-    lif_t           *pi_lif = NULL;
-    dllist_ctxt_t   *lnode = NULL;
-    lif_queue_t     *pi_lif_q;
-
-    if_type = intf_get_if_type(pi_if);
-    switch(if_type) {
-        case intf::IF_TYPE_ENIC:
-            pi_lif = if_get_lif(pi_if);
-            HAL_ASSERT_RETURN(pi_lif != NULL, HAL_RET_INVALID_ARG);
-            
-            dllist_for_each(lnode, &(pi_lif->qlist_head)) {
-                pi_lif_q = (lif_queue_t*)((char *)lnode - 
-                        offsetof(lif_queue_t, qlist_entry));
-
-                if (pi_lif_q->queue_type == qtype) {
-                    *q_off = pi_lif_q->queue_offset;
-                    *qid = pi_lif_q->queue_id;
-
-                    ret = HAL_RET_OK;
-                    goto end;
-                }
-            }
-
-            break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            ret = HAL_RET_INVALID_ARG;
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            ret = HAL_RET_INVALID_ARG;
-            break;
-        default:
-            HAL_ASSERT(0);
-    }
-
-end:
-    return ret;
-}
-
-// ----------------------------------------------------------------------------
 // Get a PI Tenant from L2 Seg
 // ----------------------------------------------------------------------------
 tenant_t *

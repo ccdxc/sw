@@ -211,41 +211,6 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 
     return dm->remove(session_state_idx);
 }
-hal_ret_t
-session_pd_fill_queue_info(ep_t *dst_ep,
-                           intf::LifQType qtype,
-                           uint8_t *qid_en,
-                           uint8_t *q_off,
-                           uint32_t *qid)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    intf::IfType    if_type = intf::IF_TYPE_NONE;
-    if_t            *pi_if;
-
-    if_type = ep_pd_get_if_type(dst_ep);
-
-    *qid_en = *q_off = *qid = 0;
-    switch(if_type) {
-        case intf::IF_TYPE_ENIC:
-            pi_if = ep_find_if_by_handle(dst_ep);
-            HAL_ASSERT(pi_if != NULL);
-
-            ret = if_get_qid_qoff(pi_if, qtype, q_off, qid);
-            if (ret == HAL_RET_OK) {
-               *qid_en = 1; 
-            }
-            break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            break;
-        default:
-            HAL_ASSERT(0);
-    }
-
-    return ret;
-}
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
 // allocate an index and return that
@@ -276,11 +241,18 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     if (((flow->key.sport == 80) && (flow->key.dport == 47273)) ||
          ((flow->key.sport == 47273) && (flow->key.dport == 80))) {
         is_tcp_proxy_flow = true;
-        printf("TCP Proxy FLow  sp %d dp %d\n", flow->key.sport, flow->key.dport);
+        HAL_TRACE_DEBUG("TCP Proxy FLow {}", flow->key);
     }
 
     if (!mcast) {
-        d.flow_info_action_u.flow_info_flow_info.lif = ep_pd_get_hw_lif_id(dep);
+        d.flow_info_action_u.flow_info_flow_info.lif = flow->lif;
+        HAL_TRACE_DEBUG("xxx: actual lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
+        if (is_tcp_proxy_flow) {
+            // HACK DO NOT COMMIT
+            d.flow_info_action_u.flow_info_flow_info.lif = 1001;
+            HAL_TRACE_DEBUG("xxx: programmed lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
+        }
+    } else {
     }
 
     if (is_tcp_proxy_flow) {
@@ -349,17 +321,15 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.dscp = 0;
 
     // TBD: check class NIC mode and set this
-    d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
+    d.flow_info_action_u.flow_info_flow_info.qid_en = flow->qid_en;
     if (is_tcp_proxy_flow) {
         // HACK DO NOT COMMIT
         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
     }
-    session_pd_fill_queue_info(dep,
-                               flow->lif_qtype,
-                               &d.flow_info_action_u.flow_info_flow_info.qid_en,
-                               &d.flow_info_action_u.flow_info_flow_info.qtype,
-                               &d.flow_info_action_u.flow_info_flow_info.tunnel_vnid);
-
+    if (flow->qid_en) {
+        d.flow_info_action_u.flow_info_flow_info.qtype = flow->qtype;
+        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->qid;
+    }
 
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;

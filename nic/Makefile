@@ -17,6 +17,7 @@ LIBDIRS = \
 		  gen/iris/src \
 		  gen/tcp_proxy_rxdma/src \
 		  gen/tcp_proxy_txdma/src \
+			hal/plugins \
 		  hal/pd/common \
 		  hal/pd/iris \
 		  hal/pd/capri \

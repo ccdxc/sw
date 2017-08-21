@@ -25,40 +25,94 @@ ctx_init(ctx_t &ctx, phv_t *phv, uint8_t *pkt, size_t pkt_len)
 }
 
 static inline hal_ret_t
-_update_flow(ctx_t&, hal::flow_cfg_t *flow, const flow_action_t&)
+flowupd_action_(ctx_t& ctx, hal::flow_cfg_t *flow, const flow_update_t& flowupd)
 {
-    // TODO(goli)
+    flow->action = flowupd.action.deny ? session::FLOW_ACTION_DROP : session::FLOW_ACTION_ALLOW;
+
+    // Update the ctx if the flow is the current pkt flow
+    if (ctx.flow == flow) {
+        ctx.drop = flowupd.action.deny;
+    }
+
     return HAL_RET_OK;
 }
 
-hal_ret_t
-ctx_update_iflow(ctx_t& ctx, const flow_action_t& action)
+static inline hal_ret_t
+flowupd_conn_track_(ctx_t& ctx, hal::flow_cfg_t *flow, const flow_update_t& flowupd)
 {
-    return _update_flow(ctx, &ctx.iflow, action);
+    flow->state = flowupd.conn_track.state;
+    if (ctx.flow == flow) {
+        ctx.session_cfg.conn_track_en = flowupd.conn_track.enable;
+        ctx.session_cfg.syn_ack_delta = flowupd.conn_track.syn_ack_delta;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+flowupd_fwding_info_(ctx_t& ctx, hal::flow_cfg_t *flow, const flow_update_t& flowupd)
+{
+    flow->qid_en = flowupd.fwding_info.qid_en;
+    if (flow->qid_en) {
+        flow->lif = flowupd.fwding_info.lif;
+        flow->qtype = flowupd.fwding_info.qtype;
+        flow->qid = flowupd.fwding_info.qid;
+    }
+
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+update_flow_(ctx_t& ctx, hal::flow_cfg_t *flow, const flow_update_t& flowupd)
+{
+    if (flow->role == hal::FLOW_ROLE_RESPONDER && ctx.rflow_valid == false)
+        return HAL_RET_OK;
+
+    switch (flowupd.type) {
+    case FLOWUPD_ACTION:
+        return flowupd_action_(ctx, flow, flowupd);
+    case FLOWUPD_HEADER_MODIFY:
+        return HAL_RET_OK;
+    case FLOWUPD_HEADER_PUSH:
+        return HAL_RET_OK;
+    case FLOWUPD_HEADER_POP:
+        return HAL_RET_OK;
+    case FLOWUPD_CONN_TRACK:
+        return flowupd_conn_track_(ctx, flow, flowupd);
+    case FLOWUPD_FWDING_INFO:
+        return flowupd_fwding_info_(ctx, flow, flowupd);
+    }
+
+    return HAL_RET_INVALID_ARG;
 }
 
 hal_ret_t
-ctx_update_rflow(ctx_t& ctx, const flow_action_t& action)
+ctx_update_iflow(ctx_t& ctx, const flow_update_t& flowupd)
 {
-    return _update_flow(ctx, &ctx.rflow, action);
+    return update_flow_(ctx, &ctx.iflow, flowupd);
+}
+
+hal_ret_t
+ctx_update_rflow(ctx_t& ctx, const flow_update_t& flowupd)
+{
+    return update_flow_(ctx, &ctx.rflow, flowupd);
 }
 
 
 // Update flow of the current packet (i or r)
 hal_ret_t
-ctx_update_flow(ctx_t& ctx, const flow_action_t& action)
+ctx_update_flow(ctx_t& ctx, const flow_update_t& flowupd)
 {
-    return _update_flow(ctx, ctx.flow, action);
+    return update_flow_(ctx, ctx.flow, flowupd);
 }
 
 // Update reverse flow of the current packet's flow (i or r)
 hal_ret_t
-ctx_update_reverse_flow(ctx_t& ctx, const flow_action_t& action)
+ctx_update_reverse_flow(ctx_t& ctx, const flow_update_t& flowupd)
 {
     if (ctx.flow == &ctx.iflow) {
-        return _update_flow(ctx, &ctx.rflow, action);
+        return update_flow_(ctx, &ctx.rflow, flowupd);
     } else {
-        return _update_flow(ctx, &ctx.iflow, action);
+        return update_flow_(ctx, &ctx.iflow, flowupd);
     }
 }
 

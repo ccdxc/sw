@@ -116,7 +116,10 @@ typedef struct flow_cfg_s {
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
-    intf::LifQType            lif_qtype;           // qtype per flow
+    uint64_t                  lif:11;              // dest LIF
+    uint64_t                  qid_en:1;            // qid enabled
+    uint64_t                  qtype:3;             // Qtype
+    uint64_t                  qid:24;              // Qid
 } __PACK__ flow_cfg_t;
 
 // flow state

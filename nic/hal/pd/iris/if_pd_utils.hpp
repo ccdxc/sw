@@ -11,8 +11,6 @@ namespace pd {
 // Interface APIs
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_uplink_ifpc_id(if_t *pi_if);
-hal_ret_t if_get_qid_qoff(if_t *pi_if, intf::LifQType qtype, 
-                          uint8_t *q_off, uint32_t *qid);
 tenant_t *if_get_pi_tenant(if_t *pi_if);
 
 // L2Seg APIs

@@ -8,6 +8,8 @@
 #include <session.hpp>
 #include <utils.hpp>
 #include <pd_api.hpp>
+#include <interface_api.hpp>
+
 
 namespace hal {
 
@@ -273,7 +275,6 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
                             flow_spec.flow_data().flow_info().nat_dip());
     flow->nat_sport = flow_spec.flow_data().flow_info().nat_sport();
     flow->nat_dport = flow_spec.flow_data().flow_info().nat_dport();
-    flow->lif_qtype = flow_spec.flow_data().flow_info().queue_type();
 
     return HAL_RET_OK;
 }
@@ -514,7 +515,7 @@ update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, i
     }
 
     if (dep_nat == NULL) {
-        return HAL_RET_EP_NOT_FOUND;;
+        return HAL_RET_EP_NOT_FOUND;
     }
 
     dl2seg_nat = find_l2seg_by_handle(dep_nat->l2seg_handle);
@@ -611,6 +612,38 @@ flow_create(const flow_cfg_t *cfg, session_t *session)
 
     flow->session = session;
     return flow;
+}
+
+hal_ret_t
+flow_update_fwding_info(flow_cfg_t *flow, intf::LifQType qtype, if_t *dif)
+{
+    hal_ret_t ret;
+    uint8_t q_off;
+    uint32_t qid;
+
+
+    flow->lif = hal::pd::if_get_hw_lif_id(dif);
+
+    if (qtype == intf::LIF_QUEUE_TYPE_NONE) {
+        return HAL_RET_OK;
+    }
+    
+    if (dif->if_type != intf::IF_TYPE_ENIC) {
+        flow->qid_en = 0;
+        return HAL_RET_OK;
+    }
+
+
+    ret = hal::if_get_qid_qoff(dif, qtype, &q_off, &qid);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    flow->qid_en = 1;
+    flow->qtype = q_off;
+    flow->qid = qid;
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -812,6 +845,23 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     ret = update_flow_for_dest_nat(args.tenant, args.rflow, &args.sl2seg, &args.sif, &args.sep);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return ret;
+    }
+
+    // Update fwding info
+    ret = flow_update_fwding_info(args.iflow,
+                                  spec.initiator_flow().flow_data().flow_info().queue_type(),
+                                  args.dif);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return ret;
+    }
+
+    ret = flow_update_fwding_info(args.rflow,
+                                  spec.responder_flow().flow_data().flow_info().queue_type(),
+                                  args.sif);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return ret;
     }
 
