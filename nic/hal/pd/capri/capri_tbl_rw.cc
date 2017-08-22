@@ -48,11 +48,11 @@ typedef int capri_error_t;
  *
  *   2.  To start with there will be single lock to protect updates to shadow
  *       memory (if HAL updates can come from multiple threads)
- *       To improve update performance and avoid lock contention, 4K rows 
+ *       To improve update performance and avoid lock contention, 4K rows
  *       can be divided into zones and one lock per zone can be maintained.
  *       (TO START WITH, I HAVE DECIDED TO USE ONE LOCK)
  *
- *   3. Using table property API provided by p4pd_api, start block, start 
+ *   3. Using table property API provided by p4pd_api, start block, start
  *      row, and number of buckets (number of table entries within
  *      a single row) are obtained.
  *
@@ -90,7 +90,7 @@ typedef int capri_error_t;
  *        to capri.
  *
  *     2. Table entry start and end on 16b boundary. Multiple such 16b words
- *        are updated or read from when performing table write or read. 
+ *        are updated or read from when performing table write or read.
  *
  */
 
@@ -108,7 +108,7 @@ typedef int capri_error_t;
 
 
 typedef struct capri_sram_shadow_mem_ {
-    uint8_t zones;          // Using entire memory as one zone. 
+    uint8_t zones;          // Using entire memory as one zone.
                             // TBD: carve into multiple zones
                             // to reduce access/update contention
 
@@ -116,14 +116,14 @@ typedef struct capri_sram_shadow_mem_ {
 
     // Since writes/read access to SRAM are in done in units of block
     // a three dim array is maintained
-    // Since word width is 16bits, uint16_t is used. A table entry starts at 16b 
+    // Since word width is 16bits, uint16_t is used. A table entry starts at 16b
     // boundary
     uint16_t mem[CAPRI_SRAM_ROWS][CAPRI_SRAM_BLOCK_COUNT][CAPRI_SRAM_WORDS_PER_BLOCK];
-    
+
 } capri_sram_shadow_mem_t;
 
 typedef struct capri_tcam_shadow_mem_ {
-    uint8_t zones;          // Using entire memory as one zone. 
+    uint8_t zones;          // Using entire memory as one zone.
                             // TBD: carve into multiple zones
                             // to reduce access/update contention
 
@@ -131,7 +131,7 @@ typedef struct capri_tcam_shadow_mem_ {
 
     uint16_t mem_x[CAPRI_TCAM_ROWS][CAPRI_TCAM_BLOCK_COUNT][CAPRI_TCAM_WORDS_PER_BLOCK];
     uint16_t mem_y[CAPRI_TCAM_ROWS][CAPRI_TCAM_BLOCK_COUNT][CAPRI_TCAM_WORDS_PER_BLOCK];
-    
+
 } capri_tcam_shadow_mem_t;
 
 
@@ -141,7 +141,7 @@ static capri_tcam_shadow_mem_t *g_shadow_tcam;
 /* HBM base address in System memory map; Cached once at the init time */
 static uint64_t hbm_mem_base_addr;
 
-/* Store base address for the table. */ 
+/* Store base address for the table. */
 static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
 
 #define P4TBL_MAX_ACTIONS (64)
@@ -155,18 +155,9 @@ typedef enum capri_tbl_rw_logging_levels_ {
     CAP_TBL_RW_LOG_LEVEL_ERROR,
 } capri_tbl_rw_logging_levels;
 
-static int cur_logging_level = CAP_TBL_RW_LOG_LEVEL_ALL;
 static FILE *log_file_fd;
 
 #define HAL_LOG_TBL_UPDATES
-
-//fprintf(log_file_fd, format, ##args);
-#define CAPRI_TBL_RW_PRINT(level, format, args...) \
-do { \
-    if (level >= cur_logging_level) { \
-        printf(format, ##args); \
-    } \
-} while (0)
 
 static void
 capri_program_table_mpu_pc(void)
@@ -185,9 +176,8 @@ capri_program_table_mpu_pc(void)
             continue;
         }
         assert(tbl_ctx.stage_tableid < 16);
-        CAPRI_TBL_RW_PRINT(CAP_TBL_RW_LOG_LEVEL_INFO, 
-                           "===========Tbl id: %d, Tbl base: 0x%lx=========\n",
-                           i, capri_table_asm_base[i]);
+        HAL_TRACE_DEBUG("===========Tbl id: {}, Tbl base: {:#x}=========",
+                        i, capri_table_asm_base[i]);
         if (tbl_ctx.gress == P4_GRESS_INGRESS) {
             cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
             // Push to HW/Capri from entry_start_block to block
@@ -299,9 +289,9 @@ int capri_table_rw_init()
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
-    g_shadow_sram = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1, 
+    g_shadow_sram = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_sram_shadow_mem_t));
-    g_shadow_tcam = (capri_tcam_shadow_mem_t*)CAPRI_CALLOC(1, 
+    g_shadow_tcam = (capri_tcam_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_tcam_shadow_mem_t));
     if (!g_shadow_sram || !g_shadow_tcam) {
         // TODO: Log erorr/trace
@@ -330,21 +320,17 @@ int capri_table_rw_init()
             p4pd_get_action_name(i, j, action_name);
             capri_program_label_to_offset("iris", progname, action_name, &capri_action_asm_base[i][j]);
             capri_action_asm_base[i][j] >>= 6; /* Action base is in byte and 64B aligned... */
-            CAPRI_TBL_RW_PRINT(CAP_TBL_RW_LOG_LEVEL_INFO,
-                               "xxx: Program-Name %s, Action-Name %s, Action-Pc 0x%lx\n",
-                               progname, action_name, capri_action_asm_base[i][j]);
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_asm_base[i][j]);
         }
     }
 
-#if 1 
+#if 1
     // HACK
     uint64_t capri_action_p4plus_asm_base;
     capri_program_to_base_addr((char *)"p4plus",
             (char *)"rxdma_stage0.bin",
             &capri_action_p4plus_asm_base);
-    printf("xxx: Program-Name %s, Action-PC 0x%lx\n", "p4plus",
-            capri_action_p4plus_asm_base);
-
     capri_program_p4plus_table_mpu_pc_for_stage0((uint32_t) capri_action_p4plus_asm_base);
 
     capri_program_p4plus_table_config();
@@ -369,7 +355,7 @@ void capri_table_rw_cleanup()
     }
     g_shadow_sram = NULL;
     g_shadow_tcam = NULL;
-    
+
     fclose(log_file_fd);
 }
 
@@ -436,25 +422,25 @@ int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,
                             uint8_t  *hwentry,
                             uint16_t hwentry_bit_len)
-{   
+{
     /* 1. When a Memory line is shared by multiple tables, only tableid's
      *    table entry bits need to be modified in the memory line.
      *    1. read Shadow memory line (entire 128bits in case of SRAM)
      *    2. clear out bits that corresponds to table.
      * 2. Argument hwentry contains byte stream that is already in format that
-     *    agrees to Capri. 
-     *    Bytes read from match-table (SRAM or TCAM) are swizzled before 
-     *    comparing key bits. Today as per HW team, byte swizzing is 
+     *    agrees to Capri.
+     *    Bytes read from match-table (SRAM or TCAM) are swizzled before
+     *    comparing key bits. Today as per HW team, byte swizzing is
      *    Byte 0 in memory is Byte 63 in KeyMaker (512b keymaker)
      *    Byte 1 in memory is Byte 62 in KeyMaker (512b keymaker)
      *    :
      *    Byte 63 in memory is Byte 0 in KeyMaker (512b keymaker)
-     * 3. Write all 128bits back to HW. In case of wide key write back 
+     * 3. Write all 128bits back to HW. In case of wide key write back
      *    multiple 128b blocks. When writing back all 128b blocks its
      *    possible to update neighbour table's entry back with same value
      *    as before.
      */
-    
+
     // Assuming a table entry is contained within a SRAM row...
     // Entry cannot be wider than entire row (10 x 128bits)
 
@@ -500,7 +486,7 @@ int capri_table_entry_write(uint32_t tableid,
         //all g_shadow_sram->mem[sram_row][i] to be pushed to capri..
         uint8_t *s = (uint8_t*)(g_shadow_sram->mem[sram_row][blk]);
         for (int p = 15; p >= 0; p--) {
-            temp[p] = *s; s++; 
+            temp[p] = *s; s++;
         }
         if (dir == P4_GRESS_INGRESS) {
             cap_pics_csr_t & pics_csr = cap0.ssi.pics;
@@ -532,7 +518,7 @@ int capri_table_entry_write(uint32_t tableid,
                                         hwentry_bit_len,
                                         buffer,
                                         sizeof(buffer));
-    printf("%s\n", buffer);
+    HAL_TRACE_DEBUG("{}", buffer);
 #endif
 
     return (CAPRI_OK);
@@ -543,9 +529,9 @@ int capri_table_entry_read(uint32_t tableid,
                            uint32_t index,
                            uint8_t  *hwentry,
                            uint16_t *hwentry_bit_len)
-{   
+{
     /*
-     * Unswizzing of the bytes into readable format is 
+     * Unswizzing of the bytes into readable format is
      * expected to be done by caller of the API.
      */
 
@@ -602,8 +588,8 @@ int capri_table_entry_read(uint32_t tableid,
  *       +--------------------------------------------------------------------+
  * Row1  | V | Block0 (128b value,mask) | .... | V | Block7 (128b value,mask) |
  *       +--------------------------------------------------------------------+
- *                              :           
- *                              :           
+ *                              :
+ *                              :
  *       +--------------------------------------------------------------------+
  * Row   | V | Block0 (128b value,mask) | .... | V | Block7 (128b value,mask) |
  * 1K-1  +====================================================================+
@@ -615,10 +601,10 @@ int capri_table_entry_read(uint32_t tableid,
  *        to capri.
  *
  *     2. Table entry start and end on 16b boundary. Multiple such 16b words
- *        are updated or read from when performing table write or read. 
+ *        are updated or read from when performing table write or read.
  */
 
-static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index, 
+static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
                                          int *tcam_row, int *entry_start_block,
                                          int *entry_end_block, int *entry_start_word)
 {
@@ -626,14 +612,14 @@ static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
 
     p4pd_table_properties_get(tableid, &tbl_ctx);
 
-    *tcam_row = tblctx->tcam_layout.top_left_y + 
+    *tcam_row = tblctx->tcam_layout.top_left_y +
                          (index/tblctx->tcam_layout.num_buckets);
     assert(*tcam_row <= tblctx->tcam_layout.btm_right_y);
     int tbl_col = index % tblctx->tcam_layout.num_buckets;
 
     /* entry_width is in units of TCAM word  -- 16b */
     /* Since every tcam table entry occupies one TCAM block */
-    *entry_start_word = tblctx->tcam_layout.start_index 
+    *entry_start_word = tblctx->tcam_layout.start_index
                          % CAPRI_TCAM_WORDS_PER_BLOCK;
     /* Capri 16b word within a 128b block is numbered from right to left.*/
     //*entry_start_word = (CAPRI_TCAM_WORDS_PER_BLOCK - 1) - *entry_start_word;
@@ -642,9 +628,9 @@ static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
      * tcam, atmost one table can occupy a TCAM block.
      */
     *entry_start_block = ((tblctx->tcam_layout.top_left_block + tbl_col) * CAPRI_TCAM_ROWS)
-                         + tblctx->tcam_layout.top_left_y 
+                         + tblctx->tcam_layout.top_left_y
                          + (index/tblctx->tcam_layout.num_buckets);
-    *entry_end_block = *entry_start_block 
+    *entry_end_block = *entry_start_block
                          + (tblctx->tcam_layout.entry_width
                             / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
 }
@@ -657,18 +643,18 @@ int capri_tcam_table_entry_write(uint32_t tableid,
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
      *    table entry bits need to be modified in the memory line.
-     *    1. read Shadow memory line (entire 64bits) 
+     *    1. read Shadow memory line (entire 64bits)
      *    2. clear out bits that corresponds to table
      * 2. Argument trit_x contains key byte stream that is already in format
      *    that agrees to Capri. trit_y contains mask byte stream that is
      *    already in format
-     *    Bytes read from match-table (TCAM) are swizzled before 
-     *    comparing key bits. Today as per HW team, byte swizzing is 
+     *    Bytes read from match-table (TCAM) are swizzled before
+     *    comparing key bits. Today as per HW team, byte swizzing is
      *    Byte 0 in memory is Byte 63 in KeyMaker (512b keymaker)
      *    Byte 1 in memory is Byte 62 in KeyMaker (512b keymaker)
      *    :
      *    Byte 63 in memory is Byte 0 in KeyMaker (512b keymaker)
-     * 3. Write all 64bits key,mask back to HW. In case of wide key write back 
+     * 3. Write all 64bits key,mask back to HW. In case of wide key write back
      *    multiple 64b blocks. When writing back all 64b blocks its
      *    possible to update neighbour table's entry back with same value
      *    as before.
@@ -700,14 +686,14 @@ int capri_tcam_table_entry_write(uint32_t tableid,
             copy_bits -= 16;
         } else if (copy_bits) {
             if (copy_bits > 8) {
-                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
+                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word]
                     = (*_trit_x << (16 - copy_bits));
-                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
+                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word]
                     = (*_trit_y << (16 - copy_bits));
             } else {
-                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
+                g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word]
                     = (*(uint8_t*)_trit_x << (16 - copy_bits));
-                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] 
+                g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word]
                     = (*(uint8_t*)_trit_y << (16 - copy_bits));
             }
             copy_bits = 0;
@@ -736,11 +722,11 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
         uint8_t *s = (uint8_t*)(g_shadow_tcam->mem_x[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
-            temp_x[p] = *s; s++; 
+            temp_x[p] = *s; s++;
         }
         s = (uint8_t*)(g_shadow_tcam->mem_y[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
-            temp_y[p] = *s; s++; 
+            temp_y[p] = *s; s++;
         }
         if (dir == P4_GRESS_INGRESS) {
             cap_pict_csr_t & pict_csr = cap0.tsi.pict;
@@ -781,7 +767,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
                                         hwentry_bit_len,
                                         buffer,
                                         sizeof(buffer));
-    printf("%s\n", buffer);
+    HAL_TRACE_DEBUG("{}", buffer);
 #endif
 
 
@@ -863,7 +849,7 @@ int capri_hbm_table_entry_write(uint32_t tableid,
     assert((entry_size >> 3) <= tbl_ctx.hbm_layout.entry_width);
     assert(index < tbl_ctx.tabledepth);
 
-    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index 
+    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index
                                 + (index * tbl_ctx.hbm_layout.entry_width);
 
 
@@ -880,7 +866,7 @@ int capri_hbm_table_entry_write(uint32_t tableid,
                                         entry_size,
                                         buffer,
                                         sizeof(buffer));
-    printf("%s\n", buffer);
+    HAL_TRACE_DEBUG("{}", buffer);
 #endif
 
     return (CAPRI_OK);
@@ -896,10 +882,10 @@ int capri_hbm_table_entry_read(uint32_t tableid,
 
     assert(index < tbl_ctx.tabledepth);
 
-    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index 
+    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index
                                 + (index * tbl_ctx.hbm_layout.entry_width);
 #ifndef P4PD_CLI
-    read_mem(hbm_mem_base_addr + entry_start_addr, hwentry, 
+    read_mem(hbm_mem_base_addr + entry_start_addr, hwentry,
              tbl_ctx.hbm_layout.entry_width);
 #endif
     *entry_size = tbl_ctx.hbm_layout.entry_width;

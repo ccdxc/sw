@@ -71,7 +71,8 @@ hal_ret_t capri_lif_qstate_create(uint32_t hw_lif_id) {
 
     struct qstate qstate_arr[8];
 
-    printf("Creating QSTATE for lif = %u, base_addr = 0x%lx\n", hw_lif_id, base_addr);
+    HAL_TRACE_DEBUG("Creating QSTATE for lif {}, base_addr = {:#x}",
+                    hw_lif_id, base_addr);
 
     /*
      *  All descriptors are 64B in size
@@ -87,7 +88,6 @@ hal_ret_t capri_lif_qstate_create(uint32_t hw_lif_id) {
 #if 1
     // HACK
     if(hw_lif_id == 1001) {
-        printf("xxx: creating lif qstate for hw_lif_id = %d\n", hw_lif_id);
         psp.dhs_lif_qstate_map.entry[hw_lif_id].length0(10); // # entries 2^10
         psp.dhs_lif_qstate_map.entry[hw_lif_id].size0(4); //
         psp.dhs_lif_qstate_map.entry[hw_lif_id].length1(0);
@@ -98,7 +98,6 @@ hal_ret_t capri_lif_qstate_create(uint32_t hw_lif_id) {
         psp.dhs_lif_qstate_map.entry[hw_lif_id].size3(0);
     } else {
 #endif
-        printf("creating lif qstate for hw_lif_id = %d\n", hw_lif_id);
         psp.dhs_lif_qstate_map.entry[hw_lif_id].length0(1);
         psp.dhs_lif_qstate_map.entry[hw_lif_id].size0(1);
         psp.dhs_lif_qstate_map.entry[hw_lif_id].length1(1);
@@ -165,23 +164,23 @@ hal_ret_t capri_lif_qstate_create(uint32_t hw_lif_id) {
 
     rv = capri_program_label_to_offset("p4plus", rxdma_prog, eth_rx_label, &offset);
     if (rv < 0) {
-        printf("ERROR: Failed to resolve handle p4plus prog %s label %s\n", rxdma_prog, eth_rx_label);
+        HAL_TRACE_ERR("Failed to resolve handle p4plus prog {} label {}",
+                      rxdma_prog, eth_rx_label);
         return HAL_RET_HW_FAIL;
     }
     qstate_arr[0].pc_offset = offset;
 
     rv = capri_program_label_to_offset("p4plus", txdma_prog, eth_tx_label, &offset);
     if (rv < 0) {
-        printf("ERROR: Failed to resolve handle p4plus prog %s label %s\n", txdma_prog, eth_tx_label);
+        HAL_TRACE_ERR("Failed to resolve handle p4plus prog {} label {}",
+                      txdma_prog, eth_tx_label);
         return HAL_RET_HW_FAIL;
     }
     qstate_arr[2].pc_offset = offset;
 
-    printf("Qstate array size %lu\n", sizeof(qstate_arr));
-
     rv = write_mem(base_addr, (uint8_t *)&qstate_arr, sizeof(qstate_arr));
     if (rv != true) {
-        printf("ERROR: Failed to write QSTATE for lif %d\n", hw_lif_id);
+        HAL_TRACE_ERR("Failed to write QSTATE for lif {}", hw_lif_id);
         return HAL_RET_HW_FAIL;
     }
 
