@@ -138,31 +138,6 @@ add_lif_to_db (lif_t *lif)
     return HAL_RET_OK;
 }
 
-hal_ret_t tcp_lif_create(){
-    lif_t                *lif = NULL;
-    pd::pd_lif_args_t    pd_lif_args;
-
-    lif = lif_alloc_init();
-    if (lif == NULL) {
-        HAL_TRACE_ERR("FAILED TO ALLOCATE LIF");
-        return HAL_RET_OOM;
-    }
-
-    lif->lif_id = 1001;
-    lif->hal_handle = hal_alloc_handle();
-    lif->admin_status = intf::IfStatus::IF_STATUS_UP;
-
-    // allocate all PD resources and finish programming, if any
-    pd::pd_lif_args_init(&pd_lif_args);
-    pd_lif_args.lif = lif;
-    pd::pd_lif_create(&pd_lif_args);
-    // add this lif to the db
-    add_lif_to_db(lif);
-    HAL_TRACE_DEBUG("-----------------------TCP API End ------------------------");
-    return HAL_RET_OK;
-}
-
-
 //------------------------------------------------------------------------------
 // process lif create
 //------------------------------------------------------------------------------

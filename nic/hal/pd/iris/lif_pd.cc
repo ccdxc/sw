@@ -100,6 +100,12 @@ lif_pd_alloc_res(pd_lif_t *pd_lif)
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
 
+    if(((lif_t *)pd_lif->pi_lif)->lif_id == 1001) {
+        pd_lif->hw_lif_id = 1001;
+        HAL_TRACE_DEBUG("HACK ALERT: SETTING HW LIF ID to {}", pd_lif->hw_lif_id);
+        return ret;
+    }
+
     // Allocate lif hwid
     rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_lif->hw_lif_id);
     if (rs != indexer::SUCCESS) {

@@ -8,14 +8,14 @@
 #include <proxy.hpp>
 
 Status
-ProxyServiceImpl::ProxyCreate(ServerContext *context,
+ProxyServiceImpl::ProxyEnable(ServerContext *context,
                               const ProxyRequestMsg *req,
                               ProxyResponseMsg *rsp)
 {
     uint32_t         i, nreqs = req->request_size();
     ProxyResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Proxy Create Request");
+    HAL_TRACE_DEBUG("Rcvd Proxy Enable Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -23,7 +23,7 @@ ProxyServiceImpl::ProxyCreate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::proxy_create(spec, response);
+        hal::proxy_enable(spec, response);
     }
     return Status::OK;
 }
@@ -51,9 +51,9 @@ ProxyServiceImpl::ProxyUpdate(ServerContext *context,
 
 
 Status
-ProxyServiceImpl::ProxyDelete(ServerContext *context,
-                              const ProxyDeleteRequestMsg *req,
-                              ProxyDeleteResponseMsg *rsp)
+ProxyServiceImpl::ProxyDisable(ServerContext *context,
+                              const ProxyDisableRequestMsg *req,
+                              ProxyDisableResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd Proxy Delete Request");
     return Status::OK;

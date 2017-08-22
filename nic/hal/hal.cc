@@ -12,6 +12,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include <interface.hpp>
 #include <tcpcb.hpp>
+#include <proxy.hpp>
 
 namespace hal {
 
@@ -223,9 +224,9 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     g_lif_manager = new LIFManager();
-
-    tcp_lif_create();
-
+   
+    hal_proxy_svc_init();
+    
     return HAL_RET_OK;
 }
 

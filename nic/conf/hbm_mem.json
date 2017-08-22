@@ -41,14 +41,6 @@
             "size_kb": 8
         },
         {
-            "name": "tcpcb",
-            "size_kb": 8192
-        },
-        {
-            "name": "tlscb",
-            "size_kb": 2048
-        },
-        {
             "name": "ipsec-cb",
             "size_kb": 64
         },

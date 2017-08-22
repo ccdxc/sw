@@ -10,9 +10,9 @@ package proxy;
 
 // The proxy service definition
 service Proxy {
-  rpc ProxyCreate (ProxyRequestMsg) returns (ProxyResponseMsg) {}
+  rpc ProxyEnable (ProxyRequestMsg) returns (ProxyResponseMsg) {}
   rpc ProxyUpdate (ProxyRequestMsg) returns (ProxyResponseMsg) {}
-  rpc ProxyDelete (ProxyDeleteRequestMsg) returns (ProxyDeleteResponseMsg) {}
+  rpc ProxyDisable (ProxyDisableRequestMsg) returns (ProxyDisableResponseMsg) {}
   rpc ProxyGet (ProxyGetRequestMsg) returns (ProxyGetResponseMsg) {}
 }
 
@@ -27,7 +27,7 @@ message ProxyKeyHandle {
 // ProxySpec captures all the proxy level configuration
 message ProxySpec {
   types.ObjectMeta      meta                       = 1;    // common object meta
-  ProxyKeyHandle        key_or_handle              = 2;    // proxy being created/updated
+  ProxyKeyHandle        key_or_handle              = 2;    // proxy being enable/updated
   types.ProxyType       proxy_type                 = 3;
   uint32                proxy_qtype                = 4;
 }
@@ -53,19 +53,19 @@ message ProxyResponseMsg {
   repeated ProxyResponse    response = 1;    // batched response
 }
 
-// ProxyDeleteRequest is used to delete a proxy
-message ProxyDeleteRequest {
+// ProxyDisableRequest is used to delete a proxy
+message ProxyDisableRequest {
   types.ObjectMeta        meta          = 1;    // object meta
   ProxyKeyHandle          key_or_handle = 2;    // Proxy key or handle
 }
 
-// ProxyDeleteRequestMsg is used to delete a batch of proxy 
-message ProxyDeleteRequestMsg {
-  repeated ProxyDeleteRequest    request = 1;    // batched delete request
+// ProxyDisableRequestMsg is used to delete a batch of proxy 
+message ProxyDisableRequestMsg {
+  repeated ProxyDisableRequest    request = 1;    // batched delete request
 }
 
-// ProxyDeleteResponseMsg is batched response to ProxyDeleteRequestMsg
-message ProxyDeleteResponseMsg {
+// ProxyDisableResponseMsg is batched response to ProxyDisableRequestMsg
+message ProxyDisableResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
