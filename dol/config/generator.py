@@ -12,6 +12,7 @@ from config.objects.session             import SessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.acl                 import AclHelper
+from config.objects.proxy_service       import ProxyServiceHelper
 
 from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
@@ -35,6 +36,8 @@ def process(topospec):
     # Generate all sessions
     SessionHelper.main()
     
+    ProxyServiceHelper.main()
+
     # Global descriptors and page rings
     SwDscrRingHelper.main("NMDR")
     SwDscrRingHelper.main("NMPR")

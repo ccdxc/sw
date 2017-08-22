@@ -285,19 +285,6 @@ hal_proxy_svc_init(void)
         return HAL_RET_NO_RESOURCE;
     }
     
-    // TODO: This should be enabled by DOL. REMOVE
-    hal_init_def_proxy_services();
-    
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_init_def_proxy_services(void) 
-{
-    HAL_ASSERT(NULL != proxy_factory(types::PROXY_TYPE_TCP));
-    HAL_TRACE_DEBUG("Initialized TCP Proxy Service...");
-    HAL_ASSERT(NULL != proxy_factory(types::PROXY_TYPE_TLS));   
-    HAL_TRACE_DEBUG("Initialized TLS Proxy Service...");
     return HAL_RET_OK;
 }
 
