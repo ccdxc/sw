@@ -1,63 +1,119 @@
 # This file contains the list of DOL test modules.
 modules:
     - module:
-        name    : L2UC_IPV4_UDP
+        name    : L2UC_QTAG_IPV4_UDP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow: filter://type=IPV4,proto=UDP
+            flow    : filter://type=IPV4,proto=UDP
+            segment : filter://native=False
     - module:
-        name    : L2UC_IPV4_TCP
+        name    : L2UC_UNTAG_IPV4_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            flow    : filter://type=IPV4,proto=UDP
+            segment : filter://native=True
+    - module:
+        name    : L2UC_QTAG_IPV4_TCP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            flow    : filter://type=IPV4,proto=TCP
+            segment : filter://native=False
     - module:
-        name    : PKT_TCPCB
+        name    : L2UC_UNTAG_IPV4_TCP
         enable  : True
-        package : test.tcp-tls-proxy
-        module  : tcp_proxy
-        spec    : tcp_proxy.testspec
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            flow    : filter://type=IPV4,proto=TCP
+            segment : filter://native=True
+    - module:
+        name    : L2UC_QTAG_IPV4_ICMP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            flow    : filter://type=IPV4,proto=ICMP
+            segment : filter://native=False
     - module:
-        name    : L2UC_IPV4_ICMP
+        name    : L2UC_UNTAG_IPV4_ICMP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : False
+        ignore  : True
         args    :
-            flow: filter://type=IPV4,proto=ICMP
+            flow    : filter://type=IPV4,proto=ICMP
+            segment : filter://native=True
     - module:
-        name    : L2UC_IPV6_UDP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        args    :
-            flow: filter://type=IPV6,proto=UDP
-    - module:
-        name    : L2UC_IPV6_TCP
+        name    : L2UC_QTAG_IPV6_UDP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow: filter://type=IPV6,proto=TCP
+            flow    : filter://type=IPV6,proto=UDP
+            segment : filter://native=False
     - module:
-        name    : L2UC_NONIP
+        name    : L2UC_UNTAG_IPV6_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            flow    : filter://type=IPV6,proto=UDP
+            segment : filter://native=True
+    - module:
+        name    : L2UC_QTAG_IPV6_TCP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        args    :
+            flow    : filter://type=IPV6,proto=TCP
+            segment : filter://native=False
+    - module:
+        name    : L2UC_UNTAG_IPV6_TCP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            flow    : filter://type=IPV6,proto=TCP
+            segment : filter://native=True
+    - module:
+        name    : L2UC_QTAG_NONIP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
         ignore  : False
-        args    : None
+        args    :
+            segment: filter://native=False
+    - module:
+        name    : L2UC_UNTAG_NONIP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : False
+        args    :
+            segment: filter://native=True
     - module:
         name    : L3UC_IPV4_UDP
         enable  : True
@@ -76,6 +132,15 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV6,proto=UDP
+    - module:
+        name    : PKT_TCPCB
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : tcp_proxy
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
     - module:
         name    : RDMA_BTH_BASIC
         enable  : True

@@ -11,4 +11,4 @@ spkt            : None  # Scapy packet object
 headers_order   : None  # List of headers by name
 encaps          : None
 pktsize         : None
-
+pktspec         : None

@@ -83,7 +83,7 @@ def PrintSummaryAndExit(report):
     return
         
 def ProcessReport():
-    report = TrigExpEngine.get_run_report(20)
+    report = TrigExpEngine.get_run_report(5)
     report.show()
     for tcid,tcreport in report.details.items():
         tc = TestCaseDB.Get(tcid)
@@ -94,7 +94,7 @@ def ProcessReport():
 
 def main():
     ExecuteAllModules()
-    if GlobalOptions.dryrun == True:
-        sys.exit(0)
+    #if GlobalOptions.dryrun == True:
+    #    sys.exit(0)
     ProcessReport()
     return

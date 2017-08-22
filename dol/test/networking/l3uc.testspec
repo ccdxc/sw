@@ -2,11 +2,11 @@
 config_filter:
     src:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
+        segment : filter://native=False
         endpoint: filter://remote=True
     dst:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
+        segment : filter://native=False
         endpoint: filter://remote=True
     flow        : filter://fwtype=L3,label=NETWORKING
     maxflows    : None

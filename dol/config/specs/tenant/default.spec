@@ -9,7 +9,7 @@ segments:
     - spec  : ref://store/specs/id=SEGMENT_NATIVE
       count : 1
     - spec  : ref://store/specs/id=SEGMENT_MDST_FWD
-      count : 1
+      count : 2
     #- spec  : ref://store/specs/id=SEGMENT_MDST_DROP
     #  count : 2
 

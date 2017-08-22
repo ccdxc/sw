@@ -94,7 +94,6 @@ class Module:
         return
 
     def UpdateResult(self, tc):
-        self.stats.total += 1
         if tc.status == 'Failed':
             if self.ignore:
                 self.stats.ignored += 1
@@ -194,6 +193,7 @@ class Module:
         # Teardown must be called only once after iterating all elements.
         self.__teardown_callback()
         self.__unload()
+        self.stats.total = len(self.CompletedTestCases)
         return
 
 

@@ -164,30 +164,12 @@ class Packet(objects.FrameworkObject):
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
-        if pktspec.clone:
-            basepkt = pktspec.clone.Get(tc)
-            self.Clone(basepkt)
-        elif pktspec.template:
-            if objects.IsReference(pktspec.template):
-                self.template = pktspec.template.Get(FactoryStore)
-            elif objects.IsCallback(pktspec.template):
-                self.template = pktspec.template.call(tc, self)
-            else:
-                assert(0)
-            if self.template == None:
-                pktlogger.error("Template NOT FOUND for ID:%s" %\
-                                self.spec.template.GetInstID())
-                assert(self.template != None)
-        else:
-            pktlogger.error("No Template or Clone specified for packet.")
-            assert(0)
+        self.pktspec = pktspec
+        self.__get_packet_base(tc, pktspec)
 
         self.encaps = []
-        if pktspec.encaps:
-            for encspec in pktspec.encaps:
-                encap = encspec.Get(FactoryStore)
-                self.encaps.append(encap)
-           
+        self.__get_packet_encaps(tc, pktspec)
+        
         self.spec = pktspec
         self.__get_payload_size(tc)
 
@@ -196,6 +178,41 @@ class Packet(objects.FrameworkObject):
         
         self.spkt           = None
         self.pktsize        = None
+        return
+
+    def __get_packet_base(self, tc, pktspec):
+        if pktspec.clone:
+            basepkt = pktspec.clone.Get(tc)
+            self.Clone(basepkt)
+            return
+
+        if pktspec.template == None:
+            pktlogger.error("No Template or Clone specified for packet.")
+            assert(0)
+
+        if objects.IsReference(pktspec.template):
+            self.template = pktspec.template.Get(FactoryStore)
+        elif objects.IsCallback(pktspec.template):
+            self.template = pktspec.template.call(tc, self)
+        else:
+            assert(0)
+        if self.template == None:
+            pktlogger.error("Template NOT FOUND for ID:%s" %\
+                            self.spec.template.GetInstID())
+            assert(self.template != None)
+        return 
+
+    def __get_packet_encaps(self, tc, pktspec):
+        if pktspec.encaps == None:
+            return
+
+        if objects.IsCallback(pktspec.encaps):
+            self.encaps = pktspec.encaps.call(tc, self)
+            return
+
+        for encspec in pktspec.encaps:
+            encap = encspec.Get(FactoryStore)
+            self.encaps.append(encap)
         return
 
     def SetStepId(self, step_id):
