@@ -645,7 +645,7 @@ def capri_asm_output_table(be, ctable):
                 if (km_off+fw) > self.union_end:
                     self.union_end = km_off+fw
 
-        def _print(self, indent='    '):
+        def _print(self, fld_names, indent='    '):
             pstr = indent + 'union {\n'
             indent2 = indent+indent
             for s_name,flist in self.ustreams.items():
@@ -658,6 +658,9 @@ def capri_asm_output_table(be, ctable):
                     fname = _get_output_name(cf.hfname)
                     if not full_fld:
                         fname += '_s%d_e%d' % (fs, fs+fw-1)
+                    if fname in fld_names:
+                        fname += '_%d' % (self.km_off+strm_off)
+                    fld_names[fname] = 1
                     pstr += findent + '%s : %d;    // k[%d:%d]\n' % \
                         (fname, fw,
                          511-(self.km_off+strm_off),
@@ -809,9 +812,10 @@ def capri_asm_output_table(be, ctable):
     pstr = 'struct %s_k {\n' % ctable.p4_table.name
     indent = '    '
     km_off = 0
+    fld_names = {}
     for i,ki_f in enumerate(ki_flds):
         if isinstance(ki_f, _ki_union):
-            pstr += ki_f._print(indent)
+            pstr += ki_f._print(fld_names, indent)
             km_off = ki_f.union_end
         else:
             if ki_f[0] == None:
@@ -820,6 +824,9 @@ def capri_asm_output_table(be, ctable):
                 fname = _get_output_name(ki_f[0].hfname)
             if not ki_f[3]:
                 fname += 's%d_e%d' % (ki_f[1], ki_f[1]+ki_f[2]-1)
+            if fname in fld_names:
+                fname += '_%d' % km_off
+            fld_names[fname] = 1
             pstr += indent + '%s : %d;    // k[%d:%d]\n' % \
                         (fname, ki_f[2],
                          511-km_off,
