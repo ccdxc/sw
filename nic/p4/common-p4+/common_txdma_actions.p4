@@ -57,5 +57,6 @@ action tx_table_s0_t0_action(data0, data1,
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
-    modify_field(app_header_scratch.app_data, app_header.app_data);
+    modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+    //modify_field(app_header_scratch.app_data, app_header.app_data);
 }

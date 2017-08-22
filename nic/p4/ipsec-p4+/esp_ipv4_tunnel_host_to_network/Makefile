@@ -19,7 +19,9 @@ all:
 	$(NCC) $(NCC_OPTIONS) $(IPSEC_TX2_PROJ).p4 --gen-dir $(GEN_DIR)
 
 clean:
-	rm -rf $(GEN_DIR)/$(PROJ)
+	rm -rf $(GEN_DIR)/$(IPSEC_RX_PROJ)
+	rm -rf $(GEN_DIR)/$(IPSEC_TX1_PROJ)
+	rm -rf $(GEN_DIR)/$(IPSEC_TX2_PROJ)
 
 default:
 	all
