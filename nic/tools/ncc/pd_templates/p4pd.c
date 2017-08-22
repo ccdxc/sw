@@ -255,7 +255,7 @@ p4pd_copy_be_src_to_le_dest(uint8_t *dest,
     for (int k = 0; k < num_bits; k++) {
         uint8_t *_src = src + ((src_start_bit + k) / 8);
         // Copy into Msbit in destination
-        uint8_t *_dest = dest + ((dest_start_bit + num_bits - 1 - k) / 8);
+        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
         p4pd_copy_single_bit(_dest,
                              (dest_start_bit + num_bits - 1 - k) % 8,
                              _src,
@@ -1626,8 +1626,13 @@ hash_${table}_unpack_action_data(uint32_t tableid,
 //::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
-            copy_before_key = true;
-            packed_action_data = packed_actiondata_before_key;
+            if (actiondata_len_before_key) {
+                copy_before_key = true;
+                packed_action_data = packed_actiondata_before_key;
+            } else {
+                copy_before_key = false;
+                packed_action_data = packed_actiondata_after_key;
+            }
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
             bits_to_copy = ${actionfldwidth}; /* = length of actiondata field */
@@ -1658,8 +1663,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                     /* remaining field bits to be copied after end of match key */
                     bits_to_copy = ${actionfldwidth} - bits_from_adata_before_key;
 
-                    src_start_bit = ${mat_key_bit_length} % 8; // TODO: When mat-key start bit
-                                                               // is not at bit0, fix this.
+                    src_start_bit = 0; /* startbit in second portion of packed actiondata */
                 }
             }
             p4pd_copy_be_src_to_le_dest(
@@ -2699,7 +2703,7 @@ ${table}_entry_decode(uint32_t tableid,
     uint16_t actiondata_len_before_key;
     uint16_t actiondata_len_after_key;
     packed_actiondata_before_key = (hwentry + 1); // After action-pc
-    packed_actiondata_after_key = (hwentry + ${mat_key_start_byte});
+    packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
     actiondata_len_before_key = ${mat_key_start_byte - 1} * 8; // bit len without actionpc
     actiondata_len_after_key = hwentry_len - (${mat_key_start_byte} * 8 + key_bit_len); // bit len
     hash_${table}_unpack_action_data(tableid,
@@ -3204,7 +3208,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${tbl}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -3387,7 +3391,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${tbl}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -3982,7 +3986,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${tbl}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
