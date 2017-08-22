@@ -19,7 +19,7 @@ l3_rewrite:
   phvwr       p.vlan_tag_valid, 0
 
   seq         c2, k.rewrite_metadata_mac_sa_rewrite, 1
-  phvwr       p.ethernet_srcAddr, d.u.l3_rewrite_d.mac_sa
+  phvwr.c2    p.ethernet_srcAddr, d.u.l3_rewrite_d.mac_sa
   seq         c2, k.rewrite_metadata_mac_da_rewrite, 1
   phvwr.c2    p.ethernet_dstAddr, d.u.l3_rewrite_d.mac_da
 

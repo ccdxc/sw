@@ -9,6 +9,8 @@ struct phv_               p;
 %%
 
 input_properties:
+  or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
+  phvwr       p.control_metadata_src_lif, r1
   phvwr       p.flow_lkp_metadata_lkp_vrf, d.u.input_properties_d.vrf
   phvwr       p.flow_lkp_metadata_lkp_dir, d.u.input_properties_d.dir
   phvwr       p.control_metadata_flow_miss_action, d.u.input_properties_d.flow_miss_action

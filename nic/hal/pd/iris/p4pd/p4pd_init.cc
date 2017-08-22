@@ -729,7 +729,7 @@ p4pd_twice_nat_init (void)
 static hal_ret_t
 p4pd_rewrite_init (void)
 {
-    uint32_t              idx = 0;
+    uint32_t              idx = 0, decap_vlan_idx = 1;
     hal_ret_t             ret;
     DirectMap             *dm;
     rewrite_actiondata    data = { 0 };
@@ -746,6 +746,16 @@ p4pd_rewrite_init (void)
         return ret;
     }
 
+    // "decap vlan" entry
+    data.actionid = REWRITE_L3_REWRITE_ID;
+    ret = dm->insert_withid(&data, decap_vlan_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
+    g_hal_state_pd->set_rwr_tbl_decap_vlan_idx(decap_vlan_idx);
     return HAL_RET_OK;
 }
 
@@ -764,15 +774,19 @@ p4pd_tunnel_encap_update_inner (void)
 //
 //  Bridging:
 //     Ingress Untag/Ingress Tag:
-//          -> Flow[rewr_id: 0] (No-op on tags)
+//          -> Flow[rewr_idx: 1, tnnl_rewr: 1] 
+//          -> rewrite_table[1] (Decaps vlan)
+//          -> tnnl_rwr_table[1] (Encaps Vlan with new dscp etc)
 //
 //  Routing:
 //     Ingress Untag 
-//          -> Flow[rewr_idx: l3_rewr_act, tnnl_rewr: 1](Nothing to decap) 
-//          -> Tnnl_Rewrite(Adds Vlan)
+//          -> Flow[rewr_idx: EP's l3_rewr_act, tnnl_rewr: 1]
+//          -> rewrite_table[EP's l3_rewr_act] (Tries to decap but nothing)
+//          -> Tnnl_Rewrite[1] (Adds Vlan)
 //     Ingress Tag   
-//          -> Flow[rewr_idx: l3_rwr_act, tnnl_rewr: 1](Decaps Vlan)
-//          -> Tnnl_Rewrite(Adds Vlan Header)
+//          -> Flow[rewr_idx: EP's l3_rwr_act, tnnl_rewr: 1]
+//          -> rewrite_table[EP's l3_rewr_act] (Decaps vlan)
+//          -> Tnnl_Rewrite[1](Adds Vlan Header)
 // ----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)
