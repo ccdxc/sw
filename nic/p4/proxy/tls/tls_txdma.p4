@@ -40,7 +40,7 @@
 #define tx_table_s7_t2_action       tls_dummy_action
 #define tx_table_s7_t3_action       tls_dummy_action
 
-#include "../common-p4+/common_txdma.p4"
+#include "../../common-p4+/common_txdma.p4"
 
 
 #define CAPRI_QSTATE_HEADER_COMMON \
@@ -75,8 +75,8 @@ header_type tls_stg0_d_t {
         fid                             : 16;
         enc_flow                        : 1;
 
-        // TBD: Total used   : 208 bits, pending: 304
-        pad                             : 304;
+        // TBD: Total used   : 209 bits, pending: 303
+        pad                             : 303;
     }
 }
 
@@ -113,7 +113,7 @@ metadata tls_stg1_7_d_t tls_stg1_7_d;
 
 
 
-action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0_x, pi_0_x, pi_1_x, ci_1_x, serq_base, fid, enc_flow, pad) {
+action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, enc_flow, pad) {
     modify_field(tls_stg0_d.pc, pc);
     modify_field(tls_stg0_d.rsvd, rsvd);
     modify_field(tls_stg0_d.cosA, cosA);
@@ -124,11 +124,11 @@ action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(tls_stg0_d.total, total);
     modify_field(tls_stg0_d.pid, pid);
 
-    modify_field(tls_stg0_d.pi_0_x, pi_0_x);
-    modify_field(tls_stg0_d.ci_0_x, ci_0_x);
+    modify_field(tls_stg0_d.pi_0, pi_0);
+    modify_field(tls_stg0_d.ci_0, ci_0);
 
-    modify_field(tls_stg0_d.pi_1_x, pi_1_x);
-    modify_field(tls_stg0_d.ci_1_x, ci_1_x);
+    modify_field(tls_stg0_d.pi_1, pi_1);
+    modify_field(tls_stg0_d.ci_1, ci_1);
 
     modify_field(tls_stg0_d.serq_base, serq_base);
     modify_field(tls_stg0_d.fid, fid);
