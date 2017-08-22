@@ -20,8 +20,7 @@ d = {
 
 k = {
   p4plus_to_p4_valid = TRUE;
-  p4plus_to_p4_flags_sbit0_ebit3 = 0x0;
-  p4plus_to_p4_flags_sbit4_ebit7 = 0x0;
+  p4plus_to_p4_flags = 0;
 };
 
 r6 = 0x01100110;

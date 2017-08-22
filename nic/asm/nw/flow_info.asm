@@ -18,8 +18,7 @@ flow_info:
   phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.lif
   sne         c2, d.u.flow_info_d.service_lif, r0
   seq         c3, k.p4plus_to_p4_valid, FALSE
-  smeqb       c4, k.{p4plus_to_p4_flags_sbit0_ebit3, \
-                     p4plus_to_p4_flags_sbit4_ebit7}, 0x80, 0
+  smeqb       c4, k.p4plus_to_p4_flags, 0x80, 0
   andcf       c2, [c3 | c4]
   setcf       c6, [!c1 & c2]
   phvwr.c6    p.capri_intrinsic_lif, d.u.flow_info_d.service_lif

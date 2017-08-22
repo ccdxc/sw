@@ -248,6 +248,7 @@ header_type p4_to_p4plus_cpu_header_t {
 header_type p4plus_to_p4_header_t {
     fields {
         p4plus_app_id    : 4;
+        pad              : 4;
         flags            : 8;
         ip_id            : 16;
         ip_len           : 16;
