@@ -113,7 +113,7 @@ metadata tls_stg1_7_d_t tls_stg1_7_d;
 
 
 
-action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, enc_flow, pad) {
+action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
     modify_field(tls_stg0_d.pc, pc);
     modify_field(tls_stg0_d.rsvd, rsvd);
     modify_field(tls_stg0_d.cosA, cosA);
@@ -132,7 +132,7 @@ action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
 
     modify_field(tls_stg0_d.serq_base, serq_base);
     modify_field(tls_stg0_d.fid, fid);
-    modify_field(tls_stg0_d.enc_flow, enc_flow);
+    modify_field(tls_stg0_d.dec_flow, dec_flow);
     modify_field(tls_stg0_d.pad, pad);
 }
 
