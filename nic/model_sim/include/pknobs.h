@@ -343,12 +343,40 @@ namespace pknobs{
     vector<Knob*> burst_knob;
     int curr_idx;
     bool stick;
+    bool permute = false;  // Permute list at the beginning and after every iteration.
+    bool permuted = false;
     int64 last_value;
+
+    void shuffle(){
+      int rng = burst_cnt_knob.size();
+      for(int i=0;i<rng;i++){
+        unsigned long rand_val = RKnob::eval();
+        int swap_idx = i + (rand_val % (rng - i));;
+
+        Knob* tmp                = burst_knob[i];
+        burst_knob[i]            = burst_knob[swap_idx];
+        burst_knob[swap_idx]     = tmp;
+
+        tmp                      = burst_cnt_knob[i];
+        burst_cnt_knob[i]        = burst_cnt_knob[swap_idx];
+        burst_cnt_knob[swap_idx] = tmp;
+
+	int   tmp_cnt            = curr_burst_cnt[i];
+	curr_burst_cnt[i]        = curr_burst_cnt[swap_idx];
+	curr_burst_cnt[swap_idx] = tmp_cnt;
+
+	int   tmp_size           = curr_burst_size[i];
+	curr_burst_size[i]       = curr_burst_size[swap_idx];
+	curr_burst_size[swap_idx]= tmp_cnt;
+      }
+    }
 
     void copy(const BLKnob & k);
   public:
     void setStick()   { stick = true;}
     void unSetStick() { stick = false;}
+    void setPermute()   { permute = true;}
+    void unSetPermute() { permute = false;}
     BLKnob(const string & n, KnobParam knob_type, int num_knobs, ... );
     BLKnob(const string & n):RKnob(n),curr_idx(0),stick(false),last_value(0){};
     BLKnob(const BLKnob & k): RKnob(k){copy(k);}
@@ -370,7 +398,10 @@ namespace pknobs{
       }
     }
     virtual int64 eval(){
-
+      if (!permuted && permute) {
+	shuffle();
+	permuted = true;
+      }
       // if just starting, get the burst size
       if (curr_burst_cnt[curr_idx] == 0){
         curr_burst_size[curr_idx] = (*burst_cnt_knob[curr_idx]).eval();
@@ -394,7 +425,12 @@ namespace pknobs{
       //if cycle is over, reset count
       if (curr_burst_cnt[curr_idx] == curr_burst_size[curr_idx]){
         curr_burst_cnt[curr_idx] = 0;
-        curr_idx = (curr_idx + 1) % curr_burst_cnt.size();
+        curr_idx = (curr_idx + 1);
+	if (curr_idx >= curr_burst_cnt.size()) {
+	  if (permute)
+	    shuffle();
+	  curr_idx -= curr_burst_cnt.size();
+	}
       }
 
       return ret_value;
@@ -485,12 +521,12 @@ namespace pknobs{
               knob_vec.push_back( new pknobs::RRKnob(lower,upper));
               int u = upper - lower + 1;
               wgt_vec.push_back(u);
-              total_wgt = u; 
+              total_wgt = u;
               setParent(this);
           }
 
           UniqKnob(const string &n, int64 _lower, int64 _upper) : WLKnob("foo"){
-              init(lower,upper);
+              init(_lower,_upper);
           }
 
 
@@ -502,7 +538,7 @@ namespace pknobs{
               os << "UniqKnob->"; WLKnob::print(os); os << endl;
           }
 
-          UniqKnob(const string & n) : WLKnob(n) { 
+          UniqKnob(const string & n) : WLKnob(n) {
               total_wgt = 0;
               lower = 0;
               upper = 0;
@@ -512,7 +548,7 @@ namespace pknobs{
           }
           virtual Knob* clone() const{ return new UniqKnob(*this);}
           virtual void setParent(Knob * p){
-              WLKnob::setParent(p); 
+              WLKnob::setParent(p);
           }
 
           virtual int64 eval() {
@@ -526,7 +562,7 @@ namespace pknobs{
                   if (prob < wgt_vec[i]){
 
                       pknobs::RRKnob & old_rrknob = dynamic_cast<pknobs::RRKnob&>(*knob_vec[i]);
-                      ret_value = old_rrknob.eval(); 
+                      ret_value = old_rrknob.eval();
                       pknobs::int64 old_max = old_rrknob.get_max_val();
                       pknobs::int64 old_min = old_rrknob.get_min_val();
                       idx = i;
@@ -553,7 +589,7 @@ namespace pknobs{
                   //cout << "deleting : " << debug.str() << endl;
                   delete knob_vec[idx];
                   knob_vec.erase(knob_vec.begin() + idx);
-                  pknobs::int64 old_wgt; 
+                  pknobs::int64 old_wgt;
 
                   if(idx != 0) {
                       old_wgt = wgt_vec[idx-1];
@@ -567,14 +603,14 @@ namespace pknobs{
 
 
                   if(knob_vec.size() != wgt_vec.size()) {
-                      cout <<" ERROR: knob_vec and wgt_vec are not of same size (" << knob_vec.size() << " vs " << wgt_vec.size() << endl; 
+                      cout <<" ERROR: knob_vec and wgt_vec are not of same size (" << knob_vec.size() << " vs " << wgt_vec.size() << endl;
                   }
 
                   if((knob_vec.size() == 0) && !new_max_rrknob && !new_min_rrknob) {
                       knob_vec.push_back( new pknobs::RRKnob(lower,upper));
                       int u = upper - lower + 1;
                       wgt_vec.push_back(u);
-                      total_wgt = u; 
+                      total_wgt = u;
                       //cout << "resetting" << endl;
                   } else {
 
