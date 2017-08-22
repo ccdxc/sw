@@ -70,24 +70,29 @@ tcp_rx_process_stage1_start:
 	nop
 
 tcp_queue_rcv:
+#if MODEL_BUG_FIX	
 	phvwri		p.common_phv_write_serq, 1
-	tblwr		d.u.tcp_rx_d.write_serq, 1
+#endif
 	
 tcp_rcv_nxt_update:
-	sub		r1, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
-	tblwr		d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
+	sub		r1, k.s1_s2s_end_seq, d.u.tcp_rx_d.rcv_nxt
+	tblwr		d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_end_seq
 	tbladd		d.u.tcp_rx_d.bytes_rcvd, r1
 	
 tcp_event_data_recv:
 	/* SCHEDULE_ACK(tp) */
-	phvwr		p.common_phv_pending_ack_send,1
-	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
-	/* Register write to set the pending bit for flow */
-	addi		r1, r0, 1
-	add		r5, k.common_phv_fid, r0
-	sll		r5, r5, SCHED_PENDING_BIT_SHIFT
-	addi		r5, r5, SCHED_PENDING_BIT_BASE
-	memwr.b		r5,r1
+	/* Set the pending txdma in phv for subsequent stage to issue dma
+	 * commands to update rx2tx shared state and ring the doorbell
+	 * to schedule the txdma processing for TCP
+	 */
+	phvwr           p.common_phv_pending_txdma,1
+#if MODEL_BUG_FIX
+	/* The bit for actual specific pending processing needed in txdma
+	 * is set in the rx2tx shared state. In this case we need an
+	 * ack to be sent
+	 */
+	phvwr		p.rx2tx_extra_pending_ack_send,1
+#endif
 	/* Initialized the delayed ack engine if first ack */
 	/*
 	  if (!tp->fto.ato) {
@@ -98,7 +103,7 @@ tcp_event_data_recv:
 	seq 		c1, d.u.tcp_rx_d.ato, r0
 	bcf		[!c1], delack_engine_init_done
 	nop
-tcp_incr_quickack_start:
+tcp_incr_quickack:
 	/* unsigned int quickacks = tp->fc.rcv_wnd / (2 * tp->rx_opt.rcv_mss); */
 
 	/* rcv_mss_shft = 1 for 1.5k (rounded to 2k), 3 for 9k (rounded to 8k) */
@@ -130,7 +135,9 @@ tcp_incr_quickack_start:
 	slt.c2		c3, r2, r1
 	tblwr.c3	d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
 	tblwr.!c3	d.u.tcp_rx_d.quick, r1
+#if MODEL_BUG_FIX
 	phvwr		p.common_phv_quick, d.u.tcp_rx_d.quick
+#endif
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
@@ -170,6 +177,8 @@ delack_engine_init_done:
 	tblwr		d.u.tcp_rx_d.ato, r5
 	/* tp->fto.ato = tp->fto.ato + TCP_ATO_MIN/2 */
 	tbladd.!c1	d.u.tcp_rx_d.ato, r2
+	/* clear c2 */
+	setcf		c2, [!c0]
 	/*  if (m < tp->fto.ato) */
 	slt.c1		c2, r1, d.u.tcp_rx_d.ato
 	/* tp->fto.ato = (tp->fto.ato >> 1) + m */
@@ -180,13 +189,13 @@ delack_engine_init_done:
 	tblwr.c3	d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
 	/* if (m > tp->fto.rto */
 	slt.c2		c4, d.u.tcp_rx_d.rto, r1
-	jal.c2		r7, tcp_incr_quickack
+	bal.c2		r7, tcp_incr_quickack
 	nop
 	/* tp->rx.lrcv_time = tcp_time_stamp */
 	tblwr		d.u.tcp_rx_d.lrcv_time, r6
 
 	/* tcp_ecn_check_ce (tp, cp) */
-	jal 		r7, tcp_ecn_check_ce
+	bal 		r7, tcp_ecn_check_ce
 	nop
 	
 tcp_event_data_rcv_done:
@@ -244,7 +253,7 @@ tcp_ack:
 	sne		c2, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
 	bcf		[c1 & c2], no_rearm_rto
 	nop
-	jal  		r7, tcp_rearm_rto
+	bal  		r7, tcp_rearm_rto
 	nop
 no_rearm_rto:	
 	/*
@@ -268,7 +277,7 @@ no_rearm_rto:
 	 */
 	add		r5, k.common_phv_process_ack_flag, r0
 	smeqh		c2, r5 , FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
-	jal.c2		r7, tcp_replace_ts_recent
+	bal.c2		r7, tcp_replace_ts_recent
 	nop
 	/*
 	 *
@@ -441,7 +450,7 @@ tcp_in_ack_event:
 	 bcf		[!c3], no_queue
 	 nop
 
-tcp_ecn_check_ce_start:
+tcp_ecn_check_ce:
 	sne		c4, r7, r0
 
 	/*   if (tp->rx.ecn_flags & TCP_ECN_OK) */
@@ -459,7 +468,7 @@ tcp_ecn_check_ce_start:
 	//.cscase	INET_ECN_NOT_ECT
 	setcf		c1, [c0]
 	smeqb.c5	c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN, TCP_ECN_SEEN
-	jal.c1		r7, tcp_enter_quickack_mode
+	bal.c1		r7, tcp_enter_quickack_mode
 	nop
 
 	//.cscase INET_ECN_ECT_1
@@ -483,7 +492,7 @@ tcp_ecn_check_ce_start:
 	phvwr.c1	p.common_phv_ca_event, r2
 	setcf		c1, [c0]
 	smeqb.c2	c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR, TCP_ECN_DEMAND_CWR
-	jal.!c1		r7, tcp_enter_quickack_mode
+	bal.!c1		r7, tcp_enter_quickack_mode
 	tblor.!c1	d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR
 	tblor		d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 	//.csend
@@ -495,7 +504,7 @@ tcp_ecn_check_ce_done:
 /* Restart timer after forward progress on connection.
  * RFC2988 recommends to restart timer to now+rto.
  */
-tcp_rearm_rto_start:
+tcp_rearm_rto:
 
         CAPRI_CLEAR_TABLE0_VALID
 
@@ -511,7 +520,7 @@ tcp_rearm_rto_start:
 	nop
 	seq		c1, k.s1_s2s_packets_out, r0
 	phvwr.c1	p.rx2tx_extra_pending_ft_clear,1
-	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
+	phvwr.c1	p.common_phv_pending_txdma, 1
 	bcf		[c1], tcp_rearm_rto_done
 	tbladd.c1	d.u.tcp_rx_d.rto,  -1
 	/* r3 = rto */
@@ -537,19 +546,19 @@ early_retx_or_tlp:
 	add.!c1         r5, r4, r6
 	tblwr.!c1	d.u.tcp_rx_d.rto_deadline, r5
 	phvwr		p.rx2tx_extra_pending_ft_reset,1
-	tblwr.c1	d.u.tcp_rx_d.pending_txdma, 1
+	phvwr.c1	p.common_phv_pending_txdma, 1
 tcp_rearm_rto_done:	
 	jr.c4		r7
 	add		r7, r0, r0
 
 	
-tcp_replace_ts_recent_start:
+tcp_replace_ts_recent:
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
 
-tcp_enter_quickack_mode_start:
-	jal		r7, tcp_incr_quickack
+tcp_enter_quickack_mode:
+	bal		r7, tcp_incr_quickack
 	nop
 	tblwr 		d.u.tcp_rx_d.pingpong, r0
 	phvwr		p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
@@ -563,10 +572,6 @@ old_ack:
 invalid_ack:
 no_queue:
 flow_rx_process_done:
-	// check and trigger pending tx processing
-	sne		c4, d.u.tcp_rx_d.pending_txdma, r0
-	bcf		[!c4], table_read_setup_next
-	nop
 	/* Address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_TCP)
 	/* data will be in r3 */
@@ -576,9 +581,6 @@ table_read_setup_next:
 	bcf		[c7], table_read_SACK
 	nop
 table_read_RTT:
-	sne		c1, d.u.tcp_rx_d.write_serq, r0
-	bcf		[c1], table_read_RNMDR_ALLOC_IDX
-	nop
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
 	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)

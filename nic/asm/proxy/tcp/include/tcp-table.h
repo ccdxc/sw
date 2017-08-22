@@ -106,11 +106,6 @@
 #define flow_queue_sched_process       0x00016800
 #define flow_sesq_consume_process      0x00016c00
 
-#define tcp_incr_quickack              0x00040110
-#define tcp_ecn_check_ce               0x000404c0
-#define tcp_rearm_rto                  0x000e0000
-#define tcp_replace_ts_recent          0x000f0000
-#define tcp_enter_quickack_mode        0x0001f000
 #define tcp_write_wakeup               0x000400c0
 #define tcp_mtu_probe                  0x00040198
 #define tcp_send_probe0                0x00023000
