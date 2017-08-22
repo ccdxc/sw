@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/vishvananda/netlink"
 )
@@ -124,7 +125,11 @@ func AddSecondaryIP(ipAddr string) error {
 		return err
 	}
 	network.IP = ip
-	return netlink.AddrAdd(link, &netlink.Addr{Label: fmt.Sprintf("%s:pens", intf.Name), IPNet: network})
+	if err = netlink.AddrAdd(link, &netlink.Addr{Label: fmt.Sprintf("%s:pens", intf.Name), IPNet: network}); err != nil {
+		return err
+	}
+	go ARPSendGratuitous(intf, ip, 3, time.Second)
+	return nil
 }
 
 // DeleteIP deletes the specified address from the interface it is found on.
