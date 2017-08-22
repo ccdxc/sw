@@ -12,6 +12,12 @@ import (
 	"github.com/pensando/sw/cmd/types"
 )
 
+// Observer is an interface implemented by observers of resolver.
+type Observer interface {
+	// OnNotifyResolver handles an event published by the resolver
+	OnNotifyResolver(types.ServiceInstanceEvent) error
+}
+
 // Interface for a resolver client.
 type Interface interface {
 	// Lookup resolves a service to its instances.
@@ -19,6 +25,12 @@ type Interface interface {
 
 	// Stop stops the resolver client.
 	Stop()
+
+	// Register an observer.
+	Register(Observer)
+
+	// Deregister an observer.
+	Deregister(Observer)
 }
 
 // Config contains configuration to create a resolver client.
@@ -35,20 +47,22 @@ type Config struct {
 // resolverClient implements the resolver client functionality.
 type resolverClient struct {
 	sync.Mutex
-	config  *Config
-	ctx     context.Context
-	cancel  context.CancelFunc
-	svcsMap map[string]map[string]*types.ServiceInstance // service name to instance mappings.
+	config    *Config
+	ctx       context.Context
+	cancel    context.CancelFunc
+	svcsMap   map[string]map[string]*types.ServiceInstance // service name to instance mappings.
+	observers []Observer
 }
 
 // New creates a new resolver client.
 func New(c *Config) (Interface, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &resolverClient{
-		config:  c,
-		ctx:     ctx,
-		cancel:  cancel,
-		svcsMap: make(map[string]map[string]*types.ServiceInstance),
+		config:    c,
+		ctx:       ctx,
+		cancel:    cancel,
+		svcsMap:   make(map[string]map[string]*types.ServiceInstance),
+		observers: make([]Observer, 0),
 	}
 	go r.runUntilCancel()
 	return r, nil
@@ -109,6 +123,9 @@ func (r *resolverClient) runUntilCancel() {
 				r.svcsMap = svcsMap
 				r.Unlock()
 				first = false
+				for ii := range el.Items {
+					r.notify(*el.Items[ii])
+				}
 				continue
 			}
 			r.Lock()
@@ -131,6 +148,9 @@ func (r *resolverClient) runUntilCancel() {
 				}
 			}
 			r.Unlock()
+			for ii := range el.Items {
+				r.notify(*el.Items[ii])
+			}
 		}
 
 		// Sleep before retrying
@@ -167,4 +187,37 @@ func (r *resolverClient) Stop() {
 		r.cancel = nil
 	}
 	r.svcsMap = nil
+}
+
+// Register an observer.
+func (r *resolverClient) Register(o Observer) {
+	r.Lock()
+	defer r.Unlock()
+	r.observers = append(r.observers, o)
+}
+
+// Deregister an observer.
+func (r *resolverClient) Deregister(o Observer) {
+	r.Lock()
+	defer r.Unlock()
+	var i int
+	for i = range r.observers {
+		if r.observers[i] == o {
+			break
+		}
+	}
+	r.observers = append(r.observers[:i], r.observers[i+1:]...)
+}
+
+// notify all observers, return first encountered err of the observers.
+// All the observers are notified of the event even if someone fails
+func (r *resolverClient) notify(e types.ServiceInstanceEvent) error {
+	var err error
+	for _, o := range r.observers {
+		er := o.OnNotifyResolver(e)
+		if err == nil && er != nil {
+			err = er
+		}
+	}
+	return err
 }

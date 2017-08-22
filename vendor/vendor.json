@@ -1893,6 +1893,12 @@
 			"revisionTime": "2017-05-31T20:35:52Z"
 		},
 		{
+			"checksumSHA1": "AvVpgwhxhJgjoSledwDtYrEKVE4=",
+			"path": "google.golang.org/genproto/googleapis/rpc/status",
+			"revision": "ee236bd376b077c7a89f260c026c4735b195e459",
+			"revisionTime": "2017-08-18T01:03:45Z"
+		},
+		{
 			"comment": "v1.0.4-59-gb13ef79",
 			"path": "google.golang.org/grpc",
 			"revision": "b13ef794997191ec801db90a42c50034df91850a"
@@ -1936,6 +1942,12 @@
 			"comment": "v1.0.4-59-gb13ef79",
 			"path": "google.golang.org/grpc/stats",
 			"revision": "b13ef794997191ec801db90a42c50034df91850a"
+		},
+		{
+			"checksumSHA1": "3Dwz4RLstDHMPyDA7BUsYe+JP4w=",
+			"path": "google.golang.org/grpc/status",
+			"revision": "25b4a426b40c26c07c80af674b03db90b5bd4a60",
+			"revisionTime": "2017-08-17T23:00:51Z"
 		},
 		{
 			"comment": "v1.0.4-59-gb13ef79",
