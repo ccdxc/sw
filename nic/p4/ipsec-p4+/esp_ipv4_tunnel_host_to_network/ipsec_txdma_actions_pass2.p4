@@ -3,22 +3,22 @@
 #define tx_table_s0_t2_action ipsec_txdma_dummy 
 #define tx_table_s0_t3_action ipsec_txdma_dummy 
 
-#define tx_table_s1_t0_action ipsec_encap_txdma2_load_barco_req 
+#define tx_table_s1_t0_action ipsec_encap_txdma2_load_barco_req_ptr
 #define tx_table_s1_t1_action ipsec_txdma_dummy 
 #define tx_table_s1_t2_action ipsec_txdma_dummy 
 #define tx_table_s1_t3_action ipsec_txdma_dummy 
 
-#define tx_table_s2_t0_action ipsec_encap_txdma2_load_in_desc 
-#define tx_table_s2_t1_action ipsec_encap_txdma2_load_out_desc 
-#define tx_table_s2_t2_action ipsec_encap_txdma2_load_ipsec_int
-#define tx_table_s2_t3_action ipsec_txdma_dummy
+#define tx_table_s2_t0_action ipsec_encap_txdma2_load_barco_req 
+#define tx_table_s2_t1_action ipsec_txdma_dummy 
+#define tx_table_s2_t2_action ipsec_txdma_dummy 
+#define tx_table_s2_t3_action ipsec_txdma_dummy 
 
-#define tx_table_s3_t0_action ipsec_build_encap_packet
-#define tx_table_s3_t1_action ipsec_txdma_dummy
-#define tx_table_s3_t2_action ipsec_txdma_dummy
+#define tx_table_s3_t0_action ipsec_encap_txdma2_load_in_desc 
+#define tx_table_s3_t1_action ipsec_encap_txdma2_load_out_desc 
+#define tx_table_s3_t2_action ipsec_encap_txdma2_load_ipsec_int
 #define tx_table_s3_t3_action ipsec_txdma_dummy
 
-#define tx_table_s4_t0_action ipsec_txdma_dummy
+#define tx_table_s4_t0_action ipsec_build_encap_packet
 #define tx_table_s4_t1_action ipsec_txdma_dummy
 #define tx_table_s4_t2_action ipsec_txdma_dummy
 #define tx_table_s4_t3_action ipsec_txdma_dummy
@@ -51,7 +51,8 @@ header_type p4plus_to_p4_ipsec_header_t {
         table1_valid : 1;
         table2_valid : 1;
         table3_valid : 1;
-        ipsec_pad : 504;
+        ipsec_pad1 : 256;
+        ipsec_pad : 248;
     }
 }
 
@@ -65,11 +66,11 @@ header_type ipsec_int_header_t {
         tailroom          : 8;
         headroom_offset   : 16;
         tailroom_offset   : 16;
-        pad_size          : 8;
         payload_start     : 16;
         buf_size          : 16;
         payload_size      : 16;
         l4_protocol       : 8;
+        pad_size          : 8;
         pad_1             : 256;
     }
 }
@@ -259,7 +260,7 @@ action ipsec_txdma_dummy ()
 {
 }
 
-//stage 3
+//stage 4
 action ipsec_build_encap_packet()
 {
     // Add intrinsic and app header
@@ -284,7 +285,7 @@ action ipsec_build_encap_packet()
 }
  
 
-//stage 2 table 2 
+//stage 3 table 2 
 action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, ipsec_cb_index,
                                          headroom_offset, tailroom_offset,
                                          pad_size, payload_start, buf_size,
@@ -299,7 +300,7 @@ action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, ipsec_cb_index,
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
-//stage 2 table 1 
+//stage 3 table 1 
 action ipsec_encap_txdma2_load_out_desc(addr0, offset0, length0,
                                         addr1, offset1, length1,
                                         addr2, offset2, length2,
@@ -310,7 +311,7 @@ action ipsec_encap_txdma2_load_out_desc(addr0, offset0, length0,
     modify_field(p4plus2p4_hdr.table1_valid, 0);
 }
 
-//stage 2 table 0 
+//stage 3 table 0 
 action ipsec_encap_txdma2_load_in_desc(addr0, offset0, length0,
                                        addr1, offset1, length1,
                                        addr2, offset2, length2,
@@ -328,7 +329,7 @@ action ipsec_encap_txdma2_load_in_desc(addr0, offset0, length0,
 
 
 
-//stage 1
+//stage 2 table0
 action ipsec_encap_txdma2_load_barco_req(brq_in_addr, brq_out_addr,
                                          brq_barco_enc_cmd, brq_key_index,
                                          brq_iv_addr, brq_auth_tag_addr,
@@ -360,6 +361,17 @@ action ipsec_encap_txdma2_load_barco_req(brq_in_addr, brq_out_addr,
 }
 
 
+//stage 1
+action ipsec_encap_txdma2_load_barco_req_ptr(barco_req_address)
+{
+    modify_field(p4plus2p4_hdr.table0_valid, 1);
+    modify_field(common_te0_phv.table_pc, 0);
+    modify_field(common_te0_phv.table_raw_table_size, 6);
+    modify_field(common_te0_phv.table_lock_en, 0);
+    modify_field(common_te0_phv.table_addr, barco_req_address);
+}
+
+
 //stage 0
 action ipsec_encap_txdma2_initial_table(pid, cosb, cosa, pc_offset,
                                        ipsec_cb_pindex, ipsec_cb_cindex,
@@ -377,7 +389,7 @@ action ipsec_encap_txdma2_initial_table(pid, cosb, cosa, pc_offset,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_ENTRY_SIZE * barco_cb_cindex));
+    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_cb_cindex));
    
 }
 
