@@ -73,7 +73,7 @@ header_type tls_stg0_d_t {
 
         serq_base                       : ADDRESS_WIDTH;
         fid                             : 16;
-        enc_flow                        : 1;
+        dec_flow                        : 1;
 
         // TBD: Total used   : 209 bits, pending: 303
         pad                             : 303;
