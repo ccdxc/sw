@@ -80,7 +80,7 @@ install_box:
 # make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
 # do a release build.
 deps: install_box
-	RELEASE=${RELEASE} box -t 'srv1.pensando.io:5000/pensando/nic:dependencies' box-deps.rb
+	RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t 'srv1.pensando.io:5000/pensando/nic:dependencies' box-deps.rb
 
 # make a release build of the dependencies image
 deps-release:
