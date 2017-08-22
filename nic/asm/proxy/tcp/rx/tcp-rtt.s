@@ -215,10 +215,10 @@ tcp_set_rto:
 	tblwr		d.backoff, r0
 flow_rtt_process_done:
 	
-table_read_FC:
+table_read_FRA:
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fra_stage3_start,
 	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
+	                    TCP_TCB_FRA_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 
