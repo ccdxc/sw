@@ -126,7 +126,6 @@ extern bool proxy_compare_handle_key_func(void *key1, void *key2);
  ***************************/
 
 hal_ret_t hal_proxy_svc_init(void);
-hal_ret_t hal_init_def_proxy_services(void);
 
 hal_ret_t proxy_allocate_qid(types::ProxyType type,
                              lif_id_t&   lif,

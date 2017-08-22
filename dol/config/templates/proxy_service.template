@@ -1,0 +1,5 @@
+# Service Proxy Object Template File.
+meta:
+    id: SERVICE_LIF
+
+type        : None
