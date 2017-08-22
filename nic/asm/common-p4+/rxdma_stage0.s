@@ -17,6 +17,7 @@
 %%
     .param      tcp_rx_read_shared_stage0_start
     .param      resp_rx_rqcb_process
+    .param      cpu_rx_read_shared_stage0_start
 
 .align
 eth_rx_stage0:
@@ -27,7 +28,6 @@ eth_rx_stage0:
 tcp_rx_stage0:
     j tcp_rx_read_shared_stage0_start
     nop
-
 
 .align
 rdma_resp_rx_stage0:
@@ -43,3 +43,9 @@ rdma_req_rx_stage0:
 ipsec_rx_stage0:
     nop.e
     nop
+
+.align
+cpu_rx_stage0:
+    j cpu_rx_read_shared_stage0_start
+    nop
+

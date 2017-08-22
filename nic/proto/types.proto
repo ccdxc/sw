@@ -83,6 +83,8 @@ enum ApiStatus {
   API_STATUS_IPSEC_CB_ID_INVALID      = 51;    // invalid IPSEC CB id
   API_STATUS_IPSEC_CB_NOT_FOUND       = 52;    // invalid IPSEC CB
   API_STATUS_L4LB_KEY_INVALID         = 53;    // invalid L4LB key
+  API_STATUS_CPU_CB_ID_INVALID        = 54;    // invalid CPU CB id
+  API_STATUS_CPU_CB_NOT_FOUND         = 55;    // invalid CPU CB
 }
 
 // common meta object that is part of all other top level objects
@@ -159,6 +161,7 @@ enum WRingType {
   WRING_TYPE_BRQ            = 9;
   WRING_TYPE_SESQ           = 10;    
   WRING_TYPE_IPSECCBQ       = 11;
+  WRING_TYPE_ARQRX          = 12;
 }
 
 // Types of Proxy Service
@@ -167,6 +170,7 @@ enum ProxyType {
   PROXY_TYPE_TCP           = 1;    
   PROXY_TYPE_TLS           = 2;    
   PROXY_TYPE_IPSEC         = 3;    
+  PROXY_TYPE_CPU           = 4;
 }
 
 // Types of Cryptographic keys

@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+// protobuf specification for cpucb
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package cpucb;
+
+// The cpu cb service definition
+service CpuCb {
+  rpc CpuCbCreate (CpuCbRequestMsg) returns (CpuCbResponseMsg) {}
+  rpc CpuCbUpdate (CpuCbRequestMsg) returns (CpuCbResponseMsg) {}
+  rpc CpuCbDelete (CpuCbDeleteRequestMsg) returns (CpuCbDeleteResponseMsg) {}
+  rpc CpuCbGet (CpuCbGetRequestMsg) returns (CpuCbGetResponseMsg) {}
+}
+
+// CpuCbKeyHandle is used to operate on a cpu_cb either by its key or handle
+message CpuCbKeyHandle {
+  oneof key_or_handle {
+    uint32     cpucb_id          = 1;    // unique cpu_cb id allocated by app
+    fixed64    cpucb_handle      = 2;    // cpu_cb handle returned by HAL
+  }
+}
+
+// CpuCbSpec captures all the cpu_cb level configuration
+message CpuCbSpec {
+  CpuCbKeyHandle        key_or_handle              = 1;    // cpu_cb being created/updated
+}
+
+// CpuCbRequestMsg is batched add or modify cpucb request
+message CpuCbRequestMsg {
+  repeated CpuCbSpec    request = 1;    // batched request
+}
+
+// CpuCbStatus is the operational status of a given cpucb
+message CpuCbStatus {
+  fixed64    cpucb_handle     = 1;    // id of cpucb returned by HAL
+}
+
+// CpuCbResponse is response to CpuCbSpec
+message CpuCbResponse {
+  types.ApiStatus        api_status            = 1;    // API status code
+  CpuCbStatus       cpucb_status   = 2;    // cpucb status, if api succeeded
+}
+
+// CpuCbResponseMsg is batched response to CpuCbRequestMsg
+message CpuCbResponseMsg {
+  repeated CpuCbResponse    response = 1;    // batched response
+}
+
+// CpuCbDeleteRequest is used to delete a cpucb
+message CpuCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  CpuCbKeyHandle     key_or_handle = 2;    // CpuCb key or handle
+}
+
+// CpuCbDeleteRequestMsg is used to delete a batch of cpucbs
+message CpuCbDeleteRequestMsg {
+  repeated CpuCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// CpuCbDeleteResponseMsg is batched response to CpuCbDeleteRequestMsg
+message CpuCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// CpuCbGetRequest is used to get information about a cpucb
+message CpuCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  CpuCbKeyHandle            key_or_handle = 2;    // CpuCb key or handle
+}
+
+// CpuCbGetRequestMsg is batched GET requests for cpucbs
+message CpuCbGetRequestMsg {
+  repeated CpuCbGetRequest    request = 1;    // batched get request
+}
+
+// CpuCbStats is the statistics object for each cpucb
+message CpuCbStats {
+}
+
+// CpuCbGetResponse captures all the information about a cpucb
+// only if api_status indicates success, other fields are valid
+message CpuCbGetResponse {
+  types.ApiStatus        api_status = 1;    // API status code
+  CpuCbSpec         spec       = 2;    // cpucb configuration
+  CpuCbStatus       status     = 3;    // operational state of cpucb
+  CpuCbStats        stats      = 4;    // stats of the cpucb
+}
+
+// CpuCbGetResponseMsg is batched response to CpuCbGetRequestMsg
+message CpuCbGetResponseMsg {
+  repeated CpuCbGetResponse    response = 1;    // batch get response
+}

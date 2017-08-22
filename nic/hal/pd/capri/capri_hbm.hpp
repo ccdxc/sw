@@ -58,6 +58,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_SERQ               "serq"
 #define CAPRI_HBM_REG_SESQ               "sesq"
 #define CAPRI_HBM_REG_IPSECCB            "ipsec-cb"
+#define CAPRI_HBM_REG_ARQRX              "arq-rx"
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -77,6 +78,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"
 #define IPSEC_IP_HDR_BASE "ipsec_ip_hdr_base"
+
+#define ARQRX_BASE              "hbm_arqrx_base"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

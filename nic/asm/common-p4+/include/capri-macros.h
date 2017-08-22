@@ -327,6 +327,7 @@
 
 #define BRQ_QPCB_BASE                  0xba00ba90
 
+#define ARQRX_BASE                     hbm_arqrx_base
 
 
 #define TABLE_TYPE_RAW                 0

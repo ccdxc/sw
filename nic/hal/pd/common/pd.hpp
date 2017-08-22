@@ -27,6 +27,7 @@ typedef struct pd_acl_s pd_acl_t;
 typedef struct pd_wring_s pd_wring_t;
 typedef struct pd_ipseccb_s pd_ipseccb_t;
 typedef struct pd_l4lb_s pd_l4lb_t;
+typedef struct pd_cpucb_s pd_cpucb_t;
 
 }    // namespace pd
 }    // namespace hal

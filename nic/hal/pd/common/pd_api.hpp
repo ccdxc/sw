@@ -17,6 +17,7 @@
 #include <crypto_keys.hpp>
 #include <ipseccb.hpp>
 #include <l4lb.hpp>
+#include <cpucb.hpp>
 
 namespace hal {
 namespace pd {
@@ -40,6 +41,7 @@ using hal::wring_t;
 using hal::mirror_session_t;
 using hal::ipseccb_t;
 using hal::l4lb_service_entry_t;
+using hal::cpucb_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -119,6 +121,10 @@ typedef struct pd_ipseccb_args_s {
 typedef struct pd_l4lb_args_s {
     l4lb_service_entry_t    *l4lb;
 } __PACK__ pd_l4lb_args_t;
+
+typedef struct pd_cpucb_args_s {
+    cpucb_t            *cpucb;
+} __PACK__ pd_cpucb_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -228,6 +234,13 @@ pd_l4lb_args_init (pd_l4lb_args_t *args)
     return;
 }
 
+static inline void
+pd_cpucb_args_init (pd_cpucb_args_t *args)
+{
+    args->cpucb = NULL;
+    return;
+}
+
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
@@ -283,6 +296,11 @@ hal_ret_t pd_ipseccb_delete(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_get(pd_ipseccb_args_t *ipseccb);
 
 hal_ret_t pd_l4lb_create(pd_l4lb_args_t *pd_l4lb_args);
+
+hal_ret_t pd_cpucb_create(pd_cpucb_args_t *cpucb);
+hal_ret_t pd_cpucb_update(pd_cpucb_args_t *cpucb);
+hal_ret_t pd_cpucb_delete(pd_cpucb_args_t *cpucb);
+hal_ret_t pd_cpucb_get(pd_cpucb_args_t *cpucb);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;
