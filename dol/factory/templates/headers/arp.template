@@ -3,11 +3,11 @@ meta:
     scapy   : ARP
     size    : 28
 fields:
-    hwtype  : 1
-    ptype   : 0x0800
-    hwlen   : 6
-    plen    : 4
-    op      : None
+    hwtype  : const/1
+    ptype   : const/0x0800
+    hwlen   : const/6
+    plen    : const/4
+    op      : const/0x1
     hwsrc   : None
     psrc    : None
     hwdst   : None

@@ -85,7 +85,8 @@ class PacketHeaderFields(objects.FrameworkObject):
                 elif data.GetRootID() == defs.ref_roots.FACTORY:
                     self.__dict__[key] = data.Get(FactoryStore)
             elif objects.IsCallback(data):
-                self.__dict__[key] = data.call(testcase, packet)
+                retval = data.call(testcase, packet)
+                self.__dict__[key] = self.__get_field_value(retval)
         return
 
 class PacketHeader(objects.FrameworkObject):

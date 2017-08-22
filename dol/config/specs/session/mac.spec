@@ -13,6 +13,13 @@ entries:
             ethertype: 0xCCC0
 
     - entry:
+        label: arp
+        initiator:
+            ethertype: 0x806
+        responder:
+            ethertype: 0x806
+
+    - entry:
         label: span
         initiator:
             ethertype: 0xCC55

@@ -111,9 +111,37 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
-        ignore  : False
+        ignore  : True
         args    :
             segment: filter://native=True
+    - module:
+        name    : L2UC_QTAG_ARP_RARP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : False
+        args    :
+            segment: filter://native=False
+        iterate :
+            - ARP_REQ_UC
+            - ARP_RESP
+            - RARP_REQ_UC
+            - RARP_RESP
+    - module:
+        name    : L2UC_UNTAG_ARP_RARP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : True
+        args    :
+            segment: filter://native=True
+        iterate :
+            - ARP_REQ_UC
+            - ARP_RESP
+            - RARP_REQ_UC
+            - RARP_RESP
     - module:
         name    : L3UC_IPV4_UDP
         enable  : True
@@ -286,3 +314,4 @@ modules:
         module  : sfw_in_sequence
         spec    : sfw_in_sequence.testspec
         ignore  : True
+
