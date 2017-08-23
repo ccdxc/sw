@@ -5,13 +5,19 @@ CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
 
-PROJ = proxy
+
+PROJ = tls_proxy
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
-ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../include -I../tcp/include -I./include -I../..//common-p4+/include
+GEN_DIR = $(TOPDIR)/gen
+ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
+P4_DIR = $(TOPDIR)/p4/proxy
+COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I./include -I../../common-p4+/include -I../tcp/include
 SRC_DIR = .
-CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
-CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
+CAPAS_BIN = ../../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
+NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
+NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
 all: deps asm
 
@@ -19,9 +25,11 @@ deps:
 
 SRC_FILES := \
     $(SRC_DIR)/tls-alloc-brq-pi.s \
-    $(SRC_DIR)/tls-alloc-rnmdr.s \
+    $(SRC_DIR)/tls-read-tnmdr-alloc-idx.s \
+    $(SRC_DIR)/tls-read-tnmpr-alloc-idx.s \
     $(SRC_DIR)/tls-alloc-rnmdr-split.s \
-    $(SRC_DIR)/tls-alloc-rnmpr.s \
+    $(SRC_DIR)/tls-tdesc-alloc.s \
+    $(SRC_DIR)/tls-tpage-alloc.s \
     $(SRC_DIR)/tls-alloc-sesq-pi.s \
     $(SRC_DIR)/tls-brq.s \
     $(SRC_DIR)/tls-queue-brq.s \
@@ -43,6 +51,9 @@ $(BIN_FILES): %.bin: %.s
 	@mkdir -p $(OBJ_DIR)
 	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
+%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
+	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
+
 asm: $(BIN_FILES)
 
 #TEST_FILES := $(patsubst %.s, %.ctl, $(SRC_FILES))
@@ -60,12 +71,6 @@ TEST_FILES := \
 
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 
-tcp-rx_ARGS := 
-tcp-write-serq_ARGS :=
-tcp-cc_ARGS :=
-tcp-rtt_ARGS :=
-tcp-rtt-non-first_ARGS :=
-tcp-fastretx-alert_cwr_end_ARGS :=
 
 $(TMP_FILES): %.x: %.ctl
 	@echo Testing ...

@@ -40,6 +40,7 @@ struct k_struct {
 
 	fid                              :  16;
 	desc	                         :  ADDRESS_WIDTH ;
+	sesq_base			 :  ADDRESS_WIDTH ;
 };
 
 struct p_struct p	;
@@ -47,16 +48,15 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
-	
+
 tls_queue_sesq_process_start:
 	tblwr		d.qhead, k.desc_aol1_addr
 
 dma_cmd_sesq_slot:
 	add		r5, r0, k.sesq_pidx
-	mincr		r5, 1, SESQ_TABLE_SIZE_SHFT
 	sll		r5, r5, NIC_SESQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for SESQ slot */
-	addi		r1, r0, SESQ_BASE
+	add		r1, r0, k.sesq_base
 	add		r1, r1, r5
 
 	phvwr		p.dma_cmd0_addr,r1

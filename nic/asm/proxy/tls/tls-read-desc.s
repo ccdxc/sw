@@ -88,7 +88,7 @@ table_read_rx_serq:
 	nop
 	
 table_read_alloc_sesq_pi:
-	TLS_READ_IDX(SESQ_PRODUCER_IDX, TABLE_TYPE_RAW, tls_alloc_sesq_pi_process)
+#	TLS_READ_IDX(SESQ_PRODUCER_IDX, TABLE_TYPE_RAW, tls_alloc_sesq_pi_process)
 
 
 	

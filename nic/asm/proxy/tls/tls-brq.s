@@ -57,7 +57,7 @@ tls_brq_completion_process_start:
 	phvwr		p.brq_cmd_mode, d.brq_cmd_mode
 	phvwr		p.brq_cmd_hash, d.brq_cmd_hash
 	phvwr		p.brq_cmd_op, d.brq_cmd_op
-	phvwr		p.brq_cmd_rsvd, d.brq_cmd_rsvd
+
 	phvwr		p.brq_payload_offset, d.brq_payload_offset
 	phvwr		p.brq_status, d.brq_status
 	phvwr		p.brq_opaque_tag, d.brq_opaque_tag

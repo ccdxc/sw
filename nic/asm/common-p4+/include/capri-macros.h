@@ -255,6 +255,77 @@
         ci_##_x                           : 16;\
         
 #define RNMDR_TABLE_BASE                hbm_rnmdr_table_base
+#define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define RNMDR_TABLE_SIZE                255
+#define RNMDR_TABLE_SIZE_SHFT           8
+
 #define RNMPR_TABLE_BASE                hbm_rnmpr_table_base
+#define RNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define RNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define RNMPR_TABLE_SIZE                255
+#define RNMPR_TABLE_SIZE_SHFT           8
+
+
+#define TNMDR_TABLE_BASE                hbm_tnmdr_table_base
+#define TNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define TNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define TNMDR_TABLE_SIZE                255
+#define TNMDR_TABLE_SIZE_SHFT           8
+
+#define TNMPR_TABLE_BASE                hbm_tnmpr_table_base
+#define TNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define TNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define TNMPR_TABLE_SIZE                255
+#define TNMPR_TABLE_SIZE_SHFT           8
+
+
+/* Semaphores */
+#define SERQ_PRODUCER_IDX              0xba00ba00
+#define SERQ_CONSUMER_IDX             0xba00ba08
+
+#define SESQ_PRODUCER_IDX              0xba00ba10
+#define SESQ_CONSUMER_IDX              0xba00ba18
+
+#define RNMPR_ALLOC_IDX                0xba00ba20
+#define RNMPR_FREE_IDX                 0xba00ba28
+
+#define RNMDR_ALLOC_IDX                0xba00ba30
+#define RNMDR_FREE_IDX                 0xba00ba38
+
+#define TNMPR_ALLOC_IDX                0xba00ba40
+#define TNMPR_FREE_IDX                 0xba00ba48
+
+#define TNMDR_ALLOC_IDX                0xba00ba50
+#define TNMDR_FREE_IDX                 0xba00ba58
+
+#define ARQ_PRODUCER_IDX               0xba00ba60
+#define ARQ_CONSUMER_IDX               0xba00ba68
+
+#define ASQ_PRODUCER_IDX               0xba00ba70
+#define ASQ_CONSUMER_IDX               0xba00ba78
+
+#define BRQ_PRODUCER_IDX               0xba00ba80
+#define BRQ_CONSUMER_IDX               0xba00ba88
+
+#define BRQ_BASE                       hbm_brq_base
+#define BRQ_TABLE_SIZE                 255
+#define BRQ_TABLE_SIZE_SHFT            8
+
+
+
+
+#define TABLE_TYPE_RAW                 0
+#define TABLE_LOCK_DIS                 0
+#define TABLE_LOCK_EN                  1
+
+#define TABLE_SIZE_8_BITS              0
+#define TABLE_SIZE_16_BITS             1
+#define TABLE_SIZE_32_BITS             2
+#define TABLE_SIZE_64_BITS             3
+#define TABLE_SIZE_128_BITS            4
+#define TABLE_SIZE_256_BITS            5
+#define TABLE_SIZE_512_BITS            6
+
 
 #endif /* #ifndef __CAPRI_MACROS_H__ */

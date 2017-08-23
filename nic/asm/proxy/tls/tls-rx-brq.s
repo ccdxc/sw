@@ -30,6 +30,7 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
+	.param		tls_read_desc_process
 	
 tls_rx_brq_process_start:
 	phvwr		p.pending_rx_serq, k.pending_rx_serq
