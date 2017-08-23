@@ -601,13 +601,14 @@ static void capri_tcam_entry_details_get(uint32_t tableid, uint32_t index,
     //*entry_start_word = (CAPRI_TCAM_WORDS_PER_BLOCK - 1) - *entry_start_word;
 
     /* Start block will be column away from top-left because in case of
-     * tcam, atmost one table can occupy a TCAM block.
+     * tcam, atmost one entry/column of table can occupy a TCAM block.
      */
     *entry_start_block = ((tblctx->tcam_layout.top_left_block + tbl_col) * CAPRI_TCAM_ROWS)
                          + tblctx->tcam_layout.top_left_y
                          + (index/tblctx->tcam_layout.num_buckets);
-    *entry_end_block = *entry_start_block
-                         + (tblctx->tcam_layout.entry_width
+    *entry_end_block = *entry_start_block +
+                       (((tblctx->tcam_layout.entry_width - 1) +
+                         (*entry_start_word % CAPRI_TCAM_WORDS_PER_BLOCK))
                             / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
 }
 
