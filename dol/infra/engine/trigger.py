@@ -7,7 +7,7 @@ import copy
 import sys
 import ruamel.yaml as yaml
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict, namedtuple
 import infra.common.utils as utils
 import infra.penscapy.penscapy as penscapy
 from infra.common.thread import InfraThreadHandler
@@ -25,6 +25,8 @@ from infra.common.utils import convert_object_to_dict, log_exception
 from infra.factory.testcase import TestCaseTrigExpPacketObject,\
     TestCaseTrigExpDescriptorObject
 from infra.factory.pktfactory import get_factory_id_from_scapy_id
+
+TestCaseContext = namedtuple('TestCaseContext', ['tc_id', 'reserved'])
 
 PEN_REF = getattr(penscapy, "PENDOL")
 
@@ -245,8 +247,14 @@ def PacketCompare(expected, actual, partial_match=None):
     result.headers = defaultdict(lambda: {})
     for header in match_hdrs:
         hdr_result = TriggerObjectCompareResult()
-        header_info = FactoryStore.headers.Get(
-            get_factory_id_from_scapy_id(header))
+        try:
+            header_info = FactoryStore.headers.Get(
+                get_factory_id_from_scapy_id(header))
+        except:
+            # Compare headers only defined in our factory.
+            logger.critical("Header %s not found in factory" % header)
+            continue
+
         if not header_info:
             assert 0
         scapy_ref = getattr(penscapy, header)
@@ -351,7 +359,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             self.expected = []
             self.received = []
 
-    def __init__(self, test_case, test_step_spec, step_count, set_timeout, logger):
+    def __init__(self, test_case, test_step_spec, step_count, logger):
         super().__init__()
         self._tc = test_case
         self._tc_step = test_step_spec
@@ -360,14 +368,15 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         self._start_ts = None
         self._logger = logger
         self._tc_status = None
+        self._result = None
         # Set timeout only if asked.
         # Typically last step or the only step will not be set
         # any timeout and will rely on trigger report call to cancel this.
         # This will be useful for the cases where there is only 1 test steps
         # and all of them have to be stopped based on global timeout called
         # by trigger.
-        self._step_timeout = None if not set_timeout else (getattr(
-            test_step_spec.expect, "timeout", None) or self.TEST_STEP_TIMEOUT)
+        self._step_timeout = getattr(
+            test_step_spec.expect, "timeout", None) or self.TEST_STEP_TIMEOUT
         self._exp_rcv_data = defaultdict(
             lambda: TriggerTestCaseStep.ExpectedReceivedData())
         self._exp_rcv_descr = defaultdict(
@@ -720,6 +729,8 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         return self._timeout and self._timeout < time.time()
 
     def get_result(self, force=False):
+        if self._result:
+            return self._result
         result = TestStepResult()
         if self._tc_status != self.STATUS_RUNNING:
             result.result = Trigger.TEST_CASE_NOT_RUN
@@ -727,9 +738,9 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             # Test case timed out or user forcing to read the current status.
             try:
                 result = self.__process_result()
+                self._result = result
             except Exception as ex:
                 log_exception(self._logger)
-                print(ex)
                 self._logger.info("Error proceessing result", ex)
         else:
             result.result = Trigger.TEST_CASE_PENDING
@@ -751,8 +762,7 @@ class TriggerTestCase(objects.FrameworkObject):
         self._logger = logger
         for i, step in enumerate(test_case_spec.session, 1):
             self._test_steps.append(
-                TriggerTestCaseStep(self, step.step, i, i != len(test_case_spec.session),
-                                    logger))
+                TriggerTestCaseStep(self, step.step, i, logger))
         self._tc_status = self.STATUS_QUEUED
         self._current_tc_step = None
         self._step_results = []
@@ -782,7 +792,7 @@ class TriggerTestCase(objects.FrameworkObject):
         return False
 
     def _all_steps_triggered(self):
-        return not self._test_steps
+        return not (len(self._test_steps) - 1)
 
     def recv_packet(self, packet_ctx, step_id):
         if self._run_test_steps_serially and self._current_tc_step:
@@ -797,8 +807,9 @@ class TriggerTestCase(objects.FrameworkObject):
             assert len(self._test_steps) == 1
             self._test_steps[0].recv_descriptors(ring, descriptors)
 
-    def get_current_step_result(self):
-        return self._current_tc_step.get_result()
+    # Force indicates retrieve the result forceully.
+    def get_current_step_result(self, force=False):
+        return self._current_tc_step.get_result(force)
 
     def get_result(self, force=False):
         # All test steps are run in parallel or all steps triggered.
@@ -825,17 +836,21 @@ class Scheduler(InfraThreadHandler):
 class Receiver(InfraThreadHandler):
 
     def __init__(self, trigger, endp_connector):
+        max_idle_interval = 0 if trigger._step_timeout_enabled else 20
         super(Receiver, self).__init__(name="Trigger Receiver",
-                                       max_idle_interval=0, max_time_per_run=200)
+                                       max_idle_interval=max_idle_interval, max_time_per_run=200)
         self._endp_connector = endp_connector
         self._trigger = trigger
 
     def execute(self, event):
-        try:
-            data = self._endp_connector.recv()
-        except Connector.Timeout:
-            return
-        self._trigger.eventEnqueue(data)
+        while True:
+            try:
+                data = self._endp_connector.recv()
+                self._trigger.eventEnqueue(data)
+            except Connector.Timeout:
+                if event and isinstance(event, TestCaseContext):
+                    self._trigger.eventEnqueue(event)
+                break
 
 
 class Trigger(InfraThreadHandler):
@@ -845,7 +860,8 @@ class Trigger(InfraThreadHandler):
     TEST_CASE_PENDING = "Pending"
     TEST_CASE_NOT_RUN = "NotRun"
 
-    def __init__(self, connector='ModelConnector', addr=utils.FakeModelSockAddr(), run_test_steps_serially=True):
+    def __init__(self, connector='ModelConnector', addr=utils.FakeModelSockAddr(), run_test_steps_serially=True,
+                 step_timeout_enabled=False):
         super(Trigger, self).__init__(name="Trigger MAIN",
                                       max_idle_interval=1, max_time_per_run=200)
         if GlobalOptions.dryrun:
@@ -853,6 +869,7 @@ class Trigger(InfraThreadHandler):
             self._connector = Connector.factory('DumbConnector')(addr)
         else:
             self._connector = Connector.factory(connector)(addr)
+        self._step_timeout_enabled = step_timeout_enabled
         self._scheduler = Scheduler(self._connector)
         self._receiver = Receiver(self, self._connector)
         self.__db_inits()
@@ -894,8 +911,18 @@ class Trigger(InfraThreadHandler):
             self._tc_db[test_case.GID()] = trigger_tc
             logger.debug("Test case ID ", test_case.GID())
             self._connector_start()
-            trigger_tc.run_test_case()
+            self._run_trigger_test_case(trigger_tc)
+
         return
+
+    def _run_trigger_test_case(self, test_case):
+        test_case.run_test_case()
+        # Step timeout not enabled, which means we have to indicate
+        # to trigger that this test case is done so that it can
+        # process result and move forward the test case.
+        if not self._step_timeout_enabled:
+            self._receiver.eventEnqueue(TestCaseContext(
+                test_case._test_spec.GID(), "rsvd"))
 
     def execute(self, event):
 
@@ -904,7 +931,11 @@ class Trigger(InfraThreadHandler):
                 self._current_descriptor_test_case.recv_packet(pkt_ctx)
 
         if event:
-            if isinstance(event, PacketContext):
+            if not self._step_timeout_enabled and isinstance(event, TestCaseContext):
+                tc_ctx = event
+                with self._tc_db_lock:
+                    self._move_foward_test_case(tc_ctx.tc_id, True)
+            elif isinstance(event, PacketContext):
                 pkt_ctx = event
                 try:
                     tc_id, step_id = get_test_case_id_from_packet(
@@ -950,6 +981,9 @@ class Trigger(InfraThreadHandler):
     def pending_test_case_count(self):
         return len(self._tc_db)
 
+    def all_test_cases_done(self):
+        return not self._tc_db
+
     def test_case_running(self, test_case_id):
         with self._tc_db_lock:
             return test_case_id in self._tc_db
@@ -988,35 +1022,39 @@ class Trigger(InfraThreadHandler):
             return
 
         # If not serial run, get out.
-        if not self._run_test_steps_serially:
+        if not self._run_test_steps_serially or not self._step_timeout_enabled:
             return
         with self._tc_db_lock:
             for tc_id in list(self._tc_db.keys()):
-                test_case = self._tc_db[tc_id]
-                result = self._tc_db[tc_id].get_current_step_result()
-                if result.result is Trigger.TEST_CASE_PENDING:
-                    # Current Test step still pending.
-                    continue
-                elif not test_case._all_steps_triggered() and result.result == Trigger.TEST_CASE_PASSED:
-                    # Move forward the test case if current test step passed.
-                    test_case._test_steps.pop(0)
-                    test_case.run_test_case()
-                else:
-                    if self._tc_db[tc_id] == self._current_descriptor_test_case:
-                        self._current_descriptor_test_case = None
+                # pdb.set_trace()
+                self._move_foward_test_case(tc_id)
 
-                    # Test case failed or all steps done, move it complete.
-                    self._tc_done_db[tc_id] = test_case
-                    del self._tc_db[tc_id]
-                    if self.pending_test_case_count() == 0:
-                        if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
-                            self._current_descriptor_test_case = self._descriptor_test_case_queue.pop(
-                                0)
-                            self._tc_db[self._current_descriptor_test_case.meta.id] = self._current_descriptor_test_case
-                            self._current_descriptor_test_case.run_test_case()
-                        else:
-                            # All test cases completed, stop the connector.
-                            self._connector_stop()
+    def _move_foward_test_case(self, tc_id, force=False):
+        test_case = self._tc_db[tc_id]
+        result = self._tc_db[tc_id].get_current_step_result(force)
+        if result.result is Trigger.TEST_CASE_PENDING:
+            # Current Test step still pending.
+            return
+        elif not test_case._all_steps_triggered() and result.result == Trigger.TEST_CASE_PASSED:
+            # Move forward the test case if current test step passed.
+            test_case._test_steps.pop(0)
+            self._run_trigger_test_case(test_case)
+        else:
+            if self._tc_db[tc_id] == self._current_descriptor_test_case:
+                self._current_descriptor_test_case = None
+
+            # Test case failed or all steps done, move it complete.
+            self._tc_done_db[tc_id] = test_case
+            del self._tc_db[tc_id]
+            if self.pending_test_case_count() == 0:
+                if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
+                    self._current_descriptor_test_case = self._descriptor_test_case_queue.pop(
+                        0)
+                    self._tc_db[self._current_descriptor_test_case.meta.id] = self._current_descriptor_test_case
+                    self._current_descriptor_test_case.run_test_case()
+                else:
+                    # All test cases completed, stop the connector.
+                    self._connector_stop()
 
     def get_result(self, tc_id):
         if tc_id in self._tc_db:
@@ -1090,10 +1128,10 @@ class Trigger(InfraThreadHandler):
 
         return test_case_out
 
-    def get_run_report(self, max_wait_time=1):
+    def get_run_report(self, max_wait_time=6000):
         end_wait_time = time.time() + max_wait_time
         logger.info("Trying to get Trigger Report..")
-        while self.pending_test_case_count() and end_wait_time > time.time():
+        while not self.all_test_cases_done() and end_wait_time > time.time():
             time.sleep(0.5)
 
         # Stop the connector as we forced every test case to complete.

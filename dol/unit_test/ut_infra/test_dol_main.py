@@ -19,14 +19,14 @@ mocked_modules = [
     "interface_pb2_grpc",
     "session_pb2_grpc",
     "telemetry_pb2_grpc",
-    "telemetry_pb2", 
-    "tcp_proxy_cb_pb2", 
-    "proxy_pb2", 
-    "tls_proxy_cb_pb2", 
-    "descriptor_aol_pb2", 
-    "wring_pb2", 
-    "tcp_proxy_cb_pb2_grpc", 
-    "proxy_pb2_grpc", 
+    "telemetry_pb2",
+    "tcp_proxy_cb_pb2",
+    "proxy_pb2",
+    "tls_proxy_cb_pb2",
+    "descriptor_aol_pb2",
+    "wring_pb2",
+    "tcp_proxy_cb_pb2_grpc",
+    "proxy_pb2_grpc",
     "tls_proxy_cb_pb2_grpc",
     "descriptor_aol_pb2_grpc",
     "wring_pb2_grpc",
@@ -163,8 +163,9 @@ class DolMainTest(unittest.TestCase):
             "PKT_TO_PKT_EXTRA": lambda res:  len(
             res.session[0].step.result.packets.extra) == 1}
 
-        print
-        self.assertTrue(module_match[module](result))
+        if not module_match[module](result):
+            print("Module failed:", module)
+            self.assertTrue(0)
 
     def test_dol_main(self):
         from infra.engine.trigger import TrigExpEngine
@@ -172,7 +173,7 @@ class DolMainTest(unittest.TestCase):
         sys.argv[0] = ws_top + "/dol/main.py"
         # This run default main.
         import main
-        report = TrigExpEngine.get_run_report(20)
+        report = TrigExpEngine.get_run_report()
         self.assertTrue(report)
 
         from infra.engine.engine import TestCaseDB
