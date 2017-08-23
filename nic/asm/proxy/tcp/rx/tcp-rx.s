@@ -23,7 +23,7 @@ struct tcp_rx_tcp_rx_d d;
         .param          tcp_rx_sack_stage2_start
 	.align
 tcp_rx_process_stage1_start:
-        phvwri          p.p4_intr_global_tm_oport, 14 
+	phvwr		p.common_phv_debug_dol, d.u.tcp_rx_d.debug_dol
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	add		r6, r4,r0
 	/* Setup the to-stage/stage-to-stage variables */

@@ -88,7 +88,8 @@
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
     modify_field(common_global_scratch.pending_txdma, common_phv.pending_txdma); \
     modify_field(common_global_scratch.pending_sync_mss, common_phv.pending_sync_mss); \
-    modify_field(common_global_scratch.pingpong, common_phv.pingpong);
+    modify_field(common_global_scratch.pingpong, common_phv.pingpong); \
+    modify_field(common_global_scratch.debug_dol, common_phv.debug_dol);
 
 /******************************************************************************
  * D-vectors
@@ -143,7 +144,8 @@ header_type tcp_rx_d_t {
         pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        pad                     : 83;
+        debug_dol               : 1;
+        pad                     : 82;
     }
 }
 
@@ -345,6 +347,7 @@ header_type common_global_phv_t {
         pending_txdma           : 1;
         pending_sync_mss        : 1;
         pingpong                : 1;
+        debug_dol               : 1;
     }
 }
 
@@ -568,7 +571,7 @@ action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, s
         snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rto, pred_flags, ecn_flags, ato, quick,
         snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
-        pingpong, pad) {
+        pingpong, debug_dol, pad) {
     // k + i for stage 1
 
     // from to_stage 1
@@ -616,6 +619,7 @@ action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, s
     modify_field(tcp_rx_d.retx_head_ts, retx_head_ts);
     modify_field(tcp_rx_d.rto_deadline, rto_deadline);
     modify_field(tcp_rx_d.pingpong, pingpong);
+    modify_field(tcp_rx_d.debug_dol, debug_dol);
     modify_field(tcp_rx_d.pad, pad);
 }
 

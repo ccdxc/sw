@@ -20,7 +20,6 @@ struct tcp_rx_tcp_cc_tcp_cc_d d;
 tcp_rx_cc_stage4_start:
 	/* Fall Thru */
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
-        phvwri          p.p4_intr_global_tm_oport, 8
 	tblwr		d.curr_ts, r4
 tcp_cong_control:
 	/* Check if we are in congestion window reduction state */

@@ -625,6 +625,7 @@ action rx_table_s0_t0_cfg_action(data0, data1, data2, data3, data4, data5, data6
 // stage 7
 @pragma stage 7
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s7_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -637,6 +638,7 @@ table rx_table_s7_t3 {
 
 @pragma stage 7
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s7_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -649,6 +651,7 @@ table rx_table_s7_t2 {
 
 @pragma stage 7
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s7_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -661,6 +664,7 @@ table rx_table_s7_t1 {
 
 @pragma stage 7
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s7_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -674,6 +678,7 @@ table rx_table_s7_t0 {
 // stage 6
 @pragma stage 6
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s6_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -686,6 +691,7 @@ table rx_table_s6_t3 {
 
 @pragma stage 6
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s6_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -698,6 +704,7 @@ table rx_table_s6_t2 {
 
 @pragma stage 6
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s6_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -710,6 +717,7 @@ table rx_table_s6_t1 {
 
 @pragma stage 6
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s6_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -723,6 +731,7 @@ table rx_table_s6_t0 {
 // stage 5
 @pragma stage 5
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s5_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -735,6 +744,7 @@ table rx_table_s5_t3 {
 
 @pragma stage 5
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s5_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -747,6 +757,7 @@ table rx_table_s5_t2 {
 
 @pragma stage 5
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s5_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -759,6 +770,7 @@ table rx_table_s5_t1 {
 
 @pragma stage 5
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s5_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -772,6 +784,7 @@ table rx_table_s5_t0 {
 // stage 4
 @pragma stage 4
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s4_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -784,6 +797,7 @@ table rx_table_s4_t3 {
 
 @pragma stage 4
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s4_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -796,6 +810,7 @@ table rx_table_s4_t2 {
 
 @pragma stage 4
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s4_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -808,6 +823,7 @@ table rx_table_s4_t1 {
 
 @pragma stage 4
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s4_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -821,6 +837,7 @@ table rx_table_s4_t0 {
 // stage 3
 @pragma stage 3
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s3_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -833,6 +850,7 @@ table rx_table_s3_t3 {
 
 @pragma stage 3
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s3_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -845,6 +863,7 @@ table rx_table_s3_t2 {
 
 @pragma stage 3
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s3_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -857,6 +876,7 @@ table rx_table_s3_t1 {
 
 @pragma stage 3
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s3_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -870,6 +890,7 @@ table rx_table_s3_t0 {
 // stage 2
 @pragma stage 2
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s2_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -882,6 +903,7 @@ table rx_table_s2_t3 {
 
 @pragma stage 2
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s2_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -893,6 +915,7 @@ table rx_table_s2_t2 {
 }
 @pragma stage 2
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s2_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -905,6 +928,7 @@ table rx_table_s2_t1 {
 
 @pragma stage 2
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s2_t0 {
     reads {
        common_te0_phv.table_addr : exact;
@@ -918,6 +942,7 @@ table rx_table_s2_t0 {
 // stage 1
 @pragma stage 1
 @pragma raw_table common_te3_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s1_t3 {
     reads {
        common_te3_phv.table_addr : exact;
@@ -930,6 +955,7 @@ table rx_table_s1_t3 {
 
 @pragma stage 1
 @pragma raw_table common_te2_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s1_t2 {
     reads {
        common_te2_phv.table_addr : exact;
@@ -942,6 +968,7 @@ table rx_table_s1_t2 {
 
 @pragma stage 1
 @pragma raw_table common_te1_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s1_t1 {
     reads {
        common_te1_phv.table_addr : exact;
@@ -954,6 +981,7 @@ table rx_table_s1_t1 {
 
 @pragma stage 1
 @pragma raw_table common_te0_phv.table_pc
+@pragma table_write // lock_en_raw=1
 table rx_table_s1_t0 {
     reads {
        common_te0_phv.table_addr : exact;

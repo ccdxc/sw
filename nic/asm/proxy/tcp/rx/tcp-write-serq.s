@@ -17,11 +17,7 @@ struct tcp_rx_write_serq_write_serq_d d;
 %%
 	.align	
 tcp_rx_write_serq_stage6_start:
-        phvwri          p.p4_intr_global_tm_oport, 0            // HACK no more stages - delete after hw is fixed
-        phvwri          p.common_te0_phv_table_pc, 0
-        phvwri          p.common_te1_phv_table_pc, 0
-        phvwri          p.common_te2_phv_table_pc, 0
-        phvwri          p.common_te3_phv_table_pc, 0 // HACK workaround to prevent stage 7 from being launched
+        CAPRI_CLEAR_TABLE0_VALID
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 	/* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
@@ -105,6 +101,9 @@ dma_cmd_write_rx2tx_shared:
 	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
 
 tcp_serq_produce:
+	sne		c1, k.common_phv_debug_dol, r0
+	bcf		[c1], flow_write_serq_process_done
+	nop
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
 	/* data will be in r3 */

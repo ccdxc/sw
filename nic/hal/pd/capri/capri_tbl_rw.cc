@@ -240,8 +240,6 @@ static int capri_stats_region_init()
     return CAPRI_OK;
 }
 
-#if 1
-// HACK
 static void capri_program_p4plus_table_mpu_pc_for_stage0(uint32_t pc)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -258,31 +256,12 @@ static void capri_program_p4plus_table_mpu_pc_for_stage0(uint32_t pc)
     te_csr.cfg_table_property[1].write();
 }
 
-static void capri_program_p4plus_table_config(void)
-{
-    int i, j;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
-    for (i = 1; i <= 7; i++) {
-        cap_te_csr_t &te_csr = cap0.pcr.te[i];
-
-        for (j = 0; j < 16; j++) {
-            te_csr.cfg_table_property[j].read();
-            te_csr.cfg_table_property[j].mpu_pc_dyn(0);
-            te_csr.cfg_table_property[j].addr_base(0);
-            te_csr.cfg_table_property[j].tbl_entry_sz_raw(1);
-            te_csr.cfg_table_property[j].lock_en_raw(1);
-            te_csr.cfg_table_property[j].write();
-        }
-    }
-}
-#endif
-
 int capri_table_rw_init()
 {
 
     char action_name[P4ACTION_NAME_MAX_LEN];
     char progname[P4ACTION_NAME_MAX_LEN];
+    uint64_t capri_action_p4plus_asm_base;
 
     // !!!!!!
     // Before making this call, it is expected that
@@ -325,16 +304,13 @@ int capri_table_rw_init()
         }
     }
 
-#if 1
-    // HACK
-    uint64_t capri_action_p4plus_asm_base;
     capri_program_to_base_addr((char *)"p4plus",
             (char *)"rxdma_stage0.bin",
             &capri_action_p4plus_asm_base);
-    capri_program_p4plus_table_mpu_pc_for_stage0((uint32_t) capri_action_p4plus_asm_base);
+    HAL_TRACE_DEBUG("Program-Name {}, Action-PC {:#x}\n", "p4plus",
+            capri_action_p4plus_asm_base);
 
-    capri_program_p4plus_table_config();
-#endif
+    capri_program_p4plus_table_mpu_pc_for_stage0((uint32_t) capri_action_p4plus_asm_base);
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
