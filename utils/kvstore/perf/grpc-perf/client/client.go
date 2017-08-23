@@ -13,12 +13,9 @@ import (
 )
 
 // newClient returns a client
-func newClient(url, certFile, keyFile, caFile string) api.RulesClient {
-	// disable logging middleware
-	rpckit.SetGlobalMiddlewares([]rpckit.Middleware{})
-
-	// create an RPC client
-	rpcClient, err := rpckit.NewRPCClient("kv-perf", url, certFile, keyFile, caFile)
+func newClient(url string) api.RulesClient {
+	// create an RPC client with logging disabled
+	rpcClient, err := rpckit.NewRPCClient("kv-perf", url, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("Error connecting to server. Err: %v", err)
 		return nil
@@ -42,7 +39,7 @@ func RunClient(gRPCServerURL string, numWatchers, numClients, numPuts, putRate i
 	putDoneCh := make(chan struct{})
 	watchCh := make(chan struct{}, numWatchers)
 
-	dClient := newClient(gRPCServerURL, "", "", "")
+	dClient := newClient(gRPCServerURL)
 	ii := 0
 	log.Infof("Waiting for gRPC server to be up ..")
 	for {
@@ -54,7 +51,7 @@ func RunClient(gRPCServerURL string, numWatchers, numClients, numPuts, putRate i
 			log.Fatalf("gRPC server failed to come up in 10 seconds")
 		}
 		time.Sleep(time.Second)
-		dClient = newClient(gRPCServerURL, "", "", "")
+		dClient = newClient(gRPCServerURL)
 	}
 	if _, err := dClient.DeleteRules(context.Background(), &api.DeleteReq{}); err != nil {
 		log.Errorf("Failed to delete previous rules, error: %v", err)
@@ -64,7 +61,7 @@ func RunClient(gRPCServerURL string, numWatchers, numClients, numPuts, putRate i
 
 	for ii := 0; ii < numWatchers; ii++ {
 		go func(ii int) {
-			rc := newClient(gRPCServerURL, "", "", "")
+			rc := newClient(gRPCServerURL)
 			if rc == nil {
 				log.Fatalf("Watcher %v: failed to create client", ii)
 			}
@@ -104,7 +101,7 @@ func RunClient(gRPCServerURL string, numWatchers, numClients, numPuts, putRate i
 
 	clients := make([]api.RulesClient, 0)
 	for ii := 0; ii < numClients; ii++ {
-		rc := newClient(":9002", "", "", "")
+		rc := newClient(":9002")
 		clients = append(clients, rc)
 	}
 

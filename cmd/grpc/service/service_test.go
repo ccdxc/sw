@@ -19,7 +19,7 @@ const (
 // createServiceAPIServerClient creates rpc server and client
 func createServiceAPIServerClient(t *testing.T) (*mock.ResolverService, *rpckit.RPCServer, types.ServiceAPIClient) {
 	// create RPC Server.
-	rpcServer, err := rpckit.NewRPCServer("testService", testURL, "", "", "")
+	rpcServer, err := rpckit.NewRPCServer("testService", testURL)
 	if err != nil {
 		t.Fatalf("Failed to create rpc server, error: %v", err)
 	}
@@ -28,7 +28,7 @@ func createServiceAPIServerClient(t *testing.T) (*mock.ResolverService, *rpckit.
 	types.RegisterServiceAPIServer(rpcServer.GrpcServer, NewRPCHandler(m))
 
 	// create RPC Client.
-	rpcClient, err := rpckit.NewRPCClient("testService", testURL, "", "", "")
+	rpcClient, err := rpckit.NewRPCClient("testService", testURL)
 	if err != nil {
 		t.Fatalf("Failed to create rpc client, error: %v", err)
 	}

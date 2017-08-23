@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package rpckit
 
 import (
@@ -7,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit/tlsproviders"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -43,13 +46,13 @@ func (tst *testRPCHandler) TestRPCErr(ctx context.Context, req *TestReq) (*TestR
 // newRPCServerClient create an RPC server and client
 func newRPCServerClient() (*RPCServer, *RPCClient, error) {
 	// create an RPC server
-	rpcServer, err := NewRPCServer("testServer", ":9900", "", "", "")
+	rpcServer, err := NewRPCServer("grpc.local", ":9900", WithTracerEnabled(true))
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("testClient", "localhost:9900", "", "", "")
+	rpcClient, err := NewRPCClient("grpc.local", "localhost:9900", WithTracerEnabled(true))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,9 +69,6 @@ func stopRPCServerClient(rpcServer *RPCServer, rpcClient *RPCClient) {
 
 // test basic RPC
 func TestRPCBasic(t *testing.T) {
-	// enable tracer middleware during tests
-	EnableTracer = true
-
 	// create an rpc handler object
 	testHandler := &testRPCHandler{
 		reqMsg:  "dummy message",
@@ -87,11 +87,11 @@ func TestRPCBasic(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make sure server with no URL or client with no URL fails
-	_, err = NewRPCServer("testServer", "", "", "", "")
+	_, err = NewRPCServer("grpc.local", "")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
-	_, err = NewRPCClient("testClient", "", "", "", "")
+	_, err = NewRPCClient("grpc.local", "")
 	Assert(t, (err != nil), "client with no URL succeded while expecting it to fail")
-	_, err = NewRPCServer("testServer", "google.com", "", "", "")
+	_, err = NewRPCServer("grpc.local", "google.com")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
 
 	// make an RPC call
@@ -203,7 +203,7 @@ func TestRPCServerRestart(t *testing.T) {
 
 	// start a new server
 	t.Logf("Restarting RPC server")
-	rpcServer, err = NewRPCServer("testServer", ":9900", "", "", "")
+	rpcServer, err = NewRPCServer("grpc.local", ":9900")
 	AssertOk(t, err, "RPC server restart error")
 	RegisterTestServer(rpcServer.GrpcServer, testHandler)
 	defer func() { rpcServer.Stop() }()
@@ -296,11 +296,11 @@ func TestRPCMiddlewares(t *testing.T) {
 	}
 
 	// create an RPC server
-	rpcServer, err := NewRPCServer("testServer", ":9900", "", "", "", tstmdl)
+	rpcServer, err := NewRPCServer("grpc.local", ":9900", WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC server")
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("testClient", "localhost:9900", "", "", "", tstmdl)
+	rpcClient, err := NewRPCClient("grpc.local", "localhost:9900", WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC client")
 
 	// close client connection and stop the server
@@ -336,42 +336,33 @@ func TestRPCTlsConnections(t *testing.T) {
 		respMsg: "test TLS response",
 	}
 
+	tlsProvider, err := tlsproviders.NewFileBasedProvider(
+		"tlsproviders/testcerts/testServer.crt",
+		"tlsproviders/testcerts/testServer.key",
+		"tlsproviders/testcerts/testCA.crt")
+	AssertOk(t, err, "Failed to instantiate TLS provider")
+
 	// create tls & non-tls RPC server
-	rpcServer, err := NewRPCServer("testServer", nontlsURL, "", "", "")
+	rpcServer, err := NewRPCServer("grpc.local", nontlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC server")
-	tlsRPCServer, err := NewRPCServer("testServer", tlsURL, "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	tlsRPCServer, err := NewRPCServer("grpc.local", tlsURL, WithTLSProvider(tlsProvider))
 	AssertOk(t, err, "Error creating TLS RPC server")
 
 	// create tls & non-tls RPC client
-	rpcClient, err := NewRPCClient("testClient", nontlsURL, "", "", "")
+	rpcClient, err := NewRPCClient("grpc.local", nontlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
-	tlsRPCClient, err := NewRPCClient("testClient", tlsURL, "testcerts/testClient.crt", "testcerts/testClient.key", "testcerts/testCA.crt")
+	tlsRPCClient, err := NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider))
 	AssertOk(t, err, "Error creating TLS RPC client")
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
 	defer stopRPCServerClient(tlsRPCServer, tlsRPCClient)
 
-	// make sure server and clients with bad cert file names fail
-	_, err = NewRPCServer("testServer", ":9800", "test.crt", "", "")
-	Assert(t, (err != nil), "server with bad cert succeded while expecting it to fail")
-	_, err = NewRPCServer("testServer", ":9801", "test.crt", "test.key", "testcerts/testCA.crt")
-	Assert(t, (err != nil), "server with bad cert succeded while expecting it to fail")
-	_, err = NewRPCServer("testServer", ":9802", "testcerts/testServer.crt", "testcerts/testServer.key", "test.ca")
-	Assert(t, (err != nil), "server with bad cert succeded while expecting it to fail")
-
-	_, err = NewRPCClient("testClient", "localhost:9000", "test.crt", "", "")
-	Assert(t, (err != nil), "client with bad cert succeded while expecting it to fail")
-	_, err = NewRPCClient("testClient", "localhost:9000", "test.crt", "test.key", "testcerts/testCA.crt")
-	Assert(t, (err != nil), "client with bad cert succeded while expecting it to fail")
-	_, err = NewRPCClient("testClient", "localhost:9000", "testcerts/testClient.crt", "testcerts/testClient.key", "testCA.crt")
-	Assert(t, (err != nil), "client with bad cert succeded while expecting it to fail")
-
 	// make sure non-tls client can not connect to tls server
 	// Note: grpc non-tls clients dont block till certification validation is done.
 	//       So, we need to make a dummy rpc call and confirm we are not able to connect
 	t.Logf("non-TLS client trying to connect to TLS server")
-	nontlsRPCClient, err := NewRPCClient("testClient", tlsURL, "", "", "")
+	nontlsRPCClient, err := NewRPCClient("grpc.local", tlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
 	nontlsTestClient := NewTestClient(nontlsRPCClient.ClientConn)
 	_, err = nontlsTestClient.TestRPC(context.Background(), &TestReq{"test request"})
@@ -385,17 +376,29 @@ func TestRPCTlsConnections(t *testing.T) {
 
 	// make sure tls client will not connect to non-tls server
 	t.Logf("TLS client trying to connect to non-TLS server")
-	_, err = NewRPCClient("testClient", nontlsURL, "testcerts/testClient.crt", "testcerts/testClient.key", "testcerts/testCA.crt")
+	_, err = NewRPCClient("grpc.local", nontlsURL, WithTLSProvider(tlsProvider))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// verify client and servers with different certs will not connect
+	tlsProvider2, err := tlsproviders.NewFileBasedProvider(
+		"tlsproviders/testcerts/test2Server.crt",
+		"tlsproviders/testcerts/test2Server.key",
+		"tlsproviders/testcerts/test2CA.crt")
+	AssertOk(t, err, "Failed to instantiate TLS provider")
+
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
-	_, err = NewRPCClient("testClient", tlsURL, "testcerts/test2Client.crt", "testcerts/test2Client.key", "testcerts/test2CA.crt")
+	_, err = NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider2))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// verify client and servers with different root CA will not connect
+	tlsProvider3, err := tlsproviders.NewFileBasedProvider(
+		"tlsproviders/testcerts/testClient.crt",
+		"tlsproviders/testcerts/testClient.key",
+		"tlsproviders/testcerts/test2CA.crt")
+	AssertOk(t, err, "Failed to instantiate TLS provider")
+
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
-	_, err = NewRPCClient("testClient", tlsURL, "testcerts/testClient.crt", "testcerts/testClient.key", "testcerts/test2CA.crt")
+	_, err = NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider3))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// register the handlers

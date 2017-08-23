@@ -73,7 +73,7 @@ func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpcki
 	Assert(t, (rpcServer != nil), "Failed to create rpc server")
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient("testServer", testServerURL, "", "", "")
+	rpcClient, err := rpckit.NewRPCClient("testServer", testServerURL)
 	if err != nil {
 		t.Fatalf("Error connecting to grpc server. Err: %v", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/utils/rpckit"
+	"github.com/pensando/sw/utils/rpckit/tlsproviders"
 )
 
 // Usage:
@@ -36,14 +37,14 @@ func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 }
 
 // runServer runs the server
-func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
+func runServer(url string, stopChannel chan bool, tlsProvider rpckit.TLSProvider) {
 	// create an rpc handler object
 	exampleHandler := &ExampleRPCHandler{
 		srvMsg: "Example Server",
 	}
 
 	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer("benchmarkServer", url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("benchmarkServer", url, rpckit.WithTLSProvider(tlsProvider))
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}
@@ -66,7 +67,7 @@ func randString(n int) string {
 }
 
 // runClient runs the client
-func runClient(url, certFile, keyFile, caFile string, length, count, concurrency int) {
+func runClient(url string, length, count, concurrency int, tlsProvider rpckit.TLSProvider) {
 	endChannel := make(chan bool, concurrency)
 
 	// record starting time
@@ -80,8 +81,7 @@ func runClient(url, certFile, keyFile, caFile string, length, count, concurrency
 	// run concurrent goroutines
 	for c := 0; c < concurrency; c++ {
 		go func(endChannel chan bool) {
-			// create an RPC client
-			rpcClient, err := rpckit.NewRPCClient("benchmarkClient", url, certFile, keyFile, caFile)
+			rpcClient, err := rpckit.NewRPCClient("grpc.local", url, rpckit.WithTLSProvider(tlsProvider))
 			if err != nil {
 				log.Errorf("Error connecting to server. Err: %v", err)
 				endChannel <- true
@@ -150,9 +150,6 @@ func main() {
 
 	flag.Parse()
 
-	// suppress info logs while running benchmark
-	log.SetFilter(log.AllowWarnFilter)
-
 	// set the number of CPUs to use
 	runtime.GOMAXPROCS(cpus)
 
@@ -175,10 +172,25 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	var tlsProvider rpckit.TLSProvider
+	var err error
+	if certFile != "" {
+		tlsProvider, err = tlsproviders.NewFileBasedProvider(certFile, keyFile, caFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Info("Initialized TLS provider")
+	} else {
+		log.Info("No TLS provider configured")
+	}
+
+	// suppress info logs while running benchmark
+	log.SetFilter(log.AllowWarnFilter)
+
 	// run server or client
 	if serverFlag {
-		runServer(url, certFile, keyFile, caFile, make(chan bool))
+		runServer(url, make(chan bool), tlsProvider)
 	} else {
-		runClient(url, certFile, keyFile, caFile, length, count, concurrency)
+		runClient(url, length, count, concurrency, tlsProvider)
 	}
 }

@@ -1,71 +1,93 @@
-// gRPC wrapper library
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+// gRPC wrapper library that provides additional functionality for Pensando
+// cluster clients and server (TLS, service-discovery, load-balancing, etc.)
 
 package rpckit
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"errors"
-	"io/ioutil"
 	"net"
 	"time"
 
 	"github.com/pensando/sw/utils/log"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
-// EnableTracer is the global variable to enable tracer middleware
-var EnableTracer = false
-
-// Middleware is RPC middleware interface
-type Middleware interface {
-	ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context
-	RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context
+// These are options that are common to both client and server
+type options struct {
+	stats        *statsMiddleware  // Stats middleware for the server instance
+	tracer       *tracerMiddleware // Tracer middleware for the server
+	middlewares  []Middleware      // list of middlewares
+	enableTracer bool              // option to enable tracer middleware
+	enableLogger bool              // option to enable logging middleware
+	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 }
 
 // RPCServer contains RPC server state
 type RPCServer struct {
-	GrpcServer  *grpc.Server      // gRPC server.
-	listenURL   string            // URL where this server is listening
-	certFile    string            // certificate filename
-	keyFile     string            // private key file name
-	caFile      string            // Root CA file
-	listener    net.Listener      // listener
-	stats       *statsMiddleware  // Stats middleware for the server instance
-	tracer      *tracerMiddleware // Tracer middleware for the server
-	middlewares []Middleware      // list of middlewares
+	GrpcServer *grpc.Server // gRPC server.
+	listenURL  string       // URL where this server is listening
+	listener   net.Listener // listener
+	options
 }
 
 // RPCClient contains RPC client definitions
 type RPCClient struct {
-	ClientConn  *grpc.ClientConn  // gRPC connection
-	remoteURL   string            // URL we are connecting to
-	certFile    string            // certificate file name
-	keyFile     string            // private key file name
-	caFile      string            // Root CA file
-	stats       *statsMiddleware  // Stats middleware for the client instance
-	tracer      *tracerMiddleware // Tracer middleware for the client
-	middlewares []Middleware      // list of middlewares
+	ClientConn *grpc.ClientConn // gRPC connection
+	srvName    string           // the server we are connecting to
+	remoteURL  string           // URL we are connecting to
+	options
 }
 
-// global middlewares that will intercept all client/server calls
-var globalMiddlewares []Middleware
+// Option fills the optional params for RPCClient and RPCServer
+type Option func(opt *options)
+
+// WithTLSProvider passes a provider for gRPC TLS options
+func WithTLSProvider(provider TLSProvider) Option {
+	return func(o *options) {
+		o.tlsProvider = provider
+	}
+}
+
+// WithTracerEnabled specifies whether the tracer should be enabled
+func WithTracerEnabled(enabled bool) Option {
+	return func(o *options) {
+		o.enableTracer = enabled
+	}
+}
+
+// WithLoggerEnabled specifies whether the logger should be enabled
+func WithLoggerEnabled(enabled bool) Option {
+	return func(o *options) {
+		o.enableLogger = enabled
+	}
+}
+
+// WithMiddleware passes a provider for gRPC TLS options
+func WithMiddleware(m Middleware) Option {
+	return func(o *options) {
+		o.middlewares = append(o.middlewares, m)
+	}
+}
+
+func defaultOptions(srvName string) *options {
+	return &options{
+		stats:        newStatsMiddleware(),
+		tracer:       newTracerMiddleware(srvName),
+		enableTracer: false,
+		enableLogger: true,
+	}
+}
 
 // NewRPCServer returns a gRPC server listening on a local port
-func NewRPCServer(srvName, listenURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCServer, error) {
+func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error) {
 	var server *grpc.Server
 
 	// some error checking
 	if listenURL == "" {
 		log.Errorf("Requires a URL to listen")
 		return nil, errors.New("Requires a URL to listen")
-	}
-	// Make sure both certFile and keyFile are specified or none
-	if (certFile == "" && keyFile != "") || (certFile != "" && keyFile == "") {
-		log.Errorf("Requires both cert file and key file")
-		return nil, errors.New("Requires both cert file and key file")
 	}
 
 	// Start a listener
@@ -75,59 +97,44 @@ func NewRPCServer(srvName, listenURL, certFile, keyFile, caFile string, middlewa
 		return nil, err
 	}
 
-	// Create the RPC server instance
+	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{
-		listenURL:   listenURL,
-		listener:    lis,
-		certFile:    certFile,
-		keyFile:     keyFile,
-		caFile:      caFile,
-		stats:       newStatsMiddleware(),
-		tracer:      newTracerMiddleware(srvName),
-		middlewares: append(globalMiddlewares, middlewares...),
+		listenURL: listenURL,
+		listener:  lis,
+		options:   *defaultOptions(srvName),
 	}
-	// add the stats middleware
-	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats)
-	if EnableTracer {
-		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer)
 
+	// add custom options
+	for _, o := range opts {
+		if o != nil {
+			o(&rpcServer.options)
+		}
+	}
+
+	// add default middlewares
+	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats)    // stats
+	rpcServer.middlewares = append(rpcServer.middlewares, newLogMiddleware()) // logging
+	if rpcServer.enableTracer {
+		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer) // tracing
+	}
+
+	grpcOpts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(rpcServerUnaryInterceptor(rpcServer)),
+		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
 	}
 
 	// start new grpc server
-	if certFile != "" && keyFile != "" && caFile != "" {
-		certificate, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if rpcServer.tlsProvider != nil {
+		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(srvName)
 		if err != nil {
-			log.Errorf("Error loading tls keypairs(%s/%s). Err: %v", certFile, keyFile, err)
+			log.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", srvName, err)
 			return nil, err
 		}
-
-		certPool := x509.NewCertPool()
-		bs, err := ioutil.ReadFile(caFile)
-		if err != nil {
-			log.Errorf("failed to read client ca cert: %s", err.Error())
-			return nil, err
-		}
-
-		ok := certPool.AppendCertsFromPEM(bs)
-		if !ok {
-			log.Fatalf("failed to append client certs: %s", err.Error())
-		}
-
-		tlsConfig := &tls.Config{
-			ClientAuth:   tls.RequireAndVerifyClientCert,
-			Certificates: []tls.Certificate{certificate},
-			ClientCAs:    certPool,
-		}
-
-		// start the server with TLS credentials
-		server = grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)),
-			grpc.UnaryInterceptor(rpcServerUnaryInterceptor(rpcServer)),
-			grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)))
-	} else {
-		server = grpc.NewServer(grpc.UnaryInterceptor(rpcServerUnaryInterceptor(rpcServer)),
-			grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)))
+		grpcOpts = append(grpcOpts, tlsOptions)
 	}
 
+	// start the server
+	server = grpc.NewServer(grpcOpts...)
 	// start service requests
 	go server.Serve(lis)
 
@@ -159,59 +166,50 @@ func (srv *RPCServer) Stop() error {
 }
 
 // NewRPCClient returns an RPC client to a remote server
-func NewRPCClient(srvName, remoteURL, certFile, keyFile, caFile string, middlewares ...Middleware) (*RPCClient, error) {
-	var opts grpc.DialOption
+func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error) {
+	var grpcOpts grpc.DialOption
+
+	// some error checking
+	if remoteURL == "" {
+		log.Errorf("Requires a remote URL to dial")
+		return nil, errors.New("Requires a remote URL to dial")
+	}
 
 	// create RPC client instance
 	rpcClient := &RPCClient{
-		remoteURL:   remoteURL,
-		certFile:    certFile,
-		keyFile:     keyFile,
-		caFile:      caFile,
-		stats:       newStatsMiddleware(),
-		tracer:      newTracerMiddleware(srvName),
-		middlewares: append(globalMiddlewares, middlewares...),
-	}
-	// add stats & tracer middleware
-	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)
-	if EnableTracer {
-		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer)
-
+		srvName:   srvName,
+		remoteURL: remoteURL,
+		options:   *defaultOptions(srvName),
 	}
 
+	// add custom options
+	for _, o := range opts {
+		if o != nil {
+			o(&rpcClient.options)
+		}
+	}
+
+	// add default middlewares
+	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)    //stats
+	rpcClient.middlewares = append(rpcClient.middlewares, newLogMiddleware()) // logging
+	if rpcClient.enableTracer {
+		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer) // tracing
+	}
+
+	var err error
 	// Get credentials
-	if certFile != "" {
-		certificate, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if rpcClient.tlsProvider != nil {
+		grpcOpts, err = rpcClient.tlsProvider.GetDialOptions(srvName)
 		if err != nil {
-			log.Errorf("failed to read cert and key files(%s/%s): Err: %v", certFile, keyFile, err)
+			log.Errorf("Failed to get dial options for server %v. Err: %v", srvName, err)
 			return nil, err
 		}
-
-		certPool := x509.NewCertPool()
-		bs, err := ioutil.ReadFile(caFile)
-		if err != nil {
-			log.Errorf("failed to read ca cert: %s", err.Error())
-			return nil, err
-		}
-
-		ok := certPool.AppendCertsFromPEM(bs)
-		if !ok {
-			log.Fatalf("failed to append certs: %s", err.Error())
-		}
-
-		transportCreds := credentials.NewTLS(&tls.Config{
-			ServerName:   "grpc.local",
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
-		})
-
-		opts = grpc.WithTransportCredentials(transportCreds)
 	} else {
-		opts = grpc.WithInsecure()
+		grpcOpts = grpc.WithInsecure()
 	}
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(remoteURL, grpc.WithBlock(), grpc.WithTimeout(time.Second*3), opts,
+	conn, err := grpc.Dial(remoteURL, grpc.WithBlock(), grpc.WithTimeout(time.Second*3), grpcOpts,
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(rpcClient)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(rpcClient)))
 	if err != nil {
@@ -239,31 +237,14 @@ func (c *RPCClient) Reconnect() error {
 		c.ClientConn = nil
 	}
 
+	var err error
 	// Get credentials
-	if c.certFile != "" {
-		certificate, err := tls.LoadX509KeyPair(c.certFile, c.keyFile)
+	if c.tlsProvider != nil {
+		opts, err = c.tlsProvider.GetDialOptions(c.srvName)
 		if err != nil {
-			log.Fatalf("failed to read cert and key files(%s/%s): Err: %v", c.certFile, c.keyFile, err)
+			log.Errorf("Failed to get dial options for server %v. Err: %v", c.srvName, err)
+			return err
 		}
-
-		certPool := x509.NewCertPool()
-		bs, err := ioutil.ReadFile(c.caFile)
-		if err != nil {
-			log.Fatalf("failed to read ca cert: %s", err.Error())
-		}
-
-		ok := certPool.AppendCertsFromPEM(bs)
-		if !ok {
-			log.Fatalf("failed to append certs: %s", err.Error())
-		}
-
-		transportCreds := credentials.NewTLS(&tls.Config{
-			ServerName:   "grpc.local",
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
-		})
-
-		opts = grpc.WithTransportCredentials(transportCreds)
 	} else {
 		opts = grpc.WithInsecure()
 	}
@@ -291,15 +272,4 @@ func (c *RPCClient) GetRPCStats() map[string]int64 {
 // Close closes client connection
 func (c *RPCClient) Close() error {
 	return c.ClientConn.Close()
-}
-
-// SetGlobalMiddlewares sets the global middlewares, useful for testing
-func SetGlobalMiddlewares(middlewares []Middleware) {
-	globalMiddlewares = middlewares
-}
-
-// Library initialization
-func init() {
-	// initialize global middlewares
-	globalMiddlewares = []Middleware{newLogMiddleware()}
 }

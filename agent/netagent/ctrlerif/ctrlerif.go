@@ -37,7 +37,7 @@ func objectKey(meta api.ObjectMeta) string {
 // NewNpmClient creates an NPM client object
 func NewNpmClient(agent netagent.CtrlerIntf, srvURL string) (*NpmClient, error) {
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient("netagent", srvURL, "", "", "")
+	rpcClient, err := rpckit.NewRPCClient("netagent", srvURL)
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err

@@ -10,7 +10,7 @@ import (
 // RunServer creates a gRPC server for cluster operations.
 func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	// create an RPC server.
-	rpcServer, err := rpckit.NewRPCServer("cmd", url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("cmd", url)
 	if err != nil {
 		log.Fatalf("Error creating grpc server: %v", err)
 	}

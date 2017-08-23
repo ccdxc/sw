@@ -1,6 +1,6 @@
 # rpckit
 
-rpckit is a library with convinient wrappers for using gRPC for inter process communication.
+rpckit is a library with convenient wrappers for using gRPC for inter process communication.
 
 Please see http://www.grpc.io/ for more information on gRPC.
 gRPC uses [protobuf](https://github.com/google/protobuf) as the IDL definition format.
@@ -68,7 +68,7 @@ func (es *ExampleRpcHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 
 ```
     // create an RPC server
-    rpcServer := rpckit.NewRpcServer("exampleServer", ":9000", "server.crt", "server.key", "rootCA.crt")
+    rpcServer := rpckit.NewRpcServer("exampleServer", ":9000")
 ```
 
 ### Step 4: Register the backend object with RPC server
@@ -88,7 +88,7 @@ func (es *ExampleRpcHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 
 ```
     // create an RPC client
-    rpcClient, err := rpckit.NewRpcClient("exampleClient", "localhost:9000", "client.crt", "client.key", "rootCA.crt")
+    rpcClient, err := rpckit.NewRpcClient("exampleClient", "localhost:9000")
     if err != nil {
         log.Errorf("Error connecting to server. Err: %v", err)
         return
@@ -152,6 +152,18 @@ gRPC supports TLS transport and certificate based mutual authentication. Please 
 In summary, both Server and Client trust a common Root CA. Both Server and Client get their public key certificates signed by the Root CA. Now they can authenticate each other. gRPC servers are setup to request client certificates and vice versa. So, in TLS environment, clients and servers need valid certificates and trusted Root CA certificate to connect to each other.
 
 There is a utility script `genkey.sh` which can be used to create Root CA, server and client certificates. Just run it with `genkey.sh <prefix>` and it'll generate all three certificates and private keys. See [example](./example) directory for an example of how to use TLS certificates.
+
+TLS is an add-on functionality for rpckit. To use TLS, library user must first instantiate a TLS provider and pass it to NewRPCServer or NewRPCClient using WithTLSProvider option.
+
+TLS providers are located in directory rpckit/tlsproviders. The simplest one is FileBasedProvider which simply reads keys and certificates from files and generates TLS options for clients and server. All TLS providers must implement the interface defined in rpckit/interfaces.go
+
+This code snippet, for example, enables TLS for an RPC Server
+
+```
+tlsProvider, err := tlsproviders.NewFileBasedProvider(certFile, keyFile, caFile)
+//  check err here
+tlsRPCServer, err := NewRPCServer("grpc.local", tlsURL, WithTLSProvider(tlsProvider))
+```
 
 ## RPC tracing using zipkin
 

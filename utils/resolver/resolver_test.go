@@ -39,7 +39,7 @@ func createFakeResolver(t *testing.T) (*rpckit.RPCServer, *mock.ResolverService)
 	for {
 		testURL := fmt.Sprintf("localhost:%d", startPort)
 		// create RPC Server.
-		rpcServer, err := rpckit.NewRPCServer("fakeResolverService", testURL, "", "", "")
+		rpcServer, err := rpckit.NewRPCServer("fakeResolverService", testURL)
 		if err == nil {
 			m := setupMockResolver()
 			types.RegisterServiceAPIServer(rpcServer.GrpcServer, service.NewRPCHandler(m))

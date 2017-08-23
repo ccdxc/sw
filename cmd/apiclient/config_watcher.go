@@ -38,7 +38,7 @@ type CfgWatcherService struct {
 // apiClientConn creates a gRPC client Connection to API server
 func apiClientConn() (*grpc.ClientConn, error) {
 	// need to integrate with service discovery
-	rpcClient, err := rpckit.NewRPCClient("cmd", "localhost:8082", "", "", "")
+	rpcClient, err := rpckit.NewRPCClient("cmd", "localhost:8082")
 	if err != nil {
 		log.Errorf("RPC client creation failed with error: %v", err)
 		return nil, errors.NewInternalError(err)

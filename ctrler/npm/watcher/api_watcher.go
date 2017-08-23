@@ -199,7 +199,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string) {
 	// loop forever
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, "", "", "")
+		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL)
 		if err != nil {
 			log.Warnf("Error connecting to grpc server. Err: %v", err)
 		} else {

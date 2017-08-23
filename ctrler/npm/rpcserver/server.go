@@ -30,7 +30,7 @@ func (rs *RPCServer) Stop() error {
 // NewRPCServer creates a new instance of
 func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, error) {
 	// create an RPC server
-	grpcServer, err := rpckit.NewRPCServer("netctrler", listenURL, "", "", "")
+	grpcServer, err := rpckit.NewRPCServer("netctrler", listenURL)
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}

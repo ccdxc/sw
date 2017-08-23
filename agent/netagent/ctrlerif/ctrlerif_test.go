@@ -103,7 +103,7 @@ const testSrvURL = "localhost:8585"
 
 func createRPCServer(t *testing.T) *fakeRPCServer {
 	// create an RPC server
-	grpcServer, err := rpckit.NewRPCServer("netctrler", testSrvURL, "", "", "")
+	grpcServer, err := rpckit.NewRPCServer("netctrler", testSrvURL)
 	if err != nil {
 		t.Fatalf("Error creating rpc server. Err; %v", err)
 	}

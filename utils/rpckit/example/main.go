@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 	exproto "github.com/pensando/sw/utils/rpckit/example/proto"
+	"github.com/pensando/sw/utils/rpckit/tlsproviders"
 	"golang.org/x/net/context"
 )
 
@@ -35,14 +36,14 @@ func (es *ExampleRPCHandler) ExampleRPC(ctx context.Context, req *exproto.Exampl
 }
 
 // runServer runs the server
-func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
+func runServer(url string, stopChannel chan bool, tlsProvider rpckit.TLSProvider) {
 	// create an rpc handler object
 	exampleHandler := &ExampleRPCHandler{
 		srvMsg: "Example Server Response",
 	}
 
 	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer("exampleServer", url, certFile, keyFile, caFile)
+	rpcServer, err := rpckit.NewRPCServer("grpc.local", url, rpckit.WithTLSProvider(tlsProvider))
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}
@@ -56,9 +57,9 @@ func runServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 }
 
 // runClient runs the client
-func runClient(url, certFile, keyFile, caFile string, count int) {
+func runClient(url string, count int, tlsProvider rpckit.TLSProvider) {
 	// create an RPC client
-	rpcClient, err := rpckit.NewRPCClient("exampleClient", url, certFile, keyFile, caFile)
+	rpcClient, err := rpckit.NewRPCClient("grpc.local", url, rpckit.WithTLSProvider(tlsProvider))
 	if err != nil {
 		log.Errorf("Error connecting to server. Err: %v", err)
 		return
@@ -104,6 +105,17 @@ func main() {
 
 	flag.Parse()
 
+	var tlsProvider rpckit.TLSProvider
+	var err error
+	if certFile != "" {
+		tlsProvider, err = tlsproviders.NewFileBasedProvider(certFile, keyFile, caFile)
+		if err != nil {
+			log.Infof("Error initializing TLS provider: %v", err)
+			os.Exit(1)
+		}
+		log.Info("Initialized TLS provider")
+	}
+
 	// make sure necessary flags are specified
 	if !serverFlag && !clientFlag {
 		fmt.Printf("Need to run as either -client or -server\n  See example --help for more details\n")
@@ -112,8 +124,8 @@ func main() {
 		fmt.Printf("Can not specify both -client and -server flags\n")
 		os.Exit(1)
 	} else if serverFlag {
-		runServer(url, certFile, keyFile, caFile, make(chan bool))
+		runServer(url, make(chan bool), tlsProvider)
 	} else {
-		runClient(url, certFile, keyFile, caFile, count)
+		runClient(url, count, tlsProvider)
 	}
 }

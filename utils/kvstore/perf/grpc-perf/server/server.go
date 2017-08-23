@@ -86,10 +86,7 @@ func RuleListHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // RunServer creates a gRPC server for rule operations.
-func RunServer(url, certFile, keyFile, caFile string, client kvstore.Interface, stopChannel chan bool) {
-	// disable logging middleware
-	rpckit.SetGlobalMiddlewares([]rpckit.Middleware{})
-
+func RunServer(url string, client kvstore.Interface, stopChannel chan bool) {
 	watcher, err := client.PrefixWatch(context.Background(), "/rules", "0")
 	if err != nil {
 		log.Fatalf("Failed to establish watch, error: %v", err)
@@ -101,8 +98,8 @@ func RunServer(url, certFile, keyFile, caFile string, client kvstore.Interface, 
 		watcher:  watcher,
 	}
 
-	// create an RPC server
-	rpcServer, err := rpckit.NewRPCServer("rules", url, certFile, keyFile, caFile)
+	// create an RPC server with logging disabled
+	rpcServer, err := rpckit.NewRPCServer("rules", url, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Fatalf("Error creating grpc server: %v", err)
 	}
@@ -219,6 +216,6 @@ func RunServers(restServerURL, gRPCServerURL string, etcdServers []string, numEt
 	}
 
 	go NewRESTServer().RunOnAddr(restServerURL)
-	RunServer(gRPCServerURL, "", "", "", clients[numClients], nil)
+	RunServer(gRPCServerURL, clients[numClients], nil)
 	log.Fatalf("Server terminated")
 }
