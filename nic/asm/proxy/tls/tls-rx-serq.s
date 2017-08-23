@@ -47,7 +47,8 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
-	
+	.param		tls_alloc_tnmdr_start
+	.param		tls_alloc_tnmpr_start
 tls_rx_serq_process_start:
 	/*   if (IS_ENC_FLOW) { */
 	sne		c1, r0, k.enc_flow
@@ -149,13 +150,14 @@ dma_cmd_enc_desc_entry_last:
 
 table_read_queue_brq:
 	phvwri		p.pending_queue_brq, 1
-table_read_alloc_rnmdr:
-	TLS_READ_IDX(RNMDR_ALLOC_IDX, TABLE_TYPE_RAW, tls_alloc_rnmdr_process)
-/*
-	TLS_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, tls_queue_brq_process,
-	                    TLS_TCB_TABLE_BASE, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TLS_TCB_OFFSET, TLS_TCB_TABLE_ENTRY_SIZE)
-*/
+table_read_TNMDR_ALLOC_IDX:
+	addi 		r3, r0, TNMDR_ALLOC_IDX
+	CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_alloc_tnmdr_start,
+	                    r3, TABLE_SIZE_16_BITS)
+table_read_TNMPR_ALLOC_IDX:
+	addi 		r3, r0, TNMPR_ALLOC_IDX
+	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_alloc_tnmpr_start,
+	                    r3, TABLE_SIZE_16_BITS)
 
 tls_rx_serq_process_done:
 	nop.e

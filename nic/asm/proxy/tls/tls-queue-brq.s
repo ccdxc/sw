@@ -50,7 +50,7 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
-	
+	.param		BRQ_BASE
 tls_queue_brq_process_start:
 	/*   if (IS_ENC_FLOW) { */
 	sne		c1, r0, k.enc_flow
@@ -100,7 +100,7 @@ dma_cmd_dec_brq_slot:
 	mincr		r5, 1, BRQ_TABLE_SIZE_SHFT
 	sll		r5, r5, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
-	addi		r1, r0, BRQ_BASE
+	add		r1, r0, BRQ_BASE
 	add		r1, r1, r5
 
 	phvwr		p.dma_cmd2_addr,r1

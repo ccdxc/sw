@@ -63,7 +63,7 @@ struct p_struct {
         dma_cmd1_size                    :  16;
         dma_cmd1_pad                     :  40;
         dma_cmd1_addr                    :  64;
-        pad2                             :  128;
+
 
         dma_cmd2_cmd                     :  8;
         dma_cmd2_size                    :  16;
@@ -81,8 +81,10 @@ struct p_struct {
 
 	// OTHER PHV - END
         fid                              : 16;
+        fid_pad                          : 16;
         ofid                             : 16;
         desc                             : ADDRESS_WIDTH;
+        desc_pad                         : ADDRESS_WIDTH;
         odesc                            : ADDRESS_WIDTH;
         sdesc                            : ADDRESS_WIDTH;
         opage                            : ADDRESS_WIDTH;
@@ -115,6 +117,7 @@ struct p_struct {
         brq_odesc                        : ADDRESS_WIDTH;
         brq_key                          : ADDRESS_WIDTH;
         brq_iv                           : ADDRESS_WIDTH;
+        brq_pad                          : ADDRESS_WIDTH;
         brq_auth_tag                     : ADDRESS_WIDTH;
   
         brq_cmd_core                     : 3;
@@ -142,7 +145,7 @@ struct p_struct {
         pending_rx_serq                  : 1;
         pending_queue_brq                : 1;
         enc_flow                         : 1;
-
+        split                            : 1;
 
         tls_hdr_type                     : 8;
         tls_hdr_version_major            : 8;
@@ -151,7 +154,28 @@ struct p_struct {
 
         db_data                          : 64;
 
-	// OTHER PHV - START
+        tcp_app_header_table0_valid      : 1;
+        tcp_app_header_table1_valid      : 1;
+        tcp_app_header_table2_valid      : 1;
+        tcp_app_header_table3_valid      : 1;
+        common_te0_phv_table_lock_en     : 1; 
+        common_te0_phv_table_raw_table_size : 3;
+        common_te0_phv_table_pc : 28; 
+        common_te0_phv_table_addr : 64; 
+        common_te1_phv_table_lock_en     : 1; 
+        common_te1_phv_table_raw_table_size : 3;
+        common_te1_phv_table_pc : 28; 
+        common_te1_phv_table_pc_pad : 28; 
+        common_te1_phv_table_addr : 64; 
+        common_te2_phv_table_lock_en     : 1; 
+        common_te2_phv_table_raw_table_size : 3;
+        common_te2_phv_table_pc : 28; 
+        common_te2_phv_table_addr : 64; 
+        common_te3_phv_table_lock_en     : 1; 
+        common_te3_phv_table_raw_table_size : 3;
+        common_te3_phv_table_pc : 28; 
+        common_te3_phv_table_addr : 64; 
+ 	// OTHER PHV - START
 
 	// INTRINSIC - END
         table_sel                       : 4; // RAW, NONE, or configured table ID

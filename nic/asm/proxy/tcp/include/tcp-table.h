@@ -15,66 +15,6 @@
 #define TCP_TCB_SACK_OFFSET             96
 #define TCP_TCB_TSO_OFFSET              352
 
-#define TNMDR_TABLE_BASE                0xbeef1000
-#define TNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
-#define TNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
-#define TNMDR_TABLE_SIZE                255
-#define TNMDR_TABLE_SIZE_SHFT           8
-
-#define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
-#define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
-#define RNMDR_TABLE_SIZE                255
-#define RNMDR_TABLE_SIZE_SHFT           8
-
-#define RNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
-#define RNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
-#define RNMPR_TABLE_SIZE                255
-#define RNMPR_TABLE_SIZE_SHFT           8
-
-/* Global registers */
-#define SERQ_BASE                      0xbeef4000
-#define SERQ_PRODUCER_IDX              0xba00ba00
-#define SERQ_CONSUMER_IDX              0xba00ba08
-#define SERQ_TABLE_SIZE                255
-#define SERQ_TABLE_SIZE_SHFT           8
-
-#define SESQ_BASE                      0xbeef5000
-#define SESQ_PRODUCER_IDX              0xba00ba10
-#define SESQ_CONSUMER_IDX              0xba00ba18
-#define SESQ_PRODUCER_IDX_VAL          0xba11ba10
-#define SESQ_CONSUMER_IDX_VAL          0xba11ba18
-#define SESQ_ENTRY_SIZE                16 /* 16B */
-#define SESQ_ENTRY_SIZE_SHFT           4  /* 16B */
-#define SESQ_SIZE                      255
-#define SESQ_SIZE_SHFT                 8
-
-#define RNMPR_ALLOC_IDX                0xba00ba20
-#define RNMPR_FREE_IDX                 0xba00ba28
-#define RNMDR_ALLOC_IDX                0xba00ba30
-#define RNMDR_FREE_IDX                 0xba00ba38
-
-#define TNMPR_ALLOC_IDX                0xba00ba40
-#define TNMPR_FREE_IDX                 0xba00ba48
-#define TNMDR_ALLOC_IDX                0xba00ba50
-#define TNMDR_FREE_IDX                 0xba00ba58
-
-#define ARQ_PRODUCER_IDX               0xba00ba60
-#define ARQ_CONSUMER_IDX               0xba00ba68
-#define ASQ_PRODUCER_IDX               0xba00ba70
-#define ASQ_CONSUMER_IDX               0xba00ba78
-
-#define TABLE_TYPE_RAW                 0
-#define TABLE_LOCK_DIS                 0
-#define TABLE_LOCK_EN                  1
-
-#define TABLE_SIZE_8_BITS              0
-#define TABLE_SIZE_16_BITS             1
-#define TABLE_SIZE_32_BITS             2
-#define TABLE_SIZE_64_BITS             3
-#define TABLE_SIZE_128_BITS            4
-#define TABLE_SIZE_256_BITS            5
-#define TABLE_SIZE_512_BITS            6
-
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400
 #define flow_sack4_process             0x00010800
@@ -82,7 +22,6 @@
 #define flow_rx_process                0x00011000
 #define flow_get_obj                   0x00011400
 #define flow_aol_page_alloc_process    0x00011800
-
 
 #define flow_sack1_process             0x00011c00
 #define flow_cc_process                0x00012000
@@ -105,6 +44,7 @@
 #define flow_sesq_read_process         0x00016400
 #define flow_queue_sched_process       0x00016800
 #define flow_sesq_consume_process      0x00016c00
+
 
 #define tcp_write_wakeup               0x000400c0
 #define tcp_mtu_probe                  0x00040198
