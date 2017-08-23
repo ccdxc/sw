@@ -5,3 +5,6 @@ def GetTcpSeqNum(testcase, packet):
 
 def GetTcpAckNum(testcase, packet):
     return 100
+
+def GetTcpWinSize(testcase, packet):
+    return 4096

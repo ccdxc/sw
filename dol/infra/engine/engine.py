@@ -83,7 +83,7 @@ def PrintSummaryAndExit(report):
     return
         
 def ProcessReport():
-    report = TrigExpEngine.get_run_report(5)
+    report = TrigExpEngine.get_run_report(60)
     report.show()
     for tcid,tcreport in report.details.items():
         tc = TestCaseDB.Get(tcid)

@@ -99,9 +99,16 @@ class TestCase(objects.FrameworkObject):
 
     def GetLogPrefix(self):
         return self.logger.GetLogPrefix() + ' ' + self.logpfx
+    
+    def __generate_packets(self):
+        self.info("Generating Packet Objects")
+        for pspec in self.testspec.packets:
+            packet = pktfactory.Packet(self, pspec.packet)
+            self.packets.Add(packet)
+        return
 
     def __generate_objects(self):
-        pktfactory.GeneratePackets(self)
+        self.__generate_packets()
         memfactory.GenerateDescriptors(self)
         memfactory.GenerateBuffers(self)
         return
@@ -119,6 +126,7 @@ class TestCase(objects.FrameworkObject):
             
             tc_pkt.packet = copy.deepcopy(tc_pkt.packet)
             tc_pkt.packet.SetStepId(step_id)
+            tc_pkt.packet.Build(self)
 
             # Resolve the ports
             if objects.IsReference(spec_pkt.packet.port):

@@ -26,18 +26,18 @@ entries:
                 tcp_ack_num     : const/5000
                 tcp_win_sz      : const/8192
                 tcp_win_scale   : const/1
-                tcp_mss         : const/16384
+                tcp_mss         : const/1460
         initiator: 
             port : const/40000
             flow_info:
                 action  : allow
                 state   : established
             tracking_info:
-                tcp_seq_num     : const/1000
-                tcp_ack_num     : const/5000
+                tcp_seq_num     : const/5000
+                tcp_ack_num     : const/1000
                 tcp_win_sz      : const/8192
                 tcp_win_scale   : const/1
-                tcp_mss         : const/16384
+                tcp_mss         : const/1460
 
     - entry:
         label: span

@@ -20,7 +20,7 @@ config_filter:
 packets:
     - packet:
         id          : IFLOW_BASE     # IFLOW Packet Base
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateBySessionIflow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
@@ -44,13 +44,13 @@ packets:
                 seq     : ref://testcase/config/session/iconfig/flow/tracking/tcp_seq_num
                 ack     : ref://testcase/config/session/iconfig/flow/tracking/tcp_ack_num
                 window  : ref://testcase/config/session/iconfig/flow/tracking/tcp_win_sz
-                flags   : ack,push
+                flags   : ack,psh
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : RFLOW_BASE     # RFLOW Packet Base
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateBySessionRflow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
@@ -74,7 +74,7 @@ packets:
                 seq     : ref://testcase/config/session/rconfig/flow/tracking/tcp_seq_num
                 ack     : ref://testcase/config/session/rconfig/flow/tracking/tcp_ack_num
                 window  : ref://testcase/config/session/rconfig/flow/tracking/tcp_win_sz
-                flags   : ack,push
+                flags   : ack,psh
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -84,23 +84,24 @@ packets:
 
     - packet:
         id          : RFLOW_PKT1     # RFLOW Packet 1
-        clone       : ref://testcase/packets/id=IFLOW_BASE
+        clone       : ref://testcase/packets/id=RFLOW_BASE
 
     - packet:
         id          : IFLOW_PKT2     # IFLOW Packet 2
         clone       : ref://testcase/packets/id=IFLOW_BASE
         headers     :
             tcp:
-                seq : callback://firewall/callbacks/GetTcpSeqNum
-                ack : callback://firewall/callbacks/GetTcpAckNum
+                seq : const/6000 #callback://firewall/callbacks/GetTcpSeqNum
+                ack : const/2000 #callback://firewall/callbacks/GetTcpAckNum
 
     - packet:
         id          : RFLOW_PKT2     # RFLOW Packet 2
-        clone       : ref://testcase/packets/id=IFLOW_BASE
+        clone       : ref://testcase/packets/id=RFLOW_BASE
         headers     :
             tcp:
-                seq : callback://firewall/callbacks/GetTcpSeqNum
-                ack : callback://firewall/callbacks/GetTcpAckNum
+                seq : const/2000 #callback://firewall/callbacks/GetTcpSeqNum
+                ack : const/5000 #callback://firewall/callbacks/GetTcpAckNum
+                #window : const/2000 #callback://firewall/callbacks/GetTcpWinSize
 
 
 session:

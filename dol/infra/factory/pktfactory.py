@@ -162,12 +162,12 @@ class Packet(objects.FrameworkObject):
         super().__init__()
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
+        self.__build_complete = False
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
         self.pktspec = pktspec
         self.__get_packet_base(tc, pktspec)
-
         self.encaps = []
         self.__get_packet_encaps(tc, pktspec)
         
@@ -268,8 +268,12 @@ class Packet(objects.FrameworkObject):
         return
 
     def __merge_headers(self, tc):
-        self.headers = PacketHeaders(self.spec.headers)
+        spec_hdrs = PacketHeaders(self.spec.headers)
         template_hdrs = PacketHeaders(self.template.headers)
+        if self.headers:
+            self.headers = objects.MergeObjects(spec_hdrs, self.headers)
+        else:
+            self.headers = spec_hdrs
         self.headers = objects.MergeObjects(self.headers, template_hdrs)
         self.headers_order = copy.deepcopy(self.template.headers_order)
         self.headers.show()
@@ -310,9 +314,12 @@ class Packet(objects.FrameworkObject):
         return
 
     def Build(self, tc):
-        self.__resolve(tc)
-        self.spkt = scapyfactory.main(self)
-        self.spkt[penscapy.PENDOL].id = tc.GID()
+        if not self.__build_complete:
+            self.__resolve(tc)
+            self.spkt = scapyfactory.main(self)
+            self.spkt[penscapy.PENDOL].id = tc.GID()
+        self.__build_complete = True
+        return
 
     def __show_raw_pkt(self, logger):
         logger.info("--------------------- RAW PACKET ---------------------")
@@ -348,12 +355,4 @@ class Packet(objects.FrameworkObject):
         return
 
 
-def GeneratePackets(tc):
-    tc.info("Generating Packet Objects")
-    for pspec in tc.testspec.packets:
-        packet = Packet(tc, pspec.packet)
-        packet.Build(tc)
-        #packet.Show(tc)
-        tc.packets.Add(packet)
-    return
 
