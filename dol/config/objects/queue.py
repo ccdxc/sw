@@ -16,8 +16,8 @@ class QueueObject(objects.FrameworkObject):
         self.id     = resmgr.QueueIdAllocator.get()
         self.spec   = spec
 
-        qtypename = 'LIF_QUEUE_TYPE_' + spec.type.upper()
-        self.type   = haldefs.interface.LifQType.Value(qtypename)
+        #qtypename = 'LIF_QUEUE_TYPE_' + spec.type.upper()
+        #self.type   = haldefs.interface.LifQType.Value(qtypename)
 
         self.parent = parent
         return

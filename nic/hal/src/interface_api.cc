@@ -115,33 +115,6 @@ if_get_lif(if_t *pi_if)
 }
 
 // ----------------------------------------------------------------------------
-// Get a qid, qoffset from pi if and qtype
-// ----------------------------------------------------------------------------
-hal_ret_t
-if_get_qid_qoff(if_t *pi_if, intf::LifQType qtype, 
-                uint8_t *q_off, uint32_t *qid)
-{
-    if (pi_if->if_type != intf::IF_TYPE_ENIC) {
-        return HAL_RET_INVALID_ARG;
-    }
-
-    lif_t *pi_lif = find_lif_by_handle(pi_if->lif_handle);
-    HAL_ASSERT_RETURN(pi_lif != NULL, HAL_RET_INVALID_ARG);
-
-    dllist_ctxt_t *lnode;
-    dllist_for_each(lnode, &(pi_lif->qlist_head)) {
-        lif_queue_t *pi_lif_q = dllist_entry(lnode, lif_queue_t, qlist_entry);
-        if (pi_lif_q->queue_type == qtype) {
-            *q_off = pi_lif_q->queue_offset;
-            *qid = pi_lif_q->queue_id;
-            return HAL_RET_OK;
-        }
-    }
-
-    return HAL_RET_QUEUE_NOT_FOUND;
-}
-
-// ----------------------------------------------------------------------------
 // Returns enic type of interface
 // ----------------------------------------------------------------------------
 intf::IfEnicType 

@@ -11,6 +11,7 @@
 namespace hal {
 
 const static uint32_t kNumQTypes = 8;
+const static uint32_t kMaxQStateSize = 4096;
 
 // Parameters for the InitLIFToQstate call.
 struct LIFQStateParams {

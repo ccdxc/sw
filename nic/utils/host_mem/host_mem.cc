@@ -9,13 +9,12 @@ static uint32_t NumUnits(size_t size) {
 
 HostMem *HostMem::New() {
   std::unique_ptr<HostMem> mem(new HostMem());
-  mem->shmid_ = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
+  mem->shmid_ = shmget(HostMemHandle(), kShmSize, 0666);
   if (mem->shmid_ < 0)
     return nullptr;
   mem->shmaddr_ = shmat(mem->shmid_, nullptr, 0);
   if (mem->shmaddr_ == (void*)-1)
     return nullptr;
-  shmctl(mem->shmid_, IPC_RMID, NULL);
 
   uint32_t num_units = kShmSize/kAllocUnit;
   uint64_t mask = kAllocUnit - 1;

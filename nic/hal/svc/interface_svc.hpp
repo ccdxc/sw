@@ -35,6 +35,10 @@ using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
+using intf::GetQStateRequestMsg;
+using intf::GetQStateResponseMsg;
+using intf::SetQStateRequestMsg;
+using intf::SetQStateResponseMsg;
 
 class InterfaceServiceImpl final : public Interface::Service {
 public:
@@ -53,6 +57,14 @@ public:
     Status LifGet(ServerContext *context,
                   const LifGetRequestMsg *req,
                   LifGetResponseMsg *rsp) override;
+
+    Status LifGetQState(ServerContext *context,
+                        const GetQStateRequestMsg *reqs,
+                        GetQStateResponseMsg *resps) override;
+
+    Status LifSetQState(ServerContext *context,
+                        const SetQStateRequestMsg *reqs,
+                        SetQStateResponseMsg *resps) override;
 
     Status InterfaceCreate(ServerContext *context,
                            const InterfaceRequestMsg *req,

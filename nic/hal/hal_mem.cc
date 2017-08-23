@@ -104,11 +104,6 @@ hal_state::init(void)
                              false, true, true, true);
     HAL_ASSERT_RETURN((lif_slab_ != NULL), false);
 
-    lif_queue_slab_ = slab::factory("LIF_QUEUE", HAL_SLAB_LIF_QUEUE,
-                              sizeof(hal::lif_queue_t), 8,
-                             false, true, true, true);
-    HAL_ASSERT_RETURN((lif_queue_slab_ != NULL), false);
-
     lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
                              hal::lif_get_key_func,
                              hal::lif_compute_hash_func,
@@ -393,7 +388,6 @@ hal_state::hal_state()
     l2seg_hal_handle_ht_ = NULL;
 
     lif_slab_ = NULL;
-    lif_queue_slab_ = NULL;
     lif_id_ht_ = NULL;
     lif_hal_handle_ht_ = NULL;
 
@@ -472,7 +466,6 @@ hal_state::~hal_state()
     l2seg_hal_handle_ht_ ? delete l2seg_hal_handle_ht_ : HAL_NOP;
 
     lif_slab_ ? delete lif_slab_ : HAL_NOP;
-    lif_queue_slab_ ? delete lif_queue_slab_ : HAL_NOP;
     lif_id_ht_ ? delete lif_id_ht_ : HAL_NOP;
     lif_hal_handle_ht_ ? delete lif_hal_handle_ht_ : HAL_NOP;
 
@@ -579,10 +572,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_LIF:
         g_hal_state->lif_slab()->free_(elem);
-        break;
-
-    case HAL_SLAB_LIF_QUEUE:
-        g_hal_state->lif_queue_slab()->free_(elem);
         break;
 
     case HAL_SLAB_IF:

@@ -1,17 +1,40 @@
 #include "host_mem.hpp"
 #include "gtest/gtest.h"
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <unistd.h>
+#include <assert.h>
 #include <memory>
 
 using namespace utils;
 
-TEST(HostMemTest, TestCreate) {
+class HostMemTest : public ::testing::Test {
+ protected:
+    virtual void SetUp() {
+        // Remove any stale segments.
+        shmid_ = shmget(HostMemHandle(), kShmSize, 0666);
+        if (shmid_ >= 0)
+            shmctl(shmid_, IPC_RMID, NULL);
+
+        shmid_ = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
+        assert(shmid_ >= 0);
+    }
+
+    virtual void TearDown() {
+        shmctl(shmid_, IPC_RMID, NULL);
+    }
+
+ private:
+    int shmid_;
+};
+
+TEST_F(HostMemTest, TestCreate) {
   std::unique_ptr<HostMem> mem(HostMem::New());
   ASSERT_NE(nullptr, mem.get());
 }
 
-TEST(HostMemTest, TestAllocFree) {
+TEST_F(HostMemTest, TestAllocFree) {
   std::unique_ptr<HostMem> mem(HostMem::New());
   ASSERT_NE(nullptr, mem.get());
   void *ptr = mem->Alloc(kShmSize - kAllocUnit);
@@ -23,7 +46,7 @@ TEST(HostMemTest, TestAllocFree) {
   ASSERT_TRUE(ptr2 != nullptr);
 }
 
-TEST(HostMemTest, TestSharing) {
+TEST_F(HostMemTest, TestSharing) {
   std::unique_ptr<HostMem> mem(HostMem::New());
   ASSERT_NE(nullptr, mem.get());
   uint8_t *ptr = (uint8_t *)mem->Alloc(1);
@@ -43,4 +66,3 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-

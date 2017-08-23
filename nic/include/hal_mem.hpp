@@ -12,7 +12,6 @@ typedef enum hal_slab_e {
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,
     HAL_SLAB_LIF,
-    HAL_SLAB_LIF_QUEUE,
     HAL_SLAB_IF,
     HAL_SLAB_EP,
     HAL_SLAB_EP_IP_ENTRY,

@@ -314,12 +314,10 @@ TEST_F(session_test, test2)
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
-    lif_spec.add_queues();
-    lif_spec.add_queues();
-    lif_spec.mutable_queues(0)->set_qtype(intf::LIF_QUEUE_TYPE_RX);
-    lif_spec.mutable_queues(0)->set_queue_id(2);
-    lif_spec.mutable_queues(1)->set_qtype(intf::LIF_QUEUE_TYPE_TX);
-    lif_spec.mutable_queues(1)->set_queue_id(1);
+    lif_spec.add_lif_qstate_map();
+    lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
+    lif_spec.mutable_lif_qstate_map(0)->set_size(1);
+    lif_spec.mutable_lif_qstate_map(0)->set_entries(3);
     ret = hal::lif_create(lif_spec, &lif_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -384,8 +382,6 @@ TEST_F(session_test, test2)
         mutable_v4_key()->mutable_tcp_udp()->set_dport(2000);
     sess_spec.mutable_initiator_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-    sess_spec.mutable_initiator_flow()->mutable_flow_data()->
-        mutable_flow_info()->set_queue_type(intf::LIF_QUEUE_TYPE_TX);
 
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
@@ -397,8 +393,6 @@ TEST_F(session_test, test2)
         mutable_v4_key()->mutable_tcp_udp()->set_dport(1000);
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-    sess_spec.mutable_responder_flow()->mutable_flow_data()->
-        mutable_flow_info()->set_queue_type(intf::LIF_QUEUE_TYPE_TX);
     ret = hal::session_create(sess_spec, &sess_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
@@ -482,12 +476,6 @@ TEST_F(session_test, test3)
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
-    lif_spec.add_queues();
-    lif_spec.add_queues();
-    lif_spec.mutable_queues(0)->set_qtype(intf::LIF_QUEUE_TYPE_RX);
-    lif_spec.mutable_queues(0)->set_queue_id(2);
-    lif_spec.mutable_queues(1)->set_qtype(intf::LIF_QUEUE_TYPE_TX);
-    lif_spec.mutable_queues(1)->set_queue_id(1);
     ret = hal::lif_create(lif_spec, &lif_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -554,8 +542,6 @@ TEST_F(session_test, test3)
         mutable_v6_key()->mutable_tcp_udp()->set_dport(2000);
     sess_spec.mutable_initiator_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-    sess_spec.mutable_initiator_flow()->mutable_flow_data()->
-        mutable_flow_info()->set_queue_type(intf::LIF_QUEUE_TYPE_TX);
 
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip2);
@@ -569,8 +555,6 @@ TEST_F(session_test, test3)
         mutable_v6_key()->mutable_tcp_udp()->set_dport(1000);
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
-    sess_spec.mutable_responder_flow()->mutable_flow_data()->
-        mutable_flow_info()->set_queue_type(intf::LIF_QUEUE_TYPE_TX);
     ret = hal::session_create(sess_spec, &sess_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 

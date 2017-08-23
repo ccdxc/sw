@@ -24,15 +24,15 @@ namespace utils {
 class HostMem : public pen_mem_base {
  public:
   HostMem() {
-    int shmid = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
-    assert(shmid >= 0);
-    shmaddr_ = shmat(shmid, nullptr, 0);
+    shmid_ = shmget(HostMemHandle(), kShmSize, IPC_CREAT | 0666);
+    assert(shmid_ >= 0);
+    shmaddr_ = shmat(shmid_, nullptr, 0);
     assert(shmaddr_ != (void*)-1);
-    shmctl(shmid, IPC_RMID, NULL);
   }
   virtual ~HostMem() {
     if ((shmaddr_) && (shmaddr_ != (void *)-1))
       shmdt(shmaddr_);
+    shmctl(shmid_, IPC_RMID, NULL);
   }
   virtual bool burst_read(uint64_t addr, unsigned char *data,
                           unsigned int len, bool secure, bool reverse_bo) {
@@ -54,6 +54,7 @@ class HostMem : public pen_mem_base {
   }
 
  private:
+  int shmid_;
   void *shmaddr_;
 };
 

@@ -56,6 +56,30 @@ InterfaceServiceImpl::LifGet(ServerContext *context,
 }
 
 Status
+InterfaceServiceImpl::LifGetQState(ServerContext *context,
+                                   const GetQStateRequestMsg *reqs,
+                                   GetQStateResponseMsg *resps)
+{
+    HAL_TRACE_DEBUG("Rcvd Get QState Request");
+    for (int i = 0; i < reqs->reqs_size(); i++) {
+        hal::LifGetQState(reqs->reqs(i), resps->add_resps());
+    }
+    return Status::OK;
+}
+
+Status
+InterfaceServiceImpl::LifSetQState(ServerContext *context,
+                                   const SetQStateRequestMsg *reqs,
+                                   SetQStateResponseMsg *resps)
+{
+    HAL_TRACE_DEBUG("Rcvd Get QState Request");
+    for (int i = 0; i < reqs->reqs_size(); i++) {
+        hal::LifSetQState(reqs->reqs(i), resps->add_resps());
+    }
+    return Status::OK;
+}
+
+Status
 InterfaceServiceImpl::InterfaceCreate(ServerContext* context,
                                       const InterfaceRequestMsg *req,
                                       InterfaceResponseMsg *rsp)

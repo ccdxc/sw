@@ -18,6 +18,10 @@ service Interface {
   rpc LifDelete(LifDeleteRequestMsg) returns (LifDeleteResponseMsg) {}
   rpc LifGet(LifGetRequestMsg) returns (LifGetResponseMsg) {}
 
+  // Queue state related APIs
+  rpc LifGetQState(GetQStateRequestMsg) returns (GetQStateResponseMsg) {}
+  rpc LifSetQState(SetQStateRequestMsg) returns (SetQStateResponseMsg) {}
+
   // common APIs for all interfaces
   rpc InterfaceCreate (InterfaceRequestMsg) returns (InterfaceResponseMsg) {}
   rpc InterfaceUpdate (InterfaceRequestMsg) returns (InterfaceResponseMsg) {}
@@ -46,18 +50,6 @@ enum IfStatus {
 // of interfaces and a LIF.
 //------------------------------------------------------------------------------
 
-// different types of LIF queues
-enum LifQType {
-  LIF_QUEUE_TYPE_NONE      = 0;
-  LIF_QUEUE_TYPE_ADMIN     = 1;    // Admin Queue
-  LIF_QUEUE_TYPE_TX        = 2;    // Tx Queue
-  LIF_QUEUE_TYPE_RX        = 3;    // Rx Queue
-  LIF_QUEUE_TYPE_RDMA_SEND = 4;    // RDMA send Queue
-  LIF_QUEUE_TYPE_RDMA_RECV = 5;    // RDMA receive Queue
-  LIF_QUEUE_TYPE_CQ        = 6;    // Completion Queue
-  LIF_QUEUE_TYPE_EQ        = 7;    // Event Queue
-}
-
 // Types of LIF ports
 enum LifPortType {
   LIF_PORT_TYPE_NONE       = 0;
@@ -67,10 +59,48 @@ enum LifPortType {
   LIF_PORT_TYPE_NCSI       = 4;    // LIF for mgmt port
 }
 
-// LIF can have many queues of different types
-message LifQueueInfo {
-    LifQType    qtype       = 1;    // queue type
-    uint32      queue_id    = 2;    // queue identifier
+// Different purposes of LIF queues. This is not the same as
+// Queue type (type_num field in LifQStateMapEntry). This is
+// application (e.g. TCP, RDMA, Storage) specific and is specified
+// on a per LIF per Queue Type bases. In other words, for one LIF
+// type 0 can be TX Queue and for another LIF type 0 can be RX Queue.
+enum LifQPurpose {
+  LIF_QUEUE_PURPOSE_NONE      = 0;    // Queue disabled.
+  LIF_QUEUE_PURPOSE_ADMIN     = 1;    // Admin Queue
+  LIF_QUEUE_PURPOSE_TX        = 2;    // Tx Queue
+  LIF_QUEUE_PURPOSE_RX        = 3;    // Rx Queue
+  LIF_QUEUE_PURPOSE_RDMA_SEND = 4;    // RDMA send Queue
+  LIF_QUEUE_PURPOSE_RDMA_RECV = 5;    // RDMA receive Queue
+  LIF_QUEUE_PURPOSE_CQ        = 6;    // Completion Queue
+  LIF_QUEUE_PURPOSE_EQ        = 7;    // Event Queue
+
+  // Add more purposes as needed.
+}
+
+// A single entry in the LIF to Qstate map.
+// This entry represents a single type.
+// Everything except type puspose is used by the hardware.
+message LifQStateMapEntry {
+  // type_num is the type as defined by Capri hardware in the
+  // LIF -> Qstate array entry. There are 8 types numbered 0-7.
+  // There can be at most one entry per type_num.
+  uint32 type_num           = 1;
+
+  // This entry represents the size of the Q state
+  // used by this type. This number represents the size
+  // as 2^(5+size). e.g. for a size of 64, the size field
+  // would be 1 i.e. 2^(5+1) = 64.
+  // Max value for size today is 7 i.e. 4096 bytes.
+  uint32 size               = 2;
+
+  // entries field represent number of queues as a
+  // power of 2. So a value of 3 means 8 queues.
+  // Max value for entries today is 24 i.e. 16M queues.
+  uint32 entries            = 3;
+
+  // Queue purpose is not needed by the hardware. It is used
+  // internally by the HAL/FTE.
+  LifQPurpose purpose       = 4;
 }
 
 // LifKeyHandle uniquely identifies a LIF
@@ -90,7 +120,8 @@ message LifSpec {
   uint32                   port_num      = 5;    // LIF port number (TM oport#)
   LifKeyHandle             peer_lif      = 6;    // peer LIF in case this LIF is pinned to another LIF
   IfStatus                 admin_status  = 7;    // admin status of the interface
-  repeated LifQueueInfo    queues        = 8;    // LIF queue information
+  repeated LifQStateMapEntry
+                           lif_qstate_map = 8;   // LIF -> Qstate map.
   bool                     vlan_strip_en = 9;    // LIF vlan strip enable
   bool                     allmulti      = 10;   // LIF set all multicast group
   bool                     enable_rdma   = 11;   // enable RDMA on LIF
@@ -116,6 +147,68 @@ message LifResponse {
 // LifResponseMsg is response to LifRequestMsg
 message LifResponseMsg {
   repeated LifResponse    response = 1;    // batch of responses
+}
+
+message QStateGetReq {
+  uint64 lif_handle = 1;
+  uint32 type_num   = 2;  // Queue type
+  uint32 qid        = 3;  // Queue ID within type
+
+  // Amount of data to return in the corresponding
+  // QStateGetResp::queue_state buffer. By default
+  // All the data is returned (based on the size of this
+  // queue type_num). But can be limited by the caller.
+  // Setting this value to be greater than the actual
+  // size has no effect.
+  uint32 ret_data_size = 4;
+}
+
+message GetQStateRequestMsg {
+  repeated QStateGetReq reqs = 1;
+}
+
+message QStateGetResp {
+  int32 error_code  = 1;  // 0 = success, otherwise errno.
+  uint64 q_addr     = 2;  // Address of the queue in HBM.
+  bytes queue_state = 3;  // Actual Queue state data.
+}
+
+message GetQStateResponseMsg {
+  repeated QStateGetResp resps = 1;
+}
+
+// A P4ProgLabel is used to get the PC offset for
+// Queue state.
+message P4ProgLabel {
+  string handle = 1;
+  string prog_name = 2;
+  string label = 3;
+}
+
+message QStateSetReq {
+  uint64 lif_handle = 1;
+  uint32 type_num   = 2;  // Queue type
+  uint32 qid        = 3;  // Queue ID within type
+
+  // If present, PC Offset is filled by the implementation
+  // based on the label.
+  P4ProgLabel label = 4;
+
+  // Actual queue state to be written. Can be less than the
+  // actual qstate size. But has to be greater than 0.
+  bytes queue_state = 5;
+}
+
+message SetQStateRequestMsg {
+  repeated QStateSetReq reqs = 1;
+}
+
+message QStateSetResp {
+  int32 error_code = 1;  // 0 = success, otherwise errno.
+}
+
+message SetQStateResponseMsg {
+  repeated QStateSetResp resps = 1;
 }
 
 // LifDeleteRequest  is used to delete a LIF object

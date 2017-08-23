@@ -146,9 +146,7 @@ lif_create (LifSpec& spec, LifResponse *rsp)
 {
     hal_ret_t            ret = HAL_RET_OK;
     lif_t                *lif = NULL;
-    uint32_t             qoff = 0;
     uint32_t             hw_lif_id = 0;
-    lif_queue_t          *lif_q = NULL;
     
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: Lif Create for id {}", __FUNCTION__, 
@@ -193,18 +191,6 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     lif->allmulti = spec.allmulti();
     lif->enable_rdma = spec.enable_rdma();
 
-    // consume queues
-    utils::dllist_reset(&lif->qlist_head);
-    for (int i = 0; i < spec.queues_size(); i++,qoff++) {
-        lif_q = lif_queue_alloc_init();
-        lif_q->queue_type = spec.queues(i).qtype();
-        lif_q->queue_id  = spec.queues(i).queue_id();
-        lif_q->queue_offset = qoff;
-
-        // add queue to list
-        utils::dllist_add(&lif->qlist_head, &lif_q->qlist_entry);
-    }
-
     // Allocate a hw lif id
     hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
     if (((int32_t)hw_lif_id) < 0) {
@@ -213,6 +199,27 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     }
 
     // Init queues
+    LIFQStateParams qs_params;
+    bzero(&qs_params, sizeof(qs_params));
+    for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
+        const auto &ent = spec.lif_qstate_map(i);
+        if (ent.type_num() >= kNumQTypes) {
+            HAL_TRACE_ERR("Invalid type num in LifSpec : {}", ent.type_num());
+            goto end;
+        }
+        if (ent.size() > 7 || ent.entries() > 24) {
+            HAL_TRACE_ERR("Invalid entry in LifSpec : size={} entries={}",
+                          ent.size(), ent.entries());
+            goto end;
+        }
+        qs_params.type[ent.type_num()].size = ent.size();
+        qs_params.type[ent.type_num()].entries = ent.entries();
+    }
+    if (g_lif_manager->InitLIFQState(hw_lif_id, &qs_params) < 0) {
+        HAL_TRACE_ERR("Failed to initialize LIFQState");
+        goto end;
+    }
+    ret = HAL_RET_OK;
 
     // Make P4 Call
     ret = lif_p4_create(spec, rsp, lif, hw_lif_id);
@@ -234,6 +241,61 @@ end:
     }
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
+}
+
+void
+LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp)
+{
+    std::unique_ptr<char[]> buf(new char[kMaxQStateSize]);
+    uint32_t size_to_copy = std::min(kMaxQStateSize, req.ret_data_size());
+    int64_t ret = g_lif_manager->GetLIFQStateAddr(
+        req.lif_handle(), req.type_num(), req.qid());
+    if (ret < 0) {
+        resp->set_error_code(0 - (int)ret);
+        return;
+    }
+    resp->set_q_addr((uint64_t)ret);
+    int ret2 = g_lif_manager->ReadQState(req.lif_handle(), req.type_num(),
+                                         req.qid(), (uint8_t *)buf.get(),
+                                         kMaxQStateSize);
+    if (ret2 < 0) {
+        resp->set_error_code(0 - ret2);
+        return;
+    }
+    resp->set_error_code(0);
+    if (size_to_copy == 0)
+        return;
+    resp->set_queue_state(std::string(buf.get(), size_to_copy));
+}
+
+void
+LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp)
+{
+    if (req.queue_state().size() == 0) {
+        resp->set_error_code(EINVAL);
+        return;
+    }
+    std::unique_ptr<uint8_t[]> buf;
+    const uint8_t *state = (const uint8_t *)req.queue_state().c_str();
+    if (req.has_label()) {
+        uint8_t off;
+        int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
+            req.label().prog_name().c_str(),
+            req.label().label().c_str(), &off);
+        if (ret < 0) {
+            resp->set_error_code(0 - ret);
+            return;
+        }
+        buf.reset(new uint8_t[req.queue_state().size()]);
+        bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
+        buf.get()[0] = off;
+        state = buf.get();
+    }
+
+    int ret = g_lif_manager->WriteQState(req.lif_handle(), req.type_num(),
+                                         req.qid(), state,
+                                         req.queue_state().size());
+    resp->set_error_code(0 - ret);
 }
 
 

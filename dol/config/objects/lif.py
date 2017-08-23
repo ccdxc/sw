@@ -51,9 +51,9 @@ class LifObject(objects.FrameworkObject):
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma;
 
-        for q in self.queues:
-            qspec = req_spec.queues.add()
-            q.configure(qspec)
+        #for q in self.queues:
+        #    qspec = req_spec.queues.add()
+        #    q.configure(qspec)
 
         return
 
