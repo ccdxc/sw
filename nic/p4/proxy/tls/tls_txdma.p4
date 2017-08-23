@@ -133,7 +133,7 @@ action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(tls_stg0_d.serq_base, serq_base);
     modify_field(tls_stg0_d.fid, fid);
     modify_field(tls_stg0_d.dec_flow, dec_flow);
-    modify_field(tls_stg0_d.pad, pad);
+    //modify_field(tls_stg0_d.pad, pad);
 }
 
 
