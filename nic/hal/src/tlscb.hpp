@@ -9,8 +9,6 @@
 #include <pd.hpp>
 #include <hal_state.hpp>
 
-//using types::L2SegmentType;
-
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
@@ -22,7 +20,7 @@ typedef struct tlscb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tlscb_id_t            cb_id;                   // TLS CB id
     uint8_t               cipher_type;
-    
+
     // operational state of TLS Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 
@@ -108,6 +106,9 @@ hal_ret_t tlscb_create(tlscb::TlsCbSpec& spec,
 
 hal_ret_t tlscb_update(tlscb::TlsCbSpec& spec,
                        tlscb::TlsCbResponse *rsp);
+
+hal_ret_t tlscb_delete(tlscb::TlsCbDeleteRequest& req,
+                       tlscb::TlsCbDeleteResponseMsg *rsp);
 
 hal_ret_t tlscb_get(tlscb::TlsCbGetRequest& req,
                     tlscb::TlsCbGetResponse *rsp);

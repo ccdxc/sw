@@ -219,6 +219,7 @@ hal_ret_t pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args);
 hal_ret_t pd_tlscb_create(pd_tlscb_args_t *tlscb);
 hal_ret_t pd_tlscb_update(pd_tlscb_args_t *tlscb);
 hal_ret_t pd_tlscb_delete(pd_tlscb_args_t *tlscb);
+hal_ret_t pd_tlscb_get(pd_tlscb_args_t *tlscb);
 
 hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
