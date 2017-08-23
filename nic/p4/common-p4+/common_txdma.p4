@@ -914,10 +914,10 @@ table tx_table_s0_t1 {
 }
 
 @pragma stage 0
-@pragma raw_table common_te0_phv.table_pc
+@pragma raw_index_table
 table tx_table_s0_t0 {
     reads {
-       common_te0_phv.table_addr : exact;
+       p4_txdma_intr.qstate_addr : exact;
     }
     actions {
         tx_table_s0_t0_action;
@@ -930,8 +930,8 @@ parser start {
 }
 
 control ingress {
+    apply(tx_table_s0_t0);
     if (app_header.table0_valid == 1) {
-        apply(tx_table_s0_t0);
         apply(tx_table_s1_t0);
         apply(tx_table_s2_t0);
         apply(tx_table_s3_t0);

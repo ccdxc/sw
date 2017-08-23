@@ -18,10 +18,10 @@ ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
-    add r2, r2, k.{p42p4plus_hdr_ipsec_payload_end_sbit0_ebit7...p42p4plus_hdr_ipsec_payload_end_sbit8_ebit15}
+    add r2, r2, k.p42p4plus_hdr_ipsec_payload_end
     phvwr p.ipsec_int_header_tailroom_offset, r2
     phvwr p.ipsec_int_header_headroom_offset, r1
-    sub r3, k.{p42p4plus_hdr_ipsec_payload_end_sbit0_ebit7...p42p4plus_hdr_ipsec_payload_end_sbit8_ebit15}, k.p42p4plus_hdr_ipsec_payload_start
+    sub r3, k.p42p4plus_hdr_ipsec_payload_end, k.p42p4plus_hdr_ipsec_payload_start
     phvwr p.ipsec_int_header_payload_size, r3
     and r4, r3, d.block_size
     sub r5, d.block_size, r4
