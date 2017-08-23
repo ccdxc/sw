@@ -3912,7 +3912,6 @@ class capri_table_mapper:
         layout['bottom_right'] = {'block' : right/mem_chunk, 'x' : right % mem_chunk, 'y' : bottom}
         return layout
 
-
     # Allocates space for a table as per requirements
     def scavenge_unused_space(self, mem_type, region, table_depth, table_width, index):
         # Get the memory space and its properties
@@ -4166,14 +4165,9 @@ class capri_table_mapper:
         mem_type = 'hbm'
         tables = self.tables[mem_type][region]
 
-        start_pos = 0
-        for rgn in sorted(self.memory[mem_type]):
-            if rgn == region:
-                break;
-            start_pos += self.memory[mem_type][rgn]['depth']
-
-        current_pos = start_pos
+        start_pos = 0 # we are doing a zero based addressing. This will be relocated to the base of the region by HAL
         end_pos = start_pos + self.memory[mem_type][region]['depth']
+        current_pos = start_pos
 
         i = self.get_next_unplaced_table(tables, -1)
         while i < len(tables):
@@ -4258,22 +4252,44 @@ class capri_table_mapper:
                         memory['entry_width'] = table['width']
                         memory['entry_width_bits'] = table_spec['tcam']['width']
                         memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
-                        memory['entry_start_index'] = capri_get_tcam_start_address_from_layout(table['layout'])
-                        memory['entry_end_index'] = capri_get_tcam_end_address_from_layout(table['layout'])
-                        memory['num_buckets'] = capri_get_width_from_layout(table['layout']) / table['width']
+                        memory['entry_start_index'] = capri_get_tcam_start_address_from_layout(memory['layout'])
+                        memory['entry_end_index'] = capri_get_tcam_end_address_from_layout(memory['layout'])
+                        memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
                         table_mapping['tcam'] = memory
+                        break
 
             if 'sram' in table_spec.keys():
-                for table in self.tables['sram'][table_spec['region']]:
-                    if table_spec['name'] == table['name']:
-                        memory = OrderedDict()
-                        memory['entry_width'] = table['width']
-                        memory['entry_width_bits'] = table_spec['sram']['width']
-                        memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
-                        memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(table['layout'])
-                        memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(table['layout'])
-                        memory['num_buckets'] = capri_get_width_from_layout(table['layout']) / table['width']
-                        table_mapping['sram'] = memory
+                if table_spec['overflow_parent']:
+                    # Overflow SRAMs are appended to their parent SRAMs. Create layout using parent's layout
+                    for table in self.tables['sram'][table_spec['region']]:
+                        if table_spec['overflow_parent'] == table['name']:
+                            entry_bit_width = 0
+                            for temp_spec in specs['tables']:
+                                if temp_spec['name'] == table['name']:
+                                    if 'sram' in temp_spec.keys():
+                                        entry_bit_width = temp_spec['sram']['width']
+                                    break
+                            memory = OrderedDict()
+                            memory['entry_width'] = table['width']
+                            memory['entry_width_bits'] = entry_bit_width
+                            memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
+                            memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
+                            memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])
+                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
+                            table_mapping['sram'] = memory
+                            break
+                else:
+                    for table in self.tables['sram'][table_spec['region']]:
+                        if table_spec['name'] == table['name']:
+                            memory = OrderedDict()
+                            memory['entry_width'] = table['width']
+                            memory['entry_width_bits'] = table_spec['sram']['width']
+                            memory['layout'] = self.carve_dummy() if not table['layout'] else table['layout']
+                            memory['entry_start_index'] = capri_get_sram_sw_start_address_from_layout(memory['layout'])
+                            memory['entry_end_index'] = capri_get_sram_sw_end_address_from_layout(memory['layout'])
+                            memory['num_buckets'] = capri_get_num_bkts_from_layout(memory['layout'], memory['entry_width'])
+                            table_mapping['sram'] = memory
+                            break
 
             if 'hbm' in table_spec.keys():
                 for table in self.tables['hbm'][table_spec['region']]:
@@ -4284,6 +4300,7 @@ class capri_table_mapper:
                         memory['entry_end_index'] = capri_get_hbm_end_address_from_layout(table['layout'])
                         memory['num_buckets'] = 1
                         table_mapping['hbm'] = memory
+                        break
 
             table_mappings.append(table_mapping)
 
@@ -4409,13 +4426,12 @@ class capri_table_manager:
                     profile_id = (ctable.stage << 4) | ctable.tbl_id
                     if mem_type == 'sram':
                         cap_name = 'cap_pics'
-                        num_bkts = 0 if table['width'] == 0 else capri_get_width_from_layout(layout) / table['width']
                         profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
                         profile['width']['value'] = "0x%x" % table['width']
                         profile['hash']['value'] = "0x%x" % 0 # Not used, confirmed by hw
                         profile['opcode']['value'] = "0x%x" % 0 # Policer/Sampler/Counter
-                        profile['log2bkts']['value'] = "0x%x" % (0 if num_bkts == 0 else log2(num_bkts))
+                        profile['log2bkts']['value'] = "0x%x" % capri_get_log2bkts_from_layout(layout, table['width'])
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
                         if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:
@@ -4429,7 +4445,7 @@ class capri_table_manager:
                         profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
                         profile['width']['value'] = "0x%x" % table['width']
-                        profile['bkts']['value'] = "0x%x" % (capri_get_depth_from_layout(layout) / table['depth'])
+                        profile['bkts']['value'] = "0x%x" % (num_bkts)
                         profile['start_addr']['value'] = "0x%x" % capri_get_tcam_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_tcam_end_address_from_layout(layout)
                         profile['keyshift']['value'] = "0x%x" % (ctable.start_key_off / 16)

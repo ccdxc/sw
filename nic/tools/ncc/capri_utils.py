@@ -211,6 +211,13 @@ def capri_get_width_from_layout(layout):
 def capri_get_depth_from_layout(layout):
     return 0 if not layout else (layout['bottom_right']['y'] - layout['top_left']['y'] + 1)
 
+def capri_get_num_bkts_from_layout(layout, entry_width):
+    return 0 if entry_width == 0 else (capri_get_width_from_layout(layout) / entry_width)
+
+def capri_get_log2bkts_from_layout(layout, entry_width):
+    num_bkts = capri_get_num_bkts_from_layout(layout, entry_width)
+    return 0 if num_bkts == 0 else log2(num_bkts)
+
 def capri_get_sram_hw_address_from_coordinate(coord):
     return 0 if not coord else (coord['y'] * 8 * 16) + (coord['block'] * 8) + (coord['x'])
 
