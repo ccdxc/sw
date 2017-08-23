@@ -8,6 +8,9 @@
 using tlscb::TlsCbSpec;
 using tlscb::TlsCbResponse;
 using tlscb::TlsCbKeyHandle;
+using tlscb::TlsCbGetRequest;
+using tlscb::TlsCbGetResponse;
+
 
 void
 hal_initialize()
@@ -82,11 +85,23 @@ TEST_F(tlscb_test, test1)
     hal_ret_t            ret;
     TlsCbSpec spec;
     TlsCbResponse rsp;
+    TlsCbGetRequest getReq;
+    TlsCbGetResponse getRsp;
 
-    spec.mutable_key_or_handle()->set_tlscb_id(100);
+
+    spec.mutable_key_or_handle()->set_tlscb_id(0);
 
     ret = hal::tlscb_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    spec.set_cipher_type(1);
+    ret = hal::tlscb_update(spec, &rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    getReq.mutable_key_or_handle()->set_tlscb_id(0);
+    ret = hal::tlscb_get(getReq, &getRsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    printf("cb_id: %d\n", getRsp.spec().key_or_handle().tlscb_id());
     printf("Done with test1\n");
 }
 
