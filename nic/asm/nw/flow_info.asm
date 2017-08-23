@@ -58,6 +58,7 @@ flow_info:
   phvwr       p.rewrite_metadata_rewrite_index, d.u.flow_info_d.rewrite_index
   phvwr       p.rewrite_metadata_mac_sa_rewrite, d.u.flow_info_d.mac_sa_rewrite
   phvwr       p.rewrite_metadata_mac_da_rewrite, d.u.flow_info_d.mac_da_rewrite
+  phvwr       p.rewrite_metadata_vlan_decap_en, d.u.flow_info_d.vlan_decap_en
   phvwr       p.rewrite_metadata_ttl_dec, d.u.flow_info_d.ttl_dec
   phvwr       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
   phvwr       p.nat_metadata_nat_l4_port, d.u.flow_info_d.nat_l4_port

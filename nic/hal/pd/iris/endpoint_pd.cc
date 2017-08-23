@@ -236,17 +236,17 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
         switch(i) {
             case REWRITE_NOP_ID:
                 break;
-            case REWRITE_L3_REWRITE_ID:
+            case REWRITE_REWRITE_ID:
                 l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
                 HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
                 nw = ep_pd_get_nw(pi_ep, l2seg);
                 // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
                 if (nw) {
-                    memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, nw->rmac_addr, 6);
-                    memrev(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, 6);
+                    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, nw->rmac_addr, 6);
+                    memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
                 } 
-                memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, *mac, 6);
-                memrev(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, 6);
+                memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, *mac, 6);
+                memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
 
                 break;
             case REWRITE_IPV4_NAT_SRC_REWRITE_ID:

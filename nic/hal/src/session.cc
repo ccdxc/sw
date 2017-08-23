@@ -453,7 +453,8 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
         flow->ttl_dec = true;
         flow->mac_sa_rewrite = true;
         flow->mac_da_rewrite = true;
-        flow->rw_act = REWRITE_L3_REWRITE_ID;
+        flow->vlan_decap_en = true;
+        flow->rw_act = REWRITE_REWRITE_ID;
 
         // check if egress pkt needs vlan encap
         if (dif->if_type == intf::IF_TYPE_ENIC) {
@@ -467,6 +468,9 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
                 flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
             }
         }
+    } else {
+        // Bridging
+        flow->rw_act = REWRITE_REWRITE_ID;
     }
 
     return ret;
@@ -830,12 +834,6 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     }
 
 
-    ret = update_session_for_routing(&args, rsp);
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-    
-
     // update flows for dnat
     ret = update_flow_for_dest_nat(args.tenant, args.iflow, &args.dl2seg, &args.dif, &args.dep);
     if (ret != HAL_RET_OK) {
@@ -847,6 +845,12 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
         return ret;
     }
+
+    ret = update_session_for_routing(&args, rsp);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    
 
     // Update fwding info
     ret = flow_update_fwding_info(args.iflow,

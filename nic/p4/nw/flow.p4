@@ -105,7 +105,7 @@ action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
                  cos_en, cos, dscp_en, dscp, qid_en, log_en,
-                 mac_sa_rewrite, mac_da_rewrite, ttl_dec,
+                 mac_sa_rewrite, mac_da_rewrite, vlan_decap_en, ttl_dec,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
                  ingress_tm_oqueue, egress_tm_oqueue) {
@@ -171,6 +171,7 @@ action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
     modify_field(rewrite_metadata.rewrite_index, rewrite_index);
     modify_field(rewrite_metadata.mac_sa_rewrite, mac_sa_rewrite);
     modify_field(rewrite_metadata.mac_da_rewrite, mac_da_rewrite);
+    modify_field(rewrite_metadata.vlan_decap_en, vlan_decap_en);
     modify_field(rewrite_metadata.ttl_dec, ttl_dec);
 
     /* NAT rewrite data */

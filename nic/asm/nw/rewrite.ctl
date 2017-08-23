@@ -6,8 +6,8 @@ struct rewrite_d d;
 struct phv_      p;
 
 d = {
-  u.l3_rewrite_d.mac_sa = 0x001122334455;
-  u.l3_rewrite_d.mac_sa = 0x00aabbccddee;
+  u.rewrite_d.mac_sa = 0x001122334455;
+  u.rewrite_d.mac_sa = 0x00aabbccddee;
 };
 
 k = {
