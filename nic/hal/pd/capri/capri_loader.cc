@@ -19,17 +19,16 @@ boost::unordered_map<std::string, capri_loader_ctx_t *> loader_instances;
 
 
 /**
- * read_programs: Read all the programs in a specified directory. For now 
+ * read_programs: Read all the programs in a specified directory. For now
  *                assumes only MPU programs reside in that directory.
- * 
+ *
  * @pathname: Fully specified path name of the directory which contains the
  *            MPU programs
  *
  * Return: 0 on success, < 0 on failure
  */
 static int
-read_programs(const char *handle,
-              char *pathname)
+read_programs(const char *handle, char *pathname)
 {
     DIR *dir;
     struct dirent *ent;
@@ -40,7 +39,7 @@ read_programs(const char *handle,
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        printf("Invalid handle\n");
+        HAL_TRACE_ERR("Invalid handle");
         return -1;
     }
     program_info = ctx->program_info;
@@ -48,7 +47,6 @@ read_programs(const char *handle,
     if ((dir = opendir (pathname)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
             if (ent->d_name[0] != '.') {
-                printf ("%s\n", ent->d_name);
                 program_info[i].name = ent->d_name;
                 i++;
                 assert(i < MAX_PROGRAMS);
@@ -56,7 +54,7 @@ read_programs(const char *handle,
         }
         closedir (dir);
     } else {
-        printf("Cant open dir %s %s \n", pathname, strerror(errno));
+        HAL_TRACE_ERR("Cannot open dir {} {}", pathname, strerror(errno));
         return -1;
     }
     return i;
@@ -64,8 +62,8 @@ read_programs(const char *handle,
 
 /**
  * program_check: Check to see if a program (speficied by its name) is present
- *                in a hierarchical input based resolution of <program, param> 
- * 
+ *                in a hierarchical input based resolution of <program, param>
+ *
  * @prog_param_info: Hierarchical data on which <program, param> to resolve
  * @num_prog_params: Number of elements in the prog_param_info array
  * @prog_name: Program name to check
@@ -73,7 +71,7 @@ read_programs(const char *handle,
  * Return: Index of program on success, < 0 on failure
  */
 static int
-program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params, 
+program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params,
               std::string prog_name)
 {
     int i;
@@ -93,7 +91,7 @@ program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params,
 /**
  * param_check: Check to see if a param (speficied by its name) is present in
  *              in a input based resolution of the program's parameter list
- * 
+ *
  * @prog_param_info: Program's parameter list
  * @prog_name: Parameter name to check
  * @val: Pointer to where the value is to be stored
@@ -115,15 +113,15 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
 }
 
 /**
- * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve 
- *                          the parameters defined in the programs using an 
- *                          input list + by checking against labels defined in 
- *                          the programs.  Finally write the programs to HBM 
- *                          memory.  
- *                          NOTE: For now the assumption is that directory 
- *                                specified by "pathname" will contain only MPU 
+ * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve
+ *                          the parameters defined in the programs using an
+ *                          input list + by checking against labels defined in
+ *                          the programs.  Finally write the programs to HBM
+ *                          memory.
+ *                          NOTE: For now the assumption is that directory
+ *                                specified by "pathname" will contain only MPU
  *                                binaries.
- * 
+ *
  * @pathname: Fully specified path name of the directory which contains the
  *            MPU programs
  * @hbm_base_addr: Base address in HBM to use when loading the MPU programs
@@ -135,7 +133,7 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
 int
 capri_load_mpu_programs(const char *handle,
                         char *pathname, uint64_t hbm_base_addr,
-                        capri_prog_param_info_t *prog_param_info, 
+                        capri_prog_param_info_t *prog_param_info,
                         int num_prog_params)
 {
     int i, j, prog_index;
@@ -148,20 +146,20 @@ capri_load_mpu_programs(const char *handle,
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
-		printf("Libcapisa initialization failed! \n");
+		HAL_TRACE_ERR("Libcapisa initialization failed!");
         return -1;
     }
 
     /* Input check */
     if (!handle || !pathname) {
-        printf("Input error \n");
+        HAL_TRACE_ERR("Input error");
         return -1;
     }
 
     /* Create a loader instance */
     ctx = loader_instances[handle];
     if (ctx) {
-        printf("Programs already loaded!");
+        HAL_TRACE_ERR("Programs already loaded!");
         return -1;
     }
 
@@ -174,16 +172,16 @@ capri_load_mpu_programs(const char *handle,
 
     /* Read all program names */
     if ((ctx->num_programs = read_programs(handle, pathname)) < 0) {
-        printf("Cant read programs \n");
+        HAL_TRACE_ERR("Cannot read programs");
         return -1;
     }
-    printf("Num programs %d \n", ctx->num_programs);
+    HAL_TRACE_DEBUG("Num programs {}", ctx->num_programs);
 
     /* Other initializations */
     std::string path_str = pathname;
     ctx->prog_hbm_base_addr = (hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
     if ((ctx->prog_hbm_base_addr & 63) != 0) {
-        printf("Invalid HBM base address\n");
+        HAL_TRACE_ERR("Invalid HBM base address");
         return -1;
     }
 
@@ -197,7 +195,7 @@ capri_load_mpu_programs(const char *handle,
         /* Load the program from the ELF file and check for errors */
         std::string filename = path_str+ "/" + program_info[i].name;
         if (program_info[i].prog.load_from_elf(filename) < 0) {
-            printf("Error: %s : %s\n", 
+            HAL_TRACE_ERR("Error: {} : {}",
                program_info[i].prog.errmap[program_info[i].prog.err].c_str(),
                filename.c_str());
             return -1;
@@ -207,12 +205,14 @@ capri_load_mpu_programs(const char *handle,
         program_info[i].base_addr = ctx->prog_hbm_base_addr;
         program_info[i].size = program_info[i].prog.text.size()*sizeof(uint64_t);
         /* Dump program specific info and the symbol table */
-        printf("MPU Program file name %s loaded, valid %d, complete %d, "
-               "number of symbols %lu, base address %lx, size %lu \n", 
-               program_info[i].name.c_str(), 
-               program_info[i].prog.valid, program_info[i].prog.complete, 
-               program_info[i].prog.symtab.size(),
-               program_info[i].base_addr, program_info[i].size);
+        HAL_TRACE_DEBUG("MPU Program file name {} loaded, valid {}, "
+                        "complete {}, number of symbols {}, "
+                        "base address {:#x}, size {}",
+                        program_info[i].name.c_str(),
+                        program_info[i].prog.valid,
+                        program_info[i].prog.complete,
+                        program_info[i].prog.symtab.size(),
+                        program_info[i].base_addr, program_info[i].size);
         program_info[i].prog.symtab.dump();
 
         /* Check to see if the program that is loaded is present in the
@@ -225,7 +225,7 @@ capri_load_mpu_programs(const char *handle,
         for (j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
             /* Get each symbol by its id */
             if ((symbol = program_info[i].prog.symtab.get_byid(j)) == NULL) {
-                printf("Id: %d, Can't get symbol \n", j);
+                HAL_TRACE_ERR("Id: {}, Cannot get symbol", j);
                 return -1;
             } else {
                 /* Symbol is a parameter */
@@ -237,28 +237,29 @@ capri_load_mpu_programs(const char *handle,
                      */
                     val = 0;
                     if (prog_index >= 0 &&
-                        param_check(&prog_param_info[prog_index], symbol->name, 
+                        param_check(&prog_param_info[prog_index], symbol->name,
                                     &val) >= 0) {
-                        printf("resolved param: name %s val %lx\n",
-                               symbol->name.c_str(), val);
+                        HAL_TRACE_DEBUG("resolved param: name {} val {:#x}",
+                                        symbol->name.c_str(), val);
                         program_info[i].resolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, val));
                     } else {
-                        printf("unresolved param: name %s \n",
-                               symbol->name.c_str());
+                        HAL_TRACE_DEBUG("unresolved param: name {}",
+                                        symbol->name.c_str());
                         program_info[i].unresolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, 0x0));
                     }
                 /* Symbol is a label */
                 } else if (symbol->type == MPUSYM_LABEL) {
-                    /* Add it to the list of program specific and global labels 
+                    /* Add it to the list of program specific and global labels
                      * which will help resolve unknown parameters in pass 2
                      */
-                    printf("label: name %s addr %lx \n", symbol->name.c_str(),
-                           program_info[i].base_addr + symbol->val);
+                    HAL_TRACE_DEBUG("label: name {} addr {:#x}",
+                                    symbol->name.c_str(),
+                                    program_info[i].base_addr + symbol->val);
                     global_labels.add(
                              MpuSymbol(symbol->name.c_str(),
-                                       symbol->type, 
+                                       symbol->type,
                                        program_info[i].base_addr+ symbol->val));
                     program_info[i].labels.add(
                              MpuSymbol(symbol->name.c_str(),
@@ -266,7 +267,7 @@ capri_load_mpu_programs(const char *handle,
                 /* Symbol type not known */
                 } else {
                     /* Other symbol types are not supported at the moment*/
-                    printf("unknown symbol type %d \n", symbol->type);
+                    HAL_TRACE_ERR("unknown symbol type {}", symbol->type);
                     return -1;
                 }
             }
@@ -284,62 +285,58 @@ capri_load_mpu_programs(const char *handle,
             /* Get the unresolved parameter by id */
             if ((param_u = program_info[i].unresolved_params.get_byid(j))
                 == NULL) {
-                printf("Id: %d, Can't get unresolved param \n", j);
+                HAL_TRACE_ERR("Id: {}, Cannot get unresolved param", j);
                 return -1;
             } else {
                 /* Try to resolve it by looking at the global labels */
-                if ((param_r = global_labels.get_byname(param_u->name.c_str())) 
+                if ((param_r = global_labels.get_byname(param_u->name.c_str()))
                     != NULL) {
-                    printf("Resolved param %s to value %lu \n",
-                           param_r->name.c_str(), param_r->val);
+                    HAL_TRACE_DEBUG("Resolved param {} to value {:#x}",
+                                    param_r->name.c_str(), param_r->val);
 
                     /* Add it to the list of resolved params for that program */
                     program_info[i].resolved_params.add(
                            MpuSymbol(param_u->name.c_str(), MPUSYM_PARAM,
                                      param_r->val));
                 } else {
-                    printf("Cannot resolve param %s \n", param_u->name.c_str());
+                    HAL_TRACE_DEBUG("Cannot resolve param {}",
+                                    param_u->name.c_str());
                 }
             }
         }
     }
 
-    /* Pass 3: Build a copy of the program based on the resolved parameters and 
-     *         write it to HBM 
+    /* Pass 3: Build a copy of the program based on the resolved parameters and
+     *         write it to HBM
      */
     for (i = 0; i < ctx->num_programs; i++) {
        program_info[i].copy = MpuProgram(program_info[i].prog,
                                          program_info[i].resolved_params);
-       printf("Prog details: name %s, base address %lx, size %lu, valid %d, "
-              "complete %d \n",
-               program_info[i].name.c_str(), program_info[i].base_addr, 
-               program_info[i].size, program_info[i].copy.valid,
-               program_info[i].copy.complete);
+       HAL_TRACE_DEBUG("Prog details: name {}, base address {:#x}, size {}, "
+                       "valid {}, complete {}",
+                       program_info[i].name.c_str(), program_info[i].base_addr,
+                       program_info[i].size, program_info[i].copy.valid,
+                       program_info[i].copy.complete);
 
        /* Sanity check the size of the copy, valid and complete flags */
-       if (program_info[i].copy.valid != 1 || 
-           program_info[i].copy.complete != 1 || 
-           program_info[i].copy.text.size()*sizeof(uint64_t) != 
+       if (program_info[i].copy.valid != 1 ||
+           program_info[i].copy.complete != 1 ||
+           program_info[i].copy.text.size()*sizeof(uint64_t) !=
            program_info[i].size) {
-           printf("valid = %d, complete = %d copy size %lu size %lu\n",
-                   program_info[i].copy.valid, program_info[i].copy.complete,
-                   program_info[i].copy.text.size(), program_info[i].size);
-           printf("Can't load program: error in validation of size/flags!!!!!!!! \n");
-           //return -1;
+           HAL_TRACE_ERR("valid = {}, complete = {} copy size {} size {}",
+                         program_info[i].copy.valid,
+                         program_info[i].copy.complete,
+                         program_info[i].copy.text.size(),
+                         program_info[i].size);
+           HAL_TRACE_ERR("Cannot load program: error in validation of size/flags!");
            continue;
        }
-       
+
        rv = write_mem(program_info[i].base_addr,
                       (uint8_t *) program_info[i].copy.text.data(),
                       program_info[i].size);
-       printf("yyy: loading at address 0x%lx, size %ld: \n", program_info[i].base_addr, program_info[i].size);
-       int ii;
-       for (ii = 0; ii < 16; ii++) {
-           printf("0x%x ", (uint8_t)program_info[i].copy.text.data()[ii]);
-       }
-       printf("\n");
        if (rv != true) {
-           printf("HBM P4 program write failed\n");
+           HAL_TRACE_ERR("HBM P4 program write failed");
        }
     }
 
@@ -347,9 +344,9 @@ capri_load_mpu_programs(const char *handle,
 }
 
 /**
- * capri_program_label_to_offset: Resolve a programs, label to its relative 
+ * capri_program_label_to_offset: Resolve a programs, label to its relative
  *                                offset
- * 
+ *
  * @prog_name: Program name
  * @label_name: Label name
  * @offset: Offset to be filled in if the program, label is found
@@ -369,43 +366,42 @@ capri_program_label_to_offset(const char *handle,
 
     /* Input check */
     if (!prog_name || !label_name || !offset || !handle) {
-        printf("Input error \n");
+        HAL_TRACE_ERR("Input error");
         return -1;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        printf("Invalid handle \n");
+        HAL_TRACE_ERR("Invalid handle");
         return -1;
     }
     program_info = ctx->program_info;
 
     /* Iterate through the list of programs and its labels until the label is
-     * found 
+     * found
      */
     for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog_name_str) {
             if ((label = program_info[i].labels.get_byname(label_name))
                  != NULL) {
-                printf("Resolved program name %s label name %s to value %lu \n",
-                       program_info[i].name.c_str(), label->name.c_str(), 
-                       label->val);
+                HAL_TRACE_DEBUG("Resolved program name {} label name {} to "
+                                "value {:#x}", program_info[i].name.c_str(),
+                                label->name.c_str(), label->val);
                 *offset = label->val;
                 return 0;
             }
         }
     }
 
-    printf("Could not resolve program name %s label name %s \n", 
-            prog_name, label_name);
-           //program_info[i].name.c_str(), label->name.c_str());
+    HAL_TRACE_ERR("Could not resolve program name {} label name {}",
+                  prog_name, label_name);
     return -1;
 }
 
 /**
  * capri_program_offset_to_label: Resolve a program, relative offset to a label
- * 
+ *
  * @prog_name: Program name
  * @offset: Offset value
  * @label_name: Pointer to the location where label name is to be filled
@@ -426,29 +422,30 @@ capri_program_offset_to_label(const char *handle,
 
     /* Input check */
     if (!prog_name || !label_name || !handle) {
-        printf("Input error \n");
+        HAL_TRACE_ERR("Input error");
         return -1;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        printf("Invalid handle \n");
+        HAL_TRACE_ERR("Invalid handle");
         return -1;
     }
     program_info = ctx->program_info;
 
-    /* Iterate through the list of programs and all offset associated with its 
-     * labels until the offset is found 
+    /* Iterate through the list of programs and all offset associated with its
+     * labels until the offset is found
      */
     for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
             for (j = 0; j < (int) program_info[i].labels.size(); j++) {
                 if ((label = program_info[i].labels.get_byid(j)) != NULL) {
                     if (offset == label->val) {
-                        printf("Resolved program name %s offset %lu to "
-                               "label name %s \n", program_info[i].name.c_str(),
-                               offset, label->name.c_str());
+                        HAL_TRACE_DEBUG("Resolved program name {} offset {} to "
+                                        "label name {}",
+                                        program_info[i].name.c_str(),
+                                        offset, label->name.c_str());
                         strncpy(label_name, label->name.c_str(), label_size);
                         return 0;
                     }
@@ -456,15 +453,14 @@ capri_program_offset_to_label(const char *handle,
             }
         }
     }
-    printf("Could not resolve program name %s offset %lu \n", 
-           prog_name, offset);
-          //program_info[i].name.c_str(), offset);
+    HAL_TRACE_ERR("Could not resolve program name {} offset {}",
+                  prog_name, offset);
     return -1;
 }
 
 /**
  * capri_program_to_base_addr: Resolve a program to its base address in HBM
- * 
+ *
  * @prog_name: Program name
  * @base_addr: Pointer to the location where base address is to be filled
  *
@@ -481,32 +477,30 @@ capri_program_to_base_addr(const char *handle,
 
     /* Input check */
     if (!prog_name || !base_addr || !handle) {
-        printf("Input error \n");
+        HAL_TRACE_ERR("Input error");
         return -1;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        printf("Invalid handle\n");
+        HAL_TRACE_ERR("Invalid handle");
         return -1;
     }
     program_info = ctx->program_info;
 
-    /* Iterate through the list of programs and if found, return its 
+    /* Iterate through the list of programs and if found, return its
      * base address
      */
     for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
-            printf("Resolved program name %s to base_addr %lx \n",
-                   program_info[i].name.c_str(), program_info[i].base_addr);
+            HAL_TRACE_DEBUG("Resolved program name {} to base_addr {:#x}",
+                            program_info[i].name.c_str(),
+                            program_info[i].base_addr);
             *base_addr = program_info[i].base_addr;
             return 0;
         }
     }
-    printf("Could not resolve program name %s \n",
-           prog_name);
-           //program_info[i].name.c_str());
+    HAL_TRACE_ERR("Could not resolve program name {}", prog_name);
     return -1;
 }
-

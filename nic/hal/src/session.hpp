@@ -108,6 +108,7 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_type:3;          // type of NAT
     uint16_t                  mac_sa_rewrite:1;    // rewrite src mac
     uint16_t                  mac_da_rewrite:1;    // rewrite dst mac
+    uint16_t                  vlan_decap_en:1;     // decap vlan header
     rewrite_actions_en        rw_act;              // rewrite action
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
     uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan    
@@ -116,13 +117,16 @@ typedef struct flow_cfg_s {
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
-    intf::LifQType            lif_qtype;           // qtype per flow
+    uint64_t                  lif:11;              // dest LIF
+    uint64_t                  qid_en:1;            // qid enabled
+    uint64_t                  qtype:3;             // Qtype
+    uint64_t                  qid:24;              // Qid
 } __PACK__ flow_cfg_t;
 
 // flow state
 struct flow_s {
     hal_spinlock_t    slock;               // lock to protect this structure
-    flow_cfg_t       config;              // flow config
+    flow_cfg_t        config;              // flow config
     flow_t            *reverse_flow;       // reverse flow data
     session_t         *session;            // session this flow belongs to, if any
 

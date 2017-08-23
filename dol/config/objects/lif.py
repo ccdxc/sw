@@ -25,6 +25,7 @@ class LifObject(objects.FrameworkObject):
         self.GID("Lif%d" % self.id)
         self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
+        self.enable_rdma = 1;
        
         self.types      = {}
 
@@ -48,6 +49,7 @@ class LifObject(objects.FrameworkObject):
         req_spec.key_or_handle.lif_id = self.id
         req_spec.mac_addr = self.mac_addr.getnum()
         req_spec.admin_status = self.status
+        req_spec.enable_rdma = self.enable_rdma;
 
         for q in self.queues:
             qspec = req_spec.queues.add()

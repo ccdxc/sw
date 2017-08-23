@@ -27,7 +27,7 @@ class capri_phc:
         self.d = d
         self.w = w  # bit width
         self.id = id
-        self.fields = OrderedDict() # need fld_name -> (container_start, fld_start_bit, fld_size)
+        self.fields = OrderedDict() # fld_name -> (container_start, fld_start_bit, fld_size)
 
     def get_flds(self, sb, sz):
         # return field name(s) that occupy specified bits within the container
@@ -823,6 +823,11 @@ class capri_gress_pa:
 
             # find the union-ed field that will be in phv
             for uf in self.fld_unions[f][0]:
+                uhdr = uf.p4_fld.instance
+                if is_synthetic_header(uhdr):
+                    continue
+                if uf == f:
+                    continue
                 # if uf is marked as fld union, there will be another fld that is marked storage
                 if not uf.is_fld_union:
                     self.fld_unions[f] = (self.fld_unions[uf][0], uf)
@@ -883,7 +888,10 @@ class capri_gress_pa:
                 # when header unions are passed as I-data
                 for pad_s, pad_w in alignment_pads:
                     pad_e = pad_s+pad_w
-                    if bit_idx >= pad_s and (bit_idx+cf.width) <= pad_e:
+                    # Need to check both ends of cf, if either falls within the pad
+                    if (bit_idx >= pad_s and bit_idx <= pad_e) or \
+                       ((bit_idx+cf.width) >= pad_s and (bit_idx+cf.width) <= pad_e):
+                        self.logger.debug("Avoid Relocate %s on to pad at %d" % (cf.hfname, pad_s))
                         bit_idx = pad_e
                 cf.phv_bit = bit_idx
                 hdr_idx[hdr] = bit_idx + cf.width

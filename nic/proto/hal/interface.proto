@@ -93,6 +93,7 @@ message LifSpec {
   repeated LifQueueInfo    queues        = 8;    // LIF queue information
   bool                     vlan_strip_en = 9;    // LIF vlan strip enable
   bool                     allmulti      = 10;   // LIF set all multicast group
+  bool                     enable_rdma   = 11;   // enable RDMA on LIF
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

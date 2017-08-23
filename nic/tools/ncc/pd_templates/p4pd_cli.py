@@ -5,12 +5,12 @@
 #!/usr/bin/python
 # This file is auto-generated. Changes will be overwritten!
 #
-# p4pd CLI
+# ${pddict['cli-name']} CLI
 #
 
 import glob
 from cmd2 import Cmd
-import p4pd
+import ${pddict['cli-name']}
 //::    tabledict = {}
 //::    tableid = 1
 //::    for table in pddict['tables']:
@@ -127,7 +127,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey.${table}_u${i}.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${table}_u${i}.${p4fldname}, i, int(values[i]))
 //::                        #endif
 
 //::                    #endfor
@@ -178,7 +178,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 //::                    #endfor
@@ -227,7 +227,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                #endif
 
@@ -268,7 +268,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 
@@ -311,7 +311,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${p4fldname}, i, int(values[i]))
 
 //::                        #endif
 
@@ -365,7 +365,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i, int(values[i]))
 
 //::                        #endif
 
@@ -417,7 +417,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i, int(values[i]))
 
 //::                        #endif
 //::                    #endfor
@@ -466,7 +466,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
 
 //::                #endif
 
@@ -507,7 +507,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
 
 //::                        #endif
 
@@ -550,7 +550,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.swkey_mask.$${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.$${p4fldname}_mask, i, int(values[i]))
 
 //::                        #endif
 
@@ -602,7 +602,7 @@ class ${table}(Cmd):
                 return
 
             for i in range(len(values)):
-                p4pd.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i]))
 
 //::                    #endif
 
@@ -785,13 +785,13 @@ class ${table}(Cmd):
             print('Usage: create_entry')
             return
 
-        hwentryp   = p4pd.new_uint8_ptr_t()
-        actiondata = p4pd.${table}_actiondata()
+        hwentryp   = ${pddict['cli-name']}.new_uint8_ptr_t()
+        actiondata = ${pddict['cli-name']}.${table}_actiondata()
 //::        if pddict['tables'][table]['type'] != 'Index':
-        swkey  = p4pd.${table}_swkey_t()
+        swkey  = ${pddict['cli-name']}.${table}_swkey_t()
         swkeyp = swkey.this
 //::            if pddict['tables'][table]['type'] == 'Ternary' or pddict['tables'][table]['type'] == 'OTcam':
-        swkey_mask  = p4pd.${table}_swkey_mask_t()
+        swkey_mask  = ${pddict['cli-name']}.${table}_swkey_mask_t()
         swkey_maskp = swkey_mask.this
 
         cmd = self.${table}_prompt_for_values(swkey, swkey_mask, actiondata)
@@ -810,13 +810,13 @@ class ${table}(Cmd):
         cmd.cmdloop()
 //::        #endif
 
-        ret = p4pd.p4pd_entry_create(self.tableid, swkeyp, swkey_maskp, actiondata.this, hwentryp)
+        ret = ${pddict['cli-name']}.p4pd_entry_create(self.tableid, swkeyp, swkey_maskp, actiondata.this, hwentryp)
 
         if ret < 0:
             print('p4pd_entry_create() returned %d!' % (ret))
 
         print('Entry was created successfully')
-        p4pd.delete_uint8_ptr_t(hwentryp)
+        ${pddict['cli-name']}.delete_uint8_ptr_t(hwentryp)
 
     def do_write_entry(self, args):
         """Usage: write_entry <index>"""
@@ -828,21 +828,21 @@ class ${table}(Cmd):
 
         try:
             index = int(values[0])
-            actiondata = p4pd.${table}_actiondata()
+            actiondata = ${pddict['cli-name']}.${table}_actiondata()
 //::        if pddict['tables'][table]['type'] != 'Index':
-            hwkey_len_p = p4pd.new_uint32_ptr_t()
-            hwkeymask_len_p = p4pd.new_uint32_ptr_t()
-            hwactiondata_len_p = p4pd.new_uint32_ptr_t()
+            hwkey_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
 
-            p4pd.p4pd_hwentry_query(self.tableid, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
+            ${pddict['cli-name']}.p4pd_hwentry_query(self.tableid, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
 
-            hwkey_p = p4pd.malloc_uint8_t((p4pd.uint32_ptr_t_value(hwkey_len_p)+7)/8)
-            hwkeymask_p = p4pd.malloc_uint8_t((p4pd.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
+            hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
+            hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
 
-            swkey  = p4pd.${table}_swkey_t()
+            swkey  = ${pddict['cli-name']}.${table}_swkey_t()
             swkeyp = swkey.this
 //::            if pddict['tables'][table]['type'] == 'Ternary' or pddict['tables'][table]['type'] == 'OTcam':
-            swkey_mask  = p4pd.${table}_swkey_mask_t()
+            swkey_mask  = ${pddict['cli-name']}.${table}_swkey_mask_t()
             swkey_maskp = swkey_mask.this
 
             cmd = self.${table}_prompt_for_values(swkey, swkey_mask, actiondata)
@@ -854,7 +854,7 @@ class ${table}(Cmd):
             cmd.cmdloop()
 //::            #endif
 
-            ret = p4pd.p4pd_hwkey_hwmask_build(self.tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p)
+            ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p)
 
             if ret < 0:
                 raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
@@ -866,7 +866,7 @@ class ${table}(Cmd):
             cmd.cmdloop()
 //::        #endif
 
-            ret = p4pd.p4pd_entry_write(self.tableid, index, hwkey_p, hwkeymask_p, actiondata.this)
+            ret = ${pddict['cli-name']}.p4pd_entry_write(self.tableid, index, hwkey_p, hwkeymask_p, actiondata.this)
 
             if ret < 0:
                 raise RuntimeError('p4pd_entry_write() returned %d!' % (ret))
@@ -878,11 +878,11 @@ class ${table}(Cmd):
 
         finally:
 //::        if pddict['tables'][table]['type'] != 'Index':
-            p4pd.free_uint8_t(hwkey_p)
-            p4pd.free_uint8_t(hwkeymask_p)
-            p4pd.delete_uint32_ptr_t(hwkey_len_p)
-            p4pd.delete_uint32_ptr_t(hwkeymask_len_p)
-            p4pd.delete_uint32_ptr_t(hwactiondata_len_p)
+            ${pddict['cli-name']}.free_uint8_t(hwkey_p)
+            ${pddict['cli-name']}.free_uint8_t(hwkeymask_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkey_len_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkeymask_len_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwactiondata_len_p)
 //::        else:
             pass
 //::        #endif
@@ -897,10 +897,10 @@ class ${table}(Cmd):
 
         index = int(values[0])
 //::        if pddict['tables'][table]['type'] != 'Index':
-        swkey  = p4pd.${table}_swkey_t()
+        swkey  = ${pddict['cli-name']}.${table}_swkey_t()
         swkeyp = swkey.this
 //::            if pddict['tables'][table]['type'] == 'Ternary' or pddict['tables'][table]['type'] == 'OTcam':
-        swkey_mask  = p4pd.${table}_swkey_mask_t()
+        swkey_mask  = ${pddict['cli-name']}.${table}_swkey_mask_t()
         swkey_maskp = swkey_mask.this
 //::            else:
         swkey_maskp = None
@@ -909,9 +909,9 @@ class ${table}(Cmd):
         swkeyp = None
         swkey_maskp = None
 //::        #endif
-        actiondata = p4pd.${table}_actiondata()
+        actiondata = ${pddict['cli-name']}.${table}_actiondata()
 
-        ret = p4pd.p4pd_entry_read(self.tableid, index, swkeyp, swkey_maskp, actiondata.this)
+        ret = ${pddict['cli-name']}.p4pd_entry_read(self.tableid, index, swkeyp, swkey_maskp, actiondata.this)
 
         if ret < 0:
             print('Error: p4pd_entry_read() returned %d!' % (ret))
@@ -921,14 +921,14 @@ class ${table}(Cmd):
 
         try:
 //::        if pddict['tables'][table]['type'] != 'Index':
-            hwkey_len_p = p4pd.new_uint32_ptr_t()
-            hwkeymask_len_p = p4pd.new_uint32_ptr_t()
-            hwactiondata_len_p = p4pd.new_uint32_ptr_t()
+            hwkey_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            hwkeymask_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
+            hwactiondata_len_p = ${pddict['cli-name']}.new_uint32_ptr_t()
 
-            p4pd.p4pd_hwentry_query(self.tableid, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
+            ${pddict['cli-name']}.p4pd_hwentry_query(self.tableid, hwkey_len_p, hwkeymask_len_p, hwactiondata_len_p)
 
-            hwkey_p = p4pd.malloc_uint8_t((p4pd.uint32_ptr_t_value(hwkey_len_p)+7)/8)
-            hwkeymask_p = p4pd.malloc_uint8_t((p4pd.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
+            hwkey_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkey_len_p)+7)/8)
+            hwkeymask_p = ${pddict['cli-name']}.malloc_uint8_t((${pddict['cli-name']}.uint32_ptr_t_value(hwkeymask_len_p)+7)/8)
 
 //::            if pddict['tables'][table]['type'] == 'Ternary' or pddict['tables'][table]['type'] == 'OTcam':
             cmd = self.${table}_prompt_for_values(swkey, swkey_mask, actiondata)
@@ -938,7 +938,7 @@ class ${table}(Cmd):
             cmd.cmdloop()
 //::            #endif
 
-            ret = p4pd.p4pd_hwkey_hwmask_build(self.tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p)
+            ret = ${pddict['cli-name']}.p4pd_hwkey_hwmask_build(self.tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p)
 
             if ret < 0:
                 raise RuntimeError('p4pd_hwkey_hwmask_build() returned %d!' % (ret))
@@ -950,7 +950,7 @@ class ${table}(Cmd):
             cmd.cmdloop()
 //::        #endif
 
-            ret = p4pd.p4pd_entry_write(self.tableid, index, hwkey_p, hwkeymask_p, actiondata.this)
+            ret = ${pddict['cli-name']}.p4pd_entry_write(self.tableid, index, hwkey_p, hwkeymask_p, actiondata.this)
 
             if ret < 0:
                 raise RuntimeError('p4pd_entry_write() returned %d!' % (ret))
@@ -962,11 +962,11 @@ class ${table}(Cmd):
 
         finally:
 //::        if pddict['tables'][table]['type'] != 'Index':
-            p4pd.free_uint8_t(hwkey_p)
-            p4pd.free_uint8_t(hwkeymask_p)
-            p4pd.delete_uint32_ptr_t(hwkey_len_p)
-            p4pd.delete_uint32_ptr_t(hwkeymask_len_p)
-            p4pd.delete_uint32_ptr_t(hwactiondata_len_p)
+            ${pddict['cli-name']}.free_uint8_t(hwkey_p)
+            ${pddict['cli-name']}.free_uint8_t(hwkeymask_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkey_len_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwkeymask_len_p)
+            ${pddict['cli-name']}.delete_uint32_ptr_t(hwactiondata_len_p)
 //::        else:
             pass
 //::        #endif
@@ -981,10 +981,10 @@ class ${table}(Cmd):
 
         index = int(values[0])
 //::        if pddict['tables'][table]['type'] != 'Index':
-        swkey  = p4pd.${table}_swkey_t()
+        swkey  = ${pddict['cli-name']}.${table}_swkey_t()
         swkeyp = swkey.this
 //::            if pddict['tables'][table]['type'] == 'Ternary' or pddict['tables'][table]['type'] == 'OTcam':
-        swkey_mask  = p4pd.${table}_swkey_mask_t()
+        swkey_mask  = ${pddict['cli-name']}.${table}_swkey_mask_t()
         swkey_maskp = swkey_mask.this
 //::            else:
         swkey_maskp = None
@@ -993,9 +993,9 @@ class ${table}(Cmd):
         swkeyp = None
         swkey_maskp = None
 //::        #endif
-        actiondata = p4pd.${table}_actiondata()
+        actiondata = ${pddict['cli-name']}.${table}_actiondata()
 
-        ret = p4pd.p4pd_entry_read(self.tableid, index, swkeyp, swkey_maskp, actiondata.this)
+        ret = ${pddict['cli-name']}.p4pd_entry_read(self.tableid, index, swkeyp, swkey_maskp, actiondata.this)
 
         if ret < 0:
             print('Error: p4pd_entry_read() returned %d!' % (ret))
@@ -1017,7 +1017,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
         print(valstr)
 //::                #endif
 //::            #endfor
@@ -1041,7 +1041,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey.${table}_u${i}.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${table}_u${i}.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -1062,7 +1062,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -1088,7 +1088,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${table}_hdr_union${i}_t.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -1109,7 +1109,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey.${p4fldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey.${p4fldname}, i))
         print(valstr)
 
 //::                        #endif
@@ -1134,7 +1134,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                #endif
@@ -1159,7 +1159,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -1180,7 +1180,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -1206,7 +1206,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -1227,7 +1227,7 @@ class ${table}(Cmd):
         for i in range((${p4fldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(swkey_mask.${p4fldname}_mask, i))
         print(valstr)
 
 //::                        #endif
@@ -1260,7 +1260,7 @@ class ${table}(Cmd):
         for i in range((${actionfldwidth} + 7) / 8):
             if i != 0 and (i % array_cols) == 0:
                 valstr += ('\n' + (' ' * lenstr))
-            valstr += '0x%02x ' % (p4pd.uint8_array_t_getitem(actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i))
+            valstr += '0x%02x ' % (${pddict['cli-name']}.uint8_array_t_getitem(actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i))
         print(valstr)
 
 //::                    #endif
@@ -1294,14 +1294,15 @@ class rootCmd(Cmd):
 
         cmd = ${table}()
         cmd.cmdloop()
+
 //::    #endfor
 
     @staticmethod
     def get_table_properties(tbl_idx):
         """Usage: get_table_properties <table-id>"""
 
-        tbl_ctx = p4pd.p4pd_table_properties_t()
-        ret = p4pd.p4pd_table_properties_get(tbl_idx, tbl_ctx.this)
+        tbl_ctx = ${pddict['cli-name']}.p4pd_table_properties_t()
+        ret = ${pddict['cli-name']}.p4pd_table_properties_get(tbl_idx, tbl_ctx.this)
         if ret < 0:
             print('p4pd_table_properties_get() returned %d' % (ret))
             return
@@ -1359,149 +1360,11 @@ class rootCmd(Cmd):
         print '  btm_right_y: ', tbl_ctx.hbm_layout.btm_right_y
         print '  btm_right_block: ', tbl_ctx.hbm_layout.btm_right_block
 
-    def do_read_reg(self, args):
-        """Usage: read_reg <addr>"""
-
-        values = args.split()
-        if len(values) != 1:
-            print('Usage: read_reg <addr>')
-            return
-
-        addr = int(values[0], 16)
-        data_p = p4pd.new_uint32_ptr_t()
-        p4pd.read_reg(addr, data_p)
-        print("Value @0x%08x: %d (0x%08x)" % (addr, p4pd.uint32_ptr_t_value(data_p), p4pd.uint32_ptr_t_value(data_p)))
-        p4pd.delete_uint32_ptr_t(data_p)
-
-    def do_write_reg(self, args):
-        """Usage: write_reg <addr> <value>"""
-
-        values = args.split()
-        if len(values) != 2:
-            print('Usage: write_reg <addr> <value>')
-            return
-
-        addr = int(values[0], 16)
-        value = int(values[1], 16)
-        p4pd.write_reg(addr, value)
-
-        print("Wrote @0x%08x: %d (0x%08x)" % (addr, value, value))
-
-    def do_read_mem(self, args):
-        """Usage: read_mem <addr> <size>"""
-
-        values = args.split()
-        if len(values) != 2:
-            print('Usage: read_mem <addr> <size>')
-            return
-
-        addr = int(values[0], 16)
-        size = int(values[1])
-        array = p4pd.new_uint8_array_t(size)
-        p4pd.read_mem(addr, array, size)
-        valstr = "Content @0x%08x: {" % (addr)
-        lenstr = len(valstr)
-        for i in range(size):
-            if i != 0 and (i % array_cols) == 0:
-                valstr += ('\n' + (' ' * lenstr))
-            valstr += "0x%02x " % (p4pd.uint8_array_t_getitem(array, i))
-        valstr += "}"
-        print(valstr)
-        p4pd.delete_uint8_array_t(array)
-
-    def do_write_mem(self, args):
-        """Usage: write_mem <addr> <size> <value0> <value1> ... <valueSize-1>"""
-
-        values = args.split()
-        if len(values) < 2 or len(values) != (int(values[1]) + 2):
-            print('"Usage: write_mem <addr> <size> <value0> <value1> ... <valueSize-1>')
-            return
-
-        addr = int(values[0], 16)
-        size = int(values[1])
-
-        if size > 0:
-            array = p4pd.new_uint8_array_t(size)
-            for i in range(size):
-                p4pd.uint8_array_t_setitem(array, i, int(values[i+2], 16))
-
-            p4pd.write_mem(addr, array, size)
-            p4pd.delete_uint8_array_t(array)
-
-        print("Wrote %d bytes @0x%08x" % (size, addr))
-
-    def do_dump_hbm(self, args):
-        """Usage: dump_hbm"""
-
-        values = args.split()
-        if len(values) != 0:
-            print('Usage: dump_hbm')
-            return
-
-        p4pd.dump_hbm()
-        print("Dumped HBM.")
-
-    def do_send_pkt(self, args):
-        """Usage: send_pkt <filename> <port> [cos]"""
-
-        values = args.split()
-        if len(values) < 2 or len(values) > 3:
-            print('Usage: send_pkt <filename> <port> [cos]')
-            return
-
-        filename = values[0]
-        port = int(values[1])
-        if len(values) > 2:
-            cos = int(values[2])
-        else:
-            cos = 0
-
-        try:
-            in_pkt = p4pd.vector_uint8_t()
-            with open(filename, "rb") as pkt_file:
-                pkt_bytes = bytearray(open(filename, "rb").read())
-                pkt_file.close()
-                for i in range(len(pkt_bytes)):
-                    in_pkt.push_back(pkt_bytes[i])
-                p4pd.step_network_pkt(in_pkt, port)
-                print("Sent packet %s to the model on port %d." % (filename, port))
-
-                out_pkt = p4pd.vector_uint8_t()
-                out_cos_p = p4pd.new_uint32_ptr_t()
-                out_port_p = p4pd.new_uint32_ptr_t()
-                p4pd.uint32_ptr_t_assign(out_cos_p, 0)
-                p4pd.uint32_ptr_t_assign(out_port_p, 0)
-                p4pd.get_next_pkt(out_pkt, out_port_p, out_cos_p)
-                if out_pkt.size():
-                    print("Got packet back from the model: %d bytes on port %d with cos %d" % (out_pkt.size(),
-                                                                                               p4pd.uint32_ptr_t_value(out_port_p),
-                                                                                               p4pd.uint32_ptr_t_value(out_cos_p)))
-                else:
-                    print("No packet back from the model.")
-
-        except Exception as error:
-            print(repr(error))
-
-    def complete_send_pkt(self, text, line, begidx, endidx):
-        before_arg = line.rfind(" ", 0, begidx)
-        if before_arg == -1:
-            return # arg not found
-
-        fixed = line[before_arg+1:begidx]  # fixed portion of the arg
-        arg = line[before_arg+1:endidx]
-        pattern = arg + '*'
-
-        completions = []
-        for path in glob.glob(pattern):
-            completions.append(path.replace(fixed, "", 1))
-
-        return completions
-
 def init():
-    p4pd.p4pd_cli_init()
+    ${pddict['cli-name']}.${pddict['cli-name']}_cli_init()
 
 def cleanup():
-    p4pd.p4pd_cli_cleanup()
+    ${pddict['cli-name']}.${pddict['cli-name']}_cleanup()
 
 if __name__ == '__main__':
     init()

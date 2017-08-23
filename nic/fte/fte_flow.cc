@@ -55,9 +55,9 @@ _build_flow_key_from_phv(const phv_t *phv, hal::flow_key_t *key)
             key->dport = phv->lkp_dport;
             break;
         case IP_PROTO_ICMP:
-            key->icmp_type =  phv->lkp_dport >> 8;
-            key->icmp_code = phv->lkp_dport & 0x00FF;
-            key->icmp_id = phv->lkp_sport;
+            key->icmp_type =  phv->lkp_sport >> 8;
+            key->icmp_code = phv->lkp_sport & 0x00FF;
+            key->icmp_id = phv->lkp_dport;
             break;
         default:
             key->sport = 0;
@@ -65,6 +65,7 @@ _build_flow_key_from_phv(const phv_t *phv, hal::flow_key_t *key)
         }
         break;
     }
+    
 
     return HAL_RET_OK;
 }

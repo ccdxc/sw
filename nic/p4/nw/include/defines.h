@@ -347,24 +347,47 @@
 /*****************************************************************************/
 /* P4+ app types                                                             */
 /*****************************************************************************/
-#define P4PLUS_APPTYPE_CLASSIC_NIC  1
-#define P4PLUS_APPTYPE_RDMA         2
-#define P4PLUS_APPTYPE_TCPTLS       3
-#define P4PLUS_APPTYPE_IPSEC        4
-#define P4PLUS_APPTYPE_NDE          5
-#define P4PLUS_APPTYPE_STORAGE      6
-#define P4PLUS_APPTYPE_TELEMETRY    7
-#define P4PLUS_APP_TYPE_MIN         P4PLUS_APPTYPE_CLASSIC_NIC
-#define P4PLUS_APP_TYPE_MAX         P4PLUS_APPTYPE_TELEMETRY
+#define P4PLUS_APPTYPE_CLASSIC_NIC     1
+#define P4PLUS_APPTYPE_RDMA            2
+#define P4PLUS_APPTYPE_TCPTLS          3
+#define P4PLUS_APPTYPE_IPSEC           4
+#define P4PLUS_APPTYPE_NDE             5
+#define P4PLUS_APPTYPE_STORAGE         6
+#define P4PLUS_APPTYPE_TELEMETRY       7
+#define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_CLASSIC_NIC
+#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_TELEMETRY
 
 /*****************************************************************************/
 /* P4+ header size constants                                                 */
 /*****************************************************************************/
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
-#define P4PLUS_ROCE_HDR_SZ             19
+#define P4PLUS_ROCE_HDR_SZ             6
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
-#define P4PLUS_CLASSIC_NIC_HDR_SZ      134
+#define P4PLUS_CLASSIC_NIC_HDR_SZ      44
+
+/*****************************************************************************/
+/* Classic NIC flags                                                         */
+/*****************************************************************************/
+#define CLASSIC_NIC_FLAGS_FCS_OK               0x0001
+#define CLASSIC_NIC_FLAGS_VLAN_VALID           0x0002
+#define CLASSIC_NIC_FLAGS_IPV4_VALID           0x0004
+#define CLASSIC_NIC_FLAGS_IPV6_VALID           0x0008
+#define CLASSIC_NIC_FLAGS_FRAGMENT             0x0010
+#define CLASSIC_NIC_FLAGS_TUNNELED             0x0020
+#define CLASSIC_NIC_FLAGS_CSUM_VERIFIED        0x0040
+#define CLASSIC_NIC_FLAGS_IP_CSUM_OK           0x0080
+#define CLASSIC_NIC_FLAGS_L4_CSUM_OK           0x0100
+#define CLASSIC_NIC_FLAGS_INNER_CSUM_VERIFIED  0x0200
+#define CLASSIC_NIC_FLAGS_INNER_IP_CSUM_OK     0x0400
+#define CLASSIC_NIC_FLAGS_INNER_L4_CSUM_OK     0x0800
+
+/*****************************************************************************/
+/* ROCE flags                                                                */
+/*****************************************************************************/
+#define ROCE_FLAGS_IPV6                0x1
+#define ROCE_FLAGS_CNP                 0x2
+#define ROCE_FLAGS_ECN                 0x4
 
 #define IPSEC_MODE_TUNNEL              1
 #define IPSEC_MODE_TRANSPORT           2

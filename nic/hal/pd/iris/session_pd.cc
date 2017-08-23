@@ -211,41 +211,6 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 
     return dm->remove(session_state_idx);
 }
-hal_ret_t
-session_pd_fill_queue_info(ep_t *dst_ep,
-                           intf::LifQType qtype,
-                           uint8_t *qid_en,
-                           uint8_t *q_off,
-                           uint32_t *qid)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    intf::IfType    if_type = intf::IF_TYPE_NONE;
-    if_t            *pi_if;
-
-    if_type = ep_pd_get_if_type(dst_ep);
-
-    *qid_en = *q_off = *qid = 0;
-    switch(if_type) {
-        case intf::IF_TYPE_ENIC:
-            pi_if = ep_find_if_by_handle(dst_ep);
-            HAL_ASSERT(pi_if != NULL);
-
-            ret = if_get_qid_qoff(pi_if, qtype, q_off, qid);
-            if (ret == HAL_RET_OK) {
-               *qid_en = 1; 
-            }
-            break;
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            break;
-        case intf::IF_TYPE_TUNNEL:
-            break;
-        default:
-            HAL_ASSERT(0);
-    }
-
-    return ret;
-}
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
 // allocate an index and return that
@@ -276,32 +241,32 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     if (((flow->key.sport == 80) && (flow->key.dport == 47273)) ||
          ((flow->key.sport == 47273) && (flow->key.dport == 80))) {
         is_tcp_proxy_flow = true;
-        printf("TCP Proxy FLow  sp %d dp %d\n", flow->key.sport, flow->key.dport);
+        HAL_TRACE_DEBUG("TCP Proxy FLow {}", flow->key);
     }
 
     if (!mcast) {
-        d.flow_info_action_u.flow_info_flow_info.lif =
-            ep_pd_get_hw_lif_id(dep);
-        printf("xxx: actual lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-	if (is_tcp_proxy_flow) {
+        d.flow_info_action_u.flow_info_flow_info.lif = flow->lif;
+#if 0
+        HAL_TRACE_DEBUG("xxx: actual lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
+        if (is_tcp_proxy_flow) {
             // HACK DO NOT COMMIT
             d.flow_info_action_u.flow_info_flow_info.lif = 1001;
-            printf("xxx: programmed lif = %d\n", d.flow_info_action_u.flow_info_flow_info.lif);
-	}
+            HAL_TRACE_DEBUG("xxx: programmed lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
+        }
+#endif
     } else {
     }
+
+#if 0
     if (is_tcp_proxy_flow) {
         // HACK DO NOT COMMIT
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+        d.flow_info_action_u.flow_info_flow_info.service_lif = 1001;
     }
+#endif
 
     d.flow_info_action_u.flow_info_flow_info.multicast_en = mcast;
     // TBD: where do these come from ?
-    d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 0;
-    if (is_tcp_proxy_flow) {
-        // HACK DO NOT COMMIT
-        d.flow_info_action_u.flow_info_flow_info.p4plus_app_id = 3;
-    }
     d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
     d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;
@@ -313,7 +278,7 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     // TODO: Sarat: We may have to pass the right action id.
     //d.flow_info_action_u.flow_info_flow_info.rewrite_index =
         //ep_get_rewrite_index(dst_ep);
-        //ep_pd_get_rw_tbl_idx_from_pi_ep(dst_ep, REWRITE_L3_REWRITE_ID);
+        //ep_pd_get_rw_tbl_idx_from_pi_ep(dst_ep, REWRITE_REWRITE_ID);
 
     // there is no transit case for us, so this is always FALSE
     if (is_if_type_tunnel(dif) && (sif->if_type != dif->if_type)) {
@@ -360,26 +325,32 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.dscp = 0;
 
     // TBD: check class NIC mode and set this
-    d.flow_info_action_u.flow_info_flow_info.qid_en = FALSE;
+    d.flow_info_action_u.flow_info_flow_info.qid_en = flow->qid_en;
+#if 0
     if (is_tcp_proxy_flow) {
         // HACK DO NOT COMMIT
         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
     }
-    session_pd_fill_queue_info(dep,
-                               flow->lif_qtype,
-                               &d.flow_info_action_u.flow_info_flow_info.qid_en,
-                               &d.flow_info_action_u.flow_info_flow_info.qtype,
-                               &d.flow_info_action_u.flow_info_flow_info.tunnel_vnid);
-
+#endif
+    if (flow->qid_en) {
+        d.flow_info_action_u.flow_info_flow_info.qtype = flow->qtype;
+        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->qid;
+    }
 
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;
 
     d.flow_info_action_u.flow_info_flow_info.mac_sa_rewrite = flow->mac_sa_rewrite;
     d.flow_info_action_u.flow_info_flow_info.mac_da_rewrite = flow->mac_da_rewrite;
+    d.flow_info_action_u.flow_info_flow_info.vlan_decap_en = flow->vlan_decap_en;
     d.flow_info_action_u.flow_info_flow_info.ttl_dec = flow->ttl_dec;
-    d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd, 
+    d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd,
             flow->rw_act);
+#if 0
+    d.flow_info_action_u.flow_info_flow_info.rewrite_index = 
+        (flow->rw_act == REWRITE_NOP_ID) ? g_hal_state_pd->rwr_tbl_decap_vlan_idx() : 
+        ep_pd_get_rw_tbl_idx(dep->pd, flow->rw_act);
+#endif
     d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->tnnl_vnid;
     d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = ep_pd_get_tnnl_rw_tbl_idx(dep->pd,
             flow->tnnl_rw_act);
@@ -392,6 +363,13 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
         session->config.conn_track_en ? flow_pd->session_state_hw_id : 0;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
+
+     if (is_tcp_proxy_flow) {
+         d.flow_info_action_u.flow_info_flow_info.lif = 1001;
+         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+         d.flow_info_action_u.flow_info_flow_info.service_lif = 1001;
+         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
+     }
 
     // insert the entry
     ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
@@ -489,18 +467,6 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     return ret;
 }
 
-uint8_t *memrev(uint8_t *block, size_t elnum)
-{
-     uint8_t *s, *t, tmp;
-
-    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
-        tmp = *s;
-        *s = *t;
-        *t = tmp;
-    }
-     return block;
-}
-
 //------------------------------------------------------------------------------
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
@@ -527,6 +493,9 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     if (flow->key.flow_type == FLOW_TYPE_V6) {
         memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
         memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+    } else if (flow->key.flow_type == FLOW_TYPE_L2) {
+        memrev(key.flow_lkp_metadata_lkp_src, 6);
+        memrev(key.flow_lkp_metadata_lkp_dst, 6);
     }
 
     if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {

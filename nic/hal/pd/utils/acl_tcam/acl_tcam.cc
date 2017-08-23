@@ -57,6 +57,7 @@ acl_tcam::init(std::string table_name, uint32_t table_id, uint32_t table_size,
     p4pd_hwentry_query(table_id_, &hwkey_len_, &hwkeymask_len_,
                        &hwdata_len_);
 
+    hwkey_len_ = hwkeymask_len_;
     hwkey_len_ = (hwkey_len_+7) >> 3;
     hwkeymask_len_ = (hwkeymask_len_ + 7) >> 3;
     hwdata_len_ = (hwdata_len_ + 7) >> 3;
@@ -458,6 +459,9 @@ acl_tcam::program_table_(TcamEntry *te, uint32_t index, void *data)
 
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
+    // Entry trace
+    entry_trace_(te, index);
+
     // P4-API: write
     pd_err = p4pd_entry_write(table_id_, index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, data ? data : te->get_data());
@@ -798,4 +802,23 @@ acl_tcam::get_prio_range_(TcamEntry *tentry)
         return itr->second;
     }
     return NULL;
+}
+
+// ----------------------------------------------------------------------------
+// Print entry
+// ----------------------------------------------------------------------------
+hal_ret_t
+acl_tcam::entry_trace_(TcamEntry *te, uint32_t index)
+{
+    char            buff[4096] = {0};
+    p4pd_error_t    p4_err;
+
+    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+            te->get_key(), te->get_key_mask(), te->get_data(), 
+            buff, sizeof(buff));
+    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+
+    HAL_TRACE_DEBUG("Index: {} \n {}", index, buff);
+
+    return HAL_RET_OK;
 }

@@ -94,7 +94,6 @@ class Module:
         return
 
     def UpdateResult(self, tc):
-        self.stats.total += 1
         if tc.status == 'Failed':
             if self.ignore:
                 self.stats.ignored += 1
@@ -184,6 +183,7 @@ class Module:
         self.__load_spec()
         while self.iterator.End() == False:
             self.logger.info("========== Starting Test Module =============")
+            self.logger.info("Iterator @ ", self.iterator.Get())
             self.__setup_callback()
             self.__select_config()
             self.__generate()
@@ -193,6 +193,7 @@ class Module:
         # Teardown must be called only once after iterating all elements.
         self.__teardown_callback()
         self.__unload()
+        self.stats.total = len(self.CompletedTestCases)
         return
 
 

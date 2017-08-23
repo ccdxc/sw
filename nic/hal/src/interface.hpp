@@ -39,6 +39,7 @@ typedef struct lif_s {
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
     bool                allmulti;                    // All multicast enable
+    bool                enable_rdma;                 // enable rdma on this LIF
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle
@@ -341,8 +342,6 @@ hal_ret_t uplinkpc_create(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 
                                  intf::InterfaceResponse *rsp,
                                  if_t *hal_if);
-
-hal_ret_t tcp_lif_create();
 
 hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp);
 hal_ret_t lif_p4_create(intf::LifSpec& spec, 

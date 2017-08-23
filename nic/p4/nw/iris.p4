@@ -48,13 +48,14 @@ header_type control_metadata_t {
         egress_bypass                  : 1;
         classic_mode                   : 1;
         ipsg_enable                    : 1;
-        recirc_reason                     : 2;
+        recirc_reason                  : 2;
         cpu_copy                       : 1;
         src_lif                        : LIF_BIT_WIDTH;
         flow_miss_action               : 2;
         flow_miss_tm_oqueue            : 5;
         lif_filter                     : 6;
-        p4plus_app_id                  : 4;
+        p4plus_app_id                  : 8;
+        rdma_enabled                   : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -191,6 +192,8 @@ header_type scratch_metadata_t {
         // icmp code and type needed for ip normalization
         icmp_code                     : 8;
         icmp_type                     : 8;
+
+        classic_nic_flags             : 16;
     }
 }
 

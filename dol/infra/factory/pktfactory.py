@@ -85,7 +85,8 @@ class PacketHeaderFields(objects.FrameworkObject):
                 elif data.GetRootID() == defs.ref_roots.FACTORY:
                     self.__dict__[key] = data.Get(FactoryStore)
             elif objects.IsCallback(data):
-                self.__dict__[key] = data.call(testcase, packet)
+                retval = data.call(testcase, packet)
+                self.__dict__[key] = self.__get_field_value(retval)
         return
 
 class PacketHeader(objects.FrameworkObject):
@@ -147,6 +148,7 @@ class PacketSpec(objects.FrameworkObject):
         return hdr
 
     def ConvertHeaders(self, spec):
+        if spec.headers == None: return
         for key,data in spec.headers.__dict__.items():
             if objects.IsFrameworkObject(data):
                 hdr = self.ConvertHeader(data)
@@ -160,33 +162,15 @@ class Packet(objects.FrameworkObject):
         super().__init__()
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
+        self.__build_complete = False
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
-        if pktspec.clone:
-            basepkt = pktspec.clone.Get(tc)
-            self.Clone(basepkt)
-        elif pktspec.template:
-            if objects.IsReference(pktspec.template):
-                self.template = pktspec.template.Get(FactoryStore)
-            elif objects.IsCallback(pktspec.template):
-                self.template = pktspec.template.call(tc, self)
-            else:
-                assert(0)
-            if self.template == None:
-                pktlogger.error("Template NOT FOUND for ID:%s" %\
-                                self.spec.template.GetInstID())
-                assert(self.template != None)
-        else:
-            pktlogger.error("No Template or Clone specified for packet.")
-            assert(0)
-
+        self.pktspec = pktspec
+        self.__get_packet_base(tc, pktspec)
         self.encaps = []
-        if pktspec.encaps:
-            for encspec in pktspec.encaps:
-                encap = encspec.Get(FactoryStore)
-                self.encaps.append(encap)
-           
+        self.__get_packet_encaps(tc, pktspec)
+        
         self.spec = pktspec
         self.__get_payload_size(tc)
 
@@ -195,6 +179,41 @@ class Packet(objects.FrameworkObject):
         
         self.spkt           = None
         self.pktsize        = None
+        return
+
+    def __get_packet_base(self, tc, pktspec):
+        if pktspec.clone:
+            basepkt = pktspec.clone.Get(tc)
+            self.Clone(basepkt)
+            return
+
+        if pktspec.template == None:
+            pktlogger.error("No Template or Clone specified for packet.")
+            assert(0)
+
+        if objects.IsReference(pktspec.template):
+            self.template = pktspec.template.Get(FactoryStore)
+        elif objects.IsCallback(pktspec.template):
+            self.template = pktspec.template.call(tc, self)
+        else:
+            assert(0)
+        if self.template == None:
+            pktlogger.error("Template NOT FOUND for ID:%s" %\
+                            self.spec.template.GetInstID())
+            assert(self.template != None)
+        return 
+
+    def __get_packet_encaps(self, tc, pktspec):
+        if pktspec.encaps == None:
+            return
+
+        if objects.IsCallback(pktspec.encaps):
+            self.encaps = pktspec.encaps.call(tc, self)
+            return
+
+        for encspec in pktspec.encaps:
+            encap = encspec.Get(FactoryStore)
+            self.encaps.append(encap)
         return
 
     def SetStepId(self, step_id):
@@ -249,8 +268,12 @@ class Packet(objects.FrameworkObject):
         return
 
     def __merge_headers(self, tc):
-        self.headers = PacketHeaders(self.spec.headers)
+        spec_hdrs = PacketHeaders(self.spec.headers)
         template_hdrs = PacketHeaders(self.template.headers)
+        if self.headers:
+            self.headers = objects.MergeObjects(spec_hdrs, self.headers)
+        else:
+            self.headers = spec_hdrs
         self.headers = objects.MergeObjects(self.headers, template_hdrs)
         self.headers_order = copy.deepcopy(self.template.headers_order)
         self.headers.show()
@@ -291,9 +314,12 @@ class Packet(objects.FrameworkObject):
         return
 
     def Build(self, tc):
-        self.__resolve(tc)
-        self.spkt = scapyfactory.main(self)
-        self.spkt[penscapy.PENDOL].id = tc.GID()
+        if not self.__build_complete:
+            self.__resolve(tc)
+            self.spkt = scapyfactory.main(self)
+            self.spkt[penscapy.PENDOL].id = tc.GID()
+        self.__build_complete = True
+        return
 
     def __show_raw_pkt(self, logger):
         logger.info("--------------------- RAW PACKET ---------------------")
@@ -329,12 +355,4 @@ class Packet(objects.FrameworkObject):
         return
 
 
-def GeneratePackets(tc):
-    tc.info("Generating Packet Objects")
-    for pspec in tc.testspec.packets:
-        packet = Packet(tc, pspec.packet)
-        packet.Build(tc)
-        #packet.Show(tc)
-        tc.packets.Add(packet)
-    return
 

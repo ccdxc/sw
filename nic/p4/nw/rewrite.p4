@@ -9,6 +9,7 @@ header_type rewrite_metadata_t {
         entropy_hash         : 16;
         mac_sa_rewrite       : 1;
         mac_da_rewrite       : 1;
+        vlan_decap_en        : 1;
         ttl_dec              : 1;
     }
 }
@@ -25,15 +26,11 @@ header_type qos_metadata_t {
 metadata rewrite_metadata_t rewrite_metadata;
 metadata qos_metadata_t qos_metadata;
 
-action decap_vlan() {
-    if (vlan_tag.valid == TRUE) {
+action rewrite(mac_sa, mac_da) {
+    if ((rewrite_metadata.vlan_decap_en == TRUE) and (vlan_tag.valid == TRUE)) {
         modify_field(ethernet.etherType, vlan_tag.etherType);
         remove_header(vlan_tag);
     }
-}
-
-action l3_rewrite(mac_sa, mac_da) {
-    decap_vlan();
 
     if (rewrite_metadata.mac_sa_rewrite == TRUE) {
         modify_field(ethernet.srcAddr, mac_sa);
@@ -71,7 +68,7 @@ table rewrite {
     }
     actions {
         nop;
-        l3_rewrite;
+        rewrite;
         ipv4_nat_src_rewrite;
         ipv4_nat_dst_rewrite;
         ipv4_nat_src_udp_rewrite;
@@ -149,9 +146,9 @@ control process_rewrites {
         apply(twice_nat);
         apply(rewrite);
     }
-    apply(p4plus_app);
     if (tunnel_metadata.tunnel_originate_egress == TRUE) {
         apply(tunnel_encap_update_inner);
     }
     apply(tunnel_rewrite);
+    apply(p4plus_app);
 }

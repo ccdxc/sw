@@ -15,21 +15,19 @@
 // Flit 1:  1023b - 512b
 // Flit 0:  511b  - 0b (INTRINSIC DATA)
 
-#define TCP_PHV_DB_DATA_START       386 /* CAPRI_PHV_START_OFFSET(db_data_index) = 3088b = 386B */
-#define TCP_PHV_DB_DATA_END         394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
+#define TCP_PHV_DB_DATA_START       CAPRI_PHV_START_OFFSET(db_data_pid)
+#define TCP_PHV_DB_DATA_END         CAPRI_PHV_END_OFFSET(db_data_pad_db_data_pad)
 #define TCP_PHV_DB_DATA_SIZE        8
 
 #define TCP_PHV_AOL_START           512
 #define TCP_PHV_AOL_END             640
 #define TCP_PHV_AOL_SIZE            64
 
-#define TCP_PHV_AOL_DESC_START      512 /* CAPRI_PHV_START_OFFSET(aol_A0) = 4096b = 512B */
-#define TCP_PHV_AOL_DESC_END        568 /* CAPRI_PHV_START_OFFSET(aol_reserved) = 4544b = 568B */
+#define TCP_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_reserved)
+#define TCP_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_A0)
 
-//#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 394 /* CAPRI_PHV_START_OFFSET(ring_entry_descr_addr) = 3152b = 394B */
-//#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 402 /* CAPRI_PHV_START_OFFSET(rx2tx_pad_rx2tx_pad) = 3216b = 402B */
-#define TCP_PHV_RING_ENTRY_DESC_ADDR_START 430 // ((3583 - 3215) + 3072) / 8 = (368 + 3072) / 8 = 430
-#define TCP_PHV_RING_ENTRY_DESC_ADDR_END 438 // ((3583 - 3151)  + 3072) / 8 = (432 + 3072) / 8 = 438
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
+#define TCP_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 
 #define TCP_PHV_ETH_SIZE            112  //14B
 #define TCP_PHV_IP_SIZE             160  //20B
@@ -42,9 +40,9 @@
 #define TCP_PHV_TCP_START           (TCP_PHV_IP_START+ROCEV2_PHV_IP_SIZE-1)
 #define TCP_PHV_HEADERS_END         (TCP_PHV_TCP_START+TCP_PHV_TCP_SIZE-1)
 
-#define TCP_PHV_RX2TX_SHARED_START  418 /* CAPRI_PHV_START_OFFSET(rx2tx_snd_cwnd) = 3344b = 418B offset */
+#define TCP_PHV_RX2TX_SHARED_START  CAPRI_PHV_START_OFFSET(rx2tx_snd_una)
 #define TCP_PHV_RX2TX_SHARED_SIZE   94
-#define TCP_PHV_RX2TX_SHARED_END    512 /* CAPRI_PHV_START_OFFSET(rx2tx_extra_ack_blocked) = 4096b = 512B offset */
+#define TCP_PHV_RX2TX_SHARED_END    CAPRI_PHV_END_OFFSET(rx2tx_pad_rx2tx_pad)
 
 
 
@@ -52,7 +50,7 @@
 #define TCP_PHV_TX2RX_SHARED_SIZE   512
 
 //#define TCP_PHV_HEADERS_END      3088
-#define TCP_PHV_DMA_COMMANDS_START      40 /* 40 * (16B) = 5120 bits */
+#define TCP_PHV_DMA_COMMANDS_START      (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
 #define TCP_PHV_DMA_COMMANDS_END        6144
 #define TCP_PHV_DMA_COMMAND_ADDR_OFFSET 0
 #define TCP_PHV_DMA_COMMAND_ADDR_LEN    64

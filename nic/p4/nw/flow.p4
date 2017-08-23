@@ -99,13 +99,13 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
+action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
                  cos_en, cos, dscp_en, dscp, qid_en, log_en,
-                 mac_sa_rewrite, mac_da_rewrite, ttl_dec,
+                 mac_sa_rewrite, mac_da_rewrite, vlan_decap_en, ttl_dec,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
                  ingress_tm_oqueue, egress_tm_oqueue) {
@@ -118,7 +118,15 @@ action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
             modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
             modify_field(capri_intrinsic.tm_replicate_ptr, lif);
         } else {
-            modify_field(capri_intrinsic.lif, lif);
+            // if service lif is present and service has not been applied,
+            // send packe to service lif
+            if ((service_lif != 0) and
+                ((p4plus_to_p4.valid == FALSE) or
+                 ((p4plus_to_p4.flags & 0x80) == 0))) {
+                modify_field(capri_intrinsic.lif, service_lif);
+            } else {
+                modify_field(capri_intrinsic.lif, lif);
+            }
         }
     }
 
@@ -131,9 +139,6 @@ action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
         modify_field(control_metadata.qid, tunnel_vnid);
         modify_field(control_metadata.qtype, qtype);
     }
-
-    /* p4plus app id */
-    modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
 
     /* mirror session id */
     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
@@ -166,6 +171,7 @@ action flow_info(lif, multicast_en, p4plus_app_id, qtype, flow_steering_only,
     modify_field(rewrite_metadata.rewrite_index, rewrite_index);
     modify_field(rewrite_metadata.mac_sa_rewrite, mac_sa_rewrite);
     modify_field(rewrite_metadata.mac_da_rewrite, mac_da_rewrite);
+    modify_field(rewrite_metadata.vlan_decap_en, vlan_decap_en);
     modify_field(rewrite_metadata.ttl_dec, ttl_dec);
 
     /* NAT rewrite data */

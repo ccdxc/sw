@@ -50,6 +50,14 @@ modules:
 
     - module:
         enable  : True
+        name    : PKT_SESSION_FAIL
+        enable  : True
+        package : test.examples
+        module  : sample
+        spec    : sample_pkt_to_pkt_session_fail.testspec
+
+    - module:
+        enable  : True
         name    : PKT_TCP_OPTS
         enable  : True
         package : test.examples

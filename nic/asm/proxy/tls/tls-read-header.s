@@ -27,7 +27,8 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
-
+	.param		tls_alloc_tnmdr_start
+	
 tls_read_header_process_start:
 	phvwr		p.pending_rx_serq, k.pending_rx_serq
 	phvwr		p.pending_rx_brq, k.pending_rx_brq
@@ -47,19 +48,17 @@ tls_read_header_process_start:
 	nop
 
 table_read_alloc_tnmdr:
+	phvwri		p.split, 1
+	addi 		r3, r0, TNMDR_ALLOC_IDX
+	CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_alloc_tnmdr_start,
+	                    r3, TABLE_SIZE_16_BITS)
 
-	TLS_READ_IDX(RNMDR_ALLOC_IDX, TABLE_TYPE_RAW, tls_alloc_rnmdr_split_process)
-/*	
-	TLS_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, tls_rx_serq_process,
-	                    TLS_TCB_TABLE_BASE, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TLS_TCB_OFFSET, TLS_TCB_TABLE_ENTRY_SIZE)
-*/
 	
 	b		tls_read_desc_process_done
 	nop
 	
 table_read_alloc_sesq_pi:
-	TLS_READ_IDX(SESQ_PRODUCER_IDX, TABLE_TYPE_RAW, tls_alloc_sesq_pi_process)
+#	TLS_READ_IDX(SESQ_PRODUCER_IDX, TABLE_TYPE_RAW, tls_alloc_sesq_pi_process)
 
 
 	

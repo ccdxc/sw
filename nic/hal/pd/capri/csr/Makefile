@@ -58,6 +58,8 @@ SOURCES = \
     cap_pxp_csr.cc \
     cap_pxc_csr.cc \
     cap_dppmem_csr.cc \
+    cap_sema_csr.cc \
+    cap_intr_csr.cc \
     LogMsg.cc \
     cpu.cc \
     cpu_hal_if.cc \

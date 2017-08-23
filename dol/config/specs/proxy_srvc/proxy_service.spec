@@ -1,0 +1,11 @@
+# TX and RX NMPR definitions
+meta:
+    id: PROXY_SERVICE
+
+entries:
+    - entry:
+        name        : SERVICE_LIF
+        type        : TCP_PROXY
+    - entry:
+        name        : SERVICE_LIF
+        type        : TLS_PROXY

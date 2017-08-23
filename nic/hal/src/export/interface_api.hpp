@@ -22,6 +22,8 @@ uint32_t lif_get_port_num(lif_t *pi_lif);
 uint32_t lif_get_lif_id(lif_t *pi_lif);
 void lif_set_pd_lif(lif_t *pi_lif, void *pd_lif);
 void *lif_get_pd_lif(lif_t *pi_lif);
+bool lif_get_enable_rdma(lif_t *pi_lif);
+void lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma);
 
 // Interface APIs
 intf::IfType intf_get_if_type(if_t *pi_if);
@@ -43,8 +45,8 @@ void *if_enicif_get_pi_l2seg(if_t *pi_if);
 void *if_enicif_get_pd_nwsec(if_t *pi_if);
 void *if_enicif_get_pi_nwsec(if_t *pi_if);
 uint32_t if_enicif_get_ipsg_en(if_t *pi_if);
-
-
+hal_ret_t if_get_qid_qoff(if_t *pi_if, intf::LifQType qtype, 
+                          uint8_t *q_off, uint32_t *qid);
 
 } // namespace hal
 #endif // __INTERFACE_API_HPP__

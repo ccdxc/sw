@@ -83,7 +83,7 @@ class EnicObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info(" - Enic %s = %s (HDL = 0x%x)" %\
+        cfglogger.info("- Enic %s = %s (HDL = 0x%x)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))

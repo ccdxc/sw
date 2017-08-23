@@ -33,7 +33,8 @@ tenjin_prefix = "//::"
 
 CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
 
-def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
+def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, cli_name):
+
     # file-names in template_dir will be used
     # to generate corresponding .c or .h files and 
     # output to output_dir
@@ -42,20 +43,22 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
 
     pdoutfiles = []
     for f in files:
-        if ".h" in f:
-            output_dir = output_h_dir
-        elif ".c" in f:
-            output_dir = output_c_dir
-        elif ".py":
+        if ".py" in f:
             output_dir = output_py_dir
+            genf = cli_name + '_cli.py'
         else:
-            continue
+            if ".h" in f:
+                output_dir = output_h_dir
+            elif ".c" in f:
+                output_dir = output_c_dir
+            else:
+                continue
 
-        if prog_name != '':
-            genf = prog_name + '_' + f
-        else:
-            genf = f
-            
+            if prog_name != '':
+                genf = prog_name + '_' + f
+            else:
+                genf = f
+
         pdoutfiles.append((os.path.join(template_dir, f), \
                            os.path.join(output_dir, genf)))
     return pdoutfiles
@@ -69,7 +72,7 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
     if output_py_dir and not os.path.exists(output_py_dir):
         os.mkdir(output_py_dir)
 
-    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name)
+    templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
     for templatefile, outfile in templates_outfiles:
         outputfile_path = os.path.dirname(outfile)
         pdd = {}
@@ -658,6 +661,8 @@ class capri_p4pd:
                     else:
                         (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
                     max_width += width_
+                if max_width > 8:
+                    max_width = 8
                 covered_bits = k + max_width
             else:
                 # check if this field is already covered
@@ -865,7 +870,10 @@ class capri_p4pd:
                                     continue
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
-                                cf_hname = cf_get_hname(cf)
+                                if cf.is_hv:
+                                    cf_hname = cf.hfname
+                                else:
+                                    cf_hname = cf_get_hname(cf)
                                 if cf_hname not in fields_of_same_header_in_byte.keys():
                                     fields_of_same_header_in_byte[cf_hname] = containerstart
                                 cs = fields_of_same_header_in_byte[cf_hname]
@@ -893,7 +901,10 @@ class capri_p4pd:
                                     key_encountered = True
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields[cf.hfname]
-                                cf_hname = cf_get_hname(cf)
+                                if cf.is_hv:
+                                    cf_hname = cf.hfname
+                                else:
+                                    cf_hname = cf_get_hname(cf)
                                 if cf_hname not in fields_of_same_header_in_byte.keys():
                                     fields_of_same_header_in_byte[cf_hname] = containerstart
                                 cs = fields_of_same_header_in_byte[cf_hname]
@@ -992,6 +1003,7 @@ class capri_p4pd:
             if cf_value_list[0][0] == None:
                 cf, cf_startbit, width, ftype, hdr = cf_value_list[0]
                 # Pad byte/bit
+                hdr = hdr.replace('[', '_').replace(']', '_')
                 asm_field_info.append(("__pad_" + hdr + "_" + str(cf_startbit), "__pad_" + hdr + "_" + str(cf_startbit), \
                                       p4f_size, 0, 0, 0, ftype, hdr))
                 return

@@ -52,6 +52,21 @@ func createFakeResolver(t *testing.T) (*rpckit.RPCServer, *mock.ResolverService)
 	}
 }
 
+type mockServiceInstanceObserver struct {
+	addedCount   int
+	deletedCount int
+}
+
+func (m *mockServiceInstanceObserver) OnNotifyResolver(e types.ServiceInstanceEvent) error {
+	switch e.Type {
+	case types.ServiceInstanceEvent_Added:
+		m.addedCount++
+	case types.ServiceInstanceEvent_Deleted:
+		m.deletedCount++
+	}
+	return nil
+}
+
 func TestResolverClient(t *testing.T) {
 	server, m := createFakeResolver(t)
 	config := &Config{
@@ -61,6 +76,8 @@ func TestResolverClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client, error: %v", err)
 	}
+	mo := &mockServiceInstanceObserver{}
+	client.Register(mo)
 	c2 := func() bool {
 		instances := client.Lookup("svc1")
 		if len(instances.Items) != 2 {
@@ -108,4 +125,13 @@ func TestResolverClient(t *testing.T) {
 	if len(instances.Items) != 0 {
 		t.Fatalf("Found non-zero instances for non-existant service")
 	}
+
+	testutils.AssertEventually(t, func() bool {
+		if mo.addedCount == 3 && mo.deletedCount == 1 {
+			return true
+		}
+		return false
+	}, "Failed to find added and deleted instances")
+
+	client.Stop()
 }

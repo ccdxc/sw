@@ -2,29 +2,34 @@
 /* ROCEv2 processing                                                         */
 /*****************************************************************************/
 action decode_roce_opcode(raw_flags, len, qtype) {
-    if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
+    if ((capri_intrinsic.tm_oport == TM_PORT_DMA) and
+        (control_metadata.rdma_enabled == TRUE)) {
+        modify_field(p4_to_p4plus_roce.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
         add_header(p4_to_p4plus_roce);
-        modify_field(p4_to_p4plus_roce.opcode, roce_bth.opCode);
         modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
         modify_field(p4_to_p4plus_roce.rdma_hdr_len, len);
 
+        add_header(capri_rxdma_intrinsic);
+        add_header(capri_rxdma_p4_intrinsic);
         modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
         modify_field(capri_rxdma_intrinsic.qtype, qtype);
         add(capri_rxdma_intrinsic.rx_splitter_offset, len,
             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
              P4PLUS_ROCE_HDR_SZ));
+        if ((roce_bth.opCode & 0xE0) == 0x60) {
+            add_header(p4_to_p4plus_roce_ip);
+            add_header(p4_to_p4plus_roce_eth);
+        }
 
         remove_header(ethernet);
+        remove_header(vlan_tag);
         remove_header(ipv4);
         remove_header(ipv6);
         remove_header(udp);
-        if ((roce_bth.opCode & 0xE0) == 0x60) {
-            add_header(p4_to_p4plus_roce_ip);
-        }
     }
 }
 
-@pragma stage 1
+@pragma stage 4
 table decode_roce_opcode {
     reads {
         roce_bth.opCode : exact;

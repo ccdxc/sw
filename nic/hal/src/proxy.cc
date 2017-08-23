@@ -4,8 +4,8 @@
 #include <hal_state.hpp>
 #include <proxy.hpp>
 #include <proxy_svc.hpp>
-#include <tenant.hpp>
 #include <pd_api.hpp>
+#include <lif_manager.hpp>
 
 namespace hal {
 
@@ -56,12 +56,12 @@ proxy_compare_handle_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
-// validate an incoming PROXY create request
+// validate an incoming PROXY enable request
 // TODO:
 // 1. check if PROXY exists already
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_proxy_create (ProxySpec& spec, ProxyResponse *rsp)
+validate_proxy_enable (ProxySpec& spec, ProxyResponse *rsp)
 {
     // must have key-handle set
     if (spec.proxy_type() == types::PROXY_TYPE_NONE) {
@@ -78,9 +78,12 @@ validate_proxy_create (ProxySpec& spec, ProxyResponse *rsp)
 static inline hal_ret_t
 add_proxy_to_db (proxy_t *proxy)
 {
-    g_hal_state->proxy_hal_handle_ht()->insert(proxy,
+    hal_ret_t   ret;
+    ret = g_hal_state->proxy_hal_handle_ht()->insert(proxy,
                                                &proxy->hal_handle_ht_ctxt);
-    g_hal_state->proxy_type_ht()->insert(proxy, &proxy->ht_ctxt);
+    HAL_TRACE_DEBUG("Return1: {} for type: {}", ret, proxy->type);
+    ret = g_hal_state->proxy_type_ht()->insert(proxy, &proxy->ht_ctxt);
+    HAL_TRACE_DEBUG("Return2: {}, type: {}", ret, proxy->type) ;
     return HAL_RET_OK;
 }
 
@@ -136,13 +139,79 @@ proxy_allocate_program_qid(types::ProxyType type,
     return proxy_program_qid(type, lif, qtype, qid);
 }
 
+hal_ret_t 
+proxy_program_lif(proxy_t* proxy)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    intf::LifSpec       lif_spec;
+    intf::LifResponse   rsp;
+    LIFQStateParams     qstate_params = {0};
+    
+    // Create LIF 
+    lif_spec.mutable_key_or_handle()->set_lif_id(proxy->lif_id); 
+    lif_spec.set_admin_status(intf::IF_STATUS_UP);
+    ret = lif_create(lif_spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("lif creation failed for proxy service" );
+        return ret;
+    }
+
+    // program qstate
+    qstate_params.type[proxy->qtype].entries = proxy->qstate_entries;
+    qstate_params.type[proxy->qtype].size = proxy->qstate_size;
+    
+    int32_t rs = g_lif_manager->InitLIFQState(proxy->lif_id, &qstate_params);
+    if(rs != 0) {
+        HAL_TRACE_ERR("Failed to program lif qstate params: 0x{0:x}", rs);
+        return HAL_RET_HW_PROG_ERR;
+    }
+
+    // Get the base address based on QID of '0'
+    proxy->base_addr = g_lif_manager->GetLIFQStateAddr(proxy->lif_id, proxy->qtype, 0);
+
+    return HAL_RET_OK;
+}
+
+
 //------------------------------------------------------------------------------
-// process a Proxy create request
+// process a Proxy enable request
 // TODO: if Proxy exists, treat this as modify (tenant id in the meta must
 // match though)
 //------------------------------------------------------------------------------
+
+hal_ret_t 
+proxy_init_default_params(proxy_t* proxy)
+{
+    if(NULL == proxy) 
+    {
+        return HAL_RET_INVALID_ARG;    
+    }
+
+    switch(proxy->type) {
+        case types::PROXY_TYPE_TCP:
+            proxy->lif_id = SERVICE_LIF_TCP_PROXY;
+            proxy->qtype = PROXY_TCP_DEF_QTYPE; 
+            proxy->qstate_size = PROXY_TCP_DEF_QSTATE_SZ;
+            proxy->qstate_entries = PROXY_TCP_DEF_QSTATE_ENTRIES;
+            break;
+
+        case types::PROXY_TYPE_TLS:
+            proxy->lif_id = SERVICE_LIF_TLS_PROXY;
+            proxy->qtype = PROXY_TLS_DEF_QTYPE; 
+            proxy->qstate_size = PROXY_TLS_DEF_QSTATE_SZ;
+            proxy->qstate_entries = PROXY_TLS_DEF_QSTATE_ENTRIES;
+            break;
+
+        default:
+            return HAL_RET_INVALID_ARG;
+        
+    }
+
+    return HAL_RET_OK;
+}
+
 proxy_t* 
-proxy_factory(types::ProxyType type, qtype_t qtype) 
+proxy_factory(types::ProxyType type) 
 {
     hal_ret_t       ret = HAL_RET_OK;
     proxy_t         * proxy = NULL;
@@ -155,15 +224,18 @@ proxy_factory(types::ProxyType type, qtype_t qtype)
     }
 
     proxy->type = type;
-    proxy->qtype = qtype;
     proxy->hal_handle = hal_alloc_handle();
     
     // Instantiate QID indexer 
     proxy->qid_idxr_ = new hal::utils::indexer(HAL_MAX_QID);
     HAL_ASSERT(NULL != proxy->qid_idxr_);
+   
+   // initialize default params
+    proxy_init_default_params(proxy);
     
-    // TODO: Allocate  LIF for this proxy
-
+    // program LIF for this proxy
+    proxy_program_lif(proxy);
+    
     // add this Proxy to our db
     ret = add_proxy_to_db(proxy);
     HAL_ASSERT(ret == HAL_RET_OK);
@@ -172,13 +244,13 @@ proxy_factory(types::ProxyType type, qtype_t qtype)
 }
 
 hal_ret_t
-proxy_create (ProxySpec& spec, ProxyResponse *rsp)
+proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     proxy_t                *proxy;
 
     // validate the request message
-    ret = validate_proxy_create(spec, rsp);
+    ret = validate_proxy_enable(spec, rsp);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
         HAL_TRACE_ERR("Proxy validate failure, err : {}", ret);
@@ -186,7 +258,7 @@ proxy_create (ProxySpec& spec, ProxyResponse *rsp)
     }
 
     // instantiate Proxy
-    proxy = proxy_factory(spec.proxy_type(), spec.proxy_qtype());
+    proxy = proxy_factory(spec.proxy_type());
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
@@ -201,13 +273,18 @@ proxy_create (ProxySpec& spec, ProxyResponse *rsp)
 //------------------------------------------------------------------------------
 // Initialize default proxy services
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_init_def_proxy_services(void) 
+
+hal_ret_t 
+hal_proxy_svc_init(void)
 {
-    HAL_ASSERT(NULL != proxy_factory(types::PROXY_TYPE_TCP, 0));
-    HAL_TRACE_DEBUG("Initialized TCP Proxy Service...");
-    HAL_ASSERT(NULL != proxy_factory(types::PROXY_TYPE_TLS, 0));   
-    HAL_TRACE_DEBUG("Initialized TLS Proxy Service...");
+    // Reserve Service LIFs
+    if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START)) 
+            <= 0) 
+    {
+        HAL_TRACE_ERR("Failed to reserve service LIF");
+        return HAL_RET_NO_RESOURCE;
+    }
+    
     return HAL_RET_OK;
 }
 

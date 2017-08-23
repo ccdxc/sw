@@ -57,6 +57,7 @@ public:
     {
 
     }
+
     bool range_check(addr_t addr) {
         return addr >= min && addr <= max;
     }

@@ -12,6 +12,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include <interface.hpp>
 #include <tcpcb.hpp>
+#include <proxy.hpp>
 
 namespace hal {
 
@@ -187,7 +188,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
         if (getenv("HAL_GRPC_PORT")) {
             hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");
-            HAL_TRACE_DEBUG("Overriding GRPC Port to : %s", hal_cfg->grpc_port);
+            HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", hal_cfg->grpc_port);
         }
         sparam = pt.get<std::string>("sw.feature_set");
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
@@ -223,9 +224,9 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     g_lif_manager = new LIFManager();
-
-    tcp_lif_create();
-
+   
+    hal_proxy_svc_init();
+    
     return HAL_RET_OK;
 }
 

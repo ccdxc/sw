@@ -6,8 +6,10 @@
 #include <p4pd_tcp_proxy_api.h>
 #include <capri_loader.h>
 #include <capri_hbm.hpp>
-#include <capri_lif.hpp>
 #include <wring_pd.hpp>
+#include <proxy.hpp>
+#include <hal.hpp>
+#include <lif_manager.hpp>
 
 namespace hal {
 namespace pd {
@@ -478,10 +480,10 @@ pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
     HAL_ASSERT(NULL != tcpcb_pd);
     HAL_ASSERT(NULL != tcpcb_pd->tcpcb);
     
-    
-    char tcpcb_reg[10] = "tcpcb";
-    uint64_t offset = get_start_offset(tcpcb_reg);
-    HAL_TRACE_DEBUG("received offset ", offset);
+    // Get the base address of TCP CB from LIF Manager.
+    // Set qtype and qid as 0 to get the start offset. 
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0, 0);
+    HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
     return offset + \
         (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
 }
@@ -500,10 +502,8 @@ p4pd_add_or_del_tcpcb_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto err;    
     }
-    ret = capri_lif_qstate_create(1001);
 
 err:
-    /*TODO: cleanup */
     return ret;
 }
 

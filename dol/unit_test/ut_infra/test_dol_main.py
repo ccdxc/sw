@@ -7,36 +7,39 @@ from infra.common import defs
 mocked_model_modules = ["model_sim", "model_sim.src.model_wrap"]
 
 mocked_modules = [
-    "l2segment_pb2", 
-    "types_pb2", 
-    "tenant_pb2", 
-    "interface_pb2", 
-    "endpoint_pb2", 
-    "session_pb2", 
+    "l2segment_pb2",
+    "types_pb2",
+    "tenant_pb2",
+    "interface_pb2",
+    "endpoint_pb2",
+    "session_pb2",
     "endpoint_pb2_grpc",
-    "l2segment_pb2_grpc", 
-    "tenant_pb2_grpc", 
-    "interface_pb2_grpc", 
-    "session_pb2_grpc", 
+    "l2segment_pb2_grpc",
+    "tenant_pb2_grpc",
+    "interface_pb2_grpc",
+    "session_pb2_grpc",
     "telemetry_pb2_grpc",
     "telemetry_pb2", 
     "tcp_proxy_cb_pb2", 
+    "proxy_pb2", 
     "tls_proxy_cb_pb2", 
     "descriptor_aol_pb2", 
     "wring_pb2", 
     "tcp_proxy_cb_pb2_grpc", 
+    "proxy_pb2_grpc", 
     "tls_proxy_cb_pb2_grpc",
     "descriptor_aol_pb2_grpc",
     "wring_pb2_grpc",
     "GlobalOptions",
-    "nwsec_pb2", 
-    "nwsec_pb2_grpc", 
-    "nw_pb2", 
+    "nwsec_pb2",
+    "nwsec_pb2_grpc",
+    "nw_pb2",
     "nw_pb2_grpc",
-    "acl_pb2", 
+    "acl_pb2",
     "acl_pb2_grpc",
     "third_party.scapy.arch.windows"
 ]
+
 
 def _mock_module_common(modules):
     def mock_parse_args(arg1=None):
@@ -139,10 +142,14 @@ class DolMainTest(unittest.TestCase):
 
     def module_result_matcher(self, module, result):
 
+        from infra.engine.trigger import Trigger
         module_match = {"PKT_TO_PKT": lambda res:  len(
             res.session[0].step.result.packets.matched) == 1,
             "PKT_SESSION": lambda res:  len(
             res.session[0].step.result.packets.matched) == 1,
+            "PKT_SESSION_FAIL": lambda res:  (len(
+                res.session[0].step.result.packets.mismatch) == 1 and
+            res.session[1].step.result == Trigger.TEST_CASE_NOT_RUN),
             "PKT_VXLAN": lambda res:  len(
             res.session[0].step.result.packets.matched) == 1,
             "PKT_TCP_OPTS": lambda res:  len(
@@ -176,3 +183,12 @@ class DolMainTest(unittest.TestCase):
     def tearDown(self):
         self.mock_model_stop()
         self.module_patcher.stop()
+
+
+if __name__ == '__main__':
+    import unittest
+    suite = unittest.TestSuite()
+    # logger.add_stdout()
+    suite.addTest(DolMainTest(
+        'test_dol_main'))
+    unittest.TextTestRunner(verbosity=2).run(suite)

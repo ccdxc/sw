@@ -207,7 +207,10 @@ def PrintHeaders(pkt):
 
 def Parse(message):
     pkt = Ether(message)
-    rawhdr = pkt[Raw]
+    try:
+        rawhdr = pkt[Raw]
+    except:
+        rawhdr = pkt[Padding]
     rawhdr.underlayer.remove_payload()
 
     pyld = PAYLOAD(bytes(rawhdr))

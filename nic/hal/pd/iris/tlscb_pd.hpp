@@ -3,7 +3,6 @@
 
 #include <base.h>
 #include <ht.hpp>
-#include <pd.hpp>
 #include <hal_state_pd.hpp>
 
 using hal::utils::ht_ctxt_t;
@@ -12,9 +11,16 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_TLSCBS                        2048
-#define P4PD_HBM_TCP_CB_ENTRY_SIZE               512
 
-typedef uint32_t    tlscb_hw_id_t;
+#define P4PD_TLSCB_STAGE_ENTRY_OFFSET            64
+#define P4PD_HBM_TLS_CB_ENTRY_SIZE               128
+
+typedef enum tlscb_hwid_order_ {
+    P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,
+    P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7
+} tlscb_hwid_order_t;
+
+typedef uint64_t    tlscb_hw_id_t;
 
 // tlscb pd state
 struct pd_tlscb_s {
@@ -76,6 +82,13 @@ static inline hal_ret_t
 add_tlscb_pd_to_db (pd_tlscb_t *tlscb_pd)
 {
     g_hal_state_pd->tlscb_hwid_ht()->insert(tlscb_pd, &tlscb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+del_tlscb_pd_from_db(pd_tlscb_t *tlscb_pd)
+{
+    g_hal_state_pd->tlscb_hwid_ht()->remove(&tlscb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 

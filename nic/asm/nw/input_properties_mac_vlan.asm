@@ -24,7 +24,7 @@ input_properties_mac_vlan:
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
   seq         c2, d.input_properties_mac_vlan_d.src_lif, r1
   bcf         [c1&!c2], dejavu_check_failed
-  phvwr       p.control_metadata_src_lif, d.input_properties_mac_vlan_d.vrf
+  nop
 
   phvwr       p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
   phvwr       p.flow_lkp_metadata_lkp_dir, d.input_properties_mac_vlan_d.dir

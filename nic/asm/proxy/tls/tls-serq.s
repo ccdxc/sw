@@ -24,6 +24,9 @@ struct k_struct k	;
 struct d_struct d	;
 	
 %%
+
+	.param		tls_serq_consume_process
+	.param		tls_read_desc_process
 	
 tls_serq_read_process_start:
 	add		r1, d.seqe_fid, r0
@@ -35,7 +38,7 @@ tls_serq_read_process_start:
 	phvwr		p.seqe_desc, d.seqe_desc
 	phvwri		p.pending_rx_serq, 1
 
-	TLS_READ_IDX(SERQ_CONSUMER_IDX, TABLE_TYPE_RAW, tls_serq_consume_process)
+#	TLS_READ_IDX(SERQ_CONSUMER_IDX, TABLE_TYPE_RAW, tls_serq_consume_process)
 	
 table_read_DESC:
 	add		r2, d.seqe_desc, r0

@@ -4,6 +4,7 @@ import threading
 import time
 import pdb
 import copy
+import sys
 import ruamel.yaml as yaml
 
 from collections import defaultdict, OrderedDict
@@ -20,7 +21,7 @@ import infra.common.objects as objects
 import infra.common.defs as defs
 import infra.common.parser as parser
 from infra.common.objects import FrameworkObject
-from infra.common.utils import convert_object_to_dict
+from infra.common.utils import convert_object_to_dict, log_exception
 from infra.factory.testcase import TestCaseTrigExpPacketObject,\
     TestCaseTrigExpDescriptorObject
 from infra.factory.pktfactory import get_factory_id_from_scapy_id
@@ -342,7 +343,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     STATUS_QUEUED = 0
     STATUS_COMPLETED = 1
     STATUS_RUNNING = 2
-    TEST_STEP_TIMEOUT = 30
+    TEST_STEP_TIMEOUT = 5
 
     class ExpectedReceivedData(object):
 
@@ -350,7 +351,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             self.expected = []
             self.received = []
 
-    def __init__(self, test_case, test_step_spec, step_count, logger):
+    def __init__(self, test_case, test_step_spec, step_count, set_timeout, logger):
         super().__init__()
         self._tc = test_case
         self._tc_step = test_step_spec
@@ -358,8 +359,15 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         self._connector = self._tc._connector
         self._start_ts = None
         self._logger = logger
-        self._step_timeout = getattr(
-            test_step_spec.expect, "timeout", None) or self.TEST_STEP_TIMEOUT
+        self._tc_status = None
+        # Set timeout only if asked.
+        # Typically last step or the only step will not be set
+        # any timeout and will rely on trigger report call to cancel this.
+        # This will be useful for the cases where there is only 1 test steps
+        # and all of them have to be stopped based on global timeout called
+        # by trigger.
+        self._step_timeout = None if not set_timeout else (getattr(
+            test_step_spec.expect, "timeout", None) or self.TEST_STEP_TIMEOUT)
         self._exp_rcv_data = defaultdict(
             lambda: TriggerTestCaseStep.ExpectedReceivedData())
         self._exp_rcv_descr = defaultdict(
@@ -378,7 +386,8 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def run_test_step(self):
         if self._tc_step is not self.STATUS_RUNNING:
             self._start_ts = time.time()
-            self._timeout = self._start_ts + self._step_timeout
+            self._timeout = self._start_ts + \
+                (self._step_timeout or sys.maxsize)
             self._logger.info("Running test case step : %s" % self._step_count)
             # Set in the test case object which step is being executed.
             self._tc._test_spec.current_step = self._tc_step
@@ -492,6 +501,14 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         return Struct(mismatch_result)
 
     def __packets_process_result(self):
+        # Hack for now, ignore the IPV4 checksum!
+        ignore_pkt_cmp = None
+        if True or hasattr(self._tc._test_spec, "ignore_ipv4_checksum") and self._tc._test_spec.ignore_ipv4_checksum:
+            ignore_pkt_cmp = objects.PacketComparePartial()
+            hdr_ignore_result = objects.HeaderComparePartial()
+            hdr_ignore_result.ignore_fields = ["chksum"]
+            ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
+
         self._logger.verbose("Processing test step packets result")
         result = PacketsTestStepResult()
         tmp_mismatch_ref = {}
@@ -519,7 +536,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 for exp_pkt in self._exp_rcv_data[port].expected[:]:
                     # TODO :Add Partial Match.
                     match, match_result = self._packets_match(
-                        exp_pkt.packet.spkt, packet, None)
+                        exp_pkt.packet.spkt, packet, ignore_pkt_cmp)
                     if not match:
                         if match_result.missing_hdrs or match_result.extra_hdrs:
                                 # If packet has  missing or extra headers
@@ -683,32 +700,40 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             cb_result = self._tc._test_spec.verify_callback()
             if cb_result == defs.status.SUCCESS:
                 self._logger.info(
-                    "Test Spec verify callback returned success.")
+                    "TestCaseVerify(): Success.")
                 result.verify_callback.status = Trigger.TEST_CASE_PASSED
             else:
                 self._logger.info(
-                    "Test spec verify callback returned failure.")
+                    "TestCaseVerify(): Failure.")
                 result.verify_callback.status = Trigger.TEST_CASE_FAILED
 
         if result.packets.status == Trigger.TEST_CASE_FAILED or \
                 result.descriptors.status == Trigger.TEST_CASE_FAILED or \
                 result.verify_callback.status == Trigger.TEST_CASE_FAILED:
-            return Trigger.TEST_CASE_FAILED, result
+            result.result = Trigger.TEST_CASE_FAILED
+            return result
         else:
-            return Trigger.TEST_CASE_PASSED, result
+            result.result = Trigger.TEST_CASE_PASSED
+            return result
 
     def timed_out(self):
         return self._timeout and self._timeout < time.time()
 
     def get_result(self, force=False):
-        if force or self.timed_out():
+        result = TestStepResult()
+        if self._tc_status != self.STATUS_RUNNING:
+            result.result = Trigger.TEST_CASE_NOT_RUN
+        elif force or self.timed_out():
             # Test case timed out or user forcing to read the current status.
             try:
-                status, details = self.__process_result()
+                result = self.__process_result()
             except Exception as ex:
+                log_exception(self._logger)
                 print(ex)
-            return status, details
-        return Trigger.TEST_CASE_PENDING, None
+                self._logger.info("Error proceessing result", ex)
+        else:
+            result.result = Trigger.TEST_CASE_PENDING
+        return result
 
 
 class TriggerTestCase(objects.FrameworkObject):
@@ -726,7 +751,8 @@ class TriggerTestCase(objects.FrameworkObject):
         self._logger = logger
         for i, step in enumerate(test_case_spec.session, 1):
             self._test_steps.append(
-                TriggerTestCaseStep(self, step.step, i, logger))
+                TriggerTestCaseStep(self, step.step, i, i != len(test_case_spec.session),
+                                    logger))
         self._tc_status = self.STATUS_QUEUED
         self._current_tc_step = None
         self._step_results = []
@@ -771,42 +797,21 @@ class TriggerTestCase(objects.FrameworkObject):
             assert len(self._test_steps) == 1
             self._test_steps[0].recv_descriptors(ring, descriptors)
 
+    def get_current_step_result(self):
+        return self._current_tc_step.get_result()
+
     def get_result(self, force=False):
-        def _get_result_internal(step):
-            result, details = step.get_result(force)
-            if result == Trigger.TEST_CASE_PENDING:
-                return Trigger.TEST_CASE_PENDING, None
-            self._logger.info("Test Step : %s , result : %s" %
-                              (step._step_count, result))
-            self._step_results.append(details)
-            if result == Trigger.TEST_CASE_FAILED:
-                # Test Step Failed, stop.
-                return result, self._step_results
-            elif result == Trigger.TEST_CASE_PASSED:
-                self._test_steps.pop(0)
-                if not self._all_steps_triggered():
-                    # : This should probably be thread locked.
-                    self.run_test_case()
-                    return Trigger.TEST_CASE_PENDING, None
-                else:
-                    # All steps triggered, let the caller know.
-                    return result, self._step_results
-            else:
-                assert 0
+        # All test steps are run in parallel or all steps triggered.
+        # Force should be set to true if we are collecting all the results.
+        final_result = Trigger.TEST_CASE_PASSED
+        step_results = []
+        for tc_step in self._test_steps:
+            result = tc_step.get_result(force)
+            if result.result in [Trigger.TEST_CASE_FAILED, Trigger.TEST_CASE_NOT_RUN]:
+                final_result = Trigger.TEST_CASE_FAILED
+            step_results.append(result)
 
-        if self._run_test_steps_serially:
-            return _get_result_internal(self._current_tc_step)
-        else:
-            # All test steps are run serially
-            # Force should be set to true if we are collecting all the results.
-            assert (force == True)
-            final_result = Trigger.TEST_CASE_PASSED
-            for tc_step in self._test_steps:
-                result, _ = _get_result_internal(tc_step)
-                if result == Trigger.TEST_CASE_FAILED:
-                    final_result = Trigger.TEST_CASE_FAILED
-
-            return final_result, self._step_results
+        return final_result, step_results
 
 
 class Scheduler(InfraThreadHandler):
@@ -838,8 +843,9 @@ class Trigger(InfraThreadHandler):
     TEST_CASE_PASSED = "Passed"
     TEST_CASE_FAILED = "Failed"
     TEST_CASE_PENDING = "Pending"
+    TEST_CASE_NOT_RUN = "NotRun"
 
-    def __init__(self, connector='ModelConnector', addr=utils.FakeModelSockAddr(), run_test_steps_serially=False):
+    def __init__(self, connector='ModelConnector', addr=utils.FakeModelSockAddr(), run_test_steps_serially=True):
         super(Trigger, self).__init__(name="Trigger MAIN",
                                       max_idle_interval=1, max_time_per_run=200)
         if GlobalOptions.dryrun:
@@ -857,6 +863,7 @@ class Trigger(InfraThreadHandler):
 
     def __db_inits(self):
         self._tc_status_dict = {}
+        self._tc_done_db = {}
         self._tc_db_lock = threading.Lock()
         self._tc_db = dict()
         self._junk_packets = []
@@ -985,15 +992,21 @@ class Trigger(InfraThreadHandler):
             return
         with self._tc_db_lock:
             for tc_id in list(self._tc_db.keys()):
-                result, details = self._tc_db[tc_id].get_result()
-                if result is not Trigger.TEST_CASE_PENDING:
-                    # Test case is done, update result dict.
-                    report = TriggerTestCaseReport(self._tc_db[tc_id])
-                    report.id, report.result, report.details = tc_id, result, details
-                    self._tc_status_dict[tc_id] = report
+                test_case = self._tc_db[tc_id]
+                result = self._tc_db[tc_id].get_current_step_result()
+                if result.result is Trigger.TEST_CASE_PENDING:
+                    # Current Test step still pending.
+                    continue
+                elif not test_case._all_steps_triggered() and result.result == Trigger.TEST_CASE_PASSED:
+                    # Move forward the test case if current test step passed.
+                    test_case._test_steps.pop(0)
+                    test_case.run_test_case()
+                else:
                     if self._tc_db[tc_id] == self._current_descriptor_test_case:
                         self._current_descriptor_test_case = None
 
+                    # Test case failed or all steps done, move it complete.
+                    self._tc_done_db[tc_id] = test_case
                     del self._tc_db[tc_id]
                     if self.pending_test_case_count() == 0:
                         if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
@@ -1008,9 +1021,11 @@ class Trigger(InfraThreadHandler):
     def get_result(self, tc_id):
         if tc_id in self._tc_db:
             raise Exception("Test case still running!")
-        tc_status = self._tc_status_dict.get(tc_id)
-        if tc_status:
-            return tc_status.result, tc_status.details
+        if tc_id not in self._tc_done_db:
+            raise Exception("Test id not present.!")
+        test_case = self._tc_done_db.get(tc_id)
+        if test_case:
+            return test_case.get_result()
         return None, None
 
     def reset(self):
@@ -1040,19 +1055,23 @@ class Trigger(InfraThreadHandler):
             dst_packet.ports = src_packet.ports
             #dst_packet.count = src_packet.count
 
-        for obj_type in ["packets", "descriptors"]:
-            result = getattr(details, obj_type)
-            for section in["matched", "missing", "mismatch", "extra"]:
-                __gen_copy_packet_result_section_(result,  obj_type, section)
-        dst_step.step.result.callback.status = details.verify_callback.status
-        dst_step.step.result.callback.message = details.verify_callback.message
+        if details.result != Trigger.TEST_CASE_NOT_RUN:
+            for obj_type in ["packets", "descriptors"]:
+                result = getattr(details, obj_type)
+                for section in["matched", "missing", "mismatch", "extra"]:
+                    __gen_copy_packet_result_section_(
+                        result,  obj_type, section)
+            dst_step.step.result.callback.status = details.verify_callback.status
+            dst_step.step.result.callback.message = details.verify_callback.message
+        else:
+            dst_step.step.result = Trigger.TEST_CASE_NOT_RUN
 
     def __gen_test_report(self, tc_id):
         test_case_out = copy.deepcopy(TestCaseOutputTemplateObject)
         test_case_out.id = tc_id
         test_case_out.status = self._tc_status_dict[tc_id].result
-        test_case_out.steps_passed = len(
-            self._tc_status_dict[tc_id].test_case._test_spec.session) - len(self._tc_status_dict[tc_id].test_case._test_steps)
+        test_case_out.steps_passed = sum(1 for step_result in self._tc_status_dict[tc_id].details
+                                         if step_result.result == Trigger.TEST_CASE_PASSED)
 
         step = TestCaseOutputTemplateObject.session[0]
         steps = [copy.deepcopy(
@@ -1082,19 +1101,21 @@ class Trigger(InfraThreadHandler):
         time.sleep(1)
         with self._tc_db_lock:
             for tc_id in self._tc_db:
-                result, details = self._tc_db[tc_id].get_result(force=True)
-                tc_report = TriggerTestCaseReport(self._tc_db[tc_id])
-                tc_report.id, tc_report.result, tc_report.details = tc_id, result, details
-                self._tc_status_dict[tc_id] = tc_report
-                #del self._tc_db[tc_id]
+                self._tc_done_db[tc_id] = self._tc_db[tc_id]
+            self._tc_db = {}
 
         report = TriggerReport()
-        for tc_id in self._tc_status_dict:
+        for tc_id in self._tc_done_db:
+            result, details = self._tc_done_db[tc_id].get_result(force=True)
+            tc_report = TriggerTestCaseReport(self._tc_done_db[tc_id])
+            tc_report.id, tc_report.result, tc_report.details = tc_id, result, details
+            self._tc_status_dict[tc_id] = tc_report
+
             if self._tc_status_dict[tc_id].result == Trigger.TEST_CASE_PASSED:
                 report.passed_count += 1
             else:
                 report.failed_count += 1
-
+            # pdb.set_trace()
             report.details[tc_id] = self.__gen_test_report(tc_id)
 
         if self._junk_packets:

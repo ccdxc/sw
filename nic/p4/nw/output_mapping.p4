@@ -35,6 +35,7 @@ action redirect_to_cpu(tunnel_index, egress_mirror_en, tm_oqueue) {
 }
 
 action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
+                    p4plus_app_id, rdma_enabled,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8) {
     if (nports == 1) {
@@ -51,6 +52,12 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
         if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
             if (vlan_tag.valid == TRUE) {
                 modify_field(ethernet.etherType, vlan_tag.etherType);
+                modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
+                modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
+                modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
+                bit_or(p4_to_p4plus_classic_nic.flags,
+                       p4_to_p4plus_classic_nic.flags,
+                       CLASSIC_NIC_FLAGS_VLAN_VALID);
                 remove_header(vlan_tag);
             }
         } else {
@@ -64,6 +71,9 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
         modify_field(capri_intrinsic.tm_span_session,
                      control_metadata.egress_mirror_session_id);
     }
+
+    modify_field(control_metadata.rdma_enabled, rdma_enabled);
+    modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.vlan_tag_in_skb, vlan_tag_in_skb);

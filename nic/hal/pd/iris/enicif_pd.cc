@@ -175,7 +175,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     input_properties_mac_vlan_actiondata        data;
     Tcam                                        *inp_prop_mac_vlan_tbl = NULL;
     mac_addr_t                                  *mac = NULL;
-    uint64_t                                    mac_int = 0;
+    // uint64_t                                    mac_int = 0;
     // intf::IfEnicType                            enicif_type = intf::IF_ENIC_TYPE_NONE;
     pd_l2seg_t                                  *pd_l2seg = NULL;
     void                                        *pi_l2seg = NULL;
@@ -210,8 +210,8 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     key.vlan_tag_valid = 1;
     key.vlan_tag_vid = if_get_encap_vlan((if_t*)pd_enicif->pi_if);
     mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);
-    mac_int = MAC_TO_UINT64(*mac);
-    memcpy(key.ethernet_srcAddr, &mac_int, 6);
+    memcpy(key.ethernet_srcAddr, *mac, 6);
+    memrev(key.ethernet_srcAddr, 6);
 
     mask.vlan_tag_valid_mask = ~(mask.vlan_tag_valid_mask & 0);
     mask.vlan_tag_vid_mask = ~(mask.vlan_tag_vid_mask & 0);

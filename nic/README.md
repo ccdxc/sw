@@ -114,3 +114,11 @@ These make targets were created for testing:
 * `make deps-test-shell` - just like `make shell`, but tests against your freshly-built image.
 * `make deps-test-build` - just like `make build`.
 
+Once you're done testing, and you have a **RELEASE** image:
+
+```
+$ docker push srv1.pensando.io/pensando/nic:dependencies
+```
+
+This will push the image to the image repository. It will make it immediately
+available for use.

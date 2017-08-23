@@ -1,0 +1,75 @@
+# Test Spec
+config_filter:
+    src:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+    dst:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://any
+    flow        : filter://proto=TCP,dport=80
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASEPKT     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+    - packet:
+        id          : PKT1
+        clone       : ref://testcase/packets/id=BASEPKT
+        headers     :
+            tcp:
+                flags: syn
+
+    - packet:
+        id          : PKT2
+        clone       : ref://testcase/packets/id=BASEPKT
+        headers     :
+            tcp:
+                flags: syn,ack
+
+        
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1
+                    port    : 1
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : 1
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : 1
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : 1

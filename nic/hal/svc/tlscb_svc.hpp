@@ -26,21 +26,21 @@ using tlscb::TlsCbGetResponseMsg;
 class TlsCbServiceImpl final : public TlsCb::Service {
 public:
     Status TlsCbCreate(ServerContext *context,
-                           const TlsCbRequestMsg *req,
-                           TlsCbResponseMsg *rsp) override;
+                       const TlsCbRequestMsg *req,
+                       TlsCbResponseMsg *rsp) override;
 
     Status TlsCbUpdate(ServerContext *context,
-                           const TlsCbRequestMsg *req,
-                           TlsCbResponseMsg *rsp) override;
+                       const TlsCbRequestMsg *req,
+                       TlsCbResponseMsg *rsp) override;
 
 
     Status TlsCbDelete(ServerContext *context,
-                           const TlsCbDeleteRequestMsg *req,
-                           TlsCbDeleteResponseMsg *rsp) override;
+                       const TlsCbDeleteRequestMsg *req,
+                       TlsCbDeleteResponseMsg *rsp) override;
 
     Status TlsCbGet(ServerContext *context,
-                        const TlsCbGetRequestMsg *req,
-                        TlsCbGetResponseMsg *rsp) override;
+                    const TlsCbGetRequestMsg *req,
+                    TlsCbGetResponseMsg *rsp) override;
 };
 
 #endif    // __TLSCB_SVC_HPP__

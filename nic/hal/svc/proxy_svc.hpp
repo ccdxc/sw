@@ -16,8 +16,8 @@ using proxy::ProxyResponse;
 using proxy::ProxyKeyHandle;
 using proxy::ProxyRequestMsg;
 using proxy::ProxyResponseMsg;
-using proxy::ProxyDeleteRequestMsg;
-using proxy::ProxyDeleteResponseMsg;
+using proxy::ProxyDisableRequestMsg;
+using proxy::ProxyDisableResponseMsg;
 using proxy::ProxyGetRequest;
 using proxy::ProxyGetRequestMsg;
 using proxy::ProxyGetResponse;
@@ -25,7 +25,7 @@ using proxy::ProxyGetResponseMsg;
 
 class ProxyServiceImpl final : public Proxy::Service {
 public:
-    Status ProxyCreate(ServerContext *context,
+    Status ProxyEnable(ServerContext *context,
                        const ProxyRequestMsg *req,
                        ProxyResponseMsg *rsp) override;
 
@@ -34,9 +34,9 @@ public:
                        ProxyResponseMsg *rsp) override;
 
 
-    Status ProxyDelete(ServerContext *context,
-                       const ProxyDeleteRequestMsg *req,
-                       ProxyDeleteResponseMsg *rsp) override;
+    Status ProxyDisable(ServerContext *context,
+                        const ProxyDisableRequestMsg *req,
+                        ProxyDisableResponseMsg *rsp) override;
 
     Status ProxyGet(ServerContext *context,
                     const ProxyGetRequestMsg *req,

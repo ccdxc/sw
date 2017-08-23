@@ -51,7 +51,8 @@ class UplinkObject(base.ConfigObjectBase):
         req_spec.admin_status = self.status
 
         req_spec.if_uplink_info.port_num = self.port
-        req_spec.if_uplink_info.native_l2segment_id = 0
+        if self.native_segment:
+            req_spec.if_uplink_info.native_l2segment_id = self.native_segment.id
         
         return
 

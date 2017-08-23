@@ -1,9 +1,16 @@
+#include <base.h>
+#include <arpa/inet.h>
 #include <hal_lock.hpp>
-#include <proxy_api.hpp>
 #include <pd_api.hpp>
 #include <tlscb_pd.hpp>
-#include <pd.hpp>
-#include <hal_state_pd.hpp>
+#include <capri_loader.h>
+#include <capri_hbm.hpp>
+#include <proxy.hpp>
+#include <hal.hpp>
+#include <lif_manager.hpp>
+#include <tls_txdma_p4plus_ingress.h>
+#include <wring_pd.hpp>
+#include <p4plus_pd_api.h>
 
 namespace hal {
 namespace pd {
@@ -31,27 +38,146 @@ tlscb_pd_compare_hw_key_func (void *key1, void *key2)
     return false;
 }
 
-hal_ret_t
-p4pd_add_tlscb_entry(pd_tlscb_t* tlscb_pd) 
-{
-    hal_ret_t                   ret = HAL_RET_OK;
-    /*
-    tlscb_tbl_actiondata        data;
-    p4pd_error_t                pd_err = P4PD_SUCCESS;
+/********************************************
+ * TxDMA
+ * ******************************************/
 
-    // program tlscb in hbm
-    data.actionid = TLSCB_TBL_TLS_RX_SERQ_ACTION_ID;
-    data.tlscb_tbl_action_u.tlscb_tbl_tls_rx_serq_action.salt = 0;
-    data.tlscb_tbl_action_u.tlscb_tbl_tls_rx_serq_action.cipher_type = tlscb_pd->tlscb->cipher_type;
+hal_ret_t 
+p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
+{
+    tx_table_s0_t0_d        data = {0};
+
+    // hardware index for this entry
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
     
-    pd_err = proxypd_entry_write(P4TBL_ID_TLSCB_TBL, 0, NULL, NULL, &data);
-    if(pd_err != P4PD_SUCCESS) {
-        ret = HAL_RET_HW_FAIL;
-        HAL_ASSERT(0);
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get tx: s0_t0_read_tls_stg0 entry for TLS CB");
+        return HAL_RET_HW_FAIL;
     }
-    */
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+p4pd_get_tls_tx_s5_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
+{
+    tx_table_s5_t0_d                   data = {0};
+    hal_ret_t                          ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7);
+    
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create tx: s5_t0_read_tls_stg1_7 entry for TLS CB");
+        return HAL_RET_HW_FAIL;
+    }
     return ret;
 }
+
+
+hal_ret_t 
+p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+ 
+    ret = p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+    
+    ret = p4pd_get_tls_tx_s5_t0_read_tls_stg1_7_entry(tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+   
+    return HAL_RET_OK;
+cleanup:
+    return ret;
+}
+
+hal_ret_t 
+p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
+{
+    tx_table_s0_t0_d        data = {0};
+    hal_ret_t               ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
+    
+    if(!del) {
+        data.u.read_tls_stg0_d.pc = 0;
+
+        // Get Serq address
+        wring_hw_id_t  serq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
+                                     tlscb_pd->tlscb->cb_id,
+                                     &serq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive serq base for tlscbcb: {}", 
+                        tlscb_pd->tlscb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
+            data.u.read_tls_stg0_d.serq_base = htonl(serq_base);    
+        }
+    }
+
+    HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create tx: s0_t0_read_tls_stg0 entry for TLS CB");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
+
+hal_ret_t 
+p4pd_add_or_del_tls_tx_s5_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool del)
+{
+    tx_table_s5_t0_d                   data = {0};
+    hal_ret_t                          ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7);
+    
+    if(!del) {
+        data.u.read_tls_stg1_7_d.cipher_type = tlscb_pd->tlscb->cipher_type;
+    }
+    HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create tx: s5_t0_read_tls_stg1_7 entry for TLS CB");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
+
+hal_ret_t 
+p4pd_add_or_del_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd, bool del)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    ret = p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(tlscb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+    
+    ret = p4pd_add_or_del_tls_tx_s5_t0_read_tls_stg1_7_entry(tlscb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+    return HAL_RET_OK;
+
+cleanup:
+
+    /* TODO: Cleanup */
+    return ret;
+}
+
+/**************************/
 
 tlscb_hw_id_t
 pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
@@ -59,17 +185,44 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
     HAL_ASSERT(NULL != tlscb_pd);
     HAL_ASSERT(NULL != tlscb_pd->tlscb);
     
-    /*
-    char tcpcb_reg[10] = "tcpcb";
-    return get_start_offset(tcpcb_reg) + \
-        (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
-    */
-    return 0xbbbb + \
+    // Get the base address of TLS CB from LIF Manager.
+    // Set qtype and qid as 0 to get the start offset. 
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0, 0);
+    HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
+    return offset + \
         (tlscb_pd->tlscb->cb_id * P4PD_HBM_TLS_CB_ENTRY_SIZE);
-
 }
 
+hal_ret_t
+p4pd_add_or_del_tlscb_entry(pd_tlscb_t* tlscb_pd, bool del) 
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+ 
+    ret = p4pd_add_or_del_tlscb_txdma_entry(tlscb_pd, del);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add/delete TLS TxDMA Entry {}", ret);
+    }
 
+    return ret;
+}
+
+static
+hal_ret_t
+p4pd_get_tlscb_entry(pd_tlscb_t* tlscb_pd) 
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    
+    ret = p4pd_get_tlscb_txdma_entry(tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get txdma entry for tlscb");
+    }
+
+    return ret;
+}
+
+/********************************************
+ * APIs
+ *******************************************/
 
 hal_ret_t
 pd_tlscb_create (pd_tlscb_args_t *args)
@@ -77,7 +230,7 @@ pd_tlscb_create (pd_tlscb_args_t *args)
     hal_ret_t               ret;
     pd_tlscb_s              *tlscb_pd;
 
-    HAL_TRACE_DEBUG("Creating pd state for TLS CB");
+    HAL_TRACE_DEBUG("Creating pd state for TLS CB.");
 
     // allocate PD tlscb state
     tlscb_pd = tlscb_pd_alloc_init();
@@ -86,17 +239,15 @@ pd_tlscb_create (pd_tlscb_args_t *args)
     }
     HAL_TRACE_DEBUG("Alloc done");
     tlscb_pd->tlscb = args->tlscb;
-
     // get hw-id for this TLSCB
     tlscb_pd->hw_id = pd_tlscb_get_base_hw_index(tlscb_pd);
-    HAL_TRACE_DEBUG("Received hw-id");
-
+    
     // program tlscb
-    ret = p4pd_add_tlscb_entry(tlscb_pd);
+    ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, false);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
-
+    HAL_TRACE_DEBUG("Programming done");
     // add to db
     ret = add_tlscb_pd_to_db(tlscb_pd);
     if (ret != HAL_RET_OK) {
@@ -111,6 +262,79 @@ cleanup:
 
     if (tlscb_pd) {
         tlscb_pd_free(tlscb_pd);
+    }
+    return ret;
+}
+
+hal_ret_t
+pd_tlscb_update (pd_tlscb_args_t *args)
+{
+    hal_ret_t               ret;
+    
+    if(!args) {
+       return HAL_RET_INVALID_ARG; 
+    }
+
+    tlscb_t*                tlscb = args->tlscb;
+    pd_tlscb_t*             tlscb_pd = (pd_tlscb_t*)tlscb->pd;
+
+    HAL_TRACE_DEBUG("TLSCB pd update");
+    
+    // program tlscb
+    ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update tlscb");
+    }
+    return ret;
+}
+
+hal_ret_t
+pd_tlscb_delete (pd_tlscb_args_t *args)
+{
+    hal_ret_t               ret;
+    
+    if(!args) {
+       return HAL_RET_INVALID_ARG; 
+    }
+
+    tlscb_t*                tlscb = args->tlscb;
+    pd_tlscb_t*             tlscb_pd = (pd_tlscb_t*)tlscb->pd;
+
+    HAL_TRACE_DEBUG("TLSCB pd delete");
+    
+    // program tlscb
+    ret = p4pd_add_or_del_tlscb_entry(tlscb_pd, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete tlscb entry"); 
+    }
+    
+    del_tlscb_pd_from_db(tlscb_pd);
+
+    tlscb_pd_free(tlscb_pd);
+
+    return ret;
+}
+
+hal_ret_t
+pd_tlscb_get (pd_tlscb_args_t *args)
+{
+    hal_ret_t               ret;
+    pd_tlscb_t              tlscb_pd;
+
+    HAL_TRACE_DEBUG("TLSCB pd get for id: {}", args->tlscb->cb_id);
+
+    // allocate PD tlscb state
+    tlscb_pd_init(&tlscb_pd);
+    tlscb_pd.tlscb = args->tlscb;
+    
+    // get hw-id for this TLSCB
+    tlscb_pd.hw_id = pd_tlscb_get_base_hw_index(&tlscb_pd);
+    HAL_TRACE_DEBUG("Received hw-id 0x{0:x}", tlscb_pd.hw_id);
+
+    // get hw tlscb entry
+    ret = p4pd_get_tlscb_entry(&tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Get request failed for id: 0x{0:x}", tlscb_pd.tlscb->cb_id);
     }
     return ret;
 }

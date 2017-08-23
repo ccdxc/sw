@@ -1,0 +1,32 @@
+meta:
+    id: FLOW_ENDPOINT
+
+ep          : None
+type        : None
+dom         : None
+addr        : None
+proto       : None
+port        : None
+icmp_type   : None
+icmp_code   : None
+icmp_id     : None
+flow_info:
+    action      : allow
+    nat_type    : none
+    nat_sip     : ipaddr/0.0.0.0
+    nat_sport   : l4port/0
+    nat_dip     : ipaddr/0.0.0.0
+    nat_dport   : l4port/0
+    state       : established
+    in_qos      : None
+    eg_qos      : None
+tracking_info:
+    timestamp       : const/0
+    bytes           : const/0
+    packets         : const/0
+    exception_bits  : const/0
+    tcp_seq_num     : const/0
+    tcp_ack_num     : const/0
+    tcp_win_sz      : const/0
+    tcp_win_scale   : const/0
+    tcp_mss         : const/0

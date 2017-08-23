@@ -82,7 +82,8 @@ capri_p4_asm_init()
 
     p4_prm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4_prm_base_addr);
-    capri_load_mpu_programs("iris", (char *)full_path.c_str(), p4_prm_base_addr, NULL, 0);
+    capri_load_mpu_programs("iris", (char *)full_path.c_str(),
+                            p4_prm_base_addr, NULL, 0);
 
     return ret;
 }
@@ -150,8 +151,9 @@ capri_p4p_asm_init()
     symbols[1].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
 
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
-    HAL_TRACE_DEBUG("base addr {#x}", p4plus_prm_base_addr);
-    capri_load_mpu_programs("p4plus", (char *)full_path.c_str(), p4plus_prm_base_addr, symbols, 2);
+    HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
+    capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
+                            p4plus_prm_base_addr, symbols, 2);
 
     HAL_FREE(capri_prog_param_info_t, symbols);
 

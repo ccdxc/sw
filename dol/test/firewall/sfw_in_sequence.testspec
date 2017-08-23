@@ -10,95 +10,98 @@ config_filter:
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
-    session     : filter://proto=TCP,label=firewall,state=ESTABLISHED
-    maxsessions : 1
+    session         :
+        base        : filter://proto=TCP,label=FIREWALL
+        iflow       : filter://state=ESTABLISHED
+        rflow       : filter://state=ESTABLISHED
+    flow            : None
+    maxsessions     : 1
 
 packets:
     - packet:
-        id          : IFLOW_BASE     # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        id          : IFLOW_BASE     # IFLOW Packet Base
+        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionIflow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src     : ref://testcase/config/session/iflow/src/endpoint/macaddr
-                dst     : ref://testcase/config/session/iflow/dst/endpoint/macaddr
+                src     : ref://testcase/config/session/iconfig/src/endpoint/macaddr
+                dst     : ref://testcase/config/session/iconfig/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/session/iflow/src/segment/vlan_id
+                vlan    : ref://testcase/config/session/iconfig/src/segment/vlan_id
             ipv4:
-                src     : ref://testcase/config/session/iflow/sip
-                dst     : ref://testcase/config/session/iflow/dip
+                src     : ref://testcase/config/session/iconfig/flow/sip
+                dst     : ref://testcase/config/session/iconfig/flow/dip
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/session/iflow/sip
-                dst     : ref://testcase/config/session/iflow/dip
+                src     : ref://testcase/config/session/iconfig/flow/sip
+                dst     : ref://testcase/config/session/iconfig/flow/dip
                 hlim    : 64
             tcp:
-                sport   : ref://testcase/config/session/iflow/sport
-                dport   : ref://testcase/config/session/iflow/dport
-                seq     : ref://testcase/config/session/iflow/tcp_seq_num
-                ack     : ref://testcase/config/session/iflow/tcp_ack_num
-                window  : ref://testcase/config/session/iflow/tcp_win_siz
-                flags   : ack,push
+                sport   : ref://testcase/config/session/iconfig/flow/sport
+                dport   : ref://testcase/config/session/iconfig/flow/dport
+                seq     : ref://testcase/config/session/iconfig/flow/tracking/tcp_seq_num
+                ack     : ref://testcase/config/session/iconfig/flow/tracking/tcp_ack_num
+                window  : ref://testcase/config/session/iconfig/flow/tracking/tcp_win_sz
+                flags   : ack,psh
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : RFLOW_BASE     # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        id          : RFLOW_BASE     # RFLOW Packet Base
+        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionRflow
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src     : ref://testcase/config/session/rflow/src/endpoint/macaddr
-                dst     : ref://testcase/config/session/rflow/dst/endpoint/macaddr
+                src     : ref://testcase/config/session/rconfig/src/endpoint/macaddr
+                dst     : ref://testcase/config/session/rconfig/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/session/rflow/src/segment/vlan_id
+                vlan    : ref://testcase/config/session/rconfig/src/segment/vlan_id
             ipv4:
-                src     : ref://testcase/config/session/rflow/sip
-                dst     : ref://testcase/config/session/rflow/dip
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/session/rflow/sip
-                dst     : ref://testcase/config/session/rflow/dip
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
                 hlim    : 64
             tcp:
-                sport   : ref://testcase/config/session/rflow/sport
-                dport   : ref://testcase/config/session/rflow/dport
-                seq     : ref://testcase/config/session/rflow/tcp_seq_num
-                ack     : ref://testcase/config/session/rflow/tcp_ack_num
-                window  : ref://testcase/config/session/rflow/tcp_win_siz
-                flags   : ack,push
+                sport   : ref://testcase/config/session/rconfig/flow/sport
+                dport   : ref://testcase/config/session/rconfig/flow/dport
+                seq     : ref://testcase/config/session/rconfig/flow/tracking/tcp_seq_num
+                ack     : ref://testcase/config/session/rconfig/flow/tracking/tcp_ack_num
+                window  : ref://testcase/config/session/rconfig/flow/tracking/tcp_win_sz
+                flags   : ack,psh
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : IFLOW_PKT1     # Input packet 2
+        id          : IFLOW_PKT1     # IFLOW Packet 1
         clone       : ref://testcase/packets/id=IFLOW_BASE
-        headers     :
 
     - packet:
-        id          : RFLOW_PKT1     # Input packet 2
-        clone       : ref://testcase/packets/id=IFLOW_BASE
-        headers     :
+        id          : RFLOW_PKT1     # RFLOW Packet 1
+        clone       : ref://testcase/packets/id=RFLOW_BASE
 
     - packet:
-        id          : IFLOW_PKT2     # Input packet 2
+        id          : IFLOW_PKT2     # IFLOW Packet 2
         clone       : ref://testcase/packets/id=IFLOW_BASE
         headers     :
             tcp:
-                seq : callbacks://firewall/common/GetTcpSeqNum
-                ack : callbacks://firewall/common/GetTcpAckNum
+                seq : const/6000 #callback://firewall/callbacks/GetTcpSeqNum
+                ack : const/2000 #callback://firewall/callbacks/GetTcpAckNum
 
     - packet:
-        id          : RFLOW_PKT2     # Input packet 2
-        clone       : ref://testcase/packets/id=IFLOW_BASE
+        id          : RFLOW_PKT2     # RFLOW Packet 2
+        clone       : ref://testcase/packets/id=RFLOW_BASE
         headers     :
             tcp:
-                seq : callbacks://firewall/common/GetTcpSeqNum
-                ack : callbacks://firewall/common/GetTcpAckNum
+                seq : const/2000 #callback://firewall/callbacks/GetTcpSeqNum
+                ack : const/5000 #callback://firewall/callbacks/GetTcpAckNum
+                #window : const/2000 #callback://firewall/callbacks/GetTcpWinSize
 
 
 session:
@@ -107,48 +110,50 @@ session:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=IFLOW_PKT1
-                    port    : ref://testcase/config/session/iflow/src/endpoint/intf/ports
+                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
 
         expect:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=IFLOW_PKT1
-                    port    : ref://testcase/config/session/iflow/dst/endpoint/intf/ports
+                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
 
     - step:
         trigger:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=RFLOW_PKT1
-                    port    : ref://testcase/config/session/rflow/src/endpoint/intf/ports
+                    port    : ref://testcase/config/session/rconfig/src/endpoint/intf/ports
 
         expect:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=RFLOW_PKT1
-                    port    : ref://testcase/config/session/rflow/dst/endpoint/intf/ports
+                    port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
 
     - step:
         trigger:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=IFLOW_PKT2
-                    port    : ref://testcase/config/session/iflow/src/endpoint/intf/ports
+                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
 
         expect:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=IFLOW_PKT2
-                    port    : ref://testcase/config/session/iflow/dst/endpoint/intf/ports    
+                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports    
+
     - step:
         trigger:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=RFLOW_PKT2
-                    port    : ref://testcase/config/session/rflow/src/endpoint/intf/ports
+                    port    : ref://testcase/config/session/rconfig/src/endpoint/intf/ports
 
         expect:
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=RFLOW_PKT2
-                    port    : ref://testcase/config/session/rflow/dst/endpoint/intf/ports
+                    port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
+

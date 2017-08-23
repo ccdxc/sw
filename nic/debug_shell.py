@@ -30,12 +30,13 @@ class debugCmd(Cmd):
         self.nic_dir = os.path.abspath(__file__)
         self.nic_dir = os.path.split(self.nic_dir)[0]
         self.iris_inited = False
+        self.model_inited = False
         self.do_init_modules("")
 
     def __del__(self):
         if self.iris_inited:
             try:
-                from p4pd_cli import cleanup as iris_cleanup
+                from iris_cli import cleanup as iris_cleanup
                 iris_cleanup()
                 self.iris_inited = False
                 debugCmd.do_iris = 0
@@ -53,19 +54,27 @@ class debugCmd(Cmd):
 
     def iris(self, a, b):
         """Interact with Iris Tables"""
-        from p4pd_cli import rootCmd as iris_root
+        from iris_cli import rootCmd as iris_root
         cmd = iris_root()
+        cmd.cmdloop()
+
+    def model(self, a, b):
+        """Interact with Capri Model"""
+        from model_cli import rootCmd as model_root
+        cmd = model_root()
         cmd.cmdloop()
 
     def do_init_modules(self, args):
         """Scan for new CLI modules"""
+        all_initialized = True
         if self.iris_inited == False:
+            all_initialized = False
             iris_path = self.nic_dir + '/gen/iris/cli'
-            if os.path.isfile(iris_path + '/p4pd_cli.py'):
+            if os.path.isfile(iris_path + '/iris_cli.py'):
                 print("Module Iris found!")
                 sys.path.append(iris_path)
                 try:
-                    from p4pd_cli import init as iris_init
+                    from iris_cli import init as iris_init
                     iris_init()
                     self.iris_inited = True
                     debugCmd.do_iris = classmethod(self.iris)
@@ -74,7 +83,25 @@ class debugCmd(Cmd):
                     print("Could not initialize Iris. Do 'make' in sw/nic/gen/iris/cli/ directory, and run 'init_modules' command here.")
             else:
                 print("Module Iris not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
-        else:
+
+        if self.model_inited == False:
+            all_initialized = False
+            model_path = self.nic_dir + '/model_sim/cli'
+            if os.path.isfile(model_path + '/model_cli.py'):
+                print("Module Model found!")
+                sys.path.append(model_path)
+                try:
+                    from model_cli import init as model_init
+                    model_init()
+                    self.model_inited = True
+                    debugCmd.do_model = classmethod(self.model)
+
+                except ImportError:
+                    print("Could not initialize Model. Do 'make' in sw/nic/model_sim/cli/ directory, and run 'init_modules' command here.")
+            else:
+                print("Module Model not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
+
+        if all_initialized:
             print("All modules initialized.")
 
 if __name__ == '__main__':

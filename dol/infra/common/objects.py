@@ -790,9 +790,11 @@ def MergeObjects(hi, lo):
             if isinstance(lo_data, FrameworkObject):
                 logger.verbose("    - merging recursively.")
                 if hi_data:
-                    assert(isinstance(hi_data, FrameworkObject))
-                    # and it is an object, merge recursively
-                    merged_data = MergeObjects(hi_data, lo_data)
+                    if isinstance(hi_data, FrameworkObject):
+                        # and it is an object, merge recursively
+                        merged_data = MergeObjects(hi_data, lo_data)
+                    else:
+                        merged_data = copy.deepcopy(hi_data)
                 else:
                     merged_data = copy.deepcopy(lo_data)
                 result.__dict__[key] = merged_data

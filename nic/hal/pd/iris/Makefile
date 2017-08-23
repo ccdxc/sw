@@ -18,6 +18,7 @@ LCXXFLAGS = \
 			-I../../../gen/iris/include \
 			-I../../../gen/tcp_proxy_rxdma/include \
 			-I../../../gen/tcp_proxy_txdma/include \
+			-I../../../gen/tls_txdma/include \
 			-I../../../p4/nw/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \

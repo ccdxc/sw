@@ -21,7 +21,7 @@ class NetworkObject(base.ConfigObjectBase):
         self.segment = segment
         self.id = self.segment.id
         self.GID("Nw%04d" % self.segment.id)
-    
+
         self.af = af
         self.prefix = prefix
         if self.IsIpv4():
@@ -48,7 +48,7 @@ class NetworkObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.segment.tenant.id
-        req_spec.rmac = self.rmac.getnum() 
+        req_spec.rmac = self.rmac.getnum()
         if self.IsIpv4():
             req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
             req_spec.key_or_handle.ip_prefix.address.v4_addr = self.prefix.getnum()
@@ -64,7 +64,7 @@ class NetworkObject(base.ConfigObjectBase):
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.status.nw_handle
         return
-    
+
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -75,8 +75,7 @@ class NetworkObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Networks -- DISABLED" % len(self.nws)) 
-        return
+        cfglogger.info("Configuring %d Networks" % len(self.nws)) 
         halapi.ConfigureNetworks(self.nws)
         return
 

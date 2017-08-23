@@ -112,17 +112,19 @@ def GetFunctionName():
 def LogFunctionBegin(lg):
     lg.debug("BEG: %s()" % inspect.stack()[1][3])
     return
-    
+
+
 def LogFunctionEnd(lg, status=0):
     lg.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
     return
 
-def log_exception():
+
+def log_exception(lg):
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error("Exception: %s-- %s" % (exc_type, exc_value))
-    logger.error('-' * 60)
-    logger.error("%s" % pprint.pformat(traceback.format_tb(exc_traceback)))
-    logger.error('-' * 60)
+    lg.info("Exception: %s-- %s" % (exc_type, exc_value))
+    lg.info('-' * 60)
+    lg.info("%s" % pprint.pformat(traceback.format_tb(exc_traceback)))
+    lg.info('-' * 60)
 
 
 def convert_scapy_out_to_dict(spkt):

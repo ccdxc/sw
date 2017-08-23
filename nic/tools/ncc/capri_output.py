@@ -580,84 +580,264 @@ def capri_asm_output_pa(gress_pa):
     hfile.close()
 
 
+def _add_cf_to_fld_map(km_off, cf, t, active_cfs, fld_map):
+    # t = (km_off, fs, fw)
+    if not cf:
+        #pdb.set_trace()
+        fld_map[km_off+t[0]] = [(None, t[1], t[2], True)]
+        return
+    if cf in active_cfs:
+        t1 = active_cfs[cf]
+        active_cfs[cf]= (t1[0], t1[1], t1[2]+t[2], False)
+    else:
+        active_cfs[cf] = (km_off+t[0], t[1], t[2], False)
+
+    if (t[1]+t[2]) == cf.width:
+        t1 = active_cfs.pop(cf)
+        if t1[0] in fld_map:
+            fld_map[t1[0]].append((cf, t1[1], t1[2], t1[1] == 0))
+        else:
+            fld_map[t1[0]] = [(cf, t1[1], t1[2], t1[1] == 0)]
+    return
+
+def _close_active_cfs(new_cfs, active_cfs, fld_map):
+    close_cfs = []
+    for cf, t1 in active_cfs.items():
+        # if any cf is not continued, close it
+        if cf not in new_cfs:
+            close_cfs.append(cf)
+            if t1[0] in fld_map:
+                fld_map[t1[0]].append((cf, t1[1], t1[2], False))
+            else:
+                fld_map[t1[0]] = [(cf, t1[1], t1[2], False)]
+
+    for cf in close_cfs:
+        #pdb.set_trace()
+        del active_cfs[cf]
+            
 def capri_asm_output_table(be, ctable):
 
-    # Table KI, KD asm code is not generated
+    # Table KI, KD asm code is now generated
     # using tenjin template. This code is not
     # used any more. For now putting a return
     # here. This code is potential candidate 
     # for cleanup -- TBD done once asm code
     # stabilizes.
-    return
+    # return
+    class _ki_union:
+        def __init__(self, km_off, flist):
+            self.ustreams = OrderedDict()
+            self.union_end = 0
+            self.km_off = km_off    # for printing comments
+            for (cf, fs, fw, full_fld) in flist:
+                if not cf: pdb.set_trace()
+                s_name = cf_get_hname(cf)
+                assert s_name not in self.ustreams, pdb.set_trace()
+                self.ustreams[s_name] = [(cf, fs, fw, full_fld)]
+                if (km_off+fw) > self.union_end:
+                    self.union_end = km_off+fw
+
+        def fladd(self, km_off, flist):
+            for (cf, fs, fw, full_fld) in flist:
+                s_name = cf_get_hname(cf)
+                assert s_name in self.ustreams, pdb.set_trace()
+                self.ustreams[s_name].append((cf, fs, fw, full_fld))
+                if (km_off+fw) > self.union_end:
+                    self.union_end = km_off+fw
+
+        def _print(self, fld_names, indent='    '):
+            pstr = indent + 'union {\n'
+            indent2 = indent+indent
+            for s_name,flist in self.ustreams.items():
+                strm_off = 0
+                findent = indent2
+                if len(flist) > 1:
+                    pstr += indent2 + 'struct {\n'
+                    findent = indent + indent2
+                for (cf, fs, fw, full_fld) in flist:
+                    fname = _get_output_name(cf.hfname)
+                    if not full_fld:
+                        fname += '_s%d_e%d' % (fs, fs+fw-1)
+                    if fname in fld_names:
+                        fname += '_%d' % (self.km_off+strm_off)
+                    fld_names[fname] = 1
+                    pstr += findent + '%s : %d;    // k[%d:%d]\n' % \
+                        (fname, fw,
+                         511-(self.km_off+strm_off),
+                         511-(self.km_off+strm_off+fw)+1)
+                    strm_off += fw
+                if len(flist) > 1:
+                    pstr += indent2 + '};\n'
+            pstr += indent + '};\n'
+            return pstr
 
     hw_model = be.hw_model
+    max_km_width = hw_model['match_action']['key_maker_width']
+    max_kmB = max_km_width/8
+
     gen_dir = be.args.gen_dir
-    cur_path = gen_dir + '/%s/asm_out' % be.prog_name
+    cur_path = gen_dir + '/%s/alt_asm_out' % be.prog_name
     flit_sz = hw_model['phv']['flit_size']
     if not os.path.exists(cur_path):
         os.makedirs(cur_path)
     fname = cur_path + '/%s_%s_k.h' % (ctable.d.name, ctable.p4_table.name)
     hfile = open(fname, 'w')
 
-    pstr = 'struct %s_k {\n' % ctable.p4_table.name
-    key_cfs = [cf for cf,_,_ in ctable.keys] 
-    cfields = key_cfs + ctable.input_fields
-    ki_fields = sorted(cfields, key=lambda f: f.phv_bit)
+    gress_pa = ctable.gtm.tm.be.pa.gress_pa[ctable.gtm.d]
 
+    # create a fld map of all flds in the key-makers
+    km_off = 0
+    fld_map = OrderedDict() # {km_offset : (cf, f_start, f_size, complete_fld_flag)}
+    # fields that are partial, keep collecting them from consecutive bytes/bits
+    active_cfs = OrderedDict()
+    for km in ctable.key_makers:    #{
+        km_prof = km.shared_km.combined_profile if km.shared_km else km.combined_profile
+        i = -1
+        if not km_prof:
+            # mpu-only table no K or I
+            continue
+        assert km_prof, pdb.set_trace()
+        for i,phc in enumerate(km_prof.byte_sel):   #{
+            new_cfs = []
+            if phc == -1:   #{
+                # handle bit extractions
+                bit_sel = []
+                if i != km_prof.bit_loc and i != km_prof.bit_loc1:
+                    # close active_cfs
+                    _close_active_cfs(new_cfs, active_cfs, fld_map)
+
+                    # unused byte
+                    fld_map[km_off] = [(None, 0, 8, True)]
+                    km_off += 8
+                    continue
+                elif i == km_prof.bit_loc:
+                    for b in range(0, 8):
+                        if b < len(km_prof.bit_sel):
+                            bit_sel.append(km_prof.bit_sel[b])
+                        else:
+                            bit_sel.append(-1)
+                else: 
+                    assert i == km_prof.bit_loc1
+                    for b in range(8, 16):
+                        if b < len(km_prof.bit_sel):
+                            bit_sel.append(km_prof.bit_sel[b])
+                        else:
+                            bit_sel.append(-1)
+
+                #pdb.set_trace()
+                for b in bit_sel: #{
+                    if b < 0:
+                        # close all active
+                        _close_active_cfs(new_cfs, active_cfs, fld_map)
+                        fld_map[km_off] = [(None, 0, 1, True)]
+                        km_off += 1
+                        continue
+                    phc = b/8
+                    bflds = gress_pa.phcs[phc].get_flds(b%8,1)
+                    for fname,(fs,fw) in bflds.items():
+                        new_cfs = []
+                        cf = gress_pa.get_field(fname)
+                        _add_cf_to_fld_map(km_off, cf, (0, fs, fw), active_cfs, fld_map)
+                    km_off += 1
+                #}
+                # get next byte
+                continue
+            #}
+
+            phc_flds = sorted(gress_pa.phcs[phc].fields.items(), key=lambda k: k[0])
+
+            for fname, t in phc_flds:   #{
+                cf = gress_pa.get_field(fname)
+                new_cfs.append(cf)
+                _add_cf_to_fld_map(km_off, cf, t, active_cfs, fld_map)
+            #}
+            #_close_active_cfs(new_cfs, active_cfs, fld_map)
+            km_off += 8
+        #}
+
+        #pdb.set_trace()
+        if (i+1) < max_kmB:
+            # close active cfs before adding pad bytes
+            new_cfs = []
+            _close_active_cfs(new_cfs, active_cfs, fld_map)
+
+            # single pad field to fill unused km
+            pad_sz = (max_kmB-(i+1)) * 8
+            fld_map[km_off] = [(None, 0, pad_sz, True)]
+            km_off += pad_sz
+
+    #}
+                    
+    #if ctable.p4_table.name == 'copp_action': pdb.set_trace()
+    if len(active_cfs):
+        new_cfs = []
+        _close_active_cfs(new_cfs, active_cfs, fld_map)
+
+    assert len(active_cfs) == 0, pdb.set_trace()
+
+    # mpu-only table with no k+i
+    if len(fld_map) == 0:
+        return
+
+    # table using single km
+    if len(ctable.key_makers) < 2:
+        fld_map[max_km_width] = [(None, 0, max_km_width, True)]
+
+    #pdb.set_trace()
+    active_union = None
+    ki_flds = []
+
+    sorted_fld_map = sorted(fld_map.items(), key=lambda k: k[0])
+    #pdb.set_trace()
+    for km_off,flist in sorted_fld_map:
+        if active_union:
+            if km_off == active_union.union_end:
+                ki_flds.append(copy.copy(active_union))
+                active_union = None
+            else:
+                active_union.fladd(km_off, flist)
+                continue
+
+        assert active_union == None, pdb.set_trace()
+
+        if len(flist) > 1:
+            active_union = _ki_union(km_off, flist)
+        else:
+            ki_flds.append(flist[0])
+        
+    #pdb.set_trace()
+    if active_union:
+        ki_flds.append(copy.copy(active_union))
+        active_union = None
+    pstr = 'struct %s_k {\n' % ctable.p4_table.name
     indent = '    '
-    indent2=indent+indent
-    # handle unions
-    #k_off = ctable.key_size + ctable.d_size
-    k_off = sum([cf.width for cf in ki_fields])
-    for cf in ki_fields:
-        pstr += indent + '%s : %d; // %d : phv[%d:%d]\n' % \
-            (_get_output_name(cf.hfname), cf.width, k_off-cf.width,
-             cf.phv_bit / flit_sz, cf.phv_bit % flit_sz)
-        k_off -= cf.width
+    km_off = 0
+    fld_names = {}
+    for i,ki_f in enumerate(ki_flds):
+        if isinstance(ki_f, _ki_union):
+            pstr += ki_f._print(fld_names, indent)
+            km_off = ki_f.union_end
+        else:
+            if ki_f[0] == None:
+                fname = '_pad_%d' % i
+            else:
+                fname = _get_output_name(ki_f[0].hfname)
+            if not ki_f[3]:
+                fname += 's%d_e%d' % (ki_f[1], ki_f[1]+ki_f[2]-1)
+            if fname in fld_names:
+                fname += '_%d' % km_off
+            fld_names[fname] = 1
+            pstr += indent + '%s : %d;    // k[%d:%d]\n' % \
+                        (fname, ki_f[2],
+                         511-km_off,
+                         511-(km_off+ki_f[2])+1)
+            km_off += ki_f[2]
+
     pstr += '};\n'
+    #pdb.set_trace()
     hfile.write(pstr)
     hfile.close()
-
-    fname = cur_path + '/%s_%s_d.h' % (ctable.d.name, ctable.p4_table.name)
-    hfile = open(fname, 'w')
-
-    for a,ad in ctable.action_data.items():
-        pstr = ''
-        # Generate k+d if hash table.
-        pstr += 'struct %s_%s_d {\n' % (ctable.p4_table.name, a)
-        if ctable.match_type == match_type.EXACT_HASH:
-            key_cfs = [cf for cf,_,_ in ctable.keys] 
-            cfields = key_cfs
-            k_fields = sorted(cfields, key=lambda f: f.phv_bit)
-            k_off = sum([cf.width for cf in key_cfs])
-            for cf in k_fields:
-                pstr += indent + '%s : %d; // %d : phv[%d:%d]\n' % \
-                    (_get_output_name(cf.hfname), cf.width, k_off-cf.width,
-                     cf.phv_bit / flit_sz, cf.phv_bit % flit_sz)
-                
-                k_off -= cf.width
-        # no ifdefs are needed by the assembler
-        # pstr += '#ifdef %s\n' % a.upper()
-        if not len(ad):
-            continue
-        # print each action parameter for this action
-        for ap in ad:
-            pstr += indent + '%s : %d;\n' % (ap[0], ap[1])
-        pstr += '};\n'
-        # pstr += '#endif /* %s */\n' % a.upper()
-        hfile.write(pstr)
-
-    if len(ctable.action_data):
-        pstr = 'struct %s_d {\n' % (ctable.p4_table.name)
-        pstr += indent + 'union {\n'
-        for a,ad in ctable.action_data.items():
-            if not len(ad):
-                continue
-            pstr += indent2 + 'struct %s_%s_d %s_d;\n' % (ctable.p4_table.name, a, a)
-        pstr += indent + '} u;\n'
-        pstr += '};\n'
-        hfile.write(pstr)
-    hfile.close()
+    return
 
 
 def capri_parser_logical_output(parser):
@@ -2341,7 +2521,8 @@ def capri_get_top_level_path(cur_dir):
 
 def capri_p4pd_create_swig_makefile(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -2365,17 +2546,17 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'LIBS = -lpython2.7 -lmodelclient -lzmq -lcapri -lcapricsr -lp4pd -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
-    content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o p4pd_wrap.c p4pd.i\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_wrap.o p4pd_wrap.c\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o p4pd_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n'
-    content_str += '\t$(CXX) $(LNKFLAGS) -o _p4pd.so p4pd_wrap.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o %s_wrap.c %s.i\n' % (name, name)
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o %s_wrap.o %s_wrap.c\n' % (name, name)
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o %s_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n' % (name)
+    content_str += '\t$(CXX) $(LNKFLAGS) -o _%s.so %s_wrap.o %s_api.o $(LIB_DIRS) $(LIBS)\n' % (name, name, name)
     content_str += '\n'
     content_str += 'main:\n'
     content_str += '\t$(CXX) $(CPPFLAGS) -DP4PD_CLI $(INC_DIRS) -o main.o main.cc\n'
-    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o p4pd_api.o $(LIB_DIRS) $(LIBS)\n'
+    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o %s_api.o $(LIB_DIRS) $(LIBS)\n' % (name)
     content_str += '\n'
     content_str += 'clean:\n'
-    content_str += '\trm *.o *.so main p4pd.py p4pd_wrap.c\n'
+    content_str += '\trm *.o *.so *.pyc main %s.py %s_wrap.c\n' % (name, name)
 
     out_file = out_dir + 'Makefile'
     with open(out_file, "w") as of:
@@ -2384,18 +2565,16 @@ def capri_p4pd_create_swig_makefile(be):
 
 def capri_p4pd_create_swig_interface(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    top_dir = capri_get_top_level_path(out_dir)
-
     content_str = \
-"""
-/* This file is auto-generated. Changes will be overwritten! */
-/* p4pd.i */
-%module p4pd
+"""/* This file is auto-generated. Changes will be overwritten! */
+/* %s.i */""" %(name) + """
+%module """ + """%s""" % (name) + """
 %include "carrays.i"
 %include "cmalloc.i"
 %include "cpointer.i"
@@ -2438,15 +2617,12 @@ typedef unsigned long long uint64_t;
 %include "p4pd_api.hpp"
 %include "lib_model_client.h"
 extern int capri_init(void);
-%inline %{
-    int p4pd_cli_init()
+%inline %{""" + """
+    int %s_cli_init()""" % (name) + """
     {
         int ret;
-        """ + \
-        """
-        setenv("HAL_CONFIG_PATH", "%s", 1);
-        """ % ('./conf') + \
-        """
+
+        setenv("HAL_CONFIG_PATH", "./conf", 1);
 
         lib_model_connect();
 
@@ -2464,22 +2640,23 @@ extern int capri_init(void);
         
         return 0;
     }
-
-    void p4pd_cli_cleanup()
+""" + """
+    void %s_cli_cleanup()""" % (name) + """
     {
         lib_model_conn_close();
         p4pd_cleanup();
     }
 %}
 """
-    out_file = out_dir + 'p4pd.i'
+    out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
 
 def capri_p4pd_create_swig_main(be):
 
-    out_dir = be.args.gen_dir + '/%s/cli/' % (be.prog_name)
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)

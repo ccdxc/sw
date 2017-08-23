@@ -62,7 +62,7 @@ def get_i2e_fname(cf):
 
 def cf_get_hname(cfld):
     hname = 'NOHEADER'
-    if cfld.p4_fld and cfld.p4_fld.instance:
+    if cfld and cfld.p4_fld and cfld.p4_fld.instance:
         hname = cfld.p4_fld.instance.name
     return hname
 
@@ -139,6 +139,12 @@ def pad_to_16(value):
 
 def pad_to_8(value):
     return (((value + 7) / 8) * 8)
+
+def get_block_width(type):
+    return 8 if type == 'sram' else \
+        8 if type == 'tcam' else \
+            1 if type == 'hbm'  else \
+                1
 
 def match_type_to_string(type):
     return 'mpu' if type == match_type.MPU_ONLY else \

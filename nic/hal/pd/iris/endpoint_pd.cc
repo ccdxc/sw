@@ -236,15 +236,18 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
         switch(i) {
             case REWRITE_NOP_ID:
                 break;
-            case REWRITE_L3_REWRITE_ID:
+            case REWRITE_REWRITE_ID:
                 l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
                 HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
                 nw = ep_pd_get_nw(pi_ep, l2seg);
                 // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
                 if (nw) {
-                    memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_sa, nw->rmac_addr, 6);
+                    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, nw->rmac_addr, 6);
+                    memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
                 } 
-                memcpy(data.rewrite_action_u.rewrite_l3_rewrite.mac_da, *mac, 6);
+                memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, *mac, 6);
+                memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
+
                 break;
             case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
                 break;
@@ -343,7 +346,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                           (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
     l2seg_t             *l2seg = NULL;
     if_t                *pi_if = NULL;
-    uint64_t            mac_int = 0;
+    // uint64_t            mac_int = 0;
     mac_addr_t          *mac = NULL;
     Tcam                *ipsg_tbl = NULL;
 
@@ -360,6 +363,9 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     memcpy(key.flow_lkp_metadata_lkp_src, 
            pi_ip_entry->ip_addr.addr.v6_addr.addr8,
            IP6_ADDR8_LEN);
+    if (pi_ip_entry->ip_addr.af == IP_AF_IPV6) {
+        memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
+    }
     key.flow_lkp_metadata_lkp_type = 
         (pi_ip_entry->ip_addr.af == IP_AF_IPV4) ? FLOW_KEY_LOOKUP_TYPE_IPV4 :
         FLOW_KEY_LOOKUP_TYPE_IPV6;
@@ -376,8 +382,9 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     data.actionid = IPSG_IPSG_HIT_ID;
     data.ipsg_action_u.ipsg_ipsg_hit.lif = if_get_hw_lif_id(pi_if);
     mac = ep_get_mac_addr(pi_ep);
-    mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
-    memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, &mac_int, 6);
+    // mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
+    memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, *mac, 6);
+    memrev(data.ipsg_action_u.ipsg_ipsg_hit.mac, 6);
     if_l2seg_get_ingress_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
@@ -390,7 +397,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
      } else {
          HAL_TRACE_DEBUG("PD-EP::{}: Programmed IPSG for: at: {} "
                          "(vrf:{}, ip:{}) => "
-                         "act_id:{}, lif:{}, vlan_v:{}, vlan_vid: {}",
+                         "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
                          __FUNCTION__,
                          pd_ip_entry->ipsg_tbl_idx,
                          key.flow_lkp_metadata_lkp_vrf,
@@ -398,7 +405,8 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                          data.actionid, 
                          data.ipsg_action_u.ipsg_ipsg_hit.lif,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
-                         data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
+                         data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
+                         macaddr2str(*mac));
      }
 
 end:

@@ -3925,6 +3925,10 @@ class capri_table_mapper:
         for top in range(mem_depth - table_depth + 1):
             # Scan columns looking for free position to start the table at
             for left in range(mem_width - table_width + 1):
+                if ((left % get_block_width(mem_type)) + table_width) > (get_block_width(mem_type) * 4):
+                    # Tables can only span a max of 4 blocks
+                    continue
+
                 if mem_space[top][left] == 0:
                     # Start position found. Now continue scanning for the required width
                     success = True

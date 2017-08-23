@@ -53,6 +53,11 @@ public:
     ~hal_state_pd();
 
     // get APIs for global variables
+    uint32_t rwr_tbl_decap_vlan_idx(void) const { 
+        return rewr_tbl_decap_vlan_idx_; }
+    void set_rwr_tbl_decap_vlan_idx(uint32_t idx) { 
+        rewr_tbl_decap_vlan_idx_ = idx; }
+
     uint32_t tnnl_rwr_tbl_encap_vlan_idx(void) const { 
         return tnnl_rewr_tbl_enc_vlan_idx_; }
     void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) { 
@@ -165,6 +170,7 @@ private:
 
     // global variables
     struct {
+        uint32_t  rewr_tbl_decap_vlan_idx_;
         uint32_t  tnnl_rewr_tbl_enc_vlan_idx_;
     } __PACK__;
 

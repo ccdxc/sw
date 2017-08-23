@@ -8,7 +8,9 @@ def Setup(infra, module):
     if module.args == None:
         return
 
-    module.testspec.config_filter.flow.Extend(module.args.flow)
+    if 'flow' in module.args.__dict__:
+        module.testspec.config_filter.flow.Extend(module.args.flow)
+
     if 'srcif' in module.args.__dict__:
         module.testspec.config_filter.src.interface.Extend(module.args.srcif)
     else:
@@ -18,6 +20,10 @@ def Setup(infra, module):
         module.testspec.config_filter.dst.interface.Extend(module.args.dstif)
     else:
         module.testspec.config_filter.dst.interface.Extend('filter://any')
+
+    if 'segment' in module.args.__dict__:
+        module.testspec.config_filter.src.segment.Extend(module.args.segment)
+        module.testspec.config_filter.dst.segment.Extend(module.args.segment)
     return
 
 def Teardown(infra, module):

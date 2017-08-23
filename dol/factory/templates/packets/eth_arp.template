@@ -1,0 +1,29 @@
+meta:
+    id: ETH_ARP
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x806
+
+    - header:
+        id      : arp
+        template: ref://store/headers/id=ARP
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:
+
+    - header:
+        id      : pendol
+        template: ref://store/headers/id=PENDOL
+        fields:
+
+    - header:
+        id      : crc
+        template: ref://store/headers/id=CRC
+        fields:

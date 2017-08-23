@@ -39,7 +39,6 @@ SOURCES = \
 		  capri_hbm.cc \
 		  capri_tm_rw.cc \
 		  capri_qstate.cc \
-		  capri_lif.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc
