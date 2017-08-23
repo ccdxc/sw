@@ -102,8 +102,13 @@ dma_cmd_write_rx2tx_shared:
 
 tcp_serq_produce:
 	sne		c1, k.common_phv_debug_dol, r0
-	bcf		[c1], flow_write_serq_process_done
+	bcf		[!c1], ring_doorbell
 	nop
+        phvwri          p.dma_cmd3_dma_cmd_eop, 1
+        phvwri          p.dma_cmd3_dma_cmd_wr_fence, 1
+        b 		flow_write_serq_process_done
+	nop
+ring_doorbell:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
 	/* data will be in r3 */

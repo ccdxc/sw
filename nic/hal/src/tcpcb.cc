@@ -116,6 +116,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
+    tcpcb->debug_dol = spec.debug_dol();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -169,6 +170,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
+    tcpcb->debug_dol = spec.debug_dol();
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
@@ -220,6 +222,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     // fill config spec of this TCP CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
+    rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
     rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
 
     // fill operational state of this TCP CB
