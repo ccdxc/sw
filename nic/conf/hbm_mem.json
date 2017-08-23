@@ -73,6 +73,10 @@
             "size_kb": 16384
         },
         {
+            "name": "bsq",
+            "size_kb": 16384
+        },
+        {
             "name": "descriptor-tx",
             "size_kb": 2048
         },

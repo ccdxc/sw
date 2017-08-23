@@ -46,6 +46,9 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384,
                                         CAPRI_HBM_REG_PAGE_BIG_RX, 9216};
 
+    g_meta[types::WRING_TYPE_BSQ] =
+        (pd_wring_meta_t) {false, "bsq", 64, "", 0};
+
     return HAL_RET_OK;
 }
 
