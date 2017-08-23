@@ -170,6 +170,15 @@ modules:
         args    :
             flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : PKT_TO_BSQ
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : pkt_to_bsq
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : RDMA_BTH_BASIC
         enable  : True
         package : test.rdma
