@@ -58,6 +58,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy15 rdma_stage0_bth_xrceth_ieth_action
 
 #include "../common-p4+/common_rxdma.p4"
+#include "./rdma_rxdma_headers.p4"
 
 /******************************************************************************
  * Macros
@@ -149,8 +150,12 @@ action rdma_stage0_bth_action () {
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
-    // from app header
-    modify_field(rdma_bth_scr.common_header_bits, rdma_bth.common_header_bits);
+    // from p4-to-p4plus-rdma-hdr
+    modify_field(rdma_bth_scr.p4plus_app_id, rdma_bth.p4plus_app_id);
+    modify_field(rdma_bth_scr.flags, rdma_bth.flags);
+    modify_field(rdma_bth_scr.rdma_hdr_len, rdma_bth.rdma_hdr_len);
+    modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
+    modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
 
     // bth params
     modify_field(rdma_bth_scr.bth_opcode, rdma_bth.bth_opcode);
