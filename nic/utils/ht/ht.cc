@@ -155,7 +155,7 @@ ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
         return HAL_RET_ENTRY_EXISTS;
     }
     if (ht_bucket->ht_ctxt) {
-        ht_ctxt->next = ht_bucket->ht_ctxt->next;
+        ht_ctxt->next = ht_bucket->ht_ctxt;
         ht_bucket->ht_ctxt->prev = ht_ctxt;
     }
     ht_ctxt->entry = entry;
