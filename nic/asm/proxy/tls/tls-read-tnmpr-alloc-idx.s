@@ -6,6 +6,8 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 
  /* d is the data returned by lookup result */
 struct d_struct {
@@ -17,7 +19,7 @@ struct k_struct {
 	fid				 : 32 ;
 };
 
-struct p_struct p;
+struct phv_ p;
 struct k_struct k;
 struct d_struct d;
 

@@ -46,7 +46,7 @@
         phvwr   p.common_te0_phv_table_pc, r1; \
         CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
         phvwr   p.common_te0_phv_table_addr, r1; \
-        phvwri  p.tcp_app_header_table0_valid, 1;
+        phvwri  p.app_header_table0_valid, 1;
 
 
 #define CAPRI_NEXT_TABLE1_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
@@ -57,7 +57,7 @@
         phvwr   p.common_te1_phv_table_pc, r1; \
         CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
         phvwr   p.common_te1_phv_table_addr, r1; \
-        phvwri  p.tcp_app_header_table1_valid, 1;
+        phvwri  p.app_header_table1_valid, 1;
 
 #define CAPRI_NEXT_TABLE2_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
         phvwri  p.common_te2_phv_table_lock_en, 1; \
@@ -67,7 +67,7 @@
         phvwr   p.common_te2_phv_table_pc, r1; \
         CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
         phvwr   p.common_te2_phv_table_addr, r1; \
-        phvwri  p.tcp_app_header_table2_valid, 1;
+        phvwri  p.app_header_table2_valid, 1;
 
 #define CAPRI_NEXT_TABLE3_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
         phvwri  p.common_te3_phv_table_lock_en, 1; \
@@ -77,7 +77,7 @@
         phvwr   p.common_te3_phv_table_pc, r1; \
         CAPRI_GET_TABLE_ADDR_R(_fid, _table_base, _table_entry_size_shft, _table_state_offset) \
         phvwr   p.common_te3_phv_table_addr, r1; \
-        phvwri  p.tcp_app_header_table3_valid, 1;
+        phvwri  p.app_header_table3_valid, 1;
 
 #define CAPRI_NEXT_IDX0_READ(_lock_en, _stage_entry, _table_base, _table_read_size) \
         CAPRI_NEXT_TABLE0_READ(0, _lock_en, _stage_entry, _table_base, 0, 0, _table_read_size) \
@@ -92,16 +92,16 @@
         CAPRI_NEXT_TABLE3_READ(0, _lock_en, _stage_entry, _table_base, 0, 0, _table_read_size) \
 
 #define CAPRI_CLEAR_TABLE0_VALID \
-        phvwri  p.tcp_app_header_table0_valid, 0;
+        phvwri  p.app_header_table0_valid, 0;
 
 #define CAPRI_CLEAR_TABLE1_VALID \
-        phvwri  p.tcp_app_header_table1_valid, 0;
+        phvwri  p.app_header_table1_valid, 0;
 
 #define CAPRI_CLEAR_TABLE2_VALID \
-        phvwri  p.tcp_app_header_table2_valid, 0;
+        phvwri  p.app_header_table2_valid, 0;
 
 #define CAPRI_CLEAR_TABLE3_VALID \
-        phvwri  p.tcp_app_header_table3_valid, 0;
+        phvwri  p.app_header_table3_valid, 0;
 
 #define CAPRI_READ_ADDR(_addr, _table_type, _stage_entry) \
         add		r1, r0, _addr			                ;\
@@ -112,8 +112,8 @@
         phvwri	        p.table_size, 8                                 ;
 
 
-#define DB_ADDR_BASE                   0xc0000000
-#define DB_UPD_SHFT                    16
+#define DB_ADDR_BASE                   0x68800000
+#define DB_UPD_SHFT                    17
 #define DB_LIF_SHFT                    6
 #define DB_TYPE_SHFT                   3
 
@@ -153,7 +153,7 @@
        addi            r6, r0, _type;\
        sll             r6, r6, DB_TYPE_SHFT;\
        or              r5, r5, r6;\
-       add             r4, r5, r0
+       addi            r4, r5, DB_ADDR_BASE
 
 #define DB_PID_SHFT                    48
 #define DB_QID_SHFT                    24
@@ -237,8 +237,8 @@
 					 - sizeof(p._field) + (offsetof(p, _field) / 512) * 512) >> 3)
 
 #define CAPRI_PHV_END_OFFSET(_field) \
-        (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
-					 + (offsetof(p, _field) / 512) * 512) >> 3)
+        ((((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field)	\
+	   + (offsetof(p, _field) / 512) * 512) >> 3) + 1)
 
 #define CAPRI_QSTATE_HEADER_COMMON \
         pc                              : 8;\

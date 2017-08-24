@@ -7,41 +7,39 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
 /* d is the data returned by lookup result */
-struct d_struct {
-        seqe_fid                         : 16;
-        seqe_desc                        : ADDRESS_WIDTH;
-};
 
 /* SERQ consumer index */
 struct k_struct {
 	serq_consumer_idx		: RING_INDEX_WIDTH ;
 };
 
-struct p_struct p	;
+struct phv_ p	;
 struct k_struct k	;
-struct d_struct d	;
+struct tx_table_s0_t0_d d	;
 	
 %%
 
 	.param		tls_serq_consume_process
-	.param		tls_read_desc_process
+	.param		tls_read_desc_process_start
 	
-tls_serq_read_process_start:
-	add		r1, d.seqe_fid, r0
-	smeqh		c1, r1, ENC_FLOW_ID_MASK, ENC_FLOW_ID_MASK
-	phvwri.c1	p.enc_flow, 1
-	phvwri.!c1      p.enc_flow, 0
+tls_stage0:
+	phvwr	    p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
 	
-	phvwr		p.seqe_fid, d.seqe_fid
-	phvwr		p.seqe_desc, d.seqe_desc
-	phvwri		p.pending_rx_serq, 1
+	phvwr		p.tls_global_phv_fid, d.u.read_tls_stg0_d.fid
+    add         r3, r0, d.u.read_tls_stg0_d.ci_0
+    sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
+    add         r3, r3, d.u.read_tls_stg0_d.serq_base
+
+	phvwr		p.tls_global_phv_desc, r3
+	phvwri		p.tls_global_phv_pending_rx_serq, 1
 
 #	TLS_READ_IDX(SERQ_CONSUMER_IDX, TABLE_TYPE_RAW, tls_serq_consume_process)
 	
 table_read_DESC:
-	add		r2, d.seqe_desc, r0
-	TLS_READ_ADDR(r2, TABLE_TYPE_RAW, tls_read_desc_process)
+    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_desc_process_start, r3, TABLE_SIZE_64_BITS)
 	nop.e
 	nop

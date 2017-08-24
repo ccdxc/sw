@@ -44,8 +44,7 @@
 
 
 #define CAPRI_QSTATE_HEADER_COMMON \
-        pc                  : 8;\
-        rsvd                : 8;\
+	rsvd		    : 8;\
         cosA                : 4;\
         cosB                : 4;\
         cos_sel             : 8;\
@@ -80,6 +79,7 @@ header_type tls_stg0_d_t {
     }
 }
 
+
 header_type tls_stg1_7_d_t {
     fields {
         cipher_type                     : 8;
@@ -104,6 +104,39 @@ header_type tls_stg1_7_d_t {
     }
 }
 
+#define GENERATE_GLOBAL_PHV                     \
+        modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);               \
+        modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);     \
+        modify_field(tls_global_phv_scratch.desc, tls_global_phv.desc);             \
+        modify_field(tls_global_phv_scratch.pending_rx_serq, tls_global_phv.pending_rx_serq); \
+        modify_field(tls_global_phv_scratch.pending_rx_brq, tls_global_phv.pending_rx_brq);     \
+        modify_field(tls_global_phv_scratch.tls_hdr_type, tls_global_phv.tls_hdr_type);         \
+        modify_field(tls_global_phv_scratch.tls_hdr_version_major, tls_global_phv.tls_hdr_version_major);   \
+        modify_field(tls_global_phv_scratch.tls_hdr_version_minor, tls_global_phv.tls_hdr_version_minor);  \
+        modify_field(tls_global_phv_scratch.tls_hdr_len, tls_global_phv.tls_hdr_len);                       \
+        modify_field(tls_global_phv_scratch.split, tls_global_phv.split);                                   \
+        modify_field(tls_global_phv_scratch.pending_queue_brq, tls_global_phv.pending_queue_brq);           \
+        modify_field(tls_global_phv_scratch.next_tls_hdr_offset, tls_global_phv.next_tls_hdr_offset);
+
+/* Global PHV definition */
+header_type tls_global_phv_t {
+    fields {
+        fid                             : 16;
+        dec_flow                        : 1;
+        split                           : 1;
+        pending_rx_serq                 : 1;
+        pending_rx_brq                  : 1;
+        pending_queue_brq               : 1;
+        desc                            : ADDRESS_WIDTH;
+        tls_hdr_type                    : 8;
+        tls_hdr_version_major           : 8;
+        tls_hdr_version_minor           : 8;
+        tls_hdr_len                     : 16;
+        next_tls_hdr_offset             : 16;
+    }
+}
+
+
 
 @pragma scratch_metadata
 metadata tls_stg0_d_t tls_stg0_d;
@@ -113,8 +146,37 @@ metadata tls_stg1_7_d_t tls_stg1_7_d;
 
 
 
-action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
-    modify_field(tls_stg0_d.pc, pc);
+@pragma pa_header_union ingress common_global
+metadata tls_global_phv_t tls_global_phv;
+
+
+
+@pragma dont_trim
+metadata pkt_descr_t aol; 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd0;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd1;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd2;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd3;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd4;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd5;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd6;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd7;
+
+
+@pragma scratch_metadata
+metadata tls_global_phv_t tls_global_phv_scratch;
+
+
+action read_tls_stg0(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
+
     modify_field(tls_stg0_d.rsvd, rsvd);
     modify_field(tls_stg0_d.cosA, cosA);
     modify_field(tls_stg0_d.cosB, cosB);
@@ -133,11 +195,13 @@ action read_tls_stg0(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(tls_stg0_d.serq_base, serq_base);
     modify_field(tls_stg0_d.fid, fid);
     modify_field(tls_stg0_d.dec_flow, dec_flow);
-    //modify_field(tls_stg0_d.pad, pad);
+    modify_field(tls_stg0_d.pad, pad);
 }
 
 
 action read_tls_stg1_7(cipher_type, ver_major, key_addr, iv_addr, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, ofid) {
+
+    GENERATE_GLOBAL_PHV
 
     modify_field(tls_stg1_7_d.cipher_type, cipher_type);
     modify_field(tls_stg1_7_d.ver_major, ver_major);

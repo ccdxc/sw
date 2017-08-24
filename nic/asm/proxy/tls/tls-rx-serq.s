@@ -7,6 +7,8 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
 /* d is the data returned by lookup result */
 struct d_struct {
@@ -42,7 +44,7 @@ struct k_struct {
 	enc_flow                         :  1		  ;
 };
 
-struct p_struct p	;
+struct phv_ p	;
 struct k_struct k	;
 struct d_struct d	;
 	
@@ -64,17 +66,21 @@ tls_rx_serq_dec_process:
 dma_cmd_dec_desc_entry_last:
 	/* SET_DESC_ENTRY(TAIL_DESC(cb,name), MAX_ENTRIES_PER_DESC - 1, desc, 0, 0); */
 	
+	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
+	add		    r4, r5, r0
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
+
 	addi		r5, r0, NIC_DESC_ENTRY_L_OFFSET
-	add		r5, r5, d.qtail
-	phvwr		p.dma_cmd3_addr, r5
+	add		    r5, r5, d.qtail
+	phvwr		p.dma_cmd0_dma_cmd_addr, r5
 
-	phvwr		p.desc_aol1_addr, k.desc
-	phvwri		p.desc_aol1_offset, 0
-	phvwri		p.desc_aol1_len, 0
+	phvwr		p.aol_next_addr, k.desc
 
-	phvwri		p.dma_cmd3_pad, TLS_PHV_AOL1_START
-	phvwri		p.dma_cmd3_size, TLS_PHV_CUR_TLS_DATA_LEN_SIZE
-	phvwri		p.dma_cmd3_cmd, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, TLS_PHV_AOL_DESC_END
+	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, TLS_PHV_AOL_DESC_START
+
+	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.dma_cmd1_dma_cmd_eop, 0
 
 no_dma_cmd:	
 	tblwr.c1	d.qtail, k.desc
@@ -91,24 +97,14 @@ no_dma_cmd:
 	slt		c1, d.next_tls_hdr_offset, k.desc_data_len
 	bcf		[!c1], tls_no_read_header
 	nop
-	phvwr		p.next_tls_hdr_offset, d.next_tls_hdr_offset
+	phvwr		p.tls_global_phv_next_tls_hdr_offset, d.next_tls_hdr_offset
 	add		r2, r0, k.desc_aol0_addr
 	add		r3, r0, k.desc_aol0_offset
 	add		r3, r3, k.next_tls_hdr_offset
 	add		r2, r2, r3
 
-	
-	phvwr		p.desc, k.desc
-	phvwr		p.desc_aol0_addr, k.desc_aol0_addr
-	phvwr		p.desc_aol0_offset, k.desc_aol0_offset
-	phvwr		p.desc_aol0_len, k.desc_aol0_len
-
-	phvwr		p.desc_aol1_addr, k.desc_aol0_addr
-	phvwr		p.desc_aol1_offset, r3
-	phvwr		p.desc_aol1_len, k.desc_aol0_len
-
 table_read_tls_header:	
-	TLS_READ_ADDR(r2, TABLE_TYPE_RAW, tls_read_header_process)
+    CAPRI_NEXT_TABLE0_READ(k.fid, TABLE_LOCK_DIS, tls_read_header_process, r2, 0, 0, TABLE_SIZE_8_BITS)
 	b		tls_rx_serq_process_done
 	nop
 	/* md->next_tls_hdr_offset = dtlsp->next_tls_hdr_offset; */
@@ -133,23 +129,27 @@ tls_rx_serq_enc_process:
 dma_cmd_enc_desc_entry_last:
 	/* SET_DESC_ENTRY(TAIL_DESC(cb,name), MAX_ENTRIES_PER_DESC - 1, desc, 0, 0); */
 	
+	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
+	add		    r4, r5, r0
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
+
 	addi		r5, r0, NIC_DESC_ENTRY_L_OFFSET
-	add		r5, r5, d.qtail
-	phvwr		p.dma_cmd3_addr, r5
+	add		    r5, r5, d.qtail
+	phvwr		p.dma_cmd0_dma_cmd_addr, r5
 
-	phvwr		p.desc_aol1_addr, k.desc
-	phvwri		p.desc_aol1_offset, 0
-	phvwri		p.desc_aol1_len, 0
+	phvwr		p.aol_next_addr, k.desc
 
-	phvwri		p.dma_cmd3_pad, TLS_PHV_AOL1_START
-	phvwri		p.dma_cmd3_size, TLS_PHV_CUR_TLS_DATA_LEN_SIZE
-	phvwri		p.dma_cmd3_cmd, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, TLS_PHV_AOL_DESC_END
+	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, TLS_PHV_AOL_DESC_START
+
+	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.dma_cmd1_dma_cmd_eop, 0
 
 	/* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */
 	tblwr		d.nxt_desc, k.desc
 
 table_read_queue_brq:
-	phvwri		p.pending_queue_brq, 1
+	phvwri		p.tls_global_phv_pending_queue_brq, 1
 table_read_TNMDR_ALLOC_IDX:
 	addi 		r3, r0, TNMDR_ALLOC_IDX
 	CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_alloc_tnmdr_start,

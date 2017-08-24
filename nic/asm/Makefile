@@ -3,7 +3,7 @@
 LIBDIRS = \
           nw \
           common-p4+ \
-	  proxy/tcp/rx \
+	  proxy \
           ipsec-p4+ \
           storage \
           $(NULL)

@@ -6,6 +6,8 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 
  /* d is the data returned by lookup result */
 struct d_struct {
@@ -18,7 +20,7 @@ struct k_struct {
 	qstate_addr			: ADDRESS_WIDTH ;
 };
 
-struct p_struct p;
+struct phv_ p;
 struct k_struct k;
 struct d_struct d;
 
@@ -31,7 +33,7 @@ tls_tdesc_alloc_start:
 
         CAPRI_CLEAR_TABLE0_VALID
 
-	phvwr		p.odesc, d.odesc
+#	phvwr		p.odesc, d.odesc
 
 table_read_QUEUE_BRQ:
 	CAPRI_NEXT_TABLE0_READ(k.fid, TABLE_LOCK_EN, tls_queue_brq_start,
