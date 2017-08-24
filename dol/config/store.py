@@ -9,7 +9,21 @@ class ConfigStore:
         self.specs      = ObjectDatabase(cfglogger)
         
         # Custom Database for easy access.
-        self.trunk_uplinks = ObjectDatabase(cfglogger)
+        self.trunks = ObjectDatabase(cfglogger)
+        self.tunnels = ObjectDatabase(cfglogger)
         return
+
+    def SetTunnels(self, objs):
+        return self.tunnels.SetAll(objs)
+    def GetTunnelsVxlan(self):
+        vxlan_tunnels = []
+        for tun in self.tunnels.GetAll():
+            if tun.IsVxlan(): vxlan_tunnels.append(tun)
+        return vxlan_tunnels
+
+    def GetTrunkingUplinks(self):
+        return self.trunks.GetAll()
+    def SetTrunkingUplinks(self, objs):
+        return self.trunks.SetAll(objs)
 
 Store = ConfigStore()

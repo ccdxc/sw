@@ -49,13 +49,16 @@ acls: ref://store/specs/id=ACL
 tenants:
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
         count   : 1
-        lifns   : range/93/96
+        lifns   : range/101/110
     #-   spec    : ref://store/specs/id=TENANT_SPAN_VXLAN
     #    count   : 1
-    #    lifns   : range/97/100
-    -   spec    : ref://store/specs/id=INFRA
+    #    lifns   : range/111/120
+    -   spec    : ref://store/specs/id=TENANT_INFRA
         count   : 1
-        lifns   : range/101/128
-    -   spec    : ref://store/specs/id=TENANT_DEFAULT
+        lifns   : range/121/130
+    -   spec    : ref://store/specs/id=TENANT_OVERLAY_VLAN
         count   : 1
-        lifns   : range/129/256
+        lifns   : range/201/300
+    -   spec    : ref://store/specs/id=TENANT_OVERLAY_VXLAN
+        count   : 1
+        lifns   : range/301/400

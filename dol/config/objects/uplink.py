@@ -106,7 +106,7 @@ class UplinkObjectHelper:
         self.Configure()
         cfglogger.info("Adding %d Uplinks to Store." % len(self.objlist))
         Store.objects.SetAll(self.objlist)
-        Store.trunk_uplinks.SetAll(self.trunks)
+        Store.SetTrunkingUplinks(self.trunks)
         return
 
     def GetAll(self):

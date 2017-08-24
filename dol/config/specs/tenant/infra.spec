@@ -1,6 +1,6 @@
 # Configuration Template.
 meta:
-    id: INFRA
+    id: TENANT_INFRA
 
 type    : infra
 overlay : vlan
@@ -21,6 +21,4 @@ sessions:
         ipv6: None
         mac: None
 
-lif:
-    spec        : ref://store/specs/id=LIF_ETH
-    count       : 8
+lif: ref://store/specs/id=LIF_ETH

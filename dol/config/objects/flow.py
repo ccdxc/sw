@@ -257,11 +257,11 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def ShowTestcaseConfig(self, obj, logger):
-        logger.info("- Config Objects for %s %s" %\
+        logger.info("Config Objects for %s %s" %\
                   (self.direction, self.GID()))
-        logger.info("  - Src EP: %s" % obj.src.endpoint.GID())
-        logger.info("  - Src IF: %s" % obj.src.endpoint.intf.GID())
-        logger.info("  - Dst EP: %s" % obj.dst.endpoint.GID())
-        logger.info("  - Dst IF: %s" % obj.dst.endpoint.intf.GID())
-        logger.info("  - Flow  : %s" % obj.flow)
+        logger.info("- Src EP: %s" % obj.src.endpoint.GID())
+        logger.info("- Src IF: %s" % obj.src.endpoint.intf.GID())
+        logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
+        logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
+        logger.info("- Flow  : %s" % obj.flow)
 

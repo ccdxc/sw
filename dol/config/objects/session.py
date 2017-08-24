@@ -97,7 +97,7 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def ShowTestcaseConfig(self, obj, logger):
-        logger.info("- Config Objects for %s" % self.GID())
+        logger.info("Config Objects for %s" % self.GID())
         self.iflow.ShowTestcaseConfig(obj.session.iconfig, logger)
         self.rflow.ShowTestcaseConfig(obj.session.rconfig, logger)
         return

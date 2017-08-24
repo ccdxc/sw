@@ -1,13 +1,11 @@
 # Configuration Template.
 meta:
-    id: TENANT_OVERLAY_VLAN
+    id: TENANT_OVERLAY_VXLAN
 
 type    : tenant
-overlay : vlan
+overlay : vxlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_NATIVE
-      count : 1
     - spec  : ref://store/specs/id=SEGMENT_MDST_FWD
       count : 2
     #- spec  : ref://store/specs/id=SEGMENT_MDST_DROP

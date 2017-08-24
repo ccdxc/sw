@@ -58,14 +58,25 @@ def GetPacketTemplateBySessionRflow(testcase, packet):
     return  __get_packet_template_impl(testcase.config.session.rconfig.flow)
 
 def __get_packet_encap_vlan(testcase, packet):
-    if testcase.config.src.segment.native == True:
+    if testcase.config.src.tenant.IsOverlayVxlan():
+        return infra_api.GetPacketTemplate('ENCAP_QTAG')
+    elif testcase.config.src.segment.native == True:
         return None
-    encap = 'ENCAP_QTAG'
-    return infra_api.GetPacketTemplate(encap)   
+    return infra_api.GetPacketTemplate('ENCAP_QTAG')
+
+def __get_packet_encap_vxlan(testcase, packet):
+    if testcase.config.src.tenant.IsOverlayVxlan():
+        return infra_api.GetPacketTemplate('ENCAP_VXLAN')
+    return None
 
 def GetPacketEncaps(testcase, packet):
     encaps = []
+    # Check for VLAN encap
     encap = __get_packet_encap_vlan(testcase, packet)
     if encap: encaps.append(encap)
+    # Check for VXLAN encap
+    encap = __get_packet_encap_vxlan(testcase, packet)
+    if encap: encaps.append(encap)
+    
     if len(encaps): return encaps
     return None

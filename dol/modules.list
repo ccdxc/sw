@@ -128,6 +128,7 @@ modules:
             - ARP_RESP
             - RARP_REQ_UC
             - RARP_RESP
+
     - module:
         name    : L2UC_UNTAG_ARP_RARP
         enable  : True
@@ -142,6 +143,17 @@ modules:
             - ARP_RESP
             - RARP_REQ_UC
             - RARP_RESP
+
+    - module:
+        name    : L2UC_VXLAN_IPV4_UDP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_vxlan.testspec
+        ignore  : True
+        args    :
+            flow    : filter://type=IPV4,proto=UDP
+
     - module:
         name    : L3UC_IPV4_UDP
         enable  : True

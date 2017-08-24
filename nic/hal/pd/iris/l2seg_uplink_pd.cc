@@ -84,9 +84,12 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
         if (enc_type == types::ENCAP_TYPE_DOT1Q) {
             key.vlan_tag_valid = 1;
             key.vlan_tag_vid = l2seg_get_fab_encap_val(args->l2seg);
+        } else {
+            // TODO: Handle Tunnels
+            HAL_TRACE_ERR("PD-ADD-L2SEG-UPIF/PC::{}: Tunnel Case - NOT IMPLEMENTED.",
+                          __FUNCTION__);
+            return HAL_RET_OK;
         }
-        // TODO: Handle Tunnels
-
 
         // Insert
         ret = inp_prop_tbl->insert(&key, &data, &hash_idx);

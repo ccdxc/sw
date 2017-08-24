@@ -268,7 +268,9 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         key.vlan_tag_vid = l2seg_get_fab_encap_val((l2seg_t *)pi_l2seg);
     } else {
         // TODO: What if fab encap is Tunnel ...
-        HAL_ASSERT(0);
+        HAL_TRACE_ERR("PD-ENICIF::{}: FabEncap = VXLAN - NOT IMPLEMENTED",
+                      __FUNCTION__);
+        return HAL_RET_OK;
     }
 
     // Data. Only srclif as this will make the pkt drop

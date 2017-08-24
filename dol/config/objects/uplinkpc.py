@@ -123,7 +123,7 @@ class UplinkPcObjectHelper:
         if len(self.uplinkpcs) == 0: return
         cfglogger.info("Adding %d UplinkPcs to Store." % len(self.uplinkpcs))
         Store.objects.SetAll(self.uplinkpcs)
-        Store.trunk_uplinks.SetAll(self.trunks)
+        Store.SetTrunkingUplinks(self.trunks)
         return
 
     def GetAll(self):

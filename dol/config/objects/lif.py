@@ -19,9 +19,9 @@ class LifObject(objects.FrameworkObject):
         super().__init__()
 
         if namespace:
-            self.id     = namespace.get()
+            self.id = namespace.get()
         else:
-            self.id         = resmgr.LifIdAllocator.get()
+            self.id = resmgr.LifIdAllocator.get()
         self.GID("Lif%d" % self.id)
         self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
@@ -74,7 +74,8 @@ class LifObjectHelper:
         self.aidx = 0
         return
 
-    def Generate(self, tenant, spec, count, namespace):
+    def Generate(self, tenant, spec, namespace):
+        count = namespace.GetCount()
         cfglogger.info("Creating %d Lifs. for Tenant:%s" %\
                        (count, tenant.GID()))
         for l in range(count):

@@ -18,6 +18,4 @@ span_sessions:
 
 sessions: None
 
-lif:
-    spec        : ref://store/specs/id=LIF_ETH
-    count       : 4
+lif: ref://store/specs/id=LIF_ETH

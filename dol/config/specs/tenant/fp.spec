@@ -23,6 +23,5 @@ sessions:
             - ref://store/specs/id=SESSION_UDP
         ipv6: None
         mac: None
-lif:
-    spec        : ref://store/specs/id=LIF_ETH
-    count       : 1
+
+lif: ref://store/specs/id=LIF_ETH

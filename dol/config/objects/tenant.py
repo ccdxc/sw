@@ -30,6 +30,7 @@ class TenantObject(base.ConfigObjectBase):
 
         self.spec = spec
         self.type = spec.type.upper()
+        
         self.overlay = spec.overlay.upper()
         self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
@@ -66,15 +67,16 @@ class TenantObject(base.ConfigObjectBase):
 
     def IsInfra(self):
         return self.type == 'INFRA'
-
     def IsSpan(self):
         return self.type == 'SPAN'
-    
+    def IsTenant(self):
+        return self.type == 'TENANT'
+
     def IsOverlayVxlan(self):
         return self.overlay == 'VXLAN'
     def IsOverlayVlan(self):
         return self.overlay == 'VLAN'
-    
+   
     def __create_segments(self):
         for entry in self.spec.segments:
             spec = entry.spec.Get(Store)
@@ -83,9 +85,8 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def __create_lifs(self):
-        self.spec.lif.spec = self.spec.lif.spec.Get(Store)
-        self.obj_helper_lif.Generate(self, self.spec.lif.spec,
-                                     self.spec.lif.count, self.lifns)
+        self.spec.lif = self.spec.lif.Get(Store)
+        self.obj_helper_lif.Generate(self, self.spec.lif, self.lifns)
         self.obj_helper_lif.Configure()
         return
 

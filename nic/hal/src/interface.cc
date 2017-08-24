@@ -741,7 +741,8 @@ hal_ret_t enicif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
     // lif for enicif ... rsp is updated within the call
     ret = get_lif_hdl_for_enicif(spec, rsp, hal_if);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-Enicif:{}: Unable to find the lif handle Err: {}", ret);
+        HAL_TRACE_ERR("PI-Enicif:{}: Unable to find the lif handle Err: {}",
+                      __FUNCTION__, ret);
         return ret;
     }
 
@@ -903,7 +904,7 @@ end:
 hal_ret_t get_lif_hdl_for_enicif(InterfaceSpec& spec, InterfaceResponse *rsp, 
                                  if_t *hal_if)
 {
-    lif_id_t            lif_id;
+    lif_id_t            lif_id = 0;
     hal_handle_t        lif_handle = 0;
     lif_t               *lif = NULL;
     hal_ret_t           ret = HAL_RET_OK;
@@ -919,6 +920,8 @@ hal_ret_t get_lif_hdl_for_enicif(InterfaceSpec& spec, InterfaceResponse *rsp,
     }
 
     if(lif == NULL) {
+        HAL_TRACE_ERR("PI-Enicif:{}: LIF handle not found for ID:{} HDL:{}",
+                      __FUNCTION__, lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;
          goto end;

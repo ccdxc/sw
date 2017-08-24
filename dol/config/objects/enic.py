@@ -43,7 +43,7 @@ class EnicObject(base.ConfigObjectBase):
 
     def Show(self):
         cfglogger.info("- Enic = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - TenantID   = %d" % self.tenant.id)
+        cfglogger.info("  - Tenant     = %s" % self.tenant.GID())
         cfglogger.info("  - Ep         = %s" % self.ep.GID())
         cfglogger.info("  - EnicType   = %s" % self.type)
         cfglogger.info("  - EncapVlan  = %d" % self.encap_vlan_id)
@@ -63,6 +63,7 @@ class EnicObject(base.ConfigObjectBase):
         return self.type == ENIC_TYPE_PVLAN
 
     def PrepareHALRequestSpec(self, req_spec):
+        assert(self.ep != None)
         req_spec.meta.tenant_id = self.tenant.id
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
