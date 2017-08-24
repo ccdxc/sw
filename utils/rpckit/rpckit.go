@@ -96,6 +96,8 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		log.Errorf("failed to listen to %s: Err %v", listenURL, err)
 		return nil, err
 	}
+	// If started with ":0", listenURL needs to be updated.
+	listenURL = lis.Addr().String()
 
 	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{

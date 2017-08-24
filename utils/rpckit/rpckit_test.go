@@ -44,20 +44,20 @@ func (tst *testRPCHandler) TestRPCErr(ctx context.Context, req *TestReq) (*TestR
 }
 
 // newRPCServerClient create an RPC server and client
-func newRPCServerClient() (*RPCServer, *RPCClient, error) {
+func newRPCServerClient(t *testing.T) (*RPCServer, *RPCClient) {
 	// create an RPC server
-	rpcServer, err := NewRPCServer("grpc.local", ":9900", WithTracerEnabled(true))
+	rpcServer, err := NewRPCServer("grpc.local", "localhost:0", WithTracerEnabled(true))
 	if err != nil {
-		return nil, nil, err
+		t.Fatalf("Failed to create listener, error: %v", err)
 	}
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("grpc.local", "localhost:9900", WithTracerEnabled(true))
+	rpcClient, err := NewRPCClient("grpc.local", rpcServer.listenURL, WithTracerEnabled(true))
 	if err != nil {
-		return nil, nil, err
+		t.Fatalf("Failed to create client with error: %v", err)
 	}
 
-	return rpcServer, rpcClient, nil
+	return rpcServer, rpcClient
 }
 
 // stopRPCServerClient closes connections and stops RPC server
@@ -76,8 +76,7 @@ func TestRPCBasic(t *testing.T) {
 	}
 
 	// create an RPC server and client
-	rpcServer, rpcClient, err := newRPCServerClient()
-	AssertOk(t, err, "Error creating RPC server/client")
+	rpcServer, rpcClient := newRPCServerClient(t)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -87,7 +86,7 @@ func TestRPCBasic(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make sure server with no URL or client with no URL fails
-	_, err = NewRPCServer("grpc.local", "")
+	_, err := NewRPCServer("grpc.local", "")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
 	_, err = NewRPCClient("grpc.local", "")
 	Assert(t, (err != nil), "client with no URL succeded while expecting it to fail")
@@ -125,8 +124,7 @@ func TestRPCClientReconnect(t *testing.T) {
 	}
 
 	// create an RPC server and
-	rpcServer, rpcClient, err := newRPCServerClient()
-	AssertOk(t, err, "Error creating RPC server/client")
+	rpcServer, rpcClient := newRPCServerClient(t)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -136,7 +134,7 @@ func TestRPCClientReconnect(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make an RPC call
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
 	AssertOk(t, err, "RPC error")
 
 	// close the client connection
@@ -178,8 +176,7 @@ func TestRPCServerRestart(t *testing.T) {
 	}
 
 	// create an RPC server and
-	rpcServer, rpcClient, err := newRPCServerClient()
-	AssertOk(t, err, "Error creating RPC server/client")
+	rpcServer, rpcClient := newRPCServerClient(t)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -189,7 +186,7 @@ func TestRPCServerRestart(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make an RPC call
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
 	AssertOk(t, err, "RPC error")
 
 	// stop the old server and wait for a while to make sure connectin closes
@@ -203,12 +200,15 @@ func TestRPCServerRestart(t *testing.T) {
 
 	// start a new server
 	t.Logf("Restarting RPC server")
-	rpcServer, err = NewRPCServer("grpc.local", ":9900")
+	rpcServer, err = NewRPCServer("grpc.local", rpcServer.listenURL)
 	AssertOk(t, err, "RPC server restart error")
 	RegisterTestServer(rpcServer.GrpcServer, testHandler)
-	defer func() { rpcServer.Stop() }()
+	defer func() {
+		rpcServer.Stop()
+		time.Sleep(time.Millisecond)
+	}()
 
-	// make an RPC call succeds with new server
+	// make an RPC call succeeds with new server
 	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"}, grpc.FailFast(false))
 	AssertOk(t, err, "RPC error")
 
@@ -239,8 +239,7 @@ func TestRPCMultipleHandlers(t *testing.T) {
 	}
 
 	// create an RPC server and
-	rpcServer, rpcClient, err := newRPCServerClient()
-	AssertOk(t, err, "Error creating RPC server/client")
+	rpcServer, rpcClient := newRPCServerClient(t)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
