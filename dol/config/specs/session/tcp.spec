@@ -7,6 +7,8 @@ proto: tcp
 entries:
     - entry:
         label: networking
+        tracking: False
+        timestamp: False
         responder: 
             port : const/42001
         initiator: 
@@ -41,6 +43,8 @@ entries:
 
     - entry:
         label: span
+        tracking: False
+        timestamp: False
         responder: 
             port : const/81
             span : ref://store/objects/id=SpanSession0002
@@ -50,6 +54,8 @@ entries:
 
     - entry:
         label: tcp-proxy
+        tracking: False
+        timestamp: False
         responder: 
             port : const/80
         initiator: 

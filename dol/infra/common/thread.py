@@ -98,7 +98,7 @@ class InfraThreadHandler(InfraThread):
             except InfraThreadExitException:
                 break
             except Exception as e:
-                log_exception()
+                log_exception(logger)
                 logger.critical("Exception in thread %s" % e)
                 break
         self.exit()

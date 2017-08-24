@@ -25,33 +25,37 @@ class SessionObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('SESSION'))
         return
 
-    def Init(self, initiator, responder, label,
-             initiator_span, responder_span):
+    def Init(self, initiator, responder, spec):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
+        self.spec = spec
         self.initiator = initiator
-        self.initiator_span = initiator_span
-        self.responder_span = responder_span
         self.responder = responder
-        self.label = label.upper()
+        self.label = self.spec.label.upper()
         
         assert(initiator.proto == responder.proto)
         self.proto = initiator.proto
 
-        self.iflow = flow.FlowObject(self, self.initiator,
-                                     self.responder, 'IFLOW', 
-                                     self.label, self.initiator_span)
-        self.rflow = flow.FlowObject(self, self.responder,
-                                     self.initiator, 'RFLOW', 
-                                     self.label, self.responder_span)
+        self.iflow = flow.FlowObject(self, self.initiator, self.responder,
+                                     'IFLOW', self.label,
+                                     self.spec.initiator.span)
+        self.rflow = flow.FlowObject(self, self.responder, self.initiator,
+                                     'RFLOW', self.label,
+                                     self.spec.responder.span)
 
         cfglogger.info("Created Session with GID:%s" % self.GID())
-        cfglogger.info("  - Label           : %s" % self.label)
+        cfglogger.info("  - Label           : %s" % self.spec.label)
+        if self.IsTCP():
+            cfglogger.info("  - Tracking        : %s" % self.spec.tracking)
+            cfglogger.info("  - Timestamp       : %s" % self.spec.timestamp)
         cfglogger.info("  - Initiator       : %s" % self.initiator)
         cfglogger.info("  - Responder       : %s" % self.responder)
         cfglogger.info("  - Initiator Flow  : %s" % self.iflow)
         cfglogger.info("  - Responder Flow  : %s" % self.rflow)
         return
+
+    def IsTCP(self):
+        return self.initiator.IsTCP()
 
     def PrepareHALRequestSpec(self, req_spec):
         cfglogger.info("Configuring Session with GID:%s" % self.GID())
@@ -61,7 +65,8 @@ class SessionObject(base.ConfigObjectBase):
         req_spec.meta.tenant_id = self.initiator.ep.tenant.id
 
         req_spec.session_id = self.id
-        req_spec.conn_track_en = False
+        req_spec.conn_track_en = self.spec.tracking if self.IsTCP() else False
+        req_spec.tcp_ts_option = self.spec.timestamp if self.IsTCP() else False
 
         self.iflow.PrepareHALRequestSpec(req_spec.initiator_flow)
         self.rflow.PrepareHALRequestSpec(req_spec.responder_flow)
@@ -149,9 +154,7 @@ class SessionObjectHelper:
                 session = SessionObject()
                 session.Init(copy.copy(flowep1),
                              copy.copy(flowep2),
-                             t.entry.label,
-                             t.entry.initiator.span,
-                             t.entry.responder.span)
+                             t.entry)
                 self.objlist.append(session)
         return
             

@@ -130,6 +130,7 @@ class AclObjectHelper:
         return
         
     def Generate(self, topospec):
+        if topospec.acls == None: return
         spec = topospec.acls.Get(Store)
         cfglogger.info("Creating Acls")
         for e in spec.entries:
