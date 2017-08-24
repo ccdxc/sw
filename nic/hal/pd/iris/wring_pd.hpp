@@ -11,7 +11,7 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_WRING                        2048
-#define WRING_SLOT_SIZE                         sizeof(uint64_t)
+#define DEFAULT_WRING_SLOT_SIZE                 8 
 
 typedef uint32_t    wring_hw_id_t;
 
@@ -30,6 +30,7 @@ typedef struct pd_wring_meta_s {
     bool        is_global;
     char        hbm_reg_name[64];
     uint32_t    num_slots;
+    uint32_t    slot_size_in_bytes;
     char        obj_hbm_reg_name[64];
     uint32_t    obj_size;
 } pd_wring_meta_t;

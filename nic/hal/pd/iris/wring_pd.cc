@@ -15,59 +15,64 @@ hal_ret_t
 wring_pd_meta_init() {
     /*
      * Add meta info for each ring
-     * Fomat: is Global Ring, region name, # of slots in the ring, 
+     * Fomat: is Global Ring, region name, # of slots in the ring, slot size in bytes
      *         associate object region name, associated size of object
      */
 
     g_meta[types::WRING_TYPE_SERQ] = 
-        (pd_wring_meta_t) {false, "serq", 64, "", 0};
+        (pd_wring_meta_t) {false, "serq", 64, DEFAULT_WRING_SLOT_SIZE, "", 0};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_TX, 128};
  
     g_meta[types::WRING_TYPE_NMDR_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_RX, 128};
     
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_TX, 2048};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_RX, 2048};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_TX, 9216};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_RX, 9216};
 
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, "bsq", 64, "", 0};
+        (pd_wring_meta_t) {false, "bsq", 64, DEFAULT_WRING_SLOT_SIZE, "", 0};
+
+    g_meta[types::WRING_TYPE_BRQ] =
+        (pd_wring_meta_t) {true, "brq", 1024, 128, "", 0};
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-get_default_slot_value(types::WRingType type, uint32_t index, uint64_t* value)
+get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
 {
     pd_wring_meta_t     *meta = &g_meta[type];
 
     if(strlen(meta->obj_hbm_reg_name) <= 0) {
-        *value = 0;
+        memset(value, 0, meta->slot_size_in_bytes);
     } else {
         wring_hw_id_t obj_addr_base = get_start_offset(meta->obj_hbm_reg_name);
         if(obj_addr_base == 0) {
             HAL_TRACE_ERR("Failed to get the addr for the object");
-            *value = 0;
+            memset(value, 0, meta->slot_size_in_bytes);
             return HAL_RET_ENTRY_NOT_FOUND;
         }
         // get the addr of the object
-        *value = (obj_addr_base + (index * meta->obj_size));    
+        uint64_t obj_addr = obj_addr_base + (index * meta->obj_size);
+        obj_addr = htonll(obj_addr);
+        memcpy(value, &obj_addr, sizeof(obj_addr));
     }
     return HAL_RET_OK;
 }
@@ -89,7 +94,7 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
         *wring_base = addr;    
     } else {
         // Flow local ring. Get the offset based on wring id
-        uint32_t wring_size = meta->num_slots * WRING_SLOT_SIZE; 
+        uint32_t wring_size = meta->num_slots * meta->slot_size_in_bytes; 
         *wring_base = addr + (wring_id * wring_size);
     }
 
@@ -115,17 +120,17 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         return HAL_RET_ERR;
     }
 
-    uint32_t required_size = meta->num_slots * WRING_SLOT_SIZE;
+    uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes;
     HAL_ASSERT(reg_size * 1024 >= required_size);
 
-    uint64_t value = 0;
+    // Allocate memory for storing value for a slot
+    uint8_t value[meta->slot_size_in_bytes];
     for(uint32_t  index = 0; index<meta->num_slots; index++) {
 
-        uint64_t slot_addr = wring_base + (index * WRING_SLOT_SIZE);
+        uint64_t slot_addr = wring_base + (index * meta->slot_size_in_bytes);
         
-        get_default_slot_value(type, index, &value);
-	value = htonll(value);
-        p4plus_hbm_write(slot_addr, (uint8_t *)&value, WRING_SLOT_SIZE);
+        get_default_slot_value(type, index, value);
+        p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes);
     }
     return HAL_RET_OK;
 }
@@ -149,17 +154,22 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
     
     // Normalize
     uint32_t slot_index = (wring_pd->wring->slot_index % meta->num_slots);
-    wring_hw_id_t slot_addr = wring_base + (slot_index * WRING_SLOT_SIZE);
+    wring_hw_id_t slot_addr = wring_base + (slot_index * meta->slot_size_in_bytes);
 
     HAL_TRACE_DEBUG("Reading from the addr: {}", slot_addr);
 
-    uint64_t value;
+    uint8_t value[meta->slot_size_in_bytes];
     if(!p4plus_hbm_read(slot_addr, 
-                        (uint8_t *)&value, 
-                        sizeof(uint64_t))) {
+                        value, 
+                        meta->slot_size_in_bytes)) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");    
     }
-    wring->slot_value = ntohll(value);
+    if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
+        wring->slot_value = ntohll(*(uint64_t *)value);
+    } else {
+        // TODO: Handle swizzle for arbiterary size
+        memcpy(&wring->slot_value, value, sizeof(wring->slot_value));
+    }
     return ret;
 }
 
@@ -182,7 +192,8 @@ wring_pd_init_global_rings()
                 // continue with the initialization of the remaining tables
                 continue;
             } 
-            HAL_TRACE_DEBUG("Initialize p4plus wring of type {}", i);
+            HAL_TRACE_DEBUG("Initialized p4plus ring: {}", 
+                types::WRingType_Name(types::WRingType(i)));
         }
     }
     return ret;

@@ -77,6 +77,11 @@
             "size_kb": 16384
         },
         {
+            "name": "brq",
+            "size_kb": 128
+        },
+
+        {
             "name": "descriptor-tx",
             "size_kb": 2048
         },
