@@ -2,7 +2,6 @@
 
 LIBDIRS = \
 	  tcp/rx \
-	  tcp/tx \
 	  tls \
           $(NULL)
 PGMDIRS = $(NULL)

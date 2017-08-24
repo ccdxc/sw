@@ -108,7 +108,9 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
     
     if(!del) {
-        data.u.read_tls_stg0_d.pc = 0;
+        /* TODO : Need action id from loader api */
+        data.action_id = 0;
+        data.u.read_tls_stg0_d.total = 2;
 
         // Get Serq address
         wring_hw_id_t  serq_base;

@@ -7,6 +7,8 @@
 #include "tls-shared-state.h"
 #include "tls-macros.h"
 #include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 
 struct d_struct {
         tls_hdr_type                     : 8;
@@ -22,7 +24,7 @@ struct k_struct {
 	enc_flow                         : 1		 ;
 };
 
-struct p_struct p	;
+struct phv_ p	;
 struct k_struct k	;
 struct d_struct d	;
 	
@@ -30,14 +32,10 @@ struct d_struct d	;
 	.param		tls_alloc_tnmdr_start
 	
 tls_read_header_process_start:
-	phvwr		p.pending_rx_serq, k.pending_rx_serq
-	phvwr		p.pending_rx_brq, k.pending_rx_brq
-	phvwr		p.enc_flow, k.enc_flow
-
-	phvwr		p.tls_hdr_type, d.tls_hdr_type
-	phvwr		p.tls_hdr_version_major, d.tls_hdr_version_major
-	phvwr		p.tls_hdr_version_minor, d.tls_hdr_version_minor
-	phvwr		p.tls_hdr_len, d.tls_hdr_len
+	phvwr		p.tls_global_phv_tls_hdr_type, d.tls_hdr_type
+	phvwr		p.tls_global_phv_tls_hdr_version_major, d.tls_hdr_version_major
+	phvwr		p.tls_global_phv_tls_hdr_version_minor, d.tls_hdr_version_minor
+	phvwr		p.tls_global_phv_tls_hdr_len, d.tls_hdr_len
 	
 	sne		c1, k.pending_rx_brq, r0
 	bcf		[c1], table_read_alloc_sesq_pi
@@ -48,7 +46,7 @@ tls_read_header_process_start:
 	nop
 
 table_read_alloc_tnmdr:
-	phvwri		p.split, 1
+	phvwri		p.tls_global_phv_split, 1
 	addi 		r3, r0, TNMDR_ALLOC_IDX
 	CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_alloc_tnmdr_start,
 	                    r3, TABLE_SIZE_16_BITS)

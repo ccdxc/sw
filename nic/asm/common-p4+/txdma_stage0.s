@@ -17,7 +17,12 @@
 %%
 
     .param      storage_tx_q_state_pop_start
+    .param	tls_stage0
 
+
+tls_tx_stage0:
+    j  tls_stage0
+    nop
 
 eth_tx_stage0:
    nop.e
