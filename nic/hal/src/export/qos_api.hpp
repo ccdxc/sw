@@ -46,8 +46,39 @@ using hal::policer_t;
 // Policer APIs
 uint32_t policer_get_policer_id(policer_t *pi_policer);
 void policer_set_pd_policer(policer_t *pi_policer, void *pd_policer);
-policer_direction_e policer_get_direction(policer_t *pi_policer);
-bool policer_get_marking_action(policer_t *pi_policer, qos_marking_action_t *m_action);
+qos_direction_e policer_get_direction(policer_t *pi_policer);
+void policer_get_marking_action(policer_t *pi_policer, qos_marking_action_t *m_action);
+
+static inline void
+qos_copy_marking_action (qos_marking_action_t *d,
+                         qos_marking_action_t *s)
+{
+    memcpy(d, s, sizeof(qos_marking_action_t));
+}
+
+static inline uint32_t
+qos_marking_action_pcp_rewrite_en (qos_marking_action_t *marking_action)
+{
+    return marking_action->pcp_rewrite_en;
+}
+
+static inline uint32_t
+qos_marking_action_pcp (qos_marking_action_t *marking_action)
+{
+    return marking_action->pcp;
+}
+
+static inline uint32_t
+qos_marking_action_dscp_rewrite_en (qos_marking_action_t *marking_action)
+{
+    return marking_action->dscp_rewrite_en;
+}
+
+static inline uint32_t
+qos_marking_action_dscp (qos_marking_action_t *marking_action)
+{
+    return marking_action->dscp;
+}
 
 } // namespace hal
 #endif // __QOS_API_HPP__

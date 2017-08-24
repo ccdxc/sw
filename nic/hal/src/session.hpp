@@ -10,6 +10,7 @@
 #include <session.pb.h>
 #include <pd.hpp>
 #include <p4pd.h>
+#include <qos.hpp>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -121,6 +122,8 @@ typedef struct flow_cfg_s {
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
+    qos_action_t              in_qos_action;       // Ingress qos action
+    qos_action_t              eg_qos_action;       // Egress qos action
 } __PACK__ flow_cfg_t;
 
 // flow state

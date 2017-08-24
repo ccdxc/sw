@@ -97,7 +97,7 @@ policer_pd_alloc_res(pd_policer_t *pd_policer)
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
     // Allocate policer hwid
-    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_POLICER) {
+    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_QOS) {
         rs = g_hal_state_pd->ingress_policer_hwid_idxr()->alloc((uint32_t *)&pd_policer->hw_policer_id);
     } else {
         rs = g_hal_state_pd->egress_policer_hwid_idxr()->alloc((uint32_t *)&pd_policer->hw_policer_id);
@@ -125,7 +125,7 @@ policer_pd_dealloc_res (pd_policer_t *pd_policer)
     if (pd_policer->hw_policer_id == HAL_INVALID_HW_POLICER_ID) {
         return;
     }
-    if (policer_get_direction(policer) == INGRESS_POLICER) {
+    if (policer_get_direction(policer) == INGRESS_QOS) {
         g_hal_state_pd->ingress_policer_hwid_idxr()->free(
             (uint32_t)pd_policer->hw_policer_id);
     } else {
@@ -193,23 +193,20 @@ policer_pd_pgm_ingress_policer_action_tbl (pd_policer_t *pd_policer)
     hal_ret_t                         ret = HAL_RET_OK;
     DirectMap                         *policer_action_tbl = NULL;
     ingress_policer_action_actiondata data;
-    bool                              marking_en;
     qos_marking_action_t              marking_action;
 
     memset(&data, 0, sizeof(data));
 
-    marking_en = policer_get_marking_action((policer_t*)pd_policer->pi_policer, 
-                                           &marking_action);
+    policer_get_marking_action((policer_t*)pd_policer->pi_policer, 
+                               &marking_action);
 
     data.actionid = INGRESS_POLICER_ACTION_INGRESS_POLICER_ACTION_ID;
 
 
-    if (marking_en) {
-        policer_action.cos_en = qos_marking_action_pcp_rewrite_en(&marking_action);
-        policer_action.cos = qos_marking_action_pcp(&marking_action);
-        policer_action.dscp_en = qos_marking_action_dscp_rewrite_en(&marking_action);
-        policer_action.dscp = qos_marking_action_dscp(&marking_action);
-    }
+    policer_action.cos_en = qos_marking_action_pcp_rewrite_en(&marking_action);
+    policer_action.cos = qos_marking_action_pcp(&marking_action);
+    policer_action.dscp_en = qos_marking_action_dscp_rewrite_en(&marking_action);
+    policer_action.dscp = qos_marking_action_dscp(&marking_action);
 
     policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_INGRESS_POLICER_ACTION);
     HAL_ASSERT_RETURN((policer_action_tbl != NULL), HAL_RET_ERR);
@@ -260,7 +257,7 @@ policer_pd_pgm_policer_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_POLICER) {
+    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_QOS) {
         ret = policer_pd_pgm_ingress_policer_tbl(pd_policer);
     } else {
         ret = policer_pd_pgm_egress_policer_tbl(pd_policer);
@@ -273,7 +270,7 @@ policer_pd_pgm_policer_action_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_POLICER) {
+    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_QOS) {
         ret = policer_pd_pgm_ingress_policer_action_tbl(pd_policer);
     } else {
         ret = policer_pd_pgm_egress_policer_action_tbl(pd_policer);
@@ -370,7 +367,7 @@ policer_pd_cleanup_policer_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_POLICER) {
+    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_QOS) {
         ret = policer_pd_cleanup_ingress_policer_tbl(pd_policer);
     } else {
         ret = policer_pd_cleanup_egress_policer_tbl(pd_policer);
@@ -384,7 +381,7 @@ policer_pd_cleanup_policer_action_tbl (pd_policer_t *pd_policer)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_POLICER) {
+    if (policer_get_direction((policer_t*)pd_policer->pi_policer) == INGRESS_QOS) {
         ret = policer_pd_cleanup_ingress_policer_action_tbl(pd_policer);
     } else {
         ret = policer_pd_cleanup_egress_policer_action_tbl(pd_policer);

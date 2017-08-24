@@ -5,7 +5,7 @@ meta:
 
 fields:
     version : const/6
-    tc      : const/0
+    tc      : const/7
     fl      : const/0
     plen    : None      # Scapy will fill this.
     nh      : ipproto/255

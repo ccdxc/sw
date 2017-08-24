@@ -12,6 +12,34 @@ using hal::utils::bitmap;
 
 namespace hal {
 
+typedef enum {
+    INGRESS_QOS = 0,
+    EGRESS_QOS = 1
+} qos_direction_e;
+
+typedef struct qos_marking_action_s {
+    bool     pcp_rewrite_en;     // Rewrite the 802.1q pcp value
+    uint32_t pcp;                // 802.1q pcp value to mark with
+    bool     dscp_rewrite_en;    // Rewrite the dscp value
+    uint32_t dscp;               // DSCP value to mark with
+} __PACK__ qos_marking_action_t;
+
+// Structure to define qos action
+typedef struct qos_action_s {
+    qos_direction_e         direction;
+    bool                    queue_valid;    // Queue is valid
+    hal_handle_t            queue_handle;
+    bool                    policer_valid;  // Policer is enabled
+    hal_handle_t            policer_handle;
+    qos_marking_action_t    marking_action;
+} __PACK__ qos_action_t;
+
+hal_ret_t
+qos_extract_action_from_spec (qos_action_t *qos_action,
+                              const qos::QOSActions& spec,
+                              qos_direction_e direction);
+
+
 typedef uint32_t buf_pool_id_t;
 
 #define HAL_MAX_BUF_POOLS            (32*HAL_MAX_TM_PORTS)
@@ -32,7 +60,7 @@ typedef struct buf_pool_spec_s {
                                   // below this limit, xoff will be cleared
     uint32_t mtu;                 // MTU of the packets in bytes
     bitmap   *cos_bmp;            // COS values using this buffer pool
-} buf_pool_spec_t;
+} __PACK__ buf_pool_spec_t;
 
 // Buf-Pool structure
 typedef struct buf_pool_s {
@@ -155,7 +183,7 @@ typedef union sched_config_s {
     struct {
         uint32_t  rate;                  // Rate for strict priority scheduling
     } strict;
-} sched_config_t;
+} __PACK__ sched_config_t;
 
 // Queue structure
 typedef struct queue_s {
@@ -253,28 +281,15 @@ hal_ret_t queue_update(qos::QueueSpec& spec,
                        qos::QueueResponse *rsp);
 
 
-typedef struct qos_marking_action_s {
-    bool     pcp_rewrite_en;     // Rewrite the 802.1q pcp value
-    uint32_t pcp;                // 802.1q pcp value to mark with
-    bool     dscp_rewrite_en;    // Rewrite the dscp value
-    uint32_t dscp;               // DSCP value to mark with
-} __PACK__ qos_marking_action_t;
-
 typedef uint32_t policer_id_t;
 
 #define HAL_MAX_POLICERS    2048
 
-typedef enum {
-    INGRESS_POLICER = 0,
-    EGRESS_POLICER = 1
-} policer_direction_e;
-
 // Specifications for the Policer
 typedef struct policer_spec_s {
-    policer_direction_e  direction;
+    qos_direction_e      direction;
     uint32_t             bandwidth;
     uint32_t             burst_size;
-    bool                 qos_marking_en; // Marking is enabled 
     qos_marking_action_t marking_action;
 } __PACK__ policer_spec_t;
 
@@ -341,9 +356,9 @@ policer_free (policer_t *policer)
 }
 
 static inline policer_t *
-find_policer_by_id (policer_id_t policer_id, policer_direction_e direction)
+find_policer_by_id (policer_id_t policer_id, qos_direction_e direction)
 {
-    if (direction == INGRESS_POLICER) {
+    if (direction == INGRESS_QOS) {
         return (policer_t *)g_hal_state->ingress_policer_id_ht()->lookup(&policer_id);
     } else {
         return (policer_t *)g_hal_state->egress_policer_id_ht()->lookup(&policer_id);
@@ -351,9 +366,9 @@ find_policer_by_id (policer_id_t policer_id, policer_direction_e direction)
 }
 
 static inline policer_t *
-find_policer_by_handle (hal_handle_t handle, policer_direction_e direction)
+find_policer_by_handle (hal_handle_t handle, qos_direction_e direction)
 {
-    if (direction == INGRESS_POLICER) {
+    if (direction == INGRESS_QOS) {
         return (policer_t *)g_hal_state->ingress_policer_hal_handle_ht()->lookup(&handle);
     } else {
         return (policer_t *)g_hal_state->egress_policer_hal_handle_ht()->lookup(&handle);
@@ -372,50 +387,6 @@ hal_ret_t policer_create(qos::PolicerSpec& spec,
                          qos::PolicerResponse *rsp);
 hal_ret_t policer_update(qos::PolicerSpec& spec,
                          qos::PolicerResponse *rsp);
-
-
-// Setters/Getters for the marking action
-static inline void
-qos_extract_marking_action_from_spec (qos_marking_action_t *m_spec, 
-                                      const qos::MarkingActionSpec& spec)
-
-{
-    m_spec->pcp_rewrite_en = spec.pcp_rewrite_en();
-    m_spec->pcp = spec.pcp();
-    m_spec->dscp_rewrite_en = spec.dscp_rewrite_en();
-    m_spec->dscp = spec.dscp();
-}
-
-static inline void
-qos_copy_marking_action (qos_marking_action_t *d,
-                         qos_marking_action_t *s)
-{
-    memcpy(d, s, sizeof(qos_marking_action_t));
-}
-
-static inline uint32_t
-qos_marking_action_pcp_rewrite_en (qos_marking_action_t *marking_action)
-{
-    return marking_action->pcp_rewrite_en;
-}
-
-static inline uint32_t
-qos_marking_action_pcp (qos_marking_action_t *marking_action)
-{
-    return marking_action->pcp;
-}
-
-static inline uint32_t
-qos_marking_action_dscp_rewrite_en (qos_marking_action_t *marking_action)
-{
-    return marking_action->dscp_rewrite_en;
-}
-
-static inline uint32_t
-qos_marking_action_dscp (qos_marking_action_t *marking_action)
-{
-    return marking_action->dscp;
-}
 
 }    // namespace hal
 

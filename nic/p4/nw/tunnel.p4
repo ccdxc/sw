@@ -147,7 +147,9 @@ action f_encap_vlan(vlan_id, ethertype) {
     modify_field(vlan_tag.etherType, ethertype);
     modify_field(vlan_tag.vid, vlan_id);
     modify_field(ethernet.etherType, ETHERTYPE_VLAN);
-    modify_field(vlan_tag.pcp, qos_metadata.cos);
+    if (qos_metadata.cos_en == TRUE) {
+        modify_field(vlan_tag.pcp, qos_metadata.cos);
+    }
 }
 
 action encap_vlan() {

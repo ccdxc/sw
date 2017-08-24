@@ -13,6 +13,7 @@
 #include <endpoint_api.hpp>
 #include <endpoint_pd.hpp>
 #include <hal_state_pd.hpp>
+#include <qos_api.hpp>
 #include <defines.h>
 #include <string.h>
 
@@ -318,11 +319,14 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
         break;
     }
 
-    // TBD: the following come when QoS model is defined
-    d.flow_info_action_u.flow_info_flow_info.cos_en = 0;
-    d.flow_info_action_u.flow_info_flow_info.cos = 0;
-    d.flow_info_action_u.flow_info_flow_info.dscp_en = 0;
-    d.flow_info_action_u.flow_info_flow_info.dscp = 0;
+    d.flow_info_action_u.flow_info_flow_info.cos_en = 
+        qos_marking_action_pcp_rewrite_en(&flow->eg_qos_action.marking_action);
+    d.flow_info_action_u.flow_info_flow_info.cos = 
+        qos_marking_action_pcp(&flow->eg_qos_action.marking_action);
+    d.flow_info_action_u.flow_info_flow_info.dscp_en = 
+        qos_marking_action_dscp_rewrite_en(&flow->eg_qos_action.marking_action);
+    d.flow_info_action_u.flow_info_flow_info.dscp = 
+        qos_marking_action_dscp(&flow->eg_qos_action.marking_action);
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow->qid_en;

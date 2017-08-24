@@ -6,7 +6,7 @@ meta:
 fields:
     version : const/4
     ihl     : const/5
-    tos     : const/0
+    tos     : const/7
     len     : None      # Scapy will fill this
     id      : const/1
     flags   : const/0

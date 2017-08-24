@@ -54,6 +54,8 @@ class FlowObject(base.ConfigObjectBase):
         self.state      = self.__sfep.flow_info.state.upper()
         self.action     = self.__sfep.flow_info.action.upper()
         self.nat_type   = self.__sfep.flow_info.nat_type.upper()
+        self.in_qos     = self.__sfep.flow_info.in_qos
+        self.eg_qos     = self.__dfep.flow_info.eg_qos
        
         self.__init_key()
         self.__init_info()
@@ -179,6 +181,11 @@ class FlowObject(base.ConfigObjectBase):
             req_spec.flow_data.conn_track_info.tcp_mss = self.__sfep.tracking_info.tcp_mss.get()
 
         #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
+        # QOS stuff
+        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = self.eg_qos.cos_rw.get()
+        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.eg_qos.cos.get()
+        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = self.eg_qos.dscp_rw.get()
+        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.eg_qos.dscp.get()
 
         return
 

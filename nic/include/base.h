@@ -175,6 +175,8 @@ do {                                                       \
                                                                         \
     ENTRY(HAL_RET_WRING_NOT_FOUND,            32, "Wring not found") \
     ENTRY(HAL_RET_PROXY_NOT_FOUND,            33, "Proxy Service not found") \
+    ENTRY(HAL_RET_POLICER_NOT_FOUND,          34, "Policer not found") \
+    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           35, "Output queue not found") \
                                                                             \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

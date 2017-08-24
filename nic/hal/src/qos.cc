@@ -677,7 +677,7 @@ policer_compare_handle_key_func (void *key1, void *key2)
 static inline hal_ret_t
 add_policer_to_db (policer_t *policer)
 {
-    if (policer->spec.direction == INGRESS_POLICER) {
+    if (policer->spec.direction == INGRESS_QOS) {
         g_hal_state->ingress_policer_id_ht()->insert(policer, &policer->ht_ctxt);
         g_hal_state->ingress_policer_hal_handle_ht()->insert(policer, &policer->hal_handle_ht_ctxt);
     } else {
@@ -688,16 +688,16 @@ add_policer_to_db (policer_t *policer)
     return HAL_RET_OK;
 }
 
-static policer_direction_e 
+static qos_direction_e 
 policer_proto_dir_to_enum (qos::PolicerDirection proto_dir)
 {
     switch(proto_dir) {
         case qos::INGRESS_POLICER:
-            return INGRESS_POLICER;
+            return INGRESS_QOS;
         case qos::EGRESS_POLICER:
-            return EGRESS_POLICER;
+            return EGRESS_QOS;
         default:
-            return INGRESS_POLICER;
+            return INGRESS_QOS;
     }
 }
 
@@ -717,6 +717,17 @@ validate_policer_create (PolicerSpec& spec,
     }
 
     return HAL_RET_OK;
+}
+
+static inline void
+qos_extract_marking_action_from_spec (qos_marking_action_t *m_spec, 
+                                      const qos::MarkingActionSpec& spec)
+
+{
+    m_spec->pcp_rewrite_en = spec.pcp_rewrite_en();
+    m_spec->pcp = spec.pcp();
+    m_spec->dscp_rewrite_en = spec.dscp_rewrite_en();
+    m_spec->dscp = spec.dscp();
 }
 
 hal_ret_t
@@ -759,7 +770,6 @@ policer_create (PolicerSpec& spec,
     policer->spec.bandwidth = spec.bandwidth();
     policer->spec.burst_size = spec.burst_size();
     if (spec.has_marking_spec()) {
-        policer->spec.qos_marking_en = true;
         qos_extract_marking_action_from_spec(&policer->spec.marking_action, spec.marking_spec());
     }
 
@@ -791,6 +801,73 @@ hal_ret_t
 policer_update (PolicerSpec& spec,
                 PolicerResponse *rsp)
 {
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+qos_extract_action_from_spec (qos_action_t *qos_action,
+                              const qos::QOSActions& spec,
+                              qos_direction_e direction)
+{
+    queue_id_t queue_id;
+    queue_t *queue;
+    hal_handle_t queue_handle;
+    policer_id_t policer_id;
+    policer_t *policer;
+    hal_handle_t policer_handle;
+
+    qos_action->direction = direction;
+
+    // Sanity checks
+    if (spec.has_queue_key_or_handle()) {
+        auto queue_kh = spec.queue_key_or_handle();
+        if (queue_kh.key_or_handle_case() == qos::QueueKeyHandle::kQueueId) {
+            queue_id = queue_kh.queue_id();
+            queue = find_queue_by_id(queue_id);
+        } else {
+            queue_handle = queue_kh.queue_handle().handle();
+            queue = find_queue_by_handle(queue_handle);
+        }
+
+        if (queue == NULL) {
+            HAL_TRACE_ERR("PI-QOS:{}: Output queue not found",
+                          __func__);
+            return HAL_RET_OQUEUE_NOT_FOUND;
+        }
+        qos_action->queue_valid = true;
+        qos_action->queue_handle = queue->hal_handle;
+    }
+
+    if (spec.has_policer_key_or_handle()) {
+        auto policer_kh = spec.policer_key_or_handle();
+        if (policer_kh.key_or_handle_case() == qos::PolicerKeyHandle::kPolicerId) {
+            policer_id = policer_kh.policer_id();
+            policer = find_policer_by_id(policer_id, direction);
+        } else {
+            policer_handle = policer_kh.policer_handle().handle();
+            policer = find_policer_by_handle(policer_handle, direction);
+        }
+
+        if (policer == NULL) {
+            HAL_TRACE_ERR("PI-QOS:{}: Policer not found",
+                          __func__);
+            return HAL_RET_POLICER_NOT_FOUND;
+        }
+        qos_action->policer_valid = true;
+        qos_action->policer_handle = policer->hal_handle;
+    }
+
+    if (spec.has_marking_spec()) {
+        if (direction == INGRESS_QOS) {
+            HAL_TRACE_ERR("PI-QOS:{}: Marking is not supported in ingress",
+                          __func__);
+            return HAL_RET_INVALID_ARG;
+        }
+
+        qos_extract_marking_action_from_spec(&qos_action->marking_action,
+                                             spec.marking_spec());
+    }
     return HAL_RET_OK;
 }
 

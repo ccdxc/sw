@@ -10,8 +10,18 @@ entries:
         label: networking
         responder:
             port : const/128
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/2
+                    dscp_rw : const/1
+                    dscp    : const/3
         initiator: 
             port : const/47273
+            flow_info:
+                eg_qos:    
+                    dscp_rw : const/1
+                    dscp    : const/4
 
     - entry:
         label: span

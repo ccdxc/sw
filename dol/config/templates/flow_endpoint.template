@@ -19,7 +19,11 @@ flow_info:
     nat_dport   : l4port/0
     state       : established
     in_qos      : None
-    eg_qos      : None
+    eg_qos      : 
+        cos_rw          : const/0
+        cos             : const/7
+        dscp_rw         : const/0
+        dscp            : const/7
 tracking_info:
     timestamp       : const/0
     bytes           : const/0

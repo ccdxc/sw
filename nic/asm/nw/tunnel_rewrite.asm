@@ -14,8 +14,8 @@ nop:
 
 .align
 encap_vxlan:
-  phvwr       p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr       p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -46,8 +46,8 @@ encap_vxlan:
 
 .align
 encap_vxlan_gpe:
-  phvwr       p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr       p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -78,8 +78,8 @@ encap_vxlan_gpe:
 
 .align
 encap_genv:
-  phvwr       p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr       p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -110,8 +110,8 @@ encap_genv:
 
 .align
 encap_nvgre:
-  phvwr       p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr       p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -158,8 +158,8 @@ encap_gre:
 
 .align
 encap_erspan:
-  phvwr       p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr       p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -203,8 +203,8 @@ encap_ip:
 .align
 encap_mpls:
   seq         c1, d.u.encap_mpls_d.eompls, TRUE
-  phvwr.c1    p.inner_ethernet_dstAddr[47:24], k.ethernet_dstAddr_sbit0_ebit23
-  phvwr.c1    p.{inner_ethernet_dstAddr[23:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit24_ebit47...ethernet_etherType}
+  phvwr.c1    p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
+  phvwr.c1    p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
   add         r1, r0, d.u.encap_mpls_d.num_labels
@@ -230,7 +230,9 @@ encap_vlan:
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
   phvwr       p.vlan_tag_vid, k.rewrite_metadata_tunnel_vnid
   phvwr       p.vlan_tag_valid, 1
-  phvwr.e     p.{vlan_tag_pcp,vlan_tag_dei}, 0
+  seq         c7, k.qos_metadata_cos_en, 1
+  phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
+  phvwr.e     p.vlan_tag_dei, 0
   phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align
@@ -258,7 +260,9 @@ f_encap_vlan:
   phvwr       p.vlan_tag_etherType, r6
   phvwr       p.vlan_tag_vid, d.u.encap_vxlan_d.vlan_id
   phvwr       p.vlan_tag_valid, 1
-  phvwr       p.{vlan_tag_pcp,vlan_tag_dei}, 0
+  seq         c7, k.qos_metadata_cos_en, 1
+  phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
+  phvwr       p.vlan_tag_dei, 0
   jr          r1
   phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 

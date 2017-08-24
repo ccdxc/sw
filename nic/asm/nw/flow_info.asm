@@ -73,7 +73,7 @@ flow_info:
   phvwr       p.qos_metadata_cos_en, d.u.flow_info_d.cos_en
   phvwr       p.qos_metadata_cos, d.u.flow_info_d.cos
   phvwr.e     p.qos_metadata_dscp_en, d.u.flow_info_d.dscp_en
-  phvwr       p.qos_metadata_dscp_en, d.u.flow_info_d.dscp
+  phvwr       p.qos_metadata_dscp, d.u.flow_info_d.dscp
 
 .align
 flow_miss:

@@ -4,7 +4,7 @@ meta:
     size    : 4
 
 fields:
-    prio: 0
+    prio: const/7
     id  : 0
     vlan: vlanid/1
     type: None

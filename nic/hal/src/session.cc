@@ -9,7 +9,7 @@
 #include <utils.hpp>
 #include <pd_api.hpp>
 #include <interface_api.hpp>
-
+#include <qos.hpp>
 
 namespace hal {
 
@@ -265,6 +265,8 @@ static hal_ret_t
 extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
                              const FlowSpec& flow_spec)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
     flow->state = flow_spec.flow_data().flow_info().tcp_state();
     flow->action = flow_spec.flow_data().flow_info().flow_action();
     flow->role = is_initiator_flow ? FLOW_ROLE_INITIATOR : FLOW_ROLE_RESPONDER;
@@ -275,6 +277,20 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
                             flow_spec.flow_data().flow_info().nat_dip());
     flow->nat_sport = flow_spec.flow_data().flow_info().nat_sport();
     flow->nat_dport = flow_spec.flow_data().flow_info().nat_dport();
+
+    ret = qos_extract_action_from_spec(&flow->in_qos_action, 
+                                       flow_spec.flow_data().flow_info().in_qos_actions(),
+                                       INGRESS_QOS);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = qos_extract_action_from_spec(&flow->eg_qos_action, 
+                                       flow_spec.flow_data().flow_info().eg_qos_actions(),
+                                       EGRESS_QOS);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
 
     return HAL_RET_OK;
 }
@@ -776,7 +792,11 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     // extract initiator's flow key and data from flow spec
     extract_flow_key_from_spec(tid, args.sep->ep_flags & EP_FLAGS_LOCAL,
                                &args.iflow->key, spec.initiator_flow());
-    extract_flow_info_from_spec(args.iflow, TRUE, spec.initiator_flow());
+    ret = extract_flow_info_from_spec(args.iflow, TRUE, spec.initiator_flow());
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return ret;
+    }
     session.conn_track_en = spec.conn_track_en();
     if (session.conn_track_en) {
         args.session_state = &session_state;
@@ -790,7 +810,11 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     if (args.rflow) {
         extract_flow_key_from_spec(tid, args.dep->ep_flags & EP_FLAGS_LOCAL,
                                    &args.rflow->key, spec.responder_flow());
-        extract_flow_info_from_spec(args.rflow, FALSE, spec.responder_flow());
+        ret = extract_flow_info_from_spec(args.rflow, FALSE, spec.responder_flow());
+        if (ret != HAL_RET_OK) {
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return ret;
+        }
         if (session.conn_track_en) {
             extract_session_state_from_spec(args.session_state, FALSE,
                           spec.responder_flow().flow_data().conn_track_info());

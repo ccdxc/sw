@@ -9,6 +9,10 @@ entries:
         label: networking
         initiator:
             ethertype: 0xCCC0
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/5
         responder:
             ethertype: 0xCCC0
 

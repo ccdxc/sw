@@ -176,7 +176,7 @@ policer_set_pd_policer(policer_t *pi_policer, void *pd_policer)
 // ----------------------------------------------------------------------------
 // Policer API: Get the direction of Policer in PI Policer
 // ----------------------------------------------------------------------------
-policer_direction_e 
+qos_direction_e 
 policer_get_direction (policer_t *pi_policer) 
 {
     return pi_policer->spec.direction;
@@ -185,10 +185,9 @@ policer_get_direction (policer_t *pi_policer)
 // ----------------------------------------------------------------------------
 // Policer API: Get the marking action of Policer in PI Policer
 // ----------------------------------------------------------------------------
-bool
+void
 policer_get_marking_action(policer_t *pi_policer, qos_marking_action_t *m_action) 
 {
     qos_copy_marking_action(m_action, &pi_policer->spec.marking_action);
-    return pi_policer->spec.qos_marking_en;
 }
 } // namespace hal
