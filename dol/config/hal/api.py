@@ -183,7 +183,7 @@ def ConfigureProxyService(objlist):
 
 def ConfigureTlsCbs(objlist):
     if IsHalDisabled(): return
-    stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)
+    stub = tls_pb2_grpc.TlsCbStub(HalChannel)
     __config(objlist, tlscb_pb2.TlsCbRequestMsg,
              stub.TlsCbCreate)
     return

@@ -28,27 +28,15 @@ class TlsCbObject(base.ConfigObjectBase):
         self.tcpcb = tcpcb 
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
-        """
-        TODO:
-        self.spec = spec_obj
-        cfglogger.info("  - %s" % self)
-
-        self.uplinks = objects.ObjectDatabase(cfglogger)
-        for uplink_spec in self.spec.uplinks:
-            uplink_obj = uplink_spec.Get(Store)
-            self.uplinks.Set(uplink_obj.GID(), uplink_obj)
-
-        assert(len(self.uplinks) > 0) """
         return
 
     def PrepareHALRequestSpec(self, reqspec):
-        reqspec.meta.id             = self.id
-        reqspec.key_or_handle.id    = self.id
+        reqspec.key_or_handle.tlscb_id    = self.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("  - TlsCb %s = %s" %\
-                       (self.name, \
+                       (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
 
@@ -73,7 +61,7 @@ class TlsCbObjectHelper:
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
         cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
-        #halapi.ConfigureTlsCbs(objlist)
+        halapi.ConfigureTlsCbs(objlist)
         return
         
     def __gen_one(self, tcpcb):
@@ -89,6 +77,7 @@ class TlsCbObjectHelper:
 
     def main(self, tcpcb):
         objlist = self.Generate(tcpcb)
+        self.Configure(self.objlist)
         return objlist
 
 TlsCbHelper = TlsCbObjectHelper()
