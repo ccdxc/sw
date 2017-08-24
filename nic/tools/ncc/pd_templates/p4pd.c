@@ -335,8 +335,10 @@ p4pd_hash_table_entry_prepare(uint8_t *hwentry,
 
     uint16_t dest_start_bit = 0;
 
-    *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-    dest_start_bit += P4PD_ACTIONPC_BITS;
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
 
     p4pd_copy_byte_aligned_src_and_dest(hwentry,
                    dest_start_bit,
@@ -384,8 +386,10 @@ p4pd_p4table_entry_prepare(uint8_t *hwentry,
 
     uint16_t dest_start_bit = 0;
 
-    *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-    dest_start_bit += P4PD_ACTIONPC_BITS;
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
 
     p4pd_copy_byte_aligned_src_and_dest(hwentry,
                    dest_start_bit,
@@ -437,6 +441,9 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
 //::     for table in pddict['tables']:
 //::        tabledict[table] = tableid
 //::        tableid += 1
+//::        if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::            continue
+//::        #endif
 //::        tbl = table.upper()
 //::        keylen = pddict['tables'][table]['keysize']
 //::        max_actionfld_len = 0
@@ -574,6 +581,12 @@ ${table}_pack_action_data(uint32_t tableid,
     *actiondata_len_before_key = 0;
     *actiondata_len_after_key = 0;
 
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                add_action_pc = True
+//::            else:
+//::                add_action_pc = False
+//::            #endif
+
     switch(actiondata->actionid) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -585,7 +598,11 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::                if add_action_pc:
             mat_key_start_bit = ${mat_key_start_bit} - 8 /* 8 bits for action pc */; /* MatchKeyStart with APC before Key */ 
+//::                else:
+            mat_key_start_bit = ${mat_key_start_bit}; /* MatchKeyStart without APC before Key */ 
+//::                #endif
             mat_key_bit_length = ${mat_key_bit_length}; /* MatchKeyLen */
             before_key_adata_start_bit = 0;
             after_key_adata_start_bit = mat_key_start_bit + mat_key_bit_length;    
@@ -593,7 +610,7 @@ ${table}_pack_action_data(uint32_t tableid,
             packed_action_data = packed_actiondata_before_key;
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
-            if ((before_key_adata_start_bit + after_key_adata_start_bit + ${actionfldwidth})
+            if ((*actiondata_len_before_key + *actiondata_len_after_key + ${actionfldwidth})
                 >= P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
@@ -615,7 +632,7 @@ ${table}_pack_action_data(uint32_t tableid,
                                    (uint8_t*)(actiondata->${table}_action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    #endif
-                                   0, /* Starting from 0th bit in source */
+                                   ${actionfldwidth} - bits_before_mat_key,
                                    bits_before_mat_key);
                     (*actiondata_len_before_key) += bits_before_mat_key;
                     copy_before_key = false;
@@ -624,7 +641,7 @@ ${table}_pack_action_data(uint32_t tableid,
                     dest_start_bit = 0;
                     /* remaining field bits to be copied after end of match key */
                     bits_to_copy = ${actionfldwidth} - bits_before_mat_key;
-                    source_start_bit = bits_before_mat_key;
+                    source_start_bit = 0;
 
                 }
             }
@@ -1469,7 +1486,16 @@ ${table}_entry_write(uint32_t tableid,
     uint32_t hwkey_len, hwkeymask_len, actiondatalen;
     uint16_t action_pc, entry_size;
 
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                add_action_pc = True
+//::            else:
+//::                add_action_pc = False
+//::            #endif
+//::            if add_action_pc:
     action_pc = capri_get_action_pc(tableid, actiondata->actionid);
+//::            else:
+    action_pc = 0xff;
+//::            #endif
     actiondatalen = ${table}_pack_action_data(tableid, actiondata, 
                                                 packed_actiondata);
     entry_size = p4pd_p4table_entry_prepare(sram_hwentry, 
@@ -1507,7 +1533,16 @@ ${table}_entry_write(uint32_t tableid,
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t entry_size, actiondatalen;
 
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                add_action_pc = True
+//::            else:
+//::                add_action_pc = False
+//::            #endif
+//::            if add_action_pc:
     action_pc = capri_get_action_pc(tableid, actiondata->actionid);
+//::            else:
+    action_pc = 0xff;
+//::            #endif
     actiondatalen = ${table}_pack_action_data(tableid, actiondata,
                                               packed_actiondata);
     entry_size = p4pd_p4table_entry_prepare(hwentry,
@@ -1551,7 +1586,16 @@ ${table}_entry_write(uint32_t tableid,
     ${table}_hwentry_query(tableid, &hwkey_len, &hwactiondata_len);
     hash_${table}_key_len(tableid, &key_len);
                           
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                add_action_pc = True
+//::            else:
+//::                add_action_pc = False
+//::            #endif
+//::            if add_action_pc:
     action_pc = capri_get_action_pc(tableid, actiondata->actionid);
+//::            else:
+    action_pc = 0xff;
+//::            #endif
 
     /* For hash tables in both pipe and HBM, pack entries such that
      * key bits in memory is aligned with key bits in KM
@@ -2432,7 +2476,6 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len, i;
-    uint8_t  actionpc;
 
     capri_tcam_table_entry_read(tableid, index, hwentry_x, hwentry_y,
                                 &hwentry_bit_len);
@@ -2467,10 +2510,21 @@ ${table}_entry_read(uint32_t tableid,
     // Split HW entry into 
     //  - actionPC
     //  - Data
-    //TODO : How to handle case where actionpc is not in table...
-    actionpc = hwentry[0]; // First byte is always action-pc
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
-    ${table}_unpack_action_data(tableid, actiondata->actionid, hwentry+1, actiondata);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
+    ${table}_unpack_action_data(tableid, actiondata->actionid,
+                                hwentry + adatabyte, actiondata);
     return (P4PD_SUCCESS);
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
@@ -2481,7 +2535,6 @@ ${table}_entry_read(uint32_t tableid,
 {
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
-    uint8_t  actionpc;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_after_key, key_bit_len;
     
@@ -2503,10 +2556,21 @@ ${table}_entry_read(uint32_t tableid,
     // Split HW entry into 
     //  - actionPC
     //  - Data
-    //TODO : How to handle case where actionpc is not in table...
-    actionpc = hwentry[0]; // First byte is always action-pc
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
-    ${table}_unpack_action_data(tableid, actiondata->actionid, hwentry+1, actiondata);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
+    ${table}_unpack_action_data(tableid, actiondata->actionid,
+                                hwentry + adatabyte, actiondata);
                        
     return (P4PD_SUCCESS);
 }
@@ -2519,7 +2583,7 @@ ${table}_entry_read(uint32_t tableid,
 {
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
-    uint8_t  actionpc, *packed_actiondata_before_key;
+    uint8_t  *packed_actiondata_before_key;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_before_key;
     uint16_t actiondata_len_after_key, key_bit_len;
@@ -2549,14 +2613,24 @@ ${table}_entry_read(uint32_t tableid,
     key_bit_len = ${table}_hwkey_unbuild(tableid, hwentry + ${mat_key_start_byte}, 
                                          ${mat_key_bit_length}, swkey);
 
-    //TODO : How to handle case where actionpc is not in table...
-    actionpc = hwentry[0]; // First byte is always action-pc
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
     // Since actionpc is not in KM, when unbuilding key into p4fld,
     // pass pointer to hwentry byte stream after action-pc
-    packed_actiondata_before_key = (hwentry + 1); // After action-pc
+    packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
-    actiondata_len_before_key = ${mat_key_start_byte - 1} * 8; // bit len without actionpc
+    actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8;
     actiondata_len_after_key = hwentry_bit_len - (${mat_key_start_byte} * 8 + ${mat_key_bit_length}); // bit len
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
@@ -2660,16 +2734,26 @@ ${table}_entry_decode(uint32_t tableid,
                       uint16_t hwentry_len,
                       ${table}_actiondata* actiondata)
 {
-    uint8_t  actionpc;
-    
     // Split HW entry into 
     //  - actionPC
     //  - Data
 
-    //TODO : How to handle case where actionpc is not in table...
-    actionpc = hwentry[0]; // First byte is always action-pc
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
-    ${table}_unpack_action_data(tableid, actiondata->actionid, hwentry+1, actiondata);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
+
+    ${table}_unpack_action_data(tableid, actiondata->actionid,
+                                hwentry + adatabyte, actiondata);
                        
     return (P4PD_SUCCESS);
 }
@@ -2681,7 +2765,6 @@ ${table}_entry_decode(uint32_t tableid,
                       ${table}_swkey_t *swkey, 
                       ${table}_actiondata *actiondata)
 {
-    uint8_t  actionpc;
     uint16_t key_bit_len;
     
     // Split HW entry into 
@@ -2693,18 +2776,28 @@ ${table}_entry_decode(uint32_t tableid,
     // pass pointer to hwentry byte stream after action-pc
     key_bit_len = ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey);
 
-    //TODO : How to handle case where actionpc is not in table...
-    actionpc = hwentry[0]; // First byte is always action-pc
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                action_pc_added = True
+//::            else:
+//::                action_pc_added = False
+//::            #endif
+//::            if action_pc_added:
+    uint8_t actionpc = hwentry[0]; // First byte is always action-pc
     actiondata->actionid = capri_get_action_id(tableid, actionpc);
+    int adatabyte = 1;
+//::            else:
+    actiondata->actionid = 0;
+    int adatabyte = 0;
+//::            #endif
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
     uint8_t *packed_actiondata_before_key;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_before_key;
     uint16_t actiondata_len_after_key;
-    packed_actiondata_before_key = (hwentry + 1); // After action-pc
+    packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
-    actiondata_len_before_key = ${mat_key_start_byte - 1} * 8; // bit len without actionpc
+    actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8; // bit len without actionpc
     actiondata_len_after_key = hwentry_len - (${mat_key_start_byte} * 8 + key_bit_len); // bit len
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
@@ -2758,7 +2851,15 @@ ${api_prefix}_hwentry_query(uint32_t tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             (void)hwkey_len;
             (void)hwkeymask_len;
@@ -2834,7 +2935,15 @@ ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (P4PD_SUCCESS); /* No hardwre key for index based lookup tables. */
 //::            #endif
@@ -2969,7 +3078,15 @@ ${api_prefix}_entry_write(uint32_t tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_write(tableid, index, 
                                          (${table}_actiondata*)actiondata));
@@ -3040,7 +3157,15 @@ ${api_prefix}_entry_read(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_read(tableid, index, 
                             (${table}_actiondata*) actiondata));
@@ -3104,7 +3229,15 @@ ${api_prefix}_entry_create(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_hwentry_create(tableid,
                     (${table}_actiondata*)actiondata, hwentry));
@@ -3186,7 +3319,15 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
         {
             memcpy(_hwentry, hwentry, (hwentry_len + 7) >> 3);
 //::        if pddict['tables'][table]['location'] != 'HBM':
@@ -3775,7 +3916,15 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::                continue
+//::            #endif
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
+//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
+//::                caps_tbl_ = tbl_.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
+//::            #endif
         {
             b = snprintf(buf, blen, "Table: %s\n", "P4TBL_ID_${caps_tablename}");
             buf += b;

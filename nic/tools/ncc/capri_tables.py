@@ -2956,7 +2956,7 @@ class capri_stage:
             ct.ct_update_key_offsets()
             if ct.is_index_table():
                 ct._fix_idx_table_km_profile()
-            if ct.is_hbm and ct.is_hash_table() and ct.num_actions() > 1:
+            if ct.is_hash_table() and ct.num_actions() > 1:
                 ct._fix_hbm_hash_table_km_profile()
             if ct.is_tcam_table() and ct.final_key_size > ct.key_phv_size:
                 ct._fix_tcam_table_km_profile()

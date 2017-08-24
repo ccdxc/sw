@@ -32,6 +32,11 @@
 //::        if pddict['tables'][table]['direction'] == "EGRESS":
 //::            continue
 //::        #endif
+//::        if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
+//::            # Skip generating KI and KD for hash overflow table.
+//::            # Overflow table will use KI and KD of regular table.
+//::            continue
+//::        #endif
 
 /* ASM Key Structure for p4-table '${table}' */
 //::        if pddict['tables'][table]['type'] == 'Hash':
@@ -119,70 +124,68 @@ struct ${table}_k {
 //::            kd_size = 0
 //::            if len(actionfldlist):
 struct ${table}_${actionname}_d {
-//::                if pddict['tables'][table]['type'] == 'Hash':
-//::                    for fields in pddict['tables'][table]['asm_kd_fields']:
-//::                        if fields[0] == 'unionized':
-//::                            ustr, uflds = fields
-//::                            all_fields_of_header_in_same_byte = {}
-//::                            for fields in uflds:
-//::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
-//::                                 flit, flitoffset, typestr, hdrname) = fields
-//::                                if hdrname in all_fields_of_header_in_same_byte.keys():
-//::                                    all_fields_of_header_in_same_byte[hdrname] += p4fldwidth 
-//::                                else:
-//::                                    all_fields_of_header_in_same_byte[hdrname] = p4fldwidth 
-//::                                #endif
-//::                            #endfor
-//::                            max_fld_union_key_len = max(x for x in all_fields_of_header_in_same_byte.values())
-//::                            pad_to_512 += max_fld_union_key_len 
-    union { /* Sourced from field/hdr union */
-//::                            all_fields_of_header_in_same_byte = []
-//::                            for fields in uflds:
-//::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
-//::                                flit, flitoffset, typestr, hdrname) = fields
-//::                                if p4fldwidth == max_fld_union_key_len:
-        /* FieldType = ${typestr} */
-        ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
-//::                                else:
-//::                                    if hdrname not in all_fields_of_header_in_same_byte:
-        struct {
-//::                                        all_fields_of_header_in_same_byte.append(hdrname)
-//::                                        _total_p4fldwidth = 0
-//::                                        for _fields in uflds:
-//::                                            (_multip4fldname, _p4fldname, _p4fldwidth, _phvbit, \
-//::                                            _flit, _flitoffset, _typestr, _hdrname) = _fields
-//::                                            if _hdrname == hdrname:
-            /* K/I = ${_typestr} */
-            ${_multip4fldname} : ${_p4fldwidth}; /* phvbit[${_phvbit}], Flit[${_flit}], FlitOffset[${_flitoffset}] */
-//::                                                _total_p4fldwidth += _p4fldwidth
-//::                                            #endif
-//::                                        #endfor
-//::                                        padlen = max_fld_union_key_len - _total_p4fldwidth
-//::                                        if padlen:
-            /* Padded to align with unionized p4field */
-            _pad_${p4fldname} : ${padlen};
-//::                                        #endif
-//::                                    #endif
-        };
-//::                                #endif
-//::                            #endfor
-    };
-//::                        else:
-//::                            (multip4fldname, p4fldname, p4fldwidth, phvbit, \
-//::                            flit, flitoffset, typestr, hdrname) = fields
-    /* FieldType = ${typestr} */
-    ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
-//::                            pad_to_512 += p4fldwidth
+//::                # Action Data before Key bits in case of Hash table.
+//::                adata_bits_before_key = 0
+//::                if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
+//::                    mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
+//::                    if len(pddict['tables'][table]['actions']) > 1:
+//::                        actionpc_bits = 8
+//::                    else:
+//::                        actionpc_bits = 0
+//::                    #endif
+//::                    assert(mat_key_start_bit >= actionpc_bits)
+//::                    adata_bits_before_key = mat_key_start_bit - actionpc_bits
+//::                    last_actionfld_bits = 0
+//::                    if adata_bits_before_key:
+//::                        fill_adata = adata_bits_before_key
+//::                        for actionfld in actionfldlist:
+//::                            actionfldname, actionfldwidth = actionfld
+//::                            if actionfldwidth <= fill_adata:
+    ${actionfldname} : ${actionfldwidth};
+//::                                fill_adata -= actionfldwidth
+//::                                last_actionfld_bits = actionfldwidth
+//::                            else:
+    ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata};
+//::                                last_actionfld_bits = fill_adata
+//::                                fill_adata = 0
+//::                            #endif
+//::                            if not fill_adata:
+//::                                last_actionfldname = actionfldname
+//::                                break
+//::                            #endif
+//::                        #endfor
+//::                    #endif
+//::                    # Table Key bits -- Pad it here
+    __pad_key_bits : ${pddict['tables'][table]['match_key_bit_length']}; /* Entire Contiguous Keybits */
+//::                    pad_to_512 += pddict['tables'][table]['match_key_bit_length']
+//::                #endif
+//::                if adata_bits_before_key:
+//::                    # Pack remaining Action Data bits after Key
+//::                    kd_size = pad_to_512 + adata_bits_before_key
+//::                    skip_adatafld  = True
+//::                    for actionfld in actionfldlist:
+//::                        actionfldname, actionfldwidth = actionfld
+//::                        if skip_adatafld and actionfldname != last_actionfldname:
+//::                            continue
+//::                        elif skip_adatafld:
+//::                            skip_adatafld  = False
+//::                            if actionfldwidth > last_actionfld_bits:
+    ${actionfldname}_sbit${last_actionfld_bits}_ebit${actionfldwidth - 1} : ${actionfldwidth - last_actionfld_bits};
+//::                            #endif    
+//::                            kd_size += (actionfldwidth - last_actionfld_bits)
+//::                            continue
 //::                        #endif
+    ${actionfldname} : ${actionfldwidth};
+//::                        kd_size += actionfldwidth 
+//::                    #endfor
+//::                else:
+//::                    kd_size = pad_to_512
+//::                    for actionfld in actionfldlist:
+//::                        actionfldname, actionfldwidth = actionfld
+    ${actionfldname} : ${actionfldwidth};
+//::                        kd_size += actionfldwidth 
 //::                    #endfor
 //::                #endif
-
-//::                kd_size = pad_to_512
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
-    ${actionfldname} : ${actionfldwidth};
-//::                    kd_size += actionfldwidth 
-//::                #endfor
 //::                if len(pddict['tables'][table]['actions']) > 1:
 //::                    if not (pddict['tables'][table]['is_raw']):
 //::                        pad_to_512 = 512 - (8 + kd_size)

@@ -31,7 +31,8 @@ flow_hash_info:
   nop
 
 flow_hash_hit:
-  phvwr.e     p.flow_info_metadata_flow_index, d.flow_hash_info_d.flow_index
+  phvwr       p.flow_info_metadata_flow_index[19:14], d.flow_hash_info_d.flow_index_sbit0_ebit5
+  phvwr.e     p.flow_info_metadata_flow_index[13:0], d.flow_hash_info_d.flow_index_sbit6_ebit19
   phvwr       p.rewrite_metadata_entropy_hash, r1
 
 flow_hash_hint1:

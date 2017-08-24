@@ -719,8 +719,14 @@ class capri_p4pd:
                 if phv_byte == -1:
                     if km_byte_pos != km_cprofile.bit_loc and \
                        km_byte_pos != km_cprofile.bit_loc1:
-                        # PAD unused byte
-                        ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
+                        put_pad = False
+                        if is_tcam:
+                            put_pad = True
+                        elif not kd:
+                            put_pad = True
+                        if put_pad:
+                            # PAD unused byte
+                            ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
                         continue
 
 
@@ -1166,6 +1172,18 @@ class capri_p4pd:
                 tdict['type'] = 'Mpu'
             elif ctable.match_type == match_type.EXACT_HASH:
                 tdict['type'] = 'Hash'
+            '''
+            if ctable.collision_ct:
+                tdict['hash_overflow_tbl'] = ctable.collision_ct.p4_table.name
+            else:
+                tdict['hash_overflow_tbl'] = ''
+            '''
+            tdict['hash_overflow_tbl'] = ''
+            if ctable.is_overflow:
+                tdict['hash_overflow'] = True
+            else:
+                tdict['hash_overflow'] = False
+            tdict['otcam'] = ctable.is_otcam
 
             tdict['direction'] = "INGRESS" if ctable.d == xgress.INGRESS else "EGRESS"
             if self.be.args.p4_plus:
