@@ -5,7 +5,7 @@ CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
 
-PROJ = ipsec_txdma_actions_pass2
+PROJ = esp_v4_tunnel_n2h_txdma2
 OBJ_DIR = $(TOPDIR)/obj/asm_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
@@ -18,13 +18,13 @@ all: deps asm
 deps:
 
 SRC_FILES := \
-    ipsec_encap_txdma2_load_barco_req.s \
-    ipsec_encap_txdma2_load_barco_req_ptr.s \
-    ipsec_encap_txdma2_load_in_desc.s \
-    ipsec_encap_txdma2_load_out_desc.s \
-    ipsec_encap_txdma2_load_ipsec_int.s \
-    ipsec_build_encap_packet.s \
-    ipsec_encap_txdma2_initial_table.s
+    esp_ipv4_tunnel_n2h_build_decap_packet.s \
+    esp_ipv4_tunnel_n2h_get_barco_req_index_ptr.s \
+    esp_ipv4_tunnel_n2h_load_barco_req.s \
+    esp_ipv4_tunnel_n2h_txdma2_initial_table.s \
+    esp_ipv4_tunnel_n2h_txdma2_load_in_desc.s \
+    esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int.s \
+    esp_ipv4_tunnel_n2h_txdma2_load_out_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

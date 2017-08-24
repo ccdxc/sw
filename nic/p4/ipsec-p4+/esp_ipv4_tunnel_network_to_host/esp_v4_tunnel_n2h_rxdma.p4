@@ -170,6 +170,10 @@ metadata dma_cmd_phv2mem_t dma_cmd_tail_desc_addr;
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
+@pragma scratch_metadata
+metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr_scratch;
+
+
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
     modify_field(scratch_t0_s2s.in_page_addr, t0_s2s.in_page_addr); \
@@ -453,11 +457,13 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_to_stage3.tail_desc_addr, tail_desc_addr);
  
 
-    modify_field(ipsec_int_header.payload_start, p42p4plus_hdr.ipsec_payload_start+8+iv_size);
+    modify_field(ipsec_int_header.payload_start, p42p4plus_hdr.ipsec_payload_start+iv_size);
     modify_field(ipsec_int_header.tailroom_offset,  p42p4plus_hdr.ipsec_payload_end-icv_size-2);
-    modify_field(ipsec_int_header.headroom, p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size);
+    modify_field(ipsec_int_header.headroom, p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size - 8 );
     modify_field(ipsec_int_header.headroom_offset, (p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size - 8));
-    modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end-icv_size-2) - (p42p4plus_hdr.ipsec_payload_start+8+iv_size));
+    modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end-icv_size-2) - (p42p4plus_hdr.ipsec_payload_start+iv_size));
+   
+    modify_field(p42p4plus_hdr_scratch.seqNo,  p42p4plus_hdr.seqNo);
 
     //Sequence number checking logic
 

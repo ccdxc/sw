@@ -10,11 +10,9 @@ struct phv_ p;
         .param ipsec_cb_tail_enqueue_input_desc
         .align
 
-update_input_desc_aol:
+esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwri p.p42p4plus_hdr_table0_valid, 1
-    addi r2, r0, ipsec_cb_tail_enqueue_input_desc
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2 
+    phvwr p.common_te0_phv_table_pc, ipsec_cb_tail_enqueue_input_desc 
     phvwri p.common_te0_phv_table_raw_table_size, 7
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwr p.common_te0_phv_table_addr, k.ipsec_to_stage3_tail_desc_addr 

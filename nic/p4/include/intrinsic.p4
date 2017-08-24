@@ -61,7 +61,7 @@ header_type p4_to_p4plus_ipsec_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        gft_flow_id         : 24;
+        flow_id             : 24;
         ipsec_payload_start : 16;
         ipsec_payload_end   : 16;
         l4_protocol         : 8;

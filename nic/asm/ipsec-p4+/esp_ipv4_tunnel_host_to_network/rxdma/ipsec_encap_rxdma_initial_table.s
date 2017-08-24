@@ -40,25 +40,33 @@ ipsec_encap_rxdma_initial_table:
     //phvwr p.ipsec_global_frame_size, k.{p4_intr_frame_size_sbit0_ebit5...p4_intr_frame_size_sbit6_ebit13}
 
     phvwri p.p42p4plus_hdr_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, allocate_input_desc_semaphore
+    addi r2, r0, allocate_input_desc_semaphore
+    srl r2, r2, 6
+    phvwr p.common_te0_phv_table_pc, r2 
     phvwri p.common_te0_phv_table_raw_table_size, 4
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
     phvwri p.p42p4plus_hdr_table1_valid, 1
-    phvwri p.common_te1_phv_table_pc, allocate_output_desc_semaphore
+    addi r2, r0, allocate_output_desc_semaphore
+    srl r2, r2, 6 
+    phvwr p.common_te1_phv_table_pc, r2 
     phvwri p.common_te1_phv_table_raw_table_size, 4
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
   
     phvwri p.p42p4plus_hdr_table2_valid, 1
-    phvwri p.common_te2_phv_table_pc, allocate_input_page_semaphore
+    addi r2, r0, allocate_input_page_semaphore 
+    srl r2, r2, 6 
+    phvwr p.common_te2_phv_table_pc, r2 
     phvwri p.common_te2_phv_table_raw_table_size, 4
     phvwri p.common_te2_phv_table_lock_en, 0
     phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
 
     phvwri p.p42p4plus_hdr_table3_valid, 1
-    phvwr p.common_te3_phv_table_pc, allocate_output_page_semaphore
+    addi r2, r0, allocate_output_page_semaphore 
+    srl r2, r2, 6 
+    phvwr p.common_te3_phv_table_pc, r2 
     phvwri p.common_te3_phv_table_raw_table_size, 4
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR

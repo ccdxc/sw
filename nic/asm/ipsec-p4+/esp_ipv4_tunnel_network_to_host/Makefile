@@ -2,10 +2,11 @@
 LIBDIRS = $(NULL)
 
 PGMDIRS = \
-	esp_ipv4_tunnel_host_to_network \
-	esp_ipv4_tunnel_network_to_host \
+	rxdma\
+        txdma1\
+        txdma2\
 	$(NULL)
 
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
-TOPDIR = ../..
+TOPDIR = ../../..
 include $(TOPDIR)/make/Makefile.inc
