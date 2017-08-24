@@ -15,7 +15,7 @@ struct s3_tbl_pvm_cq_handler_d d;
 struct phv_ p;
 
 %%
-   .param	storage_tx_q_state_push_start
+   .param storage_tx_q_state_push_start
 
 storage_tx_pvm_cq_handler_start:
 
@@ -35,8 +35,8 @@ storage_tx_pvm_cq_handler_start:
                      dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                       storage_tx_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, 6,
+                             storage_tx_q_state_push_start)
 
 exit:
    nop.e

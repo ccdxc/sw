@@ -5,8 +5,25 @@
 #ifndef STORAGE_COMMON_DEFINES_H
 #define STORAGE_COMMON_DEFINES_H
 
-// Capri doorbell update value for p_ndx increment
+// Capri doorbell address/data formation values
+#define DOORBELL_UPDATE_NONE		0
+#define DOORBELL_UPDATE_C_NDX		1
+#define DOORBELL_UPDATE_P_NDX		2
 #define DOORBELL_UPDATE_P_NDX_INCR	3
+#define DOORBELL_SCHED_WR_NONE		0
+#define DOORBELL_SCHED_WR_EVAL		1
+#define DOORBELL_SCHED_WR_RESET		2
+#define DOORBELL_SCHED_WR_SET		3
+
+#define DOORBELL_ADDR_QTYPE_SHIFT       3
+#define DOORBELL_ADDR_LIF_SHIFT         6
+#define DOORBELL_ADDR_SCHED_WR_SHIFT    17
+#define DOORBELL_ADDR_UPD_SHIFT         19
+#define DOORBELL_ADDR_WA_LOCAL_BASE     0x68800000
+
+#define DOORBELL_DATA_RING_SHIFT	16
+#define DOORBELL_DATA_QID_SHIFT		24
+#define DOORBELL_DATA_PID_SHIFT		48
 
 // Each queue state can be 64 bytes at most (from d-vector in Capri)
 #define Q_STATE_SIZE     	64      

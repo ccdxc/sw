@@ -240,28 +240,71 @@ static int capri_stats_region_init()
     return CAPRI_OK;
 }
 
-static void capri_program_p4plus_table_mpu_pc_for_stage0(uint32_t pc)
+static void capri_program_p4plus_table_mpu_pc_for_stage0(cap_te_csr_t *te_csr, 
+                                                         uint32_t pc)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
-    //stage 0 - pcr = rxdma
-    cap_te_csr_t &te_csr = cap0.pcr.te[0];
-
-    //stage0 table0
-    te_csr.cfg_table_property[1].read();
-    //VijayS to fill the argument - PC addr right shift by 6.
-    te_csr.cfg_table_property[1].mpu_pc(pc >> 6);
-    te_csr.cfg_table_property[1].mpu_pc_dyn(1);
-    te_csr.cfg_table_property[1].addr_base(0);
-    te_csr.cfg_table_property[1].write();
+    te_csr->cfg_table_property[1].read();
+    te_csr->cfg_table_property[1].mpu_pc(pc >> 6);
+    te_csr->cfg_table_property[1].mpu_pc_dyn(1);
+    te_csr->cfg_table_property[1].addr_base(0);
+    te_csr->cfg_table_property[1].write();
 }
 
+#define CAPRI_P4PLUS_HANDLE		"p4plus"
+#define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
+#define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
+
+static int capri_table_p4plus_init()
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_te_csr_t *te_csr = NULL;
+    uint64_t capri_action_p4plus_asm_base;
+    
+    // Resolve the p4plus rxdma stage 0 program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_RXDMA_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_RXDMA_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config 0 with the PC
+    te_csr = &cap0.pcr.te[0];
+    capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
+                       (uint32_t) capri_action_p4plus_asm_base);
+  
+    // Resolve the p4plus txdma stage 0 program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_TXDMA_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_TXDMA_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config 0 with the PC
+    te_csr = &cap0.pct.te[0];
+    capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
+                               (uint32_t) capri_action_p4plus_asm_base);
+
+    return CAPRI_OK;
+}
 int capri_table_rw_init()
 {
 
     char action_name[P4ACTION_NAME_MAX_LEN];
     char progname[P4ACTION_NAME_MAX_LEN];
-    uint64_t capri_action_p4plus_asm_base;
 
     // !!!!!!
     // Before making this call, it is expected that
@@ -304,13 +347,8 @@ int capri_table_rw_init()
         }
     }
 
-    capri_program_to_base_addr((char *)"p4plus",
-            (char *)"rxdma_stage0.bin",
-            &capri_action_p4plus_asm_base);
-    HAL_TRACE_DEBUG("Program-Name {}, Action-PC {:#x}\n", "p4plus",
-            capri_action_p4plus_asm_base);
-
-    capri_program_p4plus_table_mpu_pc_for_stage0((uint32_t) capri_action_p4plus_asm_base);
+    /* Program p4plus table config properties. */
+    capri_table_p4plus_init();
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();

@@ -62,6 +62,9 @@ metadata txdma_common_pad_t txdma_common_pad;
 @pragma scratch_metadata
 metadata scratch_metadata_t scratch_metadata0;
 
+@pragma scratch_metadata
+metadata scratch_metadata_t scratch_metadata1;
+
 @pragma scratch_metadata 
 metadata p4plus_common_raw_table_engine_phv_t te0_scratch;
 @pragma scratch_metadata 
@@ -88,9 +91,6 @@ metadata cap_phv_intr_txdma_t  p4_txdma_intr_scratch;
 
 @pragma scratch_metadata
 metadata p4plus_2_p4_app_header_t app_header_scratch;
-
-
-
 
 
 #define SET_RAW_TABLE0_SCRATCH \
@@ -519,19 +519,22 @@ action tx_table_s0_t1_cfg_action(data0, data1, data2, data3, data4, data5, data6
 
 }
 
-action tx_table_s0_t0_cfg_action(data0, data1, data2, data3, data4, data5, data6, data7)
+action tx_table_s0_t0_cfg_action(data0, data1,
+                                 data2, data3,
+                                 data4, data5,
+                                 data6, data7)
 {
-#if 0
-    SCRATCH_METADATA_INIT(scratch_metadata0)
-    //te0 
-    SET_RAW_TABLE0_SCRATCH
-    SET_GLOBAL_SCRATCH
-    SET_S2S_SCRATCH0
-    modify_field(te_scratch.to_stage_data, to_stage_0.to_stage_data);
-#endif
+    SCRATCH_METADATA_INIT_7(scratch_metadata1)
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
+    modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
+    modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+    modify_field(app_header_scratch.table0_valid, app_header.table0_valid);
+    modify_field(app_header_scratch.table1_valid, app_header.table1_valid);
+    modify_field(app_header_scratch.table2_valid, app_header.table2_valid);
+    modify_field(app_header_scratch.table3_valid, app_header.table3_valid);
 }
-
-
 
 
 // stage 7

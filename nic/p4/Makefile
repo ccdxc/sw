@@ -6,6 +6,7 @@ LIBDIRS = \
           proxy \
           proxy/tls \
           ipsec-p4+ \
+          storage \
           $(NULL)
 
 PGMDIRS = $(NULL)

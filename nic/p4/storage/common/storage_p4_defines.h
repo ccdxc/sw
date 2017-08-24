@@ -209,10 +209,38 @@ header_type pvm_status_t {
   }
 }
 
+// Pad for storage, vary this based on PHV allocation to align DMA commands
+// to 16 byte boundary
 header_type storage_pad_t {
   fields {
-    pad		: 48;	// Align DMA commands to 16 byte to boundary
+    pad		: 112;	// Align DMA commands to 16 byte to boundary
   }
 }
+
+// Capri doorbell address, data definitions and macros to manipulate them
+header_type storage_doorbell_addr_t {
+  fields {
+    addr	: 64;	// 64 bit address
+  }
+}
+
+header_type storage_doorbell_data_t {
+  fields {
+    data	: 64;	// 64 bit data
+  }
+}
+
+#define STORAGE_DOORBELL_ADDRESS(qtype, lif, sched_wr, upd)	\
+	(DOORBELL_ADDR_WA_LOCAL_BASE | 				\
+	 qtype << DOORBELL_ADDR_QTYPE_SHIFT |			\
+	 lif << DOORBELL_ADDR_LIF_SHIFT |			\
+	 sched_wr << DOORBELL_ADDR_SCHED_WR_SHIFT |		\
+	 upd << DOORBELL_ADDR_UPD_SHIFT)			\
+
+#define STORAGE_DOORBELL_DATA(index, ring, qid, pid)		\
+	(index | 						\
+	 ring << DOORBELL_DATA_RING_SHIFT |			\
+	 qid << DOORBELL_DATA_QID_SHIFT |			\
+	 pid << DOORBELL_DATA_PID_SHIFT)			\
 
 #endif     // STORAGE_P4_DEFINES_H

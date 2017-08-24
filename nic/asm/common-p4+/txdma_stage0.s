@@ -16,6 +16,14 @@
 
 %%
 
+    .param      storage_tx_q_state_pop_start
+
+
 eth_tx_stage0:
    nop.e
+   nop
+
+.align
+storage_tx_stage0:
+   j    storage_tx_q_state_pop_start
    nop

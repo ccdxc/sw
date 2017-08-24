@@ -31,13 +31,13 @@
 	k.storage_kivec0_is_q0
 
 // TODO: Fix these to use the values defined in hardware
-#define CAPRI_DMA_PHV2MEM		1
-#define CAPRI_DMA_MEM2MEM		2
+#define CAPRI_DMA_PHV2MEM		3
+#define CAPRI_DMA_MEM2MEM		5
 #define CAPRI_DMA_M2M_TYPE_SRC		1
 #define CAPRI_DMA_M2M_TYPE_DST		2
 
-// Load a table based on fixed base, index and fixed size
-// Size * index is used to determine offset beyond table base
+// Load a table based on absolute address
+// PC input must be a 28-bit value
 #define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)		\
   phvwri	p.app_header_table0_valid, 1;				\
   phvwri	p.app_header_table1_valid, 0;				\
@@ -48,8 +48,16 @@
   phvwri.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									\
 
+// Load a table based on absolute address
+// PC input is a .param resolved by the loader (34-bit value)
+#define LOAD_TABLE_FOR_ADDR_PARAM(_table_addr, _load_size, _pc)		\
+  addi		r1, r0, _pc;						\
+  srl		r1, r1, 6;						\
+  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, r1)			\
+
 // Load a table based with a calculation based on index
 // addr = _table_base + (_entry_index * _entry_size)
+// PC input must be a 28-bit value
 #define LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,	\
                              _load_size, _pc)				\
   add		r1, r0, _table_base;					\
@@ -62,18 +70,48 @@
   phvwri	p.app_header_table3_valid, 0;				\
   phvwr		p.common_te0_phv_table_pc, _pc;				\
   phvwr		p.common_te0_phv_table_addr, r1;			\
-  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
+  phvwri.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									
+
+// Load a table based with a calculation based on index
+// addr = _table_base + (_entry_index * _entry_size)
+// PC input is a .param resolved by the loader (34-bit value)
+#define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index, 		\
+                                   entry_size, _load_size, _pc)		\
+  addi		r1, r0, _pc;						\
+  srl		r1, r1, 6;						\
+  LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,		\
+                       _load_size, r1)					\
+
+// Used in the last stage of a pipeline to clear all table valid bits
+#define LOAD_NO_TABLES							\
+  phvwri	p.app_header_table0_valid, 0;				\
+  phvwri	p.app_header_table1_valid, 0;				\
+  phvwri	p.app_header_table2_valid, 0;				\
+  phvwri.e	p.app_header_table3_valid, 0;				\
+  nop
+
+// Capri PHV Bit to Byte Macros
+
+#define CAPRI_PHV_FLIT_SIZE_BITS        512
+#define CAPRI_PHV_FLIT_SIZE_BYTES       (CAPRI_PHV_FLIT_SIZE_BITS / 8)
+#define CAPRI_PHV_BIT_TO_BYTE(x)                                        \
+        (((x) / CAPRI_PHV_FLIT_SIZE_BITS) * CAPRI_PHV_FLIT_SIZE_BYTES) +\
+         (CAPRI_PHV_FLIT_SIZE_BYTES) - 1 - (((x) % CAPRI_PHV_FLIT_SIZE_BITS) / 8)
+
 
 // Phv2Mem DMA: Specify the address of the start and end fields in the PHV
 //              and the destination address. Can specify 0 destination
 //              address via GPR r0, which be update later.
 #define DMA_PHV2MEM_SETUP(_start, _end, _addr, _dma_cmd_X)		\
+   add		r1, r0, offsetof(p, _start);				\
+   add		r1, r0, sizeof(p._start);				\
+   add		r1, r0, offsetof(p, _end);				\
    phvwri	p._dma_cmd_X##_dma_cmd_phv_start_addr,			\
-		(sizeof (p) >> 3) - ((offsetof(p, _start) +		\
-					sizeof(p._start)) >> 3);	\
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
+                                      sizeof(p._start) - 1);		\
    phvwri	p._dma_cmd_X##_dma_cmd_phv_end_addr,			\
-		(sizeof(p) >> 3) - (offsetof(p, _end) >> 3);		\
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));		\
    phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;		\
    phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
    srl		r1, _addr, 63;						\
@@ -89,27 +127,41 @@
    
 // Setup the start and end DMA pointers
 #define DMA_PTR_SETUP(_start, _dma_cmd_eop, _dma_cmd_ptr)		\
-   phvwri	p._dma_cmd_ptr, (sizeof (p) >> 7) - 			\
-		((offsetof(p, _start) +	sizeof(p._start)) >> 7);	\
+   phvwri	p._dma_cmd_ptr,						\
+                ((CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
+                                        sizeof(p._start) - 1))/16);	\
    phvwri	p._dma_cmd_eop, 1;					\
 
-// Setup the doorbell data
-#define DOORBELL_DATA_SETUP(_index, _ring, _qid, _pid)			\
-   phvwr	p.qpush_doorbell_data_index, _index;			\
-   phvwr	p.qpush_doorbell_data_ring, _ring;			\
-   phvwr	p.qpush_doorbell_data_qid, _qid;			\
-   phvwr	p.qpush_doorbell_data_pid, _pid;			\
+/*
+#define DMA_PTR_SETUP(_start, _dma_cmd_eop, _dma_cmd_ptr)		\
+   phvwri	p._dma_cmd_ptr, 32;					\
+   phvwri	p._dma_cmd_eop, 1;					\
+*/
+
+
+// Setup the doorbell data. Write back the data in little endian format
+#define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)	\
+   add		r1, r0, _index;						\
+   sll		r2, _ring, DOORBELL_DATA_RING_SHIFT;			\
+   or		r1, r1, r2;						\
+   sll		r2, _qid, DOORBELL_DATA_QID_SHIFT;			\
+   or		r1, r1, r2;						\
+   sll		r2, _pid, DOORBELL_DATA_PID_SHIFT;			\
+   or		r1, r1, r2;						\
+   phvwr	p._db_data, r1.dx;					\
 
 // Setup the doorbell address. Output will be stored in GPR r7.
-#define	DOORBELL_ADDR_QTYPE_SHIFT	3
-#define	DOORBELL_ADDR_LIF_SHIFT		6
-#define DOORBELL_ADDR_UPD_SHIFT		17
-#define DOORBELL_ADDR_SETUP(_lif, _qtype, _upd)				\
+#define DOORBELL_ADDR_SETUP(_lif, _qtype, _sched_wr, _upd)		\
    sll		r7, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;			\
    sll		r1, _lif, DOORBELL_ADDR_LIF_SHIFT;			\
    or		r7, r7, r1;						\
+   addi		r1, r0, _sched_wr;					\
+   sll		r1, r1, DOORBELL_ADDR_SCHED_WR_SHIFT;			\
+   or		r7, r7, r1;						\
    addi		r1, r0, _upd;						\
    sll		r1, r1, DOORBELL_ADDR_UPD_SHIFT;			\
+   or		r7, r7, r1;						\
+   addi		r1, r0, DOORBELL_ADDR_WA_LOCAL_BASE;			\
    or		r7, r7, r1;						\
 
 // Queue full check based on an increment value

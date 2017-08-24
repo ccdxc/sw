@@ -1,16 +1,16 @@
 
 #include "common/dummy.p4"
 
-#define tx_table_s0_t0 s0_tbl
 #define tx_table_s1_t0 s1_tbl
 #define tx_table_s2_t0 s2_tbl
 #define tx_table_s3_t0 s3_tbl
+#define tx_table_s4_t0 s0_tbl
 
-#define tx_table_s0_t0_action q_state_pop
+#define tx_table_s0_t0_action dummy_no_data
 #define tx_table_s1_t0_action nvme_sq_handler
 #define tx_table_s2_t0_action q_state_push
 #define tx_table_s3_t0_action pvm_cq_handler
-#define tx_table_s4_t0_action dummy
+#define tx_table_s4_t0_action q_state_pop
 #define tx_table_s5_t0_action dummy
 #define tx_table_s6_t0_action dummy
 #define tx_table_s7_t0_action dummy
@@ -37,11 +37,14 @@ metadata pvm_status_t pvm_status;
 
 // Push doorbell
 @pragma scratch_metadata
-metadata doorbell_addr_t qpush_doorbell_addr;
+metadata storage_doorbell_addr_t doorbell_addr;
 
 @pragma dont_trim
-metadata doorbell_data_t qpush_doorbell_data;
+metadata storage_doorbell_data_t qpush_doorbell_data;
   
+@pragma dont_trim
+metadata storage_doorbell_data_t qpop_doorbell_data;
+
 @pragma dont_trim
 metadata storage_pad_t storage_pad;
   
@@ -121,11 +124,20 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
 
-  // Setup the DMA command to pop the entry by writing w_ndx to c_ndx
+  // Form the doorbell and setup the DMA command to pop the entry by writing 
+  // w_ndx to c_ndx
+  modify_field(doorbell_addr.addr,
+               STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
+                                        storage_kivec0.dst_lif,
+                                        DOORBELL_SCHED_WR_RESET, 
+                                        DOORBELL_UPDATE_C_NDX));
+  modify_field(qpop_doorbell_data.data,
+               STORAGE_DOORBELL_DATA(storage_kivec0.w_ndx, 0, 0, 0));
+
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_0, 
-                           storage_kivec0.src_qaddr + Q_STATE_C_NDX_OFFSET,
-                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
-                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
+                           0,
+                           PHV_FIELD_OFFSET(qpop_doorbell_data.data),
+                           PHV_FIELD_OFFSET(qpop_doorbell_data.data),
                            0, 0, 0, 0)
 
   // Carry forward NVME command information to be sent to PVM in the PHV 
@@ -217,12 +229,22 @@ action pvm_cq_handler(cspec, rsvd0, sq_head, sq_id, cid, phase, status,
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
 
-  // Setup the DMA command to pop the entry by writing w_ndx to c_ndx
+  // Form the doorbell and setup the DMA command to pop the entry by writing 
+  // w_ndx to c_ndx
+  modify_field(doorbell_addr.addr,
+               STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
+                                        storage_kivec0.dst_lif,
+                                        DOORBELL_SCHED_WR_RESET, 
+                                        DOORBELL_UPDATE_C_NDX));
+  modify_field(qpop_doorbell_data.data,
+               STORAGE_DOORBELL_DATA(storage_kivec0.w_ndx, 0, 0, 0));
+
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_0, 
-                           storage_kivec0.src_qaddr + Q_STATE_C_NDX_OFFSET,
-                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
-                           PHV_FIELD_OFFSET(storage_kivec0.w_ndx),
+                           0,
+                           PHV_FIELD_OFFSET(qpop_doorbell_data.data),
+                           PHV_FIELD_OFFSET(qpop_doorbell_data.data),
                            0, 0, 0, 0)
+                           
 
   // Carry forward NVME status information to be sent to driver in the PHV 
   modify_field(pvm_status.cspec, cspec);
@@ -292,18 +314,19 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     // Push the entry to the queue.  
     QUEUE_PUSH(q_state_scratch)
 
-    // Setup the lif, type, qid, pindex for the doorbell push
-    // In ASM, calculate address in GPR and data in PHV
-    DOORBELL_ADDR_FILL(qpush_doorbell_addr, 0, storage_kivec0.dst_qtype,
-                       storage_kivec0.dst_lif, 0, DOORBELL_UPDATE_P_NDX_INCR, 0)
-    DOORBELL_DATA_FILL(qpush_doorbell_data, q_state_scratch.p_ndx, 0, 
-                       storage_kivec0.dst_qid, 0)
+    // Form the doorbell and setup the DMA command to push the entry by
+    // incrementing p_ndx
+    modify_field(doorbell_addr.addr,
+                 STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
+                                          storage_kivec0.dst_lif,
+                                          DOORBELL_SCHED_WR_RESET, 
+                                          DOORBELL_UPDATE_P_NDX_INCR));
+    modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
 
-    // Mem2Mem DMA
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2, 
-                             qpush_doorbell_addr.upd_sched_ctl,
-                             PHV_FIELD_OFFSET(qpush_doorbell_data.index),
-                             PHV_FIELD_OFFSET(qpush_doorbell_data.pid),
+                             0,
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
                              0, 0, 0, 0)
 
     // Exit the pipeline here 

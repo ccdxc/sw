@@ -8,7 +8,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 #PROJ = nvme_vf_cmd
 PROJ = $(shell basename $(CURDIR))
-OBJ_DIR = $(TOPDIR)/obj/asm_bin
+OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/storage
@@ -26,9 +26,6 @@ deps: $(ASM_HDR_DIR)/ingress.h
 
 SRC_FILES := \
     $(wildcard *.s)
-#    $(SRC_DIR)/nvme_vf_sq_ctx_check.s \
-    $(SRC_DIR)/nvme_vf_sq_entry_pop.s \
-    $(SRC_DIR)/pvm_vf_sq_entry_push.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

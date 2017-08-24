@@ -9,6 +9,9 @@ action exit() {
 }
 #endif
 
+action dummy_no_data() {
+}
+
 
 action dummy(dummy_field) {
   modify_field(storage_scratch.dummy_field, dummy_field);

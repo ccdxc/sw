@@ -28,18 +28,20 @@ storage_tx_q_state_push_start:
    
    // Setup the lif, type, qid, pindex for the doorbell push, Output will
    // be stored in GPR r7.
-   DOORBELL_DATA_SETUP(d.p_ndx, 0, STORAGE_KIVEC0_DST_QID, 0)
+   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0, r0, r0)
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE, 
-                       DOORBELL_UPDATE_P_NDX_INCR)
+                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_P_NDX_INCR)
  
    // DMA the doorbell addr/data to increment the p_ndx and ring the doorbell
-   DMA_PHV2MEM_SETUP(qpush_doorbell_data_index, qpush_doorbell_data_pid, r7,
+   DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data, r7,
                      dma_p2m_2)
 
    
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_type, dma_p2m_2_dma_cmd_eop,
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_2_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
+
+   LOAD_NO_TABLES
 exit:
    nop.e
    nop
