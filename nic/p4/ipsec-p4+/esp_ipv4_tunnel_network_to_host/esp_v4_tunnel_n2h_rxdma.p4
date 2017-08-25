@@ -1,5 +1,21 @@
 #define rx_table_s0_t0_action esp_v4_tunnel_n2h_rxdma_initial_table 
 #define common_p4plus_stage0_app_header_table_action_dummy esp_v4_tunnel_n2h_rxdma_initial_table
+#define common_p4plus_stage0_app_header_table_action_dummy1     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy2     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy3     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy4     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy5     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy6     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy7     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy8     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy9     ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy10    ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy11    ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy12    ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy13    ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy14    ipsec_rxdma_dummy
+#define common_p4plus_stage0_app_header_table_action_dummy15    ipsec_rxdma_dummy
+
 #define rx_table_s0_t1_action ipsec_rxdma_dummy 
 #define rx_table_s0_t2_action ipsec_rxdma_dummy 
 #define rx_table_s0_t3_action ipsec_rxdma_dummy 

@@ -1120,6 +1120,22 @@ table common_p4plus_stage0_app_header_table {
     actions {
         common_p4plus_stage0_app_header_table_action;
         common_p4plus_stage0_app_header_table_action_dummy;
+        common_p4plus_stage0_app_header_table_action_dummy1;
+        common_p4plus_stage0_app_header_table_action_dummy2;
+        common_p4plus_stage0_app_header_table_action_dummy3;
+        common_p4plus_stage0_app_header_table_action_dummy4;
+        common_p4plus_stage0_app_header_table_action_dummy5;
+        common_p4plus_stage0_app_header_table_action_dummy5;
+        common_p4plus_stage0_app_header_table_action_dummy6;
+        common_p4plus_stage0_app_header_table_action_dummy7;
+        common_p4plus_stage0_app_header_table_action_dummy8;
+        common_p4plus_stage0_app_header_table_action_dummy9;
+        common_p4plus_stage0_app_header_table_action_dummy10;
+        common_p4plus_stage0_app_header_table_action_dummy11;
+        common_p4plus_stage0_app_header_table_action_dummy12;
+        common_p4plus_stage0_app_header_table_action_dummy13;
+        common_p4plus_stage0_app_header_table_action_dummy14;
+        common_p4plus_stage0_app_header_table_action_dummy15;
     }
 }
 
