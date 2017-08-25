@@ -18,6 +18,7 @@
 #define TS_WIDTH                        8
 #define RING_INDEX_WIDTH                8
 #define ADDRESS_WIDTH                   12
+#define HBM_ADDRESS_WIDTH               32
 #define OFFSET_WIDTH                    8
 #define LEN_WIDTH                       8
 #define COUNTER32                       4

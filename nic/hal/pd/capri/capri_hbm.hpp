@@ -47,6 +47,7 @@ uint32_t get_size_kb(const char *reg_name);
 #define CAPRI_HBM_REG_NMPR_SMALL_TX      "nmpr-small-tx"
 #define CAPRI_HBM_REG_PAGE_SMALL_RX      "page-small-rx"
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
+#define CAPRI_HBM_REG_BRQ                "brq"
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -89,6 +90,9 @@ typedef struct capri_semaphore_s {
 // TODO: move defines to top level include that can be included by assembly
 #define RNMDR_TABLE_BASE        "hbm_rnmdr_table_base"
 #define RNMPR_TABLE_BASE        "hbm_rnmpr_table_base"
+#define TNMDR_TABLE_BASE        "hbm_tnmdr_table_base"
+#define TNMPR_TABLE_BASE        "hbm_tnmpr_table_base"
+#define BRQ_BASE                "hbm_brq_base"
 
 extern capri_semaphore_t           *g_hbm_semaphore;
 

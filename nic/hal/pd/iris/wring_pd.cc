@@ -50,7 +50,7 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, "bsq", 64, DEFAULT_WRING_SLOT_SIZE, "", 0};
 
     g_meta[types::WRING_TYPE_BRQ] =
-        (pd_wring_meta_t) {true, "brq", 1024, 128, "", 0};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0};
 
     return HAL_RET_OK;
 }

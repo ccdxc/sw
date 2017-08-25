@@ -60,17 +60,17 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
 }
 
 hal_ret_t 
-p4pd_get_tls_tx_s5_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
+p4pd_get_tls_tx_s3_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
 {
-    tx_table_s5_t0_d                   data = {0};
+    tx_table_s3_t0_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry
     tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
-        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7);
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7);
     
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
-        HAL_TRACE_ERR("Failed to create tx: s5_t0_read_tls_stg1_7 entry for TLS CB");
+        HAL_TRACE_ERR("Failed to create tx: s3_t0_read_tls_stg1_7 entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
     return ret;
@@ -87,7 +87,7 @@ p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
         goto cleanup;
     }
     
-    ret = p4pd_get_tls_tx_s5_t0_read_tls_stg1_7_entry(tlscb_pd);
+    ret = p4pd_get_tls_tx_s3_t0_read_tls_stg1_7_entry(tlscb_pd);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
@@ -136,21 +136,21 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 
 
 hal_ret_t 
-p4pd_add_or_del_tls_tx_s5_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool del)
+p4pd_add_or_del_tls_tx_s3_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
-    tx_table_s5_t0_d                   data = {0};
+    tx_table_s3_t0_d                   data = {0};
     hal_ret_t                          ret = HAL_RET_OK;
 
     // hardware index for this entry
     tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
-        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7);
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7);
     
     if(!del) {
         data.u.read_tls_stg1_7_d.cipher_type = tlscb_pd->tlscb->cipher_type;
     }
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
-        HAL_TRACE_ERR("Failed to create tx: s5_t0_read_tls_stg1_7 entry for TLS CB");
+        HAL_TRACE_ERR("Failed to create tx: s3_t0_read_tls_stg1_7 entry for TLS CB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
@@ -167,7 +167,7 @@ p4pd_add_or_del_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd, bool del)
         goto cleanup;
     }
     
-    ret = p4pd_add_or_del_tls_tx_s5_t0_read_tls_stg1_7_entry(tlscb_pd, del);
+    ret = p4pd_add_or_del_tls_tx_s3_t0_read_tls_stg1_7_entry(tlscb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

@@ -32,16 +32,23 @@ SRC_FILES := \
     $(SRC_DIR)/tls-tpage-alloc.s \
     $(SRC_DIR)/tls-alloc-sesq-pi.s \
     $(SRC_DIR)/tls-brq.s \
-    $(SRC_DIR)/tls-queue-brq.s \
+    $(SRC_DIR)/tls-queue-brq-enc.s \
+    $(SRC_DIR)/tls-queue-brq-dec.s \
     $(SRC_DIR)/tls-queue-sesq.s \
     $(SRC_DIR)/tls-read-desc.s \
     $(SRC_DIR)/tls-read-header.s \
-    $(SRC_DIR)/tls-rx-brq.s \
-    $(SRC_DIR)/tls-rx-serq.s \
+    $(SRC_DIR)/tls-rx-serq-enc.s \
+    $(SRC_DIR)/tls-rx-serq-dec.s \
     $(SRC_DIR)/tls-s0.s \
     $(SRC_DIR)/tls-serq-consume.s \
     $(SRC_DIR)/tls-serq.s \
-    $(SRC_DIR)/tls-update-page-ctl.s
+    $(SRC_DIR)/tls-update-page-ctl.s \
+    $(SRC_DIR)/tls-read-serq-entry.s \
+    $(SRC_DIR)/tls-bld-barco-req-enc.s \
+    $(SRC_DIR)/tls-bld-barco-req-dec.s \
+    $(SRC_DIR)/tls-bubble.s
+
+#    $(SRC_DIR)/tls-rx-brq.s \
 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

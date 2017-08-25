@@ -17,15 +17,8 @@ struct d_struct {
         tls_hdr_len                      : 16;
 };
 
-struct k_struct {
-	tls_hdr_addr			 : ADDRESS_WIDTH ;
-	pending_rx_brq                   : 1		 ;
-	pending_rx_serq                  : 1		 ;
-	enc_flow                         : 1		 ;
-};
-
+struct tx_table_s3_t0_k k       ;
 struct phv_ p	;
-struct k_struct k	;
 struct d_struct d	;
 	
 %%
@@ -37,12 +30,12 @@ tls_read_header_process_start:
 	phvwr		p.tls_global_phv_tls_hdr_version_minor, d.tls_hdr_version_minor
 	phvwr		p.tls_global_phv_tls_hdr_len, d.tls_hdr_len
 	
-	sne		c1, k.pending_rx_brq, r0
-	bcf		[c1], table_read_alloc_sesq_pi
+	sne		    c1, k.tls_global_phv_pending_rx_brq, r0
+	bcf		    [c1], table_read_alloc_sesq_pi
 	nop
 
-	seq		c1, k.pending_rx_serq, r0
-	bcf		[c1], tls_read_desc_process_done
+	seq		    c1, k.tls_global_phv_pending_rx_serq, r0
+	bcf		    [c1], tls_read_desc_process_done
 	nop
 
 table_read_alloc_tnmdr:

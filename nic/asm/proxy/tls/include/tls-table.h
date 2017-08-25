@@ -6,6 +6,7 @@
 #define TLS_TCB_TABLE_ENTRY_SIZE        512 /* 512B */
 #define TLS_TCB_TABLE_ENTRY_SIZE_SHFT   9  /* 512B */
 #define TLS_TCB_OFFSET                  0
+#define TLS_TCB_CRYPT_OFFSET            64
 
 
 /* Global registers */

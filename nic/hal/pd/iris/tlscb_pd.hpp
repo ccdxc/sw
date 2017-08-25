@@ -17,7 +17,7 @@ namespace pd {
 
 typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,
-    P4PD_HWID_TLS_TX_S5_T0_READ_TLS_ST1_7
+    P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7
 } tlscb_hwid_order_t;
 
 typedef uint64_t    tlscb_hw_id_t;

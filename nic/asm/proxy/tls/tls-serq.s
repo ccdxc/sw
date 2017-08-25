@@ -10,36 +10,30 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
-/* d is the data returned by lookup result */
-
-/* SERQ consumer index */
-struct k_struct {
-	serq_consumer_idx		: RING_INDEX_WIDTH ;
-};
 
 struct phv_ p	;
-struct k_struct k	;
-struct tx_table_s0_t0_d d	;
-	
+struct tx_table_s0_t0_k k;
+struct tx_table_s0_t0_d d;
 %%
 
-	.param		tls_serq_consume_process
-	.param		tls_read_desc_process_start
+	.param		tls_read_serq_entry_process_start
 	
 tls_stage0:
 	phvwr	    p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
 	
-	phvwr		p.tls_global_phv_fid, d.u.read_tls_stg0_d.fid
+	phvwr		p.tls_global_phv_fid, k.p4_txdma_intr_qid
     add         r3, r0, d.u.read_tls_stg0_d.ci_0
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 
-	phvwr		p.tls_global_phv_desc, r3
+	phvwr		p.to_s2_idesc, r3
+   	phvwr		p.to_s5_idesc, r3
 	phvwri		p.tls_global_phv_pending_rx_serq, 1
+    phvwr       p.to_s2_serq_ci, d.u.read_tls_stg0_d.ci_0
 
-#	TLS_READ_IDX(SERQ_CONSUMER_IDX, TABLE_TYPE_RAW, tls_serq_consume_process)
-	
+    phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+
 table_read_DESC:
-    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_desc_process_start, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_serq_entry_process_start, r3, TABLE_SIZE_64_BITS)
 	nop.e
-	nop
+    nop
