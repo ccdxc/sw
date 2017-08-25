@@ -52,7 +52,7 @@ void HostMem::Free(void *addr) {
 
 uint64_t HostMem::VirtToPhys(void *addr) {
   assert(addr >= shmaddr_);
-  return (uint64_t)addr - (uint64_t)shmaddr_;
+  return (1ull << 63) | ((uint64_t)addr - (uint64_t)shmaddr_);
 }
 
 HostMem::~HostMem() {
