@@ -12,6 +12,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 CXX = g++
 CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
+CPPFLAGS += -MT $@ -MMD -MP -MF $(GENDIR)/$*.d
 OBJ_DIR = ../obj
 GEN_DIR = ../gen
 GTEST_DIR = test
@@ -48,6 +49,10 @@ SRC_FILES :=	hal.cc \
 				hal_mem.cc \
 				main.cc \
 				$(NULL)
+
+OBJECTS := $(basename $(SRC_FILES))
+OBJECTS := $(OBJECTS:%=$(GENDIR)/%.o)
+DEPENDS = $(OBJECTS:.o=.d)
 
 SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/hal.o \
@@ -115,3 +120,5 @@ all: $(OBJ_FILES)
 
 clean:
 	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_mem.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
+
+-include $(DEPENDS)

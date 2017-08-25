@@ -1,6 +1,8 @@
 #ifndef __CAPRI_MACROS_H__
 #define __CAPRI_MACROS_H__
 
+#include <capri_common.h>
+
 #define CAPRI_NEXT_TABLE_READ(_fid, _table_sel, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size)                                                                   \
   addi		r1, r0, _table_base;					\
   add 		r2, r0, _fid;						\
@@ -287,10 +289,10 @@
 #define SESQ_PRODUCER_IDX              0xba00ba10
 #define SESQ_CONSUMER_IDX              0xba00ba18
 
-#define RNMPR_ALLOC_IDX                0xba00ba20
+#define RNMPR_ALLOC_IDX                CAPRI_SEM_RNMPR_INF_ADDR
 #define RNMPR_FREE_IDX                 0xba00ba28
 
-#define RNMDR_ALLOC_IDX                0xba00ba30
+#define RNMDR_ALLOC_IDX                CAPRI_SEM_RNMDR_INF_ADDR
 #define RNMDR_FREE_IDX                 0xba00ba38
 
 #define TNMPR_ALLOC_IDX                0xba00ba40

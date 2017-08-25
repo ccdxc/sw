@@ -13,14 +13,6 @@ namespace pt = boost::property_tree;
 
 static capri_hbm_region_t *hbm_regions_;
 
-capri_semaphore_t           *g_hbm_semaphore;
-capri_descr_t               *g_hbm_descr;
-capri_big_page_t            *g_hbm_big_page;
-capri_small_page_t          *g_hbm_small_page;
-uint64_t                    *g_hbm_nmdr;
-uint64_t                    *g_hbm_nmpr_big;
-uint64_t                    *g_hbm_nmpr_small;
-
 #define HBM_OFFSET(x)       (0x80000000 + (x))
 
 hal_ret_t
@@ -133,33 +125,3 @@ get_hbm_region(char *reg_name)
     return NULL;
 }
 
-static hal_ret_t
-hbm_semaphore_init(void)
-{
-        capri_hbm_region_t  *reg;
-
-        reg = get_hbm_region((char *)JP4_SEMAPHORE);
-        if (!reg) {
-                HAL_TRACE_ERR("Could not find {} region", JP4_SEMAPHORE);
-                return HAL_RET_ERR;
-        }
-        assert(reg->size_kb * 1024 >=
-                        2 * CAPRI_NUM_SEMAPHORES * sizeof(uint64_t));
-        g_hbm_semaphore = (capri_semaphore_t *)(uint64_t)
-                                        HBM_OFFSET(reg->start_offset);
-        HAL_TRACE_DEBUG("g_hbm_semaphore 0x{0:x}, size {1}k",
-                        (uint64_t)g_hbm_semaphore, reg->size_kb);
-
-        return HAL_RET_OK;
-}
-
-hal_ret_t
-capri_hbm_mem_init(void)
-{
-        hal_ret_t ret;
-
-        ret = hbm_semaphore_init();
-        assert (ret == HAL_RET_OK);
-
-        return HAL_RET_OK;
-}

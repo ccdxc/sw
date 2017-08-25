@@ -22,13 +22,16 @@ tcp_rx_read_rnmdr_stage2_start:
 
         CAPRI_CLEAR_TABLE1_VALID
 
-	phvwr		p.s3_t1_s2s_rnmdr_pidx, d.rnmdr_pidx
+        // TODO : check for semaphore full
+        and             r4, d.rnmdr_pidx, ~(1 << CAPRI_RNMDR_RING_SHIFT)
+	phvwr		p.s3_t1_s2s_rnmdr_pidx, r4.wx
 
 table_read_RNMDR_DESC:
 	addi		r3, r0, RNMDR_TABLE_BASE
-	CAPRI_NEXT_TABLE1_READ(d.rnmdr_pidx, TABLE_LOCK_EN,
+        // TODO change to r4.wx after debugging issue with non-zero PI
+	CAPRI_NEXT_TABLE1_READ(r0, TABLE_LOCK_DIS,
                             tcp_rx_rdesc_alloc_stage_3_start,
 	                    r3, RNMDR_TABLE_ENTRY_SIZE_SHFT,
-	                    0, TABLE_SIZE_512_BITS)
+	                    0, TABLE_SIZE_64_BITS)
 	nop.e
 	nop
