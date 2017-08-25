@@ -5,39 +5,43 @@ config_filter:
     # templates.
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
+        segment     : filter://any
         endpoint    : filter://remote=True
-        qpair   : filter://any # Local QPair
+        qpair       : filter://any # Local QPair
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment : filter://any
+        segment     : filter://any
         endpoint    : filter://remote=True
-        qpair   : filter://any 
-    #flow        : filter://sip=64.1.0.2,dip=64.1.0.1,proto=TCP,dport=80
+        qpair       : filter://any 
     flow        : filter://proto=TCP,label=TCP-PROXY
-    maxflows    : 1
+    maxflows    : 64
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
 packets:
     - packet:
         id          : PKT1
-        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src : callback://tcpcb/tcpcb/GetSMac
-                dst : callback://tcpcb/tcpcb/GetDMac
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : callback://tcpcb/tcpcb/GetVlanId
+                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
-                src : callback://tcpcb/tcpcb/GetSip
-                dst : callback://tcpcb/tcpcb/GetDip
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             tcp:
-                sport   : callback://tcpcb/tcpcb/GetSPort
-                dport   : callback://tcpcb/tcpcb/GetDPort
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
