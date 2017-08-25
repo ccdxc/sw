@@ -26,26 +26,26 @@ typedef uint32_t        session_id_t;
 typedef uint32_t        app_session_id_t;
 
 // flow type depends on the type of packets flow is for
-enum {
+enum flow_type_t {
     FLOW_TYPE_L2   = 0,    // non-IP flow
     FLOW_TYPE_V4   = 1,    // IPv4 flow
     FLOW_TYPE_V6   = 2,    // IPv6 flow
 };
 
 // flow direction tells whether flow is from or to the workload
-enum {
+enum flow_direction_t {
     FLOW_DIR_FROM_ENIC   = 0,
     FLOW_DIR_FROM_UPLINK = 1,
 };
 
 // flow role
-enum {
+enum flow_role_t {
     FLOW_ROLE_INITIATOR = 0,
     FLOW_ROLE_RESPONDER = 1,
 };
 
 // NAT types
-enum {
+enum nat_type_t {
     NAT_TYPE_NONE         = 0,
     NAT_TYPE_SNAT         = 1,    // source NAT
     NAT_TYPE_DNAT         = 2,    // destination NAT

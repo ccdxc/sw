@@ -177,9 +177,9 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
 static inline hal_ret_t
 pipeline_execute_(ctx_t &ctx)
 {
-    pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq);
+    pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq());
     if (!pipeline) {
-        HAL_TRACE_ERR("pipeline not registered for lifq {} - ignoring packet", ctx.arm_lifq);
+        HAL_TRACE_ERR("pipeline not registered for lifq {} - ignoring packet", ctx.arm_lifq());
         return HAL_RET_INVALID_ARG;
     }
 
@@ -223,13 +223,14 @@ void unregister_features_and_pipelines() {
 // FTE main pkt loop
 void
 pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
-         hal_ret_t (*tx)(phv_t *phv, uint8_t *pkt, size_t pkt_len))
+         hal_ret_t (*tx)(const phv_t *phv, const uint8_t *pkt, size_t pkt_len))
 {
     hal_ret_t rc;
     phv_t *phv;
     uint8_t *pkt;
     size_t pkt_len;
     ctx_t ctx;
+    flow_t iflow, rflow, iflow_post, rflow_post;
 
     while(true) {
         // read the packet
@@ -240,7 +241,7 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
         }
 
         // Init ctx_t
-        rc = ctx_init(ctx, phv, pkt, pkt_len);
+        rc = ctx.init(phv, pkt, pkt_len, &iflow, &rflow, &iflow_post, &rflow_post);
         if (rc != HAL_RET_OK) {
             HAL_TRACE_ERR("fte - failied to init context, rc={}", rc);
             continue;
@@ -254,15 +255,15 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
         }
 
         // update GFT
-        rc = flow_update_gft(ctx);
+        rc = ctx.update_gft();
         if (rc != HAL_RET_OK) {
             HAL_TRACE_ERR("fte - failied to updated gft, rc={}", rc);
             continue;
         }
 
         // write the packet
-        if (ctx.pkt) {
-            tx(ctx.phv, ctx.pkt, ctx.pkt_len);
+        if (ctx.pkt()) {
+            tx(ctx.phv(), ctx.pkt(), ctx.pkt_len());
         }
     }
 }

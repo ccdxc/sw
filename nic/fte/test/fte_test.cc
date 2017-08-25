@@ -91,14 +91,14 @@ TEST_F(fte_test, execute_pipeline) {
 
     ctx_t ctx;
 
-    ctx.arm_lifq = {1,1,1};
+    ctx.set_arm_lifq({1,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f2", "f3"}));
 
     results.clear();
 
-    ctx.arm_lifq = {1,1,2};
+    ctx.set_arm_lifq({1,1,2});
     rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f3"}));
@@ -107,7 +107,7 @@ TEST_F(fte_test, execute_pipeline) {
 // execute unknown pipeline
 TEST_F(fte_test, execute_pipeline_unk) {
     ctx_t ctx;
-    ctx.arm_lifq = {1,1,1};
+    ctx.set_arm_lifq({1,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
 }
@@ -124,7 +124,7 @@ TEST_F(fte_test, execute_pipeline_end) {
     register_pipeline("p1", {2,1,1}, &features[0], features.size());
 
     ctx_t ctx;
-    ctx.arm_lifq = {2,1,1};
+    ctx.set_arm_lifq({2,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1","f2","f4"}));
@@ -142,7 +142,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
 
     // p2 - run f2 and goto p1
     register_feature(111, "restart-p1", [](ctx_t &ctx) {
-            ctx.arm_lifq = {1,1,1};
+            ctx.set_arm_lifq({1,1,1});
             return PIPELINE_RESTART;
         });
     features = {2, 111}; 
@@ -150,7 +150,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
 
     // p3 - run f3 and goto p2
     register_feature(112, "restart-p2", [](ctx_t &ctx) {
-            ctx.arm_lifq = {1,1,2};
+            ctx.set_arm_lifq({1,1,2});
             return PIPELINE_RESTART;
         });
     features = {3, 112}; 
@@ -158,7 +158,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
 
     // execute p3
     ctx_t ctx;
-    ctx.arm_lifq = {1, 1, 3};
+    ctx.set_arm_lifq({1, 1, 3});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f3", "f2", "f1"}));
@@ -191,22 +191,22 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
 
     ctx_t ctx;
 
-    ctx.arm_lifq = {1, 1, 1};
+    ctx.set_arm_lifq({1, 1, 1});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f1"}));
     results.clear();
 
-    ctx.arm_lifq = {1, 1, 10};
+    ctx.set_arm_lifq({1, 1, 10});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f2"}));
     results.clear();
 
-    ctx.arm_lifq = {1, 2, 2};
+    ctx.set_arm_lifq({1, 2, 2});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f3"}));
     results.clear();
 
-    ctx.arm_lifq = {2, 2, 2};
+    ctx.set_arm_lifq({2, 2, 2});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f4"}));
     results.clear();

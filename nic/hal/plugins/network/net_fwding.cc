@@ -11,13 +11,16 @@ update_fwding_info(fte::flow_update_t &flowupd, hal::if_t *dif)
     flowupd = {};
     flowupd.type = fte::FLOWUPD_FWDING_INFO;
 
-    flowupd.fwding_info.lif = hal::pd::if_get_hw_lif_id(dif);
+    flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
 
     if (hal::intf_get_if_type(dif) != intf::IF_TYPE_ENIC) {
         return HAL_RET_OK;
     }
 
-    // TODO Update fwding_info
+    // TODO(goli) Update qid
+    //flowupd.fwding.qid_en = true;
+    //flowupd.fwding.qtype = q_off;
+    //flowupd.fwding.qid = qid;
 
     return HAL_RET_OK;
 }
@@ -31,8 +34,8 @@ fwding_exec(fte::ctx_t& ctx)
     fte::flow_update_t flowupd;
 
     // Update iflow
-    if (ctx.dif) {
-        ret = update_fwding_info(flowupd, ctx.dif);
+    if (ctx.dif()) {
+        ret = update_fwding_info(flowupd, ctx.dif()); 
         if (ret != HAL_RET_OK) {
             return fte::PIPELINE_END; // TODO(goli)abort
         }
@@ -40,12 +43,12 @@ fwding_exec(fte::ctx_t& ctx)
         // TODO(goli) check hostpinning mode and find uplink based on sep
     }
 
-    ctx_update_iflow(ctx, flowupd);
+    ctx.update_iflow(flowupd);
 
     //Update rflow
-    if (ctx.rflow_valid) {
-        if (ctx.sif) {
-            ret = update_fwding_info(flowupd, ctx.sif);
+    if (ctx.valid_rflow()) {
+        if (ctx.sif()) {
+            ret = update_fwding_info(flowupd, ctx.sif());
             if (ret != HAL_RET_OK) {
                 return fte::PIPELINE_END; // TODO(goli)abort
             }
@@ -53,7 +56,7 @@ fwding_exec(fte::ctx_t& ctx)
             // TODO(goli) check hostpinning and find uplink based on dep
         }
 
-        ctx_update_rflow(ctx, flowupd);
+        ctx.update_rflow(flowupd);
     }
 
     return fte::PIPELINE_CONTINUE;

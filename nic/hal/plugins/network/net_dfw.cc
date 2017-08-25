@@ -26,15 +26,13 @@ dfw_exec(fte::ctx_t& ctx)
 
     if (!pol_check_sg_policy(ctx)) {
         flowupd.action.deny = true;
-        ctx_update_iflow(ctx, flowupd);
-        ctx.rflow_valid = false; // invalidate rflow
     } else {
         flowupd.action.deny = false;
-        ctx_update_iflow(ctx, flowupd);
-        ctx_update_rflow(ctx, flowupd);
     }
+    ctx.update_iflow(flowupd);
+    ctx.update_rflow(flowupd);
 
-    if (ctx.iflow.key.proto == types::IP_PROTO_TCP &&
+    if (ctx.key().proto == types::IP_PROTO_TCP &&
         conn_tracking_configured(ctx)) {
 
         // iflow
@@ -42,11 +40,11 @@ dfw_exec(fte::ctx_t& ctx)
         flowupd.conn_track.enable = true;
         flowupd.conn_track.state = session::FLOW_TCP_STATE_SYN_SENT;
         flowupd.conn_track.syn_ack_delta = 0;
-        ctx_update_iflow(ctx, flowupd);
+        ctx.update_iflow(flowupd);
 
         //rflow
         flowupd.conn_track.state = session::FLOW_TCP_STATE_NONE;
-        ctx_update_rflow(ctx, flowupd);
+        ctx.update_rflow(flowupd);
     }
 
     return fte::PIPELINE_CONTINUE;
