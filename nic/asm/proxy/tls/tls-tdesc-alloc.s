@@ -11,34 +11,26 @@
 
  /* d is the data returned by lookup result */
 struct d_struct {
-	odesc			 : ADDRESS_WIDTH ;
+	odesc			 : HBM_ADDRESS_WIDTH ;
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	qstate_addr			: ADDRESS_WIDTH ;
-};
+struct tx_table_s2_t2_k                 k;
 
 struct phv_ p;
-struct k_struct k;
 struct d_struct d;
 
 %%
 	
         .param          tls_queue_brq_start
         .param          TNMDR_TABLE_BASE
-	.align
+	    .align
 tls_tdesc_alloc_start:
 
         CAPRI_CLEAR_TABLE0_VALID
 
-#	phvwr		p.odesc, d.odesc
-
-table_read_QUEUE_BRQ:
-	CAPRI_NEXT_TABLE0_READ(k.fid, TABLE_LOCK_EN, tls_queue_brq_start,
-	                    k.qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
-	nop.e
-	nop
+	    phvwr		p.to_s5_odesc, d.odesc
+        
+	    nop.e
+	    nop
 

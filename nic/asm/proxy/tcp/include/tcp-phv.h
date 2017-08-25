@@ -16,7 +16,7 @@
 // Flit 0:  511b  - 0b (INTRINSIC DATA)
 
 #define TCP_PHV_DB_DATA_START       CAPRI_PHV_START_OFFSET(db_data_pid)
-#define TCP_PHV_DB_DATA_END         CAPRI_PHV_END_OFFSET(db_data_pad_db_data_pad)
+#define TCP_PHV_DB_DATA_END         CAPRI_PHV_END_OFFSET(db_data_index)
 #define TCP_PHV_DB_DATA_SIZE        8
 
 #define TCP_PHV_AOL_START           512

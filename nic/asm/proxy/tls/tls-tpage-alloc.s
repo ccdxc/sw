@@ -15,24 +15,19 @@ struct d_struct {
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	qstate_addr			: ADDRESS_WIDTH ;
-};
-
+struct tx_table_s2_t3_k k             ;
 struct phv_ p;
-struct k_struct k;
 struct d_struct d;
 
 %%
 	
-	.align
+	    .align
 tls_tpage_alloc_start:
 
         CAPRI_CLEAR_TABLE1_VALID
 
-	#phvwr		p.opage, d.opage
+	    phvwr		p.to_s5_opage, d.opage
 
-	nop.e
-	nop
+	    nop.e
+	    nop
 

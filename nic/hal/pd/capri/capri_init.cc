@@ -140,7 +140,7 @@ capri_p4p_asm_init()
     }
 
     symbols = (capri_prog_param_info_t *)HAL_CALLOC(capri_prog_param_info_t,
-                        2 * sizeof(capri_prog_param_info_t));
+                        6 * sizeof(capri_prog_param_info_t));
     symbols[0].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[0].num_params = 1;
     symbols[0].params[0].name = RNMDR_TABLE_BASE;
@@ -149,11 +149,30 @@ capri_p4p_asm_init()
     symbols[1].num_params = 1;
     symbols[1].params[0].name = RNMPR_TABLE_BASE;
     symbols[1].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[2].name = "tls-read-tnmdr-alloc-idx.bin";
+    symbols[2].num_params = 1;
+    symbols[2].params[0].name = TNMDR_TABLE_BASE;
+    symbols[2].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    symbols[3].name = "tls-read-tnmpr-alloc-idx.bin";
+    symbols[3].num_params = 1;
+    symbols[3].params[0].name = TNMPR_TABLE_BASE;
+    symbols[3].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[4].name = "tls-queue-brq-enc.bin";
+    symbols[4].num_params = 1;
+    symbols[4].params[0].name = BRQ_BASE;
+    symbols[4].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+
+    symbols[5].name = "tls-queue-brq-dec.bin";
+    symbols[5].num_params = 1;
+    symbols[5].params[0].name = BRQ_BASE;
+    symbols[5].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+
 
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
-                            p4plus_prm_base_addr, symbols, 2);
+                            p4plus_prm_base_addr, symbols, 6);
 
     HAL_FREE(capri_prog_param_info_t, symbols);
 

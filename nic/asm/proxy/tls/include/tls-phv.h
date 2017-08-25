@@ -48,9 +48,6 @@
 
 #define TLS_PHV_DMA_COMMANDS_START      (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
 
-#define TLS_PHV_AOL_DESC_START          CAPRI_PHV_START_OFFSET(aol_reserved)
-#define TLS_PHV_AOL_DESC_END            CAPRI_PHV_END_OFFSET(aol_A0)
-
 struct p_struct {
         // DMA COMMANDS - END
         dma_cmd0_cmd                     :  8;
