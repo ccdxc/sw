@@ -21,7 +21,8 @@ sessions:
         scale: 1
         ipv4:
             - ref://store/specs/id=SESSION_TCP_FP
-        ipv6: None
+        ipv6:
+            - ref://store/specs/id=SESSION_TCP_FP
         mac: None
 
 lif: ref://store/specs/id=LIF_ETH

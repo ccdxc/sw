@@ -173,7 +173,7 @@ modules:
         args    :
             flow: filter://type=IPV6,proto=UDP
     - module:
-        name    : PKT_TCPCB
+        name    : PKT_TO_SERQ
         enable  : True
         package : test.tcp-tls-proxy
         module  : tcp_proxy
