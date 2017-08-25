@@ -232,7 +232,6 @@ table input_properties_otcam {
     }
     actions {
         input_properties;
-        nop;
     }
     size : INPUT_PROPERTIES_OTCAM_TABLE_SIZE;
 }
@@ -250,7 +249,6 @@ table input_properties {
     }
     actions {
         input_properties;
-        nop;
     }
     size : INPUT_PROPERTIES_TABLE_SIZE;
 }

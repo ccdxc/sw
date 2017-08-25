@@ -7,7 +7,11 @@ struct phv_                   p;
 
 %%
 
-// r5: ipv4_ihl
+nop:
+  nop.e
+  nop
+
+.align
 native_ipv4_packet:
   or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   or          r5, k.ipv4_ihl_sbit2_ebit3, k.ipv4_ihl_sbit0_ebit1, 2
@@ -148,9 +152,3 @@ input_mapping_miss:
 malformed_native_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
-
-.align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
-nop:
-  nop.e
-  nop

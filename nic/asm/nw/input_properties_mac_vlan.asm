@@ -8,12 +8,6 @@ struct phv_                        p;
 
 %%
 
-nop:
-  nop.e
-  nop
-
-.align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 input_properties_mac_vlan:
   seq         c2, k.recirc_header_valid, TRUE
   phvwr.c2    p.control_metadata_recirc_reason, k.recirc_header_reason

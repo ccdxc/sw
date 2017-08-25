@@ -7,9 +7,9 @@ struct input_properties_d d;
 struct phv_               p;
 
 d = {
-  u.input_properties_d.vrf = 0x1;
-  u.input_properties_d.dir = 0x1;
-  u.input_properties_d.flow_miss_action = FLOW_MISS_ACTION_CPU;
+  input_properties_d.vrf = 0x1;
+  input_properties_d.dir = 0x1;
+  input_properties_d.flow_miss_action = FLOW_MISS_ACTION_CPU;
 };
 
 k = {
@@ -17,3 +17,5 @@ k = {
   capri_p4_intrinsic_frame_size_sbit0_ebit5 = 0;
   capri_p4_intrinsic_frame_size_sbit6_ebit13 = 250;
 };
+
+c1 = 1;
