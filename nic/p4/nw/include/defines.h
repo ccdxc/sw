@@ -3,7 +3,7 @@
 
 #define LIF_BIT_WIDTH                  11
 
-#define CPU_VFID                       1023
+#define CPU_LPORT                      1023
 
 #define ACT_ALLOW                      0
 #define ACT_DROP                       1
@@ -208,6 +208,13 @@
 #define DROP_TCP_NON_RST_PKT_AFTER_RST 28
 #define DROP_TCP_INVALID_RESPONDER_FIRST_PKT 29
 #define DROP_TCP_UNEXPECTED_SYN        30
+
+/*****************************************************************************/
+/* Rewrite flags                                                             */
+/*****************************************************************************/
+#define REWRITE_FLAGS_MAC_DA           0x01
+#define REWRITE_FLAGS_MAC_SA           0x02
+#define REWRITE_FLAGS_TTL_DEC          0x04
 
 /*****************************************************************************/
 /* flow role                                                                 */

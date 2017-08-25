@@ -12,6 +12,7 @@ namespace pd {
 struct pd_lif_s {
     uint32_t    hw_lif_id;
     uint32_t    dummy;
+    uint32_t    lif_lport_id;
 
     // pi ptr
     void        *pi_lif;

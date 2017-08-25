@@ -7,6 +7,7 @@
 #include <uplinkif_pd.hpp>
 #include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
+#include <if_pd.hpp>
 #include <session_pd.hpp>
 #include <buf_pool_pd.hpp>
 #include <queue_pd.hpp>
@@ -68,6 +69,10 @@ hal_state_pd::init(void)
                                  hal::pd::l2seg_pd_compute_hw_hash_func,
                                  hal::pd::l2seg_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((l2seg_hwid_ht_ != NULL), false);
+
+    // initialize lport indexer
+    lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS);
+    HAL_ASSERT_RETURN((lport_idxr_ != NULL), false);
 
     // initialize LIF PD related data structures
     lif_pd_slab_ = slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
@@ -233,6 +238,8 @@ hal_state_pd::hal_state_pd()
     l2seg_hwid_idxr_ = NULL;
     l2seg_hwid_ht_ = NULL;
 
+    lport_idxr_ = NULL;
+
     lif_pd_slab_ = NULL;
     lif_hwid_idxr_ = NULL;
 
@@ -296,6 +303,8 @@ hal_state_pd::~hal_state_pd()
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
     l2seg_hwid_idxr_ ? delete l2seg_hwid_idxr_ : HAL_NOP;
     l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
+
+    lport_idxr_ ? delete lport_idxr_ : HAL_NOP;
 
     lif_pd_slab_ ? delete lif_pd_slab_ : HAL_NOP;
     lif_hwid_idxr_ ? delete lif_hwid_idxr_ : HAL_NOP;

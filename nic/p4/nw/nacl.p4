@@ -52,8 +52,8 @@ table nacl {
         tcp.flags                          : ternary;
         tunnel_metadata.tunnel_terminate   : ternary;
         vxlan.vni                          : ternary;
-        control_metadata.src_lif           : ternary;
-        capri_intrinsic.lif                : ternary;
+        control_metadata.src_lport         : ternary;
+        control_metadata.dst_lport         : ternary;
         control_metadata.flow_miss_ingress : ternary;
         vlan_tag.valid                     : ternary;
         vlan_tag.vid                       : ternary;

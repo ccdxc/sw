@@ -24,8 +24,8 @@ action ipsg_miss() {
     }
 }
 
-action ipsg_hit(lif, mac, vlan_valid, vlan_id) {
-    if ((control_metadata.src_lif != lif) or
+action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
+    if ((control_metadata.src_lport != src_lport) or
         (ethernet.srcAddr != mac) or
         (vlan_tag.valid != vlan_valid) or
         (vlan_tag.vid != vlan_id)) {
@@ -34,7 +34,7 @@ action ipsg_hit(lif, mac, vlan_valid, vlan_id) {
     }
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.ipsg_lif, lif);
+    modify_field(scratch_metadata.ipsg_lport, src_lport);
     modify_field(scratch_metadata.mac, mac);
     modify_field(scratch_metadata.vlan_valid, vlan_valid);
     modify_field(scratch_metadata.vlan_id, vlan_id);

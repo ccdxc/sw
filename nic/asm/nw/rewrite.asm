@@ -14,19 +14,19 @@ nop:
 
 .align
 rewrite:
-  and         r1, k.vlan_tag_valid, k.rewrite_metadata_vlan_decap_en
-  seq         c1, r1, 1
-  phvwr.c1    p.ethernet_etherType, k.vlan_tag_etherType
+  seq         c1, k.vlan_tag_valid, 1
+  phvwr.c1    p.ethernet_etherType[15:8], k.vlan_tag_etherType_sbit0_ebit7
+  phvwr.c1    p.ethernet_etherType[7:0], k.vlan_tag_etherType_sbit8_ebit15
   phvwr.c1    p.vlan_tag_valid, 0
 
-  seq         c2, k.rewrite_metadata_mac_sa_rewrite, 1
-  phvwr.c2    p.ethernet_srcAddr, d.u.rewrite_d.mac_sa
-  seq         c2, k.rewrite_metadata_mac_da_rewrite, 1
-  phvwr.c2    p.ethernet_dstAddr, d.u.rewrite_d.mac_da
+  smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_MAC_SA, REWRITE_FLAGS_MAC_SA
+  phvwr.c1    p.ethernet_srcAddr, d.u.rewrite_d.mac_sa
+  smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_MAC_DA, REWRITE_FLAGS_MAC_DA
+  phvwr.c1    p.ethernet_dstAddr, d.u.rewrite_d.mac_da
 
   add         r6, r0, k.ipv4_valid
   or          r6, r6, k.ipv6_valid, 1
-  seq         c1, k.rewrite_metadata_ttl_dec, 1
+  smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_TTL_DEC, REWRITE_FLAGS_TTL_DEC
   .brbegin
   br          r6[1:0]
   seq         c2, k.qos_metadata_dscp_en, 1

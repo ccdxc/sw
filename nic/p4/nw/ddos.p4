@@ -187,7 +187,7 @@ action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
 @pragma stage 1
 table ddos_src_vf {
     reads {
-        control_metadata.src_lif : ternary;
+        control_metadata.src_lport : ternary;
     }
     actions {
         nop;

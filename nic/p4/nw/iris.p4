@@ -50,20 +50,22 @@ header_type control_metadata_t {
         ipsg_enable                    : 1;
         recirc_reason                  : 2;
         cpu_copy                       : 1;
-        src_lif                        : LIF_BIT_WIDTH;
+        src_lif                        : 11;
         flow_miss_action               : 2;
         flow_miss_tm_oqueue            : 5;
         lif_filter                     : 6;
         p4plus_app_id                  : 8;
         rdma_enabled                   : 1;
+        src_lport                      : 11;
+        dst_lport                      : 11;
+        flow_miss                      : 1;
+        flow_miss_ingress              : 1;  // NCC workaround for predication
+        flow_miss_egress               : 1;  // NCC workaround for predication
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
         egress_ddos_src_only_policer_drop : 1;
         egress_ddos_src_dst_policer_drop  : 1;
-        flow_miss                         : 1;
-        flow_miss_ingress                 : 1;  // NCC workaround for predication
-        flow_miss_egress                  : 1;  // NCC workaround for predication
     }
 }
 
@@ -163,7 +165,7 @@ header_type scratch_metadata_t {
         burst_exceed_count    : 32;
 
         // ipsg
-        ipsg_lif              : 11;
+        ipsg_lport            : 11;
         mac                   : 48;
         vlan_valid            : 1;
         vlan_id               : 12;

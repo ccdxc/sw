@@ -28,7 +28,7 @@ registered_macs_miss:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 registered_macs_hit:
-  phvwr.e     p.capri_intrinsic_lif, d.u.registered_macs_hit_d.dst_lif
+  phvwr.e     p.control_metadata_dst_lport, d.u.registered_macs_hit_d.dst_lport
   nop
 
 registered_macs_all_multicast:

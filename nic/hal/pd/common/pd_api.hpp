@@ -205,6 +205,7 @@ hal_ret_t pd_if_update(pd_if_args_t *hal_if);
 hal_ret_t pd_if_delete(pd_if_args_t *hal_if);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
+uint32_t if_get_lport_id(if_t *pi_if);
 
 hal_ret_t pd_ep_create(pd_ep_args_t *hal_if);
 hal_ret_t pd_ep_update(pd_ep_args_t *hal_if);

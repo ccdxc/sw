@@ -21,7 +21,7 @@ registered_macs_otcam_miss:
   nop
 
 registered_macs_otcam_hit:
-  phvwr.e     p.capri_intrinsic_lif, d.u.registered_macs_otcam_hit_d.dst_lif
+  phvwr.e     p.control_metadata_dst_lport, d.u.registered_macs_otcam_hit_d.dst_lport
   nop
 
 registered_macs_otcam_all_multicast:

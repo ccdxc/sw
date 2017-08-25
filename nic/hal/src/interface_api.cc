@@ -280,10 +280,11 @@ if_l2seg_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
 }
 
 // ----------------------------------------------------------------------------
-// Returns in ingress if the packet can come as tagged or untagged for l2seg if
+// Returns the encap used for l2seg on an if. 
+// Assumption: Ingress & Egress are same.
 // ----------------------------------------------------------------------------
 hal_ret_t   
-if_l2seg_get_ingress_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
+if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
                            uint16_t *vlan_id)
 {
     if (!pi_if && !pi_l2seg) {
@@ -292,8 +293,15 @@ if_l2seg_get_ingress_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
 
     switch(pi_if->if_type) {
         case intf::IF_TYPE_ENIC:
-            *vlan_v = 1;
-            *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
+            if (pi_if->enic_type == intf::IF_ENIC_TYPE_USEG || 
+                    pi_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) {
+                *vlan_v = 1;
+                *vlan_id = if_l2seg_get_encap_vlan(pi_if, pi_l2seg);
+            } else {
+                // Direct
+                *vlan_v = 0;
+                *vlan_id = 0;
+            }
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:

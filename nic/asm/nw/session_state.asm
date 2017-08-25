@@ -236,14 +236,14 @@ lb_tss_i_syn_rcvd_1:
   setcf        c3, [c1 & c2]
   tblwr.c3     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_FIN_RCVD
   b.c3         lb_tss_i_tcp_session_update
-  phvwr.c3     p.capri_intrinsic_lif, CPU_VFID
+  phvwr.c3     p.control_metadata_dst_lport, CPU_LPORT
 
   setcf        c3, [c1 & !c2]
   b.c3         lb_tss_i_tcp_session_update
   tblwr.c3     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD
 
   b            lb_tss_i_exit
-  phvwr.c3     p.capri_intrinsic_lif, CPU_VFID
+  phvwr.c3     p.control_metadata_dst_lport, CPU_LPORT
 
   .brcase      FLOW_STATE_FIN_RCVD
   scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
@@ -550,14 +550,14 @@ lb_tss_r_init_3:
   setcf        c3, [c1 & c2]
   tblwr.c3     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_FIN_RCVD
   b.c3         lb_tss_r_tcp_session_update
-  phvwr.c3     p.capri_intrinsic_lif, CPU_VFID
+  phvwr.c3     p.control_metadata_dst_lport, CPU_LPORT
 
   setcf        c3, [c1 & !c2]
   b.c3         lb_tss_r_tcp_session_update
   tblwr.c3     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD
 
   b            lb_tss_r_exit
-  phvwr.c3     p.capri_intrinsic_lif, CPU_VFID
+  phvwr.c3     p.control_metadata_dst_lport, CPU_LPORT
 
   .brcase      FLOW_STATE_FIN_RCVD
   scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5

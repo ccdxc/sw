@@ -193,9 +193,8 @@ table input_mapping_native {
 }
 
 action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
-                        ipsg_enable, dscp, l4_profile_idx, dst_lif, filter,
-                        flow_miss_tm_oqueue) {
-    modify_field(control_metadata.src_lif, capri_intrinsic.lif);
+                        ipsg_enable, dscp, l4_profile_idx, src_lport,
+                        filter, flow_miss_tm_oqueue) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -206,8 +205,8 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
     modify_field(l4_metadata.profile_idx, l4_profile_idx);
     modify_field(control_metadata.lif_filter, filter);
 
-    // classic NIC mode for packets from workloads
-    modify_field(capri_intrinsic.lif, dst_lif);
+    modify_field(control_metadata.src_lif, capri_intrinsic.lif);
+    modify_field(control_metadata.src_lport, src_lport);
 
     // update packet length based on tm_iport
     if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
@@ -263,7 +262,7 @@ table input_properties {
 // User-VLAN will be used for dejavu check.
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  vrf, dir, flow_miss_action,flow_miss_idx,
-                                 ipsg_enable, dscp, l4_profile_idx, dst_lif,
+                                 ipsg_enable, dscp, l4_profile_idx, src_lport,
                                  filter, flow_miss_tm_oqueue) {
     adjust_recirc_header();
 
@@ -277,12 +276,11 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     modify_field(control_metadata.src_lif, src_lif);
     input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
-                     ipsg_enable, dscp, l4_profile_idx, dst_lif, filter,
+                     ipsg_enable, dscp, l4_profile_idx, src_lport, filter,
                      flow_miss_tm_oqueue);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
-
 }
 
 action adjust_recirc_header() {

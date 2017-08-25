@@ -18,6 +18,9 @@ set_tm_oport:
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
+  phvwr       p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif
+  seq         c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
+  phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
   seq         c1, d.u.set_tm_oport_d.vlan_tag_in_skb, TRUE

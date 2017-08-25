@@ -113,6 +113,7 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->hw_lif_id);
 
+    // Allocate ifpc id
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
@@ -123,6 +124,16 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->up_ifpc_id);
 
+    // Allocate lport
+    rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_upif->
+            upif_lport_id);
+    if (rs != indexer::SUCCESS) {
+        return HAL_RET_NO_RESOURCE;
+    }
+    HAL_TRACE_DEBUG("PD-Uplinkif:{}: if_id:{} Allocated lport_id:{}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_upif->pi_if),
+                    pd_upif->upif_lport_id);
     return ret;
 }
 
@@ -191,6 +202,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
     om_tmoport.egress_port1 = tm_oport;
+    om_tmoport.dst_lif = pd_upif->hw_lif_id;
     
     // Program OutputMapping table
     //  - Get tmoport from PI
@@ -201,19 +213,18 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
-    ret = dm_omap->insert_withid(&data, pd_upif->hw_lif_id);
+    ret = dm_omap->insert_withid(&data, pd_upif->upif_lport_id);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-Uplinkif::{}: Unable to program for if_id: {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
     } else {
-        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for if_id: {}",
-                __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if));
+        HAL_TRACE_DEBUG("PD-Uplinkif::{}: Programmed for if_id: {} at {}",
+                __FUNCTION__, if_get_if_id((if_t *)pd_upif->pi_if),
+                pd_upif->upif_lport_id);
         p4_err = p4pd_table_ds_decoded_string_get(P4TBL_ID_OUTPUT_MAPPING, 
                                                 NULL, NULL, &data, buff, 
                                                 sizeof(buff));
         HAL_ASSERT(p4_err == P4PD_SUCCESS);
-        HAL_TRACE_DEBUG("Index: {} \n {}", pd_upif->hw_lif_id, buff);
-
     }
     return ret;
 }

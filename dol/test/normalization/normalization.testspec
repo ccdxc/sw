@@ -69,6 +69,8 @@ packets:
         payloadsize : callback://normalization/callbacks/GetExpectedPayloadSize
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
+            qtag    :
+                prio    : ref://testcase/config/flow/eg_qos/cos
             ipv4    :
                 flags   : callback://normalization/callbacks/GetExpectedIpv4Flags
                 options : callback://normalization/callbacks/GetExpectedIpv4Options

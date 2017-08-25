@@ -9,9 +9,14 @@ namespace hal {
 namespace pd {
 
 // Interface APIs
+uint32_t if_get_lport_id(if_t *pi_if);
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_uplink_ifpc_id(if_t *pi_if);
+uint32_t if_get_uplink_lport_id(if_t *pi_if);
 tenant_t *if_get_pi_tenant(if_t *pi_if);
+
+// Lif APIs
+uint32_t lif_get_lport_id(lif_t *pi_lif);
 
 // L2Seg APIs
 tenant_t *l2seg_get_pi_tenant(l2seg_t *pi_l2seg);

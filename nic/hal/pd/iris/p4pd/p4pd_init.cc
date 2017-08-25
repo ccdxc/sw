@@ -773,52 +773,29 @@ p4pd_tunnel_encap_update_inner (void)
 //     or modify a vlan encap. 
 //
 //  Bridging:
-//     Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
-//     Untag -> Untag
+//      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
+//      -> Untag:
 //          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
-//          -> rewrite_table[EP's rewr_act] (Only rewrite of dscp)
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
 //          -> tnnl_rwr_table[0] (nop)
-//     Untag -> tag
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, tnnl_vnid: dl2seg's acc/fab enc]
-//          -> rewrite_table[EP's rewr_act] (No rewrite ?)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid)
-//     tag -> Untag
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0, decap_vlan_en: 1]
-//          -> rewrite_table[EP's rewr_act] (Decaps vlan)
-//          -> tnnl_rwr_table[0] (nop)
-//     tag -> tag (Same vlan)
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0, decap_vlan_en: 0, tnnl_vnid: 0]
-//          -> rewrite_table[EP's rewr_act] (Only rewrite of cos)
-//          -> tnnl_rwr_table[0] (nop)
-//     tag -> tag (Diff vlan)
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, decap_vlan_en: 1, tnnl_vnid: dl2seg's acc/fab enc]
-//          -> rewrite_table[EP's rewr_act] (Decaps vlan)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid)
-//     
+//      -> Tag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink, 
+//                                encap from outpu_mapping, cos rwr)
 //
 //  Routing:
 //     Flow: mac_sa_rw:1, mac_da_rw:1, ttl_dec:1
-//     Untag -> Untag
+//      -> Untag:
 //          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
-//          -> rewrite_table[EP's rewr_act] (macs' rw, ttl dec)
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
 //          -> tnnl_rwr_table[0] (nop)
-//     Untag -> tag
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, tnnl_vnid: dl2seg's acc/fab enc]
-//          -> rewrite_table[EP's rewr_act] (macs' rw, ttl dec)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid)
-//     tag -> Untag
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0, decap_vlan_en: 1]
-//          -> rewrite_table[EP's rewr_act] (Decaps vlan, macs' rw, ttl dec)
-//          -> tnnl_rwr_table[0] (nop)
-//     tag -> tag (Same vlan)
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0, decap_vlan_en: 0, tnnl_vnid: 0]
-//          -> rewrite_table[EP's rewr_act] (macs' rw, ttl dec))
-//          -> tnnl_rwr_table[0] (nop)
-//     tag -> tag (Diff vlan)
-//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, decap_vlan_en: 1, tnnl_vnid: dl2seg's acc/fab enc]
-//          -> rewrite_table[EP's rewr_act] (Decaps vlan)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid)
-//
+//      -> Tag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink, 
+//                                encap from outpu_mapping, cos rwr)
+//      
 // ----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)

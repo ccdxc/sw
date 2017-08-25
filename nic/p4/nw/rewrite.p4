@@ -7,10 +7,7 @@ header_type rewrite_metadata_t {
         tunnel_rewrite_index : 10;
         tunnel_vnid          : 24;
         entropy_hash         : 16;
-        mac_sa_rewrite       : 1;
-        mac_da_rewrite       : 1;
-        vlan_decap_en        : 1;
-        ttl_dec              : 1;
+        flags                : 8;
     }
 }
 
@@ -27,20 +24,20 @@ metadata rewrite_metadata_t rewrite_metadata;
 metadata qos_metadata_t qos_metadata;
 
 action rewrite(mac_sa, mac_da) {
-    if ((rewrite_metadata.vlan_decap_en == TRUE) and (vlan_tag.valid == TRUE)) {
+    if (vlan_tag.valid == TRUE) {
         modify_field(ethernet.etherType, vlan_tag.etherType);
         remove_header(vlan_tag);
     }
 
-    if (rewrite_metadata.mac_sa_rewrite == TRUE) {
+    if ((rewrite_metadata.flags & REWRITE_FLAGS_MAC_SA) != 0) {
         modify_field(ethernet.srcAddr, mac_sa);
     }
 
-    if (rewrite_metadata.mac_da_rewrite == TRUE) {
+    if ((rewrite_metadata.flags & REWRITE_FLAGS_MAC_DA) != 0) {
         modify_field(ethernet.dstAddr, mac_da);
     }
 
-    if (rewrite_metadata.ttl_dec == TRUE) {
+    if ((rewrite_metadata.flags & REWRITE_FLAGS_TTL_DEC) != 0) {
         if (ipv4.valid == TRUE) {
             subtract(ipv4.ttl, ipv4.ttl, 1);
         } else {
@@ -101,21 +98,21 @@ action mirror_truncate(truncate_len) {
     }
 }
 
-action local_span(dst_lif, truncate_len) {
-    modify_field(capri_intrinsic.lif, dst_lif);
+action local_span(dst_lport, truncate_len) {
+    modify_field(control_metadata.dst_lport, dst_lport);
     mirror_truncate(truncate_len);
 }
 
-action remote_span(dst_lif, truncate_len, tunnel_rewrite_index, vlan) {
-    modify_field(capri_intrinsic.lif, dst_lif);
+action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan) {
+    modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
     modify_field(rewrite_metadata.tunnel_vnid, vlan);
     mirror_truncate(truncate_len);
 }
 
-action erspan_mirror(dst_lif, truncate_len, tunnel_rewrite_index) {
-    modify_field(capri_intrinsic.lif, dst_lif);
+action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index) {
+    modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
     mirror_truncate(truncate_len);

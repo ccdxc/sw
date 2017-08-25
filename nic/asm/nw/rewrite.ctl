@@ -1,5 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "../../p4/nw/include/defines.h"
 
 struct rewrite_k k;
 struct rewrite_d d;
@@ -12,12 +13,11 @@ d = {
 
 k = {
   vlan_tag_valid = 1;
-  vlan_tag_etherType = 0x800;
-  rewrite_metadata_mac_sa_rewrite = 0;
-  rewrite_metadata_mac_da_rewrite = 0;
+  vlan_tag_etherType_sbit0_ebit7 = 0x08;
+  vlan_tag_etherType_sbit8_ebit15 = 0x00;
+  rewrite_metadata_flags = REWRITE_FLAGS_TTL_DEC;
   nat_metadata_nat_ip = 0xac640101;
   nat_metadata_nat_l4_port = 0xbaba;
-  rewrite_metadata_ttl_dec = 1;
   qos_metadata_dscp_en = 0;
   ipv4_valid = 1;
   ipv6_valid = 0;

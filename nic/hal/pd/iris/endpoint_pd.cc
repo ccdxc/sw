@@ -231,8 +231,8 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
 
     // mac_sa = ... Get it from l2seg rmac
     // mac_da = ... Get it from EP's NH
-    for (int i = 0; i < REWRITE_MAX_ID; i++) {
-
+    // for (int i = 0; i < REWRITE_MAX_ID; i++) {
+    for (int i = 0; i < REWRITE_REWRITE_ID + 1; i++) {
         switch(i) {
             case REWRITE_NOP_ID:
                 break;
@@ -380,12 +380,12 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     pi_if = find_if_by_handle(pi_ep->if_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
     data.actionid = IPSG_IPSG_HIT_ID;
-    data.ipsg_action_u.ipsg_ipsg_hit.lif = if_get_hw_lif_id(pi_if);
+    data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
     mac = ep_get_mac_addr(pi_ep);
     // mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
     memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, *mac, 6);
     memrev(data.ipsg_action_u.ipsg_ipsg_hit.mac, 6);
-    if_l2seg_get_ingress_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
+    if_l2seg_get_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
      ret = ipsg_tbl->insert(&key, &key_mask, &data,
@@ -403,7 +403,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                          key.flow_lkp_metadata_lkp_vrf,
                          ipaddr2str(&(pi_ip_entry->ip_addr)),
                          data.actionid, 
-                         data.ipsg_action_u.ipsg_ipsg_hit.lif,
+                         data.ipsg_action_u.ipsg_ipsg_hit.src_lport,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
                          macaddr2str(*mac));

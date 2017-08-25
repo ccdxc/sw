@@ -1,5 +1,6 @@
 #include "if_pd_utils.hpp"
 #include "lif_pd.hpp"
+#include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
@@ -9,6 +10,68 @@ using namespace hal;
 
 namespace hal {
 namespace pd {
+
+// ----------------------------------------------------------------------------
+// Given a PI LIf, get its lport id
+// ----------------------------------------------------------------------------
+uint32_t
+lif_get_lport_id(lif_t *pi_lif) 
+{
+    uint32_t        lport_id = 0;
+    pd_lif_t        *pd_lif = NULL;
+
+    HAL_ASSERT(pi_lif != NULL);
+
+    pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
+    HAL_ASSERT(pi_lif != NULL);
+
+    lport_id =  pd_lif->lif_lport_id;
+
+    return lport_id;
+}
+
+// ----------------------------------------------------------------------------
+// Given a PI If, get its lport id
+// ----------------------------------------------------------------------------
+uint32_t
+if_get_lport_id(if_t *pi_if) 
+{
+    pd_enicif_t     *pd_enicif = NULL;
+    pd_uplinkif_t   *pd_upif = NULL;
+    pd_uplinkpc_t   *pd_uppc = NULL;
+    intf::IfType    if_type;
+    uint32_t        lport_id = 0;
+
+    HAL_ASSERT(pi_if != NULL);
+
+    if_type = intf_get_if_type(pi_if);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            pd_enicif = (pd_enicif_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_enicif!= NULL);
+
+            lport_id = pd_enicif->enic_lport_id;
+            break;
+        case intf::IF_TYPE_UPLINK:
+            pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_upif != NULL);
+
+            lport_id = pd_upif->upif_lport_id;
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
+            HAL_ASSERT(pd_uppc != NULL);
+
+            lport_id = pd_uppc->uppc_lport_id;
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return lport_id;
+}
 
 // ----------------------------------------------------------------------------
 // Given a PI If, get its hw lif id
@@ -94,6 +157,44 @@ if_get_uplink_ifpc_id(if_t *pi_if)
     }
 
     return upifpc_id;
+}
+
+// ----------------------------------------------------------------------------
+// Given an Uplink If or PC, get its lport id
+// ----------------------------------------------------------------------------
+uint32_t
+if_get_uplink_lport_id(if_t *pi_if) 
+{
+    pd_uplinkif_t   *pd_upif = NULL;
+    pd_uplinkpc_t   *pd_uppc = NULL;
+    intf::IfType    if_type;
+    uint32_t        lport_id = 0;
+
+    HAL_ASSERT(pi_if != NULL);
+
+    if_type = intf_get_if_type(pi_if);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            break;
+        case intf::IF_TYPE_UPLINK:
+            pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_upif != NULL);
+
+            lport_id = pd_upif->upif_lport_id;
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
+            HAL_ASSERT(pd_uppc != NULL);
+
+            lport_id = pd_uppc->uppc_lport_id;
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return lport_id;
 }
 
 // ----------------------------------------------------------------------------

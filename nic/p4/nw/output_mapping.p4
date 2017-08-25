@@ -35,7 +35,8 @@ action redirect_to_cpu(tunnel_index, egress_mirror_en, tm_oqueue) {
 }
 
 action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
-                    p4plus_app_id, rdma_enabled,
+                    p4plus_app_id, rdma_enabled, dst_lif,
+                    encap_vlan_id, encap_vlan_id_valid,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8) {
     if (nports == 1) {
@@ -72,6 +73,10 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
                      control_metadata.egress_mirror_session_id);
     }
 
+    modify_field(capri_intrinsic.lif, dst_lif);
+    if (encap_vlan_id_valid == TRUE) {
+        modify_field(rewrite_metadata.tunnel_vnid, encap_vlan_id);
+    }
     modify_field(control_metadata.rdma_enabled, rdma_enabled);
     modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
 
@@ -87,12 +92,13 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
     modify_field(scratch_metadata.egress_port, egress_port8);
     modify_field(scratch_metadata.egress_port, nports);
     modify_field(scratch_metadata.flag, egress_mirror_en);
+    modify_field(scratch_metadata.flag, encap_vlan_id_valid);
 }
 
 @pragma stage 1
 table output_mapping {
     reads {
-        capri_intrinsic.lif : exact;
+        control_metadata.dst_lport : exact;
     }
     actions {
         nop;

@@ -9,7 +9,7 @@ action set_replica_rewrites() {
                  tunnel_metadata.tunnel_terminate);
 
     if (tm_replication_data.valid == TRUE) {
-        modify_field(capri_intrinsic.lif, tm_replication_data.lif);
+        modify_field(control_metadata.dst_lport, tm_replication_data.lport);
         modify_field(capri_rxdma_intrinsic.qtype, tm_replication_data.qtype);
         modify_field(rewrite_metadata.rewrite_index,
                      tm_replication_data.rewrite_index);

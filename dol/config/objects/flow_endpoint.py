@@ -16,20 +16,32 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 class FlowEndpointObject(base.ConfigObjectBase):
-    def __init__(self, ep = None, 
-                 type = None, dom = None,
-                 addr = None, proto = None):
+    def __init__(self, ep = None, srcobj = None):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW_ENDPOINT'))
         self.ep         = ep
-        self.type       = type
-        self.dom        = dom
-        self.addr       = addr
-        self.proto      = proto
+        self.type       = None
+        self.dom        = None
+        self.addr       = None
+        self.proto      = None
         self.port       = None
         self.icmp_type  = None
         self.icmp_code  = None
         self.icmp_id    = None
+        if srcobj:
+            self.__copy(srcobj)
+        return
+
+    def __copy(self, src):
+        self.ep     = src.ep
+        self.type   = src.type
+        self.dom    = src.dom
+        self.addr   = src.addr
+        self.proto  = src.proto
+        self.port   = src.port
+        self.icmp_type  = src.icmp_type
+        self.icmp_code  = src.icmp_code
+        self.icmp_id    = src.icmp_id
         return
 
     def __set_tcpudp_info(self, entry):

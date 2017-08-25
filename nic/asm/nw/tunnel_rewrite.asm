@@ -271,7 +271,7 @@ f_insert_ipv4_header:
   phvwr       p.{ipv4_identification...ipv4_fragOffset}, 0
   phvwr       p.{ipv4_ttl...ipv4_protocol}, r6
   phvwr       p.{ipv4_srcAddr,ipv4_dstAddr}, d.{u.encap_vxlan_d.ip_sa,u.encap_vxlan_d.ip_da}
-	add         r7, r7, 20
+  add         r7, r7, 20
   phvwr.e     p.ipv4_totalLen, r7
   phvwr       p.ipv4_valid, 1
 

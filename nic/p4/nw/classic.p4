@@ -1,8 +1,8 @@
 /*****************************************************************************/
 /* Classic mode processing                                                   */
 /*****************************************************************************/
-action registered_macs_hit(dst_lif) {
-    modify_field(capri_intrinsic.lif, dst_lif);
+action registered_macs_hit(dst_lport) {
+    modify_field(control_metadata.dst_lport, dst_lport);
 }
 
 action registered_macs_miss() {
@@ -32,8 +32,8 @@ action registered_macs_miss() {
     }
 }
 
-action registered_macs_otcam_hit(dst_lif) {
-    registered_macs_hit(dst_lif);
+action registered_macs_otcam_hit(dst_lport) {
+    registered_macs_hit(dst_lport);
 }
 
 action registered_macs_otcam_miss() {

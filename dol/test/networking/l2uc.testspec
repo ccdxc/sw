@@ -61,7 +61,7 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             qtag:
-                #prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/eg_qos/cos
             ipv4:
                 tos     : ref://testcase/config/flow/eg_qos/dscp
             ipv6:

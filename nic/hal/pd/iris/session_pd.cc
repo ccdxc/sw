@@ -246,7 +246,7 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     }
 
     if (!mcast) {
-        d.flow_info_action_u.flow_info_flow_info.lif = flow->lif;
+        d.flow_info_action_u.flow_info_flow_info.dst_lport = flow->lport;
 #if 0
         HAL_TRACE_DEBUG("xxx: actual lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
         if (is_tcp_proxy_flow) {
@@ -344,10 +344,11 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;
 
-    d.flow_info_action_u.flow_info_flow_info.mac_sa_rewrite = flow->mac_sa_rewrite;
-    d.flow_info_action_u.flow_info_flow_info.mac_da_rewrite = flow->mac_da_rewrite;
-    d.flow_info_action_u.flow_info_flow_info.vlan_decap_en = flow->vlan_decap_en;
-    d.flow_info_action_u.flow_info_flow_info.ttl_dec = flow->ttl_dec;
+    d.flow_info_action_u.flow_info_flow_info.rewrite_flags = 
+        (flow->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
+        (flow->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
+        (flow->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
+
     d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd,
             flow->rw_act);
 #if 0
@@ -369,9 +370,8 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 
      if (is_tcp_proxy_flow) {
-         d.flow_info_action_u.flow_info_flow_info.lif = 1001;
+         d.flow_info_action_u.flow_info_flow_info.dst_lport = 1001;
          d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
-         d.flow_info_action_u.flow_info_flow_info.service_lif = 1001;
          d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
      }
 

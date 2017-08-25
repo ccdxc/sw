@@ -53,7 +53,7 @@ flowupd_fwding_info_(ctx_t& ctx, hal::flow_cfg_t *flow, const flow_update_t& flo
 {
     flow->qid_en = flowupd.fwding_info.qid_en;
     if (flow->qid_en) {
-        flow->lif = flowupd.fwding_info.lif;
+        // flow->lif = flowupd.fwding_info.lif;
         flow->qtype = flowupd.fwding_info.qtype;
         flow->qid = flowupd.fwding_info.qid;
     }

@@ -59,7 +59,7 @@ action flow_miss() {
         modify_field(control_metadata.flow_miss, TRUE);
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-        modify_field(capri_intrinsic.lif, CPU_VFID);
+        modify_field(control_metadata.dst_lport, CPU_LPORT);
     }
 
     if (control_metadata.flow_miss_action == FLOW_MISS_ACTION_DROP) {
@@ -99,13 +99,12 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
+action flow_info(dst_lport, multicast_en, qtype, flow_steering_only,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
-                 cos_en, cos, dscp_en, dscp, qid_en, log_en,
-                 mac_sa_rewrite, mac_da_rewrite, vlan_decap_en, ttl_dec,
+                 cos_en, cos, dscp_en, dscp, qid_en, log_en, rewrite_flags,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
                  ingress_tm_oqueue, egress_tm_oqueue) {
@@ -116,17 +115,9 @@ action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
     if (flow_steering_only == FALSE) {
         if (multicast_en == TRUE) {
             modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
-            modify_field(capri_intrinsic.tm_replicate_ptr, lif);
+            modify_field(capri_intrinsic.tm_replicate_ptr, dst_lport);
         } else {
-            // if service lif is present and service has not been applied,
-            // send packe to service lif
-            if ((service_lif != 0) and
-                ((p4plus_to_p4.valid == FALSE) or
-                 ((p4plus_to_p4.flags & 0x80) == 0))) {
-                modify_field(capri_intrinsic.lif, service_lif);
-            } else {
-                modify_field(capri_intrinsic.lif, lif);
-            }
+            modify_field(control_metadata.dst_lport, dst_lport);
         }
     }
 
@@ -169,10 +160,7 @@ action flow_info(lif, multicast_en, service_lif, qtype, flow_steering_only,
 
     /* rewrite index */
     modify_field(rewrite_metadata.rewrite_index, rewrite_index);
-    modify_field(rewrite_metadata.mac_sa_rewrite, mac_sa_rewrite);
-    modify_field(rewrite_metadata.mac_da_rewrite, mac_da_rewrite);
-    modify_field(rewrite_metadata.vlan_decap_en, vlan_decap_en);
-    modify_field(rewrite_metadata.ttl_dec, ttl_dec);
+    modify_field(rewrite_metadata.flags, rewrite_flags);
 
     /* NAT rewrite data */
     modify_field(nat_metadata.nat_ip, nat_ip);
@@ -209,12 +197,12 @@ action flow_hit_from_vm_bounce(src_lif) {
     modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
 }
 
-action flow_hit_to_vm_bounce(dst_lif, tm_oqueue) {
+action flow_hit_to_vm_bounce(dst_lport, tm_oqueue) {
     remove_header(ethernet);
     remove_header(ipv4);
     remove_header(udp);
     remove_header(vxlan_gpe);
-    modify_field(capri_intrinsic.lif, dst_lif);
+    modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.tm_oq, tm_oqueue);
 }

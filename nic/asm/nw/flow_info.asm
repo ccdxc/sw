@@ -15,15 +15,8 @@ flow_info:
   nop.c1.e
   seq         c1, d.u.flow_info_d.multicast_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.lif
-  sne         c2, d.u.flow_info_d.service_lif, r0
-  seq         c3, k.p4plus_to_p4_valid, FALSE
-  smeqb       c4, k.p4plus_to_p4_flags, 0x80, 0
-  andcf       c2, [c3 | c4]
-  setcf       c6, [!c1 & c2]
-  phvwr.c6    p.capri_intrinsic_lif, d.u.flow_info_d.service_lif
-  setcf       c6, [!c1 & !c2]
-  phvwr.c6    p.capri_intrinsic_lif, d.u.flow_info_d.lif
+  phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.dst_lport
+  phvwr.!c6   p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
   /* output queue selection */
   phvwr       p.capri_intrinsic_tm_oq, d.u.flow_info_d.ingress_tm_oqueue
@@ -56,10 +49,7 @@ flow_info:
 
   /* rewrite info */
   phvwr       p.rewrite_metadata_rewrite_index, d.u.flow_info_d.rewrite_index
-  phvwr       p.rewrite_metadata_mac_sa_rewrite, d.u.flow_info_d.mac_sa_rewrite
-  phvwr       p.rewrite_metadata_mac_da_rewrite, d.u.flow_info_d.mac_da_rewrite
-  phvwr       p.rewrite_metadata_vlan_decap_en, d.u.flow_info_d.vlan_decap_en
-  phvwr       p.rewrite_metadata_ttl_dec, d.u.flow_info_d.ttl_dec
+  phvwr       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
   phvwr       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
   phvwr       p.nat_metadata_nat_l4_port, d.u.flow_info_d.nat_l4_port
   phvwr       p.nat_metadata_twice_nat_idx, d.u.flow_info_d.twice_nat_idx
@@ -91,7 +81,7 @@ flow_miss:
   phvwr       p.control_metadata_flow_miss_ingress, 1
   .brcase FLOW_MISS_ACTION_CPU
   phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  phvwr       p.capri_intrinsic_lif, CPU_VFID
+  phvwr       p.control_metadata_dst_lport, CPU_LPORT
   .brcase FLOW_MISS_ACTION_DROP
   phvwr.e     p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
   phvwr       p.capri_intrinsic_drop, 1
@@ -100,7 +90,7 @@ flow_miss:
   phvwr.c1.e  p.capri_intrinsic_tm_replicate_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
   phvwr.!c1.e p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  phvwr.!c1   p.capri_intrinsic_lif, CPU_VFID
+  phvwr.!c1   p.control_metadata_dst_lport, CPU_LPORT
   .brcase FLOW_MISS_ACTION_REDIRECT
   phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx

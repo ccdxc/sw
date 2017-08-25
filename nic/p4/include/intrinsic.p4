@@ -281,14 +281,3 @@ header_type cpu_to_p4_header_t {
         oqueue           : 5;
     }
 }
-
-header_type tm_replication_data_t {
-    fields {
-        qtype                  : 3;
-        lif                    : 11;
-        tunnel_rewrite_index   : 10;
-        qid_or_vnid            : 24;
-        pad_1                  : 4;
-        rewrite_index          : 12;
-    }
-}

@@ -678,6 +678,7 @@ hal_ret_t add_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
     l2seg_t                     *l2seg = NULL;
     pd::pd_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
+    HAL_TRACE_DEBUG("----------------------- Interface API Start ------------------------");
     // Validate if l2seg and uplink exists
     ret = validate_l2seg_on_uplink(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -689,6 +690,8 @@ hal_ret_t add_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
     l2seg = fetch_l2seg_ifl2seg(spec);
     HAL_ASSERT((hal_if != NULL) && (l2seg != NULL));
 
+    HAL_TRACE_DEBUG("PI-AddL2SegUplink:{}: if_id:{} l2seg_id:{}", __FUNCTION__, 
+            hal_if->if_id, l2seg->seg_id);
 
     // PD Call
     pd::pd_l2seg_uplinkif_args_init(&pd_l2seg_uplink_args);
@@ -708,6 +711,7 @@ hal_ret_t add_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
     }
 
 cleanup:
+    HAL_TRACE_DEBUG("----------------------- Interface API End ------------------------");
     return ret;
 }
 
@@ -815,6 +819,9 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
     HAL_TRACE_DEBUG("PI-Uplinkif:{}: Uplinkif Create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
 
+    HAL_TRACE_DEBUG("PI-Uplinkif:{}: if_id:{}, native_l2seg_id:{}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id(),
+                    spec.if_uplink_info().native_l2segment_id());
     // TODO: for a member port, we can have valid pc#
     ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(), &hal_if->uplink_port_num);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);

@@ -10,6 +10,7 @@ namespace pd {
 struct pd_uplinkpc_s {
     uint32_t    hw_lif_id;      // hw lif id coming from tm
     uint32_t    up_ifpc_id;     // Unique for Uplinkif & PC. Used in l2seg
+    uint32_t    uppc_lport_id;  // lport
 
     // pi ptr
     void        *pi_if;

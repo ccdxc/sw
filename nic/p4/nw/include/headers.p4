@@ -461,3 +461,14 @@ header_type recirc_header_t {
         overflow_hash : 32;
     }
 }
+
+header_type tm_replication_data_t {
+    fields {
+        qtype                  : 3;
+        lport                  : 11;
+        tunnel_rewrite_index   : 10;
+        qid_or_vnid            : 24;
+        pad_1                  : 4;
+        rewrite_index          : 12;
+    }
+}

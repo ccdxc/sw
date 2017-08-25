@@ -218,17 +218,17 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
 
     // Populate the Key and Mask
     if (ms->src_if_match) {
-        key.control_metadata_src_lif = 
-            if_get_hw_lif_id(find_if_by_handle(ms->src_if_handle));
-        mask.control_metadata_src_lif_mask = 
-            ~(mask.control_metadata_src_lif_mask & 0);
+        key.control_metadata_src_lport = 
+            if_get_lport_id(find_if_by_handle(ms->src_if_handle));
+        mask.control_metadata_src_lport_mask = 
+            ~(mask.control_metadata_src_lport_mask & 0);
     }
 
     if (ms->dest_if_match) {
-        key.capri_intrinsic_lif = 
-            if_get_hw_lif_id(find_if_by_handle(ms->dest_if_handle));
-        mask.capri_intrinsic_lif_mask = 
-            ~(mask.capri_intrinsic_lif_mask & 0);
+        key.control_metadata_dst_lport = 
+            if_get_lport_id(find_if_by_handle(ms->dest_if_handle));
+        mask.control_metadata_dst_lport_mask = 
+            ~(mask.control_metadata_dst_lport_mask & 0);
     }
 
     switch(ms->acl_type) {

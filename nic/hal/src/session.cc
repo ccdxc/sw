@@ -430,7 +430,7 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
 }
 
 //------------------------------------------------------------------------------
-// Updates flow parameters for flow if the flow undergoes routing
+// Updates flow parameters for flow if the flow undergoes routing/bridging
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 update_flow_for_routing(session_args_t *args, SessionResponse *rsp, 
@@ -438,58 +438,117 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
 {
     hal_ret_t   ret = HAL_RET_OK;
     flow_cfg_t  *flow = NULL;
-    ep_t        /**sep = NULL, */*dep = NULL;
+    ep_t        *sep = NULL, *dep = NULL;
     l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
-    if_t        *dif = NULL;
+    if_t        *sif = NULL, *dif = NULL;
+    bool        /*ing_tag = false, */egr_tag = false;
+    uint8_t     ivlan_v = 0, evlan_v = 0;
+    uint16_t    ivlan_id = 0, evlan_id = 0;
 
     if (is_initiator_flow) {
         flow = args->iflow;
-        // sep = args->sep;
+        sep = args->sep;
         dep = args->dep;
         sl2seg = args->sl2seg;
         dl2seg = args->dl2seg;
     } else {
         flow = args->rflow;
-        // sep = args->dep;
+        sep = args->dep;
         dep = args->sep;
         sl2seg = args->dl2seg;
         dl2seg = args->sl2seg;
     }
 
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+
     dif = ep_find_if_by_handle(dep);
     HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
 
+#if 0
     // Routing case only if nat type is NONE
     if (flow->nat_type != NAT_TYPE_NONE) {
         return HAL_RET_OK;
     }
+#endif
+
+	// Derive lport
+	// TODO: Handle service case
+	flow->lport = hal::pd::if_get_lport_id(dif);
+
+    if_l2seg_get_encap(sif, sl2seg, &ivlan_v, &ivlan_id);
+    // ing_tag = (ivlan_v == 1) ? true : false;
+
+    if_l2seg_get_encap(dif, dl2seg, &evlan_v, &evlan_id);
+    egr_tag = (evlan_v == 1) ? true : false;
+
+
+	// ---------------------     Encap Logic    ----------------------
+	//  Bridging:
+	//      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
+	//      -> Untag:
+	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
+	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+	//          -> tnnl_rwr_table[0] (nop)
+	//      -> Tag:
+	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, 
+    //				    tnnl_vnid = fab_encap if dif is uplink, 
+    //                  if enic comes from output_mapping]
+	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+	//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
+	//                                encap from outpu_mapping, cos rwr)
+	//
+	//  Routing:
+	//     Flow: mac_sa_rw:1, mac_da_rw:1, ttl_dec:1
+	//      -> Untag:
+	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
+	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, 
+    //                                           dscp rw, macs' rw, ttl_dec)
+	//          -> tnnl_rwr_table[0] (nop)
+	//      -> Tag:
+	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
+	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+	//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
+	//                                encap from outpu_mapping, cos rwr)
+    // TODO: Have to still handle priority tag. When do we send a priority
+	//       tagged pkt.
+
 
     if (sl2seg != dl2seg) {
         // Routing
         flow->ttl_dec = true;
         flow->mac_sa_rewrite = true;
         flow->mac_da_rewrite = true;
-        flow->vlan_decap_en = true;
         flow->rw_act = REWRITE_REWRITE_ID;
 
-        // check if egress pkt needs vlan encap
-        if (dif->if_type == intf::IF_TYPE_ENIC) {
-            flow->tnnl_vnid = dif->encap_vlan;
-            flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-        } else if (dif->if_type == intf::IF_TYPE_UPLINK ||
-                dif->if_type == intf::IF_TYPE_UPLINK_PC) {
-            flow->tnnl_vnid = dl2seg->fabric_encap.val;
-            // Check if dl2seg is native
-            if (dif->native_l2seg != dl2seg->fabric_encap.val) {
-                flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-            }
-        }
     } else {
         // Bridging
+        flow->ttl_dec = false;
+        flow->mac_sa_rewrite = false;
+        flow->mac_da_rewrite = false;
         flow->rw_act = REWRITE_REWRITE_ID;
+
     }
 
-    return ret;
+	if (dif->if_type != intf::IF_TYPE_TUNNEL) {
+		if (!egr_tag) {
+			flow->tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+		} else {
+			flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+			if (dif->if_type == intf::IF_TYPE_UPLINK ||
+					dif->if_type == intf::IF_TYPE_UPLINK_PC) {
+				flow->tnnl_vnid = dl2seg->fabric_encap.val;
+			}
+		} 
+	} else {
+		// TODO: Handle Tunnel case
+		// Vnid: flow's tnnl_vnid
+		// OVlan, Omacsa, Omacda, OSIP, ODIP: from tunnl_rewr table
+		// flow->tnnl_vnid = dl2seg->fabric_encap.val;
+		// flow->tnnl_rw_act = 
+	}
+
+	return ret;
 }
 
 
@@ -498,7 +557,7 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
 // Updates flow parameters for sessions if the flow undergoes routing
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-update_session_for_routing(session_args_t *args, SessionResponse *rsp)
+update_session_forwarding_info(session_args_t *args, SessionResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -515,9 +574,12 @@ update_session_for_routing(session_args_t *args, SessionResponse *rsp)
     return ret;
 }
 
-
+//------------------------------------------------------------------------------
+// Updates the flow parameters for NAT
+//------------------------------------------------------------------------------
 static inline hal_ret_t
-update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, if_t **dif, ep_t **dep)
+update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, 
+                         if_t **dif, ep_t **dep)
 {
     l2seg_t *dl2seg_nat;
     if_t *dif_nat;
@@ -544,6 +606,7 @@ update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, i
     dif_nat = find_if_by_handle(dep_nat->if_handle);
     HAL_ASSERT(dif_nat != NULL);
 
+#if 0
     if (dl2seg_nat != *dl2seg) {
         // routing
         flow->mac_sa_rewrite = true;
@@ -552,6 +615,7 @@ update_flow_for_dest_nat(tenant_t *tenant, flow_cfg_t *flow, l2seg_t **dl2seg, i
     if (dep_nat != *dep) {
         flow->mac_da_rewrite = true;
     }
+#endif
 
     *dl2seg = dl2seg_nat;
     *dif = dif_nat;
@@ -634,6 +698,7 @@ flow_create(const flow_cfg_t *cfg, session_t *session)
     return flow;
 }
 
+#if 0
 hal_ret_t
 flow_update_fwding_info(flow_cfg_t *flow, if_t *dif)
 {
@@ -648,6 +713,7 @@ flow_update_fwding_info(flow_cfg_t *flow, if_t *dif)
 
     return HAL_RET_OK;
 }
+#endif
 
 hal_ret_t
 session_create (const session_args_t *args, hal_handle_t *session_handle)
@@ -853,12 +919,12 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         return ret;
     }
 
-    ret = update_session_for_routing(&args, rsp);
+    ret = update_session_forwarding_info(&args, rsp);
     if (ret != HAL_RET_OK) {
         return ret;
     }
     
-
+#if 0
     // Update fwding info
     ret = flow_update_fwding_info(args.iflow, args.dif);
     if (ret != HAL_RET_OK) {
@@ -871,6 +937,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return ret;
     }
+#endif
 
     ret = session_create(&args, &session_handle);
     if (ret != HAL_RET_OK) {

@@ -8,9 +8,9 @@ struct phv_             p;
 
 d = {
     u.ddos_src_vf_hit_d.ddos_src_vf_base_policer_idx = 0x1;
-    };
+};
 
 k = {
-    control_metadata_src_lif = 0x1;
-    };
+    control_metadata_src_lport = 0x1;
+};
 

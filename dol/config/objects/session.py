@@ -29,8 +29,10 @@ class SessionObject(base.ConfigObjectBase):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
         self.spec = spec
-        self.initiator = initiator
-        self.responder = responder
+        self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
+        self.responder = flowep.FlowEndpointObject(srcobj = responder)
+        self.initiator.SetInfo(spec.initiator)
+        self.responder.SetInfo(spec.responder)
         self.label = self.spec.label.upper()
         
         assert(initiator.proto == responder.proto)
@@ -149,12 +151,8 @@ class SessionObjectHelper:
 
             for t in spec.entries:
                 self.__pre_process_spec_entry(t.entry)
-                flowep1.SetInfo(t.entry.initiator)
-                flowep2.SetInfo(t.entry.responder)
                 session = SessionObject()
-                session.Init(copy.copy(flowep1),
-                             copy.copy(flowep2),
-                             t.entry)
+                session.Init(flowep1, flowep2, t.entry)
                 self.objlist.append(session)
         return
             

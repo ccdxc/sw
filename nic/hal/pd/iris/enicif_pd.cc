@@ -5,9 +5,11 @@
 #include <l2segment_api.hpp>
 #include <interface.pb.h>
 #include <if_pd.hpp>
+#include <lif_pd.hpp>
 #include <enicif_pd.hpp>
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
+#include <defines.h>
 
 namespace hal {
 namespace pd {
@@ -101,20 +103,21 @@ pd_enicif_init (pd_enicif_t *enicif)
 hal_ret_t 
 pd_enicif_alloc_res(pd_enicif_t *pd_enicif)
 {
-    return HAL_RET_OK;
-    // Nothing to allocate for now
-#if 0
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
 
-    // Allocate lif hwid
-    rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_enicif->hw_lif_id);
+    // Allocate lport
+    rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_enicif->
+            enic_lport_id);
     if (rs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }
+    HAL_TRACE_DEBUG("PD-EnicIf:{}: if_id:{} Allocated lport_id:{}", 
+                    __FUNCTION__, 
+                    if_get_if_id((if_t *)pd_enicif->pi_if),
+                    pd_enicif->enic_lport_id);
 
     return ret;
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -128,12 +131,53 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     // Program Input Properties Mac Vlan
     ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif);
 
+    // Program Output Mapping 
+    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif);
+
     return ret;
 }
 
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
+#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+hal_ret_t
+pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint8_t                     tm_oport = 0;
+    uint8_t                     p4plus_app_id = 0;
+    output_mapping_actiondata   data;
+    DirectMap                   *dm_omap = NULL;
+    pd_lif_t                    *pd_lif = NULL;
+
+    memset(&data, 0, sizeof(data));
+
+    pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+
+    tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
+    tm_oport = TM_PORT_DMA;
+
+    data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+    om_tmoport.nports = 1;
+    om_tmoport.egress_port1 = tm_oport;
+    om_tmoport.p4plus_app_id = p4plus_app_id;
+    om_tmoport.dst_lif = pd_lif->hw_lif_id;
+    // om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
+
+    dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EnicIf::{}: lif_id:{} Unable to program",
+                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    } else {
+        HAL_TRACE_DEBUG("PD-EnicIf::{}: lif_id:{} Success",
+                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    }
+    return ret;
+}
 
 // ----------------------------------------------------------------------------
 // Freeing ENICIF PD
@@ -227,6 +271,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
     inp_prop_mac_vlan_data.src_lif = 0;
     inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
+    inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
 
     // TODO: Fill these fields eventually
 #if 0
@@ -236,8 +281,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.dst_lif    
     inp_prop_mac_vlan_data.filter    
 #endif
-
-    HAL_TRACE_DEBUG("Vlan: {}", key.vlan_tag_vid);
 
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_host));
@@ -277,7 +320,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     inp_prop_mac_vlan_data.src_lif_check_en = 1;
     inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
 
-    HAL_TRACE_DEBUG("Vlan: {}", key.vlan_tag_vid);
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_upl));
     if (ret != HAL_RET_OK) {
@@ -307,6 +349,25 @@ pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif)
     HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
 
     return ten_get_nwsec_prof_hw_id(pi_tenant);
+}
+
+pd_lif_t *
+pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
+{
+    if_t        *pi_if = NULL;
+    pd_lif_t    *pd_lif = NULL;
+    lif_t       *pi_lif = NULL;
+
+    pi_if = (if_t *)pd_enicif->pi_if;
+    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+
+    pi_lif = if_get_lif(pi_if);
+    HAL_ASSERT(pi_lif != NULL);
+
+    pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
+    HAL_ASSERT(pi_lif != NULL);
+
+    return pd_lif;
 }
 
 }    // namespace pd

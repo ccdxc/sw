@@ -8,14 +8,13 @@ struct phv_             p;
 
 d = {
     u.ddos_src_dst_hit_d.ddos_src_dst_base_policer_idx = 0x1;
-    };
+};
 
 k = {
     flow_lkp_metadata_lkp_vrf                       = 0x1;
     flow_lkp_metadata_lkp_proto                     = 0x1;
     tcp_flags                                       = 0x2;
     flow_lkp_metadata_lkp_src                       = 0x1;
-    flow_lkp_metadata_lkp_dst                       = 0x1;
     flow_lkp_metadata_lkp_dport                     = 0x1;
-    };
+};
 

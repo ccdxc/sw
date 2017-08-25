@@ -76,6 +76,9 @@ public:
     indexer *l2seg_hwid_idxr(void) const { return l2seg_hwid_idxr_; }
     ht *l2seg_hwid_ht(void) const { return l2seg_hwid_ht_; }
 
+    // get API for lport indexer
+    indexer *lport_idxr(void) const { return lport_idxr_; }
+
     // get APIs for LIF related state
     slab *lif_pd_slab(void) const { return lif_pd_slab_; }
     indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
@@ -190,6 +193,11 @@ private:
         slab       *l2seg_slab_;
         indexer    *l2seg_hwid_idxr_;
         ht         *l2seg_hwid_ht_;
+    } __PACK__;
+
+    // Lport Indexer
+    struct {
+        indexer    *lport_idxr_;
     } __PACK__;
 
     // LIF related state
