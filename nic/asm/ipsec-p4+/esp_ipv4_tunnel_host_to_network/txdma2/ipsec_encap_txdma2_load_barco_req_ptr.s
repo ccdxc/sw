@@ -9,11 +9,13 @@ struct phv_ p;
 %%
         .param ipsec_encap_txdma2_load_barco_req
         .align
-ipsec_get_barco_req_index_ptr:
+ipsec_encap_txdma2_load_barco_req_ptr:
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6 
-    phvwri p.common_te0_phv_table_pc, ipsec_encap_txdma2_load_barco_req 
+    addi r2, r0, ipsec_encap_txdma2_load_barco_req
+    srl r2, r2, 6
+    phvwr p.common_te0_phv_table_pc, r2 
     phvwr  p.common_te0_phv_table_addr, d.barco_req_address 
     nop.e
 

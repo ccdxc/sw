@@ -152,7 +152,7 @@ metadata ipsec_table3_s2s t3_s2s;
 metadata ipsec_int_header_t ipsec_int_header;
 
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinic_app_hdr;
+metadata dma_cmd_phv2pkt_t intrinsic_app_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t eth_hdr;
 @pragma dont_trim
@@ -170,7 +170,7 @@ action ipsec_txdma_dummy ()
 action esp_v4_tunnel_n2h_txdma2_build_decap_packet()
 {
     // Add intrinsic and app header
-    DMA_COMMAND_PHV2PKT_FILL(intrinic_app_hdr, 0, 32, 0)
+    DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
     // Add ethernet, optional-vlan and outer-ip from input-descriptor
     DMA_COMMAND_MEM2PKT_FILL(eth_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
