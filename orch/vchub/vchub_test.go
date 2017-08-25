@@ -73,7 +73,7 @@ func TestVCHub(t *testing.T) {
 		}
 
 		return true
-	}, "100ms", "20s")
+	}, "Default SmartNICs", "100ms", "20s")
 
 	os.Args = []string{"vchub", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk"}
 	err = parseOpts(&opts)

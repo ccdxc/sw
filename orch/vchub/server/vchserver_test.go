@@ -192,7 +192,7 @@ func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
 	}
 	if suite.testStore.IsWatchActive(prefix) != active {
 		debug.PrintStack()
-		t.Fatalf("Watch channel not in expected state after 3 sec")
+		t.Fatalf("Watch channel not in expected state after 10 sec")
 	}
 }
 
@@ -877,7 +877,7 @@ func verifyVCPSnics(t *testing.T, poll, timeOut string) {
 	AssertEventually(t, func() bool {
 		nicMap := getExpectedNICs(t)
 		return checkSmartNICList(nicMap) == nil
-	}, poll, timeOut)
+	}, "verifyVCPSnics", poll, timeOut)
 }
 
 func TestVCPSnic(t *testing.T) {
@@ -1080,7 +1080,7 @@ func TestVCPNwIF(t *testing.T) {
 	AssertEventually(t, func() bool {
 		ifMap := getExpectedNwIFs(t)
 		return checkNwIFList(ifMap) == nil
-	}, "50ms", "5s")
+	}, "Default NwIFs", "50ms", "5s")
 
 	// Add a new NwIF and verify
 	doneCh := make(chan bool)
