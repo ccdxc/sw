@@ -22,10 +22,11 @@ class EnicObject(base.ConfigObjectBase):
         self.GID("Enic%d" % self.id)
         return
 
-    def Init(self, segment, type):
+    def Init(self, segment, type, l4lb_backend = False):
         self.segment = segment
         self.tenant  = segment.tenant
         self.type    = type
+        self.l4lb_backend = l4lb_backend
         self.macaddr = resmgr.EnicMacAllocator.get()
         if self.IsUseg() or self.IsPvlan():
             self.encap_vlan_id = resmgr.EncapVlanAllocator.get()
@@ -99,49 +100,84 @@ class EnicObjectHelper:
         self.direct = []
         self.useg   = []
         self.pvlan  = []
+
+        self.backend_enics  = []
+        self.backend_direct = []
+        self.backend_useg   = []
+        self.backend_pvlan  = []
         return
     
     def Show(self):
-        cfglogger.info("  - # EN: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
-                       (len(self.direct), len(self.useg), len(self.pvlan),
-                        len(self.enics)))
+        cfglogger.info("  - # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+                       (len(self.direct), len(self.useg),
+                        len(self.pvlan), len(self.enics)))
+        cfglogger.info("  - # Backend Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+                       (len(self.backend_direct), len(self.backend_useg),
+                        len(self.backend_pvlan), len(self.backend_enics)))
         return
 
-    def __create_enics(self, segment, count, enic_type):
+    def __create(self, segment, count, enic_type, l4lb_backend = False):
         enics = []
         for e in range(count):
             enic = EnicObject()
-            enic.Init(segment, enic_type)
+            enic.Init(segment, enic_type, l4lb_backend)
             enics.append(enic)
         return enics
 
+    def __gen_direct(self, segment, spec, l4lb_backend = False):
+        enics = []
+        if spec.direct == 0: return enics
+        cfglogger.info("Creating %d DIRECT (Backend:%s) Enics in Segment = %s" %\
+                       (spec.direct, l4lb_backend, segment.GID()))
+        enics = self.__create(segment, spec.direct, ENIC_TYPE_DIRECT)
+        Store.objects.SetAll(enics)
+        return enics
+
+    def __gen_useg(self, segment, spec, l4lb_backend = False):
+        enics = []
+        if spec.useg == 0: return enics
+        cfglogger.info("Creating %d USEG (Backend:%s) Enics in Segment = %s" %\
+                       (spec.useg, l4lb_backend, segment.GID()))
+        enics = self.__create(segment, spec.useg, ENIC_TYPE_USEG)
+        Store.objects.SetAll(enics)
+        return enics
+
+    def __gen_pvlan(self, segment, spec, l4lb_backend = False):
+        enics = []
+        if spec.pvlan == 0: return enics
+        cfglogger.info("Creating %d PVLAN (Backend:%s) Enics in Segment = %s" %\
+                       (spec.pvlan, l4lb_backend, segment.GID()))
+        enics = self.__create(segment, spec.pvlan, ENIC_TYPE_PVLAN)
+        Store.objects.SetAll(enics)
+        return enics
+
     def Generate(self, segment, spec):
-        if spec.direct:
-            cfglogger.info("Creating %d DIRECT Enics in Segment = %s" %\
-                           (spec.direct, segment.GID()))
-            self.direct = self.__create_enics(segment, spec.direct,
-                                              ENIC_TYPE_DIRECT)
-            Store.objects.SetAll(self.direct)
-            self.enics += self.direct
+        self.direct = self.__gen_direct(segment, spec)
+        self.enics += self.direct
+        self.useg = self.__gen_useg(segment, spec)
+        self.enics += self.useg
+        self.pvlan = self.__gen_pvlan(segment, spec)
+        self.enics += self.pvlan
 
-        if spec.useg:
-            cfglogger.info("Creating %d USEG Enics in Segment = %s" %\
-                           (spec.useg, segment.GID()))
-            self.useg   = self.__create_enics(segment, spec.useg,
-                                              ENIC_TYPE_USEG)
-            Store.objects.SetAll(self.useg)
-            self.enics += self.useg
+        if segment.l4lb:
+            self.backend_direct = self.__gen_direct(segment, spec,
+                                                    l4lb_backend = True)
+            self.backend_enics += self.backend_direct
+        
+            self.backend_useg = self.__gen_useg(segment, spec,
+                                                l4lb_backend = True)
+            self.backend_enics += self.backend_useg
 
-        if spec.pvlan:
-            cfglogger.info("Creating %d PVLAN Enics in Segment = %s" %\
-                           (spec.pvlan, segment.GID()))
-            self.pvlan  = self.__create_enics(segment, spec.pvlan,
-                                              ENIC_TYPE_PVLAN)
-            Store.objects.SetAll(self.pvlan)
-            self.enics += self.pvlan
+            self.backend_pvlan = self.__gen_pvlan(segment, spec,
+                                                  l4lb_backend = True)
+            self.backend_enics += self.backend_pvlan
         return
 
     def Configure(self):
         cfglogger.info("Configuring %d Enics." % len(self.enics))
         halapi.ConfigureInterfaces(self.enics)
+        if len(self.backend_enics):
+            cfglogger.info("Configuring %d L4LbBackend Enics." %\
+                           len(self.backend_enics))
+            halapi.ConfigureInterfaces(self.backend_enics)
         return

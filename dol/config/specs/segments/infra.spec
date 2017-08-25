@@ -6,6 +6,7 @@ type        : infra
 native      : False
 broadcast   : drop
 multicast   : drop
+l4lb        : False
 endpoints   :
     useg    : 0
     pvlan   : 0

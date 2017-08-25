@@ -6,6 +6,7 @@ type        : tenant
 native      : False
 broadcast   : drop
 multicast   : drop
+l4lb        : True
 endpoints   :
     useg    : 2
     pvlan   : 2

@@ -10,6 +10,7 @@ import config.objects.segment   as segment
 import config.objects.lif       as lif
 import config.objects.tunnel    as tunnel
 import config.objects.span      as span
+import config.objects.l4lb      as l4lb
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -34,9 +35,9 @@ class TenantObject(base.ConfigObjectBase):
         self.overlay = spec.overlay.upper()
         self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
-            self.subnet             = resmgr.TepIpSubnetAllocator.get()
-            self.ip_addr_allocator  = resmgr.CreateIpAddrAllocator(self.subnet.get())
-            self.local_tep          = self.ip_addr_allocator.get()
+            self.subnet     = resmgr.TepIpSubnetAllocator.get()
+            self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
+            self.local_tep  = self.ipv4_pool.get()
         self.Show()
         
         # Process LIFs
@@ -46,7 +47,9 @@ class TenantObject(base.ConfigObjectBase):
         # Process Segments 
         self.obj_helper_segment = segment.SegmentObjectHelper()
         self.__create_segments()
-
+        # Process L4LbServices
+        self.obj_helper_l4lb = l4lb.L4LbServiceObjectHelper()
+        self.__create_l4lb_services()
         # Process Tunnels
         if self.IsInfra():
             self.obj_helper_tunnel = tunnel.TunnelObjectHelper()
@@ -77,6 +80,12 @@ class TenantObject(base.ConfigObjectBase):
     def IsOverlayVlan(self):
         return self.overlay == 'VLAN'
    
+    def __create_l4lb_services(self):
+        if 'l4lb' not in self.spec.__dict__: return
+        spec = self.spec.l4lb.Get(Store)
+        self.obj_helper_l4lb.Generate(self, spec)
+        return
+
     def __create_segments(self):
         for entry in self.spec.segments:
             spec = entry.spec.Get(Store)
@@ -119,13 +128,15 @@ class TenantObject(base.ConfigObjectBase):
             if seg.IsSpanSegment():
                 return seg
         return None
+    def GetL4LbServices(self):
+        return self.obj_helper_l4lb.svcs
 
-    def GetEps(self):
-        return self.obj_helper_segment.GetEps()
-    def GetRemoteEps(self):
-        return self.obj_helper_segment.GetRemoteEps()
-    def GetLocalEps(self):
-        return self.obj_helper_segment.GetLocalEps()
+    def GetEps(self, backend = False):
+        return self.obj_helper_segment.GetEps(backend)
+    def GetRemoteEps(self, backend = False):
+        return self.obj_helper_segment.GetRemoteEps(backend)
+    def GetLocalEps(self, backend = False):
+        return self.obj_helper_segment.GetLocalEps(backend)
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id

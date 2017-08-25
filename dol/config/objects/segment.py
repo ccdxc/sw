@@ -29,6 +29,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.tenant = tenant
         self.type   = spec.type.upper()
         self.native = spec.native
+        self.l4lb   = spec.l4lb
 
         self.vlan_id    = resmgr.SegVlanAllocator.get()
         self.vxlan_id   = resmgr.SegVxlanAllocator.get()
@@ -36,14 +37,18 @@ class SegmentObject(base.ConfigObjectBase):
         if self.IsInfraSegment():
             self.subnet     = resmgr.TepIpSubnetAllocator.get()
             self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
-        elif self.IsTenantSegment() or self.IsSpanSegment():
+        else:
             self.subnet     = resmgr.IpSubnetAllocator.get()
             self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
-        else:
-            assert(0)
 
-        self.ip_addr_allocator      = resmgr.CreateIpAddrAllocator(self.subnet.get())
-        self.ipv6_addr_allocator    = resmgr.CreateIpv6AddrAllocator(self.subnet6.get())
+        self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
+        self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
+        
+        if self.l4lb:
+            self.bend_subnet = resmgr.L4LbBackendIpSubnetAllocator.get()
+            self.bend_subnet6 = resmgr.L4LbBackendIpv6SubnetAllocator.get()
+            self.bend_ipv4_pool = resmgr.CreateIpv4AddrPool(self.bend_subnet.get())
+            self.bend_ipv6_pool = resmgr.CreateIpv6AddrPool(self.bend_subnet6.get())
 
         policy = "BROADCAST_FWD_POLICY_" + spec.broadcast.upper()
         self.broadcast_policy = haldefs.segment.BroadcastFwdPolicy.Value(policy)
@@ -64,6 +69,17 @@ class SegmentObject(base.ConfigObjectBase):
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
         self.Show(detail = True)
         return
+
+    def AllocIpv4Address(self, backend):
+        if backend:
+            assert(self.l4lb)
+            return self.bend_ipv4_pool.get()
+        return self.ipv4_pool.get()
+    def AllocIpv6Address(self, backend):
+        if backend:
+            assert(self.l4lb)
+            return self.bend_ipv6_pool.get()
+        return self.ipv6_pool.get()
 
     def IsTenantSegment(self):
         return self.type == 'TENANT'
@@ -88,17 +104,29 @@ class SegmentObject(base.ConfigObjectBase):
         self.obj_helper_enic.Show()
         return
 
-    def GetDirectEnics(self):
+    def GetDirectEnics(self, backend = False):
+        if backend:
+            return self.obj_helper_enic.backend_direct
         return self.obj_helper_enic.direct
-    def GetPvlanEnics(self):
+    def GetPvlanEnics(self, backend = False):
+        if backend:
+            return self.obj_helper_enic.backend_pvlan
         return self.obj_helper_enic.pvlan
-    def GetUsegEnics(self):
+    def GetUsegEnics(self, backend = False):
+        if backend:
+            return self.obj_helper_enic.backend_useg
         return self.obj_helper_enic.useg
-    def GetEps(self):
+    def GetEps(self, backend = False):
+        if backend:
+            return self.obj_helper_ep.backend_eps
         return self.obj_helper_ep.eps
-    def GetLocalEps(self):
+    def GetLocalEps(self, backend = False):
+        if backend:
+            self.obj_helper_ep.backend_local
         return self.obj_helper_ep.local
-    def GetRemoteEps(self):
+    def GetRemoteEps(self, backend = False):
+        if backend:
+            self.obj_helper_ep.backend_remote
         return self.obj_helper_ep.remote
 
     def ConfigureEndpoints(self):
@@ -177,20 +205,21 @@ class SegmentObjectHelper:
         Store.objects.SetAll(self.segs)
         return
 
-    def GetEps(self):
+    def GetEps(self, backend = False):
         eps = []
         for seg in self.segs:
-            eps += seg.GetEps()
+            eps += seg.GetEps(backend)
         return eps
 
-    def GetLocalEps(self):
+    def GetLocalEps(self, backend = False):
         eps = []
         for seg in self.segs:
-            eps += seg.GetLocalEps()
+            eps += seg.GetLocalEps(backend)
         return eps
 
-    def GetRemoteEps(self):
+    def GetRemoteEps(self, backend = False):
         eps = []
         for seg in self.segs:
-            eps += seg.GetRemoteEps()
+            eps += seg.GetRemoteEps(backend)
         return eps
+

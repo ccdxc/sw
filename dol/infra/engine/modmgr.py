@@ -112,11 +112,15 @@ class Module:
         return 0
 
     def PrintResultSummary(self):
-        ign = ''
+        status = ''
         if self.ignore:
-            ign = 'ignore'
+            status = 'Ignore'
+        elif self.GetFinalResult():
+            status = 'Fail'
+        else:
+            status = 'Pass'
         print("%-16s %-32s %-6s %6d %6d %6d" %\
-              (self.module, self.name, ign,
+              (self.module, self.name, status,
                self.stats.passed, self.stats.failed,
                self.stats.total))
         return

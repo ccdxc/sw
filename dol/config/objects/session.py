@@ -12,6 +12,7 @@ import config.resmgr                as resmgr
 import config.objects.flow          as flow
 import config.objects.flow_endpoint as flowep
 import config.objects.endpoint      as endpoint
+import config.objects.tenant        as tenant
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -234,8 +235,15 @@ class SessionObjectHelper:
         self.__process_multidest(ep2, ep2)
         return
 
+    def __get_eps(self):
+        eps = []
+        tenants = Store.objects.GetAllByClass(tenant.TenantObject)
+        for t in tenants:
+            eps += t.GetEps()
+        return eps
+
     def Generate(self):
-        ep1_list = Store.objects.GetAllByClass(endpoint.EndpointObject)
+        ep1_list = self.__get_eps()
         ep2_list = ep1_list
         for ep1 in ep1_list:
             for ep2 in ep2_list:

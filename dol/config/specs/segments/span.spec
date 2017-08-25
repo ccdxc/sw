@@ -6,6 +6,7 @@ type        : span
 native      : False
 broadcast   : drop
 multicast   : drop
+l4lb        : False
 endpoints   :
     useg    : 1
     pvlan   : 0

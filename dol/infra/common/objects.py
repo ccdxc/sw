@@ -249,6 +249,9 @@ class IpAddressStep(FrameworkFieldObject):
         self.start = ipaddress.IPv4Address(valobj.params[0])
         self.step = ipaddress.IPv4Address(valobj.params[1])
         self.curr = self.start
+        self.count = 0
+        if len(valobj.params) == 3:
+            self.count = utils.ParseInteger(valobj.params[2])
         return
 
     def __getone(self):
@@ -258,6 +261,9 @@ class IpAddressStep(FrameworkFieldObject):
 
     def get(self):
         return IpAddress(string=str(self.__getone()))
+
+    def GetCount(self):
+        return self.count
 
 
 class Ipv6Address(FrameworkFieldObject):
