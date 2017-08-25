@@ -28,13 +28,10 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-cc.s \
     $(SRC_DIR)/tcp-fastretx-alert.s \
     $(SRC_DIR)/tcp-get-obj.s \
-    $(SRC_DIR)/tcp-get-tkt.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
-    $(SRC_DIR)/tcp-read-aol-entry.s \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
-    $(SRC_DIR)/tcp-read-se-rcv-aol-entry.s \
     $(SRC_DIR)/tcp-read-serq-pidx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \

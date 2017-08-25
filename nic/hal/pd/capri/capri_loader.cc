@@ -146,21 +146,21 @@ capri_load_mpu_programs(const char *handle,
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
-		HAL_TRACE_ERR("Libcapisa initialization failed!");
-        return -1;
+	HAL_TRACE_ERR("Libcapisa initialization failed!");
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
     /* Input check */
     if (!handle || !pathname) {
         HAL_TRACE_ERR("Input error");
-        return -1;
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
     /* Create a loader instance */
     ctx = loader_instances[handle];
     if (ctx) {
         HAL_TRACE_ERR("Programs already loaded!");
-        return -1;
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
     /* Allocate context */
@@ -173,7 +173,7 @@ capri_load_mpu_programs(const char *handle,
     /* Read all program names */
     if ((ctx->num_programs = read_programs(handle, pathname)) < 0) {
         HAL_TRACE_ERR("Cannot read programs");
-        return -1;
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
     HAL_TRACE_DEBUG("Num programs {}", ctx->num_programs);
 
@@ -182,7 +182,7 @@ capri_load_mpu_programs(const char *handle,
     ctx->prog_hbm_base_addr = (hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
     if ((ctx->prog_hbm_base_addr & 63) != 0) {
         HAL_TRACE_ERR("Invalid HBM base address");
-        return -1;
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
     /* Pass 1: Load all MPU programs into a data structure. Seperate the symbols
@@ -198,7 +198,7 @@ capri_load_mpu_programs(const char *handle,
             HAL_TRACE_ERR("Error: {} : {}",
                program_info[i].prog.errmap[program_info[i].prog.err].c_str(),
                filename.c_str());
-            return -1;
+            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
         }
 
         /* Save the base address and size */
@@ -226,7 +226,7 @@ capri_load_mpu_programs(const char *handle,
             /* Get each symbol by its id */
             if ((symbol = program_info[i].prog.symtab.get_byid(j)) == NULL) {
                 HAL_TRACE_ERR("Id: {}, Cannot get symbol", j);
-                return -1;
+                HAL_ASSERT_RETURN(0, HAL_RET_ERR);
             } else {
                 /* Symbol is a parameter */
                 if (symbol->type == MPUSYM_PARAM) {
@@ -236,7 +236,9 @@ capri_load_mpu_programs(const char *handle,
                      *    add the parameter to the list of unresolved list
                      */
                     val = 0;
-                    if (prog_index >= 0 &&
+                    if (prog_index >= 0 && 
+                        prog_index < num_prog_params &&
+                        prog_param_info &&
                         param_check(&prog_param_info[prog_index], symbol->name,
                                     &val) >= 0) {
                         HAL_TRACE_DEBUG("resolved param: name {} val {:#x}",
@@ -268,7 +270,7 @@ capri_load_mpu_programs(const char *handle,
                 } else {
                     /* Other symbol types are not supported at the moment*/
                     HAL_TRACE_ERR("unknown symbol type {}", symbol->type);
-                    return -1;
+                    HAL_ASSERT_RETURN(0, HAL_RET_ERR);
                 }
             }
         }
@@ -286,7 +288,7 @@ capri_load_mpu_programs(const char *handle,
             if ((param_u = program_info[i].unresolved_params.get_byid(j))
                 == NULL) {
                 HAL_TRACE_ERR("Id: {}, Cannot get unresolved param", j);
-                return -1;
+                HAL_ASSERT_RETURN(0, HAL_RET_ERR);
             } else {
                 /* Try to resolve it by looking at the global labels */
                 if ((param_r = global_labels.get_byname(param_u->name.c_str()))
@@ -299,8 +301,8 @@ capri_load_mpu_programs(const char *handle,
                            MpuSymbol(param_u->name.c_str(), MPUSYM_PARAM,
                                      param_r->val));
                 } else {
-                    HAL_TRACE_DEBUG("Cannot resolve param {}",
-                                    param_u->name.c_str());
+                    HAL_TRACE_ERR("Cannot resolve param {}",
+                                  param_u->name.c_str());
                 }
             }
         }
@@ -312,35 +314,40 @@ capri_load_mpu_programs(const char *handle,
     for (i = 0; i < ctx->num_programs; i++) {
        program_info[i].copy = MpuProgram(program_info[i].prog,
                                          program_info[i].resolved_params);
-       HAL_TRACE_DEBUG("Prog details: name {}, base address {:#x}, size {}, "
-                       "valid {}, complete {}",
-                       program_info[i].name.c_str(), program_info[i].base_addr,
-                       program_info[i].size, program_info[i].copy.valid,
-                       program_info[i].copy.complete);
-
        /* Sanity check the size of the copy, valid and complete flags */
        if (program_info[i].copy.valid != 1 ||
            program_info[i].copy.complete != 1 ||
            program_info[i].copy.text.size()*sizeof(uint64_t) !=
            program_info[i].size) {
-           HAL_TRACE_ERR("valid = {}, complete = {} copy size {} size {}",
-                         program_info[i].copy.valid,
-                         program_info[i].copy.complete,
-                         program_info[i].copy.text.size(),
-                         program_info[i].size);
-           HAL_TRACE_ERR("Cannot load program: error in validation of size/flags!");
-           continue;
+           HAL_TRACE_DEBUG("Failed to resolve program: name {}, "
+                           "base address {:#x}, size {}, valid {}, complete {}",
+                           program_info[i].name.c_str(),
+                           program_info[i].base_addr,
+                           program_info[i].size, 
+                           program_info[i].copy.valid,
+                           program_info[i].copy.complete);
+           HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+       } else {
+           HAL_TRACE_DEBUG("Successfully resolved program: name {}, "
+                           "base address {:#x}, size {}, valid {}, complete {}",
+                           program_info[i].name.c_str(),
+                           program_info[i].base_addr,
+                           program_info[i].size, 
+                           program_info[i].copy.valid,
+                           program_info[i].copy.complete);
        }
 
+       /* Write program to HBM */
        rv = write_mem(program_info[i].base_addr,
                       (uint8_t *) program_info[i].copy.text.data(),
                       program_info[i].size);
        if (rv != true) {
-           HAL_TRACE_ERR("HBM P4 program write failed");
+           HAL_TRACE_ERR("HBM program write failed");
+           HAL_ASSERT_RETURN(0, HAL_RET_ERR);
        }
     }
 
-    return 0;
+    return HAL_RET_OK;
 }
 
 /**
