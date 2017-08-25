@@ -105,6 +105,7 @@ class UplinkPcObjectHelper:
             if seg.native == False: continue
             for uplinkpc in self.trunks:
                 uplinkpc.SetNativeSegment(seg)
+        self.ReConfigure()
         halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
         return
 

@@ -9,6 +9,8 @@
 #include <lif_manager.hpp>
 #include <if_utils.hpp>
 
+using hal::pd::pd_if_args_t;
+
 namespace hal {
 
 void *
@@ -526,7 +528,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     hal_ret_t           ret = HAL_RET_OK;
     if_t                *hal_if = NULL;
     indexer::status     rs;
-    pd::pd_if_args_t    pd_if_args;
+    pd_if_args_t    pd_if_args;
 
 
     HAL_TRACE_DEBUG("----------------------- Interface API Start ------------------------");
@@ -647,14 +649,68 @@ end:
 hal_ret_t
 interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
-    if_t    *hal_if = NULL;
-    hal_if = find_if_by_id(spec.key_or_handle().interface_id());
+    hal_ret_t           ret = HAL_RET_OK;
+    if_t                *hal_if = NULL;
+    pd_if_args_t        pd_if_args;
+
+    HAL_TRACE_DEBUG("----------------------- Interface API Start ------------------------");
+
+    hal_if = if_get_from_id_handle(&spec.key_or_handle());
+    if (!hal_if) {
+        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+        ret = HAL_RET_INVALID_ARG;
+        HAL_TRACE_ERR("PI-IF:{}: If Update Fail", __FUNCTION__);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("PI-IF:{}: If Update for id {} Type: {} EnicType: {}", __FUNCTION__,
+                    hal_if->if_id, hal_if->if_type, hal_if->enic_type);
+
+    // allocate pd args
+    pd::pd_if_args_init(&pd_if_args);
+    pd_if_args.intf = hal_if;
+
+    switch (hal_if->if_type) {
+        case intf::IF_TYPE_ENIC:
+            break;
+        case intf::IF_TYPE_UPLINK:
+            ret = uplinkif_update(spec, rsp, hal_if, &pd_if_args);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            break;
+        case intf::IF_TYPE_UPLINK_PC:
+            ret = uplinkpc_update(spec, rsp, hal_if, &pd_if_args);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            break;
+        case intf::IF_TYPE_TUNNEL:
+            break;
+        default:
+            ret = HAL_RET_INVALID_ARG;
+            rsp->set_api_status(types::API_STATUS_OK);
+            rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
+            rsp->set_api_status(types::API_STATUS_IF_TYPE_INVALID);
+            goto end;
+    }
+
+    // PD If Update
+    ret = pd::pd_if_update(&pd_if_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD interface update failure, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
     rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
 
-    return HAL_RET_OK;
+end:
+    HAL_TRACE_DEBUG("----------------------- Interface API End ------------------------");
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -806,6 +862,55 @@ hal_ret_t enicif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
     return ret;
 }
 
+
+//------------------------------------------------------------------------------
+// Uplink If Update
+//------------------------------------------------------------------------------
+hal_ret_t uplinkif_update(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                          if_t *hal_if, void *if_args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_if_args_t        *pd_if_args = (pd_if_args_t *)if_args;
+
+    HAL_TRACE_DEBUG("PI-Uplinkif:{}: Update for if_id:{}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+
+    HAL_ASSERT_RETURN(if_args != NULL, HAL_RET_INVALID_ARG);
+
+    if (hal_if->native_l2seg != spec.if_uplink_info().native_l2segment_id()) {
+        hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
+        pd_if_args->native_l2_seg_upd = true;
+        HAL_TRACE_DEBUG("PI-Uplinkif:{}: Updating native_l2seg_id:{}", 
+                __FUNCTION__, hal_if->native_l2seg);
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Uplink PC Update
+//------------------------------------------------------------------------------
+hal_ret_t uplinkpc_update(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                          if_t *hal_if, void *if_args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_if_args_t        *pd_if_args = (pd_if_args_t *)if_args;
+
+    HAL_TRACE_DEBUG("PI-UplinkPC:{}: Update for if_id:{}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+
+    HAL_ASSERT_RETURN(if_args != NULL, HAL_RET_INVALID_ARG);
+
+    if (hal_if->native_l2seg != spec.if_uplink_pc_info().native_l2segment_id()) {
+        hal_if->native_l2seg = spec.if_uplink_pc_info().native_l2segment_id();
+        pd_if_args->native_l2_seg_upd = true;
+        HAL_TRACE_DEBUG("PI-UplinkPC:{}: Updating native_l2seg_id:{}", 
+                __FUNCTION__, hal_if->native_l2seg);
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // Uplink If Create 
 //------------------------------------------------------------------------------
@@ -816,12 +921,10 @@ hal_ret_t uplinkif_create(InterfaceSpec& spec, InterfaceResponse *rsp,
     // l2seg_id_t          l2seg_id;
     // l2seg_t             *l2seg;
 
-    HAL_TRACE_DEBUG("PI-Uplinkif:{}: Uplinkif Create for id {}", __FUNCTION__, 
-                    spec.key_or_handle().interface_id());
-
-    HAL_TRACE_DEBUG("PI-Uplinkif:{}: if_id:{}, native_l2seg_id:{}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("PI-Uplinkif:{}: Uplinkif Create for id {}, native_l2seg_id:{}", __FUNCTION__, 
                     spec.key_or_handle().interface_id(),
                     spec.if_uplink_info().native_l2segment_id());
+
     // TODO: for a member port, we can have valid pc#
     ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(), &hal_if->uplink_port_num);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
@@ -874,7 +977,7 @@ hal_ret_t uplinkpc_create(InterfaceSpec& spec, InterfaceResponse *rsp,
 
     hal_if->uplink_port_num = HAL_PORT_INVALID;
     hal_if->uplink_pc_num = spec.if_uplink_pc_info().uplink_pc_num();
-    hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
+    hal_if->native_l2seg = spec.if_uplink_pc_info().native_l2segment_id();
     hal_if->vlans = bitmap::factory(4096);
     if (hal_if->vlans == NULL) {
         ret = HAL_RET_OOM;
@@ -939,6 +1042,26 @@ hal_ret_t get_lif_hdl_for_enicif(InterfaceSpec& spec, InterfaceResponse *rsp,
 end:
     return ret;
 }
+
+//------------------------------------------------------------------------------
+// Get if from either id or handle
+//------------------------------------------------------------------------------
+if_t *
+if_get_from_id_handle(const intf::InterfaceKeyHandle *key_hdl)
+{
+    if (key_hdl->key_or_handle_case() == 
+            intf::InterfaceKeyHandle::kInterfaceId) {
+        return find_if_by_id(key_hdl->interface_id());
+    }
+    if (key_hdl->key_or_handle_case() == 
+            intf::InterfaceKeyHandle::kIfHandle) {
+        return find_if_by_handle(key_hdl->if_handle());
+    }
+
+    return NULL;
+
+}
+
 
 
 }    // namespace hal

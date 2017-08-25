@@ -57,6 +57,7 @@ typedef struct pd_lif_args_s {
 
 typedef struct pd_if_args_s {
     if_t    *intf;
+    bool    native_l2_seg_upd;
 } __PACK__ pd_if_args_t;
 
 typedef struct pd_ep_args_s {

@@ -8,7 +8,7 @@
 #include <bitmap.hpp>
 #include <l2segment.hpp>
 #include <interface.pb.h>
-// #include <interface_svc.hpp>
+#include <interface.hpp>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -286,9 +286,23 @@ hal_ret_t uplinkif_create(intf::InterfaceSpec& spec,
 hal_ret_t uplinkpc_create(intf::InterfaceSpec& spec, 
                           intf::InterfaceResponse *rsp,
                           if_t *hal_if);
+#if 0
+hal_ret_t enicif_create(intf::InterfaceSpec& spec, 
+                        intf::InterfaceResponse *rsp,
+                        if_t *hal_if);
+#endif
+hal_ret_t uplinkif_update(intf::InterfaceSpec& spec, 
+                          intf::InterfaceResponse *rsp,
+                          if_t *hal_if,
+                          void *if_args);
+hal_ret_t uplinkpc_update(intf::InterfaceSpec& spec, 
+                          intf::InterfaceResponse *rsp,
+                          if_t *hal_if,
+                          void *if_args);
 hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 
                                  intf::InterfaceResponse *rsp,
                                  if_t *hal_if);
+if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_hdl);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);

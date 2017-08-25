@@ -15,7 +15,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow    : filter://type=IPV4,proto=UDP
             segment : filter://native=True
@@ -34,7 +34,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow    : filter://type=IPV4,proto=TCP
             segment : filter://native=True
@@ -54,7 +54,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow    : filter://type=IPV4,proto=ICMP
             segment : filter://native=True
@@ -73,7 +73,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow    : filter://type=IPV6,proto=UDP
             segment : filter://native=True
@@ -92,7 +92,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow    : filter://type=IPV6,proto=TCP
             segment : filter://native=True
@@ -111,7 +111,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
-        ignore  : True
+        ignore  : False
         args    :
             segment: filter://native=True
     - module:
@@ -135,7 +135,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : arp.testspec
-        ignore  : True
+        ignore  : False
         args    :
             segment: filter://native=True
         iterate :

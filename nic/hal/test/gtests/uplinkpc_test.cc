@@ -115,6 +115,9 @@ TEST_F(uplinkpc_test, test1)
     ret = hal::interface_create(pc_spec, &pc_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    pc_spec.mutable_if_uplink_pc_info()->set_native_l2segment_id(2);
+    ret = hal::interface_update(pc_spec, &pc_rsp);
+    ASSERT_TRUE(ret == HAL_RET_OK);
     // Release if_uplink_info
     // free spec.release_if_uplink_info();
 }

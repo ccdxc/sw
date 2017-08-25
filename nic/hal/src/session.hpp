@@ -5,6 +5,7 @@
 #include <list.hpp>
 #include <ht.hpp>
 #include <ip.h>
+#include <interface.hpp>
 #include <l2segment.hpp>
 #include <endpoint.hpp>
 #include <session.pb.h>

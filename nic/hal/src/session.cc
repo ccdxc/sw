@@ -465,13 +465,6 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
     dif = ep_find_if_by_handle(dep);
     HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
 
-#if 0
-    // Routing case only if nat type is NONE
-    if (flow->nat_type != NAT_TYPE_NONE) {
-        return HAL_RET_OK;
-    }
-#endif
-
 	// Derive lport
 	// TODO: Handle service case
 	flow->lport = hal::pd::if_get_lport_id(dif);
@@ -482,6 +475,7 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
     if_l2seg_get_encap(dif, dl2seg, &evlan_v, &evlan_id);
     egr_tag = (evlan_v == 1) ? true : false;
 
+    HAL_TRACE_DEBUG("if_id:{}, l2seg_id:{}", dif->if_id, dl2seg->seg_id);
 
 	// ---------------------     Encap Logic    ----------------------
 	//  Bridging:
