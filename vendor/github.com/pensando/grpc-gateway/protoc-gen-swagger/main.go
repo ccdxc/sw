@@ -13,6 +13,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger"
+	gwplugin "github.com/pensando/grpc-gateway/protoc-gen-swagger/plugins"
 )
 
 var (
@@ -58,6 +59,11 @@ func main() {
 		if err != nil {
 			glog.Fatalf("Error parsing flags: %v", err)
 		}
+	}
+
+	for k, v := range gwplugin.MutatorMap {
+		glog.V(1).Infof("Calling Mutator func %s", k)
+		v(req)
 	}
 
 	reg.SetPrefix(*importPrefix)
