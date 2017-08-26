@@ -24,14 +24,22 @@ tls_bld_barco_req_enc_process:
 table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_input_list_address, k.to_s4_idesc
+    add         r1, r0, k.to_s4_idesc
     phvwr       p.barco_desc_output_list_address, k.to_s4_odesc
+    add         r1, r0, k.to_s4_odesc        
     phvwr       p.barco_desc_key_desc_index, d.key_addr
+    add         r1, r0, d.key_addr
     phvwr       p.barco_desc_iv_address, d.iv_addr
+    add         r1, r0, d.iv_addr
     phvwr       p.barco_desc_command_core,  d.command_core
+    add         r1, r0, d.command_core
     phvwr       p.barco_desc_command_mode, d.command_mode
+    add         r1, r0, d.command_mode
     phvwr       p.barco_desc_command_op, d.command_op
+    add         r1, r0, d.command_op
     phvwr       p.barco_desc_command_param, d.command_param
-
+    add         r1, r0, d.command_param
+        
     addi        r3, r0, BRQ_QPCB_BASE        
     CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_brq_enc_process,
                            r3, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,

@@ -146,7 +146,6 @@ p4pd_add_or_del_tls_tx_s3_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7);
     
     if(!del) {
-        data.u.read_tls_stg1_7_d.cipher_type = tlscb_pd->tlscb->cipher_type;
     }
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
