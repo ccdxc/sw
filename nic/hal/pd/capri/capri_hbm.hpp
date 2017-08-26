@@ -57,6 +57,12 @@ uint32_t get_size_kb(const char *reg_name);
 #define    JUMBO_FRAME_SIZE             9216
 #define    ETH_FRAME_SIZE               1536
 
+#define RNMDR_TABLE_BASE        "hbm_rnmdr_table_base"
+#define RNMPR_TABLE_BASE        "hbm_rnmpr_table_base"
+#define TNMDR_TABLE_BASE        "hbm_tnmdr_table_base"
+#define TNMPR_TABLE_BASE        "hbm_tnmpr_table_base"
+#define BRQ_BASE                "hbm_brq_base"
+
 typedef struct capri_descr_s {
         uint64_t        scratch[8];
         uint64_t        A0;
@@ -81,19 +87,5 @@ typedef struct capri_small_page_s {
         uint64_t        scratch[PAGE_SCRATCH_SIZE_BYTES];
         char            data[ETH_FRAME_SIZE];
 } capri_small_page_t;
-
-typedef struct capri_semaphore_s {
-        uint64_t        pidx;
-        uint64_t        cidx;
-} capri_semaphore_t;
-
-// TODO: move defines to top level include that can be included by assembly
-#define RNMDR_TABLE_BASE        "hbm_rnmdr_table_base"
-#define RNMPR_TABLE_BASE        "hbm_rnmpr_table_base"
-#define TNMDR_TABLE_BASE        "hbm_tnmdr_table_base"
-#define TNMPR_TABLE_BASE        "hbm_tnmpr_table_base"
-#define BRQ_BASE                "hbm_brq_base"
-
-extern capri_semaphore_t           *g_hbm_semaphore;
 
 #endif    // __CAPRI_HPP__

@@ -588,11 +588,11 @@ table_read_RTT:
 table_read_RNMDR_ALLOC_IDX:
 	addi 		r3, r0, RNMDR_ALLOC_IDX
 	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
-	                    r3, TABLE_SIZE_16_BITS)
+	                    r3, TABLE_SIZE_64_BITS)
 table_read_RNMPR_ALLOC_IDX:
 	addi 		r3, r0, RNMPR_ALLOC_IDX
 	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
-	                    r3, TABLE_SIZE_16_BITS)
+	                    r3, TABLE_SIZE_64_BITS)
 table_read_SERQ_PRODUCER_IDX:
 	phvwri		p.common_phv_write_serq, 1
 	phvwr		p.to_s6_serq_base, d.u.tcp_rx_d.serq_base

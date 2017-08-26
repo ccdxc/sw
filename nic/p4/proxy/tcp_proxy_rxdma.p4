@@ -185,14 +185,20 @@ header_type tcp_rtt_d_t {
 // d for stage 2 table 1
 header_type read_rnmdr_d_t {
     fields {
-        rnmdr_pidx              : 16;
+        rnmdr_pidx_hi           : 31;
+        rnmdr_pidx_full         : 1;
+        rnmdr_pidx              : 32;
+        pad                     : 448;
     }
 }
 
 // d for stage 2 table 2
 header_type read_rnmpr_d_t {
     fields {
-        rnmpr_pidx              : 16;
+        rnmpr_pidx_hi           : 31;
+        rnmpr_pidx_full         : 1;
+        rnmpr_pidx              : 32;
+        pad                     : 448;
     }
 }
 
@@ -364,6 +370,8 @@ header_type common_global_phv_t {
         pending_sync_mss        : 1;
         pingpong                : 1;
         debug_dol               : 1;
+        rnmdr_full              : 1;
+        rnmpr_full              : 1;
     }
 }
 

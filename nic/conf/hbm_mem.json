@@ -37,10 +37,6 @@
 	    "size_kb": 16384
 	},
         {
-            "name": "semaphore",
-            "size_kb": 8
-        },
-        {
             "name": "ipsec-cb",
             "size_kb": 64
         },

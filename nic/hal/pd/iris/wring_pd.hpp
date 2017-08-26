@@ -33,6 +33,7 @@ typedef struct pd_wring_meta_s {
     uint32_t    slot_size_in_bytes;
     char        obj_hbm_reg_name[64];
     uint32_t    obj_size;
+    uint64_t    semaphore_addr;
 } pd_wring_meta_t;
 
 // allocate a wring pd instance
