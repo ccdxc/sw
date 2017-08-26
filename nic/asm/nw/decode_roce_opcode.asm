@@ -22,6 +22,7 @@ decode_roce_opcode:
   phvwr.c1    p.p4_to_p4plus_roce_valid, TRUE
   phvwr       p.p4_to_p4plus_roce_raw_flags, d.u.decode_roce_opcode_d.raw_flags
   phvwr       p.p4_to_p4plus_roce_rdma_hdr_len, d.u.decode_roce_opcode_d.len
+  phvwr       p.p4_to_p4plus_roce_p4plus_app_id, P4PLUS_APPTYPE_RDMA
 
   phvwr.c1    p.capri_rxdma_intrinsic_valid, TRUE
   phvwr.c1    p.capri_rxdma_p4_intrinsic_valid, TRUE
