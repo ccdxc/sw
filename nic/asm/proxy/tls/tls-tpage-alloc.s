@@ -11,7 +11,8 @@
 
  /* d is the data returned by lookup result */
 struct d_struct {
-	opage			 : ADDRESS_WIDTH ;
+	opage			 : DESC_ADDRESS_WIDTH ;
+    pad              : 448                ;
 };
 
 /* Readonly Parsed packet header info for the current packet */
@@ -24,7 +25,7 @@ struct d_struct d;
 	    .align
 tls_tpage_alloc_start:
 
-        CAPRI_CLEAR_TABLE1_VALID
+        CAPRI_CLEAR_TABLE3_VALID
 
 	    phvwr		p.to_s5_opage, d.opage
 

@@ -17,7 +17,7 @@
 #define tx_table_s2_t2_action       read_tnmpr
 #define tx_table_s2_t3_action       tls_rx_serq
 
-#define tx_table_s3_t0_action       read_tls_stg1_7
+#define tx_table_s3_t0_action       tls_serq_consume
 #define tx_table_s3_t1_action       tdesc_alloc
 #define tx_table_s3_t2_action       tpage_alloc
 #define tx_table_s3_t3_action       tls_dummy_action
@@ -72,7 +72,7 @@ header_type tls_stg0_d_t {
         // 4 Bytes BSQ ring
         CAPRI_QSTATE_HEADER_RING(1)
 
-        serq_base                       : ADDRESS_WIDTH;
+        serq_base                       : HBM_ADDRESS_WIDTH;
         fid                             : 16;
         dec_flow                        : 1;
 
@@ -255,6 +255,7 @@ header_type to_stage_3_phv_t {
     fields {
         tnmdr_pi                        : 16;
         tnmpr_pi                        : 16;
+        serq_ci                         : 16;
     }
 }
 
@@ -516,6 +517,38 @@ action read_tnmdr(tnmdr_pidx) {
 action read_tnmpr(tnmpr_pidx) {
     // d for stage 2 table 2 read-tnmpr-idx
     modify_field(read_tnmpr_d.tnmpr_pidx, tnmpr_pidx);
+}
+
+/* Stage 3 table 0 action */
+action tls_serq_consume(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
+
+
+    GENERATE_GLOBAL_K
+
+    /* To Stage 3 fields */
+    modify_field(to_s3_scratch.serq_ci, to_s3.serq_ci);
+
+    /* D vector */
+    modify_field(tls_stg0_d.rsvd, rsvd);
+    modify_field(tls_stg0_d.cosA, cosA);
+    modify_field(tls_stg0_d.cosB, cosB);
+    modify_field(tls_stg0_d.cos_sel, cos_sel);
+    modify_field(tls_stg0_d.eval_last, eval_last);
+    modify_field(tls_stg0_d.host, host);
+    modify_field(tls_stg0_d.total, total);
+    modify_field(tls_stg0_d.pid, pid);
+
+    modify_field(tls_stg0_d.pi_0, pi_0);
+    modify_field(tls_stg0_d.ci_0, ci_0);
+
+    modify_field(tls_stg0_d.pi_1, pi_1);
+    modify_field(tls_stg0_d.ci_1, ci_1);
+
+    modify_field(tls_stg0_d.serq_base, serq_base);
+    modify_field(tls_stg0_d.fid, fid);
+    modify_field(tls_stg0_d.dec_flow, dec_flow);
+    modify_field(tls_stg0_d.pad, pad);
+
 }
 
 /*

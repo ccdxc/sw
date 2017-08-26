@@ -11,7 +11,8 @@
 
  /* d is the data returned by lookup result */
 struct d_struct {
-	odesc			 : HBM_ADDRESS_WIDTH ;
+	odesc			 : DESC_ADDRESS_WIDTH ;
+    pad              : 448               ;
 };
 
 /* Readonly Parsed packet header info for the current packet */
@@ -27,7 +28,7 @@ struct d_struct d;
 	    .align
 tls_tdesc_alloc_start:
 
-        CAPRI_CLEAR_TABLE0_VALID
+        CAPRI_CLEAR_TABLE2_VALID
 
 	    phvwr		p.to_s5_odesc, d.odesc
         
