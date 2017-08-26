@@ -32,6 +32,8 @@ def process(topospec):
     # Enable all segments on Uplinks and UplinkPcs
     UplinkHelper.ConfigureAllSegments()
     UplinkPcHelper.ConfigureAllSegments()
+    # Phase2 Tenant config - EPs and ENICs
+    TenantHelper.ConfigurePhase2()
 
     # Generate all sessions
     SessionHelper.main()

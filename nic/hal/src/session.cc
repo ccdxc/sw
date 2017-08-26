@@ -433,7 +433,7 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
 // Updates flow parameters for flow if the flow undergoes routing/bridging
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-update_flow_for_routing(session_args_t *args, SessionResponse *rsp, 
+update_flow_forwarding_info(session_args_t *args, SessionResponse *rsp, 
                            bool is_initiator_flow)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -505,7 +505,7 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
 	//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
 	//                                encap from outpu_mapping, cos rwr)
     // TODO: Have to still handle priority tag. When do we send a priority
-	//       tagged pkt.
+	//       tagged pkt?
 
 
     if (sl2seg != dl2seg) {
@@ -548,19 +548,19 @@ update_flow_for_routing(session_args_t *args, SessionResponse *rsp,
 
 
 //------------------------------------------------------------------------------
-// Updates flow parameters for sessions if the flow undergoes routing
+// Updates flow forwarding parameters for sessions
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 update_session_forwarding_info(session_args_t *args, SessionResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    ret = update_flow_for_routing(args, rsp, TRUE);
+    ret = update_flow_forwarding_info(args, rsp, TRUE);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    ret = update_flow_for_routing(args, rsp, FALSE);
+    ret = update_flow_forwarding_info(args, rsp, FALSE);
     if (ret != HAL_RET_OK) {
         return ret;
     }

@@ -116,6 +116,9 @@ class TenantObject(base.ConfigObjectBase):
     def ConfigureSegments(self):
         return self.obj_helper_segment.Configure()
 
+    def ConfigureSegmentsPhase2(self):
+        return self.obj_helper_segment.ConfigurePhase2()
+
     def ConfigureTunnels(self):
         if self.IsInfra():
             self.obj_helper_tunnel.Configure()
@@ -167,6 +170,11 @@ class TenantObjectHelper:
             ten.ConfigureTunnels()
         return
         
+    def ConfigurePhase2(self):
+        for ten in self.tens:
+            ten.ConfigureSegmentsPhase2()
+        return
+
     def Generate(self, topospec):
         for entry in topospec.tenants:
             spec = entry.spec.Get(Store)

@@ -188,6 +188,9 @@ class SegmentObjectHelper:
         for seg in self.segs:
             seg.ConfigureNetworks()
         halapi.ConfigureSegments(self.segs)
+        return
+
+    def ConfigurePhase2(self):
         for seg in self.segs:
             seg.ConfigureChildren()
         return
