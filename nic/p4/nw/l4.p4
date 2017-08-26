@@ -273,7 +273,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
              (rflow_tcp_ack_num -1 <= tcp.seqNo) and
              (tcp.seqNo < rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz)))) {
 
-            if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num) {
+            if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num and
+                tcp.ackNo <= scratch_metadata.rflow_tcp_seq_num) {
                 modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
                 modify_field(scratch_metadata.iflow_tcp_win_sz, tcp.window);
             }
@@ -522,7 +523,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
 
 
 // INITIATOR_TCP_SESSION_UPDATE:
-        if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num) {
+        // Making sure that some random ack number is not updated as this
+        // can completely throw us off 
+        if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num and
+            tcp.ackNo <= scratch_metadata.rflow_tcp_seq_num) {
             modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
             modify_field(scratch_metadata.iflow_tcp_win_sz, tcp.window);
         }
@@ -569,7 +573,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
              (scratch_metadata.iflow_tcp_ack_num -1 <= scratch_metadata.adjusted_seq_num) and
              (scratch_metadata.adjusted_seq_num < scratch_metadata.iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz)))) {
 
-            if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num) {
+            if (tcp.ackNo > scratch_metadata.rflow_tcp_ack_num and
+                tcp.ackNo <= scratch_metadata.iflow_tcp_seq_num) {
                 modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
                 modify_field(scratch_metadata.iflow_tcp_win_sz, tcp.window);
             }
@@ -905,7 +910,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        }
 
 // RESPONDER_TCP_SESSION_UPDATE:
-        if (tcp.ackNo > scratch_metadata.rflow_tcp_ack_num) {
+        // Making sure that some random ack number is not updated as this
+        // can completely throw us off 
+        if (tcp.ackNo > scratch_metadata.rflow_tcp_ack_num and
+            tcp.ackNo <= scratch_metadata.iflow_tcp_seq_num) {
             modify_field(scratch_metadata.rflow_tcp_ack_num, tcp.ackNo);
             modify_field(scratch_metadata.rflow_tcp_win_sz, tcp.window);
         }

@@ -282,7 +282,7 @@ class Packet(objects.FrameworkObject):
     def __add_payload(self, tc):
         pktlogger.debug("Payload size = %d" % self.payloadsize)
         self.headers.payload.meta.size = self.payloadsize
-        self.headers.payload.data =\
+        self.headers.payload.fields.data =\
                      self.headers.payload.meta.pattern.get(self.payloadsize)
         # pkt.show()
         return

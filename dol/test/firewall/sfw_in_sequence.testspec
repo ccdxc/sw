@@ -2,12 +2,12 @@
 config_filter:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
     session         :
@@ -20,9 +20,10 @@ config_filter:
 packets:
     - packet:
         id          : IFLOW_BASE     # IFLOW Packet Base
-        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : 980 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateBySessionIflow
-        encaps      : 
+        #encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
@@ -50,9 +51,10 @@ packets:
 
     - packet:
         id          : RFLOW_BASE     # RFLOW Packet Base
-        payloadsize : 1000 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : 980 #ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateBySessionRflow
-        encaps      : 
+        #encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:

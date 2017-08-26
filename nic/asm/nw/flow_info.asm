@@ -47,6 +47,9 @@ flow_info:
   seq         c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
+  /* Flow Connection Tracking enable */
+  phvwr       p.l4_metadata_flow_conn_track, d.u.flow_info_d.flow_conn_track
+
   /* rewrite info */
   phvwr       p.rewrite_metadata_rewrite_index, d.u.flow_info_d.rewrite_index
   phvwr       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags

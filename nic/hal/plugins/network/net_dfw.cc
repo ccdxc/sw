@@ -38,12 +38,12 @@ dfw_exec(fte::ctx_t& ctx)
         // iflow
         flowupd = {type: fte::FLOWUPD_CONN_TRACK};
         flowupd.conn_track.enable = true;
-        flowupd.conn_track.state = session::FLOW_TCP_STATE_SYN_SENT;
+        flowupd.conn_track.state = session::FLOW_TCP_STATE_TCP_SYN_RCVD;
         flowupd.conn_track.syn_ack_delta = 0;
         ctx.update_iflow(flowupd);
 
         //rflow
-        flowupd.conn_track.state = session::FLOW_TCP_STATE_NONE;
+        flowupd.conn_track.state = session::FLOW_TCP_STATE_INIT;
         ctx.update_rflow(flowupd);
     }
 

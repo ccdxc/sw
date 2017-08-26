@@ -233,9 +233,12 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     flow_info_actiondata     d = { 0};
     timespec_t               ts;
     bool                     is_tcp_proxy_flow = false;
+    pd_session_t             *sess_pd = NULL;
     HAL_ASSERT(dep != NULL);
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
+
+    sess_pd = session->pd;
 
     // populate the action information
     d.actionid = FLOW_INFO_FLOW_INFO_ID;
@@ -365,7 +368,7 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
-        session->config.conn_track_en ? flow_pd->session_state_hw_id : 0;
+        session->config.conn_track_en ? sess_pd->session_state_idx : 0;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 

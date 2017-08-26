@@ -334,5 +334,5 @@ modules:
         package : test.firewall
         module  : sfw_in_sequence
         spec    : sfw_in_sequence.testspec
-        ignore  : True
+        ignore  : false
 

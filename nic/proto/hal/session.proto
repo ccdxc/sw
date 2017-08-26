@@ -87,14 +87,14 @@ enum FlowAction {
 // Flow TCP states
 // TODO: Srini, please define all other states
 enum FlowTCPState {
-    FLOW_TCP_STATE_NONE            = 0;
-    FLOW_TCP_STATE_INIT            = 1;
-    FLOW_TCP_STATE_SYN_SENT        = 2;
+    FLOW_TCP_STATE_INIT            = 0;
+    FLOW_TCP_STATE_TCP_SYN_RCVD    = 1;
+    FLOW_TCP_STATE_TCP_ACK_RCVD    = 2;
     FLOW_TCP_STATE_SYN_ACK_RCVD    = 3;
-    FLOW_TCP_STATE_CLOSING         = 4;
-    FLOW_TCP_STATE_CLOSE_WAIT      = 5;
-    FLOW_TCP_STATE_ESTABLISHED     = 6;
-    FLOW_TCP_STATE_CLOSED          = 7;
+    FLOW_TCP_STATE_ESTABLISHED     = 4;
+    FLOW_TCP_STATE_FIN_RCVD        = 5;
+    FLOW_TCP_STATE_BIDIR_FIN_RCVD  = 6;
+    FLOW_TCP_STATE_RESET           = 7;
 }
 
 // App Types ... In sync with p4/nw/include/defines.h
