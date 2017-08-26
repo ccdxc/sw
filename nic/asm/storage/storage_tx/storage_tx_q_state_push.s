@@ -28,7 +28,8 @@ storage_tx_q_state_push_start:
    
    // Setup the lif, type, qid, pindex for the doorbell push, Output will
    // be stored in GPR r7.
-   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0, r0, r0)
+   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,
+                       STORAGE_KIVEC0_DST_QID, r0)
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE, 
                        DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_P_NDX_INCR)
  

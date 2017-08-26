@@ -58,7 +58,7 @@ header_type q_state_t {
   }
 }
 
-#define Q_STATE_COPY(q_state)				\
+#define Q_STATE_COPY_STAGE0(q_state)			\
   modify_field(q_state.pc_offset, pc_offset);		\
   modify_field(q_state.rsvd, rsvd);			\
   modify_field(q_state.cosA, cosA);			\
@@ -81,6 +81,9 @@ header_type q_state_t {
   modify_field(q_state.dst_qid, dst_qid);		\
   modify_field(q_state.vf_id, vf_id);			\
   modify_field(q_state.sq_id, sq_id);			\
+
+#define Q_STATE_COPY(q_state)				\
+  Q_STATE_COPY_STAGE0(q_state)				\
   modify_field(q_state.pad, pad);			\
 
 // Queue empty macros
@@ -109,10 +112,18 @@ header_type storage_kivec0_t {
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
-    src_qaddr	: 34;	// Source queue state address
     dst_qaddr	: 34;	// Destination queue state address
     prp_assist	: 1;	// Download additional PRP entries (upto 16)
     is_q0	: 1;	// Is queue id 0 ? Used to distinguish admin queue
+   }
+}
+
+header_type storage_kivec1_t {
+   fields {
+    src_lif	: 11;	// Source LIF number
+    src_qtype	: 3;	// Source LIF type (within the LIF)
+    src_qid	: 24;	// Source queue number (within the LIF)
+    src_qaddr	: 34;	// Source queue state address
    }
 }
 
@@ -123,8 +134,13 @@ header_type storage_kivec0_t {
   modify_field(scratch.dst_qid, kivec.dst_qid);				\
   modify_field(scratch.prp_assist, kivec.prp_assist);			\
   modify_field(scratch.is_q0, kivec.is_q0);				\
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.dst_qaddr, kivec.dst_qaddr);			\
+
+#define STORAGE_KIVEC1_USE(scratch, kivec)				\
+  modify_field(scratch.src_lif, kivec.src_lif);				\
+  modify_field(scratch.src_qtype, kivec.src_qtype);			\
+  modify_field(scratch.src_qid, kivec.src_qid);				\
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
 
 // PRP size calculation
 #define PRP_SIZE(p)				(PRP_SIZE_SUB - (p & PRP_SIZE_MASK))

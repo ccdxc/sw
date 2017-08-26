@@ -21,14 +21,30 @@
 	k.storage_kivec0_dst_qtype
 #define STORAGE_KIVEC0_DST_QID		\
 	k.{storage_kivec0_dst_qid_sbit0_ebit1...storage_kivec0_dst_qid_sbit18_ebit23}
-#define STORAGE_KIVEC0_SRC_QADDR	\
-	k.{storage_kivec0_src_qaddr_sbit0_ebit1...storage_kivec0_src_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC0_DST_QADDR	\
-	k.{storage_kivec0_dst_qaddr_sbit0_ebit31...storage_kivec0_dst_qaddr_sbit32_ebit33}
+	k.{storage_kivec0_dst_qaddr_sbit0_ebit1...storage_kivec0_dst_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC0_PRP_ASSIST	\
 	k.storage_kivec0_prp_assist
 #define STORAGE_KIVEC0_IS_Q0		\
 	k.storage_kivec0_is_q0
+
+#define STORAGE_KIVEC1_SRC_LIF		\
+	k.{storage_kivec1_src_lif_sbit0_ebit7...storage_kivec1_src_lif_sbit8_ebit10}
+#define STORAGE_KIVEC1_SRC_QTYPE	\
+	k.storage_kivec1_src_qtype
+#define STORAGE_KIVEC1_SRC_QID		\
+	k.{storage_kivec1_src_qid_sbit0_ebit1...storage_kivec1_src_qid_sbit18_ebit23}
+#define STORAGE_KIVEC1_SRC_QADDR	\
+	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
+
+#define STAGE0_KIVEC_LIF		\
+	k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
+#define STAGE0_KIVEC_QTYPE		\
+	k.p4_txdma_intr_qtype
+#define STAGE0_KIVEC_QID		\
+	k.p4_txdma_intr_qid
+#define STAGE0_KIVEC_QADDR		\
+	k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_PHV2MEM		3
@@ -45,7 +61,7 @@
   phvwri	p.app_header_table3_valid, 0;				\
   phvwr		p.common_te0_phv_table_pc, _pc;				\
   phvwr		p.common_te0_phv_table_addr, _table_addr;		\
-  phvwri.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
+  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									\
 
 // Load a table based on absolute address
@@ -53,16 +69,17 @@
 #define LOAD_TABLE_FOR_ADDR_PARAM(_table_addr, _load_size, _pc)		\
   addi		r1, r0, _pc;						\
   srl		r1, r1, 6;						\
-  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, r1)			\
+  addi		r2, r0, _load_size;					\
+  LOAD_TABLE_FOR_ADDR(_table_addr, r2, r1)				\
 
 // Load a table based with a calculation based on index
-// addr = _table_base + (_entry_index * _entry_size)
+// addr = _table_base + (_entry_index * (2 ^_entry_size))
 // PC input must be a 28-bit value
 #define LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,	\
                              _load_size, _pc)				\
   add		r1, r0, _table_base;					\
-  add 		r2, r0, _entry_index;					\
-  mul		r3, r2, _entry_size;					\
+  add 		r2, r0, _entry_size;					\
+  sllv		r3, _entry_index, r2;					\
   add		r1, r1, r3;						\
   phvwri	p.app_header_table0_valid, 1;				\
   phvwri	p.app_header_table1_valid, 0;				\
@@ -70,14 +87,14 @@
   phvwri	p.app_header_table3_valid, 0;				\
   phvwr		p.common_te0_phv_table_pc, _pc;				\
   phvwr		p.common_te0_phv_table_addr, r1;			\
-  phvwri.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
+  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									
 
 // Load a table based with a calculation based on index
 // addr = _table_base + (_entry_index * _entry_size)
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index, 		\
-                                   entry_size, _load_size, _pc)		\
+                                   _entry_size, _load_size, _pc)	\
   addi		r1, r0, _pc;						\
   srl		r1, r1, 6;						\
   LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,		\

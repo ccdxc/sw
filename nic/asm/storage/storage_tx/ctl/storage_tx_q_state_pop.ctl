@@ -3,7 +3,7 @@
 
 
 struct s0_tbl_k k;
-struct s0_tbl_q_state_pop_d d;
+struct s2_tbl_q_state_push_d d;
 struct phv_ p;
 
 k = {

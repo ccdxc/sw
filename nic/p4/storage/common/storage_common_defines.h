@@ -26,7 +26,8 @@
 #define DOORBELL_DATA_PID_SHIFT		48
 
 // Each queue state can be 64 bytes at most (from d-vector in Capri)
-#define Q_STATE_SIZE     	64      
+// The sizes are expressed as a power of 2, hence using 6 here
+#define Q_STATE_SIZE     	6      
 
 // Offsets (in bytes) of fields within a structure
 #define Q_STATE_C_NDX_OFFSET	10

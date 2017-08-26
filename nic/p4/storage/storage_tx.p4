@@ -1,16 +1,16 @@
 
 #include "common/dummy.p4"
 
+#define tx_table_s0_t0 s0_tbl
 #define tx_table_s1_t0 s1_tbl
 #define tx_table_s2_t0 s2_tbl
 #define tx_table_s3_t0 s3_tbl
-#define tx_table_s4_t0 s0_tbl
 
-#define tx_table_s0_t0_action dummy_no_data
+#define tx_table_s0_t0_action q_state_pop
 #define tx_table_s1_t0_action nvme_sq_handler
 #define tx_table_s2_t0_action q_state_push
 #define tx_table_s3_t0_action pvm_cq_handler
-#define tx_table_s4_t0_action q_state_pop
+#define tx_table_s4_t0_action dummy
 #define tx_table_s5_t0_action dummy
 #define tx_table_s6_t0_action dummy
 #define tx_table_s7_t0_action dummy
@@ -26,8 +26,14 @@ metadata q_state_t q_state_scratch;
 @pragma pa_header_union ingress common_t0_s2s
 metadata storage_kivec0_t storage_kivec0;
 
+@pragma pa_header_union ingress common_global
+metadata storage_kivec1_t storage_kivec1;
+
 @pragma scratch_metadata
 metadata storage_kivec0_t storage_kivec0_scratch;
+
+@pragma scratch_metadata
+metadata storage_kivec1_t storage_kivec1_scratch;
 
 // PVM Command metadata
 @pragma dont_trim
@@ -79,7 +85,7 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                    dst_lif, dst_qtype, dst_qid, vf_id, sq_id, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  Q_STATE_COPY(q_state_scratch)
+  Q_STATE_COPY_STAGE0(q_state_scratch)
 
   // If queue is empty exit
   if (QUEUE_EMPTY(q_state_scratch)) {
@@ -95,9 +101,12 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     modify_field(storage_kivec0.dst_qtype, dst_qtype);
     modify_field(storage_kivec0.dst_qid, dst_qid);
 
-    // TODO: FIXME, derive these from the K+I for stage 0
+    // In ASM, derive these from the K+I for stage 0
     modify_field(storage_kivec0.is_q0, 0);
-    modify_field(storage_kivec0.src_qaddr, 0);
+    modify_field(storage_kivec1.src_qaddr, 0);
+    modify_field(storage_kivec1.src_lif, 0);
+    modify_field(storage_kivec1.src_qtype, 0);
+    modify_field(storage_kivec1.src_qid, 0);
 
     // Initialize the vf_id and sq_id fields in the PHV
     modify_field(pvm_cmd.vf_id, vf_id);
@@ -123,6 +132,7 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+  STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -228,6 +238,7 @@ action pvm_cq_handler(cspec, rsvd0, sq_head, sq_id, cid, phase, status,
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+  STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -282,6 +293,7 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+  STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY(q_state_scratch)

@@ -18,18 +18,12 @@ struct phv_ p;
 
 storage_tx_nvme_sq_handler_start:
 
-   // DMA write w_ndx to c_ndx to actually pop the entry
-#if 0
-   add		r7, r0, STORAGE_KIVEC0_SRC_QADDR
-   addi		r7, r7, Q_STATE_C_NDX_OFFSET
-   DMA_PHV2MEM_SETUP(storage_kivec0_w_ndx, storage_kivec0_w_ndx, r7, 
-                     dma_p2m_0)
-#endif
-   // TODO: Remove add
-   add		r1, r0, k.storage_kivec0_w_ndx
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, k.storage_kivec0_w_ndx, r0, r0, r0)
-   DOORBELL_ADDR_SETUP(r0, r0, DOORBELL_SCHED_WR_RESET,
-                       DOORBELL_UPDATE_C_NDX)
+   // DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed to
+   // reset the scheduler bit.
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX, r0,
+                       STORAGE_KIVEC1_SRC_QID, r0)
+   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,
+                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_C_NDX)
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data, r7,
                      dma_p2m_0)
 
@@ -73,7 +67,7 @@ dma_nvme_cmd:
                      dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, 6,
+   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
                              storage_tx_q_state_push_start)
 
 exit:
