@@ -10,6 +10,9 @@ struct phv_      p;
 set_replica_rewrites:
   phvwr       p.control_metadata_flow_miss_egress, k.control_metadata_flow_miss
   phvwr       p.tunnel_metadata_tunnel_originate_egress, k.tunnel_metadata_tunnel_originate
+  seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU
+  phvwr.c1    p.control_metadata_dst_lport, CPU_LPORT
+
   seq         c1, k.tm_replication_data_valid, TRUE
   nop.!c1.e
   phvwr       p.tunnel_metadata_tunnel_terminate_egress, k.tunnel_metadata_tunnel_terminate

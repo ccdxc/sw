@@ -286,6 +286,9 @@ hal_ret_t uplinkif_create(intf::InterfaceSpec& spec,
 hal_ret_t uplinkpc_create(intf::InterfaceSpec& spec, 
                           intf::InterfaceResponse *rsp,
                           if_t *hal_if);
+hal_ret_t cpuif_create(intf::InterfaceSpec& spec, 
+                       intf::InterfaceResponse *rsp,
+                       if_t *hal_if);
 #if 0
 hal_ret_t enicif_create(intf::InterfaceSpec& spec, 
                         intf::InterfaceResponse *rsp,
@@ -302,6 +305,9 @@ hal_ret_t uplinkpc_update(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 
                                  intf::InterfaceResponse *rsp,
                                  if_t *hal_if);
+hal_ret_t get_lif_hdl_for_cpuif(intf::InterfaceSpec& spec, 
+                                intf::InterfaceResponse *rsp,
+                                if_t *hal_if);
 if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_hdl);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);

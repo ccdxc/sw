@@ -102,6 +102,17 @@ p4plus_app_tcp_proxy:
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
 
 .align
+p4plus_app_cpu:
+  phvwr       p.p4_to_p4plus_cpu_valid, TRUE
+  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+              P4PLUS_CPU_HDR_SZ)
+  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+
+.align
 p4plus_app_ipsec:
   nop.e
   nop

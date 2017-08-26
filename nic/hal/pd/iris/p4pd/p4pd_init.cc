@@ -503,6 +503,9 @@ p4pd_p4plus_app_init (void)
     DirectMap                *dm;
     p4plus_app_actiondata data = { 0 };
 
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
+    HAL_ASSERT(dm != NULL);
+
     for (int i = P4PLUS_APP_TYPE_MIN; i <= P4PLUS_APP_TYPE_MAX; i++) {
         switch(i) {
             case P4PLUS_APPTYPE_CLASSIC_NIC:
@@ -522,13 +525,13 @@ p4pd_p4plus_app_init (void)
                 break;
             case P4PLUS_APPTYPE_TELEMETRY:
                 break;
+            case P4PLUS_APPTYPE_CPU:
+                data.actionid = P4PLUS_APP_P4PLUS_APP_CPU_ID;
+                break;
             default:
                 HAL_TRACE_ERR("Unknown app_type: {}", i);
                 HAL_ASSERT(0);
         }
-
-        dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
-        HAL_ASSERT(dm != NULL);
 
         ret = dm->insert_withid(&data, i);
         if (ret != HAL_RET_OK) {

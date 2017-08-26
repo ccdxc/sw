@@ -361,8 +361,9 @@
 #define P4PLUS_APPTYPE_NDE             5
 #define P4PLUS_APPTYPE_STORAGE         6
 #define P4PLUS_APPTYPE_TELEMETRY       7
+#define P4PLUS_APPTYPE_CPU             8
 #define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_CLASSIC_NIC
-#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_TELEMETRY
+#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_CPU
 
 /*****************************************************************************/
 /* P4+ header size constants                                                 */
@@ -372,6 +373,7 @@
 #define P4PLUS_ROCE_HDR_SZ             6
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      44
+#define P4PLUS_CPU_HDR_SZ              6
 
 /*****************************************************************************/
 /* Classic NIC flags                                                         */

@@ -8,6 +8,11 @@ struct phv_             p;
 
 %%
 
+nop:
+  nop.e
+  nop
+
+.align
 set_tm_oport:
   seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
@@ -42,15 +47,13 @@ set_tm_oport:
 
 .align
 redirect_to_cpu:
+  phvwr       p.capri_intrinsic_lif, d.u.redirect_to_cpu_d.dst_lif
+  phvwr       p.control_metadata_cpu_copy, TRUE
   seq         c1, d.u.redirect_to_cpu_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
-  seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU
-  seq         c2, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_NORMAL
-  andcf       c1, [c2]
-  phvwr       p.control_metadata_cpu_copy, TRUE
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_DMA
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.tm_oqueue
-  phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_cpu_d.tunnel_index
+  phvwr       p.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_CPU
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
@@ -60,8 +63,3 @@ redirect_to_remote:
   phvwr       p.capri_intrinsic_tm_oport, d.u.redirect_to_remote_d.tm_oport
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oqueue
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index
-
-.align
-nop:
-  nop.e
-  nop

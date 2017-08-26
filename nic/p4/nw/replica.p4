@@ -8,6 +8,10 @@ action set_replica_rewrites() {
     modify_field(tunnel_metadata.tunnel_terminate_egress,
                  tunnel_metadata.tunnel_terminate);
 
+    if (capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_CPU) {
+        modify_field(control_metadata.dst_lport, CPU_LPORT);
+    }
+
     if (tm_replication_data.valid == TRUE) {
         modify_field(control_metadata.dst_lport, tm_replication_data.lport);
         modify_field(capri_rxdma_intrinsic.qtype, tm_replication_data.qtype);

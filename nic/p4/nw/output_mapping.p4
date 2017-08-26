@@ -15,15 +15,12 @@ action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oqueue) {
     modify_field(scratch_metadata.flag, egress_mirror_en);
 }
 
-/* dst_lif == 0 indicates CPU copy */
-action redirect_to_cpu(tunnel_index, egress_mirror_en, tm_oqueue) {
-    if ((capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_CPU) or
-        (capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_NORMAL)) {
-        modify_field(control_metadata.cpu_copy, TRUE);
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-        modify_field(capri_intrinsic.tm_oq, tm_oqueue);
-        modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_index);
-    }
+action redirect_to_cpu(dst_lif, egress_mirror_en, tm_oqueue) {
+    modify_field(capri_intrinsic.lif, dst_lif);
+    modify_field(control_metadata.cpu_copy, TRUE);
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+    modify_field(capri_intrinsic.tm_oq, tm_oqueue);
+    modify_field(control_metadata.p4plus_app_id, P4PLUS_APPTYPE_CPU);
 
     if (egress_mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session,

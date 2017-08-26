@@ -495,6 +495,12 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
             return HAL_RET_INVALID_ARG;
         }
+    } else if (if_type == intf::IF_TYPE_CPU) {
+        // CPU specific validation
+        if (!spec.has_if_cpu_info()) {
+            rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
     } else {
         // TODO: Tunnels etc.
         rsp->set_api_status(types::API_STATUS_IF_TYPE_INVALID);
@@ -590,6 +596,12 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
             break;
 
+        case intf::IF_TYPE_CPU:
+            ret = cpuif_create(spec, rsp, hal_if);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+            break;
         default:
             ret = HAL_RET_INVALID_ARG;
             rsp->set_api_status(types::API_STATUS_OK);
@@ -779,6 +791,32 @@ hal_ret_t del_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
                               InterfaceL2SegmentResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// CPU If Create 
+//------------------------------------------------------------------------------
+hal_ret_t cpuif_create(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                        if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    lif_t               *lif;
+
+    HAL_TRACE_DEBUG("PI-CPUif:{}: CPUif Create for id {}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+
+    ret = get_lif_hdl_for_cpuif(spec, rsp, hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-CPUif:{}: Unable to find the lif handle Err: {}",
+                      __FUNCTION__, ret);
+        return ret;
+    }
+
+    lif = find_lif_by_handle(hal_if->lif_handle);
+    HAL_TRACE_DEBUG("PI-CPUif:{}: if_id:{} lif_id:{}", __FUNCTION__, 
+            hal_if->if_id, lif->lif_id);
 
     return ret;
 }
@@ -1043,6 +1081,40 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// Get lif handle for CPU If
+//------------------------------------------------------------------------------
+hal_ret_t get_lif_hdl_for_cpuif(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                                 if_t *hal_if)
+{
+    lif_id_t            lif_id = 0;
+    hal_handle_t        lif_handle = 0;
+    lif_t               *lif = NULL;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    // fetch the lif associated with this interface
+    auto lif_kh = spec.if_cpu_info().lif_key_or_handle();
+    if (lif_kh.key_or_handle_case() == intf::LifKeyHandle::kLifId) {
+        lif_id = lif_kh.lif_id();
+        lif = find_lif_by_id(lif_id);
+    } else {
+        lif_handle = lif_kh.lif_handle();
+        lif = find_lif_by_handle(lif_handle);
+    }
+
+    if(lif == NULL) {
+        HAL_TRACE_ERR("PI-CPUif:{}: LIF handle not found for ID:{} HDL:{}",
+                      __FUNCTION__, lif_id, lif_handle);
+        rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
+         ret = HAL_RET_LIF_NOT_FOUND;
+         goto end;
+    } else {
+        hal_if->lif_handle = lif->hal_handle;
+    }
+
+end:
+    return ret;
+}
 //------------------------------------------------------------------------------
 // Get if from either id or handle
 //------------------------------------------------------------------------------

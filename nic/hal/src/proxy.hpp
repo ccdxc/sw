@@ -27,6 +27,7 @@ namespace hal {
 enum {
     SERVICE_LIF_TCP_PROXY = SERVICE_LIF_START,
     SERVICE_LIF_TLS_PROXY,
+    SERVICE_LIF_CPU,
     SERVICE_LIF_END
 };
 

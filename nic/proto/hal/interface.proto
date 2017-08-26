@@ -299,6 +299,7 @@ enum IfType {
   IF_TYPE_UPLINK       = 2;    // interface representing NIC uplink(s)
   IF_TYPE_UPLINK_PC    = 3;    // interface representing NIC uplink port channel
   IF_TYPE_TUNNEL       = 4;    // interface representing tunnel
+  IF_TYPE_CPU          = 5;    // interface representing CPU
 }
 
 //------------------------------------------------------------------------------
@@ -377,6 +378,10 @@ message IfTunnelInfo {
   }
 }
 
+// attributes for CPU If
+message IfCPUInfo {
+  LifKeyHandle          lif_key_or_handle   = 2;    // LIF identifier for this interface
+}
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
@@ -387,10 +392,11 @@ message InterfaceSpec {
     IfEnicInfo       if_enic_info      = 6;     // enic data if interface type is IF_TYPE_ENIC
     IfUplinkInfo     if_uplink_info    = 7;     // uplink port number if interface type is IF_TYPE_UPLINK
     IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 9;
+    IfTunnelInfo     if_tunnel_info    = 9;     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 10;    // cpu interface informaton 
   }
-  qos.QOSActions     tx_qos_actions    = 10;    // QOS actions for packets transmitted from this interface
-  qos.QOSActions     rx_qos_actions    = 11;    // QOS actions for packets received on this interface
+  qos.QOSActions     tx_qos_actions    = 11;    // QOS actions for packets transmitted from this interface
+  qos.QOSActions     rx_qos_actions    = 12;    // QOS actions for packets received on this interface
 }
 
 // InterfaceRequestMsg is batched request message that is used to do

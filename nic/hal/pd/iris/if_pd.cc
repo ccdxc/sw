@@ -5,6 +5,7 @@
 #include <uplinkif_pd.hpp>
 #include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
+#include <cpuif_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -30,6 +31,9 @@ pd_if_create (pd_if_args_t *args)
             ret = pd_uplinkpc_create(args);
             break;
         case intf::IF_TYPE_TUNNEL:
+            break;
+        case intf::IF_TYPE_CPU:
+            ret = pd_cpuif_create(args);
             break;
         default:
             HAL_ASSERT(0);
@@ -60,6 +64,8 @@ pd_if_update (pd_if_args_t *args)
         case intf::IF_TYPE_UPLINK_PC:
             break;
         case intf::IF_TYPE_TUNNEL:
+            break;
+        case intf::IF_TYPE_CPU:
             break;
         default:
             HAL_ASSERT(0);

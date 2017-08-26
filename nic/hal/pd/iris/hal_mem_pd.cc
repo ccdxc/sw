@@ -7,6 +7,7 @@
 #include <uplinkif_pd.hpp>
 #include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
+#include <cpuif_pd.hpp>
 #include <if_pd.hpp>
 #include <session_pd.hpp>
 #include <buf_pool_pd.hpp>
@@ -103,6 +104,12 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::pd_enicif_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
+
+    // initialize CPU If PD related data structures
+    cpuif_pd_slab_ = slab::factory("CPUIF_PD", HAL_SLAB_CPUIF_PD,
+                                 sizeof(hal::pd::pd_cpuif_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((cpuif_pd_slab_ != NULL), false);
 
     // initialize EP PD related data structures
     ep_pd_slab_ = slab::factory("EP_PD", HAL_SLAB_EP_PD,
@@ -248,6 +255,8 @@ hal_state_pd::hal_state_pd()
     uplinkifpc_idxr_ = NULL;
 
     enicif_pd_slab_ = NULL;
+
+    cpuif_pd_slab_ = NULL;
 
     ep_pd_slab_ = NULL;
     ep_pd_ip_entry_slab_ = NULL;

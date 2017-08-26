@@ -110,6 +110,20 @@ action p4plus_app_ipsec() {
 action p4plus_app_rdma() {
 }
 
+action p4plus_app_cpu() {
+    add_header(p4_to_p4plus_cpu);
+    modify_field(p4_to_p4plus_cpu.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+
+    add_header(capri_rxdma_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_CPU_HDR_SZ));
+    modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
+    modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
+}
+
 @pragma stage 5
 table p4plus_app {
     reads {
@@ -120,6 +134,7 @@ table p4plus_app {
         p4plus_app_tcp_proxy;
         p4plus_app_ipsec;
         p4plus_app_rdma;
+        p4plus_app_cpu;
         nop;
     }
     size : P4PLUS_APP_TABLE_SIZE;

@@ -34,6 +34,7 @@ gtest:
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/uplinkif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/uplinkpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkpc_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/enicif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/enicif_test.xml"
+	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/cpuif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/cpuif_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/buf_pool_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/buf_pool_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/queue_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/queue_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(TOPDIR)/obj WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/policer_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/policer_test.xml"
