@@ -25,7 +25,7 @@ levels = defs.Dict2Enum(__levels)
 gl_file_log = None
 #gl_file_log = open('.framework.log', 'w')
 class Logger:
-    def __init__(self, stdout=True, level=levels.DEBUG, name=None):
+    def __init__(self, stdout=True, level=levels.DEBUG, name=None, log_file=None):
         self.sinks = []
         self.indent_enable = False
         self.level = level
@@ -36,6 +36,9 @@ class Logger:
         global gl_file_log
         if gl_file_log:
             self.sinks.append(gl_file_log)
+        if log_file:
+            fp = open(log_file, 'w')
+            self.sinks.append(fp)
         return
 
     def add_stdout(self):

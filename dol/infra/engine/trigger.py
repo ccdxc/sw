@@ -253,7 +253,7 @@ def PacketCompare(expected, actual, partial_match=None):
         except:
             # Compare headers only defined in our factory.
             logger.critical("Header %s not found in factory" % header)
-            continue
+            assert(0)
 
         if not header_info:
             assert 0
@@ -274,7 +274,6 @@ def PacketCompare(expected, actual, partial_match=None):
         else:
             match_fields = set(
                 expected_fields) - set(partial_match.ignore_hdrs[header].ignore_fields)
-
         for field in match_fields:
             try:
                 expected_val = getattr(expected[scapy_ref], field)
@@ -614,7 +613,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                         extra_pkt = PacketResult()
                         extra_pkt.spkt, extra_pkt.port = packet_ctx.packet, packet_ctx.port
                         result.extra.append(extra_pkt)
-                        self._logger.info("Received excess packet on port = %s of len:%s" % (
+                        self._logger.error("Received excess packet on port = %s of len:%s" % (
                             extra_pkt.port, len(packet_ctx.packet)))
 
         for key, res in tmp_mismatch_ref.items():
@@ -634,7 +633,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             mismatch_result.mismatch = self._convert_mismatch_result(
                 res[1].__dict__)
             result.mismatch.append(mismatch_result)
-            self._logger.info("Mismatch packet id = %s, expected ports:%s len:%s, actual port:%s len: %s" % (key.packet.GID(),
+            self._logger.error("Mismatch packet id = %s, expected ports:%s len:%s, actual port:%s len: %s" % (key.packet.GID(),
                                                                                                              expected_packet.ports,
                                                                                                              len(
                                                                                                                  expected_packet.spkt),
@@ -643,7 +642,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             for header in res[1].headers:
                 self._logger.info("Header mismatch : %s" % header)
                 for field, mis_result in res[1].headers[header].mismatch_fields.items():
-                    self._logger.info("\tMismatch field : %s,  expected : %s, actual : %s" %
+                    self._logger.error("\tMismatch field : %s,  expected : %s, actual : %s" %
                                       (field, mis_result.expected, mis_result.actual))
 
         tmp_missing_ref = defaultdict(lambda: [])
@@ -658,7 +657,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             missing_pkt.spkt = packet_ctx.packet.spkt
             missing_pkt.ports = tmp_missing_ref[packet_ctx]
             result.missing.append(missing_pkt)
-            self._logger.info("Missing packet id = %s, expected on ports = %s of len:%s" % (packet_ctx.packet.GID(),
+            self._logger.error("Missing packet id = %s, expected on ports = %s of len:%s" % (packet_ctx.packet.GID(),
                                                                                             missing_pkt.ports, len(packet_ctx.packet.spkt)))
 
         result._set_status()
@@ -712,7 +711,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     "TestCaseVerify(): Success.")
                 result.verify_callback.status = Trigger.TEST_CASE_PASSED
             else:
-                self._logger.info(
+                self._logger.error(
                     "TestCaseVerify(): Failure.")
                 result.verify_callback.status = Trigger.TEST_CASE_FAILED
 
@@ -720,9 +719,11 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 result.descriptors.status == Trigger.TEST_CASE_FAILED or \
                 result.verify_callback.status == Trigger.TEST_CASE_FAILED:
             result.result = Trigger.TEST_CASE_FAILED
+            self._logger.error("Test case failed.")
             return result
         else:
             result.result = Trigger.TEST_CASE_PASSED
+            self._logger.info("Test case passed.")
             return result
 
     def timed_out(self):
@@ -1128,7 +1129,7 @@ class Trigger(InfraThreadHandler):
 
         return test_case_out
 
-    def get_run_report(self, max_wait_time=6000):
+    def get_run_report(self, max_wait_time=6000000):
         end_wait_time = time.time() + max_wait_time
         logger.info("Trying to get Trigger Report..")
         while not self.all_test_cases_done() and end_wait_time > time.time():

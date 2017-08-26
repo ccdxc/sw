@@ -180,8 +180,8 @@ class Module:
 
     def main(self, infra_data):
         self.infra_data = infra_data
-        self.logger = logging.Logger(level=logging.levels.INFO,
-                                     name="MOD:%s" % self.name)
+        self.logger = logging.Logger(level=logging.levels.INFO, stdout=False,
+                                     name="MOD:%s" % self.name, log_file=self.name + ".log")
         self.infra_data.Logger = self.logger
         self.__load()
         self.__load_spec()

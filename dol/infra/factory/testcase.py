@@ -89,6 +89,10 @@ class TestCase(objects.FrameworkObject):
         self.logger.info(self.logpfx, *args, **kwargs)
         return
 
+    def error(self, *args, **kwargs):
+        self.logger.error(self.logpfx, *args, **kwargs)
+        return
+
     def debug(self, *args, **kwargs):
         self.logger.debug(self.logpfx, *args, **kwargs)
         return
