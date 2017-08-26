@@ -2267,6 +2267,8 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
         if skip == True:
             continue
 
+        if (is_array == 0) and (width/8 < (word_size * 4)):
+            width = word_size * 32
         while width > 0:
 #            print '0x%08x 0x%08x %s' % \
 #                (addr_offset, data & 0xFFFFFFFF, name)
