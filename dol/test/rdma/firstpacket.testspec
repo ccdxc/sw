@@ -37,6 +37,7 @@ packets:
                 dport   : ref://testcase/config/flow/dport
             bth:
                 opcode  : 1
+                destqp  : 1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

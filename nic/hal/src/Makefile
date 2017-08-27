@@ -44,6 +44,7 @@ SOURCES = \
 		  bm_allocator.cc \
 		  lif_manager_base.cc \
 		  lif_manager.cc \
+		  rdma.cc \
 		  wring.cc \
 		  proxy.cc \
 		  descriptor_aol.cc \
