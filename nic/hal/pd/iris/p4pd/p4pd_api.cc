@@ -163,6 +163,7 @@ static p4pd_error_t p4pd_tbl_packing_json_parse()
         }
         if (strlen(overflow_parent.c_str())) {
             tbl->is_oflow_table = true;
+            tbl->oflow_parent_table_id = p4pd_get_tableid_from_tablename(overflow_parent.c_str());
         } else {
             tbl->is_oflow_table = false;
         }

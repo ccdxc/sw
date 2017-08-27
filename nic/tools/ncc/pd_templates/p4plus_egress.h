@@ -8,7 +8,7 @@
 //::     prefix = 'p4pd_' + pddict['p4program']
 /*
  * ${p4prog}_p4plus_ingress.h
- * Mahesh Shirshyad (Pensando Systems)
+ * Pensando Systems
  */
 /* This file contains action data bit field data structures for p4+
  * programs to update table actiond data. The data structure generated

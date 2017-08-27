@@ -16,7 +16,7 @@
 //:: ACTION_PC_LEN = 8 # in bits
 /*
  * p4pd.c
- * Mahesh Shirshyad (Pensando Systems)
+ * Pensando Systems
  */
 
 /* This file contains API implementation needed to operate on each P4 Table. 
@@ -248,7 +248,7 @@ p4pd_copy_be_src_to_le_dest(uint8_t *dest,
                             uint16_t src_start_bit,
                             uint16_t num_bits)
 {
-    (void)p4pd_copy_be_src_to_be_dest;
+    (void)p4pd_copy_be_src_to_le_dest;
 
     if (!num_bits || src == NULL) {
         return;
@@ -266,6 +266,29 @@ p4pd_copy_be_src_to_le_dest(uint8_t *dest,
     }
 }
 
+static void
+p4pd_copy_be_adata_to_le_dest(uint8_t *dest,
+                            uint16_t dest_start_bit,
+                            uint8_t *src,
+                            uint16_t src_start_bit,
+                            uint16_t num_bits)
+{
+    (void)p4pd_copy_be_adata_to_le_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    for (int k = 0; k < num_bits; k++) {
+        uint8_t *_src = src + ((src_start_bit + k) >> 3);
+        uint8_t *_dest = dest + ((dest_start_bit + num_bits - 1 - k) >> 3);
+        p4pd_copy_single_bit(_dest,
+                             (dest_start_bit + num_bits - 1 - k) & 0x7,
+                             _src,
+                             7 - ((src_start_bit + k) & 0x7),
+                             1);
+    }
+}
 
 static void
 p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
@@ -493,7 +516,6 @@ ${table}_hwentry_query(uint32_t tableid,
 {
     *hwkey_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
     *hwkeymask_len = ${keylen}; /* Total bit len of all matchkeys of this table. */
-    /* Tcam memory line is allocated in chunks of P4PD_TCAM_WORD_CHUNK_LEN */
     *hwkeymask_len += P4PD_TCAM_WORD_CHUNK_LEN - (*hwkeymask_len % P4PD_TCAM_WORD_CHUNK_LEN); 
     *hwkey_len += P4PD_TCAM_WORD_CHUNK_LEN - (*hwkey_len % P4PD_TCAM_WORD_CHUNK_LEN); 
     /* Among all actions of the table, this length is set to maximum
@@ -638,7 +660,6 @@ ${table}_pack_action_data(uint32_t tableid,
                                    bits_before_mat_key);
                     (*actiondata_len_before_key) += bits_before_mat_key;
                     copy_before_key = false;
-                    //dest_start_bit = after_key_adata_start_bit;
                     packed_action_data = packed_actiondata_after_key;
                     dest_start_bit = 0;
                     /* remaining field bits to be copied after end of match key */
@@ -1528,9 +1549,6 @@ ${table}_entry_write(uint32_t tableid,
                      ${table}_actiondata *actiondata)
 {
     uint8_t  action_pc;
-    // For entry update performance reasons 
-    // avoid mem allocate/free. Memory for action data and 
-    // table entry memory line is allocated on stack.
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t entry_size, actiondatalen;
@@ -1570,9 +1588,6 @@ ${table}_entry_write(uint32_t tableid,
 {
     uint32_t hwactiondata_len, hwkey_len;
     uint8_t  action_pc;
-    // For entry update performance reasons
-    // avoid mem allocate/free. Memory for action data and
-    // table entry memory line is allocated on stack.
     uint8_t  packed_actiondata_after_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  packed_actiondata_before_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -1602,8 +1617,6 @@ ${table}_entry_write(uint32_t tableid,
     /* For hash tables in both pipe and HBM, pack entries such that
      * key bits in memory is aligned with key bits in KM
      */
-    // Need to pack actiondata on left of hwkey
-    // in case MatchKey is prepended by i1 bytes in KM
     actiondatalen = ${table}_pack_action_data(tableid, actiondata,
                                      packed_actiondata_before_key,
                                      &actiondata_len_before_key,
@@ -1689,8 +1702,8 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                     /* Copy part of the field before from actiondata before key
                      * remaining part from action data after key
                      */
-                    bits_from_adata_before_key = src_start_bit  + ${actionfldwidth} - actiondata_len_before_key;
-                    p4pd_copy_be_src_to_le_dest(
+                    bits_from_adata_before_key = actiondata_len_before_key - src_start_bit;
+                    p4pd_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                                    (uint8_t*)&(actiondata->${table}_action_u.\
                                    ${table}_${actionname}.${actionfldname}),
@@ -1698,21 +1711,23 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                                    (uint8_t*)(actiondata->${table}_action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    #endif
-                                   0,
+                                   ${actionfldwidth} - bits_from_adata_before_key,
                                    packed_action_data,
                                    src_start_bit,
                                    bits_from_adata_before_key);
                     actiondatalen += bits_from_adata_before_key;
-                    dest_start_bit = bits_from_adata_before_key;
+                    dest_start_bit = 0;
                     copy_before_key = false;
                     packed_action_data = packed_actiondata_after_key;
                     /* remaining field bits to be copied after end of match key */
                     bits_to_copy = ${actionfldwidth} - bits_from_adata_before_key;
-
-                    src_start_bit = 0; /* startbit in second portion of packed actiondata */
+                    /* startbit of second portion of packed actiondata could
+                     *  start in middle of byte (after last key bit)
+                     */
+                    src_start_bit = ${mat_key_bit_length % 8};
                 }
             }
-            p4pd_copy_be_src_to_le_dest(
+            p4pd_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
                                 ${table}_${actionname}.${actionfldname}),
@@ -1766,7 +1781,7 @@ ${table}_unpack_action_data(uint32_t tableid,
                 >= P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
-            p4pd_copy_be_src_to_le_dest(
+            p4pd_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
                                 ${table}_${actionname}.${actionfldname}),
@@ -2477,41 +2492,24 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry_x[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
-    uint16_t hwentry_bit_len, i;
+    uint16_t hwentry_bit_len;
 
     capri_tcam_table_entry_read(tableid, index, hwentry_x, hwentry_y,
                                 &hwentry_bit_len);
     if (!hwentry_bit_len) {
-        // Zero len!!
         return (P4PD_FAIL);
     }
     int pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
     p4pd_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
     p4pd_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
-    // convert trit to match mask
-    // xy
-    // 01 - match 0
-    // 10 - match 1
-    // 11 - illegal
-    // 00 - dont care
-    for (i = 0; i < (hwentry_bit_len + pad) / 8; i++) {
-        hwentry_y[i] = hwentry_y[i] ^ hwentry_x[i];
-    }
-    if (hwentry_bit_len % 8) {
-        hwentry_y[i] = hwentry_y[i] ^ hwentry_x[i];
-    }
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
     capri_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
     if (!hwentry_bit_len) {
-        // Zero len!!
         return (P4PD_SUCCESS);
     }
     pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
     p4pd_swizzle_bytes(hwentry, hwentry_bit_len+pad);
-    // Split HW entry into 
-    //  - actionPC
-    //  - Data
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -2555,9 +2553,6 @@ ${table}_entry_read(uint32_t tableid,
         // Zero len!!
         return (P4PD_SUCCESS);
     }
-    // Split HW entry into 
-    //  - actionPC
-    //  - Data
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -2603,17 +2598,12 @@ ${table}_entry_read(uint32_t tableid,
         // Zero len!!
         return (P4PD_SUCCESS);
     }
-    // Split HW entry into 
-    //  - actionPC
-    //  - Key 
-    //  - Data
-
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
 
-    key_bit_len = ${table}_hwkey_unbuild(tableid, hwentry + ${mat_key_start_byte}, 
-                                         ${mat_key_bit_length}, swkey);
+    ${table}_hwkey_unbuild(tableid, hwentry, 
+                           ${mat_key_bit_length}, swkey);
 
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
@@ -2633,7 +2623,7 @@ ${table}_entry_read(uint32_t tableid,
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
     actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8;
-    actiondata_len_after_key = hwentry_bit_len - (${mat_key_start_byte} * 8 + ${mat_key_bit_length}); // bit len
+    actiondata_len_after_key = ${max_actionfld_len} - actiondata_len_before_key;
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
                                     packed_actiondata_before_key,
@@ -2736,10 +2726,6 @@ ${table}_entry_decode(uint32_t tableid,
                       uint16_t hwentry_len,
                       ${table}_actiondata* actiondata)
 {
-    // Split HW entry into 
-    //  - actionPC
-    //  - Data
-
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -2767,17 +2753,9 @@ ${table}_entry_decode(uint32_t tableid,
                       ${table}_swkey_t *swkey, 
                       ${table}_actiondata *actiondata)
 {
-    uint16_t key_bit_len;
-    
-    // Split HW entry into 
-    //  - actionPC
-    //  - Key 
-    //  - Data
-
     // Since actionpc is not in KM, when unbuilding key into p4fld,
     // pass pointer to hwentry byte stream after action-pc
-    key_bit_len = ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey);
-
+    ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey);
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -2800,7 +2778,7 @@ ${table}_entry_decode(uint32_t tableid,
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
     actiondata_len_before_key = (${mat_key_start_byte} - adatabyte) * 8; // bit len without actionpc
-    actiondata_len_after_key = hwentry_len - (${mat_key_start_byte} * 8 + key_bit_len); // bit len
+    actiondata_len_after_key = ${max_actionfld_len} - actiondata_len_before_key;
     hash_${table}_unpack_action_data(tableid,
                                     actiondata->actionid,
                                     packed_actiondata_before_key,
@@ -2808,7 +2786,6 @@ ${table}_entry_decode(uint32_t tableid,
                                     packed_actiondata_after_key,
                                     actiondata_len_after_key,
                                     actiondata);
-
     return (P4PD_SUCCESS);
 }
 //::        #endif
@@ -2928,11 +2905,6 @@ ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
                                  uint8_t    *hw_key, 
                                  uint8_t    *hw_key_y)
 {
-
-    /*
-     * 1. Table match key bits are compared with key bits in Key-Maker
-     * 2. The ordering of key bits should match ordering of key bits in Key maker.
-     */
 
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -3806,7 +3778,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                     case ${caps_tablename}_${actname}_ID:
                     {
-                        b = snprintf(buf, blen, "Action: %s\n", "${tbl}_${actname}_ID");
+                        b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
                         buf += b;
                         blen -= b;
                         if (blen <= 0) {
@@ -3904,11 +3876,8 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 
     memset(buffer, 0, buf_len);
 
-    if (!sw_key) {
-        b = snprintf(buf, blen, "*** Print Table Actiondata before Encoding ***\n");
-    } else {
-        b = snprintf(buf, blen, "*** Print Table Key before Encoding ***\n");
-    }
+    b = snprintf(buf, blen, "Table Entry Fields\n");
+
     buf += b;
     blen -= b;
     if (blen <= 0) {
@@ -3999,7 +3968,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             if (!swkey) {
                 break;
             }
-            b = snprintf(buf, blen, "Print Key:\n");
+            b = snprintf(buf, blen, "Key:\n");
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4189,7 +4158,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             ${table}_swkey_t *swkey = (${table}_swkey_t *)sw_key;
             ${table}_swkey_mask_t *swkey_mask = (${table}_swkey_mask_t *)sw_key_mask;
             if (swkey && swkey_mask) {
-                b = snprintf(buf, blen, "Print Key\n");
+                b = snprintf(buf, blen, "Key:\n");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4405,7 +4374,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${tbl}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {

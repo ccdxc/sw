@@ -110,6 +110,7 @@ typedef struct p4pd_table_properties_ {
     uint32_t                tabledepth; /* Number of entries */
     uint8_t                 stage; /* Stage # in pipeline */
     uint8_t                 oflow_table_id; /* if has_otcam is True */
+    uint8_t                 oflow_parent_table_id; /* if otcam pointing to parent */
     p4pd_table_mem_layout_t sram_layout;
     p4pd_table_mem_layout_t tcam_layout; /* Will be not used in case of hash / index table. */
     p4pd_table_mem_layout_t hbm_layout; /* Only if HBM table.. */

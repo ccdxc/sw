@@ -6,7 +6,7 @@
 
 /*
  * egress.h
- * Mahesh Shirshyad (Pensando Systems)
+ * Pensando Systems
  */
 
 /* This file contains assembly level data structures for all Egress processing
