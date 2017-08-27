@@ -163,7 +163,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
     om_tmoport.egress_port1 = tm_oport;
     om_tmoport.p4plus_app_id = p4plus_app_id;
     om_tmoport.dst_lif = pd_lif->hw_lif_id;
-    // om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
+    om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
