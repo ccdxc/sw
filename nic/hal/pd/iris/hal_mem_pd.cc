@@ -225,6 +225,8 @@ hal_state_pd::init(void)
     met_table_ = NULL;
     acl_table_ = NULL;
 
+    p4plus_rxdma_dm_tables_ = NULL;
+
     return true;
 }
 
@@ -392,6 +394,16 @@ hal_state_pd::~hal_state_pd()
 
     if (acl_table_) {
         delete acl_table_;
+    }
+
+    if (p4plus_rxdma_dm_tables_) {
+        for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+             tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+            if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
+                delete p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+            }
+        }
+        HAL_FREE(HAL_MEM_ALLOC_PD, p4plus_rxdma_dm_tables_);
     }
 }
 
@@ -606,6 +618,103 @@ hal_state_pd::init_tables(void)
     return ret;
 }
 
+hal_ret_t
+hal_state_pd::p4plus_rxdma_init_tables(void)
+{
+    uint32_t                   tid;
+    hal_ret_t                  ret = HAL_RET_OK;
+    p4pd_table_properties_t    tinfo, ctinfo;
+    p4pd_error_t               rc;
+
+    memset(&tinfo, 0, sizeof(tinfo));
+    memset(&ctinfo, 0, sizeof(ctinfo));
+
+    // parse the NCC generated table info file for p4+ tables
+    rc = p4pluspd_rxdma_init();
+    HAL_ASSERT(rc == P4PD_SUCCESS);
+
+    // start instantiating tables based on the parsed information
+    p4plus_rxdma_dm_tables_ =
+        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
+                                 sizeof(DirectMap *) *
+                                 (P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX -
+                                  P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
+    HAL_ASSERT(p4plus_rxdma_dm_tables_ != NULL);
+
+    // TODO:
+    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
+    // 2. When tables are instantiated proper names are not passed today,
+    // waiting for an API from Mahesh that gives table name given table id
+
+    for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
+        rc = p4pluspd_rxdma_table_properties_get(tid, &tinfo);
+        HAL_ASSERT(rc == P4PD_SUCCESS);
+        
+        switch (tinfo.table_type) {
+#if 0   // TODO: only program Index table for now
+        case P4_TBL_TYPE_HASHTCAM:
+            if (tinfo.has_oflow_table) {
+                p4pluspd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
+            }
+            hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] =
+                new Hash(tinfo.tablename, tid,
+                         tinfo.oflow_table_id,
+                         tinfo.tabledepth,
+                         tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
+                         tinfo.key_struct_size,
+                         tinfo.actiondata_struct_size,
+                         static_cast<Hash::HashPoly>(tinfo.hash_type));
+            HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
+            break;
+
+        case P4_TBL_TYPE_TCAM:
+            if (tid == P4TBL_ID_NACL) {
+                acl_table_ = acl_tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                               tinfo.key_struct_size, 
+                                               tinfo.actiondata_struct_size, true);
+                HAL_ASSERT(acl_table_ != NULL);
+            } else {
+                if (!tinfo.is_oflow_table) {
+                    tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
+                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
+                                 tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
+                    HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
+                }
+            }
+
+            break;
+
+        case P4_TBL_TYPE_HASH:
+            HAL_ASSERT(tid == P4TBL_ID_FLOW_HASH);
+            if (tinfo.has_oflow_table) {
+                p4pluspd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
+            }
+            flow_table_ =
+                new Flow(tinfo.tablename, tid, ctinfo.oflow_table_id,
+                         tinfo.tabledepth, ctinfo.tabledepth,
+                         tinfo.key_struct_size,
+                         sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
+                         static_cast<Flow::HashPoly>(tinfo.hash_type));
+            HAL_ASSERT(flow_table_ != NULL);
+            break;
+#endif
+
+        case P4_TBL_TYPE_INDEX:
+            p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth);
+            HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            break;
+
+        case P4_TBL_TYPE_MPU:
+        default:
+            break;
+        }
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
@@ -619,6 +728,12 @@ hal_pd_mem_init (void)
 
     HAL_TRACE_DEBUG("Initializing asic lib tables ...");
     ret = g_hal_state_pd->init_tables();
+    if (ret != HAL_RET_OK) {
+        delete g_hal_state_pd;
+    }
+
+    HAL_TRACE_DEBUG("Initializing p4plus asic lib tables ...");
+    ret = g_hal_state_pd->p4plus_rxdma_init_tables();
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;
     }

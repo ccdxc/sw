@@ -104,6 +104,10 @@
         {
             "name": "p4plus_program",
             "size_kb": 131072
+        },
+        {
+            "name": "rdma",
+            "size_kb": 131072
         }
     ]
 }

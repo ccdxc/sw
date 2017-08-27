@@ -5,10 +5,12 @@
 //::    p4prog = pddict['p4program'] + '_'
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
+//::	start_table_base = 101
 //:: else:
 //::    p4prog = ''
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
+//::	start_table_base = 1
 //:: #endif
 //:: #define here any constants needed.
 //:: ACTION_PC_LEN = 8 # in bits
@@ -437,7 +439,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
 
 
 //::     tabledict = OrderedDict() # key=table-name
-//::     tableid = 1
+//::     tableid = start_table_base
 //::     for table in pddict['tables']:
 //::        tabledict[table] = tableid
 //::        tableid += 1

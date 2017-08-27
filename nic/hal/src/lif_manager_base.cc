@@ -116,6 +116,17 @@ int64_t LIFManagerBase::GetLIFQStateAddr(
     (qid * qstate->type[type].qsize));
 }
 
+int32_t LIFManagerBase::GetLIFQStateBaseAddr(
+    uint32_t lif_id, uint32_t type) {
+  if ((lif_id >= kNumMaxLIFs) || (type >= kNumQTypes))
+    return -EINVAL;
+  std::lock_guard<std::mutex> lk(lk_);
+  LIFQState *qstate = GetLIFQState(lif_id);
+  if (qstate == nullptr)
+    return -ENOENT;
+  return qstate->hbm_address + qstate->type[type].hbm_offset;
+}
+
 int32_t LIFManagerBase::ReadQState(
     uint32_t lif_id, uint32_t type, uint32_t qid, uint8_t *buf,
     uint32_t bufsize) {

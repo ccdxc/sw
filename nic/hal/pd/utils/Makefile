@@ -22,6 +22,8 @@ SLOBJECTS = \
 		  $(OBJDIR)/capri_tbl_rw.o \
 		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \
+		  $(OBJDIR)/p4pluspd_rxdma_api.o \
+		  $(OBJDIR)/p4pd_global_api.o \
 		  $(NULL)
 
 LPOSTALL = $(OBJDIR)/libpdutils_stub.so
@@ -44,6 +46,8 @@ SLOBJECTS_STUB = \
 		  $(OBJDIR)/capri_tbl_rw.o \
 		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \
+		  $(OBJDIR)/p4pluspd_rxdma_api.o \
+		  $(OBJDIR)/p4pd_global_api.o \
 		  $(NULL)
 
 # LDEPENDS = $(SLOBJECTS_STUB:.o=.d)

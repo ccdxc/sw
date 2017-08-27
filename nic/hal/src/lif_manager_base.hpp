@@ -59,6 +59,9 @@ class LIFManagerBase {
   //   -errno - In case of failure.
   int32_t InitLIFQState(uint32_t lif_id, LIFQStateParams *params);
 
+  //
+  int32_t GetLIFQStateBaseAddr(uint32_t, uint32_t);
+
   // Get the qstate address for a LIF, type and qid.
   // Returns:
   //   Positive address in case of success.

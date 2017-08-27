@@ -125,3 +125,14 @@ get_hbm_region(char *reg_name)
     return NULL;
 }
 
+int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size) {
+  if (!read_mem(addr, buf, size))
+     return -EIO;
+  return 0;
+}
+
+int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size) {
+  if (!write_mem(addr, buf, size))
+     return -EIO;
+  return 0;
+}

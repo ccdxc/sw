@@ -5,9 +5,11 @@
 //:: if pddict['p4plus']:
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
+//::	start_table_base = 101
 //:: else:
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
+//::	start_table_base = 1
 //:: #endif
 /*
  * p4pd.h
@@ -64,7 +66,7 @@
 #include <hal_pd_error.hpp>
 
 //::     tabledict = {}
-//::     tableid = 1
+//::     tableid = start_table_base
 //::     hash_min = tableid
 //::     for table in pddict['tables']:
 //::        if pddict['tables'][table]['type'] == 'Hash':
@@ -408,7 +410,7 @@ typedef enum ${prefix}_table_ids_ {
     P4${caps_p4prog}TBL_ID_INDEX_MAX = ${index_max},
     P4${caps_p4prog}TBL_ID_MPU_MIN = ${mpu_min},
     P4${caps_p4prog}TBL_ID_MPU_MAX = ${mpu_max},
-    P4${caps_p4prog}TBL_ID_TBLMIN = 1,
+    P4${caps_p4prog}TBL_ID_TBLMIN = ${start_table_base},
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
     P4${caps_p4prog}TBL_ID_${caps_tblname} = ${tabledict[tblname]},

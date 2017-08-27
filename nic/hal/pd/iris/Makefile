@@ -1,7 +1,7 @@
 
 TOPDIR = ../../..
 SHAREDLIBRARY = libiris.so
-SYSTEM_LIBRARIES = -lp4pdapi -lp4pd -lcapri -lp4pdtcprx -lp4pdtcptx
+SYSTEM_LIBRARIES = -lp4pdapi -lp4pd -lcapri -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma
 
 LCXXFLAGS = \
 			-fpic \
@@ -18,6 +18,7 @@ LCXXFLAGS = \
 			-I../../../gen/iris/include \
 			-I../../../gen/tcp_proxy_rxdma/include \
 			-I../../../gen/tcp_proxy_txdma/include \
+                        -I../../../gen/common_rxdma_actions/include \
 			-I../../../gen/tls_txdma/include \
 			-I../../../p4/nw/include \
 			-I../capri \
@@ -35,6 +36,7 @@ SOURCES = \
 		  tenant_pd.cc \
 		  nwsec_pd.cc \
 		  l2seg_pd.cc \
+		  rdma_pd.cc \
 		  session_pd.cc \
 		  lif_pd.cc \
 		  uplinkif_pd.cc \

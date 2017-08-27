@@ -395,7 +395,7 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
 {
     p4pd_table_properties_t       tbl_ctx, *tblctx = &tbl_ctx;
 
-    p4pd_table_properties_get(tableid, &tbl_ctx);
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
 
     *sram_row = tblctx->sram_layout.top_left_y +
                          (index/tblctx->sram_layout.num_buckets);
@@ -450,7 +450,7 @@ int capri_table_entry_write(uint32_t tableid,
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
     p4pd_table_properties_t tbl_ctx;
-    p4pd_table_properties_get(tableid, &tbl_ctx);
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_sram_entry_details_get(tableid, index,
                                  &sram_row, &entry_start_block,
@@ -547,7 +547,7 @@ int capri_table_entry_read(uint32_t tableid,
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
     p4pd_table_properties_t tbl_ctx;
-    p4pd_table_properties_get(tableid, &tbl_ctx);
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_sram_entry_details_get(tableid, index,
                                  &sram_row, &entry_start_block,

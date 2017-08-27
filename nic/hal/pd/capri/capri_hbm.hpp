@@ -26,6 +26,8 @@ typedef struct capri_hbm_region_s {
 hal_ret_t capri_hbm_parse();
 uint32_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
+int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
+int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 
 #define JKEY_REGIONS        "regions"
 #define JKEY_REGION_NAME    "name"

@@ -1,15 +1,25 @@
 
 TOPDIR = ../..
 SHAREDLIBRARY = libhalpi.so
+SYSTEM_LIBRARIES = -lhostmem
+SHARED_OBJS :=  $(OBJ_DIR)/utils.o \
+
 
 LCXXFLAGS = \
 			-I. \
 			-I.. \
 			-I../svc \
+			-I../../utils/host_mem \
 			-I../../gen/protobuf \
 			-I../../gen/iris/include \
+                        -I../../gen/common_rxdma_actions/include \
 			-I../../include \
-			-I../../third-party/spdlog/include
+			-I../pd/iris \
+			-I../pd/capri \
+			-I../../asic/capri/model/capsim-master/lib/libcapisa/include \
+			-I../../asic/capri/model/capsim-master/lib/libmpuobj/include \
+			-I../../third-party/spdlog/include \
+
 
 SOURCES = \
 		  acl.cc \

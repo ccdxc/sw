@@ -27,7 +27,7 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
     hwkeymask_len = 0;
 
     // Returns in bits
-    p4pd_hwentry_query(table_id_, &hwkey_len, &hwkeymask_len, &hwdata_len_);
+    p4pd_global_hwentry_query(table_id_, &hwkey_len, &hwkeymask_len, &hwdata_len_);
 
     // Rounding off to upper byte
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
@@ -72,7 +72,7 @@ DirectMap::insert(void *data, uint32_t *index)
 
 
     // P4-API: Write API
-    pd_err = p4pd_entry_write(table_id_, *index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_write(table_id_, *index, NULL, NULL, data); 
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;
         HAL_ASSERT(0);
@@ -101,7 +101,7 @@ DirectMap::insert_withid(void *data, uint32_t index)
     entry_trace_(data, index);
 
     // P4-API: Write API
-    pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, data); 
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;
         HAL_ASSERT(0);
@@ -134,7 +134,7 @@ DirectMap::update(uint32_t index, void *data)
     entry_trace_(data, index);
 
     // P4-API: Write API
-    pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, data); 
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;
         HAL_ASSERT(0);
@@ -172,7 +172,7 @@ DirectMap::remove(uint32_t index)
     entry_trace_(tmp_data, index);
 
     // P4-API: Write API
-    pd_err = p4pd_entry_write(table_id_, index, NULL, NULL, tmp_data); 
+    pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, tmp_data); 
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;
         HAL_ASSERT(0);
@@ -210,7 +210,7 @@ DirectMap::retrieve(uint32_t index, void *data)
     }
 
     // P4-API: Read API
-    pd_err = p4pd_entry_read(table_id_, index, NULL, NULL, data); 
+    pd_err = p4pd_global_entry_read(table_id_, index, NULL, NULL, data); 
     // HAL_ASSERT_RETURN((pd_err == P4PD_SUCCESS), HAL_RET_HW_FAIL);
     if (pd_err != P4PD_SUCCESS) {
         rs = HAL_RET_HW_FAIL;
@@ -237,7 +237,7 @@ DirectMap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
     for (uint32_t i = 0; i < num_entries_; i++) {
         if (dm_indexer_->is_alloced(i)) {
             // P4-API: Read API
-            pd_err = p4pd_entry_read(table_id_, i, NULL, NULL, tmp_data); 
+            pd_err = p4pd_global_entry_read(table_id_, i, NULL, NULL, tmp_data); 
             HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
             iterate_func(i, tmp_data, cb_data);
         }
@@ -397,7 +397,7 @@ DirectMap::entry_trace_(void *data, uint32_t index)
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
-    p4_err = p4pd_table_ds_decoded_string_get(table_id_,
+    p4_err = p4pd_global_table_ds_decoded_string_get(table_id_,
             NULL, NULL, data, buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
 

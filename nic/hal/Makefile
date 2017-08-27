@@ -31,6 +31,7 @@ LDFLAGS +=	-lhal \
 			-lp4pd \
 			-lp4pdtcprx \
 			-lp4pdtcptx \
+			-lp4pluspd_rxdma \
 			-lcapricsr \
 			-lcapri \
 			-lslab \
@@ -43,7 +44,8 @@ LDFLAGS +=	-lhal \
 			-lthread \
 			-lzmq \
 			-lsvc \
-			-lpdcommon
+			-lpdcommon \
+			-lhostmem
 
 SRC_FILES :=	hal.cc \
 				hal_mem.cc \
