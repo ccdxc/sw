@@ -24,6 +24,7 @@
 #include <tcpcb_pd.hpp>
 #include <wring_pd.hpp>
 #include <proxy.hpp>
+#include <crypto_keys_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -224,6 +225,9 @@ hal_state_pd::init(void)
                                  hal::pd::wring_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((wring_hwid_ht_ != NULL), false);
 
+    // Indexer based allocator to manage the crypto session keys
+    session_keys_idxr_ = new hal::utils::indexer(CRYPTO_KEY_COUNT_MAX);
+    HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -781,6 +785,13 @@ hal_pd_pgm_def_p4plus_entries (void)
     ret = wring_pd_init_global_rings();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program default rings, err: {}", ret);
+        return ret;
+    }
+
+    ret = crypto_pd_init();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to intialize Capri Barco err: {}", ret);
+        return ret;
     }
     return ret;
 }

@@ -163,3 +163,15 @@ enum ProxyType {
   PROXY_TYPE_TLS           = 2;    
 }
 
+
+// Types of Cryptographic keys
+enum CryptoKeyType {
+    CRYPTO_KEY_TYPE_AES128      = 0;
+    CRYPTO_KEY_TYPE_AES192      = 1;
+    CRYPTO_KEY_TYPE_AES256      = 2;
+    CRYPTO_KEY_TYPE_DES         = 3;
+    CRYPTO_KEY_TYPE_CHACHA20    = 4;
+    CRYPTO_KEY_TYPE_POLY1305    = 5;
+    CRYPTO_KEY_TYPE_HMAC        = 6;
+}
+

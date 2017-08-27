@@ -140,6 +140,9 @@ public:
     slab *wring_slab(void) const { return wring_slab_; }
     ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
 
+    // get APIs for Crypto state
+    indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
+
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
@@ -302,6 +305,11 @@ private:
     struct {
         slab       *wring_slab_;
         ht         *wring_hwid_ht_;
+    } __PACK__;
+
+    // Crypto related state
+    struct {
+        indexer    *session_keys_idxr_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

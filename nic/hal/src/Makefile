@@ -49,6 +49,7 @@ SOURCES = \
 		  proxy.cc \
 		  descriptor_aol.cc \
 		  telemetry.cc \
+		  crypto_keys.cc \
 		  $(NULL)
 
 

@@ -22,6 +22,7 @@ LCXXFLAGS = \
 			-I../../../p4/nw/include \
 			-I../../../hal/pd \
 			-I../../../hal/src \
+			-I../../../gen/protobuf \
 			$(CAPINC) \
 			-g \
 			-Wno-maybe-uninitialized \
@@ -39,6 +40,7 @@ SOURCES = \
 		  capri_hbm.cc \
 		  capri_tm_rw.cc \
 		  capri_qstate.cc \
+		  capri_barco_crypto.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

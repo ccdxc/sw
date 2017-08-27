@@ -76,7 +76,6 @@
             "name": "brq",
             "size_kb": 128
         },
-
         {
             "name": "descriptor-tx",
             "size_kb": 2048
@@ -108,6 +107,14 @@
         {
             "name": "rdma",
             "size_kb": 131072
+        },
+        {
+            "name": "key-desc-array",
+            "size_kb": 1024
+        },
+        {
+            "name": "key-mem",
+            "size_kb": 2048
         }
     ]
 }

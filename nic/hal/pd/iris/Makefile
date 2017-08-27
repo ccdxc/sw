@@ -58,6 +58,7 @@ SOURCES = \
 		  wring_pd.cc \
 		  descriptor_aol_pd.cc \
 		  telemetry_pd.cc \
+		  crypto_keys_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc
