@@ -2,3 +2,4 @@
 cmd.proto cmd
 example.proto bookstore
 network.proto network
+networkencryption.proto networkencryption

@@ -11,6 +11,8 @@ import (
 	cmdClient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	network "github.com/pensando/sw/api/generated/network"
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
+	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
+	networkencryptionClient "github.com/pensando/sw/api/generated/networkencryption/grpc/client"
 	"github.com/pensando/sw/utils/log"
 )
 
@@ -25,6 +27,7 @@ type Services interface {
 	ServiceV1() network.ServiceV1Interface
 	SgpolicyV1() network.SgpolicyV1Interface
 	TenantV1() network.TenantV1Interface
+	TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface
 }
 
 type apiGrpcServerClient struct {
@@ -32,15 +35,16 @@ type apiGrpcServerClient struct {
 	logger log.Logger
 	conn   *grpc.ClientConn
 
-	aBookstoreV1     bookstore.BookstoreV1Interface
-	aCmdV1           cmd.CmdV1Interface
-	aEndpointV1      network.EndpointV1Interface
-	aLbPolicyV1      network.LbPolicyV1Interface
-	aNetworkV1       network.NetworkV1Interface
-	aSecurityGroupV1 network.SecurityGroupV1Interface
-	aServiceV1       network.ServiceV1Interface
-	aSgpolicyV1      network.SgpolicyV1Interface
-	aTenantV1        network.TenantV1Interface
+	aBookstoreV1               bookstore.BookstoreV1Interface
+	aCmdV1                     cmd.CmdV1Interface
+	aEndpointV1                network.EndpointV1Interface
+	aLbPolicyV1                network.LbPolicyV1Interface
+	aNetworkV1                 network.NetworkV1Interface
+	aSecurityGroupV1           network.SecurityGroupV1Interface
+	aServiceV1                 network.ServiceV1Interface
+	aSgpolicyV1                network.SgpolicyV1Interface
+	aTenantV1                  network.TenantV1Interface
+	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
 }
 
 func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
@@ -79,6 +83,10 @@ func (a *apiGrpcServerClient) TenantV1() network.TenantV1Interface {
 	return a.aTenantV1
 }
 
+func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface {
+	return a.aTrafficEncryptionPolicyV1
+}
+
 // NewGrpcAPIClient returns a gRPC client
 func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (Services, error) {
 	conn, err := grpc.Dial(url, opts...)
@@ -91,30 +99,32 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (S
 		conn:   conn,
 		logger: logger,
 
-		aBookstoreV1:     bookstoreClient.NewGrpcCrudClientBookstoreV1(conn, logger),
-		aCmdV1:           cmdClient.NewGrpcCrudClientCmdV1(conn, logger),
-		aEndpointV1:      networkClient.NewGrpcCrudClientEndpointV1(conn, logger),
-		aLbPolicyV1:      networkClient.NewGrpcCrudClientLbPolicyV1(conn, logger),
-		aNetworkV1:       networkClient.NewGrpcCrudClientNetworkV1(conn, logger),
-		aSecurityGroupV1: networkClient.NewGrpcCrudClientSecurityGroupV1(conn, logger),
-		aServiceV1:       networkClient.NewGrpcCrudClientServiceV1(conn, logger),
-		aSgpolicyV1:      networkClient.NewGrpcCrudClientSgpolicyV1(conn, logger),
-		aTenantV1:        networkClient.NewGrpcCrudClientTenantV1(conn, logger),
+		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(conn, logger),
+		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(conn, logger),
+		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(conn, logger),
+		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(conn, logger),
+		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(conn, logger),
+		aSecurityGroupV1:           networkClient.NewGrpcCrudClientSecurityGroupV1(conn, logger),
+		aServiceV1:                 networkClient.NewGrpcCrudClientServiceV1(conn, logger),
+		aSgpolicyV1:                networkClient.NewGrpcCrudClientSgpolicyV1(conn, logger),
+		aTenantV1:                  networkClient.NewGrpcCrudClientTenantV1(conn, logger),
+		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(conn, logger),
 	}, nil
 }
 
 type apiRestServerClient struct {
 	url string
 
-	aBookstoreV1     bookstore.BookstoreV1Interface
-	aCmdV1           cmd.CmdV1Interface
-	aEndpointV1      network.EndpointV1Interface
-	aLbPolicyV1      network.LbPolicyV1Interface
-	aNetworkV1       network.NetworkV1Interface
-	aSecurityGroupV1 network.SecurityGroupV1Interface
-	aServiceV1       network.ServiceV1Interface
-	aSgpolicyV1      network.SgpolicyV1Interface
-	aTenantV1        network.TenantV1Interface
+	aBookstoreV1               bookstore.BookstoreV1Interface
+	aCmdV1                     cmd.CmdV1Interface
+	aEndpointV1                network.EndpointV1Interface
+	aLbPolicyV1                network.LbPolicyV1Interface
+	aNetworkV1                 network.NetworkV1Interface
+	aSecurityGroupV1           network.SecurityGroupV1Interface
+	aServiceV1                 network.ServiceV1Interface
+	aSgpolicyV1                network.SgpolicyV1Interface
+	aTenantV1                  network.TenantV1Interface
+	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
 }
 
 func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
@@ -153,19 +163,24 @@ func (a *apiRestServerClient) TenantV1() network.TenantV1Interface {
 	return a.aTenantV1
 }
 
+func (a *apiRestServerClient) TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface {
+	return a.aTrafficEncryptionPolicyV1
+}
+
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
 	return &apiRestServerClient{
 		url: url,
 
-		aBookstoreV1:     bookstoreClient.NewRestCrudClientBookstoreV1(url),
-		aCmdV1:           cmdClient.NewRestCrudClientCmdV1(url),
-		aEndpointV1:      networkClient.NewRestCrudClientEndpointV1(url),
-		aLbPolicyV1:      networkClient.NewRestCrudClientLbPolicyV1(url),
-		aNetworkV1:       networkClient.NewRestCrudClientNetworkV1(url),
-		aSecurityGroupV1: networkClient.NewRestCrudClientSecurityGroupV1(url),
-		aServiceV1:       networkClient.NewRestCrudClientServiceV1(url),
-		aSgpolicyV1:      networkClient.NewRestCrudClientSgpolicyV1(url),
-		aTenantV1:        networkClient.NewRestCrudClientTenantV1(url),
+		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
+		aCmdV1:                     cmdClient.NewRestCrudClientCmdV1(url),
+		aEndpointV1:                networkClient.NewRestCrudClientEndpointV1(url),
+		aLbPolicyV1:                networkClient.NewRestCrudClientLbPolicyV1(url),
+		aNetworkV1:                 networkClient.NewRestCrudClientNetworkV1(url),
+		aSecurityGroupV1:           networkClient.NewRestCrudClientSecurityGroupV1(url),
+		aServiceV1:                 networkClient.NewRestCrudClientServiceV1(url),
+		aSgpolicyV1:                networkClient.NewRestCrudClientSgpolicyV1(url),
+		aTenantV1:                  networkClient.NewRestCrudClientTenantV1(url),
+		aTrafficEncryptionPolicyV1: networkencryptionClient.NewRestCrudClientTrafficEncryptionPolicyV1(url),
 	}, nil
 }

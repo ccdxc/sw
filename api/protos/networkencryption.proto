@@ -1,0 +1,98 @@
+syntax = "proto3";
+// Service name
+package networkencryption;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// This should usually be a ServiceDiscovery key. A IP address for now
+option(venice.fileGrpcDest) = "localhost:8082";
+
+// ----------------------------- Encryption Policy -----------------------------
+// A policy that specifies how data in-motion is encrypted.
+// TLS is used for encryption between workloads, IPsec encryption is used between nodes.
+
+message TLSProtocolSpec {
+  // TLS version: only supported value at present is 1.2
+  string Version = 1 [(gogoproto.jsontag) = "version,omitempty"];
+
+  // The name of the cipher suite in IANA format
+  // default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  string CipherSuite = 2 [(gogoproto.jsontag) = "cipherSuite,omitempty"];
+
+  // Not supported:
+  // - compression (not secure)
+  // - session resumption
+}
+
+message IPsecProtocolSpec {
+  // ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106)
+  string EncryptionTransform = 1 [(gogoproto.jsontag) = "encryptionTransform,omitempty"];
+
+  // ESP integrity algorithm.
+  // Default is "NULL" (must be "NULL" if AES-GCM is used for encryption)
+  string IntegrityTransform = 2 [(gogoproto.jsontag) = "integrityTransform,omitempty"];
+
+  // Not supported:
+  // - IKE
+  // - AH transforms
+
+  // Default is tunnel mode
+}
+
+message TrafficEncryptionPolicySpec {
+  // Possible values: TLS, IPsec
+  string Mode = 1 [(gogoproto.jsontag) = "mode,omitempty"];
+
+  // Only one of TLSParameters or IPsecParameters can be present and it must match the mode
+
+  // TLS Parameters for workload-to-workload connections
+  TLSProtocolSpec Tls = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tls,omitempty"];
+
+  // IPsec Parameters for node-to-node connections
+  IPsecProtocolSpec IPsec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec,omitempty"];
+
+  // How often the keys should be rotated, in seconds
+  uint32  KeyRotationIntervalSecs = 4 [(gogoproto.jsontag) = "keyRotationIntervalSecs,omitempty"];
+}
+
+message TrafficEncryptionPolicyStatus {
+    // empty
+}
+
+message TrafficEncryptionPolicy {
+     option (venice.objectPrefix) = "trafficEncryptionPolicy";
+     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+     // Spec contains the configuration of the encryption policy.
+     TrafficEncryptionPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+     // Status contains the current state of the encryption policy.
+     TrafficEncryptionPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// TrafficEncryptionPolicy REST API
+service TrafficEncryptionPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "trafficEncryptionPolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "TrafficEncryptionPolicy";
+
+    option (venice.apiRestService) = {
+        Object: "TrafficEncryptionPolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/trafficEncryptionPolicy"
+    };
+    option (venice.apiRestService) = {
+        Object: "TrafficEncryptionPolicy"
+        Method: [ "post" ]
+        Pattern: "/{O.Tenant}"
+    };
+}
+
