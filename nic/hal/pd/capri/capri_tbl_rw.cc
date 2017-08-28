@@ -155,7 +155,6 @@ typedef enum capri_tbl_rw_logging_levels_ {
     CAP_TBL_RW_LOG_LEVEL_ERROR,
 } capri_tbl_rw_logging_levels;
 
-static FILE *log_file_fd;
 
 #define HAL_LOG_TBL_UPDATES
 
@@ -191,6 +190,44 @@ capri_program_table_mpu_pc(void)
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
             te_csr.cfg_table_property[tbl_ctx.stage_tableid]
                     .mpu_pc(((capri_table_asm_base[i]) >> 6));
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
+        }
+    }
+#endif
+}
+
+static void
+capri_program_hbm_table_base_addr(void)
+{
+#ifndef P4PD_CLI
+    p4pd_table_properties_t       tbl_ctx;
+    /* Program table base address into capri TE */
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
+            continue;
+        }
+        // For each HBM table, program HBM table start address
+        assert(tbl_ctx.stage_tableid < 16);
+        HAL_TRACE_DEBUG("===HBM Tbl id,Name: {}, {}, Stage {}, "
+                        "StageID {} HBM Tbl startadd: {:#x}===",
+                        i, tbl_ctx.tablename, tbl_ctx.stage,
+                        tbl_ctx.stage_tableid,
+                        get_start_offset(tbl_ctx.tablename));
+        if (tbl_ctx.gress == P4_GRESS_INGRESS) {
+            cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
+            // Push to HW/Capri from entry_start_block to block
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
+                    .addr_base(get_start_offset(tbl_ctx.tablename));
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
+        } else {
+            cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
+            // Push to HW/Capri from entry_start_block to block
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
+            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
+                    .addr_base(get_start_offset(tbl_ctx.tablename));
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
         }
     }
@@ -321,7 +358,6 @@ int capri_table_rw_init()
         return CAPRI_FAIL;
     }
 
-    log_file_fd = fopen("./capri_tbl_rw.log", "w+");
 
 #ifndef P4PD_CLI
     // register hal cpu interface
@@ -347,6 +383,9 @@ int capri_table_rw_init()
         }
     }
 
+    /* Program p4 HBM table start addr in table property config. */
+    capri_program_hbm_table_base_addr();
+
     /* Program p4plus table config properties. */
     capri_table_p4plus_init();
 
@@ -370,7 +409,6 @@ void capri_table_rw_cleanup()
     g_shadow_sram = NULL;
     g_shadow_tcam = NULL;
 
-    fclose(log_file_fd);
 }
 
 
@@ -891,12 +929,12 @@ int capri_hbm_table_entry_write(uint32_t tableid,
     assert((entry_size >> 3) <= tbl_ctx.hbm_layout.entry_width);
     assert(index < tbl_ctx.tabledepth);
 
-    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index
-                                + (index * tbl_ctx.hbm_layout.entry_width);
+    uint64_t entry_start_addr = (index * tbl_ctx.hbm_layout.entry_width);
 
 
 #ifndef P4PD_CLI
-    write_mem(hbm_mem_base_addr + entry_start_addr, hwentry, (entry_size >> 3));
+    write_mem(get_start_offset(tbl_ctx.tablename) + entry_start_addr, 
+              hwentry, (entry_size >> 3));
 #endif
 #ifdef HAL_LOG_TBL_UPDATES
     char    buffer[2048];
@@ -937,10 +975,10 @@ int capri_hbm_table_entry_read(uint32_t tableid,
 
     assert(index < tbl_ctx.tabledepth);
 
-    uint64_t entry_start_addr = tbl_ctx.hbm_layout.start_index
-                                + (index * tbl_ctx.hbm_layout.entry_width);
+    uint64_t entry_start_addr = (index * tbl_ctx.hbm_layout.entry_width);
+                                
 #ifndef P4PD_CLI
-    read_mem(hbm_mem_base_addr + entry_start_addr, hwentry,
+    read_mem(get_start_offset(tbl_ctx.tablename) + entry_start_addr, hwentry,
              tbl_ctx.hbm_layout.entry_width);
 #endif
     *entry_size = tbl_ctx.hbm_layout.entry_width;

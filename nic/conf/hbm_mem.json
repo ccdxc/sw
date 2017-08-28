@@ -13,7 +13,7 @@
             "size_kb": 131072
         },
         {
-            "name": "flow_hash_oflow",
+            "name": "flow_hash_overflow",
             "size_kb": 1024
         },
         {
@@ -21,7 +21,7 @@
             "size_kb": 65536
         },
         {
-            "name": "flow_state",
+            "name": "session_state",
             "size_kb": 65536
         },
         {
