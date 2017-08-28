@@ -7,12 +7,14 @@ struct rx_table_s3_t0_rx_table_s3_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
-        .param ipsec_cb_tail_enqueue_input_desc
+        .param esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
         .align
 
 esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwri p.p42p4plus_hdr_table0_valid, 1
-    phvwr p.common_te0_phv_table_pc, ipsec_cb_tail_enqueue_input_desc 
+    addi r2, r0, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
+    srl r2, r2, 6
+    phvwr p.common_te0_phv_table_pc, r2 
     phvwri p.common_te0_phv_table_raw_table_size, 7
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwr p.common_te0_phv_table_addr, k.ipsec_to_stage3_tail_desc_addr 
