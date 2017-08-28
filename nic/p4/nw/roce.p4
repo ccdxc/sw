@@ -8,6 +8,7 @@ action decode_roce_opcode(raw_flags, len, qtype) {
         add_header(p4_to_p4plus_roce);
         modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
         modify_field(p4_to_p4plus_roce.rdma_hdr_len, len);
+        modify_field(p4_to_p4plus_roce.payload_len, (udp.len - 8 - len));
 
         add_header(capri_rxdma_intrinsic);
         add_header(capri_rxdma_p4_intrinsic);
@@ -20,12 +21,6 @@ action decode_roce_opcode(raw_flags, len, qtype) {
             add_header(p4_to_p4plus_roce_ip);
             add_header(p4_to_p4plus_roce_eth);
         }
-
-        remove_header(ethernet);
-        remove_header(vlan_tag);
-        remove_header(ipv4);
-        remove_header(ipv6);
-        remove_header(udp);
     }
 }
 

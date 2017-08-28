@@ -120,5 +120,8 @@ p4plus_app_ipsec:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_rdma:
-  nop.e
-  nop
+  phvwr       p.ethernet_valid, FALSE
+  phvwr       p.vlan_tag_valid, FALSE
+  phvwr       p.ipv4_valid, FALSE
+  phvwr.e     p.ipv6_valid, FALSE
+  phvwr       p.udp_valid, FALSE

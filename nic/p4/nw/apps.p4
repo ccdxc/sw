@@ -108,6 +108,11 @@ action p4plus_app_ipsec() {
 }
 
 action p4plus_app_rdma() {
+    remove_header(ethernet);
+    remove_header(vlan_tag);
+    remove_header(ipv4);
+    remove_header(ipv6);
+    remove_header(udp);
 }
 
 action p4plus_app_cpu() {

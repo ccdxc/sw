@@ -36,8 +36,6 @@ decode_roce_opcode:
   smeqb       c1, k.roce_bth_opCode, 0xE0, 0x60
   phvwr.c1    p.p4_to_p4plus_roce_ip_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_roce_eth_valid, TRUE
-  phvwr       p.ethernet_valid, 0
-  phvwr       p.vlan_tag_valid, 0
-  phvwr       p.ipv4_valid, 0
-  phvwr.e     p.ipv6_valid, 0
-  phvwr       p.udp_valid, 0
+  sub         r1, k.udp_len, 8
+  sub.e       r1, r1, d.u.decode_roce_opcode_d.len
+  phvwr       p.p4_to_p4plus_roce_payload_len, r1

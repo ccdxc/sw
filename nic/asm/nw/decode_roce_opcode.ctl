@@ -13,5 +13,7 @@ d = {
 
 k = {
   capri_intrinsic_tm_oport = TM_PORT_DMA;
+  control_metadata_rdma_enabled = TRUE;
   roce_bth_destQP = 0x5555;
+  udp_len = 0x434;
 };
