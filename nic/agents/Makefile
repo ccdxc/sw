@@ -31,5 +31,5 @@ all:
 	$(CXX) $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/net.pb.o $(OBJ_DIR)/net.grpc.pb.o $(OBJ_DIR)/nw_agent.o $(OBJ_DIR)/svc_reg.o $(OBJ_DIR)/nw_svc.o $(LDFLAGS) -lhal -lperiodic -liris -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lcapri -lcapricsr -lbitmap -lslab -lindexer -lht -ltwheel -ltrace -lbitmap -lthread -lprint -lpdutils -lhostmem -o $(OBJ_DIR)/nw_agent
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.o $(GEN_DIR)/*.cc $(GEN_DIR)/*.h $(OBJ_DIR)/vlan_test_grpc_client
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d $(GEN_DIR)/*.cc $(GEN_DIR)/*.h $(OBJ_DIR)/vlan_test_grpc_client
 	rm -f $(OBJ_DIR)/nw_agent

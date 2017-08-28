@@ -201,12 +201,11 @@ all clean gtest:
                 then continue; \
             fi; \
         fi; \
-		if test -d $$d; \
-            then $(MAKE) -C $$d $@; \
-        else : \
-            echo "Skipping"; \
+        if test -d $$d; then \
+            $(MAKE) -C $$d $@; \
+        else \
+            echo "No Dir. Skipping ..."; \
         fi; \
-		# if test ! -d $(subdir); then $(MAKE) -C $$d $@; else : @echo "Skipping $subdir"; fi \
 	done
 
 else
