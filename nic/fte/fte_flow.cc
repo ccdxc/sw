@@ -214,6 +214,8 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type, int nat
 hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &flow_cfg,
                                        const header_rewrite_info_t &rewrite)
 {
+    // TODO(bharat): Please take care of this after changes in flow design
+#if 0
        // flags
     flow_cfg.ttl_dec = rewrite.flags.dec_ttl;
 
@@ -296,7 +298,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &flow_cfg,
     }
 
     //TODO(goli)need to create rewrite table entry with appropraite action (l3 or nat_xxx)
-
+#endif
     return HAL_RET_OK;
 }
 
@@ -310,11 +312,14 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &flow_cfg) const
     // conn_track info
     flow_cfg.state = conn_track_.state;
 
+    // TODO(bharat): Please take care of this after changes in flow design
+#if 0
     // fwding info
     flow_cfg.lport = fwding_.lport;
     flow_cfg.qid_en = fwding_.qid_en;
     flow_cfg.qtype = fwding_.qtype;
     flow_cfg.qid = fwding_.qid;
+#endif
 
     // header manipulations
     for (int i = 0; i < num_header_updates_; i++) {

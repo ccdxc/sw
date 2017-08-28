@@ -415,5 +415,20 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
+const char *
+ep_l2_key_to_str(ep_t *ep)
+{
+    static thread_local char       ep_str[4][50];
+    static thread_local uint8_t    ep_str_next = 0;
+    char                           *buf;
+
+    buf = ep_str[ep_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (ep) {
+        snprintf(buf, 50, "%d::%s", ep->l2_key.l2_segid,
+                ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)));
+    }
+    return buf;
+}
 }    // namespace hal
 

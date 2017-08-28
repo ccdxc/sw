@@ -81,6 +81,13 @@ p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
         return ret;
     }
 
+    if (session_pd->iflow_aug_valid) {
+        ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow_aug.flow_stats_hw_id);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    }
+
     // program flow_stats table entry for rflow
     if (session_pd->rflow_valid) {
         ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow.flow_stats_hw_id);
@@ -90,6 +97,12 @@ p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
         }
     }
 
+    if (session_pd->rflow_aug_valid) {
+        ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow_aug.flow_stats_hw_id);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    }
     return ret;
 }
 
@@ -219,57 +232,60 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 // 1. flow_ttl is set to DEF_TTL (64) currently ... if we have packet in hand we
 //    should take it from there or else default is fine
 // 2. twice nat not supported
-//------------------------------------------------------------------------------
-hal_ret_t
+//-----------------------------------------------------------------------------
+#if 0
 p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
                                 l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                                 nwsec_profile_t *nwsec_profile,
                                 flow_cfg_t *flow, pd_flow_t *flow_pd,
                                 if_t *sif, if_t *dif, ep_t *sep, ep_t *dep,
                                 bool mcast)
+#endif
+hal_ret_t
+p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
     hal_ret_t                ret;
     DirectMap                *dm;
     flow_info_actiondata     d = { 0};
     timespec_t               ts;
+    flow_pgm_attrs_t         *flow_attrs = NULL;
+    flow_cfg_t               *flow_cfg = NULL;
     bool                     is_tcp_proxy_flow = false;
     pd_session_t             *sess_pd = NULL;
+#if 0
     HAL_ASSERT(dep != NULL);
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
+#endif
+
     sess_pd = session->pd;
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    HAL_ASSERT(dm != NULL);
+
+    // get the flow attributes
+    if (role == FLOW_ROLE_INITIATOR) {
+        flow_attrs = aug ? &session->iflow->assoc_flow->pgm_attrs :
+            &session->iflow->pgm_attrs;
+        flow_cfg = &session->iflow->config;
+    } else {
+        flow_attrs = aug ? &session->rflow->assoc_flow->pgm_attrs :
+            &session->rflow->pgm_attrs;
+        flow_cfg = &session->rflow->config;
+    }
 
     // populate the action information
     d.actionid = FLOW_INFO_FLOW_INFO_ID;
-    if (((flow->key.sport == 80) && (flow->key.dport == 47273)) ||
-         ((flow->key.sport == 47273) && (flow->key.dport == 80))) {
+    if (((flow_cfg->key.sport == 80) && (flow_cfg->key.dport == 47273)) ||
+         ((flow_cfg->key.sport == 47273) && (flow_cfg->key.dport == 80))) {
         is_tcp_proxy_flow = true;
-        HAL_TRACE_DEBUG("TCP Proxy FLow {}", flow->key);
+        HAL_TRACE_DEBUG("TCP Proxy flow_cfg {}", flow_cfg->key);
     }
 
-    if (!mcast) {
-        d.flow_info_action_u.flow_info_flow_info.dst_lport = flow->lport;
-#if 0
-        HAL_TRACE_DEBUG("xxx: actual lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
-        if (is_tcp_proxy_flow) {
-            // HACK DO NOT COMMIT
-            d.flow_info_action_u.flow_info_flow_info.lif = 1001;
-            HAL_TRACE_DEBUG("xxx: programmed lif = {}", d.flow_info_action_u.flow_info_flow_info.lif);
-        }
-#endif
-    } else {
-    }
+    d.flow_info_action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
+    d.flow_info_action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
 
-#if 0
-    if (is_tcp_proxy_flow) {
-        // HACK DO NOT COMMIT
-        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
-        d.flow_info_action_u.flow_info_flow_info.service_lif = 1001;
-    }
-#endif
-
-    d.flow_info_action_u.flow_info_flow_info.multicast_en = mcast;
     // TBD: where do these come from ?
     d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
@@ -279,11 +295,8 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = 0;
     d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = 0;
 
-    // TODO: Sarat: We may have to pass the right action id.
-    //d.flow_info_action_u.flow_info_flow_info.rewrite_index =
-        //ep_get_rewrite_index(dst_ep);
-        //ep_pd_get_rw_tbl_idx_from_pi_ep(dst_ep, REWRITE_REWRITE_ID);
-
+#if 0
+    // TODO: Do this in PI
     // there is no transit case for us, so this is always FALSE
     if (is_if_type_tunnel(dif) && (sif->if_type != dif->if_type)) {
         d.flow_info_action_u.flow_info_flow_info.tunnel_originate = TRUE;
@@ -321,52 +334,56 @@ p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
     default:
         break;
     }
+#endif
 
     d.flow_info_action_u.flow_info_flow_info.cos_en = 
-        qos_marking_action_pcp_rewrite_en(&flow->eg_qos_action.marking_action);
+        qos_marking_action_pcp_rewrite_en(&flow_cfg->eg_qos_action.marking_action);
     d.flow_info_action_u.flow_info_flow_info.cos = 
-        qos_marking_action_pcp(&flow->eg_qos_action.marking_action);
+        qos_marking_action_pcp(&flow_cfg->eg_qos_action.marking_action);
     d.flow_info_action_u.flow_info_flow_info.dscp_en = 
-        qos_marking_action_dscp_rewrite_en(&flow->eg_qos_action.marking_action);
+        qos_marking_action_dscp_rewrite_en(&flow_cfg->eg_qos_action.marking_action);
     d.flow_info_action_u.flow_info_flow_info.dscp = 
-        qos_marking_action_dscp(&flow->eg_qos_action.marking_action);
+        qos_marking_action_dscp(&flow_cfg->eg_qos_action.marking_action);
 
     // TBD: check class NIC mode and set this
-    d.flow_info_action_u.flow_info_flow_info.qid_en = flow->qid_en;
+    d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
 #if 0
     if (is_tcp_proxy_flow) {
         // HACK DO NOT COMMIT
         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
     }
 #endif
-    if (flow->qid_en) {
-        d.flow_info_action_u.flow_info_flow_info.qtype = flow->qtype;
-        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->qid;
+    if (flow_attrs->qid_en) {
+        d.flow_info_action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
+        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
     }
 
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;
 
     d.flow_info_action_u.flow_info_flow_info.rewrite_flags = 
-        (flow->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
-        (flow->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
-        (flow->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
+        (flow_attrs->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
+        (flow_attrs->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
+        (flow_attrs->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
-    d.flow_info_action_u.flow_info_flow_info.rewrite_index = ep_pd_get_rw_tbl_idx(dep->pd,
-            flow->rw_act);
+    if (flow_attrs->rw_act != REWRITE_NOP_ID) {
+        d.flow_info_action_u.flow_info_flow_info.rewrite_index = 
+            ep_pd_get_rw_tbl_idx(flow_attrs->dep->pd,
+                flow_attrs->rw_act);
+    }
 #if 0
     d.flow_info_action_u.flow_info_flow_info.rewrite_index = 
         (flow->rw_act == REWRITE_NOP_ID) ? g_hal_state_pd->rwr_tbl_decap_vlan_idx() : 
         ep_pd_get_rw_tbl_idx(dep->pd, flow->rw_act);
 #endif
-    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow->tnnl_vnid;
-    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = ep_pd_get_tnnl_rw_tbl_idx(dep->pd,
-            flow->tnnl_rw_act);
+    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
+    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = ep_pd_get_tnnl_rw_tbl_idx(flow_attrs->dep->pd,
+            flow_attrs->tnnl_rw_act);
 
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
-    d.flow_info_action_u.flow_info_flow_info.flow_role = flow->role;
+    d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
         session->config.conn_track_en ? sess_pd->session_state_idx : 0;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
@@ -442,6 +459,7 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
 
+#if 0
     // program flow_info table entry for iflow
     ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
                                          args->l2seg_s, args->l2seg_d,
@@ -451,23 +469,41 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
                                          args->sif, args->dif,
                                          args->sep, args->dep,
                                          false);
+#endif
+    ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
+    if (session_pd->iflow_aug_valid) {
+        ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->iflow_aug, FLOW_ROLE_INITIATOR, true);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    }
+
     // program flow_info table entry for rflow
     if (session_pd->rflow_valid) {
+#if 0
         ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
-                                             args->l2seg_d, args->l2seg_s,
-                                             args->nwsec_prof,
-                                             &args->session->rflow->config,
-                                             &session_pd->rflow,
-                                             args->dif, args->sif,
-                                             args->dep, args->sep,
-                                             false);
+                args->l2seg_d, args->l2seg_s,
+                args->nwsec_prof,
+                &args->session->rflow->config,
+                &session_pd->rflow,
+                args->dif, args->sif,
+                args->dep, args->sep,
+                false);
+#endif
+        ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->rflow, FLOW_ROLE_RESPONDER, false);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_info_table_entry(session_pd->iflow.flow_stats_hw_id);
             return ret;
+        }
+        if (session_pd->rflow_aug_valid) {
+            ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->rflow_aug, FLOW_ROLE_RESPONDER, true);
+            if (ret != HAL_RET_OK) {
+                return ret;
+            }
         }
     }
 
@@ -578,18 +614,38 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     session_t               *session = (session_t *)session_pd->session;
 
     ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
-                                         (pd_l2seg_t *)args->l2seg_s->pd,
+                                         (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                          &session_pd->iflow);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
+    if (session_pd->iflow_aug_valid) {
+        // TODO: key has to involve service done? populate in flow_attrs
+        ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
+                (pd_l2seg_t *)(session->iflow->dl2seg->pd),
+                &session_pd->iflow);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    }
     if (session_pd->rflow_valid) {
         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config,
-                                             (pd_l2seg_t *)args->l2seg_d->pd,
+                                             (pd_l2seg_t *)session->rflow->sl2seg->pd,
+                                             // (pd_l2seg_t *)args->l2seg_d->pd,
                                              &session_pd->rflow);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
+        }
+        if (session_pd->rflow_aug_valid) {
+            // TODO: key has to involve service done? populate in flow_attrs
+            ret = p4pd_add_flow_hash_table_entry(&session->rflow->config,
+                    (pd_l2seg_t *)session->rflow->dl2seg->pd,
+                    // (pd_l2seg_t *)args->l2seg_d->pd,
+                    &session_pd->rflow);
+            if (ret != HAL_RET_OK) {
+                p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
+            }
         }
     }
 
@@ -604,6 +660,7 @@ pd_session_create (pd_session_args_t *args)
 {
     hal_ret_t          ret;
     pd_session_t       *session_pd;
+    session_t          *session = args->session;
 
     HAL_TRACE_DEBUG("Creating pd state for session");
 
@@ -617,6 +674,13 @@ pd_session_create (pd_session_args_t *args)
         session_pd->rflow_valid = TRUE;
     } else {
         session_pd->rflow_valid = FALSE;
+    }
+
+    if (session->iflow->assoc_flow) {
+        session_pd->iflow_aug_valid = true;
+    }
+    if (session->rflow->assoc_flow) {
+        session_pd->rflow_aug_valid = true;
     }
 
     // add flow stats entries first

@@ -239,12 +239,15 @@ ctx_t::update_gft()
     session_args.iflow = &iflow_cfg;
     session_args.rflow = &rflow_cfg;
     session_args.tenant = tenant_;
+    // TODO(bharat): Please take care of this after the changes in flow design.
+#if 0
     session_args.sep = sep_;
     session_args.dep = dep_;
     session_args.sif = sif_;
     session_args.dif = dif_;
     session_args.sl2seg = sl2seg_;
     session_args.dl2seg = dl2seg_;
+#endif
 
     return hal::session_create(&session_args, NULL);
 }

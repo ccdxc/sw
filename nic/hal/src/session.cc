@@ -177,12 +177,12 @@ session_cleanup (session_t *session)
 // extract flow key from the flow spec
 //------------------------------------------------------------------------------
 static hal_ret_t
-extract_flow_key_from_spec (tenant_id_t tid, bool is_src_ep_local,
-                            flow_key_t *flow_key, const FlowSpec& flow_spec)
+extract_flow_key_from_spec (tenant_id_t tid,
+                            flow_key_t *flow_key, 
+                            const FlowSpec& flow_spec)
 {
     const FlowKey&    flow_spec_key = flow_spec.flow_key();
 
-    flow_key->dir = is_src_ep_local ? FLOW_DIR_FROM_ENIC : FLOW_DIR_FROM_UPLINK;
     if (flow_spec_key.has_l2_key()) {
         flow_key->flow_type = FLOW_TYPE_L2;
         flow_key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
@@ -429,109 +429,75 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
     return HAL_RET_OK;
 }
 
-//------------------------------------------------------------------------------
-// Updates flow parameters for flow if the flow undergoes routing/bridging
-//------------------------------------------------------------------------------
+
+// ---------------------     Encap Logic    ----------------------
+//  Bridging:
+//      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
+//      -> Untag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+//          -> tnnl_rwr_table[0] (nop)
+//      -> Tag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, 
+//				    tnnl_vnid = fab_encap if dif is uplink, 
+//                  if enic comes from output_mapping]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
+//                                encap from outpu_mapping, cos rwr)
+//
+//  Routing:
+//     Flow: mac_sa_rw:1, mac_da_rw:1, ttl_dec:1
+//      -> Untag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, 
+//                                           dscp rw, macs' rw, ttl_dec)
+//          -> tnnl_rwr_table[0] (nop)
+//      -> Tag:
+//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
+//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
+//                                encap from outpu_mapping, cos rwr)
+// TODO: Have to still handle priority tag. When do we send a priority
+//       tagged pkt?
+
 static inline hal_ret_t
-update_flow_forwarding_info(session_args_t *args, SessionResponse *rsp, 
-                           bool is_initiator_flow)
+update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg, 
+                     flow_pgm_attrs_t *flow_attrs)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    flow_cfg_t  *flow = NULL;
-    ep_t        *sep = NULL, *dep = NULL;
-    l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
-    if_t        *sif = NULL, *dif = NULL;
-    bool        /*ing_tag = false, */egr_tag = false;
-    uint8_t     ivlan_v = 0, evlan_v = 0;
-    uint16_t    ivlan_id = 0, evlan_id = 0;
+    hal_ret_t           ret = HAL_RET_OK;
+    uint8_t             evlan_v = 0;
+    uint16_t            evlan_id = 0;
+    bool                egr_tag = false;
 
-    if (is_initiator_flow) {
-        flow = args->iflow;
-        sep = args->sep;
-        dep = args->dep;
-        sl2seg = args->sl2seg;
-        dl2seg = args->dl2seg;
-    } else {
-        flow = args->rflow;
-        sep = args->dep;
-        dep = args->sep;
-        sl2seg = args->dl2seg;
-        dl2seg = args->sl2seg;
-    }
-
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
-
-	// Derive lport
-	// TODO: Handle service case
-	flow->lport = hal::pd::if_get_lport_id(dif);
-
-    if_l2seg_get_encap(sif, sl2seg, &ivlan_v, &ivlan_id);
-    // ing_tag = (ivlan_v == 1) ? true : false;
+	flow_attrs->lport = hal::pd::if_get_lport_id(dif);
 
     if_l2seg_get_encap(dif, dl2seg, &evlan_v, &evlan_id);
     egr_tag = (evlan_v == 1) ? true : false;
 
-    HAL_TRACE_DEBUG("if_id:{}, l2seg_id:{}", dif->if_id, dl2seg->seg_id);
-
-	// ---------------------     Encap Logic    ----------------------
-	//  Bridging:
-	//      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
-	//      -> Untag:
-	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
-	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
-	//          -> tnnl_rwr_table[0] (nop)
-	//      -> Tag:
-	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, 
-    //				    tnnl_vnid = fab_encap if dif is uplink, 
-    //                  if enic comes from output_mapping]
-	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
-	//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
-	//                                encap from outpu_mapping, cos rwr)
-	//
-	//  Routing:
-	//     Flow: mac_sa_rw:1, mac_da_rw:1, ttl_dec:1
-	//      -> Untag:
-	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 0]
-	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, 
-    //                                           dscp rw, macs' rw, ttl_dec)
-	//          -> tnnl_rwr_table[0] (nop)
-	//      -> Tag:
-	//          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
-	//          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
-	//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
-	//                                encap from outpu_mapping, cos rwr)
-    // TODO: Have to still handle priority tag. When do we send a priority
-	//       tagged pkt?
-
-
     if (sl2seg != dl2seg) {
         // Routing
-        flow->ttl_dec = true;
-        flow->mac_sa_rewrite = true;
-        flow->mac_da_rewrite = true;
-        flow->rw_act = REWRITE_REWRITE_ID;
+        flow_attrs->ttl_dec = true;
+        flow_attrs->mac_sa_rewrite = true;
+        flow_attrs->mac_da_rewrite = true;
+        // flow_attrs->rw_act = REWRITE_REWRITE_ID;
 
     } else {
         // Bridging
-        flow->ttl_dec = false;
-        flow->mac_sa_rewrite = false;
-        flow->mac_da_rewrite = false;
-        flow->rw_act = REWRITE_REWRITE_ID;
+        flow_attrs->ttl_dec = false;
+        flow_attrs->mac_sa_rewrite = false;
+        flow_attrs->mac_da_rewrite = false;
+        // flow_attrs->rw_act = REWRITE_REWRITE_ID;
 
     }
 
 	if (dif->if_type != intf::IF_TYPE_TUNNEL) {
 		if (!egr_tag) {
-			flow->tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+			flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
 		} else {
-			flow->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+			flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
 			if (dif->if_type == intf::IF_TYPE_UPLINK ||
 					dif->if_type == intf::IF_TYPE_UPLINK_PC) {
-				flow->tnnl_vnid = dl2seg->fabric_encap.val;
+				flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
 			}
 		} 
 	} else {
@@ -541,26 +507,359 @@ update_flow_forwarding_info(session_args_t *args, SessionResponse *rsp,
 		// flow->tnnl_vnid = dl2seg->fabric_encap.val;
 		// flow->tnnl_rw_act = 
 	}
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Get rewrite action given a flow - assumption is flow will have a rewrite
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+flow_update_rewrite_info(flow_t *flow)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    flow_t              *res_flow = NULL;
+    rewrite_actions_en  *rw_act = &flow->pgm_attrs.rw_act;
+    flow_pgm_attrs_t    *flow_attrs = &flow->pgm_attrs;
+
+    // get resultant flow
+    res_flow = flow;
+    if (flow->is_aug_flow) {
+        res_flow = flow->assoc_flow;
+    }
+    
+    // if there is no NAT or flow is L2, then set the default rw act.
+    if (res_flow->config.nat_type == NAT_TYPE_NONE ||
+            res_flow->config.key.flow_type == FLOW_TYPE_L2) {
+        *rw_act = REWRITE_REWRITE_ID;
+        goto end;
+    }
+    if (res_flow->config.key.flow_type == FLOW_TYPE_V4) {
+        if (res_flow->config.nat_type == NAT_TYPE_SNAT &&
+                res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+                *rw_act = REWRITE_IPV4_NAT_SRC_REWRITE_ID;
+            } else {
+                if (res_flow->config.nat_sport == 0) {
+                    *rw_act = REWRITE_IPV4_NAT_SRC_REWRITE_ID;
+                } else {
+                    flow_attrs->nat_l4_port = flow->config.nat_sport;
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID :
+                        REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID;
+                }
+            }
+        }
+        if (res_flow->config.nat_type == NAT_TYPE_DNAT &&
+                res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+                *rw_act = REWRITE_IPV4_NAT_DST_REWRITE_ID;
+            } else {
+                if (res_flow->config.nat_dport == 0) {
+                    *rw_act = REWRITE_IPV4_NAT_DST_REWRITE_ID;
+                } else {
+                    flow_attrs->nat_l4_port = flow->config.nat_dport;
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID :
+                        REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID;
+                }
+            }
+        }
+        if (res_flow->config.nat_type == NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+                *rw_act = REWRITE_IPV4_TWICE_NAT_REWRITE_ID;
+            } else {
+                // only if both ports have to be rewritten
+                // there is no option to write only one
+                if (res_flow->config.nat_sport != 0 && res_flow->config.nat_dport != 0) {
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID:
+                        REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID;
+                    if (res_flow->role == FLOW_ROLE_INITIATOR) {
+                        flow_attrs->nat_l4_port = flow->config.nat_sport;
+                    } else {
+                        flow_attrs->nat_l4_port = flow->config.nat_dport;
+                    }
+                } else {
+                    *rw_act = REWRITE_IPV4_TWICE_NAT_REWRITE_ID;
+                }
+            }
+        }
+    }
+
+    // v6 cases
+    if (res_flow->config.key.flow_type == FLOW_TYPE_V6) {
+        if (res_flow->config.nat_type == NAT_TYPE_SNAT &&
+                res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+                *rw_act = REWRITE_IPV6_NAT_SRC_REWRITE_ID;
+            } else {
+                if (res_flow->config.nat_sport == 0) {
+                    *rw_act = REWRITE_IPV6_NAT_SRC_REWRITE_ID;
+                } else {
+                    flow_attrs->nat_l4_port = flow->config.nat_sport;
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID :
+                        REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID;
+                }
+            }
+        }
+        if (res_flow->config.nat_type == NAT_TYPE_DNAT &&
+                res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+                *rw_act = REWRITE_IPV6_NAT_DST_REWRITE_ID;
+            } else {
+                if (res_flow->config.nat_dport == 0) {
+                    *rw_act = REWRITE_IPV6_NAT_DST_REWRITE_ID;
+                } else {
+                    flow_attrs->nat_l4_port = flow->config.nat_dport;
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID :
+                        REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID;
+                }
+            }
+        }
+        if (res_flow->config.nat_type == NAT_TYPE_TWICE_NAT) {
+            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+                *rw_act = REWRITE_IPV6_TWICE_NAT_REWRITE_ID;
+            } else {
+                // only if both ports have to be rewritten
+                // there is no option to write only one
+                if (res_flow->config.nat_sport != 0 && res_flow->config.nat_dport != 0) {
+                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                        REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
+                        REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID;
+                    if (res_flow->role == FLOW_ROLE_INITIATOR) {
+                        flow_attrs->nat_l4_port = flow->config.nat_sport;
+                    } else {
+                        flow_attrs->nat_l4_port = flow->config.nat_dport;
+                    }
+                } else {
+                    *rw_act = REWRITE_IPV6_TWICE_NAT_REWRITE_ID;
+                }
+            }
+        }
+    }
+
+    flow->pgm_attrs.nat_sip = flow->config.nat_sip;
+    flow->pgm_attrs.nat_dip = flow->config.nat_dip;
+    flow->pgm_attrs.nat_sport = flow->config.nat_sport;
+    flow->pgm_attrs.nat_dport = flow->config.nat_dport;
+
+end:
+    // TODO: populate rw_idx instead of dep.
+    flow->pgm_attrs.dep = res_flow->dep;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Updates flow parameters for ifflow 
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+update_iflow_forwarding_info(const session_args_t *args, session_t *session)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    flow_t      *flow = NULL, *assoc_flow = NULL;
+    ep_t        *sep = NULL, *dep = NULL;
+    l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
+    if_t        *sif = NULL, *dif = NULL;
+
+    flow = session->iflow;
+    assoc_flow = flow->assoc_flow;
+    sep = flow->sep;
+    dep = flow->dep;
+    sl2seg = flow->sl2seg;
+    dl2seg = flow->dl2seg;
+
+    flow->pgm_attrs.role = flow->role;
+    if (assoc_flow) {
+        assoc_flow->pgm_attrs.role = flow->role;
+    }
+
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    // check which of iflows will have rewrite info
+    if (!flow->assoc_flow) {
+        // No associated flow - no service
+        update_encap_rw_info(dif, sl2seg, dl2seg, &flow->pgm_attrs); 
+        flow_update_rewrite_info(flow);
+    } else {
+        if (flow->role == FLOW_ROLE_INITIATOR && 
+                flow->src_type == FLOW_END_TYPE_P4PLUS &&
+                (flow->dst_type == FLOW_END_TYPE_HOST ||
+                 flow->dst_type == FLOW_END_TYPE_NETWORK)) {
+            update_encap_rw_info(dif, sl2seg, dl2seg, &flow->pgm_attrs);
+            flow_update_rewrite_info(flow);
+        } else {
+            // No rw for flow
+            flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
+			flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+        }
+        if (assoc_flow->role == FLOW_ROLE_INITIATOR && 
+                assoc_flow->src_type == FLOW_END_TYPE_P4PLUS &&
+                (assoc_flow->dst_type == FLOW_END_TYPE_HOST ||
+                 assoc_flow->dst_type == FLOW_END_TYPE_NETWORK)) {
+            update_encap_rw_info(dif, sl2seg, dl2seg, &assoc_flow->pgm_attrs);
+            flow_update_rewrite_info(assoc_flow);
+        } else {
+            // No rw for flow
+            assoc_flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
+			assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+        }
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+            "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+            "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
+            "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
+            __FUNCTION__, flow->pgm_attrs.role, 
+            flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
+            flow->pgm_attrs.rw_act, flow->pgm_attrs.tnnl_rw_act, 
+            flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
+            flow->pgm_attrs.lport, flow->pgm_attrs.qid_en,
+            flow->pgm_attrs.qtype, flow->pgm_attrs.qid, 
+            ipaddr2str(&flow->pgm_attrs.nat_sip), 
+            ipaddr2str(&flow->pgm_attrs.nat_dip), 
+            flow->pgm_attrs.nat_sport, flow->pgm_attrs.nat_dport,
+            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en, 
+            ep_l2_key_to_str(flow->pgm_attrs.dep));
+
+    if (flow->assoc_flow) {
+        HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+                "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+                "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
+                "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
+                __FUNCTION__, assoc_flow->pgm_attrs.role, 
+                assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
+                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.tnnl_rw_act, 
+                assoc_flow->pgm_attrs.tnnl_vnid, assoc_flow->pgm_attrs.ttl_dec, 
+                assoc_flow->pgm_attrs.lport, assoc_flow->pgm_attrs.qid_en,
+                assoc_flow->pgm_attrs.qtype, assoc_flow->pgm_attrs.qid, 
+                ipaddr2str(&assoc_flow->pgm_attrs.nat_sip), 
+                ipaddr2str(&assoc_flow->pgm_attrs.nat_dip), 
+                assoc_flow->pgm_attrs.nat_sport, assoc_flow->pgm_attrs.nat_dport,
+                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en, 
+                ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
+    }
 
 	return ret;
 }
 
+//------------------------------------------------------------------------------
+// Updates flow parameters for rflow 
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+update_rflow_forwarding_info(const session_args_t *args, session_t *session)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    flow_t      *flow = NULL, *assoc_flow = NULL;
+    ep_t        *sep = NULL, *dep = NULL;
+    l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
+    if_t        *sif = NULL, *dif = NULL;
+
+    flow = session->rflow;
+    assoc_flow = flow->assoc_flow;
+    sep = flow->sep;
+    dep = flow->dep;
+    sl2seg = flow->sl2seg;
+    dl2seg = flow->dl2seg;
+
+    flow->pgm_attrs.role = flow->role;
+    if (assoc_flow) {
+        assoc_flow->pgm_attrs.role = flow->role;
+    }
+
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    // check which of iflows will have rewrite info
+    if (!flow->assoc_flow) {
+        // No associated flow - no service
+        update_encap_rw_info(dif, sl2seg, dl2seg, &flow->pgm_attrs);
+        flow_update_rewrite_info(flow);
+    } else {
+        if (flow->role == FLOW_ROLE_RESPONDER && 
+                flow->dst_type == FLOW_END_TYPE_P4PLUS &&
+                (flow->src_type == FLOW_END_TYPE_HOST ||
+                 flow->src_type == FLOW_END_TYPE_NETWORK)) {
+            update_encap_rw_info(dif, sl2seg, dl2seg, &flow->pgm_attrs);
+            flow_update_rewrite_info(flow);
+        } else {
+            // No rw for flow
+            flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
+			flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+        }
+        if (assoc_flow->role == FLOW_ROLE_RESPONDER && 
+                assoc_flow->dst_type == FLOW_END_TYPE_P4PLUS &&
+                (assoc_flow->src_type == FLOW_END_TYPE_HOST ||
+                 assoc_flow->src_type == FLOW_END_TYPE_NETWORK)) {
+            update_encap_rw_info(dif, sl2seg, dl2seg, &assoc_flow->pgm_attrs);
+            flow_update_rewrite_info(assoc_flow);
+        } else {
+            // No rw for flow
+            assoc_flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
+			assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+        }
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+            "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+            "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
+            "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
+            __FUNCTION__, flow->pgm_attrs.role, 
+            flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
+            flow->pgm_attrs.rw_act, flow->pgm_attrs.tnnl_rw_act, 
+            flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
+            flow->pgm_attrs.lport, flow->pgm_attrs.qid_en,
+            flow->pgm_attrs.qtype, flow->pgm_attrs.qid, 
+            ipaddr2str(&flow->pgm_attrs.nat_sip), 
+            ipaddr2str(&flow->pgm_attrs.nat_dip), 
+            flow->pgm_attrs.nat_sport, flow->pgm_attrs.nat_dport,
+            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en, 
+            ep_l2_key_to_str(flow->pgm_attrs.dep));
+
+    if (flow->assoc_flow) {
+        HAL_TRACE_DEBUG("PI-Session:{} rflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+                "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+                "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
+                "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
+                __FUNCTION__, assoc_flow->pgm_attrs.role, 
+                assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
+                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.tnnl_rw_act, 
+                assoc_flow->pgm_attrs.tnnl_vnid, assoc_flow->pgm_attrs.ttl_dec, 
+                assoc_flow->pgm_attrs.lport, assoc_flow->pgm_attrs.qid_en,
+                assoc_flow->pgm_attrs.qtype, assoc_flow->pgm_attrs.qid, 
+                ipaddr2str(&assoc_flow->pgm_attrs.nat_sip), 
+                ipaddr2str(&assoc_flow->pgm_attrs.nat_dip), 
+                assoc_flow->pgm_attrs.nat_sport, assoc_flow->pgm_attrs.nat_dport,
+                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en, 
+                ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
+    }
+	return ret;
+}
 
 
 //------------------------------------------------------------------------------
 // Updates flow forwarding parameters for sessions
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-update_session_forwarding_info(session_args_t *args, SessionResponse *rsp)
+update_session_forwarding_info(const session_args_t *args, session_t *session)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    ret = update_flow_forwarding_info(args, rsp, TRUE);
+    ret = update_iflow_forwarding_info(args, session);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    ret = update_flow_forwarding_info(args, rsp, FALSE);
+    ret = update_rflow_forwarding_info(args, session);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -672,9 +971,520 @@ add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
     return HAL_RET_OK;
 }
 
+//-----------------------------------------------------------------------------
+// Returns true if the flow needs an associate flow
+//-----------------------------------------------------------------------------
+bool
+flow_needs_associate_flow (const flow_key_t *flow_key)
+{
+    // TODO: Query to check if the flow needs an associate flow.
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Handle NAT config and Update flow structure for iflow 
+//-----------------------------------------------------------------------------
+hal_ret_t
+process_iflow_for_lb(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *iflow = NULL;
+    flow_cfg_t              *flow_cfg = NULL;
+    l2seg_t                 *dl2seg_nat = NULL;
+    if_t                    *dif_nat = NULL;
+    ep_t                    *dep_nat = NULL;
+
+    iflow = session->iflow;
+    flow_cfg = &iflow->config;
+
+    // No-op if there is no DNAT or Twice NAT
+    if (flow_cfg->nat_type != NAT_TYPE_DNAT && 
+            flow_cfg->nat_type != NAT_TYPE_TWICE_NAT) {
+        return HAL_RET_OK;
+    }
+
+    // change the dep, dl2seg and dif
+    if (flow_cfg->nat_dip.af == IP_AF_IPV4) {
+        dep_nat = find_ep_by_v4_key(session->tenant->tenant_id,
+                                    flow_cfg->nat_dip.addr.v4_addr);
+    } else {
+        dep_nat = find_ep_by_v6_key(session->tenant->tenant_id, 
+                                    &flow_cfg->nat_dip);
+    }
+
+    if (dep_nat == NULL) {
+        HAL_TRACE_ERR("PI-Session:{} NAT EP not found", __FUNCTION__);
+        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    dl2seg_nat = find_l2seg_by_handle(dep_nat->l2seg_handle);
+    HAL_ASSERT(dl2seg_nat != NULL);
+
+    dif_nat = find_if_by_handle(dep_nat->if_handle);
+    HAL_ASSERT(dif_nat != NULL);
+
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: DNAT/TNAT dep: {} -> {}, "
+            "dif: {} -> {}, dl2seg: {} -> {}",
+            ep_l2_key_to_str(iflow->dep), ep_l2_key_to_str(dep_nat),
+            iflow->dif->if_id, dif_nat->if_id,
+            iflow->dl2seg->seg_id, dl2seg_nat->seg_id);
+
+    iflow->dep = dep_nat;
+    iflow->dif = dif_nat;
+    iflow->dl2seg = dl2seg_nat;
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Handle NAT config and Update flow structure for rflow 
+//-----------------------------------------------------------------------------
+hal_ret_t
+process_rflow_for_lb(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *rflow = NULL;
+    flow_cfg_t              *flow_cfg = NULL;
+    l2seg_t                 *dl2seg_nat = NULL;
+    if_t                    *dif_nat = NULL;
+    ep_t                    *dep_nat = NULL;
+
+    rflow = session->rflow;
+    flow_cfg = &rflow->config;
+
+    // No-op if there is no DNAT or Twice NAT
+    if (flow_cfg->nat_type != NAT_TYPE_DNAT && 
+            flow_cfg->nat_type != NAT_TYPE_TWICE_NAT) {
+        return HAL_RET_OK;
+    }
+
+    // change the dep, dl2seg and dif
+    if (flow_cfg->nat_dip.af == IP_AF_IPV4) {
+        dep_nat = find_ep_by_v4_key(session->tenant->tenant_id,
+                                    flow_cfg->nat_dip.addr.v4_addr);
+    } else {
+        dep_nat = find_ep_by_v6_key(session->tenant->tenant_id, 
+                                    &flow_cfg->nat_dip);
+    }
+
+    if (dep_nat == NULL) {
+        HAL_TRACE_ERR("PI-Session:{} NAT EP not found", __FUNCTION__);
+        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    dl2seg_nat = find_l2seg_by_handle(dep_nat->l2seg_handle);
+    HAL_ASSERT(dl2seg_nat != NULL);
+
+    dif_nat = find_if_by_handle(dep_nat->if_handle);
+    HAL_ASSERT(dif_nat != NULL);
+
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: DNAT/TNAT dep: {} -> {}, "
+            "dif: {} -> {}, dl2seg: {} -> {}",
+            ep_l2_key_to_str(rflow->dep), ep_l2_key_to_str(dep_nat),
+            rflow->dif->if_id, dif_nat->if_id,
+            rflow->dl2seg->seg_id, dl2seg_nat->seg_id);
+
+    rflow->dep = dep_nat;
+    rflow->dif = dif_nat;
+    rflow->dl2seg = dl2seg_nat;
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Process session for LB (NAT)
+//-----------------------------------------------------------------------------
+hal_ret_t 
+process_session_for_lb(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    ret = process_iflow_for_lb(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing iflow for LB(NAT) failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+
+    ret = process_rflow_for_lb(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing rflow for LB(NAT) failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+
+//-----------------------------------------------------------------------------
+// Build flow structure for iflow
+//-----------------------------------------------------------------------------
+hal_ret_t
+process_iflow_base_spec(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *iflow = NULL;
+    ep_t                    *sep = NULL, *dep = NULL;
+
+    iflow = session->iflow;
+
+    // get the src and dst EPs from the flow key
+    if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
+                                  args->spec->initiator_flow().flow_key(),
+                              &iflow->sep, &iflow->dep) != HAL_RET_OK) {
+        if (iflow->sep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
+        }
+        if (iflow->dep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
+        }
+        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    sep = iflow->sep;
+    dep = iflow->dep;
+
+    iflow->config.key.dir = 
+        (sep->ep_flags & EP_FLAGS_LOCAL) ? FLOW_DIR_FROM_ENIC : 
+        FLOW_DIR_FROM_UPLINK; 
+
+    // lookup ingress & egress interfaces
+    iflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    iflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+    if ((iflow->sif == NULL) || (iflow->dif == NULL)) {
+        HAL_TRACE_ERR("Src/Dst interface not found");
+        args->rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+        return  HAL_RET_IF_NOT_FOUND;
+    }
+
+    // lookup ingress & egress L2 segments
+    iflow->sl2seg =
+        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
+    iflow->dl2seg =
+        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+    if ((iflow->sl2seg == NULL) || (iflow->dl2seg == NULL)) {
+        args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: sep:{}, dep:{}, sif_id:{}, "
+            "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
+            ep_l2_key_to_str(sep), ep_l2_key_to_str(dep),
+            iflow->sif->if_id, iflow->dif->if_id, 
+            iflow->sl2seg->seg_id, iflow->dl2seg->seg_id);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Build flow structure for rflow
+//-----------------------------------------------------------------------------
+hal_ret_t
+process_rflow_base_spec(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *rflow = NULL;
+    ep_t                    *sep = NULL, *dep = NULL;
+
+    rflow = session->rflow;
+
+    // get the src and dst EPs from the flow key
+    if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
+                                  args->spec->responder_flow().flow_key(),
+                              &rflow->sep, &rflow->dep) != HAL_RET_OK) {
+        if (rflow->sep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
+        }
+        if (rflow->dep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
+        }
+        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return HAL_RET_EP_NOT_FOUND;
+    }
+
+    sep = rflow->sep;
+    dep = rflow->dep;
+
+    rflow->config.key.dir = 
+        (sep->ep_flags & EP_FLAGS_LOCAL) ? FLOW_DIR_FROM_ENIC : 
+        FLOW_DIR_FROM_UPLINK; 
+
+    // lookup ingress & egress interfaces
+    rflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    rflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+    if ((rflow->sif == NULL) || (rflow->dif == NULL)) {
+        HAL_TRACE_ERR("Src/Dst interface not found");
+        args->rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+        return  HAL_RET_IF_NOT_FOUND;
+    }
+
+    // lookup ingress & egress L2 segments
+    rflow->sl2seg =
+        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
+    rflow->dl2seg =
+        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+    if ((rflow->sl2seg == NULL) || (rflow->dl2seg == NULL)) {
+        args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: sep:{}, dep:{}, sif_id:{}, "
+            "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
+            ep_l2_key_to_str(sep), ep_l2_key_to_str(dep),
+            rflow->sif->if_id, rflow->dif->if_id, 
+            rflow->sl2seg->seg_id, rflow->dl2seg->seg_id);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Process base spec and populate flow
+//-----------------------------------------------------------------------------
+hal_ret_t 
+process_session_base_spec(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    ret = process_iflow_base_spec(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing of base spec of iflow failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+
+    ret = process_rflow_base_spec(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing of base spec of rflow failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+
+
+//-----------------------------------------------------------------------------
+// Pre-Process IFlow
+//-----------------------------------------------------------------------------
+hal_ret_t 
+pre_process_iflow(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *iflow = NULL, *assoc_flow = NULL;
+    ep_t                    *sep = NULL, *dep = NULL;
+    if_t                    *sif = NULL, *dif = NULL;
+
+    iflow = session->iflow;
+    assoc_flow = iflow->assoc_flow;
+
+    sep = iflow->sep;
+    dep = iflow->dep;
+
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    // set role
+    iflow->role = FLOW_ROLE_INITIATOR;
+    // set src_type
+    if (sif->if_type == intf::IF_TYPE_ENIC) {
+        iflow->src_type = FLOW_END_TYPE_HOST;
+    } else {
+        iflow->src_type = FLOW_END_TYPE_NETWORK;
+    }
+
+    // set dst_type
+    if (assoc_flow) {
+        // service is enabled
+        iflow->dst_type = FLOW_END_TYPE_P4PLUS;
+    } else {
+        if (dif->if_type == intf::IF_TYPE_ENIC) {
+            iflow->dst_type = FLOW_END_TYPE_HOST;
+        } else {
+            iflow->dst_type = FLOW_END_TYPE_NETWORK;
+        }
+    }
+
+    // set role, src_type, dst_type for assoc flow
+    if (assoc_flow) {
+        assoc_flow->role = FLOW_ROLE_INITIATOR;
+        assoc_flow->src_type = FLOW_END_TYPE_P4PLUS;
+        if (dif->if_type == intf::IF_TYPE_ENIC) {
+            assoc_flow->dst_type = FLOW_END_TYPE_HOST;
+        } else {
+            assoc_flow->dst_type = FLOW_END_TYPE_NETWORK;
+        }
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, src_type:{}, dst_type:{}",
+            __FUNCTION__, iflow->role, iflow->src_type, iflow->dst_type);
+    if (assoc_flow) {
+    HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, src_type:{}, "
+            "dst_type:{}",
+            __FUNCTION__, assoc_flow->role, assoc_flow->src_type, 
+            assoc_flow->dst_type);
+    }
+    
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Pre-Process RFlow
+//-----------------------------------------------------------------------------
+hal_ret_t 
+pre_process_rflow(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_t                  *rflow = NULL, *assoc_flow = NULL;
+    ep_t                    *sep = NULL, *dep = NULL;
+    if_t                    *sif = NULL, *dif = NULL;
+
+    rflow = session->rflow;
+    assoc_flow = rflow->assoc_flow;
+
+    // get the src and dst EPs from the flow key
+    if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
+                                  args->spec->responder_flow().flow_key(),
+                                  &rflow->sep, &rflow->dep) != HAL_RET_OK) {
+        if (rflow->sep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
+        }
+        if (rflow->dep == NULL) {
+            HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
+        }
+        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        return HAL_RET_EP_NOT_FOUND;
+    }
+    sep = rflow->dep;
+    dep = rflow->sep;
+
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    // set role
+    rflow->role = FLOW_ROLE_RESPONDER;
+    // set dst_type
+    if (dif->if_type == intf::IF_TYPE_ENIC) {
+        rflow->dst_type = FLOW_END_TYPE_HOST;
+    } else {
+        rflow->dst_type = FLOW_END_TYPE_NETWORK;;
+    }
+
+    // set src_type
+    if (assoc_flow) {
+        // service is enabled
+        rflow->src_type = FLOW_END_TYPE_P4PLUS;
+    } else {
+        if (sif->if_type == intf::IF_TYPE_ENIC) {
+            rflow->src_type = FLOW_END_TYPE_HOST;
+        } else {
+            rflow->src_type = FLOW_END_TYPE_NETWORK;
+        }
+    }
+
+    // set role, src_type, dst_type for assoc flow
+    if (assoc_flow) {
+        assoc_flow->role = FLOW_ROLE_RESPONDER;
+        assoc_flow->dst_type = FLOW_END_TYPE_P4PLUS;
+        if (sif->if_type == intf::IF_TYPE_ENIC) {
+            assoc_flow->src_type = FLOW_END_TYPE_HOST;
+        } else {
+            assoc_flow->src_type = FLOW_END_TYPE_NETWORK;
+        }
+    }
+    
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: role:{}, src_type:{}, dst_type:{}",
+            __FUNCTION__, rflow->role, rflow->src_type, rflow->dst_type);
+    if (assoc_flow) {
+    HAL_TRACE_DEBUG("PI-Session:{} rflow_assoc: role:{}, src_type:{}, "
+            "dst_type:{}",
+            __FUNCTION__, assoc_flow->role, assoc_flow->src_type, 
+            assoc_flow->dst_type);
+    }
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Pre Process Session
+//-----------------------------------------------------------------------------
+hal_ret_t 
+pre_process_session(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    ep_t                    *sep = NULL, *dep = NULL;
+    if_t                    *sif = NULL, *dif = NULL;
+
+    sep = session->iflow->sep;
+    dep = session->iflow->dep;
+
+    sif = ep_find_if_by_handle(sep);
+    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
+    dif = ep_find_if_by_handle(dep);
+    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+
+    if (sif->if_type == intf::IF_TYPE_ENIC) {
+        session->src_dir = SESSION_DIR_H;
+    } else {
+        session->src_dir = SESSION_DIR_N;
+    }
+
+    if (dif->if_type == intf::IF_TYPE_ENIC) {
+        session->dst_dir = SESSION_DIR_H;
+    } else {
+        session->dst_dir = SESSION_DIR_N;
+    }
+
+    HAL_TRACE_DEBUG("PI-Session:{} src_dir:{}, dst_dir:{}", __FUNCTION__,
+            session->src_dir, session->dst_dir);
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Process Flows
+//-----------------------------------------------------------------------------
+hal_ret_t 
+pre_process_flows(const session_args_t *args, session_t *session)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    ret = pre_process_iflow(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Pre-processing of iflow failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+
+    ret = pre_process_rflow(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Pre-processing of rflow failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Flow Create
+//-----------------------------------------------------------------------------
 static flow_t *
 flow_create(const flow_cfg_t *cfg, session_t *session)
 {
+    flow_t      *assoc_flow = NULL;
+
     flow_t *flow = (flow_t *)g_hal_state->flow_slab()->alloc();
     if (!flow) {
         return NULL;
@@ -689,6 +1499,29 @@ flow_create(const flow_cfg_t *cfg, session_t *session)
     }
 
     flow->session = session;
+
+    flow->assoc_flow = NULL;
+    // Check if we have to create associated flow
+    if (flow_needs_associate_flow(&cfg->key)) {
+        assoc_flow = (flow_t *)g_hal_state->flow_slab()->alloc();
+        if (!assoc_flow) {
+            return NULL;
+        }
+        *assoc_flow = {};
+        HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_PRIVATE);
+        assoc_flow->flow_key_ht_ctxt.reset();
+        if (cfg) {
+            assoc_flow->config = *cfg;
+        }
+        assoc_flow->session = session;
+        // If its an aug flow, goto assoc flow to get all params
+        assoc_flow->is_aug_flow = true;
+
+        // Link 
+        flow->assoc_flow = assoc_flow;
+        assoc_flow->assoc_flow = flow;
+    }
+
     return flow;
 }
 
@@ -717,8 +1550,11 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
     pd::pd_session_args_t    pd_session_args;
     session_t               *session;
 
+#if 0
+    // TODO: This can be removed if session args doesnt have ifs, l2segs, eps
     HAL_ASSERT(args->tenant && args->iflow && args->sep && args->dep &&
                args->sif && args->dif && args->sl2seg && args->dl2seg);
+#endif
 
     // allocate a session
     session = (session_t *)g_hal_state->session_slab()->alloc();
@@ -728,6 +1564,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
     }
     *session = {};
     session->config = *args->session;
+    session->tenant = args->tenant;
 
     // fetch the security profile, if any
     if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -736,7 +1573,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
         nwsec_prof = NULL;
     }
 
-    //create flows
+    // create flows
     session->iflow = flow_create(args->iflow, session);
     if (session->iflow == NULL) {
         ret = HAL_RET_OOM;
@@ -752,17 +1589,60 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
         session->iflow->reverse_flow = session->rflow;
         session->rflow->reverse_flow = session->iflow;
     }
+    session->hal_handle = hal_alloc_handle();
+
+    // Process base specs to populate flows
+    ret = process_session_base_spec(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing of base session spec failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+    // LB(NAT) processing
+    ret = process_session_for_lb(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Processing session for LB (NAT)  failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+    // pre process flows
+    ret = pre_process_flows(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Pre-processing of flows failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+    // pre process session
+    ret = pre_process_session(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Pre-processing of session failed.",
+                __FUNCTION__);
+        goto end;
+    }
+
+    // populate forwarding info for the 
+    ret = update_session_forwarding_info(args, session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Session:{}: Pre-processing of session failed.",
+                __FUNCTION__);
+        goto end;
+    }
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
     pd_session_args.tenant = args->tenant;
     pd_session_args.nwsec_prof = nwsec_prof;
+#if 0
     pd_session_args.l2seg_s = args->sl2seg;
     pd_session_args.l2seg_d = args->dl2seg;
     pd_session_args.sif = args->sif;
     pd_session_args.dif = args->dif;
     pd_session_args.sep = args->sep;
     pd_session_args.dep = args->dep;
+#endif
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
 
@@ -773,8 +1653,9 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
     }
 
     // add this session to our db
-    add_session_to_db(args->tenant, args->sl2seg, args->dl2seg,
-                      args->sep, args->dep, args->sif, args->dif, session);
+    add_session_to_db(session->tenant, session->iflow->sl2seg, session->iflow->dl2seg,
+                      session->iflow->sep, session->iflow->dep, session->iflow->sif, 
+                      session->iflow->dif, session);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     if (session_handle) {
@@ -835,7 +1716,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         args.rflow = &rflow;
     }
 
-
+#if 0
     // get the src and dst EPs from the flow key
     if (ep_get_from_flow_key_spec(tid, spec.initiator_flow().flow_key(),
                                   &args.sep, &args.dep) != HAL_RET_OK) {
@@ -848,10 +1729,10 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
+#endif
 
     // extract initiator's flow key and data from flow spec
-    extract_flow_key_from_spec(tid, args.sep->ep_flags & EP_FLAGS_LOCAL,
-                               &args.iflow->key, spec.initiator_flow());
+    extract_flow_key_from_spec(tid, &args.iflow->key, spec.initiator_flow());
     ret = extract_flow_info_from_spec(args.iflow, TRUE, spec.initiator_flow());
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -868,8 +1749,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
     // extract responder's flow key and data from flow spec
     if (args.rflow) {
-        extract_flow_key_from_spec(tid, args.dep->ep_flags & EP_FLAGS_LOCAL,
-                                   &args.rflow->key, spec.responder_flow());
+        extract_flow_key_from_spec(tid, &args.rflow->key, spec.responder_flow());
         ret = extract_flow_info_from_spec(args.rflow, FALSE, spec.responder_flow());
         if (ret != HAL_RET_OK) {
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -881,6 +1761,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         }
     }
 
+#if 0
     // lookup ingress & egress interfaces
     args.sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&args.sep->if_handle);
     args.dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&args.dep->if_handle);
@@ -917,22 +1798,10 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     if (ret != HAL_RET_OK) {
         return ret;
     }
-    
-#if 0
-    // Update fwding info
-    ret = flow_update_fwding_info(args.iflow, args.dif);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return ret;
-    }
+#endif 
 
-    ret = flow_update_fwding_info(args.rflow, args.sif);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return ret;
-    }
-#endif
-
+    args.spec = &spec;
+    args.rsp = rsp;
     ret = session_create(&args, &session_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session create failure, err : {}", ret);

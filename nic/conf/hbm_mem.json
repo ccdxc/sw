@@ -32,10 +32,10 @@
             "name": "mcast_repl",
             "size_kb": 4096
         },
-	{
-	    "name": "lif2qstate_map",
-	    "size_kb": 16384
-	},
+        {
+            "name": "lif2qstate_map",
+            "size_kb": 16384
+        },
         {
             "name": "ipsec-cb",
             "size_kb": 64

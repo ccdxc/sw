@@ -21,7 +21,11 @@ struct pd_session_s {
     uint32_t     session_state_idx;     // flow/session state index, if any
     pd_flow_t    iflow;              // iflow's PD state
     pd_flow_t    rflow;              // rflow's PD state
+    pd_flow_t    iflow_aug;          // augmented iflow's PD state
+    pd_flow_t    rflow_aug;          // augmented rflow's PD state
     uint8_t      rflow_valid:1;      // TRUE if rflow is valid
+    uint8_t      iflow_aug_valid:1;  // TRUE if iflow has augmented flow
+    uint8_t      rflow_aug_valid:1;  // TRUE if rflow has augmented flow
     uint8_t      conn_track_en:1;    // connection tracking enabled or not
 } __PACK__;
 

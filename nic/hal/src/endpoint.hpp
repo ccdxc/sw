@@ -9,6 +9,7 @@
 #include <interface.hpp>
 #include <endpoint.pb.h>
 #include <pd.hpp>
+#include <netinet/ether.h>
 
 using endpoint::EndpointKeyHandle;
 using endpoint::EndpointGetResponse;
@@ -139,6 +140,8 @@ find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
     memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
     return find_ep_by_l3_key(&l3_key);
 }
+
+const char *ep_l2_key_to_str(ep_t *ep);
 
 extern void *ep_get_l2_key_func(void *entry);
 extern uint32_t ep_compute_l2_hash_func(void *key, uint32_t ht_size);

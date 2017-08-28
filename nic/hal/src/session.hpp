@@ -5,6 +5,7 @@
 #include <list.hpp>
 #include <ht.hpp>
 #include <ip.h>
+#include <session_svc.hpp>
 #include <interface.hpp>
 #include <l2segment.hpp>
 #include <endpoint.hpp>
@@ -39,11 +40,35 @@ enum flow_direction_t {
     FLOW_DIR_FROM_UPLINK = 1,
 };
 
+#if 0
 // flow role
 enum flow_role_t {
     FLOW_ROLE_INITIATOR = 0,
     FLOW_ROLE_RESPONDER = 1,
 };
+#endif
+
+#define FLOW_ROLES(ENTRY)                                           \
+    ENTRY(FLOW_ROLE_INITIATOR,      0, "IFLOW")                     \
+    ENTRY(FLOW_ROLE_RESPONDER,      1, "RFLOW")                     
+
+DEFINE_ENUM(flow_role_t, FLOW_ROLES)
+#undef FLOW_ROLES
+    
+#define FLOW_END_TYPES(ENTRY)                                               \
+    ENTRY(FLOW_END_TYPE_HOST,        0, "FLOW_END_TYPE_HOST")               \
+    ENTRY(FLOW_END_TYPE_NETWORK,     1, "FLOW_END_TYPE_NETWORK")            \
+    ENTRY(FLOW_END_TYPE_P4PLUS,      2, "FLOW_END_TYPE_P4PLUS")
+
+DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
+#undef FLOW_END_TYPES
+
+#define SESSION_DIRECTIONS(ENTRY)                           \
+    ENTRY(SESSION_DIR_H,     0, "SESSION_DIR_H")            \
+    ENTRY(SESSION_DIR_N,     1, "SESSION_DIR_N")            \
+
+DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
+#undef SESSION_DIRECTIONS
 
 // NAT types
 enum nat_type_t {
@@ -108,31 +133,58 @@ typedef struct flow_cfg_s {
     uint16_t                  action:3;            // flow action(s)
     uint16_t                  role:1;              // flow role (initiator or responder)
     uint16_t                  nat_type:3;          // type of NAT
-    uint16_t                  mac_sa_rewrite:1;    // rewrite src mac
-    uint16_t                  mac_da_rewrite:1;    // rewrite dst mac
-    uint16_t                  vlan_decap_en:1;     // decap vlan header
-    rewrite_actions_en        rw_act;              // rewrite action
-    tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
-    uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan    
-    uint16_t                  ttl_dec:1;           // decrement ttl
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
-    uint16_t                  lport:11;            // dest lport
-    uint64_t                  qid_en:1;            // qid enabled
-    uint64_t                  qtype:3;             // Qtype
-    uint64_t                  qid:24;              // Qid
     qos_action_t              in_qos_action;       // Ingress qos action
     qos_action_t              eg_qos_action;       // Egress qos action
 } __PACK__ flow_cfg_t;
 
+typedef struct flow_pgm_attrs_s {
+    uint16_t                  role:1;              // flow role (initiator or responder)
+    uint16_t                  mac_sa_rewrite:1;    // rewrite src mac
+    uint16_t                  mac_da_rewrite:1;    // rewrite dst mac
+    rewrite_actions_en        rw_act;              // rewrite action
+    uint32_t                  rw_idx;              // rewrite index
+    tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
+    uint32_t                  tnnl_rw_idx;         // tunnel rewrite index
+    uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan    
+    uint16_t                  ttl_dec:1;           // decrement ttl
+    uint16_t                  lport:11;            // dest lport
+    uint64_t                  qid_en:1;            // qid enabled
+    uint64_t                  qtype:3;             // Qtype
+    uint64_t                  qid:24;              // Qid
+    ip_addr_t                 nat_sip;             // source NAT IP, if any
+    ip_addr_t                 nat_dip;             // destination NAT IP, if any
+    uint16_t                  nat_sport;           // NAT source port
+    uint16_t                  nat_dport;           // NAT destination port
+    uint16_t                  nat_l4_port;         // NAT L4 port
+    uint8_t                   mcast_en:1;          // mcast enable
+    ep_t                      *dep;                // only to get rw idx in PD
+} __PACK__ flow_pgm_attrs_t;
+
 // flow state
 struct flow_s {
     hal_spinlock_t    slock;               // lock to protect this structure
+    flow_role_t       role;                // flow role
+    flow_end_type_t   src_type;            // flow src type
+    flow_end_type_t   dst_type;            // flow dst type
+    bool              is_aug_flow;         // is an augment flow
+
     flow_cfg_t        config;              // flow config
+    flow_pgm_attrs_t  pgm_attrs;           // table program attributes
     flow_t            *reverse_flow;       // reverse flow data
+    flow_t            *assoc_flow;         // valid only if flow has an associated flow
     session_t         *session;            // session this flow belongs to, if any
+
+    // flow src & dst info
+    ep_t               *sep;                      // spurce ep
+    ep_t               *dep;                      // dest ep
+    if_t               *sif;                      // source interface
+    if_t               *dif;                      // dest interface
+    l2seg_t            *sl2seg;                   // source l2seg
+    l2seg_t            *dl2seg;                   // dest l2seg
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state
@@ -172,12 +224,16 @@ typedef struct session_args_s {
     flow_cfg_t         *rflow;                    // responder flow
     session_state_t    *session_state;            // connection tracking state
     tenant_t           *tenant;                   // tenant
+#if 0
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
     if_t               *sif;                      // source interface
     if_t               *dif;                      // dest interface
     l2seg_t            *sl2seg;                   // source l2seg
     l2seg_t            *dl2seg;                   // dest l2seg
+#endif
+    SessionSpec        *spec;                     // session spec
+    SessionResponse    *rsp;                      // session response
 } __PACK__ session_args_t;
 
 
@@ -193,7 +249,10 @@ struct session_s {
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
+    session_dir_t       src_dir;                  // source direction
+    session_dir_t       dst_dir;                  // destination direction
     app_session_t       *app_session;             // app session this L4 session is part of, if any
+    tenant_t           *tenant;                   // tenant
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -243,6 +302,7 @@ extern bool flow_compare_key_func(void *key1, void *key2);
 
 extern hal_ret_t ep_get_from_flow_key(const flow_key_t* key,
                                       ep_t **sep, ep_t **dep);
+bool flow_needs_associate_flow(const flow_key_t *flow_key);
 
 extern hal_ret_t session_release(session_t *session);
 
@@ -253,6 +313,7 @@ hal_ret_t session_create(session::SessionSpec& spec,
 
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __SESSION_HPP__

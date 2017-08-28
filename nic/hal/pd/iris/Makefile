@@ -9,6 +9,7 @@ LCXXFLAGS = \
 			-I.. \
 			-I../.. \
 			-I../../src \
+			-I../../svc \
 			-I../common \
 			-I/usr/local/include \
 			-I../../../include \

@@ -233,6 +233,9 @@ TEST_F(session_test, test1)
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     ret = hal::session_create(sess_spec, &sess_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
+    HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
 }
 
 

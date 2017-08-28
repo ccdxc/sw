@@ -70,12 +70,14 @@ typedef struct pd_ep_args_s {
 typedef struct pd_sessoin_args_s {
     tenant_t           *tenant;
     nwsec_profile_t    *nwsec_prof;
+#if 0
     l2seg_t            *l2seg_s;
     l2seg_t            *l2seg_d;
     if_t               *sif;
     if_t               *dif;
     ep_t               *sep;
     ep_t               *dep;
+#endif
     session_t          *session;
     session_state_t    *session_state;
 } __PACK__ pd_session_args_t;
@@ -147,9 +149,11 @@ static inline void
 pd_session_args_init (pd_session_args_t *args)
 {
     args->tenant = NULL;
+#if 0
     args->l2seg_s = args->l2seg_d = NULL;
     args->sif = args->dif = NULL;
     args->sep = args->dep = NULL;
+#endif
     args->session = NULL;
     args->session_state = NULL;
     return;
