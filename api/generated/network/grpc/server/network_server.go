@@ -24,14 +24,12 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 )
 
-var apisrv apiserver.Server
-
 // dummy vars to suppress unused errors
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
 
-type snetworkBackend struct {
+type snetworkNetworkBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
@@ -45,7 +43,7 @@ type snetworkBackend struct {
 }
 
 type eEndpointV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
@@ -56,7 +54,7 @@ type eEndpointV1Endpoints struct {
 	fnAutoWatchEndpoint func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eLbPolicyV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteLbPolicy func(ctx context.Context, t interface{}) (interface{}, error)
@@ -67,7 +65,7 @@ type eLbPolicyV1Endpoints struct {
 	fnAutoWatchLbPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eNetworkV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddNetwork    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteNetwork func(ctx context.Context, t interface{}) (interface{}, error)
@@ -78,7 +76,7 @@ type eNetworkV1Endpoints struct {
 	fnAutoWatchNetwork func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eSecurityGroupV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddSecurityGroup    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteSecurityGroup func(ctx context.Context, t interface{}) (interface{}, error)
@@ -89,7 +87,7 @@ type eSecurityGroupV1Endpoints struct {
 	fnAutoWatchSecurityGroup func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eServiceV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddService    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteService func(ctx context.Context, t interface{}) (interface{}, error)
@@ -100,7 +98,7 @@ type eServiceV1Endpoints struct {
 	fnAutoWatchService func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eSgpolicyV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddSgpolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteSgpolicy func(ctx context.Context, t interface{}) (interface{}, error)
@@ -111,7 +109,7 @@ type eSgpolicyV1Endpoints struct {
 	fnAutoWatchSgpolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 type eTenantV1Endpoints struct {
-	Svc snetworkBackend
+	Svc snetworkNetworkBackend
 
 	fnAutoAddTenant    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTenant func(ctx context.Context, t interface{}) (interface{}, error)
@@ -122,7 +120,7 @@ type eTenantV1Endpoints struct {
 	fnAutoWatchTenant func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
-func (s *snetworkBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
@@ -1523,7 +1521,7 @@ func (e *eTenantV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream ne
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
-	svc := snetworkBackend{}
+	svc := snetworkNetworkBackend{}
 
 	{
 		e := eEndpointV1Endpoints{Svc: svc}

@@ -9,7 +9,10 @@
           "Publisher"
         ]
       }
-    }
+    },
+    "Files": [
+      "protos/example.proto"
+    ]
   },
   "cmd": {
     "Svcs": {
@@ -20,7 +23,10 @@
           "Cluster"
         ]
       }
-    }
+    },
+    "Files": [
+      "protos/cmd.proto"
+    ]
   },
   "network": {
     "Svcs": {
@@ -66,7 +72,10 @@
           "Tenant"
         ]
       }
-    }
+    },
+    "Files": [
+      "protos/network.proto"
+    ]
   },
   "networkencryption": {
     "Svcs": {
@@ -76,6 +85,9 @@
           "TrafficEncryptionPolicy"
         ]
       }
-    }
+    },
+    "Files": [
+      "protos/networkencryption.proto"
+    ]
   }
 }

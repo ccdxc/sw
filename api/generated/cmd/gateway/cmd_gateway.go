@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -27,8 +26,6 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
-
-const codecSize = 1024 * 1024
 
 type sCmdV1GwService struct {
 	logger log.Logger
@@ -126,15 +123,21 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = cmd.RegisterCmdV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service cmd.CmdV1")
+
 	m.Handle("/v1/cmd/", http.StripPrefix("/v1/cmd", mux))
-	err = registerSwaggerDef(m, logger)
+	if fileCount == 1 {
+		err = registerSwaggerDef(m, logger)
+	}
 	return err
 }
 
@@ -159,23 +162,6 @@ func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, opts .
 
 	cl := adapterCmdV1{grpcclient.NewCmdV1Backend(conn, e.logger)}
 	return cl, nil
-}
-
-func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/cmd/swagger")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.Box")
-		return err
-	}
-	content, err := box.Bytes("cmd.swagger.json")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.File")
-		return err
-	}
-	m.HandleFunc("/swagger/cmd/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(content)
-	})
-	return nil
 }
 
 func init() {

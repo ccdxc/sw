@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -27,8 +26,6 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
-
-const codecSize = 1024 * 1024
 
 type sTrafficEncryptionPolicyV1GwService struct {
 	logger log.Logger
@@ -91,15 +88,21 @@ func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.C
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = networkencryption.RegisterTrafficEncryptionPolicyV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service networkencryption.TrafficEncryptionPolicyV1")
+
 	m.Handle("/v1/trafficEncryptionPolicy/", http.StripPrefix("/v1/trafficEncryptionPolicy", mux))
-	err = registerSwaggerDef(m, logger)
+	if fileCount == 1 {
+		err = registerSwaggerDef(m, logger)
+	}
 	return err
 }
 
@@ -124,23 +127,6 @@ func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grp
 
 	cl := adapterTrafficEncryptionPolicyV1{grpcclient.NewTrafficEncryptionPolicyV1Backend(conn, e.logger)}
 	return cl, nil
-}
-
-func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/networkencryption/swagger")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.Box")
-		return err
-	}
-	content, err := box.Bytes("networkencryption.swagger.json")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.File")
-		return err
-	}
-	m.HandleFunc("/swagger/networkencryption/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(content)
-	})
-	return nil
 }
 
 func init() {

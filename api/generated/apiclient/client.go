@@ -16,17 +16,28 @@ import (
 	"github.com/pensando/sw/utils/log"
 )
 
-// Services is list of all services exposed by the client
+// Services is list of all services exposed by the client ---
 type Services interface {
+
+	// Package is bookstore and len of messages is 3
 	BookstoreV1() bookstore.BookstoreV1Interface
+	// Package is cmd and len of messages is 2
 	CmdV1() cmd.CmdV1Interface
+	// Package is network and len of messages is 1
 	EndpointV1() network.EndpointV1Interface
+	// Package is network and len of messages is 1
 	LbPolicyV1() network.LbPolicyV1Interface
+	// Package is network and len of messages is 1
 	NetworkV1() network.NetworkV1Interface
+	// Package is network and len of messages is 1
 	SecurityGroupV1() network.SecurityGroupV1Interface
+	// Package is network and len of messages is 1
 	ServiceV1() network.ServiceV1Interface
+	// Package is network and len of messages is 1
 	SgpolicyV1() network.SgpolicyV1Interface
+	// Package is network and len of messages is 1
 	TenantV1() network.TenantV1Interface
+	// Package is networkencryption and len of messages is 1
 	TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface
 }
 

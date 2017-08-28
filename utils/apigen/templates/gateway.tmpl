@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -29,10 +28,8 @@ import (
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
 
-const codecSize = 1024 * 1024
-
-{{$grpcdest := "localhost:8081"}} {{$swaggerfile := getSwaggerFileName .Name}}
-{{$cgrpcdest := (getExtension "venice.fileGrpcDest" .)}}
+{{$grpcdest := "localhost:8082"}}
+{{$cgrpcdest := (getGrpcDestination .)}}
 {{$pkgname := .GoPkg.Name}}{{range $index, $v := .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}
 type s{{.Name}}GwService struct {
 	logger log.Logger
@@ -73,15 +70,21 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = {{$pkgname}}.Register{{.Name}}HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service {{$pkgname}}.{{.Name}}")
+	{{$manifest := (getSvcManifest "generated/apiclient/svcmanifest.json")}}{{$pkgs := (index $manifest $pkgname)}}{{$fileCount := (len $pkgs.Files)}}
 	m.Handle("/{{$svcparams.Version}}/{{$svcparams.Prefix}}/", http.StripPrefix("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", mux))
-	{{if eq ($index) 0}}err = registerSwaggerDef(m, logger){{end}}
+	if fileCount == {{$fileCount}} {
+		{{if eq ($index) 0}}err = registerSwaggerDef(m, logger){{end}}
+	}
 	return err
 }
 
@@ -107,23 +110,6 @@ func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, op
 	cl := adapter{{$svcname}}{grpcclient.New{{.Name}}Backend(conn, e.logger)}
 	return cl, nil
 }{{end}}
-
-func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../{{getCWD2}}/generated/{{$pkgname}}/swagger")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.Box")
-		return err
-	}
-	content, err := box.Bytes("{{$swaggerfile}}")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.File")
-		return err
-	}
-	m.HandleFunc("/swagger/{{$pkgname}}/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(content)
-	})
-	return nil
-}
 
 func init() {
 	apigw := apigwpkg.MustGetAPIGateway()

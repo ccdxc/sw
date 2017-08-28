@@ -14,6 +14,619 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
-  "definitions": {}
+  "paths": {
+    "/books/{Spec.ISBNId}": {
+      "get": {
+        "operationId": "AutoGetBook",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreBook"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Spec.ISBNId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Author",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IdProvider",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Inventory",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "operationId": "AutoListOrder",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreAutoMsgOrderListHelper"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddOrder",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/orders/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetOrder",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "PROCESSING",
+              "FILLED",
+              "SHIPPED",
+              "COMPLETED"
+            ],
+            "default": "CREATED"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteOrder",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateOrder",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "bookstoreAutoMsgBookListHelper": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreBook"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgBookWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstoreBook"
+        }
+      }
+    },
+    "bookstoreAutoMsgOrderListHelper": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrder"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgOrderWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstoreOrder"
+        }
+      }
+    },
+    "bookstoreAutoMsgPublisherListHelper": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstorePublisher"
+          }
+        }
+      }
+    },
+    "bookstoreAutoMsgPublisherWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstorePublisher"
+        }
+      }
+    },
+    "bookstoreBook": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreBookSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreBookStatus"
+        }
+      }
+    },
+    "bookstoreBookSpec": {
+      "type": "object",
+      "properties": {
+        "ISBNId": {
+          "type": "string"
+        },
+        "Author": {
+          "type": "string"
+        },
+        "IdProvider": {
+          "type": "string"
+        }
+      }
+    },
+    "bookstoreBookStatus": {
+      "type": "object",
+      "properties": {
+        "Inventory": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "bookstoreOrder": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreOrderSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreOrderStatus"
+        }
+      }
+    },
+    "bookstoreOrderItem": {
+      "type": "object",
+      "properties": {
+        "ISBNId": {
+          "type": "string"
+        },
+        "Quantity": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "bookstoreOrderSpec": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Order": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrderItem"
+          }
+        }
+      }
+    },
+    "bookstoreOrderStatus": {
+      "type": "object",
+      "properties": {
+        "Status": {
+          "$ref": "#/definitions/bookstoreOrderStatusOrderStatus"
+        },
+        "Filled": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrderSpec"
+          }
+        }
+      }
+    },
+    "bookstoreOrderStatusOrderStatus": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "PROCESSING",
+        "FILLED",
+        "SHIPPED",
+        "COMPLETED"
+      ],
+      "default": "CREATED"
+    },
+    "bookstorePublisher": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstorePublisherSpec"
+        }
+      }
+    },
+    "bookstorePublisherSpec": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "Address": {
+          "type": "string"
+        }
+      }
+    }
+  }
 }

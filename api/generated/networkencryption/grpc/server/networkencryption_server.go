@@ -24,14 +24,12 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 )
 
-var apisrv apiserver.Server
-
 // dummy vars to suppress unused errors
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
 
-type snetworkencryptionBackend struct {
+type snetworkencryptionNetworkencryptionBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
@@ -39,7 +37,7 @@ type snetworkencryptionBackend struct {
 }
 
 type eTrafficEncryptionPolicyV1Endpoints struct {
-	Svc snetworkencryptionBackend
+	Svc snetworkencryptionNetworkencryptionBackend
 
 	fnAutoAddTrafficEncryptionPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTrafficEncryptionPolicy func(ctx context.Context, t interface{}) (interface{}, error)
@@ -50,7 +48,7 @@ type eTrafficEncryptionPolicyV1Endpoints struct {
 	fnAutoWatchTrafficEncryptionPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
-func (s *snetworkencryptionBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
@@ -268,7 +266,7 @@ func (e *eTrafficEncryptionPolicyV1Endpoints) AutoWatchTrafficEncryptionPolicy(i
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
-	svc := snetworkencryptionBackend{}
+	svc := snetworkencryptionNetworkencryptionBackend{}
 
 	{
 		e := eTrafficEncryptionPolicyV1Endpoints{Svc: svc}

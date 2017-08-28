@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -27,8 +26,6 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
-
-const codecSize = 1024 * 1024
 
 type sEndpointV1GwService struct {
 	logger log.Logger
@@ -91,15 +88,21 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterEndpointV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.EndpointV1")
+
 	m.Handle("/v1/endpoints/", http.StripPrefix("/v1/endpoints", mux))
-	err = registerSwaggerDef(m, logger)
+	if fileCount == 1 {
+		err = registerSwaggerDef(m, logger)
+	}
 	return err
 }
 
@@ -187,15 +190,21 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterLbPolicyV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.LbPolicyV1")
-	m.Handle("/v1/lb-policy/", http.StripPrefix("/v1/lb-policy", mux))
 
+	m.Handle("/v1/lb-policy/", http.StripPrefix("/v1/lb-policy", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -283,15 +292,21 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterNetworkV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.NetworkV1")
-	m.Handle("/v1/networks/", http.StripPrefix("/v1/networks", mux))
 
+	m.Handle("/v1/networks/", http.StripPrefix("/v1/networks", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -379,15 +394,21 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterSecurityGroupV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.SecurityGroupV1")
-	m.Handle("/v1/security-groups/", http.StripPrefix("/v1/security-groups", mux))
 
+	m.Handle("/v1/security-groups/", http.StripPrefix("/v1/security-groups", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -475,15 +496,21 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterServiceV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.ServiceV1")
-	m.Handle("/v1/services/", http.StripPrefix("/v1/services", mux))
 
+	m.Handle("/v1/services/", http.StripPrefix("/v1/services", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -571,15 +598,21 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterSgpolicyV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.SgpolicyV1")
-	m.Handle("/v1/sgpolicy/", http.StripPrefix("/v1/sgpolicy", mux))
 
+	m.Handle("/v1/sgpolicy/", http.StripPrefix("/v1/sgpolicy", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -667,15 +700,21 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
-	mux := runtime.NewServeMux(opts)
+	if mux == nil {
+		mux = runtime.NewServeMux(opts)
+	}
+	fileCount++
 	err = network.RegisterTenantV1HandlerWithClient(ctx, mux, cl)
 	if err != nil {
 		err = errors.Wrap(err, "service registration failed")
 		return err
 	}
 	logger.InfoLog("msg", "registered service network.TenantV1")
-	m.Handle("/v1/tenants/", http.StripPrefix("/v1/tenants", mux))
 
+	m.Handle("/v1/tenants/", http.StripPrefix("/v1/tenants", mux))
+	if fileCount == 1 {
+
+	}
 	return err
 }
 
@@ -700,23 +739,6 @@ func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, opt
 
 	cl := adapterTenantV1{grpcclient.NewTenantV1Backend(conn, e.logger)}
 	return cl, nil
-}
-
-func registerSwaggerDef(m *http.ServeMux, logger log.Logger) error {
-	box, err := rice.FindBox("../../../../../sw/api/generated/network/swagger")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.Box")
-		return err
-	}
-	content, err := box.Bytes("network.swagger.json")
-	if err != nil {
-		err = errors.Wrap(err, "error opening rice.File")
-		return err
-	}
-	m.HandleFunc("/swagger/network/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(content)
-	})
-	return nil
 }
 
 func init() {

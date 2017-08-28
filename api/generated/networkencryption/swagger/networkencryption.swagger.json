@@ -14,6 +14,361 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
-  "definitions": {}
+  "paths": {
+    "/{O.Tenant}": {
+      "post": {
+        "operationId": "AutoAddTrafficEncryptionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "TrafficEncryptionPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/trafficEncryptionPolicy": {
+      "get": {
+        "operationId": "AutoGetTrafficEncryptionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Mode",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Tls.Version",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Tls.CipherSuite",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPsec.EncryptionTransform",
+            "description": "Possible values: TLS, IPsec.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPsec.IntegrityTransform",
+            "description": "TLS Parameters for workload-to-workload connections.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.KeyRotationIntervalSecs",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "TrafficEncryptionPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteTrafficEncryptionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TrafficEncryptionPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateTrafficEncryptionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "TrafficEncryptionPolicyV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "networkencryptionAutoMsgTrafficEncryptionPolicyListHelper": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "TLS version: only supported value at present is 1.2"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+          }
+        }
+      }
+    },
+    "networkencryptionAutoMsgTrafficEncryptionPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106)"
+        },
+        "Object": {
+          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy",
+          "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
+        }
+      }
+    },
+    "networkencryptionIPsecProtocolSpec": {
+      "type": "object",
+      "properties": {
+        "EncryptionTransform": {
+          "type": "string",
+          "title": "Possible values: TLS, IPsec"
+        },
+        "IntegrityTransform": {
+          "type": "string",
+          "title": "TLS Parameters for workload-to-workload connections"
+        }
+      }
+    },
+    "networkencryptionTLSProtocolSpec": {
+      "type": "object",
+      "properties": {
+        "Version": {
+          "type": "string"
+        },
+        "CipherSuite": {
+          "type": "string"
+        }
+      }
+    },
+    "networkencryptionTrafficEncryptionPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicySpec",
+          "description": "Spec contains the configuration of the encryption policy."
+        },
+        "Status": {
+          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicyStatus",
+          "description": "Status contains the current state of the encryption policy."
+        }
+      }
+    },
+    "networkencryptionTrafficEncryptionPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Mode": {
+          "type": "string"
+        },
+        "Tls": {
+          "$ref": "#/definitions/networkencryptionTLSProtocolSpec"
+        },
+        "IPsec": {
+          "$ref": "#/definitions/networkencryptionIPsecProtocolSpec"
+        },
+        "KeyRotationIntervalSecs": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "networkencryptionTrafficEncryptionPolicyStatus": {
+      "type": "object"
+    }
+  }
 }

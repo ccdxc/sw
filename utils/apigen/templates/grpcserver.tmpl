@@ -23,15 +23,14 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/listerwatcher"
 )
-{{$pkgname := .GoPkg.Name}}
-var apisrv apiserver.Server
+{{$pkgname := .GoPkg.Name}}{{$flname := (getFileName .Name)}}
 
 // dummy vars to suppress unused errors
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
 
-type s{{$pkgname}}Backend struct {
+type s{{$pkgname}}{{$flname}}Backend struct {
 	Services  map[string]apiserver.Service
 	Messages  map[string]apiserver.Message
 	{{range .Services}}
@@ -39,14 +38,14 @@ type s{{$pkgname}}Backend struct {
 }
 {{range .Services}}{{$svcname := .Name}}
 type e{{.Name}}Endpoints struct {
-	Svc           s{{$pkgname}}Backend
+	Svc           s{{$pkgname}}{{$flname}}Backend
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
 	fn{{.Name}} func(ctx context.Context, t interface{}) (interface{}, error){{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 	fnAutoWatch{{.}} func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {{end}}{{end}}
 }{{end}}
 
-func (s *s{{$pkgname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
+func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 		{{range .Messages}}{{if isNestedMessage .}}{{else}}
@@ -218,7 +217,7 @@ func (e *e{{$svcname}}Endpoints)AutoWatch{{.}}(in *api.ListWatchOptions, stream 
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
-	svc := s{{$pkgname}}Backend{}
+	svc := s{{$pkgname}}{{$flname}}Backend{}
 
 	{{range .Services}}
 	{

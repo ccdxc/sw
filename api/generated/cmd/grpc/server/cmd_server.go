@@ -24,14 +24,12 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 )
 
-var apisrv apiserver.Server
-
 // dummy vars to suppress unused errors
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
 
-type scmdBackend struct {
+type scmdCmdBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
@@ -39,7 +37,7 @@ type scmdBackend struct {
 }
 
 type eCmdV1Endpoints struct {
-	Svc scmdBackend
+	Svc scmdCmdBackend
 
 	fnAutoAddCluster    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddNode       func(ctx context.Context, t interface{}) (interface{}, error)
@@ -56,7 +54,7 @@ type eCmdV1Endpoints struct {
 	fnAutoWatchCluster func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
-func (s *scmdBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
@@ -451,7 +449,7 @@ func (e *eCmdV1Endpoints) AutoWatchCluster(in *api.ListWatchOptions, stream cmd.
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
-	svc := scmdBackend{}
+	svc := scmdCmdBackend{}
 
 	{
 		e := eCmdV1Endpoints{Svc: svc}

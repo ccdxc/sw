@@ -357,7 +357,8 @@ func genManifest(path, pkg, file string) (map[string]string, error) {
 
 //
 type packageDef struct {
-	Svcs map[string]serviceDef
+	Svcs  map[string]serviceDef
+	Files []string
 }
 
 type serviceDef struct {
@@ -365,30 +366,47 @@ type serviceDef struct {
 	Messages []string
 }
 
-func genServiceManifest(filenm string, file *descriptor.File) (map[string]packageDef, error) {
+// getServiceManifest retrieves the manifest from file specified in arg
+func getServiceManifest(filenm string) (map[string]packageDef, error) {
 	manifest := make(map[string]packageDef)
 	if _, err := os.Stat(filenm); os.IsNotExist(err) {
 		glog.V(1).Infof("manifest [%s] not found", filenm)
-	} else {
-		glog.V(1).Infof("manifest exists, reading from manifest")
-		raw, err := ioutil.ReadFile(filenm)
-		if err != nil {
-			glog.V(1).Infof("Reading Manifest failed (%s)", err)
-			return nil, err
-		}
-		err = json.Unmarshal(raw, &manifest)
-		if err != nil {
-			glog.V(1).Infof("Json Unmarshall of svc manifest file failed ignoring current file")
-		}
+		return manifest, nil
+	}
+	glog.V(1).Infof("manifest exists, reading from manifest")
+	raw, err := ioutil.ReadFile(filenm)
+	if err != nil {
+		glog.V(1).Infof("Reading Manifest failed (%s)", err)
+		return nil, err
+	}
+	err = json.Unmarshal(raw, &manifest)
+	if err != nil {
+		glog.V(1).Infof("Json Unmarshall of svc manifest file failed ignoring current file")
+		return nil, err
+	}
+	glog.V(1).Infof("manifest has %v packages", len(manifest))
+	return manifest, nil
+}
+
+// genServiceManifest generates a service manifest at the location specified.
+//  The manifest is created in an additive fashion since it is called once per protofile.
+func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
+	manifest, err := getServiceManifest(filenm)
+	if err != nil {
+		return "", err
 	}
 	pkg := file.GoPkg.Name
-	pkgdef := packageDef{Svcs: make(map[string]serviceDef)}
-
+	var pkgdef packageDef
+	ok := false
+	if pkgdef, ok = manifest[pkg]; !ok {
+		pkgdef = packageDef{Svcs: make(map[string]serviceDef)}
+	}
+	pkgdef.Files = append(pkgdef.Files, *file.Name)
 	for _, svc := range file.Services {
 		ver, err := reg.GetExtension("venice.apiVersion", svc)
 		if err != nil {
 			glog.V(1).Infof("unversioned service, ingnoring for svc manifest [%s](%s)", svc.Name, err)
-			return manifest, nil
+			continue
 		}
 		svcdef := serviceDef{
 			Version: ver.(string),
@@ -412,17 +430,7 @@ func genServiceManifest(filenm string, file *descriptor.File) (map[string]packag
 		glog.Fatalf("failed to marshal service manifest")
 	}
 
-	cwd, err := os.Getwd()
-	fl, err := os.Create(filenm)
-	if err != nil {
-		glog.Fatalf("could not create service manifest file(%s) cwd (%s)", err, cwd)
-	}
-	defer fl.Close()
-	_, err = fl.WriteString(string(ret))
-	if err != nil {
-		glog.Fatalf("could not write service manifest file")
-	}
-	return manifest, nil
+	return string(ret), nil
 }
 
 // relationRef is reference to relations
@@ -670,6 +678,19 @@ func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	return "", errors.New("not an autogen method")
 }
 
+//getGrpcDestination returns the gRPC destination specified.
+func getGrpcDestination(file *descriptor.File) string {
+	if v, err := reg.GetExtension("venice.fileGrpcDest", file); err == nil {
+		return v.(string)
+	}
+	return ""
+}
+
+// getFileName returns a filename sans the extension and path
+func getFileName(name string) string {
+	return strings.Title(strings.TrimSuffix(filepath.Base(name), filepath.Ext(filepath.Base(name))))
+}
+
 //--- Mutators functions ---//
 func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
@@ -701,6 +722,7 @@ func init() {
 	reg.RegisterFunc("createDir", createDir)
 	reg.RegisterFunc("genManifest", genManifest)
 	reg.RegisterFunc("genSvcManifest", genServiceManifest)
+	reg.RegisterFunc("getSvcManifest", getServiceManifest)
 	reg.RegisterFunc("addRelations", addRelations)
 	reg.RegisterFunc("genRelMap", genRelMap)
 	reg.RegisterFunc("title", strings.Title)
@@ -719,6 +741,8 @@ func init() {
 	reg.RegisterFunc("isRestExposed", isRestExposed)
 	reg.RegisterFunc("isRestMethod", isRestMethod)
 	reg.RegisterFunc("isNestedMessage", isNestedMessage)
+	reg.RegisterFunc("getFileName", getFileName)
+	reg.RegisterFunc("getGrpcDestination", getGrpcDestination)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

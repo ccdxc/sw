@@ -926,17 +926,25 @@ func TestGetSvcManifest(t *testing.T) {
 		t.Errorf("failed to genServiceManifest (%s)", err)
 	}
 	expected := make(map[string]packageDef)
-	expected["example"] = packageDef{Svcs: make(map[string]serviceDef)}
-	expected["example"].Svcs["hybrid_crudservice"] = serviceDef{
+
+	pkg := packageDef{Svcs: make(map[string]serviceDef)}
+	pkg.Files = append(expected["example"].Files, "example.proto")
+	pkg.Svcs["hybrid_crudservice"] = serviceDef{
 		Version:  "v1",
 		Messages: []string{"Nest1", "testmsg"},
 	}
-	expected["example"].Svcs["full_crudservice"] = serviceDef{
+	pkg.Svcs["full_crudservice"] = serviceDef{
 		Version:  "v1",
 		Messages: []string{"Nest1"},
 	}
-	if !reflect.DeepEqual(manifest, expected) {
-		t.Errorf("result does not match %+v", manifest)
+	expected["example"] = pkg
+
+	ret, err := json.MarshalIndent(expected, "", "  ")
+	if err != nil {
+		t.Fatalf("Json Unmarshall of svc manifest file failed")
+	}
+	if manifest != string(ret) {
+		t.Errorf("result does not match [%+v] [%v]", manifest, string(ret))
 	}
 }
 
@@ -1207,6 +1215,67 @@ func TestParsers(t *testing.T) {
 		}
 		if _, err := parseRestServiceOption(&dummyval1); err == nil {
 			t.Errorf("parseStringOptions passed")
+		}
+	}
+}
+
+func TestGetFileName(t *testing.T) {
+	var tests = []struct {
+		input    string
+		expected string
+	}{
+		{"/trythis.proto", "Trythis"},
+		{"/TryThis.exa", "TryThis"},
+		{"aaa/this", "This"},
+	}
+	for _, test := range tests {
+		ret := getFileName(test.input)
+		if ret != test.expected {
+			t.Errorf("expecting [%s] found [%s]", test.expected, ret)
+		}
+	}
+}
+
+func TestGetGrpcDestination(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileGrpcDest]: "localhost:8082">
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	var tests = []struct {
+		input    string
+		expected string
+	}{
+		{input: "example.proto", expected: "localhost:8082"},
+		{input: "example2.proto", expected: ""},
+	}
+	for _, test := range tests {
+		file, err := r.LookupFile(test.input)
+		if err != nil {
+			t.Fatalf("Could not find file %s in request", test.input)
+		}
+		if test.expected != getGrpcDestination(file) {
+			t.Errorf("expecting [%s] found [%s]", test.expected, getGrpcDestination(file))
 		}
 	}
 }

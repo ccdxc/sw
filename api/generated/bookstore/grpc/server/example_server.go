@@ -24,14 +24,12 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 )
 
-var apisrv apiserver.Server
-
 // dummy vars to suppress unused errors
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
 
-type sbookstoreBackend struct {
+type sbookstoreExampleBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
@@ -39,7 +37,7 @@ type sbookstoreBackend struct {
 }
 
 type eBookstoreV1Endpoints struct {
-	Svc sbookstoreBackend
+	Svc sbookstoreExampleBackend
 
 	fnAutoAddBook         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddOrder        func(ctx context.Context, t interface{}) (interface{}, error)
@@ -62,7 +60,7 @@ type eBookstoreV1Endpoints struct {
 	fnAutoWatchPublisher func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
-func (s *sbookstoreBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
+func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
 	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
@@ -636,7 +634,7 @@ func (e *eBookstoreV1Endpoints) AutoWatchPublisher(in *api.ListWatchOptions, str
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()
 
-	svc := sbookstoreBackend{}
+	svc := sbookstoreExampleBackend{}
 
 	{
 		e := eBookstoreV1Endpoints{Svc: svc}

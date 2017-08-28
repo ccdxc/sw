@@ -20,3 +20,6 @@ bld_proto:
 genapi:
 	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos	
 
+clean:
+	@rm -rf generated/*
+

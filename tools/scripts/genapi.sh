@@ -25,6 +25,10 @@ if [ -e ${curdir}/generated/relations.json ]; then
     rm -f ${curdir}/generated/relations.json
 fi
 
+if [ -e ${curdir}/generated/apiclient/svcmanifest.json ]; then
+    rm -f ${curdir}/generated/apiclient/svcmanifest.json
+fi
+
 echo "++ generating manifest"
 for protofile in ${protopath}/*.proto
 do

@@ -12,7 +12,6 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	api "github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
@@ -22,31 +21,10 @@ import (
 	"github.com/pensando/sw/utils/log"
 )
 
-func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
-	xmd, ok := metadata.FromContext(ctx)
-	if ok {
-		cmd := metadata.Join(*md, xmd)
-		*md = cmd
-	}
-	return ctx
-}
-
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
 var _ listerwatcher.WatcherClient
 var _ kvstore.Interface
-
-func addVersion(ctx context.Context, version string) context.Context {
-	pairs := []string{apiserver.RequestParamVersion, version}
-	inmd, ok := metadata.FromContext(ctx)
-	var outmd metadata.MD
-	if ok {
-		outmd = metadata.Join(inmd, metadata.Pairs(pairs...))
-	} else {
-		outmd = metadata.Pairs(pairs...)
-	}
-	return metadata.NewContext(ctx, outmd)
-}
 
 // NewBookstoreV1 sets up a new client for BookstoreV1
 func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceBookstoreV1Client {
