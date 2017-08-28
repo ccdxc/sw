@@ -2,12 +2,12 @@
 config_filter:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=False
         interface   : filter://any
     flow        : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA

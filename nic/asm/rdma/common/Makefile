@@ -1,3 +1,4 @@
+SRC_DIR = .
 TOPDIR = ../../..
 P4_DIR = $(TOPDIR)/p4/rdma
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
@@ -30,3 +31,16 @@ clean:
 
 %.bin: %.s
 	$(CAPAS_BIN) $(INC_DIR) $< -o $(OBJ_DIR)/$@
+
+TEST_FILES := \
+    $(SRC_DIR)/ctl/common_p4plus_stage0_lif_table1.ctl
+
+TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
+
+
+$(TMP_FILES): %.x: %.ctl
+	@echo Testing ...
+	@echo $<
+	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIR) $< $(OBJ_DIR)/$(basename $(notdir $@)).bin
+
+gtest: $(TMP_FILES)

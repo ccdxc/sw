@@ -13,6 +13,6 @@ RDMA_RXGEN_FILE = $(GEN_DIR)/$(RDMA_RXPROJ)/asm_out/ingress.h
 
 my_all: $(RDMA_RXGEN_FILE) 
 
-$(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4
+$(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4 rdma_rxdma_headers.p4
 	$(NCC) $(NCC_OPTIONS) $(RDMA_RXPROJ).p4 --gen-dir $(GEN_DIR)
 

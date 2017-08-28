@@ -1,3 +1,4 @@
+SRC_DIR = .
 TOPDIR = ../../..
 P4_DIR = $(TOPDIR)/p4/rdma
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
@@ -31,3 +32,17 @@ clean:
 
 %.bin: %.s
 	$(CAPAS_BIN) $(INC_DIR) $< -o $(OBJ_DIR)/$@
+
+TEST_FILES := \
+    $(SRC_DIR)/ctl/resp_rx_rqcb_process.ctl
+
+TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
+
+resp_rx_rqcb_process_PARAMS := -P resp_rx_rqpt_process=100
+
+$(TMP_FILES): %.x: %.ctl
+	@echo Testing ...
+	@echo $<
+	$(CAPSIM_BIN) -e ${$(basename $(notdir $@))_ARGS} ${$(basename $(notdir $@))_PARAMS} $(INC_DIR) $< $(OBJ_DIR)/$(basename $(notdir $@)).bin
+
+gtest: $(TMP_FILES)

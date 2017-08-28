@@ -16,11 +16,24 @@
 
 %%
     .param      tcp_rx_read_shared_stage0_start
+    .param      resp_rx_rqcb_process
 
+.align
 tcp_rx_stage0:
     j tcp_rx_read_shared_stage0_start
     nop
 
+.align
 eth_rx_stage0:
    nop.e
    nop
+
+.align
+rdma_resp_rx_stage0:
+    j resp_rx_rqcb_process
+    nop
+
+.align
+rdma_req_rx_stage0:
+    nop.e
+    nop

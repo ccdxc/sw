@@ -158,6 +158,7 @@ action rdma_stage0_bth_action () {
     modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
 
     // bth params
+    modify_field(rdma_bth_scr.bth_nop, rdma_bth.bth_nop);
     modify_field(rdma_bth_scr.bth_opcode, rdma_bth.bth_opcode);
     modify_field(rdma_bth_scr.bth_se, rdma_bth.bth_se);
     modify_field(rdma_bth_scr.bth_m, rdma_bth.bth_m);

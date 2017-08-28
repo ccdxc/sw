@@ -24,6 +24,7 @@ tls_tx_stage0:
     j  tls_stage0
     nop
 
+.align
 eth_tx_stage0:
    nop.e
    nop

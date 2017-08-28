@@ -34,15 +34,15 @@ struct capri_intrinsic_s0_k_t {
 };
 
 struct capri_intrinsic_qstate_t {
-    pid: 16;
-    total_rings: 4;
-    host_rings: 4;
-    eval_last: 8;
-    cos_selector: 8;
-    cosB: 4;
-    cosA: 4;
+    pc: 8;  
     rsvd: 8;
-    pc: 8;
+    cosA: 4;
+    cosB: 4;
+    cos_selector: 8;
+    eval_last: 8;
+    host_rings: 4;
+    total_rings: 4;
+    pid: 16;
 };
 
 struct capri_intrinsic_ring_t {

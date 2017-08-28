@@ -8,7 +8,7 @@ broadcast   : drop
 multicast   : drop
 l4lb        : True
 endpoints   :
-    useg    : 0
+    useg    : 1
     pvlan   : 0
     direct  : 0
     remote  : 2 # Remote TEPs

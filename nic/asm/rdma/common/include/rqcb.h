@@ -54,28 +54,40 @@ struct rqcb0_t {
     struct capri_intrinsic_ring_t ring3;
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
+
     pt_base_addr: 32;
+
     rsq_base_addr: 32;
+
     rsq_size: 8;
+    token_id: 8;
+    nxt_to_go_token_id: 8;
+    rsq_pindex_prime: 8;
+
+
     log_pmtu: 5;
     log_rq_page_size: 5;
     log_wqe_size: 5;
     log_num_wqes: 5;
-    e_psn: 24;
-    busy: 1;
-    in_progress: 1;
     serv_type: 3;
     srq_enabled: 1;
+    busy: 1;
+    in_progress: 1;
+    rsvd1: 3; 
     adjust_rsq_c_index_in_progress: 1;
     rsq_quiesce: 1;
     cache: 1;
-    rsq_pindex_prime: 8;
+
+
+    e_psn: 24;
     adjust_rsq_c_index: 8;
-    msn:24;
-    token_id: 8;
-    nxt_to_go_token_id: 8;
-    pd: 32;
-    rsvd: 40;
+
+    msn:24; 
+    rsvd2:8; 
+
+    pd: 32; 
+
+    rsvd3: 32;
 };
 
 struct rqcb1_t {

@@ -21,6 +21,7 @@ sessions:
         scale: 1
         ipv4:
             - ref://store/specs/id=SESSION_UDP_FP
+            - ref://store/specs/id=SESSION_UDP_SERVICES
         ipv6: None
         mac: None
 

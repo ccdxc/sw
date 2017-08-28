@@ -39,7 +39,6 @@ resp_rx_rqcb_process:
     add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
     add     r6, r0, CAPRI_APP_DATA_PAYLOAD_LEN
 
-    srl     r7, r7, 8
     // get a tokenid
     phvwr   p.my_token_id, d.token_id
 

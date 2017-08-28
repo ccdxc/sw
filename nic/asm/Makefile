@@ -4,6 +4,7 @@ LIBDIRS = \
           nw \
           common-p4+ \
 	  proxy \
+          rdma \
           storage \
           $(NULL)
 PGMDIRS = $(NULL)

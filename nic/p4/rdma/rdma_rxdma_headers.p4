@@ -10,6 +10,7 @@ header_type p4_to_p4plus_roce_bth_header_t {
         raw_flags           : 16;
         payload_len         : 16;
 
+        bth_nop             : 32;
         bth_opcode          : 8;
         bth_se              : 1;
         bth_m               : 1;
