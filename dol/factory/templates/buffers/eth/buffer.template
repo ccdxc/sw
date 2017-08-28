@@ -1,0 +1,10 @@
+# Eth Buffer Template
+meta:
+    id      : ETH_BUFFER
+    package : factory.objects.eth
+    module  : buffer
+    objname : EthBufferObject
+
+address : None
+size    : None
+data    : None

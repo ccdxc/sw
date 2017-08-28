@@ -37,7 +37,7 @@ class EnicObject(base.ConfigObjectBase):
 
     def AttachEndpoint(self, ep):
         assert(self.ep == None)
-        self.lif            = self.tenant.AllocLif()
+        self.lif = self.tenant.AllocLif()
         self.ep = ep
         self.Show()
         return

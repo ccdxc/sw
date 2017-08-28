@@ -21,4 +21,4 @@ sessions:
         ipv6: None
         mac: None
 
-lif: ref://store/specs/id=LIF_ETH
+lif: ref://store/specs/id=LIF_DEFAULT

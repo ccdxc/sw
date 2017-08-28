@@ -1,32 +1,35 @@
 # LIF Configuration Template
-# LIFx.admin.queue[1-4].ring[1-2]
 meta:
-    id: LIF_ETH
+    id: LIF_DEFAULT
 
-types   :
+rdma: True
+
+entries:
     - entry:
-        type        : admin
-        queues      : 1
-        qstatesize  : 64
-        rings       : 1
+        id          : TXQ
+        type        : 0
+        purpose     : tx
+        count       : 1
+        size        : 256
+        ring:
+            id      : R0
+            count   : 1
+            pi      : 0
+            ci      : 0
+            size    : 1024
+            template: ref://factory/templates/id=DESCR_ETH_TX
+
     - entry:
-        type        : tx
-        queues      : 2
-        qstatesize  : 64
-        rings       : 1
-    - entry:
-        type        : rx
-        queues      : 2
-        qstatesize  : 64
-        rings       : 1
-    - entry:
-        type        : cq
-        queues      : 1
-        qstatesize  : 64
-        rings       : 1
-    - entry:
-        type        : eq
-        queues      : 1
-        qstatesize  : 64
-        rings       : 1
+        id          : RXQ
+        type        : 1
+        purpose     : rx
+        count       : 1
+        size        : 256
+        ring:
+            id      : R0
+            count   : 1
+            pi      : 0
+            ci      : 0
+            size    : 1024
+            template: ref://factory/templates/id=DESCR_ETH_RX
 

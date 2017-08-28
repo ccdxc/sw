@@ -1,0 +1,95 @@
+# Test Spec
+config_filter:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow            : filter://fwtype=L2,label=NETWORKING
+    maxflows        : 1
+
+packets:
+    - packet:
+        id          : PKT1 # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           size: ref://testcase/packets/id=PKT1/hdrsize
+           data: ref://testcase/packets/id=PKT1/hdrbytes
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           size: ref://testcase/packets/id=PKT1/payloadsize
+           data: ref://testcase/packets/id=PKT1/payloadbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            num_buffs   : 2
+            b0_address  : ref://testcase/buffers/id=BUF1/address
+            b0_len      : ref://testcase/buffers/id=BUF1/size
+            b1_address  : ref://testcase/buffers/id=BUF2/address
+            b1_len      : ref://testcase/buffers/id=BUF2/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queues/id=TXQ/rings/id=R0
+            # Translates to RING0.Post(DESC1)
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queues/id=TXQ/rings/id=R0/doorbell
+        fields:
+            updbits : 1
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/dst/endpoint/intf/ports

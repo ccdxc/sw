@@ -27,13 +27,10 @@ class LifObject(objects.FrameworkObject):
         self.status     = haldefs.interface.IF_STATUS_UP
         self.enable_rdma = 1;
        
-        self.types      = {}
-
-        self.queues = []
-        for qt in spec.types:
-            queues = queue.LoadConfigSpec(qt.entry, self)
-            self.types[qt.entry.type] = queues
-            self.queues += queues
+        self.queues = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_q = queue.QueueObjectHelper()
+        self.obj_helper_q.Generate(self, spec)
+        self.queues.SetAll(self.obj_helper_q.queues)
 
         self.tenant     = tenant
         self.Show()
@@ -41,8 +38,7 @@ class LifObject(objects.FrameworkObject):
 
     def Show(self):
         cfglogger.info("- LIF   : %s" % self.GID())
-        cfglogger.info("  - # Types     : %d" % len(self.types))
-        cfglogger.info("  - # Queues    : %d" % len(self.queues))
+        cfglogger.info("  - # Queues    : %d" % len(self.obj_helper_q.queues))
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -50,11 +46,6 @@ class LifObject(objects.FrameworkObject):
         req_spec.mac_addr = self.mac_addr.getnum()
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma;
-
-        #for q in self.queues:
-        #    qspec = req_spec.queues.add()
-        #    q.configure(qspec)
-
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

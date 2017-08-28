@@ -29,11 +29,15 @@ class TestCaseTrigExpPacketObject:
         self.packet = None
         self.ports  = None
         return
-
 class TestCaseTrigExpDescriptorObject:
     def __init__(self):
         self.object = None
         self.ring   = None
+        return
+
+class TestCaseTrigExpDescriptorSpec:
+    def __init__(self):
+        self.descriptor = TestCaseTrigExpDescriptorObject()
         return
 
 class TestCaseSessionEntryObject:
@@ -146,12 +150,12 @@ class TestCase(objects.FrameworkObject):
     def __setup_descriptors(self, tc_section, spec_section):
         for spec_desc_entry in spec_section.descriptors:
             if spec_desc_entry.descriptor.object == None: continue
-            tc_desc = TestCaseTrigExpDescriptorObject()
-            tc_desc.object  = spec_desc_entry.descriptor.object.Get(self)
-            tc_desc.ring    = spec_desc_entry.descriptor.ring.Get(self)
+            tc_desc_spec = TestCaseTrigExpDescriptorSpec()
+            tc_desc_spec.descriptor.object = spec_desc_entry.descriptor.object.Get(self)
+            tc_desc_spec.descriptor.ring   = spec_desc_entry.descriptor.ring.Get(self)
             self.info("- Adding Descriptor: %s, Ring: %s" %\
-                      (tc_desc.object.GID(), tc_desc.ring.GID()))
-            tc_section.descriptors.append(tc_desc)
+                      (tc_desc.descriptor.object.GID(), tc_desc.descriptor.ring.GID()))
+            tc_section.descriptors.append(tc_desc_spec)
             return
     
     def __setup_trigger(self, tc_ssn_step, spec_ssn_step):

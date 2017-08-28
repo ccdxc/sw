@@ -1,7 +1,10 @@
 # Ethernet TX Descriptor Object Template
 meta:
-    id      : DESC_ETH_TX_CQ
+    id      : DESCR_ETH_TX_CQ
     size    : 16
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthTxCqDescriptorObject
 
 cindex  : None
 rsvd0   : const/0x0

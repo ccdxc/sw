@@ -421,7 +421,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 assert descriptor.descriptor and descriptor.descriptor.object and descriptor.descriptor.ring
                 self._logger.info("Posting to ring = %s, descriptor(id=%s) = %s" % (
                     descriptor.descriptor.ring, descriptor.descriptor.GID(), descriptor.descriptor.object))
-                descriptor.descriptor.ring.post(descriptor.descriptor.object)
+                descriptor.descriptor.ring.Post(descriptor.descriptor.object)
                 ring_set.add(descriptor.descriptor.ring)
 
             if (hasattr(self._tc_step.trigger, "doorbell") and
@@ -1051,7 +1051,7 @@ class Trigger(InfraThreadHandler):
                 if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
                     self._current_descriptor_test_case = self._descriptor_test_case_queue.pop(
                         0)
-                    self._tc_db[self._current_descriptor_test_case.meta.id] = self._current_descriptor_test_case
+                    self._tc_db[self._current_descriptor_test_case._test_spec.GID()] = self._current_descriptor_test_case
                     self._current_descriptor_test_case.run_test_case()
                 else:
                     # All test cases completed, stop the connector.

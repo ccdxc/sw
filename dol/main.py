@@ -29,6 +29,9 @@ import infra.common.glopts as glopts
 
 from infra.common.logging import logger
 
+logger.info("Initializing Factory.")
+factory.init()
+
 logger.info("Initializing Config Infra")
 config.init()
 
@@ -37,9 +40,6 @@ generator.main(glopts.GlobalOptions.topology)
 if glopts.GlobalOptions.cfgonly:
     logger.info("CONFIG Only Run......Stopping.")
     sys.exit(0)
-
-logger.info("Initializing Factory.")
-factory.init()
 
 logger.info("Initializing Engine.")
 engine.init()

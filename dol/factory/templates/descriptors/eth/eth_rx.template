@@ -1,7 +1,10 @@
 # Ethernet RX Descriptor Object Template
 meta:
-    id      : DESC_ETH_RX
-    size    : 12
+    id      : DESCR_ETH_RX
+    size    : 16
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthRxDescriptorObject
 
 address     : None
 length      : None

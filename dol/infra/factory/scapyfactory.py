@@ -22,7 +22,12 @@ class ScapyHeaderBuilder_BASE:
         for key, value in hdr.fields.__dict__.items():
             if objects.IsFrameworkObjectInternalAttr(key): continue
             logger.verbose("  - %-10s =" % key, value)
-            shdr.__setattr__(key, value)
+            try:
+                shdr.__setattr__(key, value)
+            except:
+                logger.error("ScapyHeaderBuilder: Failed to set %s.%s to" %\
+                             (hdr.meta.id, key), value)
+                assert(0)
 
         return shdr
 BASE_builder = ScapyHeaderBuilder_BASE()

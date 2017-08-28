@@ -25,4 +25,4 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_FP
         mac: None
 
-lif: ref://store/specs/id=LIF_ETH
+lif: ref://store/specs/id=LIF_DEFAULT

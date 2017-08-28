@@ -182,7 +182,7 @@ class ModelConnector(Connector):
     def consume_rings(self, rings):
         for ring in rings:
             descrs = []
-            for read_desc in ring.consume():
+            for read_desc in ring.Consume():
                 descrs.append(read_desc)
             if descrs:
                 self._eventQueue.enqueueEv(RingContext(ring, descrs))

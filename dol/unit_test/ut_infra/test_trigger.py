@@ -8,7 +8,7 @@ from collections import defaultdict
 from third_party.scapy.all import Dot1Q, IP, Ether
 from unit_test.ut_infra.test_common import mock_modules, mock_model_modules
 mock_modules()
-from config.objects.ring import RingIdAllocator
+from config.objects.ut.ring import RingIdAllocator
 from factory.objects.ut.buffer import BufferIdAllocator
 from infra.common.utils import convert_object_to_dict
 

@@ -5,10 +5,6 @@ import model_sim.src.model_wrap as model_wrap
 import infra.common.objects as objects
 from factory.objects.ut.buffer import InfraUtBufferObject
 
-
-DescriptorIdAllocator = objects.TemplateFieldObject("range/1/256")
-
-
 class InfraUtTxDescriptorObject(base.FactoryObjectBase):
 
     ADDR_TYPE = 2
@@ -19,7 +15,7 @@ class InfraUtTxDescriptorObject(base.FactoryObjectBase):
         self.size = size
         return
 
-    def Init(self):
+    def Init(self, spec = None):
         #self.logger.info("Initializing INFRA_UT_TX_DESCRITOR %s" % self.GID())
         self.buffs = []
         return
@@ -64,7 +60,7 @@ class InfraUtRxDescriptorObject(base.FactoryObjectBase):
         self.logger = logger
         return
 
-    def Init(self):
+    def Init(self, spec = None):
         self.logger.info("Initializing INFRA_UT_RX_DESCRITOR %s" % self.GID())
         return
 

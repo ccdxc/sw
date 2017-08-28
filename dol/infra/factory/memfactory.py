@@ -22,6 +22,7 @@ def __generate_common(tc, spec):
                                       template.meta.objname)
     obj.SetLogger(tc)
     obj.GID(spec.id)
+    obj.Init(spec)
     return obj
 
 def GenerateDescriptors(tc):
@@ -29,7 +30,7 @@ def GenerateDescriptors(tc):
     for desc_entry in tc.testspec.descriptors:
         if desc_entry.descriptor.id == None: continue
         obj = __generate_common(tc, desc_entry.descriptor)
-        self.descriptors.Add(obj)
+        tc.descriptors.Add(obj)
     return
 
 def GenerateBuffers(tc):
@@ -37,5 +38,5 @@ def GenerateBuffers(tc):
     for buff_entry in tc.testspec.buffers:
         if buff_entry.buffer.id == None: continue
         obj = __generate_common(tc, buff_entry.buffer)
-        self.buffers.Add(obj)
+        tc.buffers.Add(obj)
     return

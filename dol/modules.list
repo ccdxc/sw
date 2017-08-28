@@ -9,6 +9,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=UDP
             segment : filter://native=False
+
     - module:
         name    : L2UC_UNTAG_IPV4_UDP
         enable  : True
@@ -19,6 +20,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=UDP
             segment : filter://native=True
+
     - module:
         name    : L2UC_QTAG_IPV4_TCP
         enable  : True
@@ -28,6 +30,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=TCP
             segment : filter://native=False
+
     - module:
         name    : L2UC_UNTAG_IPV4_TCP
         enable  : True
@@ -38,6 +41,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=TCP
             segment : filter://native=True
+
     - module:
         name    : L2UC_QTAG_IPV4_ICMP
         enable  : True
@@ -48,6 +52,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=ICMP
             segment : filter://native=False
+
     - module:
         name    : L2UC_UNTAG_IPV4_ICMP
         enable  : True
@@ -58,6 +63,7 @@ modules:
         args    :
             flow    : filter://type=IPV4,proto=ICMP
             segment : filter://native=True
+
     - module:
         name    : L2UC_QTAG_IPV6_UDP
         enable  : True
@@ -67,6 +73,7 @@ modules:
         args    :
             flow    : filter://type=IPV6,proto=UDP
             segment : filter://native=False
+
     - module:
         name    : L2UC_UNTAG_IPV6_UDP
         enable  : True
@@ -77,6 +84,7 @@ modules:
         args    :
             flow    : filter://type=IPV6,proto=UDP
             segment : filter://native=True
+
     - module:
         name    : L2UC_QTAG_IPV6_TCP
         enable  : True
@@ -86,6 +94,7 @@ modules:
         args    :
             flow    : filter://type=IPV6,proto=TCP
             segment : filter://native=False
+
     - module:
         name    : L2UC_UNTAG_IPV6_TCP
         enable  : True
@@ -96,6 +105,7 @@ modules:
         args    :
             flow    : filter://type=IPV6,proto=TCP
             segment : filter://native=True
+
     - module:
         name    : L2UC_QTAG_NONIP
         enable  : True
@@ -105,6 +115,7 @@ modules:
         ignore  : False
         args    :
             segment: filter://native=False
+
     - module:
         name    : L2UC_UNTAG_NONIP
         enable  : True
@@ -114,6 +125,7 @@ modules:
         ignore  : False
         args    :
             segment: filter://native=True
+
     - module:
         name    : L2UC_QTAG_ARP_RARP
         enable  : True
@@ -163,6 +175,7 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=UDP
+
     - module:
         name    : L3UC_IPV6_UDP
         enable  : True
@@ -172,6 +185,7 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV6,proto=UDP
+
     - module:
         name    : PKT_TO_SERQ
         enable  : True
@@ -181,6 +195,7 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
+
     - module:
         name    : PKT_TO_BSQ
         enable  : True
@@ -190,6 +205,7 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
+
     - module:
         name    : RDMA_BTH_BASIC
         enable  : True
@@ -197,6 +213,7 @@ modules:
         module  : rdma
         spec    : firstpacket.testspec
         ignore  : True
+
     - module:
         name    : NORMALIZATION_IP
         enable  : True
@@ -210,6 +227,7 @@ modules:
             - SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
             - SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
             - SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
+
     - module:
         name    : NORMALIZATION_IP_IGNORE
         enable  : True
@@ -229,6 +247,7 @@ modules:
             - SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
             - SEC_PROF_IP_INVALID_LEN_ACTION_DROP
             - SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
+
     - module:
         name    : NORMALIZATION_ICMP
         enable  : True
@@ -246,6 +265,7 @@ modules:
             - SEC_PROF_ICMP_DEPRECATED_MSGS_DROP_DISABLE
             - SEC_PROF_ICMP_REDIRECT_MSG_DROP_ENABLE
             - SEC_PROF_ICMP_REDIRECT_MSG_DROP_DISABLE
+
     - module:
         name    : NORMALIZATION_TCP_STATELESS
         enable  : True
@@ -284,6 +304,7 @@ modules:
             - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
             - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
             - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
+
     - module:
         name    : NORMALIZATION_TCP_STATEFUL
         enable  : True
@@ -313,6 +334,7 @@ modules:
             - SEC_PROF_TCP_UNEXPECTED_TS_OPTION_ACTION_EDIT
             - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
             - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
+
     - module:
         name    : ACL_IPV4
         enable  : True
@@ -321,6 +343,7 @@ modules:
         spec    : ipv4.testspec
         args    : 
             flow: filter://type=IPV4
+
     - module:
         name    : ACL_ETH
         enable  : True
@@ -328,6 +351,7 @@ modules:
         module  : acl
         spec    : eth.testspec
         args    : None
+
     - module:
         name    : SFW_IN_SEQUENCE
         enable  : True
@@ -335,4 +359,12 @@ modules:
         module  : sfw_in_sequence
         spec    : sfw_in_sequence.testspec
         ignore  : false
+
+    - module:
+        name    : ETH_TX
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx.testspec
+        ignore  : True
 

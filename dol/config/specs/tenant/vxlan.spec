@@ -44,4 +44,4 @@ sessions:
             - ref://store/specs/id=SESSION_L2MC
             - ref://store/specs/id=SESSION_L2BC
 
-lif: ref://store/specs/id=LIF_ETH
+lif: ref://store/specs/id=LIF_DEFAULT

@@ -1,7 +1,10 @@
 # Ethernet TX Descriptor Object Template
 meta:
-    id      : DESC_ETH_TX
+    id      : DESCR_ETH_TX
     size    : 16
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthTxDescriptorObject
 
 address     : None
 vlan_tag    : None

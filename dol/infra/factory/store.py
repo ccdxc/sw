@@ -9,7 +9,6 @@ class FactoryStoreObject:
         self.payloads       = ObjectDatabase(pktlogger)
         
         self.templates      = ObjectDatabase(pktlogger)
-        self.objects        = ObjectDatabase(pktlogger)
         self.specs          = ObjectDatabase(pktlogger)
 
         self.testobjects    = ObjectDatabase(pktlogger)

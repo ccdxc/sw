@@ -15,7 +15,7 @@ from factory.objects.ut.descriptor import InfraUtTxDescriptorObject, InfraUtRxDe
 from infra.common.objects import MacAddressBase
 from factory.objects.ut.doorbell import InfraUtDoorbell
 import model_sim.src.model_wrap as model_wrap
-from config.objects.ring import RingObject
+from config.objects.ut.ring import RingObject
 from infra.common.logging import logger
 from infra.common.utils import convert_object_to_dict
 from copy import copy

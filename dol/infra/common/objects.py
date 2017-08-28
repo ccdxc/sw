@@ -555,6 +555,7 @@ class ReferenceField(FrameworkFieldObject):
                 return val
         except:
             logger.error("Failed to resolve Ref: %s" % self.string)
+            logger.error(" - Attr: %s" % refattr.attr)
             assert(0)
         return None
 
