@@ -61,10 +61,6 @@ class SessionObject(base.ConfigObjectBase):
         return self.initiator.IsTCP()
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("Configuring Session with GID:%s" % self.GID())
-        cfglogger.info("  - Initiator       : %s" % self.initiator)
-        cfglogger.info("  - Responder       : %s" % self.responder)
-
         req_spec.meta.tenant_id = self.initiator.ep.tenant.id
 
         req_spec.session_id = self.id
@@ -76,10 +72,24 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - Session %s = %s" %\
-                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        cfglogger.info("Configuring Session with GID:%s" % self.GID())
+        cfglogger.info("  - Initiator       : %s" % self.initiator)
+        self.iflow.ProcessHALResponse(req_spec.initiator_flow,
+                                      resp_spec.status.iflow_status)
+        cfglogger.info("  - Responder       : %s" % self.responder)
+        self.rflow.ProcessHALResponse(req_spec.responder_flow,
+                                      resp_spec.status.rflow_status)
 
         self.hal_handle = resp_spec.status.session_handle
+
+        if self.iflow.IsCollisionFlow():
+            self.label = self.iflow.label
+        elif self.rflow.IsCollisionFlow():
+            self.label = self.rflow.label
+        cfglogger.info("  - Session %s = %s(HDL = %x), Label = %s" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
+                        self.hal_handle, self.label))
+
         return
 
     def IsFilterMatch(self, config_filter):

@@ -15,6 +15,7 @@ from infra.common.logging       import cfglogger
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
+FLOW_COLLISION_LABEL = 'FLOW-COLLISION'
 class FlowObject(base.ConfigObjectBase):
     def __init__(self, session, sfep, dfep, direction, label, span):
         super().__init__()
@@ -114,6 +115,9 @@ class FlowObject(base.ConfigObjectBase):
     def HasL4Ports(self):
         return self.IsTCP() or self.IsUDP()
 
+    def IsCollisionFlow(self):
+        return self.label == FLOW_COLLISION_LABEL
+
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():
             l4_info.tcp_udp.sport = self.sport
@@ -212,6 +216,15 @@ class FlowObject(base.ConfigObjectBase):
         if self.IsTCP():
             string += "/%s" % self.state
         return string
+
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        self.hal_handle = resp_spec.flow_handle
+        if resp_spec.flow_coll: self.label = FLOW_COLLISION_LABEL
+        cfglogger.info("  - %s %s = (HDL = %x), Label = %s" %\
+                       (self.direction, self.GID(),
+                        self.hal_handle, self.label))
+        return
+
 
     def IsFilterMatch(self, config_filter):
         cfglogger.debug("Matching Flow %s" % self.GID())

@@ -3,6 +3,10 @@ import os
 import sys
 from struct import *
 
+def error_exit():
+    print("[ERROR]: Exiting due to Timeout: Model-NOT-Responding.")
+    sys.exit(1)
+
 def zmq_connect ():
     _model_sock_timeo_sec = 30
     context = zmq.Context()
@@ -27,7 +31,7 @@ def step_network_pkt (pkt, port):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     zmq_close(socket)
     pass
 
@@ -40,7 +44,7 @@ def get_next_pkt ():
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     btype, size, port, cos, status, addr= unpack('iiiiiq', msg[0:32])
     eoffset = 32 + size
     pkt = msg[32:eoffset]
@@ -57,7 +61,7 @@ def read_reg (addr):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     btype, size, port, cos, status, addr = unpack('iiiiiq', msg[0:32])
     eoffset = 32 + size
     zmq_close(socket)
@@ -71,7 +75,7 @@ def write_reg (addr, data):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     btype, size, port, cos, status, addr = unpack('iiiiiq', msg[0:32])
     zmq_close(socket)
     pass
@@ -84,7 +88,7 @@ def read_mem (addr, size):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     btype, size, port, cos, status, addr = unpack('iiiiiq', msg[0:32])
     eoffset = 32 + size
     zmq_close(socket)
@@ -98,7 +102,7 @@ def write_mem (addr, data, size):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     zmq_close(socket)
     pass
 
@@ -110,6 +114,6 @@ def doorbell (data, size):
         msg = socket.recv()
     except zmq.ZMQError as e:
         if e.errno == zmq.EAGAIN:
-            sys.exit(1)
+            error_exit()
     zmq_close(socket)
     pass
