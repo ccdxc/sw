@@ -385,7 +385,6 @@ class capri_flit:
         pad_cf.allow_relocation = False
         cf.allow_relocation = False
 
-        if cf.hfname == 'control_metadata.packet_len': pdb.set_trace()
         self.gress_pa.logger.debug("%s:Add pad %s before %s" % \
             (self.gress_pa.d.name, pad_cf.hfname, cf.hfname))
         self.field_order.append(pad_cf)

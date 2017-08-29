@@ -226,11 +226,11 @@ class capri_km_flit:
 
         self.km_profile.k_bit_sel += self.km_profile.bit_sel
 
-        for k_bit, w, _ in self.i_bit_ext:
+        for i_bit, w, _ in self.i_bit_ext:
             while w:
-                self.km_profile.bit_sel.append(k_bit)
-                self.km_profile.i_bit_sel.append(k_bit)
-                k_bit += 1
+                self.km_profile.bit_sel.append(i_bit)
+                self.km_profile.i_bit_sel.append(i_bit)
+                i_bit += 1
                 w -= 1
 
         # sorted_bytes = sorted(self.km_profile.byte_sel)
@@ -1248,8 +1248,13 @@ class capri_table:
                 byte_avail -= ((num_kbits+7)/8)
 
                 if num_ibits > max_km_bits or (byte_avail < (num_ibits+7)/8):
-                    km_free_bits = (max_km_bits + max_km_bits - num_kbits - num_ibits)/2
-                    km0_bits = max_km_bits - km_free_bits
+                    if byte_avail < (num_ibits+7)/8:
+                        # evenly splitting the bits may require 2B per km and that
+                        # will exceed total available bytes, pack all bits as possible
+                        km_free_bits = 0
+                    else:
+                        km_free_bits = (max_km_bits + max_km_bits - num_kbits - num_ibits)/2
+                    km0_bits = max_km_bits - num_kbits - km_free_bits
                     km0_bits = min(km0_bits, num_ibits)
                     for b in range(km0_bits):
                         km0_profile.i_bit_sel.append(self.combined_profile.i_bit_sel[b])
@@ -1450,8 +1455,12 @@ class capri_table:
         lk_end_byte = -1
         if lk_bit in km0.combined_profile.bit_sel:
             lk_bit_idx = km0.combined_profile.bit_sel.index(lk_bit)
-            self.end_key_off = (km0.combined_profile.bit_loc*8) + lk_bit_idx + 1
-            lk_end_byte = km0.combined_profile.bit_loc
+            if lk_bit_idx < 8:
+                self.end_key_off = (km0.combined_profile.bit_loc*8) + lk_bit_idx + 1
+                lk_end_byte = km0.combined_profile.bit_loc
+            else:
+                self.end_key_off = (km0.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + 1
+                lk_end_byte = km0.combined_profile.bit_loc1
         if lk_byte in km0.combined_profile.byte_sel:
             lk_idx = km0.combined_profile.byte_sel.index(lk_byte)
             if lk_idx > lk_end_byte:
@@ -1464,8 +1473,13 @@ class capri_table:
             assert km1
             if lk_bit in km1.combined_profile.bit_sel:
                 lk_bit_idx = km1.combined_profile.bit_sel.index(lk_bit)
-                self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
-                lk_end_byte = km1.combined_profile.bit_loc
+                if lk_bit_idx < 8:
+                    self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
+                    lk_end_byte = km1.combined_profile.bit_loc
+                else:
+                    self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + max_km_width
+                    lk_end_byte = km1.combined_profile.bit_loc1
+
             if lk_byte in km1.combined_profile.byte_sel:
                 lk_idx = km1.combined_profile.byte_sel.index(lk_byte)
                 if lk_idx > lk_end_byte:
@@ -1546,8 +1560,11 @@ class capri_table:
         assert(len(km_prof.byte_sel) < max_kmB)
         for _ in range((action_id_size+7)/8):
             km_prof.byte_sel.insert(0, -1)
-        self.start_key_off += 8
         self.end_key_off += 8
+        if km_prof.bit_loc >= 0:
+            km_prof.bit_loc += 1
+        if km_prof.bit_loc1 >= 0:
+            km_prof.bit_loc1 += 1
 
     def _fix_tcam_table_km_profile(self):
         # XXX make it a generic optimization
@@ -2048,6 +2065,7 @@ class capri_key_maker:
         self.combined_profile.k_byte_sel = []
         self.combined_profile.k_bit_sel = []
         self.combined_profile.i_bit_sel = []
+        k_bit_sel = []
         # merge must take into account table types
         for fid in sorted(self.flit_km_profiles.keys()):
             if base_table:
@@ -2075,11 +2093,11 @@ class capri_key_maker:
                         else:
                             i2_byte_sel.append(b)
                     i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
-                    # XXX update the k, i1, i2 in the flit?? May cause problems in other code
                     self.combined_profile.i1_byte_sel += sorted(i1_byte_sel)
                     self.combined_profile.i2_byte_sel += sorted(i2_byte_sel)
                     self.combined_profile.k_byte_sel += sorted(k_byte_sel)
-                    self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+                    # Must keep k-bits of the base-table together (don't update k bits into profile)
+                    k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
                     self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
                     continue
                 else:
@@ -2089,13 +2107,33 @@ class capri_key_maker:
             self.combined_profile.i1_byte_sel += self.flit_km_profiles[fid].i1_byte_sel
             self.combined_profile.i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
             self.combined_profile.k_byte_sel += self.flit_km_profiles[fid].k_byte_sel
-            self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+            # Must keep k-bits of the base-table together (don't update k bits)
+            if base_table:
+                k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+            else:
+                self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+
             self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
+
+        # create byte and bit_sel from k and i
         self.combined_profile.byte_sel = self.combined_profile.i1_byte_sel + \
             self.combined_profile.k_byte_sel + self.combined_profile.i2_byte_sel
 
-        self.combined_profile.bit_sel = self.combined_profile.k_bit_sel + \
-            self.combined_profile.i_bit_sel
+        if base_table:
+            # when a table is given a preference (i.e. hash/idx, must keep its k-bits together)
+            # add all the k bits of the base table that are in this key-maker
+            for b in k_bit_sel:
+                if b in base_table.combined_profile.k_bit_sel:
+                    self.combined_profile.k_bit_sel.append(b)
+            # add other k_bits from this merged key_maker
+            for b in k_bit_sel:
+                if b not in self.combined_profile.k_bit_sel:
+                    self.combined_profile.k_bit_sel.append(b)
+            self.combined_profile.bit_sel = self.combined_profile.k_bit_sel + \
+                self.combined_profile.i_bit_sel
+        else:
+            self.combined_profile.bit_sel = self.combined_profile.k_bit_sel + \
+                self.combined_profile.i_bit_sel
         #pdb.set_trace()
 
     def _assign_bit_loc(self):
@@ -2992,6 +3030,8 @@ class capri_stage:
 
         # XXX calculate the bit_loc for combined KMs - tricky when hash tables are involved
         for ct in self.ct_list:
+            if ct.is_overflow:
+                continue
             for km in ct.key_makers:
                 if km.shared_km:
                     # pdb.set_trace()
