@@ -260,12 +260,13 @@ action flow_hash_info(entry_valid, export_en,
     }
 
     // resolve hint and pick next hash for recirc path
-    if ((control_metadata.flow_miss == FALSE) and
+    if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
+        modify_field(control_metadata.ingress_bypass, 1);
         add_header(recirc_header);
         modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
-        modify_field(recirc_header.overflow_entry_index, hint1);
-        modify_field(recirc_header.overflow_hash, scratch_metadata.entropy_hash);
+        // do not assign it to larger variable.. can result in K+D violation
+        //modify_field(recirc_header.overflow_entry_index, hint1);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
         modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
     }
@@ -298,7 +299,6 @@ action flow_hash_overflow(lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_prot
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           more_hashs, more_hints) {
     // remove the recirc header
-    modify_field(scratch_metadata.entropy_hash, recirc_header.overflow_hash);
     remove_header(recirc_header);
 
     // check if the key matches the entry data
@@ -346,12 +346,12 @@ action flow_hash_overflow(lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_prot
     modify_field(scratch_metadata.more_hints, more_hints);
 
     // resolve hint and pick next hash for recirc path
-    if ((control_metadata.flow_miss == FALSE) and
+    if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
+        modify_field(control_metadata.ingress_bypass, 1);
         add_header(recirc_header);
         modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
-        modify_field(recirc_header.overflow_entry_index, hint1);
-        modify_field(recirc_header.overflow_hash, scratch_metadata.entropy_hash);
+        // modify_field(recirc_header.overflow_entry_index, hint1);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
         modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
     }
@@ -365,7 +365,7 @@ table flow_hash_overflow {
         recirc_header.overflow_entry_index : exact;
     }
     actions {
-        flow_hash_overflow;
+        flow_hash_info; // Use the same function as hash table.. need to fix the asm code
     }
     size : FLOW_HASH_OVERFLOW_TABLE_SIZE;
 }

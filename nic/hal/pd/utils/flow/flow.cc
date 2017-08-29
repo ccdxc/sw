@@ -130,6 +130,41 @@ Flow::get_num_bits_from_size_(uint32_t size)
     return i;
 }
 
+uint32_t
+Flow::calc_hash_(void *key, void *data)
+{
+    hal_ret_t                       rs = HAL_RET_OK;
+    FlowEntry                       *entry = NULL;
+    uint32_t                        hash_val = 0;
+    uint32_t                        ft_bits = 0;
+    void                            *hwkey = NULL;
+
+    // create a flow entry
+    entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, false);
+
+    // call P4 API to get hw key
+    hwkey = ::operator new(hwkey_len_);
+	memset(hwkey, 0, hwkey_len_);
+	// TODO: Remove this after P4 API is implemented.
+	if (hwkey_is_swkey_) {
+		memcpy(hwkey, key, key_len_);
+	}
+
+    rs = entry->form_hw_key(table_id_, hwkey);
+	if (rs != HAL_RET_OK) HAL_ASSERT(0);
+
+    // cal. hash
+    hash_val = generate_hash_(hwkey, hwkey_len_, false);
+    ::operator delete(hwkey);
+
+    // check if flow table entry exists
+    ft_bits = fetch_flow_table_bits_(hash_val);
+
+    delete entry;
+
+    return ft_bits;
+}
+
 // ---------------------------------------------------------------------------
 // Insert
 // ---------------------------------------------------------------------------
@@ -151,7 +186,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
                     __FUNCTION__, fe_idx);
 
     // create a flow entry
-    entry = new FlowEntry(key, key_len_, data, data_len_);
+    entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);
 
     // call P4 API to get hw key
     hwkey = ::operator new(hwkey_len_);
@@ -307,7 +342,7 @@ Flow::remove(uint32_t index)
 // ---------------------------------------------------------------------------
 #define HAL_INTERNAL_MCAST_CRC32_HASH_SEED 0x33335555
 uint32_t
-Flow::generate_hash_(void *key, uint32_t key_len)
+Flow::generate_hash_(void *key, uint32_t key_len, bool log)
 {
     // TODO - Replace this with whatever hardware implements
     // return crc32((uint32_t)HAL_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key, 
@@ -321,8 +356,11 @@ Flow::generate_hash_(void *key, uint32_t key_len)
     for (uint32_t i = 0; i < key_len; i++, tmp++) {
         buf.write("{:#x} ", (uint8_t)*tmp);
     }
-    HAL_TRACE_DEBUG("Key:");
-    HAL_TRACE_DEBUG(buf.c_str());
+
+    if (log) {
+        HAL_TRACE_DEBUG("Key:");
+        HAL_TRACE_DEBUG(buf.c_str());
+    }
 
 	switch(hash_poly_) {
 		case HASH_POLY0:

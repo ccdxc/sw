@@ -532,7 +532,7 @@ hal_state_pd::init_tables(void)
     HAL_ASSERT(dm_tables_ != NULL);
 
     // make sure there is one flow table only
-    HAL_ASSERT((P4TBL_ID_HASH_MAX - P4TBL_ID_HASH_MIN + 1) == 1);
+    HAL_ASSERT((P4TBL_ID_HASH_MAX - P4TBL_ID_HASH_MIN + 1) == 2);
 
     hash_tcam_tables_ =
         (Hash **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
@@ -596,12 +596,15 @@ hal_state_pd::init_tables(void)
             break;
 
         case P4_TBL_TYPE_HASH:
+            if (tid == P4TBL_ID_FLOW_HASH_OVERFLOW) {
+                break;
+            }
             HAL_ASSERT(tid == P4TBL_ID_FLOW_HASH);
             if (tinfo.has_oflow_table) {
                 p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             flow_table_ =
-                new Flow(tinfo.tablename, tid, ctinfo.oflow_table_id,
+                new Flow(tinfo.tablename, tid, tinfo.oflow_table_id,
                          tinfo.tabledepth, ctinfo.tabledepth,
                          tinfo.key_struct_size,
                          sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints

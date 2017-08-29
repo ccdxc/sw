@@ -33,3 +33,4 @@ cp -v $ASIC_SRC/capri/model/cap_pic/cap_pict_csr.json ../tools/ncc/csr_json/
 cp -v $ASIC_SRC/capri/model/cap_pic/cap_pics_csr.json ../tools/ncc/csr_json/
 cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpr_csr.json ../tools/ncc/csr_json/
 cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpp_csr.json ../tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/design/common/cap_addr.json ../tools/ncc/csr_json/

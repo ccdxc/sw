@@ -990,8 +990,6 @@ parser parse_inner_ipv4_options {
 
 parser parse_inner_ipv4 {
     extract(inner_ipv4);
-    set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
-    set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
     set_metadata(parser_metadata.parse_inner_ipv4_counter, (inner_ipv4.ihl << 2) - 20);
     return select(parser_metadata.parse_inner_ipv4_counter) {
         0x0 : parse_base_inner_ipv4;

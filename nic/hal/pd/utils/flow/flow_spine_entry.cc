@@ -55,10 +55,9 @@ FlowSpineEntry::form_action_data(flow_hash_actiondata *action_data)
         memcpy((char *)&(flow_hash_info.entry_valid) + 1, anchor_entry_->get_data(), 
                 anchor_entry_->get_data_len());
     }
+
     // After this loc will point to hash1 
-    // +1 is for entry_valid export_en + flow_index is data
-    loc = (char*)&(flow_hash_info.entry_valid) + 1 + 
-        get_ft_entry()->get_flow()->get_flow_data_len(); // flow_data  == anchor_e_data 
+    loc = (char*)&(flow_hash_info.hash1);
 
     for (itr = hg_list_.begin();itr != hg_list_.end(); itr++) {
         fhg = (*itr);

@@ -2109,10 +2109,16 @@ def capri_te_cfg_output(stage):
 
         # key size (applicable to hash and index tables), num bits to use as index
         if ct.is_index_table():
-            json_tbl_['addr_sz']['value'] = str(ct.key_size)
+            #lg2_size = log2size(ct.num_entries)
+            # does not work correctly for raw tables
+            json_tbl_['addr_sz']['value'] = str(ct.final_key_size)
         elif ct.is_hash_table():
-            lg2_size = log2size(ct.num_entries)
-            json_tbl_['addr_sz']['value'] = str(lg2_size)
+            if ct.is_overflow:
+                lg2_size = log2size(ct.num_entries)
+                json_tbl_['addr_sz']['value'] = str(lg2_size)
+            else:
+                lg2_size = log2size(ct.num_entries)
+                json_tbl_['addr_sz']['value'] = str(lg2_size)
             
 
         # XXX Check w/ asic km0=>lo, km1=>hi (from te.cc)
@@ -2154,7 +2160,11 @@ def capri_te_cfg_output(stage):
 
         entry_size = ct.d_size
         if ct.is_hash_table():
-            entry_size += ct.key_phv_size
+            if ct.is_overflow:
+                entry_size += ct.hash_ct.key_phv_size
+            else:
+                entry_size += ct.key_phv_size
+
         entry_sizeB = (entry_size + 7) / 8   # convert to bytes
         lg2entry_size = log2size(entry_sizeB)
 

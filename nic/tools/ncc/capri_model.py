@@ -28,6 +28,7 @@ capri_model = {
         'action_id_size' : 8,       # XXX can become 8bits. Branch (relative) addr of action routine
         'num_cycles' : 12,
         'raw_pc_size' : 28, # size of mpu_pc provided to raw table
+        'collision_index_sz' : 32,
         'te_consts' : {
             # hardware constants
             'no_load_byte' : '0x3FF',

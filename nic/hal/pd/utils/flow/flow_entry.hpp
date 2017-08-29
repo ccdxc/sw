@@ -31,6 +31,7 @@ private:
     uint32_t            key_len_;           // sw key len
     void                *data_;             // sw data
     uint32_t            data_len_;          // sw data len
+    uint32_t            hwkey_len_;         // hw key len
     uint32_t            hash_val_;          // hash value from key
     FlowHintGroup       *fh_group_;         // flow hint group
     uint32_t            gl_index_;          // global index
@@ -41,7 +42,8 @@ private:
     uint32_t            fhct_index_;        // non-anchor's flow coll. tbl idx
 
 public:
-    FlowEntry (void *key, uint32_t key_len, void *data, uint32_t data_len);
+    FlowEntry (void *key, uint32_t key_len, void *data, uint32_t data_len, 
+               uint32_t hwkey_len, bool log);
     ~FlowEntry ();
 
 

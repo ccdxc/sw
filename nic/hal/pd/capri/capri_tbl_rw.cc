@@ -167,11 +167,10 @@ capri_program_table_mpu_pc(void)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
         p4pd_table_properties_get(i, &tbl_ctx);
-        if (tbl_ctx.is_oflow_table) {
-            // Since Oflow and hash table share same tableid,
-            // only one MPU_PC (Table base) address of hash table
-            // should be programmed. In that case, skip
-            // oflow table id.
+        if (tbl_ctx.is_oflow_table &&
+            tbl_ctx.table_type == P4_TBL_TYPE_TCAM) {
+            // OTCAM and hash table share the same table id
+            // so mpu_pc shouldn't be overwritten
             continue;
         }
         assert(tbl_ctx.stage_tableid < 16);

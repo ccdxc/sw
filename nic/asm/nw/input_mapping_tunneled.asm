@@ -37,6 +37,8 @@ tunneled_ipv4_packet:
 
   phvwr       p.tunnel_metadata_tunnel_terminate, 1
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
+  phvwr       p.flow_lkp_metadata_lkp_src, k.inner_ipv4_srcAddr
+  phvwr       p.flow_lkp_metadata_lkp_dst, k.inner_ipv4_dstAddr
   phvwr       p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwr       p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags
   phvwr       p.flow_lkp_metadata_ipv4_frag_offset, k.{inner_ipv4_fragOffset_sbit0_ebit4,inner_ipv4_fragOffset_sbit5_ebit12}

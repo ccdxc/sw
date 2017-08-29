@@ -65,3 +65,45 @@ entries:
         initiator: 
             port : const/47273
 
+    - entry:
+        label: recirc
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/1
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/4
+                    dscp_rw : const/1
+                    dscp    : const/1
+        initiator: 
+            port : const/4
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/3
+                    dscp_rw : const/1
+                    dscp    : const/2
+
+    - entry:
+        label: recirc
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/28750
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/2
+                    dscp_rw : const/1
+                    dscp    : const/3
+        initiator: 
+            port : const/2
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/1
+                    dscp_rw : const/1
+                    dscp    : const/4
+

@@ -7,7 +7,7 @@ modules:
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow    : filter://type=IPV4,proto=UDP
+            flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
             segment : filter://native=False
 
     - module:
@@ -18,7 +18,7 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV4,proto=UDP
+            flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
             segment : filter://native=True
 
     - module:
@@ -28,7 +28,7 @@ modules:
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow    : filter://type=IPV4,proto=TCP
+            flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
             segment : filter://native=False
 
     - module:
@@ -39,7 +39,7 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV4,proto=TCP
+            flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
             segment : filter://native=True
 
     - module:
@@ -50,7 +50,7 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV4,proto=ICMP
+            flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
             segment : filter://native=False
 
     - module:
@@ -61,7 +61,7 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV4,proto=ICMP
+            flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
             segment : filter://native=True
 
     - module:
@@ -71,7 +71,7 @@ modules:
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow    : filter://type=IPV6,proto=UDP
+            flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
             segment : filter://native=False
 
     - module:
@@ -82,7 +82,7 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV6,proto=UDP
+            flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
             segment : filter://native=True
 
     - module:
@@ -92,7 +92,7 @@ modules:
         module  : networking
         spec    : l2uc.testspec
         args    :
-            flow    : filter://type=IPV6,proto=TCP
+            flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
             segment : filter://native=False
 
     - module:
@@ -103,9 +103,18 @@ modules:
         spec    : l2uc.testspec
         ignore  : False
         args    :
-            flow    : filter://type=IPV6,proto=TCP
+            flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
             segment : filter://native=True
 
+    - module:
+        name    : L2UC_QTAG_IPV4_TCP_RECIRC
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        args    :
+            flow    : filter://type=IPV4,proto=TCP,label=RECIRC
+            segment : filter://native=False
     - module:
         name    : L2UC_QTAG_NONIP
         enable  : True
@@ -198,7 +207,7 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ
-        enable  : True
+        enable  : False
         package : test.tcp-tls-proxy
         module  : pkt_to_bsq
         spec    : tcp_proxy.testspec

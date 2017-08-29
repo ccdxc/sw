@@ -129,7 +129,7 @@ private:
     uint32_t get_num_bits_from_size_(uint32_t size);
     void pre_process_sizes_(uint32_t num_flow_hash_entries,
                             uint32_t num_flow_hash_coll_entries);
-    uint32_t generate_hash_(void *key, uint32_t key_len);
+    uint32_t generate_hash_(void *key, uint32_t key_len, bool log = true);
 public:
 
 
@@ -146,6 +146,8 @@ public:
 
 
     hal_ret_t insert(void *key, void *data, uint32_t *index);
+    // calc_hash_ is a test only method used to generate hash collissions
+    uint32_t calc_hash_(void *key, void *data);
     hal_ret_t update(uint32_t index, void *data);
     hal_ret_t remove(uint32_t index);
 

@@ -17,20 +17,24 @@ using hal::pd::utils::FlowSpineEntry;
 // Constructor - Flow Entry
 // ---------------------------------------------------------------------------
 FlowEntry::FlowEntry(void *key, uint32_t key_len, 
-                     void *data, uint32_t data_len)
+                     void *data, uint32_t data_len,
+                     uint32_t hwkey_len, bool log)
 {
     key_len_ = key_len;
     data_len_ = data_len;
-
-    HAL_TRACE_DEBUG("FlowEe:: key_len: {}, data_len: {}", key_len, data_len);
+    hwkey_len_ = hwkey_len;
 
     key_    = ::operator new(key_len);
     data_   = ::operator new(data_len);
 
-    HAL_TRACE_DEBUG("FlowE:: key: {} data: {}", key_, data_);
 
     std::memcpy(key_, key, key_len);
     std::memcpy(data_, data, data_len);
+
+    if (log) {
+        HAL_TRACE_DEBUG("FlowEe:: key_len: {}, data_len: {}", key_len, data_len);
+        HAL_TRACE_DEBUG("FlowE:: key: {} data: {}", key_, data_);
+    }
 
     hash_val_ = 0;
     fh_group_ = NULL;
@@ -449,7 +453,8 @@ FlowEntry *
 FlowEntry::create_new_flow_entry(FlowEntry *fe)
 {
     FlowEntry *new_fe = new FlowEntry(fe->get_key(), fe->get_key_len(),
-                                      fe->get_data(), fe->get_data_len());
+                                      fe->get_data(), fe->get_data_len(), 
+                                      hwkey_len_, true);
     *new_fe = *fe;
 
     // Take location information from "this"
@@ -484,7 +489,7 @@ FlowEntry::get_eff_spine_entry()
 }
 
 
-#define oflow_hash_info oflow_act_data.flow_hash_overflow_action_u.flow_hash_overflow_flow_hash_overflow
+#define oflow_hash_info oflow_act_data.flow_hash_overflow_action_u.flow_hash_overflow_flow_hash_info
 // ---------------------------------------------------------------------------
 // Program Non-anchor entry
 // ---------------------------------------------------------------------------
@@ -496,8 +501,7 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     uint32_t                        oflow_table_id = 0;
     char                            *loc = NULL;
     flow_hash_overflow_actiondata   oflow_act_data;
-
-    return rs;
+    void                            *hwkey = NULL;
 
     memset(&oflow_act_data, 0, sizeof(oflow_act_data));
 
@@ -506,8 +510,6 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     // Do we need hw key ?
     
     loc = (char *)&(oflow_act_data.flow_hash_overflow_action_u); // At union
-    memcpy(loc, key_, key_len_);
-    loc += key_len_;
     oflow_hash_info.entry_valid = 1;
     loc += 1; // For entry valid
     memcpy(loc, data_, data_len_); // export_en + flow_index is data
@@ -520,12 +522,18 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
                     __FUNCTION__, oflow_table_id, fhct_index_);
     // FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
 
+    hwkey = ::operator new(hwkey_len_);
+    memset(hwkey, 0, hwkey_len_);
+    p4pd_hwkey_hwmask_build(oflow_table_id, key_,
+                            NULL, (uint8_t *)hwkey, NULL);
+
     entry_trace(oflow_table_id, fhct_index_, (void *)&oflow_act_data);
 
     // P4-API: Oflow Table Write
-    pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL,
+    pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, (uint8_t*)hwkey, NULL,
                               (void *)&oflow_act_data);
     HAL_TRACE_DEBUG("Done programming Flow Hash Overflow {}", pd_err);
+    ::operator delete(hwkey);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }
@@ -667,7 +675,7 @@ FlowEntry::entry_trace(uint32_t table_id, uint32_t index,
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
-    p4_err = p4pd_table_ds_decoded_string_get(table_id, NULL, NULL, 
+    p4_err = p4pd_table_ds_decoded_string_get(table_id, key_, NULL, 
                                               data, buff, sizeof(buff));
     HAL_ASSERT(p4_err == P4PD_SUCCESS);
 

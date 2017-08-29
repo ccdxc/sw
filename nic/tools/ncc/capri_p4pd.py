@@ -1172,14 +1172,11 @@ class capri_p4pd:
                 tdict['type'] = 'Mpu'
             elif ctable.match_type == match_type.EXACT_HASH:
                 tdict['type'] = 'Hash'
-            '''
             if ctable.collision_ct:
                 tdict['hash_overflow_tbl'] = ctable.collision_ct.p4_table.name
             else:
                 tdict['hash_overflow_tbl'] = ''
-            '''
-            tdict['hash_overflow_tbl'] = ''
-            if ctable.is_overflow:
+            if ctable.is_overflow and not ctable.is_otcam:
                 tdict['hash_overflow'] = True
             else:
                 tdict['hash_overflow'] = False

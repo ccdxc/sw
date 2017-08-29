@@ -13,6 +13,8 @@ action set_packet_type(mac_da) {
 
 action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4);
+    modify_field(flow_lkp_metadata.lkp_src, inner_ipv4.srcAddr);
+    modify_field(flow_lkp_metadata.lkp_dst, inner_ipv4.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, inner_ipv4.protocol);
     modify_field(flow_lkp_metadata.ipv4_flags, inner_ipv4.flags);
     modify_field(flow_lkp_metadata.ipv4_frag_offset, inner_ipv4.fragOffset);
