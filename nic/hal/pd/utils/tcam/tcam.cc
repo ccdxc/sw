@@ -67,7 +67,7 @@ Tcam::~Tcam()
 //
 // ---------------------------------------------------------------------------
 hal_ret_t 
-Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index)
+Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest)
 {
     hal_ret_t rs        = HAL_RET_OK;
     TcamEntry *te       = NULL;
@@ -78,7 +78,7 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index)
     }
 
 	// alloc index
-    rs = alloc_index_(index);
+    rs = alloc_index_(index, lowest);
     if (rs != HAL_RET_OK) {
         goto end;
     }
@@ -429,12 +429,12 @@ Tcam::fetch_stats(const uint64_t **stats)
 // Allocate an index
 // ----------------------------------------------------------------------------
 hal_ret_t
-Tcam::alloc_index_(uint32_t *idx)
+Tcam::alloc_index_(uint32_t *idx, bool lowest)
 {
     hal_ret_t   rs = HAL_RET_OK;
     
 	// Allocate an index in repl. table
-    indexer::status irs = tcam_indexer_->alloc(idx);
+    indexer::status irs = tcam_indexer_->alloc(idx, lowest, 1);
     if (irs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
     }

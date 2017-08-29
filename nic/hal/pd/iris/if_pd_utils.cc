@@ -2,6 +2,7 @@
 #include "lif_pd.hpp"
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
+#include "tunnelif_pd.hpp"
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
 #include <interface_api.hpp>
@@ -65,6 +66,16 @@ if_get_lport_id(if_t *pi_if)
             lport_id = pd_uppc->uppc_lport_id;
             break;
         case intf::IF_TYPE_TUNNEL:
+            ep_t *remote_tep_ep;
+            if_t *ep_if;
+            bool v4;
+            intf::IfType tif_type;
+            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            ep_if = if_get_if_from_ep(remote_tep_ep);
+            tif_type = intf_get_if_type(ep_if);
+            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            /* Recursive resolution to get the tunnel LIF */
+            lport_id = if_get_lport_id(ep_if);
             break;
         default:
             HAL_ASSERT(0);
@@ -112,12 +123,51 @@ if_get_hw_lif_id(if_t *pi_if)
             hw_lif_id = pd_uppc->hw_lif_id;
             break;
         case intf::IF_TYPE_TUNNEL:
+            ep_t *remote_tep_ep;
+            if_t *ep_if;
+            bool v4;
+            intf::IfType tif_type;
+            remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4);
+            ep_if = if_get_if_from_ep(remote_tep_ep);
+            tif_type = intf_get_if_type(ep_if);
+            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            /* Recursive resolution to get the tunnel LIF */
+            hw_lif_id = if_get_hw_lif_id(ep_if);
             break;
         default:
             HAL_ASSERT(0);
     }
 
     return hw_lif_id;
+}
+
+// ----------------------------------------------------------------------------
+// Given a tunnel PI, get the remote TEP EP
+// ----------------------------------------------------------------------------
+ep_t *
+if_get_tunnelif_remote_tep_ep(if_t *pi_if, bool *v4_valid)
+{
+    ep_t *remote_tep_ep;
+    if (pi_if->vxlan_rtep.af == IP_AF_IPV4) {
+        remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
+                                      pi_if->vxlan_rtep.addr.v4_addr);
+        *v4_valid = TRUE;
+    } else {
+        remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->vxlan_rtep);
+        *v4_valid = FALSE;
+    }
+    return remote_tep_ep;
+}
+
+// ----------------------------------------------------------------------------
+// Given an EP return PI if 
+// ----------------------------------------------------------------------------
+if_t *
+if_get_if_from_ep(ep_t *ep)
+{
+    if (!ep)
+        return (NULL);
+    return (find_if_by_handle(ep->if_handle));
 }
 
 // ----------------------------------------------------------------------------
@@ -239,6 +289,16 @@ l2seg_get_pi_tenant(l2seg_t *pi_l2seg)
     return pi_tenant;
 }
 
+// ----------------------------------------------------------------------------
+// Given a PD tunnel IF, get the tunnel rewrite index
+// ----------------------------------------------------------------------------
+int
+pd_tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif)
+{
+    if (!pd_tif)
+        return -1;
+    return (pd_tif->tunnel_rw_idx);
+}
 
 // ----------------------------------------------------------------------------
 // Given a PI Tenant, get the nwsec profile hw id

@@ -3,6 +3,7 @@
 
 #include <base.h>
 #include <eth.h>
+#include <ip.h>
 #include <list.hpp>
 #include <ht.hpp>
 #include <bitmap.hpp>
@@ -48,13 +49,13 @@ typedef struct if_s {
     if_id_t             if_id;                       // interface id
     intf::IfType        if_type;                     // interface type
     intf::IfStatus      if_admin_status;             // admin status
+    tenant_id_t         tid;                         // tenant id
 
     union {
         // enic interface info
         struct {
             intf::IfEnicType    enic_type;           // type of ENIC
             hal_handle_t        lif_handle;          // handle to corresponding LIF
-			tenant_id_t			tid;				 // tenant id
             l2seg_id_t          l2seg_id;            // user VLAN or L2 segment
             mac_addr_t          mac_addr;            // EP's MAC addr
             vlan_id_t           encap_vlan;          // vlan enabled on this if
@@ -72,7 +73,19 @@ typedef struct if_s {
             struct {
                 uint32_t      uplink_pc_num;         // uplink port channel number
             } __PACK__;
-        };
+        } __PACK__;
+        // tunnel interface info
+        struct {
+            intf::IfTunnelEncapType encap_type;   // type of Encap
+            union {
+                /* VxLAN tunnel info */
+                struct {
+                    ip_addr_t vxlan_ltep; // Local TEP
+                    ip_addr_t vxlan_rtep; // Remote TEP
+                } __PACK__;
+                /* Add structs for other tunnel types */
+            } __PACK__;
+        } __PACK__;
     } __PACK__;
 
     // operational state of interface
@@ -302,6 +315,9 @@ hal_ret_t uplinkpc_update(intf::InterfaceSpec& spec,
                           intf::InterfaceResponse *rsp,
                           if_t *hal_if,
                           void *if_args);
+hal_ret_t tunnelif_create(intf::InterfaceSpec& spec, 
+                          intf::InterfaceResponse *rsp,
+                          if_t *hal_if);
 hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 
                                  intf::InterfaceResponse *rsp,
                                  if_t *hal_if);

@@ -6,6 +6,7 @@
 #include <uplinkpc_pd.hpp>
 #include <enicif_pd.hpp>
 #include <cpuif_pd.hpp>
+#include <tunnelif_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -31,6 +32,7 @@ pd_if_create (pd_if_args_t *args)
             ret = pd_uplinkpc_create(args);
             break;
         case intf::IF_TYPE_TUNNEL:
+            ret = pd_tunnelif_create(args);
             break;
         case intf::IF_TYPE_CPU:
             ret = pd_cpuif_create(args);
@@ -41,8 +43,6 @@ pd_if_create (pd_if_args_t *args)
 
     }
     // Branch out for different interface types
-
-
     return ret;
 }
 

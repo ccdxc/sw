@@ -429,7 +429,6 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
     return HAL_RET_OK;
 }
 
-
 // ---------------------     Encap Logic    ----------------------
 //  Bridging:
 //      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
@@ -439,7 +438,7 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
 //          -> tnnl_rwr_table[0] (nop)
 //      -> Tag:
 //          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1, 
-//				    tnnl_vnid = fab_encap if dif is uplink, 
+//                    tnnl_vnid = fab_encap if dif is uplink, 
 //                  if enic comes from output_mapping]
 //          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
 //          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
@@ -459,7 +458,6 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
 //                                encap from outpu_mapping, cos rwr)
 // TODO: Have to still handle priority tag. When do we send a priority
 //       tagged pkt?
-
 static inline hal_ret_t
 update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg, 
                      flow_pgm_attrs_t *flow_attrs)
@@ -469,10 +467,14 @@ update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg,
     uint16_t            evlan_id = 0;
     bool                egr_tag = false;
 
-	flow_attrs->lport = hal::pd::if_get_lport_id(dif);
+    flow_attrs->lport = hal::pd::if_get_lport_id(dif);
 
-    if_l2seg_get_encap(dif, dl2seg, &evlan_v, &evlan_id);
+    if (dif->if_type != intf::IF_TYPE_TUNNEL) {
+        if_l2seg_get_encap(dif, dl2seg, &evlan_v, &evlan_id);
+    }
     egr_tag = (evlan_v == 1) ? true : false;
+
+    HAL_TRACE_DEBUG("if_id:{}, l2seg_id:{}", dif->if_id, dl2seg->seg_id);
 
     if (sl2seg != dl2seg) {
         // Routing
@@ -490,23 +492,23 @@ update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg,
 
     }
 
-	if (dif->if_type != intf::IF_TYPE_TUNNEL) {
-		if (!egr_tag) {
-			flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
-		} else {
-			flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-			if (dif->if_type == intf::IF_TYPE_UPLINK ||
-					dif->if_type == intf::IF_TYPE_UPLINK_PC) {
-				flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
-			}
-		} 
-	} else {
-		// TODO: Handle Tunnel case
-		// Vnid: flow's tnnl_vnid
-		// OVlan, Omacsa, Omacda, OSIP, ODIP: from tunnl_rewr table
-		// flow->tnnl_vnid = dl2seg->fabric_encap.val;
-		// flow->tnnl_rw_act = 
-	}
+    if (dif->if_type != intf::IF_TYPE_TUNNEL) {
+        if (!egr_tag) {
+            flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+        } else {
+            flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+            if (dif->if_type == intf::IF_TYPE_UPLINK ||
+                    dif->if_type == intf::IF_TYPE_UPLINK_PC) {
+                flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
+            }
+        } 
+    } else if (dif->if_type == intf::IF_TYPE_TUNNEL) {
+        // Vnid: flow's tnnl_vnid
+        // OVlan, Omacsa, Omacda, OSIP, ODIP: from tunnl_rewr table
+        HAL_ASSERT(dl2seg->fabric_encap.type == types::encapType::ENCAP_TYPE_VXLAN);
+        flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
+        flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+    }
     return ret;
 }
 
@@ -697,7 +699,7 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
         } else {
             // No rw for flow
             flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
-			flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+            flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
         }
         if (assoc_flow->role == FLOW_ROLE_INITIATOR && 
                 assoc_flow->src_type == FLOW_END_TYPE_P4PLUS &&
@@ -708,7 +710,7 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
         } else {
             // No rw for flow
             assoc_flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
-			assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+            assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
         }
     }
 
@@ -746,7 +748,7 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
                 ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
     }
 
-	return ret;
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -794,7 +796,7 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
         } else {
             // No rw for flow
             flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
-			flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+            flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
         }
         if (assoc_flow->role == FLOW_ROLE_RESPONDER && 
                 assoc_flow->dst_type == FLOW_END_TYPE_P4PLUS &&
@@ -805,7 +807,7 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
         } else {
             // No rw for flow
             assoc_flow->pgm_attrs.rw_act = REWRITE_NOP_ID;
-			assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+            assoc_flow->pgm_attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
         }
     }
 
@@ -842,7 +844,7 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
                 assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en, 
                 ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
     }
-	return ret;
+    return ret;
 }
 
 

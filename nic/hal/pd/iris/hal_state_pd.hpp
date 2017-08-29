@@ -98,6 +98,9 @@ public:
     // get APIs for cpuif  related state
     slab *cpuif_pd_slab(void) const { return cpuif_pd_slab_; }
 
+    // get APIs for TunnelIf related state
+    slab *tunnelif_pd_slab(void) const { return tunnelif_pd_slab_; }
+
     // get APIs for LIF related state
     slab *ep_pd_slab(void) const { return ep_pd_slab_; }
     slab *ep_pd_ip_entry_slab(void) const { return ep_pd_ip_entry_slab_; }
@@ -235,6 +238,11 @@ private:
     // CPU IF related state
     struct {
         slab       *cpuif_pd_slab_;
+    } __PACK__;
+
+    // Tunnel IF related state
+    struct {
+        slab       *tunnelif_pd_slab_;
     } __PACK__;
 
     // EP related state

@@ -349,6 +349,11 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     // uint64_t            mac_int = 0;
     mac_addr_t          *mac = NULL;
     Tcam                *ipsg_tbl = NULL;
+    
+    
+    pi_if = find_if_by_handle(pi_ep->if_handle);
+    if (pi_if->if_type == intf::IF_TYPE_TUNNEL)
+        return HAL_RET_OK;
 
     memset(&key, 0, sizeof(key));
     memset(&key_mask, 0, sizeof(key_mask));
@@ -377,7 +382,6 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     memset(key_mask.flow_lkp_metadata_lkp_src_mask, ~0, 
             sizeof(key_mask.flow_lkp_metadata_lkp_src_mask));
 
-    pi_if = find_if_by_handle(pi_ep->if_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
     data.actionid = IPSG_IPSG_HIT_ID;
     data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
@@ -482,6 +486,7 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
             return pd_uppc->hw_lif_id;
             break;
         case intf::IF_TYPE_TUNNEL:
+            return (if_get_hw_lif_id(pi_if));
             break;
         default:
             HAL_ASSERT(0);
@@ -534,6 +539,9 @@ ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep,
 
     if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         return g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+    } else if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
+        if_t *tunnel_if = ep_find_if_by_handle((ep_t *)pd_ep->pi_ep);
+        return (pd_tunnelif_get_rw_idx((pd_tunnelif_t *)tunnel_if->pd_if));
     }
 
     return 0;

@@ -9,6 +9,7 @@
 #include <enicif_pd.hpp>
 #include <cpuif_pd.hpp>
 #include <if_pd.hpp>
+#include <tunnelif_pd.hpp>
 #include <session_pd.hpp>
 #include <buf_pool_pd.hpp>
 #include <queue_pd.hpp>
@@ -110,6 +111,12 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::pd_cpuif_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((cpuif_pd_slab_ != NULL), false);
+
+    // initialize TUNNEL If PD related data structures
+    tunnelif_pd_slab_ = slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
+                                 sizeof(hal::pd::pd_tunnelif_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((tunnelif_pd_slab_ != NULL), false);
 
     // initialize EP PD related data structures
     ep_pd_slab_ = slab::factory("EP_PD", HAL_SLAB_EP_PD,
@@ -257,6 +264,7 @@ hal_state_pd::hal_state_pd()
     uplinkifpc_idxr_ = NULL;
 
     enicif_pd_slab_ = NULL;
+    tunnelif_pd_slab_ = NULL;
 
     cpuif_pd_slab_ = NULL;
 

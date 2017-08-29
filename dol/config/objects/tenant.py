@@ -167,12 +167,12 @@ class TenantObjectHelper:
         halapi.ConfigureTenants(self.tens)
         for ten in self.tens:
             ten.ConfigureSegments()
-            ten.ConfigureTunnels()
         return
         
     def ConfigurePhase2(self):
         for ten in self.tens:
             ten.ConfigureSegmentsPhase2()
+            ten.ConfigureTunnels()
         return
 
     def Generate(self, topospec):

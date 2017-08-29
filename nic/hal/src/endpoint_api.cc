@@ -2,6 +2,8 @@
 #include <endpoint_api.hpp>
 #include <pd.hpp>
 #include <interface_api.hpp>
+#include <network.hpp>
+#include <utils.hpp>
 
 namespace hal {
 
@@ -15,6 +17,44 @@ mac_addr_t *
 ep_get_mac_addr(ep_t *pi_ep)
 {
     return &(pi_ep->l2_key.mac_addr);
+}
+
+mac_addr_t *
+ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg)
+{
+    network_t *nw;
+    nw = ep_get_nw(pi_ep, l2seg);
+    if (!nw)
+        HAL_ASSERT(0);
+    return (&nw->rmac_addr);
+}
+
+network_t *
+ep_get_nw(ep_t *pi_ep, l2seg_t *l2seg) 
+{
+    network_t       *nw = NULL;
+    dllist_ctxt_t   *lnode = NULL, *nw_lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    // Get the first IP
+    if (dllist_empty(&pi_ep->ip_list_head)) {
+        goto end;
+    } else {
+        lnode = pi_ep->ip_list_head.next;
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - offsetof(ep_ip_entry_t, ep_ip_lentry));
+
+        dllist_for_each(nw_lnode, &(l2seg->nw_list_head)) {
+            nw = (network_t *)((char *)nw_lnode -
+                    offsetof(network_t, l2seg_nw_lentry));
+            // Check if ip is in prefix
+            if (ip_addr_in_ip_pfx(&pi_ip_entry->ip_addr, &nw->nw_key.ip_pfx)) {
+                return nw;
+            }
+        }
+    }
+
+end:
+    return nw;
 }
 
 // ----------------------------------------------------------------------------

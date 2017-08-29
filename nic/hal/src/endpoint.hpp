@@ -163,6 +163,8 @@ hal_ret_t endpoint_update(endpoint::EndpointSpec& spec,
 
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
+mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
+mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
 }    // namespace hal
 
 #endif    // __ENDPOINT_HPP__

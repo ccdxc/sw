@@ -94,7 +94,7 @@ private:
 
     uint64_t        *stats_;                // Statistics
 
-	hal_ret_t alloc_index_(uint32_t *idx);
+	hal_ret_t alloc_index_(uint32_t *idx, bool lowest);
 	hal_ret_t alloc_index_withid_(uint32_t idx);
 	hal_ret_t free_index_(uint32_t idx);
     bool tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len);
@@ -119,7 +119,7 @@ public:
          bool allow_dup_insert = false);
     ~Tcam();
 
-    hal_ret_t insert(void *key, void *key_mask, void *data, uint32_t *index);
+    hal_ret_t insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest=true);
     hal_ret_t insert_withid(void *key, void *key_mask, void *data, uint32_t index);
     hal_ret_t update(uint32_t index, void *data);
     hal_ret_t remove(uint32_t index);

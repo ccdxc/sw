@@ -16,12 +16,35 @@ namespace pd {
 static hal_ret_t
 p4pd_input_mapping_native_init (void)
 {
-    uint32_t                             idx = 10;     // TODO: make this 0 before merging integration branch to master
+    uint32_t                             idx;
     input_mapping_native_swkey_t         key;
     input_mapping_native_swkey_mask_t    mask;
     input_mapping_native_actiondata      data;
     hal_ret_t                            ret;
     Tcam                                 *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_NATIVE);
+    HAL_ASSERT(tcam != NULL);
+
+    /* TODO: TEMP HACK FOR EXTRA ENTRY SINCE MODEL IS NOT LOOKING AT LAST INDEX!
+     * WILL BE REMOVED ONCE MODEL FIX IS IN
+     */
+    // Temp extra catch-all entry
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    // set the action
+    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
+
+    // insert into the tcam now - default entries are inserted bottom-up
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping native tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for IPv4 native packets
     memset(&key, 0, sizeof(key));
@@ -43,18 +66,17 @@ p4pd_input_mapping_native_init (void)
     // set the action
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
 
-    // insert into the tcam now
-    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_NATIVE);
-    HAL_ASSERT(tcam != NULL);
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    // insert into the tcam now - default entries are inserted bottom-up
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for IPv6 native packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -74,16 +96,17 @@ p4pd_input_mapping_native_init (void)
     // set the action
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
 
-    // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    // insert into the tcam now - default entries are inserted bottom-up
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for non-IP native packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -104,15 +127,16 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // no-op entry for IPv4 transit packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -133,15 +157,16 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // no-op entry for IPv6 transit packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -162,15 +187,16 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // no-op entry for non-IP tunnel packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -191,24 +217,49 @@ p4pd_input_mapping_native_init (void)
     data.actionid = INPUT_MAPPING_NATIVE_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping native tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping native tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
     return HAL_RET_OK;
 }
 
 static hal_ret_t
 p4pd_input_mapping_tunneled_init (void)
 {
-    uint32_t                             idx = 0;
+    uint32_t                             idx;
     input_mapping_tunneled_swkey_t       key;
     input_mapping_tunneled_swkey_mask_t  mask;
     input_mapping_tunneled_actiondata    data;
     hal_ret_t                            ret;
     Tcam                                 *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_TUNNELED);
+    HAL_ASSERT(tcam != NULL);
+
+    /* TODO: TEMP HACK SINCE MODEL IS NOT LOOKING AT LAST INDEX!!
+     * WILL BE REMOVED ONCE MODEL FIX IS IN
+     */
+    // extra catch-all entry for IPv4 native packets
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    // set the action
+    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+    // insert into the tcam now
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
+                      "idx : {}, err : {}", idx, ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
+
 
     // no-op entry for IPv4 native packets
     memset(&key, 0, sizeof(key));
@@ -226,22 +277,19 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0xFF;
-
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
-
     // insert into the tcam now
-    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_TUNNELED);
-    HAL_ASSERT(tcam != NULL);
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // no-op entry for IPv6 native packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -262,15 +310,16 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // no-op entry for non-IP native packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -291,15 +340,16 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for IPv4 transit packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -320,15 +370,16 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for IPv6 transit packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -349,15 +400,16 @@ p4pd_input_mapping_tunneled_init (void)
     data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
 
     // entry for non-IP tunnel packets
-    ++idx;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -369,21 +421,23 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
-    mask.ipv4_valid_mask = 0;
-    mask.ipv6_valid_mask = 0;
-    mask.mpls_0_valid_mask = 0;
-    mask.tunnel_metadata_tunnel_type_mask = 0;
+    mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
 
     // set the action
     data.actionid = INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID;
 
     // insert into the tcam now
-    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Input mapping tunneled tcam write failure, "
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
+                  "idx : {}, ret: {}", idx, ret);
     return HAL_RET_OK;
 }
 

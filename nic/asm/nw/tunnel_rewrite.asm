@@ -33,7 +33,7 @@ encap_vxlan:
   phvwr       p.udp_valid, 1
   phvwr       p.vxlan_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -65,7 +65,7 @@ encap_vxlan_gpe:
   phvwr       p.udp_valid, 1
   phvwr       p.vxlan_gpe_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -97,7 +97,7 @@ encap_genv:
   phvwr       p.udp_valid, 1
   phvwr       p.genv_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -123,7 +123,7 @@ encap_nvgre:
   phvwr       p.gre_valid, 1
   phvwr       p.nvgre_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -144,7 +144,7 @@ encap_gre:
   phvwr       p.gre_proto, k.ethernet_etherType
   phvwr       p.gre_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -174,7 +174,7 @@ encap_erspan:
   phvwr       p.gre_valid, 1
   phvwr       p.erspan_t3_header_valid, 1
 
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan
@@ -188,7 +188,7 @@ encap_erspan:
 
 .align
 encap_ip:
-  seq         c1, d.u.encap_vxlan_d.ip_type, 0
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
   bal.c2      r1, f_encap_vlan

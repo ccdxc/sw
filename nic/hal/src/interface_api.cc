@@ -46,6 +46,8 @@ lif_get_pd_lif(lif_t *pi_lif)
 intf::IfType
 intf_get_if_type(if_t *pi_if)
 {
+    if (!pi_if)
+        return intf::IfType::IF_TYPE_NONE;
     return pi_if->if_type;
 }
 
@@ -274,6 +276,7 @@ if_l2seg_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
             break;
         case intf::IF_TYPE_TUNNEL:
             // TODO: Handle Tunnels
+            HAL_ASSERT(0);
             break;
         default:
             HAL_ASSERT(0);
@@ -317,7 +320,9 @@ if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
             }
             break;
         case intf::IF_TYPE_TUNNEL:
-            // TODO: Handle for Tunnel case
+            // DO NOT REMOVE HAL_ASSERT
+            // This API is not expected to be called for tunnel-if
+            HAL_ASSERT(0);
             break;
         default:
             HAL_ASSERT(0);

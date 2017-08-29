@@ -179,14 +179,16 @@ action f_insert_vxlan_header(mac_sa, mac_da) {
 
 action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     f_insert_vxlan_header(mac_sa, mac_da);
-    if (ip_type == 0) {
+    if (ip_type == IP_HEADER_TYPE_IPV4) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv4.totalLen, l3_metadata.payload_length, 50);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
-        f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 30);
-        modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        if (ip_type == IP_HEADER_TYPE_IPV6) {
+            f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
+            add(ipv6.payloadLen, l3_metadata.payload_length, 30);
+            modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+        }
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);

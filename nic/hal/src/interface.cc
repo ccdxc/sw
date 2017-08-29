@@ -7,6 +7,7 @@
 #include <pd_api.hpp>
 #include <l2segment.pb.h>
 #include <lif_manager.hpp>
+#include <utils.hpp>
 #include <if_utils.hpp>
 
 using hal::pd::pd_if_args_t;
@@ -588,12 +589,10 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             break;
 
         case intf::IF_TYPE_TUNNEL:
-            HAL_TRACE_DEBUG("Tunnel create: NOT IMPLEMENTED. Returning success.");
-            hal_if->hal_handle = hal_alloc_handle();
-            // prepare the response
-            rsp->set_api_status(types::API_STATUS_OK);
-            rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
-            rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
+            ret = tunnelif_create(spec, rsp, hal_if);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
             break;
 
         case intf::IF_TYPE_CPU:
@@ -1043,6 +1042,39 @@ hal_ret_t uplinkpc_create(InterfaceSpec& spec, InterfaceResponse *rsp,
         utils::dllist_add(&hal_if->mbr_if_list_head, &mbr_if->pc_lentry);
     }
 end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Tunnel If Create 
+//------------------------------------------------------------------------------
+hal_ret_t tunnelif_create(InterfaceSpec& spec, InterfaceResponse *rsp, 
+                          if_t *hal_if)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("PI-TunnelIF:{}: TunnelIF Create for id {}", __FUNCTION__, 
+                    spec.key_or_handle().interface_id());
+    hal_if->tid = spec.meta().tenant_id();
+    auto if_tunnel_info = spec.if_tunnel_info();
+    hal_if->encap_type = if_tunnel_info.encap_type();
+    /* Both Local TEP And remote TEP have to v4 or v6 */
+    if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
+        !if_tunnel_info.vxlan_info().remote_tep().v4_addr()) || 
+        (!if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
+          if_tunnel_info.vxlan_info().remote_tep().v4_addr())) {
+        ret = HAL_RET_INVALID_ARG;
+        rsp->set_api_status(types::API_STATUS_OK);
+        rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
+        rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
+    }
+    if (hal_if->encap_type ==
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+        ip_addr_spec_to_ip_addr(&hal_if->vxlan_ltep,
+                                if_tunnel_info.vxlan_info().local_tep());
+        ip_addr_spec_to_ip_addr(&hal_if->vxlan_rtep,
+                                if_tunnel_info.vxlan_info().remote_tep());
+    }
     return ret;
 }
 

@@ -44,6 +44,7 @@ SOURCES = \
 		  uplinkpc_pd.cc \
 		  enicif_pd.cc \
 		  cpuif_pd.cc \
+		  tunnelif_pd.cc \
 		  l2seg_uplink_pd.cc \
 		  if_pd.cc \
 		  endpoint_pd.cc \
