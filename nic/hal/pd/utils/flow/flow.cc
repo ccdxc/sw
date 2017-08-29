@@ -180,6 +180,12 @@ Flow::insert(void *key, void *data, uint32_t *index)
         HAL_TRACE_DEBUG("Flow::{}: FT Entry exist ...", __FUNCTION__);
         ft_entry = itr->second;
         rs = ft_entry->insert(entry);
+        // TODO: No need to send flow coll return status
+        if (rs == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Flow::{} Setting collision return code", 
+                    __FUNCTION__);
+            rs = HAL_RET_FLOW_COLL;
+        }
 
     } else {
         // flow table entry doesnt exist
@@ -195,7 +201,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
         }
     }
 
-    if (rs == HAL_RET_OK) {
+    if (rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL) {
         HAL_TRACE_DEBUG("Flow::{}: Insert SUCCESS ...", __FUNCTION__);
 
         // insert into flow entry indexer map ... For retrieval
@@ -214,6 +220,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
 		HAL_ASSERT(rs1 == HAL_RET_OK);
     }
 end:
+    HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
     return rs;
 }
 

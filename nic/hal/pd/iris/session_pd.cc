@@ -586,12 +586,13 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     HAL_TRACE_DEBUG(dst_buf.c_str());
     ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
                                                &flow_pd->flow_hash_hw_id);
-    if (ret != HAL_RET_OK) {
+    // TODO: Cleanup. Dont return flow coll from lib.
+    if (ret != HAL_RET_OK && ret != HAL_RET_FLOW_COLL) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         return ret;
     }
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -616,6 +617,11 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                          &session_pd->iflow);
+    if (ret == HAL_RET_FLOW_COLL) {
+        args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+        HAL_TRACE_DEBUG("IFlow Collision!");
+        ret = HAL_RET_OK;
+    }
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -634,6 +640,11 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              (pd_l2seg_t *)session->rflow->sl2seg->pd,
                                              // (pd_l2seg_t *)args->l2seg_d->pd,
                                              &session_pd->rflow);
+        if (ret == HAL_RET_FLOW_COLL) {
+            args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+            HAL_TRACE_DEBUG("RFlow Collision!");
+            ret = HAL_RET_OK;
+        }
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
         }

@@ -1635,16 +1635,9 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
     pd::pd_session_args_init(&pd_session_args);
     pd_session_args.tenant = args->tenant;
     pd_session_args.nwsec_prof = nwsec_prof;
-#if 0
-    pd_session_args.l2seg_s = args->sl2seg;
-    pd_session_args.l2seg_d = args->dl2seg;
-    pd_session_args.sif = args->sif;
-    pd_session_args.dif = args->dif;
-    pd_session_args.sep = args->sep;
-    pd_session_args.dep = args->dep;
-#endif
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
+    pd_session_args.rsp = args->rsp;
 
     ret = pd::pd_session_create(&pd_session_args);
     if (ret != HAL_RET_OK) {

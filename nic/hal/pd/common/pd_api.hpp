@@ -80,6 +80,7 @@ typedef struct pd_sessoin_args_s {
 #endif
     session_t          *session;
     session_state_t    *session_state;
+    SessionResponse    *rsp;
 } __PACK__ pd_session_args_t;
 
 typedef struct pd_l2seg_uplink_args_s {
@@ -149,13 +150,9 @@ static inline void
 pd_session_args_init (pd_session_args_t *args)
 {
     args->tenant = NULL;
-#if 0
-    args->l2seg_s = args->l2seg_d = NULL;
-    args->sif = args->dif = NULL;
-    args->sep = args->dep = NULL;
-#endif
     args->session = NULL;
     args->session_state = NULL;
+    args->rsp = NULL;
     return;
 }
 

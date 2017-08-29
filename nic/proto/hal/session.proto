@@ -178,6 +178,7 @@ message SessionRequestMsg {
 message FlowStatus {
   fixed64             flow_handle     = 1;    // id of the flow (returned by HAL)
   ConnTrackInfo       conn_track_info = 2;    // connection tracking info
+  bool                flow_coll       = 3;    // TODO: flow collision. Only till recirc works  
 }
 
 // SessionStatus captures the operational status of the session

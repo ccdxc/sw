@@ -51,6 +51,9 @@ pd_tenant_create (pd_tenant_args_t *args)
         return HAL_RET_NO_RESOURCE;
     }
 
+    HAL_TRACE_DEBUG("PD-Tenant:{}: Allocated ten_hw_id:{}", 
+                    __FUNCTION__, tenant_pd->hw_id);
+
     // add to db
     ret = add_tenant_pd_to_db(tenant_pd);
     if (ret != HAL_RET_OK) {

@@ -155,28 +155,29 @@ do {                                                       \
     ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail") \
     ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail") \
     ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")  \
-    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            15,"flow oflow table full") \
-    ENTRY(HAL_RET_FLOW_LIMT_REACHED,          16,"allowed flow limit reached") \
-    ENTRY(HAL_RET_DUP_FREE,                   17,"freeing multiple times") \
-    ENTRY(HAL_RET_TENANT_NOT_FOUND,           18,"tenant not found")    \
-    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            19,"L2 segment not found") \
-    ENTRY(HAL_RET_IF_NOT_FOUND,               20,"interface not found") \
-    ENTRY(HAL_RET_EP_NOT_FOUND,               21,"endpoint not found")  \
-    ENTRY(HAL_RET_FLOW_NOT_FOUND,             22,"flow not found")      \
-    ENTRY(HAL_RET_SESSION_NOT_FOUND,          23,"session not found")   \
-    ENTRY(HAL_RET_HANDLE_INVALID,             24,"invalid hal handle")  \
-    ENTRY(HAL_RET_LIF_NOT_FOUND,              25,"LIF not found")       \
-    ENTRY(HAL_RET_HW_PROG_ERR,                26,"Error while programming h/w") \
-    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 27, "qsecurity profile not found") \
-    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           28, "TLS CB not found") \
-    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           29, "TCP CB not found") \
-    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            30,"interface not found") \
-    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          31,"network not found") \
+    ENTRY(HAL_RET_FLOW_COLL,                  15,"flow collision") \
+    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full") \
+    ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,"allowed flow limit reached") \
+    ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times") \
+    ENTRY(HAL_RET_TENANT_NOT_FOUND,           19,"tenant not found")    \
+    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found") \
+    ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found") \
+    ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")  \
+    ENTRY(HAL_RET_FLOW_NOT_FOUND,             23,"flow not found")      \
+    ENTRY(HAL_RET_SESSION_NOT_FOUND,          24,"session not found")   \
+    ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")  \
+    ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")       \
+    ENTRY(HAL_RET_HW_PROG_ERR,                27,"Error while programming h/w") \
+    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "qsecurity profile not found") \
+    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found") \
+    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found") \
+    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found") \
+    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found") \
                                                                         \
-    ENTRY(HAL_RET_WRING_NOT_FOUND,            32, "Wring not found") \
-    ENTRY(HAL_RET_PROXY_NOT_FOUND,            33, "Proxy Service not found") \
-    ENTRY(HAL_RET_POLICER_NOT_FOUND,          34, "Policer not found") \
-    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           35, "Output queue not found") \
+    ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found") \
+    ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found") \
+    ENTRY(HAL_RET_POLICER_NOT_FOUND,          35, "Policer not found") \
+    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           36, "Output queue not found") \
                                                                             \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
