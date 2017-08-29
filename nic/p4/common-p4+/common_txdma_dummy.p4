@@ -1,0 +1,40 @@
+
+// Define all dummy actions before including the P4 file
+#define tx_table_s7_t3_action	tx_table_dummy_action
+#define tx_table_s7_t2_action	tx_table_dummy_action
+#define tx_table_s7_t1_action	tx_table_dummy_action
+#define tx_table_s7_t0_action	tx_table_dummy_action
+#define tx_table_s6_t3_action	tx_table_dummy_action
+#define tx_table_s6_t2_action	tx_table_dummy_action
+#define tx_table_s6_t1_action	tx_table_dummy_action
+#define tx_table_s6_t0_action	tx_table_dummy_action
+#define tx_table_s5_t3_action	tx_table_dummy_action
+#define tx_table_s5_t2_action	tx_table_dummy_action
+#define tx_table_s5_t1_action	tx_table_dummy_action
+#define tx_table_s5_t0_action	tx_table_dummy_action
+#define tx_table_s4_t3_action	tx_table_dummy_action
+#define tx_table_s4_t2_action	tx_table_dummy_action
+#define tx_table_s4_t1_action	tx_table_dummy_action
+#define tx_table_s4_t0_action	tx_table_dummy_action
+#define tx_table_s3_t3_action	tx_table_dummy_action
+#define tx_table_s3_t2_action	tx_table_dummy_action
+#define tx_table_s3_t1_action	tx_table_dummy_action
+#define tx_table_s3_t0_action	tx_table_dummy_action
+#define tx_table_s2_t3_action	tx_table_dummy_action
+#define tx_table_s2_t2_action	tx_table_dummy_action
+#define tx_table_s2_t1_action	tx_table_dummy_action
+#define tx_table_s2_t0_action	tx_table_dummy_action
+#define tx_table_s1_t3_action	tx_table_dummy_action
+#define tx_table_s1_t2_action	tx_table_dummy_action
+#define tx_table_s1_t1_action	tx_table_dummy_action
+#define tx_table_s1_t0_action	tx_table_dummy_action
+#define tx_table_s0_t3_action	tx_table_dummy_action
+#define tx_table_s0_t2_action	tx_table_dummy_action
+#define tx_table_s0_t1_action	tx_table_dummy_action
+#define tx_table_s0_t0_action	tx_table_dummy_action
+
+
+#define tx_table_s2_t0_action1	tx_table_dummy_action
+#define tx_table_s1_t0_action1	tx_table_dummy_action
+#define tx_table_s0_t0_action1	tx_table_dummy_action
+

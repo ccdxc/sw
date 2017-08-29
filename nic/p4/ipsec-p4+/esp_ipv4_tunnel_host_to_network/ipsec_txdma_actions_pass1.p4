@@ -1,42 +1,14 @@
+#include "../../common-p4+/common_txdma_dummy.p4"
+
 #define tx_table_s0_t0_action ipsec_encap_txdma_initial_table 
-#define tx_table_s0_t1_action ipsec_txdma_dummy 
-#define tx_table_s0_t2_action ipsec_txdma_dummy 
-#define tx_table_s0_t3_action ipsec_txdma_dummy 
 
 #define tx_table_s1_t0_action ipsec_get_in_desc_from_cb_cindex 
 #define tx_table_s1_t1_action allocate_barco_req_pindex 
-#define tx_table_s1_t2_action ipsec_txdma_dummy 
-#define tx_table_s1_t3_action ipsec_txdma_dummy 
 
 #define tx_table_s2_t0_action ipsec_encap_txdma_load_head_desc_int_header 
 #define tx_table_s2_t1_action ipsec_get_barco_req_index_ptr 
-#define tx_table_s2_t2_action ipsec_txdma_dummy 
-#define tx_table_s2_t3_action ipsec_txdma_dummy
 
 #define tx_table_s3_t0_action ipsec_write_barco_req
-#define tx_table_s3_t1_action ipsec_txdma_dummy
-#define tx_table_s3_t2_action ipsec_txdma_dummy
-#define tx_table_s3_t3_action ipsec_txdma_dummy
-
-#define tx_table_s4_t0_action ipsec_txdma_dummy
-#define tx_table_s4_t1_action ipsec_txdma_dummy
-#define tx_table_s4_t2_action ipsec_txdma_dummy
-#define tx_table_s4_t3_action ipsec_txdma_dummy
-
-#define tx_table_s5_t0_action ipsec_txdma_dummy
-#define tx_table_s5_t1_action ipsec_txdma_dummy
-#define tx_table_s5_t2_action ipsec_txdma_dummy
-#define tx_table_s5_t3_action ipsec_txdma_dummy
-
-#define tx_table_s6_t0_action ipsec_txdma_dummy
-#define tx_table_s6_t1_action ipsec_txdma_dummy
-#define tx_table_s6_t2_action ipsec_txdma_dummy
-#define tx_table_s6_t3_action ipsec_txdma_dummy
-
-#define tx_table_s7_t0_action ipsec_txdma_dummy
-#define tx_table_s7_t1_action ipsec_txdma_dummy
-#define tx_table_s7_t2_action ipsec_txdma_dummy
-#define tx_table_s7_t3_action ipsec_txdma_dummy
 
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
@@ -207,9 +179,6 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 
-action ipsec_txdma_dummy ()
-{
-}
 
 //stage 3 table 0
 action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,

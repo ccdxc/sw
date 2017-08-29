@@ -2,42 +2,7 @@
 /* rdma_rxdma.p4
 /*****************************************************************************/
 
-#define rx_table_s0_t3_action rdma_dummy_action
-#define rx_table_s0_t2_action rdma_dummy_action
-#define rx_table_s0_t1_action rdma_dummy_action
-#define rx_table_s0_t0_action rdma_dummy_action
-#define rx_table_s7_t3_action rdma_dummy_action
-#define rx_table_s7_t2_action rdma_dummy_action
-#define rx_table_s7_t1_action rdma_dummy_action
-#define rx_table_s7_t0_action rdma_dummy_action
-#define rx_table_s6_t3_action rdma_dummy_action
-#define rx_table_s6_t2_action rdma_dummy_action
-#define rx_table_s6_t1_action rdma_dummy_action
-#define rx_table_s6_t0_action rdma_dummy_action
-#define rx_table_s5_t3_action rdma_dummy_action
-#define rx_table_s5_t2_action rdma_dummy_action
-#define rx_table_s5_t1_action rdma_dummy_action
-#define rx_table_s5_t0_action rdma_dummy_action
-#define rx_table_s4_t3_action rdma_dummy_action
-#define rx_table_s4_t2_action rdma_dummy_action
-#define rx_table_s4_t1_action rdma_dummy_action
-#define rx_table_s4_t0_action rdma_dummy_action
-#define rx_table_s3_t3_action rdma_dummy_action
-#define rx_table_s3_t2_action rdma_dummy_action
-#define rx_table_s3_t1_action rdma_dummy_action
-#define rx_table_s3_t0_action rdma_dummy_action
-#define rx_table_s2_t3_action rdma_dummy_action
-#define rx_table_s2_t2_action rdma_dummy_action
-#define rx_table_s2_t1_action rdma_dummy_action
-#define rx_table_s2_t0_action rdma_dummy_action
-#define rx_table_s1_t3_action rdma_dummy_action
-#define rx_table_s1_t2_action rdma_dummy_action
-#define rx_table_s1_t1_action rdma_dummy_action
-#define rx_table_s1_t0_action rdma_dummy_action
-#define rx_table_s0_t3_action rdma_dummy_action
-#define rx_table_s0_t2_action rdma_dummy_action
-#define rx_table_s0_t1_action rdma_dummy_action
-#define rx_table_s0_t0_action rdma_dummy_action
+#include "../common-p4+/common_rxdma_dummy.p4"
 
 #define common_p4plus_stage0_app_header_table rdma_stage0_table
 #define common_p4plus_stage0_app_header_table_action_dummy rdma_stage0_bth_action
@@ -58,6 +23,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy15 rdma_stage0_bth_xrceth_ieth_action
 
 #include "../common-p4+/common_rxdma.p4"
+
 #include "./rdma_rxdma_headers.p4"
 
 /******************************************************************************
@@ -571,19 +537,3 @@ action rdma_stage0_bth_xrceth_ieth_action () {
     // ieth params
     modify_field(rdma_bth_xrceth_ieth_scr.ieth_r_key, rdma_bth_xrceth_ieth.ieth_r_key);
 }
-
-
-/*
- * Dummy
- */
-action rdma_dummy_action(data0, data1, data2, data3, data4, data5, data6, data7) {
-    modify_field(scratch_metadata0.data0, data0);
-    modify_field(scratch_metadata0.data1, data1);
-    modify_field(scratch_metadata0.data2, data2);
-    modify_field(scratch_metadata0.data3, data3);
-    modify_field(scratch_metadata0.data4, data4);
-    modify_field(scratch_metadata0.data5, data5);
-    modify_field(scratch_metadata0.data6, data6);
-    modify_field(scratch_metadata0.data7, data7);
-}
-

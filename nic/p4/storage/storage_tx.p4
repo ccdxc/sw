@@ -1,19 +1,17 @@
 
-#include "common/dummy.p4"
+
+#include "../common-p4+/common_txdma_dummy.p4"
 
 #define tx_table_s0_t0 s0_tbl
 #define tx_table_s1_t0 s1_tbl
 #define tx_table_s2_t0 s2_tbl
 #define tx_table_s3_t0 s3_tbl
 
+
 #define tx_table_s0_t0_action q_state_pop
 #define tx_table_s1_t0_action nvme_sq_handler
 #define tx_table_s2_t0_action q_state_push
 #define tx_table_s3_t0_action pvm_cq_handler
-#define tx_table_s4_t0_action dummy
-#define tx_table_s5_t0_action dummy
-#define tx_table_s6_t0_action dummy
-#define tx_table_s7_t0_action dummy
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -72,6 +70,11 @@ metadata dma_cmd_phv2mem_t dma_p2m_2;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_2
 metadata dma_cmd_mem2mem_t dma_m2m_2;
+
+
+/* Exit action handler needs to be stubbed out for NCC */
+action exit() {
+}
 
 /*****************************************************************************
  *  q_state_pop : Check the queue state and see if there's anything to be 

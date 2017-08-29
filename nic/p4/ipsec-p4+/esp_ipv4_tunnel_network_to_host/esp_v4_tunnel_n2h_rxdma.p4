@@ -1,24 +1,7 @@
+#include "../../common-p4+/common_rxdma_dummy.p4"
+
 #define rx_table_s0_t0_action esp_v4_tunnel_n2h_rxdma_initial_table 
 #define common_p4plus_stage0_app_header_table_action_dummy esp_v4_tunnel_n2h_rxdma_initial_table
-#define common_p4plus_stage0_app_header_table_action_dummy1     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy2     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy3     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy4     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy5     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy6     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy7     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy8     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy9     ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy10    ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy11    ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy12    ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy13    ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy14    ipsec_rxdma_dummy
-#define common_p4plus_stage0_app_header_table_action_dummy15    ipsec_rxdma_dummy
-
-#define rx_table_s0_t1_action ipsec_rxdma_dummy 
-#define rx_table_s0_t2_action ipsec_rxdma_dummy 
-#define rx_table_s0_t3_action ipsec_rxdma_dummy 
 
 #define rx_table_s1_t0_action esp_v4_tunnel_n2h_allocate_input_desc_semaphore 
 #define rx_table_s1_t1_action esp_v4_tunnel_n2h_allocate_output_desc_semaphore 
@@ -32,30 +15,11 @@
 
 #define rx_table_s3_t0_action esp_v4_tunnel_n2h_update_input_desc_aol 
 #define rx_table_s3_t1_action esp_v4_tunnel_n2h_update_output_desc_aol 
-#define rx_table_s3_t2_action ipsec_rxdma_dummy
-#define rx_table_s3_t3_action ipsec_rxdma_dummy
 
 #define rx_table_s4_t0_action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
-#define rx_table_s4_t1_action ipsec_rxdma_dummy
-#define rx_table_s4_t2_action ipsec_rxdma_dummy
-#define rx_table_s4_t3_action ipsec_rxdma_dummy
-
-#define rx_table_s5_t0_action ipsec_rxdma_dummy
-#define rx_table_s5_t1_action ipsec_rxdma_dummy
-#define rx_table_s5_t2_action ipsec_rxdma_dummy
-#define rx_table_s5_t3_action ipsec_rxdma_dummy
-
-#define rx_table_s6_t0_action ipsec_rxdma_dummy
-#define rx_table_s6_t1_action ipsec_rxdma_dummy
-#define rx_table_s6_t2_action ipsec_rxdma_dummy
-#define rx_table_s6_t3_action ipsec_rxdma_dummy
-
-#define rx_table_s7_t0_action ipsec_rxdma_dummy
-#define rx_table_s7_t1_action ipsec_rxdma_dummy
-#define rx_table_s7_t2_action ipsec_rxdma_dummy
-#define rx_table_s7_t3_action ipsec_rxdma_dummy
 
 #include "../../common-p4+/common_rxdma.p4"
+
 #include "esp_v4_tunnel_n2h_headers.p4"
 
 #include "../ipsec_defines.h"
@@ -218,10 +182,6 @@ metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr_scratch;
 //modify_field(ipsec_global_scratch.frame_size, ipsec_global.frame_size);
 
 
-//action ipsec_rxdma_dummy (data0, data1) 
-action ipsec_rxdma_dummy () 
-{
-}
 
 
 // Enqueue the input-descriptor at the tail of ipsec-cb

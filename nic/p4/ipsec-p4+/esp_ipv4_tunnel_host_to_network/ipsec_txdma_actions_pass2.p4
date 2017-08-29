@@ -1,42 +1,16 @@
+#include "../../common-p4+/common_txdma_dummy.p4"
+
 #define tx_table_s0_t0_action ipsec_encap_txdma2_initial_table 
-#define tx_table_s0_t1_action ipsec_txdma_dummy 
-#define tx_table_s0_t2_action ipsec_txdma_dummy 
-#define tx_table_s0_t3_action ipsec_txdma_dummy 
 
 #define tx_table_s1_t0_action ipsec_encap_txdma2_load_barco_req_ptr
-#define tx_table_s1_t1_action ipsec_txdma_dummy 
-#define tx_table_s1_t2_action ipsec_txdma_dummy 
-#define tx_table_s1_t3_action ipsec_txdma_dummy 
 
 #define tx_table_s2_t0_action ipsec_encap_txdma2_load_barco_req 
-#define tx_table_s2_t1_action ipsec_txdma_dummy 
-#define tx_table_s2_t2_action ipsec_txdma_dummy 
-#define tx_table_s2_t3_action ipsec_txdma_dummy 
 
 #define tx_table_s3_t0_action ipsec_encap_txdma2_load_in_desc 
 #define tx_table_s3_t1_action ipsec_encap_txdma2_load_out_desc 
 #define tx_table_s3_t2_action ipsec_encap_txdma2_load_ipsec_int
-#define tx_table_s3_t3_action ipsec_txdma_dummy
 
 #define tx_table_s4_t0_action ipsec_build_encap_packet
-#define tx_table_s4_t1_action ipsec_txdma_dummy
-#define tx_table_s4_t2_action ipsec_txdma_dummy
-#define tx_table_s4_t3_action ipsec_txdma_dummy
-
-#define tx_table_s5_t0_action ipsec_txdma_dummy
-#define tx_table_s5_t1_action ipsec_txdma_dummy
-#define tx_table_s5_t2_action ipsec_txdma_dummy
-#define tx_table_s5_t3_action ipsec_txdma_dummy
-
-#define tx_table_s6_t0_action ipsec_txdma_dummy
-#define tx_table_s6_t1_action ipsec_txdma_dummy
-#define tx_table_s6_t2_action ipsec_txdma_dummy
-#define tx_table_s6_t3_action ipsec_txdma_dummy
-
-#define tx_table_s7_t0_action ipsec_txdma_dummy
-#define tx_table_s7_t1_action ipsec_txdma_dummy
-#define tx_table_s7_t2_action ipsec_txdma_dummy
-#define tx_table_s7_t3_action ipsec_txdma_dummy
 
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
@@ -157,9 +131,6 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 
-action ipsec_txdma_dummy ()
-{
-}
 
 //stage 4
 action ipsec_build_encap_packet()

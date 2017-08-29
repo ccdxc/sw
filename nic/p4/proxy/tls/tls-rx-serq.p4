@@ -5,11 +5,13 @@
 
 #include "common/tls-serq-to-brq-metadata.h"
 
+#include "../../common-p4+/common_txdma_dummy.p4"
+
 #define tx_table_s0_t0 tlscb_tbl
 
 #define tx_table_s0_t0_action tls_rx_serq_action
 
-#include "../../../../../common-p4+/p4/common_txdma.p4"
+#include "../../common-p4+/common_txdma.p4"
 
 /*
  * tls_rx_serq_action

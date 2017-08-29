@@ -2,85 +2,55 @@
 /* tcp_proxy_rxdma.p4
 /*****************************************************************************/
 
-#define rx_table_s0_t3_action tcp_proxy_dummy_action
-#define rx_table_s0_t2_action tcp_proxy_dummy_action
-#define rx_table_s0_t1_action tcp_proxy_dummy_action
-#define rx_table_s0_t0_action tcp_proxy_dummy_action
-#define rx_table_s7_t3_action tcp_proxy_dummy_action
-#define rx_table_s7_t2_action tcp_proxy_dummy_action
-#define rx_table_s7_t1_action tcp_proxy_dummy_action
-#define rx_table_s7_t0_action tcp_proxy_dummy_action
-#define rx_table_s6_t3_action tcp_proxy_dummy_action
-#define rx_table_s6_t2_action tcp_proxy_dummy_action
-#define rx_table_s6_t1_action tcp_proxy_dummy_action
-#define rx_table_s5_t3_action tcp_proxy_dummy_action
-#define rx_table_s5_t2_action tcp_proxy_dummy_action
-#define rx_table_s5_t1_action tcp_proxy_dummy_action
-#define rx_table_s4_t3_action tcp_proxy_dummy_action
-#define rx_table_s4_t2_action tcp_proxy_dummy_action
-#define rx_table_s4_t1_action tcp_proxy_dummy_action
-#define rx_table_s3_t3_action tcp_proxy_dummy_action
-#define rx_table_s1_t3_action tcp_proxy_dummy_action
-#define rx_table_s1_t2_action tcp_proxy_dummy_action
-#define rx_table_s1_t1_action tcp_proxy_dummy_action
-#define rx_table_s0_t3_action tcp_proxy_dummy_action
-#define rx_table_s0_t2_action tcp_proxy_dummy_action
-#define rx_table_s0_t1_action tcp_proxy_dummy_action
-#define rx_table_s0_t0_action tcp_proxy_dummy_action
-
-#define common_p4plus_stage0_app_header_table_action_dummy1   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy2   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy3   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy4   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy5   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy6   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy7   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy8   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy9   tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy10  tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy11  tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy12  tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy13  tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy14  tcp_proxy_dummy_action_default
-#define common_p4plus_stage0_app_header_table_action_dummy15  tcp_proxy_dummy_action_default
-
-#define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
-#define common_p4plus_stage0_app_header_table_action_dummy read_tx2rx
+#include "../common-p4+/common_rxdma_dummy.p4"
 
 #define rx_table_s1_t0 tcp_rx_tcp_rx
-#define rx_table_s1_t0_action tcp_rx
 
 #define rx_table_s2_t0 tcp_rx_tcp_rtt
-#define rx_table_s2_t0_action tcp_rtt
 
 #define rx_table_s2_t1 tcp_rx_read_rnmdr
-#define rx_table_s2_t1_action read_rnmdr
 
 #define rx_table_s2_t2 tcp_rx_read_rnmpr
-#define rx_table_s2_t2_action read_rnmpr
 
 #define rx_table_s2_t3 tcp_rx_read_serq
-#define rx_table_s2_t3_action read_serq
 
 #define rx_table_s3_t0 tcp_rx_tcp_fra
-#define rx_table_s3_t0_action tcp_fra
-
 #define rx_table_s3_t1 tcp_rx_rdesc_alloc
-#define rx_table_s3_t1_action rdesc_alloc
-
 #define rx_table_s3_t2 tcp_rx_rpage_alloc
-#define rx_table_s3_t2_action rpage_alloc
 
 #define rx_table_s4_t0 tcp_rx_tcp_cc
-#define rx_table_s4_t0_action tcp_cc
 
 #define rx_table_s5_t0 tcp_rx_tcp_fc
-#define rx_table_s5_t0_action tcp_fc
 
 #define rx_table_s6_t0 tcp_rx_write_serq
+
+#define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
+
+
+#define rx_table_s1_t0_action tcp_rx
+
+#define rx_table_s2_t0_action tcp_rtt
+
+#define rx_table_s2_t1_action read_rnmdr
+
+#define rx_table_s2_t2_action read_rnmpr
+
+#define rx_table_s2_t3_action read_serq
+
+#define rx_table_s3_t0_action tcp_fra
+#define rx_table_s3_t1_action rdesc_alloc
+#define rx_table_s3_t2_action rpage_alloc
+
+#define rx_table_s4_t0_action tcp_cc
+
+#define rx_table_s5_t0_action tcp_fc
+
 #define rx_table_s6_t0_action write_serq
 
+#define common_p4plus_stage0_app_header_table_action_dummy read_tx2rx
+
 #include "../common-p4+/common_rxdma.p4"
+
 #include "tcp_proxy_common.p4"
 
 /******************************************************************************
@@ -862,22 +832,4 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts) {
     modify_field(write_serq_d.nde_offset, nde_offset);
     modify_field(write_serq_d.nde_len, nde_len);
     modify_field(write_serq_d.curr_ts, curr_ts);
-}
-
-
-/*
- * Dummy
- */
-action tcp_proxy_dummy_action(data0, data1, data2, data3, data4, data5, data6, data7) {
-    modify_field(scratch_metadata0.data0, data0);
-    modify_field(scratch_metadata0.data1, data1);
-    modify_field(scratch_metadata0.data2, data2);
-    modify_field(scratch_metadata0.data3, data3);
-    modify_field(scratch_metadata0.data4, data4);
-    modify_field(scratch_metadata0.data5, data5);
-    modify_field(scratch_metadata0.data6, data6);
-    modify_field(scratch_metadata0.data7, data7);
-}
-
-action tcp_proxy_dummy_action_default() {
 }

@@ -132,6 +132,15 @@ metadata p4plus_2_p4_app_header_t app_header_scratch;
 #define SET_S2S_SCRATCH3 \
     modify_field(s2s_scratch0.s2s_data, common_t3_s2s.s2s_data); 
 
+// dummy action function 
+action tx_table_dummy_action(data0, data1,
+                             data2, data3,
+                             data4, data5, 
+                             data6, data7)
+{
+    SCRATCH_METADATA_INIT_7(scratch_metadata1)
+}
+
 //stage 7 action functions 
 action tx_table_s7_t3_cfg_action(data0, data1,
                              data2, data3,
@@ -827,6 +836,7 @@ table tx_table_s2_t0 {
     actions {
         tx_table_s2_t0_action;
         tx_table_s2_t0_cfg_action;
+        tx_table_s2_t0_action1;
     }
 }
 
@@ -876,6 +886,7 @@ table tx_table_s1_t0 {
     actions {
         tx_table_s1_t0_action;
         tx_table_s1_t0_cfg_action;
+        tx_table_s1_t0_action1;
     }
 }
 
@@ -925,6 +936,7 @@ table tx_table_s0_t0 {
     actions {
         tx_table_s0_t0_action;
         tx_table_s0_t0_cfg_action;
+        tx_table_s0_t0_action1;
     }
 }
 

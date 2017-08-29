@@ -183,6 +183,21 @@ metadata p4plus_common_to_stage_t te_scratch;
 #define SET_S2S_SCRATCH3 \
     modify_field(s2s_scratch0.s2s_data, common_t3_s2s.s2s_data); 
 
+@pragma scratch_metadata
+metadata scratch_metadata_t scratch_metadata1;
+
+// dummy action function 
+action rx_table_dummy_action(data0, data1,
+                             data2, data3,
+                             data4, data5, 
+                             data6, data7)
+{
+    SCRATCH_METADATA_INIT_7(scratch_metadata1)
+}
+
+action common_p4plus_stage0_app_header_table_action_dummy_default() {
+}
+
 //stage 7 action functions 
 action rx_table_s7_t3_cfg_action(data0, data1,
                              data2, data3,

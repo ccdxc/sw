@@ -2,15 +2,11 @@
 
 #define HBM_ADDRESS_WIDTH           32
 
+#include "../../common-p4+/common_txdma_dummy.p4"
+
 #define tx_table_s0_t0_action       read_tls_stg0
-#define tx_table_s0_t1_action       tls_dummy_action
-#define tx_table_s0_t2_action       tls_dummy_action
-#define tx_table_s0_t3_action       tls_dummy_action
 
 #define tx_table_s1_t0_action       read_tls_stg1_7
-#define tx_table_s1_t1_action       tls_dummy_action
-#define tx_table_s1_t2_action       tls_dummy_action
-#define tx_table_s1_t3_action       tls_dummy_action
 
 #define tx_table_s2_t0_action       tls_rx_serq 
 #define tx_table_s2_t1_action       read_tnmdr
@@ -20,30 +16,16 @@
 #define tx_table_s3_t0_action       tls_serq_consume
 #define tx_table_s3_t1_action       tdesc_alloc
 #define tx_table_s3_t2_action       tpage_alloc
-#define tx_table_s3_t3_action       tls_dummy_action
 
 #define tx_table_s4_t0_action       tls_bld_brq4
-#define tx_table_s4_t1_action       tls_dummy_action
-#define tx_table_s4_t2_action       tls_dummy_action
-#define tx_table_s4_t3_action       tls_dummy_action
 
 #define tx_table_s5_t0_action       tls_queue_brq5
-#define tx_table_s5_t1_action       tls_dummy_action
-#define tx_table_s5_t2_action       tls_dummy_action
-#define tx_table_s5_t3_action       tls_dummy_action
 
 #define tx_table_s6_t0_action       tls_bld_brq6
-#define tx_table_s6_t1_action       tls_dummy_action
-#define tx_table_s6_t2_action       tls_dummy_action
-#define tx_table_s6_t3_action       tls_dummy_action
 
 #define tx_table_s7_t0_action       tls_queue_brq7
-#define tx_table_s7_t1_action       tls_dummy_action
-#define tx_table_s7_t2_action       tls_dummy_action
-#define tx_table_s7_t3_action       tls_dummy_action
 
 #include "../../common-p4+/common_txdma.p4"
-
 
 #define CAPRI_QSTATE_HEADER_COMMON \
         rsvd		        : 8;\
@@ -665,16 +647,4 @@ action tls_queue_brq7(STG_QUEUE_BRQ_ACTION_PARAMS) {
     modify_field(to_s7_scratch.next_tls_hdr_offset, to_s7.next_tls_hdr_offset);
 
     GENERATE_STG_QUEUE_BRQ_D
-}
-
-
-action tls_dummy_action(data0, data1, data2, data3, data4, data5, data6, data7) {
-    modify_field(scratch_metadata0.data0, data0);
-    modify_field(scratch_metadata0.data1, data1);
-    modify_field(scratch_metadata0.data2, data2);
-    modify_field(scratch_metadata0.data3, data3);
-    modify_field(scratch_metadata0.data4, data4);
-    modify_field(scratch_metadata0.data5, data5);
-    modify_field(scratch_metadata0.data6, data6);
-    modify_field(scratch_metadata0.data7, data7);
 }

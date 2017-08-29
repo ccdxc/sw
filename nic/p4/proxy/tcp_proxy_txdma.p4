@@ -2,55 +2,35 @@
 /* tcp_proxy_common.p4
 /*****************************************************************************/
 
-#define tx_table_s0_t3_action tcp_proxy_dummy_action
-#define tx_table_s0_t2_action tcp_proxy_dummy_action
-#define tx_table_s0_t1_action tcp_proxy_dummy_action
-#define tx_table_s7_t3_action tcp_proxy_dummy_action
-#define tx_table_s7_t2_action tcp_proxy_dummy_action
-#define tx_table_s7_t1_action tcp_proxy_dummy_action
-#define tx_table_s7_t0_action tcp_proxy_dummy_action
-#define tx_table_s6_t3_action tcp_proxy_dummy_action
-#define tx_table_s6_t2_action tcp_proxy_dummy_action
-#define tx_table_s6_t1_action tcp_proxy_dummy_action
-#define tx_table_s5_t3_action tcp_proxy_dummy_action
-#define tx_table_s5_t2_action tcp_proxy_dummy_action
-#define tx_table_s5_t1_action tcp_proxy_dummy_action
-#define tx_table_s5_t0_action tcp_proxy_dummy_action
-#define tx_table_s4_t3_action tcp_proxy_dummy_action
-#define tx_table_s4_t2_action tcp_proxy_dummy_action
-#define tx_table_s3_t3_action tcp_proxy_dummy_action
-#define tx_table_s1_t3_action tcp_proxy_dummy_action
-#define tx_table_s1_t2_action tcp_proxy_dummy_action
-#define tx_table_s1_t1_action tcp_proxy_dummy_action
-#define tx_table_s0_t3_action tcp_proxy_dummy_action
-#define tx_table_s0_t2_action tcp_proxy_dummy_action
-#define tx_table_s0_t1_action tcp_proxy_dummy_action
-#define tx_table_s2_t1_action tcp_proxy_dummy_action
-#define tx_table_s2_t2_action tcp_proxy_dummy_action
-#define tx_table_s2_t3_action tcp_proxy_dummy_action
-#define tx_table_s3_t1_action tcp_proxy_dummy_action
-#define tx_table_s3_t2_action tcp_proxy_dummy_action
-#define tx_table_s6_t0_action tcp_proxy_dummy_action
+#include "../common-p4+/common_txdma_dummy.p4"
 
 #define tx_table_s0_t0 tcp_tx_read_rx2tx
-#define tx_table_s0_t0_action read_rx2tx
 
 #define tx_table_s1_t0 tcp_tx_read_rx2tx_extra
-#define tx_table_s1_t0_action read_rx2tx_extra
 
 #define tx_table_s2_t0 tcp_tx_read_sesq_ci
-#define tx_table_s2_t0_action read_sesq_ci
 
 #define tx_table_s3_t0 tcp_tx_read_sesq
-#define tx_table_s3_t0_action read_sesq
 
 #define tx_table_s4_t0 tcp_proxy_dummy_action  // TODO
-#define tx_table_s4_t0_action tcp_proxy_dummy_action  // TODO
 
 #define tx_table_s4_t1 tcp_tx_sesq_consume
+
+
+#define tx_table_s0_t0_action read_rx2tx
+
+#define tx_table_s1_t0_action read_rx2tx_extra
+
+#define tx_table_s2_t0_action read_sesq_ci
+
+#define tx_table_s3_t0_action read_sesq
+
+#define tx_table_s4_t0_action tcp_proxy_dummy_action  // TODO
+
 #define tx_table_s4_t1_action sesq_consume
 
 #include "../common-p4+/common_txdma.p4"
+
 #include "tcp_proxy_common.p4"
 
 /******************************************************************************
