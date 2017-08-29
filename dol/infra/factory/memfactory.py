@@ -17,9 +17,7 @@ def init():
 
 def __generate_common(tc, spec):
     template = spec.template.Get(FactoryStore)
-    obj = loader.CreateObjectInstance(template.meta.package,
-                                      template.meta.module,
-                                      template.meta.objname)
+    obj = template.CreateObjectInstance()
     obj.SetLogger(tc)
     obj.GID(spec.id)
     obj.Init(spec)

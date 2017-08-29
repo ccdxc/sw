@@ -1,5 +1,6 @@
 # RDMA Recv Queue Descriptor Format
 meta:
-    id  : DESC_RDMA_RQ
-    base: ref://store/templates/id=DESCRIPTOR
-
+    id      : DESC_RDMA_RQ
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaRqDescriptorObject

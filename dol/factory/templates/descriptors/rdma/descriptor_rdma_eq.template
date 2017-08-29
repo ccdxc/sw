@@ -1,5 +1,6 @@
 # RDMA Event Queue Descriptor Format
 meta:
-    id  : DESC_RDMA_EQ
-    base: ref://store/templates/id=DESCRIPTOR
-
+    id      : DESC_RDMA_EQ
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaEqDescriptorObject

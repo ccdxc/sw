@@ -7,6 +7,7 @@ import infra.common.utils           as utils
 import infra.common.dyml            as dyml
 import infra.common.objects         as objects
 import infra.common.parser          as parser
+import infra.common.loader          as loader
 
 from infra.common.logging   import pktlogger
 from infra.factory.store    import FactoryStore
@@ -19,17 +20,32 @@ class FactoryTemplate(objects.FrameworkTemplateObject):
             self.GID(yobj.meta.id)
         return
 
+class FactoryObjectTemplate(FactoryTemplate):
+    def __init__(self, yobj):
+        super().__init__(yobj)
+        if yobj:
+            self.package    = yobj.meta.package
+            self.module     = yobj.meta.module
+            self.objname    = yobj.meta.objname
+        return
+
+    def CreateObjectInstance(self):
+        obj = loader.CreateObjectInstance(self.package,
+                                          self.module,
+                                          self.objname)
+        return obj
+
+class DescriptorTemplate(FactoryObjectTemplate):
+    def __init__(self, yobj):
+        super().__init__(yobj)
+        return
+
+class BufferTemplate(FactoryObjectTemplate):
+    def __init__(self, yobj):
+        super().__init__(yobj)
+        return
+
 class HeaderTemplate(FactoryTemplate):
-    def __init__(self, yobj):
-        super().__init__(yobj)
-        return
-
-class DescriptorTemplate(FactoryTemplate):
-    def __init__(self, yobj):
-        super().__init__(yobj)
-        return
-
-class BufferTemplate(FactoryTemplate):
     def __init__(self, yobj):
         super().__init__(yobj)
         return

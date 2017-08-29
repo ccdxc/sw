@@ -1,7 +1,9 @@
 # RDMA Send Queue Descriptor Format
 meta:
-    id  : DESC_RDMA_SQ_RING
-    base: ref://store/templates/id=DESCRIPTOR
+    id      : DESC_RDMA_SQ_RING
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaRqDescriptorObject
 
 wrid    : random/1/65535
 op_type : None # Filled by Testspec

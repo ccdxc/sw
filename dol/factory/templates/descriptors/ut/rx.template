@@ -3,7 +3,7 @@ meta:
     id      : DESC_INFRA_UT_RX
     package : factory.objects.ut
     module  : descriptor
-    class   : InfraUtRxDescriptorObject
+    objname : InfraUtRxDescriptorObject
 
 
 vlan    : None # Vlan of the Recvd Packet

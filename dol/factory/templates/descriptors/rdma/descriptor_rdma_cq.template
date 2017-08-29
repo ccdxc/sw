@@ -1,5 +1,8 @@
 # RDMA Completion Queue Descriptor Format
 meta:
     id  : DESC_RDMA_CQ
-    base: ref://store/templates/id=DESCRIPTOR
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaCqDescriptorObject
+
 
