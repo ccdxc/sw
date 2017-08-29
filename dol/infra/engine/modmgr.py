@@ -180,15 +180,15 @@ class Module:
 
     def main(self, infra_data):
         self.infra_data = infra_data
-        self.logger = logging.Logger(level=logging.levels.INFO, stdout=False,
+        self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
                                      name="MOD:%s" % self.name)
                                      #log_file='logs/' + self.name + ".log")
         self.infra_data.Logger = self.logger
         self.__load()
-        self.__load_spec()
         while self.iterator.End() == False:
             self.logger.info("========== Starting Test Module =============")
             self.logger.info("Iterator @ ", self.iterator.Get())
+            self.__load_spec()
             self.__setup_callback()
             self.__select_config()
             self.__generate()

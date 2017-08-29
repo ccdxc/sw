@@ -869,7 +869,7 @@ def IsCallback(field):
 class ObjectDatabase(FrameworkObject):
     def __init__(self, logger):
         super().__init__()
-        self.db = {}
+        self.db = OrderedDict()
         self.logger = logger
         return
 
