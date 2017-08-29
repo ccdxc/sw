@@ -131,47 +131,6 @@ metadata rdma_scratch_metadata_t scratch_rdma;
 @pragma scratch_metadata
 metadata p4_2_p4plus_app_header_t scratch_app;
 
-#if 0
-action common_p4plus_stage0_lif_table1(rdma_pointers) {
-    modify_field(scratch_rdma.rdma_pointers, rdma_pointers);
-}
-
-table common_p4plus_stage0_lif_table1 {
-    reads {
-        p4_intr_global.lif : exact;
-    }
-    actions {
-        common_p4plus_stage0_lif_table1;
-    }
-    size : LIF_TABLE_SIZE;
-}
-
-action common_p4plus_stage0_lif_table0(hash_seed_320) {
-    modify_field(scratch_classic.hash_seed_320, hash_seed_320);
-}
-
-table common_p4plus_stage0_lif_table0 {
-    reads {
-        p4_intr_global.lif : exact;
-    }
-    actions {
-        common_p4plus_stage0_lif_table0;
-    }
-    size : LIF_TABLE_SIZE;
-}
-
-table common_p4plus_stage0_app_header_table {
-    reads { 
-        // dummy - we do not need any key to this table, we just need 52 bytes of app-data to go into K+I
-        app_header.app_type : exact; 
-    }
-    actions {
-        common_p4plus_stage0_app_header_table_action;
-    }
-}
-
-#endif
-
 @pragma scratch_metadata
 metadata p4plus_common_raw_table_engine_phv_t te0_scratch;
 @pragma scratch_metadata

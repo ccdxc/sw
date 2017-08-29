@@ -14,7 +14,6 @@ struct phv_ p;
         .align 
 ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
-    phvwr p.ipsec_to_stage3_tail_desc_addr, d.tail_desc_addr
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
@@ -28,8 +27,8 @@ ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_pad_size, r5
     sll r6, r4, 8
     addi r6, r6, IPSEC_PAD_BYTES_TABLE_BASE
-    phvwr p.ipsec_to_stage4_pad_addr, r6
-    phvwr p.ipsec_to_stage4_pad_size, r5
+    phvwr p.ipsec_to_stage3_pad_addr, r6
+    phvwr p.ipsec_to_stage3_pad_size, r5
     add r7, r5, d.icv_size
     addi r7, r7, 2
     phvwr p.ipsec_int_header_tailroom, r7

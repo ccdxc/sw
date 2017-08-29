@@ -10,7 +10,7 @@ struct phv_ p;
 %%
         .align
 ipsec_build_encap_packet:
-    phvwri p.intrinic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.tail_2_bytes_dma_cmd_phv_start_addr, 0
     phvwri p.tail_2_bytes_dma_cmd_phv_end_addr, 32
     
