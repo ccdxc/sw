@@ -52,6 +52,17 @@ func AssertEquals(tb TB, exp, act interface{}, msg string) {
 	}
 }
 
+// AssertOneOf fails the test if actual is not one of expected.
+func AssertOneOf(tb TB, act string, exp []string) {
+	for ii := range exp {
+		if act == exp[ii] {
+			return
+		}
+	}
+	_, file, line, _ := runtime.Caller(1)
+	tb.Fatalf("\033[31m%s:%d:\n\n\texp: one of %#v\n\n\tgot: %#v\033[39m\n\n", filepath.Base(file), line, exp, act)
+}
+
 // AssertEventually polls evaluator periodically and checks if it reached desired condition
 // intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
 func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {

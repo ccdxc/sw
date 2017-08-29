@@ -7,6 +7,7 @@ package rpckit
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -22,6 +23,7 @@ type options struct {
 	enableTracer bool              // option to enable tracer middleware
 	enableLogger bool              // option to enable logging middleware
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
+	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
 }
 
 // RPCServer contains RPC server state
@@ -68,6 +70,13 @@ func WithLoggerEnabled(enabled bool) Option {
 func WithMiddleware(m Middleware) Option {
 	return func(o *options) {
 		o.middlewares = append(o.middlewares, m)
+	}
+}
+
+// WithBalancer passes a balancer for gRPC Load balancing
+func WithBalancer(b grpc.Balancer) Option {
+	return func(o *options) {
+		o.balancer = b
 	}
 }
 
@@ -125,7 +134,7 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
 	}
 
-	// start new grpc server
+	// get TLS options
 	if rpcServer.tlsProvider != nil {
 		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(srvName)
 		if err != nil {
@@ -168,8 +177,14 @@ func (srv *RPCServer) Stop() error {
 }
 
 // NewRPCClient returns an RPC client to a remote server
+//
+// srvName   - identifier of the client, used in logging
+// remoteURL - either <host:port> or <service-name>. If <service-name> is
+//             specified, a balancer should be involved to resolve the name.
+//             At this time, the balancer is explicitly passed. At a later
+//             time, there will be an implicit balancer created.
 func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error) {
-	var grpcOpts grpc.DialOption
+	grpcOpts := make([]grpc.DialOption, 0)
 
 	// some error checking
 	if remoteURL == "" {
@@ -191,6 +206,17 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 		}
 	}
 
+	serviceTarget := false // need for a balancer.
+	_, _, err := net.SplitHostPort(remoteURL)
+	if err != nil {
+		// Not a URL, must provide a balancer.
+		// TODO: Create a balancer that uses a resolver that points to VIP:<CMD port>
+		if rpcClient.balancer == nil {
+			return nil, fmt.Errorf("Requires a balancer to resolve %v", remoteURL)
+		}
+		serviceTarget = true
+	}
+
 	// add default middlewares
 	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)    //stats
 	rpcClient.middlewares = append(rpcClient.middlewares, newLogMiddleware()) // logging
@@ -198,22 +224,29 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer) // tracing
 	}
 
-	var err error
 	// Get credentials
 	if rpcClient.tlsProvider != nil {
-		grpcOpts, err = rpcClient.tlsProvider.GetDialOptions(srvName)
+		tlsOpt, err := rpcClient.tlsProvider.GetDialOptions(srvName)
 		if err != nil {
 			log.Errorf("Failed to get dial options for server %v. Err: %v", srvName, err)
 			return nil, err
 		}
+		grpcOpts = append(grpcOpts, tlsOpt)
 	} else {
-		grpcOpts = grpc.WithInsecure()
+		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	}
 
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(remoteURL, grpc.WithBlock(), grpc.WithTimeout(time.Second*3), grpcOpts,
+	// For service targets, use the balancer.
+	if serviceTarget {
+		grpcOpts = append(grpcOpts, grpc.WithBalancer(rpcClient.balancer))
+	}
+
+	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(rpcClient)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(rpcClient)))
+
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(remoteURL, grpcOpts...)
 	if err != nil {
 		log.Errorf("could not connect to %s. Err: %v", remoteURL, err)
 		return nil, err

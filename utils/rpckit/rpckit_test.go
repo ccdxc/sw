@@ -5,6 +5,8 @@ package rpckit
 import (
 	"errors"
 	"fmt"
+	"net"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,6 +16,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/cmd/grpc/service"
+	"github.com/pensando/sw/cmd/services/mock"
+	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/utils/balancer"
+	"github.com/pensando/sw/utils/resolver"
 	. "github.com/pensando/sw/utils/testutils"
 )
 
@@ -421,4 +429,86 @@ func TestRPCTlsConnections(t *testing.T) {
 	tlsTestClient = NewTestClient(tlsRPCClient.ClientConn)
 	_, err = tlsTestClient.TestRPC(context.Background(), &TestReq{"test TLS request"})
 	AssertOk(t, err, "RPC error")
+}
+
+// test load balancing of RPCs
+func TestRPCBalancing(t *testing.T) {
+	// create two handler objects
+	testHandler1 := &testRPCHandler{
+		respMsg: "t1",
+	}
+	testHandler2 := &testRPCHandler{
+		respMsg: "t2",
+	}
+
+	// create two rpc servers
+	rpcServer1, err := NewRPCServer("testService", "localhost:0", WithTracerEnabled(true))
+	AssertOk(t, err, "Failed to create listener")
+	defer func() {
+		rpcServer1.Stop()
+		time.Sleep(time.Millisecond)
+	}()
+	_, portStr1, err := net.SplitHostPort(rpcServer1.listenURL)
+	AssertOk(t, err, "Failed to parse port")
+	port1, err := strconv.Atoi(portStr1)
+	AssertOk(t, err, "Failed to convert port")
+
+	rpcServer2, err := NewRPCServer("testService", "localhost:0", WithTracerEnabled(true))
+	AssertOk(t, err, "Failed to create listener")
+	defer func() {
+		rpcServer2.Stop()
+		time.Sleep(time.Millisecond)
+	}()
+	_, portStr2, err := net.SplitHostPort(rpcServer2.listenURL)
+	AssertOk(t, err, "Failed to parse port")
+	port2, err := strconv.Atoi(portStr2)
+	AssertOk(t, err, "Failed to convert port")
+
+	// register handlers with rpc servers
+	RegisterTestServer(rpcServer1.GrpcServer, testHandler1)
+	RegisterTestServer(rpcServer2.GrpcServer, testHandler2)
+
+	// Now create a mock resolver
+	m := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(m)
+	resolverServer, err := NewRPCServer("resolver", "localhost:0", WithTracerEnabled(true))
+	AssertOk(t, err, "Failed to create listener")
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+
+	// populate the mock resolver with the two servers
+	si1 := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "t1",
+		},
+		Service: "testService",
+		Node:    "localhost",
+		Port:    uint32(port1),
+	}
+	si2 := si1
+	si2.Name = "t2"
+	si2.Port = uint32(port2)
+	m.AddServiceInstance(&si1)
+	m.AddServiceInstance(&si2)
+
+	// Now create a rpc client with a balancer
+	r, err := resolver.New(&resolver.Config{Servers: []string{resolverServer.listenURL}})
+	AssertOk(t, err, "Failed to create resolver client")
+	b := balancer.New(r)
+	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b))
+	AssertOk(t, err, "Failed to create RPC Client")
+	testClient := NewTestClient(client.ClientConn)
+
+	// Send a bunch of RPCs
+	respMap := make(map[string]int)
+	for ii := 0; ii < 100; ii++ {
+		resp, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+		AssertOk(t, err, "Failed to send RPC")
+		respMap[resp.RespMsg]++
+	}
+	if respMap["t1"] != 50 || respMap["t2"] != 50 {
+		t.Fatalf("Load balancing of RPCs failed, got %v and %v", respMap["t1"], respMap["t2"])
+	}
 }

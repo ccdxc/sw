@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"fmt"
 	"sync"
 
 	"golang.org/x/net/context"
@@ -150,7 +151,7 @@ func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
 	siList := b.resolver.Lookup(b.service)
 	nodes := make([]grpc.Address, 0)
 	for ii := range siList.Items {
-		nodes = append(nodes, grpc.Address{Addr: siList.Items[ii].Node})
+		nodes = append(nodes, grpc.Address{Addr: fmt.Sprintf("%s:%d", siList.Items[ii].Node, siList.Items[ii].Port)})
 	}
 	if len(nodes) != 0 {
 		b.notifyCh <- nodes

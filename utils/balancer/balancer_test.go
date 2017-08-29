@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/cmd/types"
+	. "github.com/pensando/sw/utils/testutils"
 )
 
 func TestBalancer(t *testing.T) {
@@ -36,17 +37,14 @@ func TestBalancer(t *testing.T) {
 		},
 		Service: "testService",
 		Node:    "node1",
+		Port:    8888,
 	}
 	// Add instance1.
 	rc.AddServiceInstance(&si1)
 	select {
 	case addrs := <-notifyCh:
-		if len(addrs) != 1 {
-			t.Fatalf("Expected 1 addr, got %v", len(addrs))
-		}
-		if addrs[0].Addr != "node1" {
-			t.Fatalf("Expected node1, got %v", addrs[0].Addr)
-		}
+		AssertEquals(t, len(addrs), 1, fmt.Sprintf("Expected 1 addr, got %v", len(addrs)))
+		AssertEquals(t, addrs[0].Addr, "node1:8888", fmt.Sprintf("Expected node1:8888, got %v", addrs[0].Addr))
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}
@@ -57,59 +55,43 @@ func TestBalancer(t *testing.T) {
 	rc.AddServiceInstance(&si2)
 	select {
 	case addrs := <-notifyCh:
-		if len(addrs) != 2 {
-			t.Fatalf("Expected 2 addrs, got %v", len(addrs))
-		}
+		AssertEquals(t, len(addrs), 2, fmt.Sprintf("Expected 2 addrs, got %v", len(addrs)))
 		for ii := range addrs {
-			if addrs[ii].Addr != "node1" && addrs[ii].Addr != "node2" {
-				t.Fatalf("Expected node1/node2, got %v", addrs[ii].Addr)
-			}
+			AssertOneOf(t, addrs[ii].Addr, []string{"node1:8888", "node2:8888"})
 		}
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}
 
 	// Both instances are still down.
-	if addr, _, err := b.Get(context.Background(), grpc.BalancerGetOptions{}); err == nil {
-		t.Fatalf("Did not get unavailable error")
-	} else if addr.Addr != "" {
-		t.Fatalf("Expected empty Get, got %v", addr.Addr)
-	}
+	addr, _, err := b.Get(context.Background(), grpc.BalancerGetOptions{})
+	Assert(t, (err != nil), "Did not get unavailable error")
+	Assert(t, (addr.Addr == ""), fmt.Sprintf("Expected empty Get, got %v", addr.Addr))
 
 	// Mark instance1 up.
-	b.Up(grpc.Address{Addr: "node1"})
-	if addr, _, err := b.Get(context.Background(), grpc.BalancerGetOptions{}); err != nil {
-		t.Fatalf("Failed to get with error: %v", err)
-	} else if addr.Addr != "node1" {
-		t.Fatalf("Expected to get node1, got %v", addr.Addr)
-	}
+	b.Up(grpc.Address{Addr: "node1:8888"})
+	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
+	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
+	AssertEquals(t, addr.Addr, "node1:8888", fmt.Sprintf("Expected to get node1:8888, got %v", addr.Addr))
 
 	// Mark instance2 up.
-	downFn := b.Up(grpc.Address{Addr: "node2"})
-	if addr, _, err := b.Get(context.Background(), grpc.BalancerGetOptions{}); err != nil {
-		t.Fatalf("Failed to get with error: %v", err)
-	} else if addr.Addr != "node1" && addr.Addr != "node2" {
-		t.Fatalf("Expected to get node1/node2, got %v", addr.Addr)
-	}
+	downFn := b.Up(grpc.Address{Addr: "node2:8888"})
+	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
+	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
+	AssertOneOf(t, addr.Addr, []string{"node1:8888", "node2:8888"})
 
 	// Mark instance2 down.
 	downFn(fmt.Errorf("Test down"))
-	if addr, _, err := b.Get(context.Background(), grpc.BalancerGetOptions{}); err != nil {
-		t.Fatalf("Failed to get with error: %v", err)
-	} else if addr.Addr != "node1" {
-		t.Fatalf("Expected to get node1, got %v", addr.Addr)
-	}
+	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
+	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
+	AssertEquals(t, addr.Addr, "node1:8888", fmt.Sprintf("Expected to get node1:8888, got %v", addr.Addr))
 
 	// Delete instance2.
 	rc.DeleteServiceInstance(&si2)
 	select {
 	case addrs := <-notifyCh:
-		if len(addrs) != 1 {
-			t.Fatalf("Expected 1 addr, got %v", len(addrs))
-		}
-		if addrs[0].Addr != "node1" {
-			t.Fatalf("Expected node1, got %v", addrs[0].Addr)
-		}
+		AssertEquals(t, len(addrs), 1, fmt.Sprintf("Expected 1 addr, got %v", len(addrs)))
+		AssertEquals(t, addrs[0].Addr, "node1:8888", fmt.Sprintf("Expected node1:8888, got %v", addrs[0].Addr))
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}
