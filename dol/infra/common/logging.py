@@ -4,6 +4,7 @@ import datetime
 import pdb
 import sys
 import inspect
+import threading 
 
 import infra.common.defs as defs
 
@@ -21,34 +22,52 @@ __levels = {
 }
 
 levels = defs.Dict2Enum(__levels)
-
-gl_file_log = None
-#gl_file_log = open('.framework.log', 'w')
-class Logger:
-    def __init__(self, stdout=True, level=levels.DEBUG, name=None, log_file=None):
-        self.sinks = []
-        self.indent_enable = False
-        self.level = level
-        self.levels = levels
-        self.name = name
+class LoggerSink:
+    def __init__(self, stdout = None, logfile = None):
+        self.sink = None
+        self.prefix = ''
+        self.lock = threading.Lock()
         if stdout:
-            self.sinks.append(sys.stdout)
-        global gl_file_log
-        if gl_file_log:
-            self.sinks.append(gl_file_log)
-        if log_file:
-            fp = open(log_file, 'w')
-            self.sinks.append(fp)
+            self.sink = sys.stdout
+        elif logfile:
+            self.sink = open(logfile, 'w')
+        else:
+            assert(0)
+        return
+    
+    def write(self, text):
+        self.lock.acquire()
+        self.sink.write(text)
+        self.lock.release()
+
+    def flush(self):
+        self.sink.flush()
         return
 
-    def add_stdout(self):
-        if sys.stdout not in self.sinks:
-            self.sinks.append(sys.stdout)
-        
+StdoutLoggerSink = LoggerSink(stdout = True)
+sys.stdout = StdoutLoggerSink
+sys.stderr = StdoutLoggerSink
+
+class Logger:
+    def __init__(self, stdout=True, level=levels.DEBUG, name=None, logfile=None):
+        self.sinks          = []
+        self.indent_enable  = False
+        self.level          = level
+        self.levels         = levels
+        self.name           = name
+        self.logfile        = logfile
+
+        if stdout:
+            global StdoutLoggerSink
+            self.sinks.append(StdoutLoggerSink)
+
+        if logfile:
+            self.sinks.append(LoggerSink(logfile = self.logfile))
+        return
+
     def __flush(self, text):
         for s in self.sinks:
             s.write(text)
-            s.flush()
         return
 
     def __get_timestamp(self):
