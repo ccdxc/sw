@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_defines.h"
 
-struct tx_table_s1_t2_k k;
-struct tx_table_s1_t2_allocate_barco_req_pindex_d d;
+struct tx_table_s1_t1_k k;
+struct tx_table_s1_t1_allocate_barco_req_pindex_d d;
 struct phv_ p;
 
 %%

@@ -20,7 +20,7 @@ ipsec_encap_txdma2_initial_table:
     addi r2, r0, ipsec_encap_txdma2_load_barco_req_ptr
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 
-    add r1, r0, d.barco_cb_cindex
+    add r1, r0, d.barco_ring_cindex
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     addi r1, r1, BRQ_REQ_RING_BASE_ADDR
     phvwr  p.common_te0_phv_table_addr, r1

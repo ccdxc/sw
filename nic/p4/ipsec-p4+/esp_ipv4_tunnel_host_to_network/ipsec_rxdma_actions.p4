@@ -56,88 +56,24 @@
 #define rx_table_s7_t3_action ipsec_rxdma_dummy
 
 #include "../../common-p4+/common_rxdma.p4"
-
+#include "esp_ipv4_tunnel_h2n_headers.p4"
+#
 #include "../ipsec_defines.h"
 
 
 
-header_type ipsec_int_header_t {
-    fields {
-	in_desc           : ADDRESS_WIDTH;
-	out_desc          : ADDRESS_WIDTH;
-	ipsec_cb_index    : 16;
-	headroom          : 8;
-	tailroom          : 8;
-	headroom_offset   : 16;
-	tailroom_offset   : 16;
-	pad_size          : 8;
-	payload_start     : 16;
-	buf_size          : 16;
-	payload_size      : 16;
-        l4_protocol       : 8;
-        ipsec_int_pad0    : 256;
-    }
-}
-
-header_type ipsec_cb_metadata_t {
-    fields {
-        pid : 16;
-        cos_b : 4;
-        cos_a : 4;
-        pc_offset : 8; 
-        rxdma_ring_pindex : RING_INDEX_WIDTH;
-        rxdma_ring_cindex : RING_INDEX_WIDTH;
-        barco_ring_pindex : RING_INDEX_WIDTH;
-        barco_ring_cindex : RING_INDEX_WIDTH;
-        key_index : 32;
-        iv_size   : 8;
-        icv_size  : 8;
-        spi       : 32;
-        esn_lo    : 32;
-        iv        : 64;
-        esn_hi    : 32;
-        barco_enc_cmd  : 32;
-        ipsec_cb_index : 16;
-        block_size     : 8;
-        head_desc_addr : ADDRESS_WIDTH;
-        tail_desc_addr : ADDRESS_WIDTH;
-        ipsec_cb_pad : 40;
-    }
-}
-
-// the below phv is going to be written to the descriptor memory by action func as phv2mem
-// please refer to barco document - table3 for the latest format.
-header_type barco_descriptor_t {
-    fields {
-        A0_addr : ADDRESS_WIDTH;
-        O0      : AOL_OFFSET_WIDTH;
-        L0      : AOL_LENGTH_WIDTH;
-        A1_addr : ADDRESS_WIDTH;
-        O1      : AOL_OFFSET_WIDTH;
-        L1      : AOL_LENGTH_WIDTH;
-        A2_addr : ADDRESS_WIDTH;
-        O2      : AOL_OFFSET_WIDTH;
-        L2      : AOL_LENGTH_WIDTH;
-        // Barco linked list next descriptor entry addr
-        NextAddr : ADDRESS_WIDTH;
-        // Below will be renamed as CB-descriptor-linked-list-next - different from barco-next-addr
-        Reserved : 64;
-    }
-}
-
 header_type ipsec_to_stage3_t {
     fields {
-        tail_desc_addr : ADDRESS_WIDTH; 
-        stage2_pad     : ADDRESS_WIDTH;
+        pad_addr : ADDRESS_WIDTH;
+        pad_size : 8;
+        stage3_pad     : 56;
     }
 }
 
 header_type ipsec_to_stage4_t {
     fields {
         out_desc_addr : ADDRESS_WIDTH; 
-        pad_size : 8;
-        pad_addr : 40;
-        to_stage_3_pad : 16;
+        to_stage_4_pad : 64;
     }
 }
 
@@ -185,6 +121,11 @@ header_type ipsec_rxdma_global_t {
     }
 }
 
+header_type doorbell_data_pad_t {                                                                                                                                                                                
+    fields {
+        db_data_pad : 64;
+    }
+}
 
 
 //Unionize the below with p4_2_p4plus_app_header_t
@@ -236,6 +177,11 @@ metadata barco_descriptor_t barco_desc_in;
 metadata barco_descriptor_t barco_desc_out;
 
 
+@pragma dont_trim
+metadata doorbell_data_t db_data;
+@pragma dont_trim
+metadata doorbell_data_pad_t db_data_pad;
+
 //dma commands
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
@@ -252,8 +198,15 @@ metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_src;
 @pragma dont_trim
 metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_dst;
 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t doorbell_cmd; 
+
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
+
 
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -294,21 +247,22 @@ action ipsec_rxdma_dummy ()
 // 2. rsvd field should be zero there. 
 // 3. Now table write the rsvd with newly allocated input-descriptor
 // 4. Update the input-descriptor rsvd to zero (it would be anyway be zero - but just to make sure)
-//stage 3 - table 0
-action ipsec_cb_tail_enqueue_input_desc (addr0, offset0, length0,
-                              addr1, offset1, length1,
-                              addr2, offset2, length2,
-                              nextptr, rsvd)
+//stage 4 - table 0
+action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
+                                       eval_last, host, total, pid,
+                                       rxdma_ring_pindex, rxdma_ring_cindex,
+                                       barco_ring_pindex, barco_ring_cindex,
+                                       key_index, iv_size, icv_size, spi,
+                                       esn_lo, iv, esn_hi, barco_enc_cmd,
+                                       ipsec_cb_index, block_size,
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
 {
-    //table write in_desc into rsvd value of tail_desc - write this part in assembly.
+    IPSEC_CB_SCRATCH
+
     // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
 
-    // do not try to understand the below line - just for K+I generation to get ipsec_cb_index
-    modify_field(t0_s2s.in_page_addr, ipsec_global.ipsec_cb_index); 
     // DMA Commands
-    // 1. Original pkt to input descriptor pkt2mem 
-    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, length0, 0, 0)
 
     // 2. ipsec_int_header to input-descriptor scratch phv2mem
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_phv2mem_ipsec_int, t0_s2s.in_desc_addr, IPSEC_INT_START_OFFSET, IPSEC_INT_END_OFFSET, 0, 0, 0, 0)
@@ -319,10 +273,8 @@ action ipsec_cb_tail_enqueue_input_desc (addr0, offset0, length0,
     // Need to change to out_desc_addr
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
-    // 4. Pad bytes from HBM - mem2mem 
-    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage4.pad_addr, 0, addr0+length0, 0, ipsec_to_stage4.pad_size, 0, 0, 0)
     // 5. DMA Command to write tail_desc_addr in ipsec_cb
-    DMA_COMMAND_PHV2MEM_FILL(dma_cmd_tail_desc_addr,  (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE + IPSEC_CB_TAIL_DESC_ADDR_OFFSET,  IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_START, IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_END, 0, 0, 0, 0)   
+    // DMA_COMMAND_PHV2MEM_FILL(dma_cmd_tail_desc_addr,  (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE + IPSEC_CB_TAIL_DESC_ADDR_OFFSET,  IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_START, IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_END, 0, 0, 0, 0)   
 
 
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
@@ -373,14 +325,20 @@ action update_input_desc_aol (addr0, offset0, length0,
     modify_field(barco_desc_in.O2, 0);
     modify_field(barco_desc_in.L2, 0);
 
-    // Load tail-descriptor
+    // Load ipsec-cb-again
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, ipsec_to_stage3.tail_desc_addr+64);
+    modify_field(common_te0_phv.table_addr, (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE);
+
+
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
+    // Original pkt to input descriptor pkt2mem 
+    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, length0, 0, 0)
+    // Pad bytes from HBM - mem2mem 
+    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage3.pad_addr, 0, addr0+length0, 0, ipsec_to_stage3.pad_size, 0, 0, 0)
 }
 
 //stage 2 
@@ -490,23 +448,16 @@ action allocate_input_desc_semaphore(in_desc_ring_index)
 
 
 //stage 0
-action ipsec_encap_rxdma_initial_table(key_index, iv_size, icv_size,
-                                       spi, esn_lo, iv, esn_hi,
-                                       barco_enc_cmd, ipsec_cb_index, 
-                                       block_size, head_desc_addr, tail_desc_addr)
+action ipsec_encap_rxdma_initial_table(pc, rsvd, cosA, cosB, cos_sel, 
+                                       eval_last, host, total, pid,
+                                       rxdma_ring_pindex, rxdma_ring_cindex, 
+                                       barco_ring_pindex, barco_ring_cindex,
+                                       key_index, iv_size, icv_size, spi,
+                                       esn_lo, iv, esn_hi, barco_enc_cmd,
+                                       ipsec_cb_index, block_size, 
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
 {
-
-    //Set all variables to scratch so that they are not removed 
-    modify_field(ipsec_cb_scratch.key_index, key_index);
-    modify_field(ipsec_cb_scratch.iv_size, iv_size);
-    modify_field(ipsec_cb_scratch.icv_size, icv_size);
-    modify_field(ipsec_cb_scratch.spi,spi);
-    modify_field(ipsec_cb_scratch.esn_lo,esn_lo);
-    modify_field(ipsec_cb_scratch.iv,iv);
-    modify_field(ipsec_cb_scratch.esn_hi,esn_hi);
-    modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd);
-    modify_field(ipsec_cb_scratch.block_size, block_size);
-    modify_field(ipsec_cb_scratch.head_desc_addr, head_desc_addr);
+    IPSEC_CB_SCRATCH
 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
@@ -517,7 +468,6 @@ action ipsec_encap_rxdma_initial_table(key_index, iv_size, icv_size,
 
     // we do not need the other IPSec-CB content right now - we need it in txdma1
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);
-    modify_field(ipsec_to_stage3.tail_desc_addr, tail_desc_addr);
  
 
     // based on ipsec_esp_v4_tun_h2n_encap_init
@@ -531,12 +481,12 @@ action ipsec_encap_rxdma_initial_table(key_index, iv_size, icv_size,
 
 
     // mem2mem HBM based ipsec pad-table
-    //modify_field(ipsec_to_stage4.pad_addr, (block_size - (((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size)) * 256) + IPSEC_PAD_BYTES_TABLE_BASE );
-    //modify_field(ipsec_to_stage4.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
+    //modify_field(ipsec_to_stage3.pad_addr, (block_size - (((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size)) * 256) + IPSEC_PAD_BYTES_TABLE_BASE );
+    //modify_field(ipsec_to_stage3.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
     
     //HLIR promoting block_size to 34 bits - do not want that
-    modify_field(ipsec_to_stage4.pad_addr, 0);
-    modify_field(ipsec_to_stage4.pad_size, 0);
+    modify_field(ipsec_to_stage3.pad_addr, 0);
+    modify_field(ipsec_to_stage3.pad_size, 0);
 
 
 //    modify_field(ipsec_int_header.tailroom, ipsec_int_header.pad_size + 2 + icv_size);
@@ -584,5 +534,3 @@ action ipsec_encap_rxdma_initial_table(key_index, iv_size, icv_size,
     modify_field(common_te3_phv.table_addr, OUTPAGE_SEMAPHORE_ADDR);
 
 }
-
-
