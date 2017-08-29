@@ -107,12 +107,20 @@ f_ip_normalization:
   phvwr.c1    p.capri_intrinsic_drop, 1
   // Edit Case. Need to check whether to update inner or outer
   seq         c7, k.tunnel_metadata_tunnel_terminate, 1
-  phvwrmi.c7  p.inner_ipv4_flags, 0, 1
+  phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_RSVD_MASK
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_RSVD_MASK
 
 lb_ip_norm_df_bit:
-  jr r7
-  nop
+  seq         c1, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_ALLOW
+  b.c1        lb_ip_norm_options
+  smeqb       c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_DF_MASK, IP_FLAGS_DF_MASK
+  b.!c1       lb_ip_norm_options
+  seq         c1, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_DROP
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+  // Edit Case. Need to check whether to update inner or outer
+  phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
+  phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_DF_MASK
 
 lb_ip_norm_options:
   jr r7

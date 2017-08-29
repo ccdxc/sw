@@ -979,6 +979,9 @@ table session_state {
    2. We need to handle IPv4 and IPv6
    3. For edit option we need to check for Tunnel terminate or not and update
       the appropriate field.
+   4. Should we skip normalization checks for packets coming from uplink even if
+      l4_profile settings are turned on. Concern is with outer and inner?
+      and ip_normalize_ttl option cannot be enforced.
         ip_rsvd_flags_action    -     IPv4
         ip_df_action            -     IPv4
         ip_options_action       -     IPv4 only (TBD)
@@ -999,6 +1002,9 @@ action ip_normalization_checks() {
     if (tunnel_metadata.tunnel_terminate == TRUE) {
         // Act on inner fields otherwise outer fields
     }
+
+    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4)
+    {
 
     // Reserved bit in ip header non-zero
     if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
@@ -1024,9 +1030,16 @@ action ip_normalization_checks() {
         modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
     }
 
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_or(flow_lkp_metadata.ipv4_flags, flow_lkp_metadata.ipv4_flags, 5);
+        bit_or(ipv4.flags, ipv4.flags, 5);
+    }
+
+    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
+        bit_or(inner_ipv4.flags, inner_ipv4.flags, 5);
     }
 
     // IPV4 Options packets
@@ -1039,6 +1052,7 @@ action ip_normalization_checks() {
         // NOP all the options.
     }
 
+    }
 
     // Outer IP Header length to frame length validation
     // !!! TODO !!!
