@@ -54,6 +54,7 @@ config:
 packets      : None # Database packet objects for this testcase.
 descriptors  : None # Database
 buffers      : None # Database
+objects      : None # Database
 current_step : None # Current step being executed by trigger.
 
 snapshot:
