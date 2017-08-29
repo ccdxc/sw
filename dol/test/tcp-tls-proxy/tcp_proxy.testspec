@@ -14,7 +14,7 @@ config_filter:
         endpoint    : filter://remote=True
         qpair       : filter://any 
     flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2
-    maxflows    : 4
+    maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
