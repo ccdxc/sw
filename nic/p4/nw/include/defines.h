@@ -134,12 +134,12 @@
 #define TM_P4_IG_RECIRC_QUEUE          31 /* Recirc queue in the P4 IG port */
 
 /*****************************************************************************/
-/* TM instance type - TBD: Need to get correct values from HW Spec           */
+/* TM instance type                                                          */
 /*****************************************************************************/
 #define TM_INSTANCE_TYPE_NORMAL        0
 #define TM_INSTANCE_TYPE_MULTICAST     1
-#define TM_INSTANCE_TYPE_SPAN          2
-#define TM_INSTANCE_TYPE_CPU           3
+#define TM_INSTANCE_TYPE_CPU           2
+#define TM_INSTANCE_TYPE_SPAN          3
 
 /*****************************************************************************/
 /* flow key types                                                            */
