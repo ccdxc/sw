@@ -25,6 +25,8 @@ resp_rx_ptseg_process:
 
     // k_p->pt_offset / log_page_size
     srlv        PAGE_ID, k.args.pt_offset, r1
+    //big-endian
+    sub		PAGE_ID, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), PAGE_ID
 
     // k_p->pt_offset % log_page_size
     add         PAGE_OFFSET, 0, k.args.pt_offset
@@ -45,16 +47,20 @@ transfer_loop:
     add                 r3, r0, k.args.log_page_size
     sllv                DMA_BYTES, 1, r3
     sub.F_FIRST_PASS    DMA_BYTES, DMA_BYTES, PAGE_OFFSET    
+    slt                 c3, DMA_BYTES, TRANSFER_BYTES
+    cmov                DMA_BYTES, c3, DMA_BYTES, TRANSFER_BYTES
     // r3 has amount of bytes to be xfered
 
     sll                 r2, PAGE_ID, CAPRI_LOG_SIZEOF_U64_BITS
-    tblrdp              DMA_ADDR, r2, 0, CAPRI_SIZEOF_U64_BITS
+    //big-endian
+    tblrdp.dx           DMA_ADDR, r2, 0, CAPRI_SIZEOF_U64_BITS
     
     DMA_PKT2MEM_SETUP(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR)
     
     sub                 TRANSFER_BYTES, TRANSFER_BYTES, DMA_BYTES
     add                 DMA_CMD_INDEX, DMA_CMD_INDEX, 1
-    add                 PAGE_ID, PAGE_ID, 1
+    //big-endian
+    sub                 PAGE_ID, PAGE_ID, 1
 
     // loop if still some more bytes to be xfered
     seq                 c2, TRANSFER_BYTES, r0

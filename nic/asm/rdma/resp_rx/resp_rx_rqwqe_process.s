@@ -1,4 +1,5 @@
 #include "capri.h"
+#include "types.h"
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
@@ -64,7 +65,11 @@ resp_rx_rqwqe_process:
     cmov        NUM_VALID_SGES, c1, k.args.num_valid_sges, d.num_sges
 
     //sge_p = (in_progress == TRUE) ? d_p : (d_p + RQWQE_SGE_OFFSET)
-    cmov        SGE_P, c1, r0, RQWQE_SGE_OFFSET
+    //big-endian
+    cmov        SGE_P, c1, HBM_CACHE_LINE_SIZE_BITS, RQWQE_SGE_OFFSET
+    // we need to add SIZEOF_SGE_T_BITS because SGE is accessed from bottom to top in big-endian
+    //big-endian
+    sub         SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
 
     //phv_p->cqwqe.id.wrid = wqe_p->wrid;
     phvwr.!c1   p.cqwqe.id.wrid, d.wrid
@@ -132,6 +137,8 @@ loop:
     //current_sge_offset = 0;
     sll.c2      r1, r1, SGE_OFFSET_SHIFT
 
+    KT_BASE_ADDR_GET(r6, r2)
+
     // r2 <- sge_p->l_key
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, l_key)
 
@@ -144,15 +151,17 @@ loop:
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
     andi        r2, r2, KEY_INDEX_MASK
     sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-    KT_BASE_ADDR_GET(r6)
+
     add         r2, r2, r6
     // now r2 has key_addr
 
     //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
     and         r6, r2, HBM_CACHE_LINE_SIZE_MASK
+    sub         r6, r2, r6
     // r6 now has aligned_key_addr
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
+    // compute (key_addr - aligned_key_addr) >> log_key_entry_t
     sub         r2, r2, r6
     srl         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
     // r2 now has key_id
@@ -185,6 +194,11 @@ exit:
     SEL_T0_OR_T1_S2S_DATA(r7, F_FIRST_PASS)
     // set dma_cmdeop for the last table (could be T0 or T1)
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
+
+    // TODO: for now skip wb0/wb1 stages
+    nop.e
+    nop
+
 
     add         r7, r0, k.global.flags
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)

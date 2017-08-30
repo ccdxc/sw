@@ -15,7 +15,7 @@ struct resp_rx_rqpt_process_k_t k;
 
 %%
     //.param  resp_rx_rqwqe_wrid_process
- //   .param  resp_rx_rqwqe_process
+    .param  resp_rx_rqwqe_process
 
 .align
 resp_rx_rqpt_process:
@@ -25,8 +25,12 @@ resp_rx_rqpt_process:
     add     r7, r0, k.global.flags.flags
 
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * rqcb_to_pt_info_p->page_seg_offset);
-    sll     r3, k.args.page_seg_offset, CAPRI_LOG_SIZEOF_U64_BITS
-    tblrdp  r3, r3, 0, CAPRI_SIZEOF_U64_BITS
+
+    //big-endian
+    sub     r3, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), k.args.page_seg_offset
+    sll     r3, r3, CAPRI_LOG_SIZEOF_U64_BITS
+    //big-endian
+    tblrdp.dx  r3, r3, 0, CAPRI_SIZEOF_U64_BITS
 
     // wqe_p = (void *)(*page_addr_p + rqcb_to_pt_info_p->page_offset);
     add     r3, r3, k.args.page_offset
@@ -48,8 +52,10 @@ resp_rx_rqpt_process:
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
     //add.c1      RAW_TABLE_PC, r0, resp_rx_rqwqe_wrid_process
     //add.!c1     RAW_TABLE_PC, r0, resp_rx_rqwqe_process
+    //CAPRI_SET_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process)
+    CAPRI_SET_RAW_TABLE_PC_C(!c1, RAW_TABLE_PC, resp_rx_rqwqe_process)
 
-    //CAPRI_NEXT_TABLE_I_READ(TBL_KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ(TBL_KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
 
     nop.e
     nop

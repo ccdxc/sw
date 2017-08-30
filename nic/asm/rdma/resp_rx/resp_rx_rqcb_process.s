@@ -21,10 +21,12 @@ resp_rx_rqcb_process:
     // populate global fields
     add r3, r0, offsetof(struct phv_, common_global_global_data)
 
-    // enable below code after spr_tbladdr special purpose register is available in capsim
+    // we don't need spr_tbladdr for now, as QSTATE_ADDR is anyway available
+    // as part of raw intrinsic params
     #mfspr r1, spr_tbladdr	
-    #srl r1, r1, RQCB_ADDR_SHIFT
-    #CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, r1)
+    add r1, r0, CAPRI_INTRINSIC_QSTATE_ADDR
+    srl r1, r1, RQCB_ADDR_SHIFT
+    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, r1)
 
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_INTRINSIC_LIF)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qtype, CAPRI_INTRINSIC_QTYPE)

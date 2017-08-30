@@ -34,42 +34,6 @@ struct resp_rx_phv_global_t {
 
 // stage to stage argument structures
 
-struct resp_rx_s0_t {
-    lif: 11;
-    qtype: 3;
-    qid: 24;
-    struct p4_2_p4plus_app_hdr_t app_hdr;
-};
-
-struct resp_rx_rqcb_process_k_old_t {
-    struct capri_intrinsic_s0_k_t intrinsic;
-    struct resp_rx_s0_t args;
-};
-
-struct resp_rx_rqcb_process_k_t {
-    _pad_0 : 8;    // k[511:504]
-    p4_rxdma_intr_dma_cmd_ptr : 6;    // k[503:498]
-    p4_rxdma_intr_qstate_addr : 34;    // k[497:464]
-    app_data0_1 : 88;    // k[463:376]
-    app_data1   : 88;    // k[375:288]
-    _pad_5 : 32;    // k[287:256]
-
-
-    p4_intr_global_tm_iq : 5;    // k[255:251]
-    lif          : 11;    // k[250:240]
-    qid          : 24;    // k[239:216]
-    qtype        : 3;    // k[215:213]
-    rx_splitter_offsets0_e4 : 5;    // k[212:208]
-    app_type     : 4;    // k[207:204]
-    table0_valid : 1;    // k[203:203]
-    table1_valid : 1;    // k[202:202]
-    table2_valid : 1;    // k[201:201]
-    table3_valid : 1;    // k[200:200]
-                     //app_data0_0  : 160;    // k[199:40]
-    struct app_data0_0_t app_data0_0;
-    _pad_18      : 40;    // k[39:0]
-};
-
 struct resp_rx_rqcb_to_pt_info_t {
     in_progress: 1;
     page_seg_offset: 3;
@@ -77,12 +41,14 @@ struct resp_rx_rqcb_to_pt_info_t {
     cache: 1;
     page_offset: 16;
     remaining_payload_bytes: 16;
+    pad: 120;
 };
 
 struct resp_rx_rqpt_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_rqcb_to_pt_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_rqcb_to_wqe_info_t {
@@ -96,12 +62,14 @@ struct resp_rx_rqcb_to_wqe_info_t {
     current_sge_offset: 32;
     //computed
     num_valid_sges: 8;
+    pad: 30;
 };
 
 struct resp_rx_rqwqe_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_rqcb_to_wqe_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_sge_to_lkey_info_t {
@@ -115,12 +83,14 @@ struct resp_rx_sge_to_lkey_info_t {
     cq_id:24;
     dma_cmdeop: 1;
     rsvd: 7;
+    //tightly packed for 160 bits
 };
 
 struct resp_rx_rqlkey_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_sge_to_lkey_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_rqcb0_write_back_info_t {
@@ -129,12 +99,14 @@ struct resp_rx_rqcb0_write_back_info_t {
     incr_c_index: 1;
     tbl_id: 3;
     cache: 1;
+    pad: 146;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_rqcb0_write_back_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_rqcb1_write_back_info_t {
@@ -143,12 +115,14 @@ struct resp_rx_rqcb1_write_back_info_t {
     current_sge_id: 8;
     update_num_sges: 1;
     num_sges: 8;
+    pad: 47;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_rqcb1_write_back_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_lkey_to_pt_info_t {
@@ -159,12 +133,14 @@ struct resp_rx_lkey_to_pt_info_t {
     log_page_size: 5;
     dma_cmdeop: 1;
     rsvd: 2;
+    pad: 88;
 };
 
 struct resp_rx_ptseg_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_lkey_to_pt_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_compl_or_inv_rkey_info_t {
@@ -172,24 +148,28 @@ struct resp_rx_compl_or_inv_rkey_info_t {
     dma_cmd_index: 8;
     tbl_id: 3;
     rsvd: 5;
+    pad: 112;
 };
 
 struct resp_rx_compl_or_inv_rkey_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_compl_or_inv_rkey_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_rqcb_to_cq_info_t {
     tbl_id: 3;
     rsvd: 5;
     dma_cmd_index: 8;
+    pad: 144;
 };
 
 struct resp_rx_cqcb_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_rqcb_to_cq_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_cqcb_to_pt_info_t {
@@ -201,12 +181,14 @@ struct resp_rx_cqcb_to_pt_info_t {
     arm: 1;
     tbl_id: 3;
     rsvd: 4;
+    pad: 72;
 };
 
 struct resp_rx_cqpt_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_cqcb_to_pt_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 struct resp_rx_cqcb_to_eq_info_t {
@@ -214,12 +196,14 @@ struct resp_rx_cqcb_to_eq_info_t {
     rsvd: 5;
     dma_cmd_index: 8;  
     cq_id: 24;
+    pad: 120;
 };
 
 struct resp_rx_eqcb_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct phv_global_common_t global;
     struct resp_rx_cqcb_to_eq_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
 };
 
 

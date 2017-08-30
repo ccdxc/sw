@@ -6,6 +6,8 @@
 #define CAPRI_INTRINSIC_QTYPE k.p4_rxdma_intr_qtype
 #define CAPRI_INTRINSIC_QID k.p4_rxdma_intr_qid
 
+#define CAPRI_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+
 // app data fields
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.rdma_bth_payload_len
@@ -71,19 +73,22 @@ struct capri_intrinsic_ring_t {
 #define TABLE_2     2
 #define TABLE_3     3
 
-#define CAPRI_TABLE_SIZE_8_BITS        1
-#define CAPRI_TABLE_SIZE_16_BITS       2
-#define CAPRI_TABLE_SIZE_32_BITS       3
-#define CAPRI_TABLE_SIZE_64_BITS       4
-#define CAPRI_TABLE_SIZE_128_BITS      5
-#define CAPRI_TABLE_SIZE_256_BITS      6
-#define CAPRI_TABLE_SIZE_512_BITS      7
+#define CAPRI_TABLE_SIZE_8_BITS        0
+#define CAPRI_TABLE_SIZE_16_BITS       1
+#define CAPRI_TABLE_SIZE_32_BITS       2
+#define CAPRI_TABLE_SIZE_64_BITS       3
+#define CAPRI_TABLE_SIZE_128_BITS      4
+#define CAPRI_TABLE_SIZE_256_BITS      5
+#define CAPRI_TABLE_SIZE_512_BITS      6
 
 #define CAPRI_TABLE_LOCK_EN    1
 #define CAPRI_TABLE_LOCK_DIS   0
 
 #define CAPRI_SET_FIELD(_base_r, _struct_name, _field_name, _src) \
     phvwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+
+#define CAPRI_SET_FIELD_IMM(_base_r, _struct_name, _field_name, _immdata) \
+    phvwrpi  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _immdata; 
 
 #define CAPRI_TABLE_GET_FIELD(_dst_r, _base_r, _struct_name, _field_name) \
     tblrdp  _dst_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
@@ -104,6 +109,10 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_RAW_TABLE_PC(_r, _pc) \
     addi _r, r0, _pc; \
     srl _r, _r, CAPRI_RAW_TABLE_PC_SHIFT;
+
+#define CAPRI_SET_RAW_TABLE_PC_C(_c, _r, _pc) \
+    addi._c    _r, r0, _pc; \
+    srl._c     _r, _r, CAPRI_RAW_TABLE_PC_SHIFT;
 
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, lock_en), sizeof(INTRINSIC_RAW_K_T.lock_en), _lock_en; \

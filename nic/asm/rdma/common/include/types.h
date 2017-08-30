@@ -1,9 +1,12 @@
 #ifndef __TYPES_H
 #define __TYPES_H
 
+#define HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE 2
+
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
 #define HBM_CACHE_LINE_SIZE 64 // Bytes
+#define HBM_CACHE_LINE_SIZE_BITS (HBM_CACHE_LINE_SIZE * BITS_PER_BYTE)
 #define HBM_CACHE_LINE_SIZE_MASK (HBM_CACHE_LINE_SIZE - 1)
 #define LOG_HBM_CACHE_LINE_SIZE 6 // 2^6 = 64 Bytes
 #define LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE 3 // 2^3 = 8 entries
@@ -318,7 +321,7 @@ struct resp_rx_flags_t {
 #define RDMA_PKT_OPC_SEND_ONLY_WITH_INV        23
 
 union roce_opcode_flags_t {
-    flags: 13;  //TODO: There is space only for 13 bits in global data
+    flags: 16;
     struct req_rx_flags_t req_rx;
     struct resp_rx_flags_t resp_rx;
 }; 
@@ -364,9 +367,12 @@ struct rqwqe_base_t {
     wrid: 64;
     num_sges: 8;
     rsvd: 184;
+    rsvd2:256;
 };
 
 #define SGE_T struct sge_t
+#define SIZEOF_SGE_T 16 //Bytes
+#define SIZEOF_SGE_T_BITS (SIGEOF_SGE_T * BITS_PER_BYTE)
 #define LOG_SIZEOF_SGE_T   4   // 2^4 = 16 Bytes
 #define LOG_SIZEOF_SGE_T_BITS   (LOG_SIZEOF_SGE_T + LOG_BITS_PER_BYTE)
 struct sge_t {

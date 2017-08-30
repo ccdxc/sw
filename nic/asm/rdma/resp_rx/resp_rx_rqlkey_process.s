@@ -35,7 +35,9 @@ struct resp_rx_rqlkey_process_k_t k;
 resp_rx_rqlkey_process:
 
     // lkey_p = lkey_p + lkey_info_p->key_id;
-    add         KEY_P, r0, k.args.key_id, LOG_SIZEOF_KEY_ENTRY_T_BITS
+    //big-endian
+    sub         KEY_P, (HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE - 1), k.args.key_id
+    add         KEY_P, r0, KEY_P, LOG_SIZEOF_KEY_ENTRY_T_BITS
 
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
     CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, acc_ctrl)
@@ -89,7 +91,7 @@ resp_rx_rqlkey_process:
     sllv        r6, 1, LOG_PT_SEG_SIZE
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
     sle         c1, r6, r7
-    bcf         [c1], aligned_pt
+    bcf         [!c1], aligned_pt
     nop
 
 unaligned_pt:
@@ -125,7 +127,12 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.sge_index)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, LOG_PAGE_SIZE)
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
+    //skipping completion for now.
+    //TODO
+    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1)
+    nop.e
+    nop
     
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], exit

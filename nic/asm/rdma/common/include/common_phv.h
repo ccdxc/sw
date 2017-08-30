@@ -5,14 +5,21 @@
 
 #define S2S_DATA_WIDTH 160
 #define GLOBAL_DATA_WIDTH 128
+#define TO_STAGE_DATA_WIDTH 128
+
+struct phv_to_stage_t {
+    pad: TO_STAGE_DATA_WIDTH;
+};
 
 #define PT_BASE_ADDR_GET(_r) \
     sll     _r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
 
-#define KT_BASE_ADDR_GET(_r) \
-    add     _r, k.global.log_num_pt_entries, CAPRI_LOG_SIZEOF_U64; \
-    add     _r, _r, HBM_PAGE_SIZE_SHIFT; \
-    sllv    _r, k.global.pt_base_addr_page_id, _r;
+#define KT_BASE_ADDR_GET(_r, _tmp_r) \
+    sll    _r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;\
+    add    _tmp_r, CAPRI_LOG_SIZEOF_U64, k.global.log_num_pt_entries; \
+    sllv   _tmp_r, 1, _tmp_r; \
+    add    _r, _r, _tmp_r;
+
 
 #define CQCB_BASE_ADDR_GET(_r) \
     sll     _r, k.global.cqcb_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
@@ -37,9 +44,9 @@ struct phv_global_common_t {
     qid: 24;
     cb_addr: 25;
     pt_base_addr_page_id: 20;
-    log_num_pt_entries: 7;
+    log_num_pt_entries: 5;
     cqcb_base_addr_page_id: 20;
-    log_num_cq_entries: 5;
+    log_num_cq_entries: 4;
     union roce_opcode_flags_t flags;
     //prefetch_pool_base_addr_page_id: 20;
     //log_num_prefetch_pool_entries: 5;
