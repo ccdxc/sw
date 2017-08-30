@@ -164,7 +164,7 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
     uint16_t         payload_size;
 } p4_to_p4plus_rdma_hdr_t;
 
-typedef struct key_entry_s {
+typedef struct key_entry_old_s {
     uint8_t          user_key;
     uint8_t          state : 4;
     uint8_t          type  : 4; //mr_type_t
@@ -180,6 +180,21 @@ typedef struct key_entry_s {
 #if 0
     uint32_t         peer_key: 24; //index of peer l_key or r_key
 #endif
+} PACKED key_entry_old_t;
+
+typedef struct key_entry_s {
+    uint32_t         qp: 24; //qp which bound the MW ?
+    uint8_t          flags;
+    uint32_t         pt_size; // looks like we are not using this field ?
+    uint32_t         pd;
+    uint32_t         pt_base;
+    uint64_t         base_va;
+    uint32_t         len;
+    uint8_t          log_page_size;
+    uint8_t          acc_ctrl;
+    uint8_t          type  : 4; //mr_type_t
+    uint8_t          state : 4;
+    uint8_t          user_key;
 } PACKED key_entry_t;
 
 
@@ -292,9 +307,9 @@ typedef enum aeth_code_e {
 #define SYNDROME_GET(__a, __b) (((__a) << 5) | (__b))
 
 typedef struct sge_s {
-    uint64_t va;
-    uint32_t len;
     uint32_t l_key;
+    uint32_t len;
+    uint64_t va;
 } sge_t;
 
 #define RDMA_ATOMIC_DATA_SIZE 8
@@ -560,11 +575,17 @@ typedef struct rqwqe_s {
 #endif
 
 typedef struct rqwqe_base_s {
-    uint64_t     wrid;
-    uint8_t      num_sges;
-    uint8_t      rsvd1[7];
     uint64_t     rsvd2[2];
+    uint8_t      rsvd1[7];
+    uint8_t      num_sges;
+    uint64_t     wrid;
 } PACKED rqwqe_base_t;
+
+typedef struct rqwqe_s {
+    sge_t        sge1;
+    sge_t        sge0;
+    rqwqe_base_t base;
+} PACKED rqwqe_t;
 
 typedef struct rsqwqe_read_s {
     uint32_t r_key;

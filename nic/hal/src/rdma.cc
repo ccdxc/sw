@@ -10,6 +10,7 @@
 #include <rdma_pd.hpp>
 #include <host_mem.hpp>
 #include <pd/capri/capri_hbm.hpp>
+#include <pd/iris/if_pd_utils.hpp>
 #include <hal_state_pd.hpp>
 #include <capri_loader.h>
 
@@ -279,26 +280,33 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
-    pt_table_base_addr = (sram_lif_entry.pt_base_addr_page_id << HBM_PAGE_SIZE_SHIFT);
+    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
 
-    capri_hbm_read_mem((uint64_t)((key_entry_t *) key_table_base_addr) + key,
+    capri_hbm_read_mem((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
                        (uint8_t*)entry_p, sizeof(key_entry_t));
+    // Convert data before reading from HBM
+    pd::memrev((uint8_t*)entry_p, sizeof(key_entry_t));
 }
 
 void
 rdma_key_entry_write (uint16_t lif, uint32_t key, key_entry_t *entry_p)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
-    uint64_t                 pt_table_base_addr;
-    uint64_t                 key_table_base_addr;
+    uint64_t            pt_table_base_addr;
+    uint64_t            key_table_base_addr;
+    key_entry_t	        tmp_key_entry = {0};
 
     rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
-    pt_table_base_addr = (sram_lif_entry.pt_base_addr_page_id << HBM_PAGE_SIZE_SHIFT);
+    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
 
-    capri_hbm_write_mem((uint64_t)((key_entry_t *) key_table_base_addr) + key,
-                        (uint8_t*)entry_p, sizeof(key_entry_t));
+    memcpy(&tmp_key_entry, entry_p, sizeof(key_entry_t));
+    pd::memrev((uint8_t *)&tmp_key_entry, sizeof(key_entry_t));
+    capri_hbm_write_mem((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
+                        (uint8_t*)&tmp_key_entry, sizeof(key_entry_t));
 }
 
 void
@@ -310,7 +318,8 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
     rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     pt_table_base_addr = (uint32_t)(sram_lif_entry.pt_base_addr_page_id << HBM_PAGE_SIZE_SHIFT);
 
-    capri_hbm_write_mem((uint64_t)(pt_table_base_addr + offset), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
+    capri_hbm_write_mem((uint64_t)(pt_table_base_addr + 
+        (offset * sizeof(uint64_t))), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
 }
 
 uint32_t
@@ -380,6 +389,9 @@ rdma_post_send_wr (void *handle_p, sqwqe_base_t *wr_p)
 
     g_lif_manager->ReadQState(qp_handle_p->lif, Q_TYPE_SQ,
         qp_handle_p->qp, (uint8_t*)&sqcb, sizeof(sqcb_t));
+    // Convert data after reading from HBM
+    pd::memrev((uint8_t*)&sqcb, sizeof(sqcb0_t));
+
     p_index = RING_P_INDEX_GET(&sqcb, SQ_RING_ID);
     memcpy((((char*)qp_handle_p->sq_p) + (p_index * qp_handle_p->sqwqe_size)),
                           wr_p, qp_handle_p->sqwqe_size);
@@ -393,20 +405,30 @@ rdma_post_send_wr (void *handle_p, sqwqe_base_t *wr_p)
 }
 
 void
-rdma_post_recv_wr (void *handle_p, rqwqe_base_t *wr_p)
+rdma_post_recv_wr (void *handle_p, void *wr_p)
 {
     qp_handle_t *qp_handle_p = (qp_handle_t*)handle_p;
     uint8_t     p_index;
     rqcb_t      rqcb;
 
     g_lif_manager->ReadQState(qp_handle_p->lif, Q_TYPE_RQ, qp_handle_p->qp, (uint8_t*)&rqcb, sizeof(rqcb_t));
+    // Convert data after reading from HBM
+    pd::memrev((uint8_t*)&rqcb, sizeof(rqcb0_t));
+
     p_index = RING_P_INDEX_GET(&rqcb, RQ_RING_ID);
     memcpy(((char*)qp_handle_p->rq_p) + (p_index * qp_handle_p->rqwqe_size),
            wr_p, qp_handle_p->rqwqe_size);
+
 // TODO: TEMP: For now increment the pindex so RXDMA will see the posted wqes.
 // Remove this code once the following door bell code is hooked in
     RING_P_INDEX_INCREMENT(&rqcb, RQ_RING_ID);
+
+    // Convert data before writting to HBM
+    pd::memrev((uint8_t*)&rqcb, sizeof(rqcb0_t));
     g_lif_manager->WriteQState(qp_handle_p->lif, Q_TYPE_RQ, qp_handle_p->qp, (uint8_t*)&rqcb, sizeof(rqcb_t));
+
+
+
     // TODO: Integrate doorbell request to Capri
 #if 0
     doorbell_write_pindex(qp_handle_p->lif, Q_TYPE_RQ,
@@ -604,19 +626,6 @@ stage0_req_rx_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
-// size in multiples of 32 bytes
-void
-convert_memory (uint32_t *data, uint32_t size)
-{
-    uint32_t i, tmp;
-    for (i = 0; i < size/2; i++) {
-         data[i] = ntohl(data[i]);
-         data[size-1-i] = ntohl(data[size-1-i]);
-         tmp  = data[i];
-         data[i] = data[size-1-i];
-         data[size-1-i] = tmp;
-    }
-}
 
 qp_handle_t*
 rdma_create_qp (uint16_t lif, qp_attr_t *attr_p)
@@ -741,6 +750,8 @@ rdma_create_qp (uint16_t lif, qp_attr_t *attr_p)
     qp_handle_p->header_template_addr = header_template_addr;
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial SQCB State\n", __FUNCTION__, lif);
+    // Convert data before writting to HBM
+    pd::memrev((uint8_t*)sqcb_p, sizeof(sqcb0_t));
     g_lif_manager->WriteQState(lif, Q_TYPE_SQ, qp_num, (uint8_t *)sqcb_p, sizeof(sqcb_t));
 
     // register rq
@@ -774,7 +785,7 @@ rdma_create_qp (uint16_t lif, qp_attr_t *attr_p)
     qp_handle_p->rqcb_p = &rqcb;
 
     // Convert data before writting to HBM
-    convert_memory((uint32_t*)rqcb_p, 16);
+    pd::memrev((uint8_t*)rqcb_p, sizeof(rqcb0_t));
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State\n", __FUNCTION__, lif);
@@ -794,13 +805,25 @@ rdma_modify_qp (qp_handle_t *qp_handle_p, modify_qp_attr_t *attr_p)
 
     g_lif_manager->ReadQState(qp_handle_p->lif, Q_TYPE_RQ, qp_handle_p->qp,
                               (uint8_t*)&rqcb, sizeof(rqcb_t));
+    // Convert data before reading from HBM
+    pd::memrev((uint8_t*)&rqcb, sizeof(rqcb0_t));
+
     rqcb.rqcb1.dst_qp = attr_p->dst_qp;
+
+    // Convert data before writting to HBM
+    pd::memrev((uint8_t*)&rqcb, sizeof(rqcb0_t));
     g_lif_manager->WriteQState(qp_handle_p->lif, Q_TYPE_RQ, qp_handle_p->qp,
                                (uint8_t*)&rqcb, sizeof(rqcb_t));
 
     g_lif_manager->ReadQState(qp_handle_p->lif, Q_TYPE_SQ, qp_handle_p->qp,
                               (uint8_t*)&sqcb, sizeof(sqcb_t));
+    // Convert data before reading from HBM
+    pd::memrev((uint8_t*)&sqcb, sizeof(sqcb0_t));
+
     sqcb.sqcb1.dst_qp = attr_p->dst_qp;
+
+    // Convert data before writting to HBM
+    pd::memrev((uint8_t*)&sqcb, sizeof(sqcb0_t));
     g_lif_manager->WriteQState(qp_handle_p->lif, Q_TYPE_SQ, qp_handle_p->qp,
                                (uint8_t*)&sqcb, sizeof(sqcb_t));
     return HAL_RET_OK;
@@ -819,7 +842,9 @@ rdma_configure ()
     //void            *cq1_handle_p;
     //void            *cq2_handle_p;
     //void            *eq_handle_p;
-    uint8_t              wr[128];
+    rqwqe_t           wr;
+    rqwqe_base_t      *rcv_wr_p = &(wr.base);
+    sge_t             *sge_p;
     //uint8_t              rr[128];
     mr_attr_t       mr_attr;
     void            *buff, *buff2, *buff3, *buff4;
@@ -904,9 +929,10 @@ rdma_configure ()
     memset(&mr_attr, 0, sizeof(mr_attr_t));
     mr_attr.pd = 1;
     mr_attr.va = (uint64_t) buff;
-    mr_attr.len = sizeof(buff);
+    mr_attr.len = 3072;
     mr_attr.acc_ctrl = ACC_CTRL_LOCAL_WRITE | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_REMOTE_READ;
     
+
     rdma_register_mr(lif_id, &mr_attr);
     HAL_TRACE_DEBUG("lkey: {} rkey: {}\n", mr_attr.lkey, mr_attr.rkey);
     HAL_ASSERT(is_rkey_valid(lif_id, mr_attr.rkey) == TRUE);
@@ -989,8 +1015,8 @@ rdma_configure ()
 #endif
 
     memset(&qp_attr, 0, sizeof(qp_attr_t));
-    qp_attr.num_sq_sges = 6;
-    qp_attr.num_rq_sges = 6;
+    qp_attr.num_sq_sges = 2;
+    qp_attr.num_rq_sges = 2;
     qp_attr.atomic_enabled = 1;
     qp_attr.service = RDMA_SERV_TYPE_RC;
     qp_attr.pd = 1;
@@ -1032,14 +1058,26 @@ rdma_configure ()
     template_p->udp.dport = 2222;
 #endif
 
-    HAL_TRACE_DEBUG("===========================================================\n");
+    HAL_TRACE_DEBUG("==========================================================\n");
     HAL_TRACE_DEBUG("END OF INIT\n");
-    HAL_TRACE_DEBUG("===========================================================\n\n");
+    HAL_TRACE_DEBUG("==========================================================\n\n");
 
     //SEND_ONLY
     HAL_TRACE_DEBUG("\n\n\nTrying SEND_ONLY\n");
     //wr_base_p->wrid++;
-    rdma_post_recv_wr(qp_handle_p, (rqwqe_base_t *) wr);
+    memset(&wr, 0, sizeof(wr));
+    rcv_wr_p->wrid = 0x0102030405060708;
+    rcv_wr_p->num_sges = 1;
+
+    sge_p = &(wr.sge0);
+    sge_p->va = mr_attr.va;
+    sge_p->len = 3072;
+    sge_p->l_key = mr_attr.lkey;
+    HAL_TRACE_DEBUG("Posting RQ WR: sge va: {} len: {} l_key: {}\n", sge_p->va, sge_p->len, sge_p->l_key);
+    
+
+    pd::memrev((uint8_t*)&wr, sizeof(wr)); 
+    rdma_post_recv_wr(qp_handle_p, (void *) &wr);
 
 
     // Inject packet into model
