@@ -8,6 +8,7 @@ from config.store               import Store
 rnmdr = 0
 rnmpr = 0
 brq = 0
+tlscb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -21,6 +22,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
     global brq
+    global tlscb
 
     print("TestCaseSetup(): Sample Implementation.")
     
@@ -38,13 +40,14 @@ def TestCaseSetup(tc):
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ"])
-    
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
     return
 
 def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
     global brq
+    global tlscb
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -65,11 +68,11 @@ def TestCaseVerify(tc):
         #return False
 
     # 4. Verify pi/ci got update got updated
-    tlscb = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
-    print("pre-sync: tlscb.serq_pi %d tlscb.serq_ci %d" % (tlscb.serq_pi, tlscb.serq_ci))
-    tlscb.GetObjValPd()
-    print("post-sync: tlscb.serq_pi %d tlscb.serq_ci %d" % (tlscb.serq_pi, tlscb.serq_ci))
-    if (tlscb.serq_pi != 1 or tlscb.serq_ci != 1):
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    tlscb_cur.GetObjValPd()
+    print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    if (tlscb_cur.serq_pi != (tlscb.serq_pi+1) or tlscb_cur.serq_ci != (tlscb.serq_ci+1)):
         print("serq pi/ci not as expected")
         return False
     print("serq pi/ci not expected")
