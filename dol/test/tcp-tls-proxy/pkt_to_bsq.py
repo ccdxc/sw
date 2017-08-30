@@ -57,7 +57,7 @@ def TestCaseVerify(tc):
     # 2. Verify descriptor 
     if rnmdr.ringentries[0].handle != bsq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[0].handle, bsq_cur.ringentries[0].handle)) 
-        #return False
+        return False
 
     # 3. Verify page
     if rnmpr.ringentries[0].handle != bsq_cur.swdre_list[0].Addr1:
