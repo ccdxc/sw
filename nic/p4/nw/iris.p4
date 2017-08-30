@@ -16,7 +16,6 @@
 #include "roce.p4"
 #include "stats.p4"
 #include "tunnel.p4"
-#include "classic.p4"
 #include "policer.p4"
 #include "replica.p4"
 #include "rewrite.p4"
@@ -46,7 +45,6 @@ header_type control_metadata_t {
         normalization_cpu_reason       : 8;
         ingress_bypass                 : 1;
         egress_bypass                  : 1;
-        classic_mode                   : 1;
         ipsg_enable                    : 1;
         recirc_reason                  : 2;
         cpu_copy                       : 1;
@@ -66,6 +64,13 @@ header_type control_metadata_t {
         egress_ddos_service_policer_drop  : 1;
         egress_ddos_src_only_policer_drop : 1;
         egress_ddos_src_dst_policer_drop  : 1;
+    }
+}
+
+header_type entry_status_t {
+    fields {
+        inactive   : 1;
+        inactive_e : 1;
     }
 }
 
@@ -203,6 +208,7 @@ header_type scratch_metadata_t {
 metadata cap_phv_intr_p4_t capri_p4_intrinsic;
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
+metadata entry_status_t entry_status;
 // scratch_metadata : no phvs will be allocated for this. These fields
 // should  only be used in action routines as temporary/local variables
 @pragma scratch_metadata
@@ -223,7 +229,6 @@ control ingress {
         process_input_mapping();
         process_l4_profile();
         process_ipsg();
-        process_registered_macs();
         process_flow_table();
         process_nacl();
         process_ingress_policer();

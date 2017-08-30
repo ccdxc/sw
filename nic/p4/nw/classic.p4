@@ -43,6 +43,7 @@ action registered_macs_otcam_miss() {
 @pragma stage 2
 table registered_macs {
     reads {
+        entry_status.inactive            : exact;
         flow_lkp_metadata.lkp_vrf        : exact;
         flow_lkp_metadata.lkp_dstMacAddr : exact;
     }
@@ -57,6 +58,7 @@ table registered_macs {
 @pragma overflow_table registered_macs
 table registered_macs_otcam {
     reads {
+        entry_status.inactive            : ternary;
         flow_lkp_metadata.lkp_vrf        : ternary;
         flow_lkp_metadata.lkp_dstMacAddr : ternary;
     }

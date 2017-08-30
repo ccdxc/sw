@@ -14,7 +14,7 @@ nop:
 .align
 native_ipv4_packet:
   or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
-  or          r5, k.ipv4_ihl_sbit2_ebit3, k.ipv4_ihl_sbit0_ebit1, 2
+  or          r5, k.ipv4_ihl_sbit1_ebit3, k.ipv4_ihl_sbit0_ebit0, 3
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1

@@ -251,12 +251,14 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         // SRIOV
     }
 #endif
+    key.entry_status_inactive = 0;
     key.vlan_tag_valid = 1;
     key.vlan_tag_vid = if_get_encap_vlan((if_t*)pd_enicif->pi_if);
     mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);
     memcpy(key.ethernet_srcAddr, *mac, 6);
     memrev(key.ethernet_srcAddr, 6);
 
+    mask.entry_status_inactive_mask = 0x1;
     mask.vlan_tag_valid_mask = ~(mask.vlan_tag_valid_mask & 0);
     mask.vlan_tag_vid_mask = ~(mask.vlan_tag_vid_mask & 0);
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));

@@ -151,6 +151,7 @@ action input_mapping_miss() {
 @pragma stage 0
 table input_mapping_tunneled {
     reads {
+        entry_status.inactive       : ternary;
         tunnel_metadata.tunnel_type : ternary;
         mpls[0].valid               : ternary;
         ipv4.valid                  : ternary;
@@ -174,6 +175,7 @@ table input_mapping_tunneled {
 @pragma stage 0
 table input_mapping_native {
     reads {
+        entry_status.inactive       : ternary;
         tunnel_metadata.tunnel_type : ternary;
         mpls[0].valid               : ternary;
         ipv4.valid                  : ternary;
@@ -226,6 +228,7 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
 @pragma overflow_table input_properties
 table input_properties_otcam {
     reads {
+        entry_status.inactive       : ternary;
         capri_intrinsic.lif         : ternary;
         vlan_tag.valid              : ternary;
         vlan_tag.vid                : ternary;
@@ -243,6 +246,7 @@ table input_properties_otcam {
 @pragma hash_type 0
 table input_properties {
     reads {
+        entry_status.inactive       : exact;
         capri_intrinsic.lif         : exact;
         vlan_tag.valid              : exact;
         vlan_tag.vid                : exact;
@@ -298,9 +302,10 @@ action adjust_recirc_header() {
 @pragma stage 0
 table input_properties_mac_vlan {
     reads {
-        vlan_tag.valid              : ternary;
-        vlan_tag.vid                : ternary;
-        ethernet.srcAddr            : ternary;
+        entry_status.inactive  : ternary;
+        vlan_tag.valid         : ternary;
+        vlan_tag.vid           : ternary;
+        ethernet.srcAddr       : ternary;
     }
     actions {
         input_properties_mac_vlan;

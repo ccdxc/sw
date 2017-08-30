@@ -42,6 +42,7 @@ action nacl_deny() {
 @pragma stage 3
 table nacl {
     reads {
+        entry_status.inactive              : ternary;
         flow_lkp_metadata.lkp_type         : ternary;
         flow_lkp_metadata.lkp_vrf          : ternary;
         flow_lkp_metadata.lkp_src          : ternary;

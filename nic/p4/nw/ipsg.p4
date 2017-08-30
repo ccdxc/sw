@@ -44,6 +44,7 @@ action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
 @pragma stage 2
 table ipsg {
     reads {
+        entry_status.inactive       : ternary;
         flow_lkp_metadata.lkp_type  : ternary;
         flow_lkp_metadata.lkp_vrf   : ternary;
         flow_lkp_metadata.lkp_src   : ternary;

@@ -187,6 +187,7 @@ action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
 @pragma stage 0
 table ddos_src_vf {
     reads {
+        entry_status.inactive_e    : ternary;
         control_metadata.src_lport : ternary;
     }
     actions {
@@ -199,6 +200,7 @@ table ddos_src_vf {
 @pragma stage 3
 table ddos_src_dst {
     reads {
+        entry_status.inactive       : ternary;
         flow_lkp_metadata.lkp_vrf   : ternary;
         flow_lkp_metadata.lkp_src   : ternary;
         flow_lkp_metadata.lkp_dst   : ternary;
@@ -216,6 +218,7 @@ table ddos_src_dst {
 @pragma stage 3
 table ddos_service {
     reads {
+        entry_status.inactive       : ternary;
         flow_lkp_metadata.lkp_vrf   : ternary;
         flow_lkp_metadata.lkp_dst   : ternary;
         flow_lkp_metadata.lkp_proto : ternary;

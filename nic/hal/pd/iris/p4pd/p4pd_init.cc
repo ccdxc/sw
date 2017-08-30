@@ -52,12 +52,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -82,12 +84,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -112,12 +116,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -142,12 +148,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -172,12 +180,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -202,12 +212,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -267,12 +279,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -295,12 +309,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -325,12 +341,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -355,12 +373,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -385,12 +405,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -415,12 +437,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
+    key.entry_status_inactive = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
+    mask.entry_status_inactive_mask = 0x1;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -597,73 +621,6 @@ p4pd_p4plus_app_init (void)
 
     return ret;
 }
-
-#if 0
-static hal_ret_t
-p4pd_p4plus_app_init (void)
-{
-    hal_ret_t                ret;
-    DirectMap                *dm;
-    p4plus_app_actiondata data = { 0 };
-
-#if 0
-    for (int i = P4PLUS_APP_TYPE_MIN; i <= P4PLUS_APP_TYPE_MAX; i++) {
-        switch(i) {
-#if 0
-            case P4PLUS_APPTYPE_CLASSIC_NIC:
-                break;
-            case P4PLUS_APPTYPE_RDMA:
-                break;
-#endif
-            //case P4PLUS_APPTYPE_TCPTLS:
-            case 3:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;
-                break;
-#if 0
-            case P4PLUS_APPTYPE_IPSEC:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_IPSEC_ID;
-                break;
-            case P4PLUS_APPTYPE_NDE:
-                break;
-            case P4PLUS_APPTYPE_STORAGE:
-                break;
-            case P4PLUS_APPTYPE_TELEMETRY:
-                break;
-#endif
-            default:
-                HAL_TRACE_ERR("Unknown app_type: {}", i);
-                HAL_ASSERT(0);
-        }
-#endif
-                data.actionid = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;
-
-                HAL_TRACE_ERR("xxx: programming tcp app id\n");
-        dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
-        HAL_ASSERT(dm != NULL);
-
-#if 0
-                HAL_TRACE_ERR("xxx: writing to index 1\n");
-        ret = dm->insert_withid(&data, 1);
-                HAL_TRACE_ERR("xxx: writing to index 2\n");
-        ret = dm->insert_withid(&data, 2);
-#endif
-                HAL_TRACE_ERR("xxx: writing to index 3\n");
-        ret = dm->insert_withid(&data, 3);
-#if 0
-                HAL_TRACE_ERR("xxx: writing to index 4\n");
-        ret = dm->insert_withid(&data, 4);
-#endif
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("p4plus app table write failure, idx : {}, err : {}",
-                    3, ret);
-            return ret;
-        }
-#if 0
-    }
-#endif
-    return ret;
-}
-#endif
 
 typedef struct tunnel_decap_copy_inner_key_t_ {
     union {
@@ -1049,15 +1006,15 @@ typedef struct roce_opcode_info_t {
 
 roce_opcode_info_t opc_to_info[DECODE_ROCE_OPCODE_TABLE_SIZE] = {
     //Reliable-Connect opcodes
-    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_FIRST | RESP_RX_FLAG_SEND)}, //0 - send-first
-    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_SEND)}, //1 - send-middle
-    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)}, //2 - send-last
-    {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ, 
+    {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)}, //3 - send-last-with-immediate
-    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ, 
+    {1, sizeof(rdma_bth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)}, //4 - send-only
     {1, sizeof(rdma_bth_t)+sizeof(rdma_immeth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)}, //5 - send-only-with-immediate
@@ -1096,7 +1053,7 @@ roce_opcode_info_t opc_to_info[DECODE_ROCE_OPCODE_TABLE_SIZE] = {
      (RESP_RX_FLAG_LAST | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY)}, //22 - send-last-with-inv-rkey
     {1, sizeof(rdma_bth_t)+sizeof(rdma_ieth_t), Q_TYPE_RDMA_RQ,
      (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY)}, //23 - send-only-with-inv-rkey
-};      
+};
 
 static hal_ret_t
 p4pd_decode_roce_opcode_init (void)
@@ -1112,12 +1069,12 @@ p4pd_decode_roce_opcode_init (void)
     for (idx = 0; idx < DECODE_ROCE_OPCODE_TABLE_SIZE; idx++) {
 
         if (opc_to_info[idx].valid == 1) {
-                      
+
             // valid entry
             data.actionid = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype = 
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype =
                 opc_to_info[idx].type;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len = 
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len =
                 opc_to_info[idx].roce_hdr_length;
             data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags =
                 opc_to_info[idx].raw_flags;
@@ -1125,7 +1082,7 @@ p4pd_decode_roce_opcode_init (void)
             // nop entry
             data.actionid = DECODE_ROCE_OPCODE_NOP_ID;
         }
-     
+
         ret = dm->insert_withid(&data, idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("decode roce opcode table write failure, idx : {}, err : {}",
@@ -1133,7 +1090,7 @@ p4pd_decode_roce_opcode_init (void)
             return ret;
         }
     }
-    
+
     return HAL_RET_OK;
 }
 

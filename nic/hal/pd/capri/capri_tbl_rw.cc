@@ -392,6 +392,9 @@ int capri_table_rw_init()
         return CAPRI_FAIL;
     }
 
+    // Initialize shadow tcam to match all ones. This makes all entries
+    // to be treated as inactive.
+    memset(g_shadow_tcam->mem_x, 0xFF, sizeof(g_shadow_tcam->mem_x));
 
 #ifndef P4PD_CLI
     // register hal cpu interface

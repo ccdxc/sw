@@ -80,6 +80,7 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
     inp_prop.ipsg_enable = l2seg_get_ipsg_en(args->l2seg);
     inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
 
+    key.entry_status_inactive = 0;
     if (!is_native) {
         // Install one entry
         enc_type = l2seg_get_fab_encap_type(args->l2seg);

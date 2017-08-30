@@ -51,8 +51,6 @@ SRC_FILES := \
     $(SRC_DIR)/nacl.asm \
     $(SRC_DIR)/output_mapping.asm \
     $(SRC_DIR)/p4plus_app.asm \
-    $(SRC_DIR)/registered_macs.asm \
-    $(SRC_DIR)/registered_macs_otcam.asm \
     $(SRC_DIR)/replica.asm \
     $(SRC_DIR)/rewrite.asm \
     $(SRC_DIR)/tunnel_decap.asm \
@@ -92,8 +90,6 @@ ipsg_ARGS := -r ipsg_hit
 mirror_ARGS := -r erspan_mirror
 output_mapping_ARGS := -r set_tm_oport
 p4plus_app_ARGS := -r p4plus_app_tcp_proxy
-registered_macs_ARGS := -r registered_macs_hit
-registered_macs_otcam_ARGS := -r registered_macs_otcam_hit
 rewrite_ARGS := -r rewrite
 tunnel_decap_copy_inner_ARGS := -r copy_inner_ipv4_udp
 tunnel_encap_update_inner_ARGS := -r encap_inner_ipv4_udp_rewrite

@@ -217,6 +217,9 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     }
 
     // Populate the Key and Mask
+    key.entry_status_inactive = 0;
+    mask.entry_status_inactive_mask = 0x1;
+
     if (ms->src_if_match) {
         key.control_metadata_src_lport = 
             if_get_lport_id(find_if_by_handle(ms->src_if_handle));
