@@ -4,7 +4,7 @@
 action decode_roce_opcode(raw_flags, len, qtype) {
     if ((capri_intrinsic.tm_oport == TM_PORT_DMA) and
         (control_metadata.rdma_enabled == TRUE)) {
-        modify_field(p4_to_p4plus_roce.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
+        modify_field(control_metadata.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
         add_header(p4_to_p4plus_roce);
         modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
         modify_field(p4_to_p4plus_roce.rdma_hdr_len, len);
