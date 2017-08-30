@@ -13,6 +13,7 @@
 #include <qos.hpp>
 #include <acl.hpp>
 #include <wring.hpp>
+#include <telemetry.hpp>
 
 namespace hal {
 namespace pd {
@@ -33,6 +34,7 @@ using hal::queue_t;
 using hal::policer_t;
 using hal::acl_t;
 using hal::wring_t;
+using hal::mirror_session_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -99,6 +101,10 @@ typedef struct pd_tcpcb_args_s {
 typedef struct pd_wring_args_s {
     wring_t            *wring;
 } __PACK__ pd_wring_args_t;
+
+typedef struct pd_mirror_session_args_s {
+    mirror_session_t *session;
+} __PACK__ pd_mirror_session_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -184,6 +190,12 @@ pd_wring_args_init (pd_wring_args_t *args)
 {
     args->wring = NULL;
     return;
+}
+
+static inline void
+pd_mirror_session_args_init(pd_mirror_session_args_t *args)
+{
+    args->session = NULL;
 }
 
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
@@ -311,7 +323,8 @@ typedef struct pd_descr_aol_s {
 
 hal_ret_t
 pd_descriptor_aol_get(pd_descr_aol_t *src, pd_descr_aol_t *dst);
-
+hal_ret_t pd_mirror_session_create(pd_mirror_session_args_t *args);
+hal_ret_t pd_mirror_session_get(pd_mirror_session_args_t *args);
 }    // namespace pd
 }    // namespace hal
 

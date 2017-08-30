@@ -27,9 +27,13 @@ entries:
         label: span
         responder:
             port : const/129
-            span : ref://store/objects/id=SpanSession0001
+            span : 
+                ingress:
+                    - ref://store/objects/id=SpanSession0001
         initiator: 
             port : const/47275
-            span : ref://store/objects/id=SpanSession0002
+            span : 
+                ingress:
+                    - ref://store/objects/id=SpanSession0002
 
 

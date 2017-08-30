@@ -51,10 +51,14 @@ entries:
         timestamp: False
         responder: 
             port : const/81
-            span : ref://store/objects/id=SpanSession0002
+            span :
+                ingress:
+                    - ref://store/objects/id=SpanSession0002
         initiator: 
             port : const/41000
-            span : ref://store/objects/id=SpanSession0002
+            span :
+                ingress:
+                    - ref://store/objects/id=SpanSession0002
 
     - entry:
         label: tcp-proxy

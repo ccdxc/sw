@@ -48,6 +48,7 @@ SOURCES = \
 		  wring.cc \
 		  proxy.cc \
 		  descriptor_aol.cc \
+		  telemetry.cc \
 		  $(NULL)
 
 

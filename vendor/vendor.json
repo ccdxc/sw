@@ -823,6 +823,12 @@
 			"revisionTime": "2017-07-06T23:49:42Z"
 		},
 		{
+			"checksumSHA1": "kGENkjYJ18VCC+pILfHdT/twU60=",
+			"path": "github.com/golang/protobuf/ptypes/empty",
+			"revision": "1909bc2f63dc92bb931deace8b8312c4db72d12f",
+			"revisionTime": "2017-08-08T02:16:21Z"
+		},
+		{
 			"checksumSHA1": "+nsb2jDuP/5l2DO78dtU/jYB3G8=",
 			"path": "github.com/golang/protobuf/ptypes/timestamp",
 			"revision": "fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4",

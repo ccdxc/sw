@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "types.proto";
 import "interface.proto";
-import "google/protobuf/empty.proto";
 
 package telemetry;
 
@@ -243,6 +242,9 @@ message MirrorSessionResponseMsg {
   repeated MirrorSession	response  = 2; // Operational status of the mirror session
 }
 
+message Empty {
+}
+
 service Telemetry {
   // Collector operations CRUD operations
   rpc CollectorCreate(CollectorConfigMsg) returns (CollectorResponseMsg) {}
@@ -267,6 +269,6 @@ service Telemetry {
   rpc MirrorSessionCreate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionUpdate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionGet(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionList(google.protobuf.Empty) returns (MirrorSessionResponseMsg) {}
+  rpc MirrorSessionList(Empty) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionDelete(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
 }

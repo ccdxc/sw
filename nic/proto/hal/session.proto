@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "qos.proto";
-import "interface.proto";
+import "telemetry.proto";
 
 package session;
 
@@ -122,6 +122,8 @@ message FlowInfo {
   FlowTCPState    tcp_state      = 7;    // TCP state, if any
   qos.QOSActions  in_qos_actions = 8;    // QOS actions for the flow coming in (ingress P4 pipeline)
   qos.QOSActions  eg_qos_actions = 9;    // QOS actions for the flow while going out (egress P4 pipeline)
+  repeated telemetry.MirrorSessionId  ing_mirror_sessions = 10;   // Mirror sessions to copy the flow to
+  repeated telemetry.MirrorSessionId  egr_mirror_sessions = 11;   // Mirror sessions to copy the flow to
 }
 
 // ConnTrackInfo contains dynamic information that was recorded due to connection tracking

@@ -29,6 +29,7 @@ SOURCES = \
 		acl_svc.cc \
 		wring_svc.cc \
 		proxy_svc.cc \
+		telemetry_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

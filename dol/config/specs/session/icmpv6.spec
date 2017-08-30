@@ -23,9 +23,13 @@ entries:
             type: const/8   # Echo
             code: const/0
             id  : const/2
-            span: ref://store/objects/id=SpanSession0003
+            span: 
+                ingress: 
+                    - ref://store/objects/id=SpanSession0003
         responder:
             type: const/0   # Echo Reply
             code: const/0
             id  : const/2
-            span: ref://store/objects/id=SpanSession0003
+            span: 
+                ingress:
+                    - ref://store/objects/id=SpanSession0003

@@ -27,18 +27,19 @@ class SpanSessionObject(base.ConfigObjectBase):
         self.id = resmgr.SpanSessionIdAllocator.get()
         self.GID("SpanSession%04d" % self.id)
         self.spec = spec
+        self.snaplen = spec.snaplen.get()
         self.type = spec.type.upper()
         self.dscp = None
 
         if self.IsLocal():
-            local_eps = tenant.GetLocalEps()
-            self.ep   = local_eps[0]
+            eps = tenant.GetRemoteEps()
+            self.ep   = eps[0]
         elif self.IsRspan():
             eps = tenant.GetRemoteEps()
-            self.ep = eps[0]
+            self.ep = eps[1]
         elif self.IsErspan():
             eps = tenant.GetRemoteEps()
-            self.ep = eps[1]
+            self.ep = eps[2]
             self.dscp = spec.dscp.get()
         else:
             assert(0)
@@ -73,9 +74,9 @@ class SpanSessionObject(base.ConfigObjectBase):
         return self.type == 'ERSPAN'
 
     def PrepareHALRequestSpec(self, reqspec):
-        #reqspec.meta.tenant_id          = self.id
-        #reqspec.key_or_handle.tenant_id = self.id
-        #reqspec.security_profile_handle = self.security_profile.hal_handle
+        reqspec.id.session_id = self.id
+        reqspec.snaplen = self.snaplen
+        reqspec.local_span_if.if_handle = self.intf.hal_handle
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -109,5 +110,5 @@ class SpanSessionObjectHelper:
 
     def main(self, tenant, topospec):
         self.Generate(tenant, topospec)
-        #self.Configure()
+        self.Configure()
         return

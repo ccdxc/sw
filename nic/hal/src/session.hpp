@@ -139,6 +139,8 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_dport;           // NAT destination port
     qos_action_t              in_qos_action;       // Ingress qos action
     qos_action_t              eg_qos_action;       // Egress qos action
+    uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
+    uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {

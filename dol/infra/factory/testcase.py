@@ -90,6 +90,26 @@ class TestCase(objects.FrameworkObject):
         config_root_obj.SetupTestcaseConfig(self.config)
         return
 
+    def __init_config(self, flow):
+        self.config.flow    = flow
+        
+        self.config.src.tenant  = flow.GetSrcTenant()
+        self.config.dst.tenant  = flow.GetDstTenant()
+       
+        self.config.src.segment = flow.GetSrcSegment()
+        self.config.dst.segment = flow.GetDstSegment()
+
+        self.config.src.endpoint = flow.GetSrcEndpoint()
+        self.config.dst.endpoint = flow.GetDstEndpoint()
+
+        self.config.ingress_mirror.session1 = flow.GetIngressMirrorSession(idx = 1)
+        self.config.ingress_mirror.session2 = flow.GetIngressMirrorSession(idx = 2)
+        self.config.ingress_mirror.session3 = flow.GetIngressMirrorSession(idx = 3)
+        self.config.egress_mirror.session1 = flow.GetEgressMirrorSession(idx = 1)
+        self.config.egress_mirror.session2 = flow.GetEgressMirrorSession(idx = 2)
+        self.config.egress_mirror.session3 = flow.GetEgressMirrorSession(idx = 3)
+        return
+
     def info(self, *args, **kwargs):
         self.logger.info(self.logpfx, *args, **kwargs)
         return

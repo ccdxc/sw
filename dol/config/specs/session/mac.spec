@@ -27,8 +27,12 @@ entries:
         label: span
         initiator:
             ethertype: 0xCC55
-            span: ref://store/objects/id=SpanSession0002
+            span: 
+                ingress:
+                    - ref://store/objects/id=SpanSession0002
         responder:
             ethertype: 0xCC55
-            span: ref://store/objects/id=SpanSession0002
+            span: 
+                ingress:
+                    - ref://store/objects/id=SpanSession0002
 

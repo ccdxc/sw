@@ -23,6 +23,14 @@ config:
                 endpoint: None
                 lif     : None
             flow: None
+            ingress_mirror:
+                session1: None
+                session2: None
+                session3: None
+            egress_mirror:
+                session1: None
+                session2: None
+                session3: None
         rconfig:
             src:
                 tenant  : None
@@ -35,6 +43,14 @@ config:
                 endpoint: None
                 lif     : None
             flow: None
+            ingress_mirror:
+                session1: None
+                session2: None
+                session3: None
+            egress_mirror:
+                session1: None
+                session2: None
+                session3: None
     src:
         tenant  : None
         segment : None
@@ -46,6 +62,14 @@ config:
         endpoint: None
         lif     : None
     flow: None
+    ingress_mirror:
+        session1: None
+        session2: None
+        session3: None
+    egress_mirror:
+        session1: None
+        session2: None
+        session3: None
     rdma:
         lqpair  : None # Local QPair
         rqpair  : None # Remote QPair

@@ -34,7 +34,17 @@ class FlowObject(base.ConfigObjectBase):
         self.__dseg     = dfep.ep.segment
         self.__sten     = self.__sseg.tenant
         self.__dten     = self.__dseg.tenant
-        self.__span     = span.Get(Store) if span else None
+        self.ing_mirror_sessions = []
+        self.egr_mirror_sessions = []
+        if span:
+            if 'ingress' in span.__dict__:
+                for s in span.ingress:
+                    span   = s.Get(Store)
+                    self.ing_mirror_sessions.append(span)
+            if 'egress' in span.__dict__:
+                for s in span.egress:
+                    span   = s.Get(Store)
+                    self.egr_mirror_sessions.append(span)
 
         # Initialize Externally Visible Fields
         # Attributes available for Filters
@@ -118,6 +128,16 @@ class FlowObject(base.ConfigObjectBase):
     def IsCollisionFlow(self):
         return self.label == FLOW_COLLISION_LABEL
 
+    def GetIngressMirrorSession(self, idx = 0):
+        if idx > len(self.ing_mirror_sessions):
+            return None
+        return self.ing_mirror_sessions[idx - 1]
+
+    def GetEgressMirrorSession(self, idx = 0):
+        if idx > len(self.egr_mirror_sessions):
+            return None
+        return self.egr_mirror_sessions[idx - 1]
+
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():
             l4_info.tcp_udp.sport = self.sport
@@ -191,6 +211,12 @@ class FlowObject(base.ConfigObjectBase):
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = self.eg_qos.dscp_rw.get()
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.eg_qos.dscp.get()
 
+        for ssn in self.ing_mirror_sessions:
+            ssn_spec = req_spec.flow_data.flow_info.ing_mirror_sessions.add()
+            ssn_spec.session_id = ssn.id
+        for ssn in self.egr_mirror_sessions:
+            ssn_spec = req_spec.flow_data.flow_info.egr_mirror_sessions.add()
+            ssn_spec.session_id = ssn.id
         return
 
     def __str__(self):
@@ -215,6 +241,14 @@ class FlowObject(base.ConfigObjectBase):
         string += " --> %s" % self.action
         if self.IsTCP():
             string += "/%s" % self.state
+        string += '/[IngSpan:'
+        for ssn in self.ing_mirror_sessions:
+            string += ssn.GID() + ' '
+
+        string += ']/[EgrSpan:'
+        for ssn in self.egr_mirror_sessions:
+            string += ssn.GID() + ' '
+        string += ']'
         return string
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -274,6 +308,12 @@ class FlowObject(base.ConfigObjectBase):
         obj.dst.segment = self.__dseg
         obj.src.endpoint = self.__sep
         obj.dst.endpoint = self.__dep
+        obj.ingress_mirror.session1 = self.GetIngressMirrorSession(idx = 1)
+        obj.ingress_mirror.session2 = self.GetIngressMirrorSession(idx = 2)
+        obj.ingress_mirror.session3 = self.GetIngressMirrorSession(idx = 3)
+        obj.egress_mirror.session1 = self.GetEgressMirrorSession(idx = 1)
+        obj.egress_mirror.session2 = self.GetEgressMirrorSession(idx = 2)
+        obj.egress_mirror.session3 = self.GetEgressMirrorSession(idx = 3)
         return
 
     def ShowTestcaseConfig(self, obj, logger):

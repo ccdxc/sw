@@ -11,6 +11,9 @@
 #include <interface_api.hpp>
 #include <qos.hpp>
 
+using telemetry::MirrorSessionId;
+using session::FlowInfo;
+
 namespace hal {
 
 void *
@@ -132,6 +135,34 @@ flowkey2str (const flow_key_t& key)
     out.write("}}");
 
     return buf;
+}
+
+// extract mirror sessions specified in spec into ingress and egress bitmaps
+//------------------------------------------------------------------------------
+static hal_ret_t
+extract_mirror_sessions(const FlowSpec& spec, uint8_t *ingress, uint8_t *egress)
+{
+    int i;
+    *ingress = 0;
+    *egress = 0;
+    FlowInfo flinfo = spec.flow_data().flow_info();
+    for (i = 0; i < flinfo.ing_mirror_sessions_size(); ++i) {
+        uint32_t id = flinfo.ing_mirror_sessions(i).session_id();
+        if (id > 7) {
+            return HAL_RET_INVALID_ARG;
+        }
+        *ingress = *ingress | (1 << id);
+        HAL_TRACE_DEBUG("  Adding ingress session {}", id);
+    }
+    for (i = 0; i < flinfo.egr_mirror_sessions_size(); ++i) {
+        uint32_t id = flinfo.egr_mirror_sessions(i).session_id();
+        if (id > 7) {
+            return HAL_RET_INVALID_ARG;
+        }
+        *egress = *egress | (1 << id);
+        HAL_TRACE_DEBUG("  Adding egress session {}", id);
+    }
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -1683,7 +1714,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     session_cfg_t           session = {};
     flow_cfg_t              iflow = {};
     flow_cfg_t              rflow = {};
-    session_state_t      session_state = {};
+    session_state_t         session_state = {};
+    uint8_t                 ingress, egress;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-Session:{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
@@ -1794,6 +1826,24 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         return ret;
     }
 #endif 
+
+    ret = extract_mirror_sessions(spec.initiator_flow(), &ingress, &egress);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+        return ret;
+    }
+    args.iflow->ing_mirror_session = ingress;
+    args.iflow->eg_mirror_session = egress;
+
+    if (args.rflow) {
+        ret = extract_mirror_sessions(spec.responder_flow(), &ingress, &egress);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+            return ret;
+         }
+         args.iflow->ing_mirror_session = ingress;
+         args.iflow->eg_mirror_session = egress;
+    }
 
     args.spec = &spec;
     args.rsp = rsp;

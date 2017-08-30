@@ -376,4 +376,10 @@ modules:
         module  : eth
         spec    : tx.testspec
         ignore  : True
-
+    - module:
+        name    : TELEMETRY_FP
+        enable  : True
+        package : test.telemetry
+        module  : telemetry
+        spec    : firstpacket.testspec
+        ignore  : True

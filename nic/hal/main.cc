@@ -39,6 +39,7 @@
 #include <wring_svc.hpp>
 #include <proxy_svc.hpp>
 #include <acl_svc.hpp>
+#include <telemetry_svc.hpp>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -62,6 +63,7 @@ svc_reg (const std::string& server_addr)
     NwSecurityServiceImpl    nwsec_svc;
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
+    TelemetryServiceImpl     telemetry_svc;
     ServerBuilder            server_builder;
     TlsCbServiceImpl         tlscb_svc;
     TcpCbServiceImpl         tcpcb_svc;
@@ -92,6 +94,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&wring_svc);
     server_builder.RegisterService(&proxy_svc);
     server_builder.RegisterService(&acl_svc);
+    server_builder.RegisterService(&telemetry_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 
