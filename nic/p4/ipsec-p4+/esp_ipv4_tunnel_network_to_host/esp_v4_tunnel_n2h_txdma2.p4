@@ -138,15 +138,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 //stage 4
-action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
-                                       cos_sel, eval_last, host, total, pid,
-                                       rxdma_ring_pindex, rxdma_ring_cindex,
-                                       barco_ring_pindex, barco_ring_cindex,
-                                       key_index, iv_size, icv_size,
-                                       expected_seq_no, last_replay_seq_no,
-                                       replay_seq_no_bmp, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+action esp_v4_tunnel_n2h_txdma2_build_decap_packet()
 {
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
@@ -158,8 +150,6 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
     DMA_COMMAND_MEM2PKT_FILL(dec_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size - txdma2_global.pad_size), 0, 0, 0)
 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA2_DECRYPT_DMA_COMMANDS_OFFSET);
-
-    //tblwr barco_ring_cindex
 }
  
 
@@ -203,7 +193,7 @@ action esp_v4_tunnel_n2h_txdma2_load_in_desc(addr0, offset0, length0,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 0);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, (txdma2_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE);
+    modify_field(common_te0_phv.table_addr, txdma2_global.in_desc_addr);
 }
 
 
@@ -261,7 +251,7 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       head_desc_addr, tail_desc_addr)
 {
     modify_field(ipsec_cb_scratch.pid, pid);
     modify_field(ipsec_cb_scratch.total, total);
@@ -287,6 +277,9 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd);
     modify_field(ipsec_cb_scratch.block_size, block_size);
     modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index);
+    modify_field(ipsec_cb_scratch.head_desc_addr, head_desc_addr);
+    // K+D violation being thrown by NCC at compile time - need to come back
+    // modify_field(ipsec_cb_scratch.tail_desc_addr, tail_desc_addr);
 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);

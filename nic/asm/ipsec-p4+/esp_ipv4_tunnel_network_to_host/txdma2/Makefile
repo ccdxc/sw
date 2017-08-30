@@ -19,7 +19,7 @@ deps:
 
 SRC_FILES := \
     esp_ipv4_tunnel_n2h_build_decap_packet.s \
-    esp_ipv4_tunnel_n2h_txdma2_get_barco_req_index_ptr.s \
+    esp_ipv4_tunnel_n2h_get_barco_req_index_ptr.s \
     esp_ipv4_tunnel_n2h_load_barco_req.s \
     esp_ipv4_tunnel_n2h_txdma2_initial_table.s \
     esp_ipv4_tunnel_n2h_txdma2_load_in_desc.s \

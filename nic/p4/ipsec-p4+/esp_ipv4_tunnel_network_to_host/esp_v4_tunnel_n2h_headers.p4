@@ -26,10 +26,8 @@ header_type ipsec_cb_metadata_t {
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
         block_size     : 8;
-        cb_pindex      : 16;
-        cb_cindex      : 16;
-        cb_ring_base_addr : ADDRESS_WIDTH;
-        ipsec_cb_pad   : 56;
+        head_desc_addr : ADDRESS_WIDTH;
+        tail_desc_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -91,44 +89,3 @@ header_type barco_request_t {
     }
 }
 
-#define IPSEC_CB_SCRATCH \
-    modify_field(ipsec_cb_scratch.pid, pid); \
-    modify_field(ipsec_cb_scratch.total, total); \
-    modify_field(ipsec_cb_scratch.host, host); \
-    modify_field(ipsec_cb_scratch.eval_last, eval_last); \
-    modify_field(ipsec_cb_scratch.cos_sel, cos_sel); \
-    modify_field(ipsec_cb_scratch.cosB, cosB); \
-    modify_field(ipsec_cb_scratch.cosA, cosA); \
-    modify_field(ipsec_cb_scratch.rsvd, rsvd); \
-    modify_field(ipsec_cb_scratch.pc, pc); \
-    modify_field(ipsec_cb_scratch.rxdma_ring_pindex, rxdma_ring_pindex); \
-    modify_field(ipsec_cb_scratch.rxdma_ring_cindex, rxdma_ring_cindex); \
-    modify_field(ipsec_cb_scratch.barco_ring_pindex, barco_ring_pindex); \
-    modify_field(ipsec_cb_scratch.barco_ring_cindex, barco_ring_cindex); \
-    modify_field(ipsec_cb_scratch.key_index, key_index); \
-    modify_field(ipsec_cb_scratch.iv_size, iv_size); \
-    modify_field(ipsec_cb_scratch.icv_size, icv_size); \
-    modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no); \
-    modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no); \
-    modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp); \
-    modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd); \
-    modify_field(ipsec_cb_scratch.block_size, block_size); \
-    modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index); \
-    modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
-    modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
-    modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
-    modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad);               
-
-
-#define IPSEC_BARCO_DESC_SCRATH \
-    modify_field(barco_desc_scratch.A0_addr,A0_addr); \
-    modify_field(barco_desc_scratch.O0,O0); \
-    modify_field(barco_desc_scratch.L0,L0); \
-    modify_field(barco_desc_scratch.A1_addr,A1_addr); \
-    modify_field(barco_desc_scratch.O1,O1); \
-    modify_field(barco_desc_scratch.L1,L1); \
-    modify_field(barco_desc_scratch.A2_addr,A2_addr); \
-    modify_field(barco_desc_scratch.O2,O2); \
-    modify_field(barco_desc_scratch.L2,L2); \
-    modify_field(barco_desc_scratch.NextAddr,NextAddr); \
-    modify_field(barco_desc_scratch.Reserved,Reserved); \

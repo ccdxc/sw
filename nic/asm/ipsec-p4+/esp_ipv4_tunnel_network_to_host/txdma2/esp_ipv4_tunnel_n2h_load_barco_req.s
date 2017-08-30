@@ -39,7 +39,7 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.common_te2_phv_table_raw_table_size, 6 
     addi r2, r0, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int
     srl r2, r2, 6
-    phvwr p.common_te2_phv_table_pc, r2 
+    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int 
     phvwr  p.common_te0_phv_table_addr, d.brq_in_addr 
     nop.e
 
