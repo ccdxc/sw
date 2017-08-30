@@ -7,7 +7,7 @@ overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_INFRA
-      count : 2
+      count : 1
 
 tunnels:
     - spec  : ref://store/specs/id=TUNNEL_VXLAN

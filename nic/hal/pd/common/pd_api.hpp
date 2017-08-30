@@ -221,6 +221,10 @@ hal_ret_t pd_if_delete(pd_if_args_t *hal_if);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
+uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
+        rewrite_actions_en rw_act);
+uint32_t ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
+        tunnel_rewrite_actions_en tnnl_rw_act);
 
 hal_ret_t pd_ep_create(pd_ep_args_t *hal_if);
 hal_ret_t pd_ep_update(pd_ep_args_t *hal_if);

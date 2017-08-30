@@ -20,6 +20,7 @@ types::encapType l2seg_get_fab_encap_type(l2seg_t *seg);
 uint32_t l2seg_get_fab_encap_val(l2seg_t *seg);
 void *l2seg_get_pi_nwsec(l2seg_t *l2seg);
 uint32_t l2seg_get_ipsg_en(l2seg_t *pi_l2seg);
+l2seg_t *l2seg_get_infra_l2seg();
 } // namespace hal
 
 

@@ -57,6 +57,7 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
     uint32_t                    hash_idx = 0;
     char                        buff[4096] = {0};
     p4pd_error_t                p4_err;
+    l2seg_t                     *infra_pi_l2seg = NULL;
     input_properties_swkey_t    key;
     input_properties_actiondata data;
 
@@ -86,7 +87,9 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
             key.vlan_tag_valid = 1;
             key.vlan_tag_vid = l2seg_get_fab_encap_val(args->l2seg);
         } else if (enc_type == types::ENCAP_TYPE_VXLAN) {
-            key.vlan_tag_valid = 0;
+            infra_pi_l2seg = hal::l2seg_get_infra_l2seg();
+            if_l2seg_get_encap(args->intf, infra_pi_l2seg, &key.vlan_tag_valid, &key.vlan_tag_vid);
+            // TODO: If infra is native on this uplink, do we have to install two entries ? 
             key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
             key.tunnel_metadata_tunnel_vni = l2seg_get_fab_encap_val(args->l2seg);
         }

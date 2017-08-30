@@ -680,7 +680,11 @@ flow_update_rewrite_info(flow_t *flow)
 
 end:
     // TODO: populate rw_idx instead of dep.
-    flow->pgm_attrs.dep = res_flow->dep;
+    // flow->pgm_attrs.dep = res_flow->dep;
+    flow->pgm_attrs.rw_idx = hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(res_flow->dep, 
+            flow->pgm_attrs.rw_act);
+    flow->pgm_attrs.tnnl_rw_idx = hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(res_flow->dep,
+            flow->pgm_attrs.tnnl_rw_act);
 
     return ret;
 }
@@ -738,37 +742,36 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
     }
 
     HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
-            "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+            "rw_act:{}, rw_idx:{} tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
             "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
             "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
             __FUNCTION__, flow->pgm_attrs.role, 
             flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
-            flow->pgm_attrs.rw_act, flow->pgm_attrs.tnnl_rw_act, 
+            flow->pgm_attrs.rw_act, flow->pgm_attrs.rw_idx, flow->pgm_attrs.tnnl_rw_act, 
             flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
             flow->pgm_attrs.lport, flow->pgm_attrs.qid_en,
             flow->pgm_attrs.qtype, flow->pgm_attrs.qid, 
             ipaddr2str(&flow->pgm_attrs.nat_sip), 
             ipaddr2str(&flow->pgm_attrs.nat_dip), 
             flow->pgm_attrs.nat_sport, flow->pgm_attrs.nat_dport,
-            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en, 
-            ep_l2_key_to_str(flow->pgm_attrs.dep));
+            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en);
 
     if (flow->assoc_flow) {
         HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
-                "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+                "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
                 "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
-                "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
+                "nat_dport:{}, nat_l4_port:{}, mcast_en:{}",
                 __FUNCTION__, assoc_flow->pgm_attrs.role, 
                 assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
-                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.tnnl_rw_act, 
+                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.rw_idx, 
+                assoc_flow->pgm_attrs.tnnl_rw_act, 
                 assoc_flow->pgm_attrs.tnnl_vnid, assoc_flow->pgm_attrs.ttl_dec, 
                 assoc_flow->pgm_attrs.lport, assoc_flow->pgm_attrs.qid_en,
                 assoc_flow->pgm_attrs.qtype, assoc_flow->pgm_attrs.qid, 
                 ipaddr2str(&assoc_flow->pgm_attrs.nat_sip), 
                 ipaddr2str(&assoc_flow->pgm_attrs.nat_dip), 
                 assoc_flow->pgm_attrs.nat_sport, assoc_flow->pgm_attrs.nat_dport,
-                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en, 
-                ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
+                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en);
     }
 
     return ret;
@@ -827,37 +830,35 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
     }
 
     HAL_TRACE_DEBUG("PI-Session:{} rflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
-            "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+            "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
             "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
             "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
             __FUNCTION__, flow->pgm_attrs.role, 
             flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
-            flow->pgm_attrs.rw_act, flow->pgm_attrs.tnnl_rw_act, 
+            flow->pgm_attrs.rw_act, flow->pgm_attrs.rw_idx, flow->pgm_attrs.tnnl_rw_act, 
             flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
             flow->pgm_attrs.lport, flow->pgm_attrs.qid_en,
             flow->pgm_attrs.qtype, flow->pgm_attrs.qid, 
             ipaddr2str(&flow->pgm_attrs.nat_sip), 
             ipaddr2str(&flow->pgm_attrs.nat_dip), 
             flow->pgm_attrs.nat_sport, flow->pgm_attrs.nat_dport,
-            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en, 
-            ep_l2_key_to_str(flow->pgm_attrs.dep));
+            flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en);
 
     if (flow->assoc_flow) {
         HAL_TRACE_DEBUG("PI-Session:{} rflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
-                "rw_act:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
+                "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
                 "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
                 "nat_dport:{}, nat_l4_port:{}, mcast_en:{}, dep:{}",
                 __FUNCTION__, assoc_flow->pgm_attrs.role, 
                 assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
-                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.tnnl_rw_act, 
+                assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.rw_idx, assoc_flow->pgm_attrs.tnnl_rw_act, 
                 assoc_flow->pgm_attrs.tnnl_vnid, assoc_flow->pgm_attrs.ttl_dec, 
                 assoc_flow->pgm_attrs.lport, assoc_flow->pgm_attrs.qid_en,
                 assoc_flow->pgm_attrs.qtype, assoc_flow->pgm_attrs.qid, 
                 ipaddr2str(&assoc_flow->pgm_attrs.nat_sip), 
                 ipaddr2str(&assoc_flow->pgm_attrs.nat_dip), 
                 assoc_flow->pgm_attrs.nat_sport, assoc_flow->pgm_attrs.nat_dport,
-                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en, 
-                ep_l2_key_to_str(assoc_flow->pgm_attrs.dep));
+                assoc_flow->pgm_attrs.nat_l4_port, assoc_flow->pgm_attrs.mcast_en);
     }
     return ret;
 }
@@ -1013,6 +1014,9 @@ process_iflow_for_lb(const session_args_t *args, session_t *session)
 
     iflow = session->iflow;
     flow_cfg = &iflow->config;
+    
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: nat_type:{}",
+            __FUNCTION__, flow_cfg->nat_type);
 
     // No-op if there is no DNAT or Twice NAT
     if (flow_cfg->nat_type != NAT_TYPE_DNAT && 
@@ -1042,7 +1046,7 @@ process_iflow_for_lb(const session_args_t *args, session_t *session)
     HAL_ASSERT(dif_nat != NULL);
 
     HAL_TRACE_DEBUG("PI-Session:{} iflow: DNAT/TNAT dep: {} -> {}, "
-            "dif: {} -> {}, dl2seg: {} -> {}",
+            "dif: {} -> {}, dl2seg: {} -> {}", __FUNCTION__,
             ep_l2_key_to_str(iflow->dep), ep_l2_key_to_str(dep_nat),
             iflow->dif->if_id, dif_nat->if_id,
             iflow->dl2seg->seg_id, dl2seg_nat->seg_id);
@@ -1075,6 +1079,8 @@ process_rflow_for_lb(const session_args_t *args, session_t *session)
         return ret;
     }
 
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: nat_type:{}",
+            __FUNCTION__, flow_cfg->nat_type);
 
     // No-op if there is no DNAT or Twice NAT
     if (flow_cfg->nat_type != NAT_TYPE_DNAT && 

@@ -446,6 +446,8 @@ hal_state::hal_state()
     proxy_slab_ = NULL;
     proxy_type_ht_ = NULL;
     proxy_hal_handle_ht_ = NULL;
+
+    infra_l2seg_ = NULL;
 }
 
 //------------------------------------------------------------------------------

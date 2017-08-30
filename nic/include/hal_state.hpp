@@ -121,6 +121,10 @@ public:
     ht *proxy_type_ht(void) const { return proxy_type_ht_; }
     ht *proxy_hal_handle_ht(void) const { return proxy_hal_handle_ht_; }
 
+    // get API for infra l2seg
+    void *infra_l2seg(void) { return infra_l2seg_; } 
+    void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
+
 
 private:
     bool init(void);
@@ -249,6 +253,11 @@ private:
         slab       *acl_slab_;
         ht         *acl_id_ht_;
         ht         *acl_hal_handle_ht_;
+    } __PACK__;
+
+    // assumption is there will be only one infra vlan
+    struct {
+        void        *infra_l2seg_;  // l2seg_t *
     } __PACK__;
 
 };

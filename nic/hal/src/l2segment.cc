@@ -175,10 +175,16 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (spec.has_access_encap()) {
         l2seg->access_encap.type = spec.access_encap().encap_type();
         l2seg->access_encap.val = spec.access_encap().encap_value();
+        HAL_TRACE_ERR("PI-L2Seg:{} {} Acc enc_type:{} enc_val:{}",
+                __FUNCTION__, l2seg->seg_id, l2seg->access_encap.type, 
+                l2seg->access_encap.val);
     }
     if (spec.has_fabric_encap()) {
         l2seg->fabric_encap.type = spec.fabric_encap().encap_type();
         l2seg->fabric_encap.val = spec.fabric_encap().encap_value();
+        HAL_TRACE_ERR("PI-L2Seg:{} {} Fab enc_type:{} enc_val:{}",
+                __FUNCTION__, l2seg->seg_id, l2seg->fabric_encap.type, 
+                l2seg->fabric_encap.val);
     }
     l2seg->hal_handle = hal_alloc_handle();
 
@@ -211,6 +217,12 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         HAL_TRACE_ERR("PI-L2Seg:{}: PD programming fail.  ret: {}",
                       __FUNCTION__, ret);
         goto end;
+    }
+
+    if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
+        HAL_TRACE_DEBUG("PI-L2Seg:{} id:{} is Infra ", __FUNCTION__, 
+                        l2seg->seg_id);
+        g_hal_state->set_infra_l2seg(l2seg);
     }
 
     // add this L2 segment to our db

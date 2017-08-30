@@ -93,4 +93,18 @@ l2seg_get_ipsg_en(l2seg_t *pi_l2seg)
 
     return pi_nwsec->ipsg_en;
 }
+
+// ----------------------------------------------------------------------------
+// Returns infra L2 segment
+// ----------------------------------------------------------------------------
+l2seg_t *
+l2seg_get_infra_l2seg()
+{
+    return (l2seg_t *)g_hal_state->infra_l2seg();
+}
+
+
+
+
+
 }

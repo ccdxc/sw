@@ -233,14 +233,6 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 //    should take it from there or else default is fine
 // 2. twice nat not supported
 //-----------------------------------------------------------------------------
-#if 0
-p4pd_add_flow_info_table_entry (tenant_t *tenant, session_t *session,
-                                l2seg_t *l2seg_s, l2seg_t *l2seg_d,
-                                nwsec_profile_t *nwsec_profile,
-                                flow_cfg_t *flow, pd_flow_t *flow_pd,
-                                if_t *sif, if_t *dif, ep_t *sep, ep_t *dep,
-                                bool mcast)
-#endif
 hal_ret_t
 p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
@@ -252,12 +244,6 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     flow_cfg_t               *flow_cfg = NULL;
     bool                     is_tcp_proxy_flow = false;
     pd_session_t             *sess_pd = NULL;
-#if 0
-    HAL_ASSERT(dep != NULL);
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
-
-#endif
 
     sess_pd = session->pd;
 
@@ -366,18 +352,15 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
         (flow_attrs->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
     if (flow_attrs->rw_act != REWRITE_NOP_ID) {
-        d.flow_info_action_u.flow_info_flow_info.rewrite_index = 
+        d.flow_info_action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
+#if 0
+        d.flow_info_action_u.flow_info_flow_info.rewrite_index =
             ep_pd_get_rw_tbl_idx(flow_attrs->dep->pd,
                 flow_attrs->rw_act);
-    }
-#if 0
-    d.flow_info_action_u.flow_info_flow_info.rewrite_index = 
-        (flow->rw_act == REWRITE_NOP_ID) ? g_hal_state_pd->rwr_tbl_decap_vlan_idx() : 
-        ep_pd_get_rw_tbl_idx(dep->pd, flow->rw_act);
 #endif
+    }
     d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
-    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = ep_pd_get_tnnl_rw_tbl_idx(flow_attrs->dep->pd,
-            flow_attrs->tnnl_rw_act);
+    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
 
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;

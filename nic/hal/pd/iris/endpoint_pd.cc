@@ -528,6 +528,17 @@ ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act)
     return pd_ep->rw_tbl_idx[rw_act];
 }
 
+uint32_t
+ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
+                                     tunnel_rewrite_actions_en tnnl_rw_act) 
+{
+    pd_ep_t *pd_ep = NULL;
+
+    pd_ep = (pd_ep_t *)ep_get_pd_ep(pi_ep);
+
+    return ep_pd_get_tnnl_rw_tbl_idx(pd_ep, tnnl_rw_act);
+}
+
 // ----------------------------------------------------------------------------
 // Input: Dest EP and Tunnel Rewrite Action
 // Retuns: Tunnel RW idx in flow table
