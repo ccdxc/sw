@@ -14,6 +14,7 @@ struct phv_ p;
         .align 
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
+    phvwr p.ipsec_to_stage3_tail_desc_addr, d.tail_desc_addr
 
    //payload_start sent by p4 as outer-IP+base-esp(8 bytes)
     add r1, r0, d.iv_size
@@ -105,8 +106,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     ori r3, r3, 1
     tblwr d.replay_seq_no_bmp, r3
     nop
-    tblwr d.expected_seq_no, k.p42p4plus_hdr_seqNo
-    nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     // ipsec_cb->replay_win_bmp = 1;
@@ -115,7 +114,5 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     tblwr d.replay_seq_no_bmp, r7 
     //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
     //phvwr p.ipsec_int_drop_mask, r4
-    nop
-    tblwr d.expected_seq_no, k.p42p4plus_hdr_seqNo
     nop
  

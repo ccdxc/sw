@@ -12,11 +12,12 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
-    add r1, r0, d.cb_pindex
-    addi r1, r1, 1
-    tblwr d.cb_pindex, r1
-    nop
-     
+
+dma_cmd_to_move_input_pkt_to_mem:
+    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT 
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, k.t0_s2s_in_page_addr
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_size, d.length0
+
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.t0_s2s_in_desc_addr
@@ -36,19 +37,13 @@ dma_cmd_to_write_output_desc_aol:
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, k.ipsec_to_stage4_out_desc_addr
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
-dma_cmd_ring_doorbell:
-    /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
-        /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.ipsec_global_ipsec_cb_index, 0, d.cb_pindex)                                                                                                                                    
-        phvwr           p.doorbell_cmd_dma_cmd_addr, r4
-        phvwr           p.db_data_index, d.cb_pindex
-        phvwr           p.db_data_qid, d.ipsec_cb_index
-
-        phvwri          p.doorbell_cmd_dma_cmd_phv_start_addr,IPSEC_PHV_DB_DATA_START
-        phvwri          p.doorbell_cmd_dma_cmd_phv_end_addr, IPSEC_PHV_DB_DATA_END
-        phvwri          p.doorbell_cmd_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-
-        phvwri          p.doorbell_cmd_dma_cmd_eop, 1
-        phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
  
+dma_cmd_to_update_tail_desc:
+    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    add r1, r0, k.ipsec_global_ipsec_cb_index
+    sll r1, r1, IPSEC_CB_SHIFT_SIZE
+    addi r1, r1, IPSEC_CB_BASE
+    phvwr p.dma_cmd_tail_desc_addr_dma_cmd_type, r1 
+    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
+    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
+

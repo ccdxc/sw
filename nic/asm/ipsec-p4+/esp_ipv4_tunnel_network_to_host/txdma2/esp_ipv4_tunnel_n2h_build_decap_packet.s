@@ -9,7 +9,7 @@ struct phv_ p;
 
 %%
         .align
-esp_v4_tunnel_n2h_txdma2_build_decap_packet:
+esp_ipv4_tunnel_n2h_build_decap_packet:
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, 0
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 32
