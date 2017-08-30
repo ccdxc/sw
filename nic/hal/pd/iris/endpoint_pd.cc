@@ -231,60 +231,41 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
 
     // mac_sa = ... Get it from l2seg rmac
     // mac_da = ... Get it from EP's NH
-    // for (int i = 0; i < REWRITE_MAX_ID; i++) {
-    for (int i = 0; i < REWRITE_REWRITE_ID + 1; i++) {
+    // Start by skipping REWRITE_NOP_ID
+    for (int i = 1; i < REWRITE_MAX_ID; i++) {
         switch(i) {
-            case REWRITE_NOP_ID:
-                break;
             case REWRITE_REWRITE_ID:
+            case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
+            case REWRITE_IPV4_NAT_DST_REWRITE_ID:
+            case REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID:
+            case REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID:
+            case REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID:
+            case REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID:
+            case REWRITE_IPV4_TWICE_NAT_REWRITE_ID:
+            case REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID:
+            case REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID:
+            case REWRITE_IPV6_NAT_SRC_REWRITE_ID:
+            case REWRITE_IPV6_NAT_DST_REWRITE_ID:
+            case REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID:
+            case REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID:
+            case REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID:
+            case REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID:
+            case REWRITE_IPV6_TWICE_NAT_REWRITE_ID:
+            case REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID:
+            case REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
                 l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
                 HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
                 nw = ep_pd_get_nw(pi_ep, l2seg);
-                // HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
+                HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
                 if (nw) {
                     memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, nw->rmac_addr, 6);
                     memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
                 } 
                 memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, *mac, 6);
                 memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
-
                 break;
-            case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_NAT_DST_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_TWICE_NAT_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_SRC_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_DST_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_TWICE_NAT_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID:
-                break;
-            case REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
-                break;
+            default:
+                HAL_ASSERT(0);
         }
         data.actionid = i;
         ret = rw_tbl->insert(&data, &(pd_ep->rw_tbl_idx[i]));
