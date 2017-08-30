@@ -42,6 +42,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-sack3.s \
     $(SRC_DIR)/tcp-sack4.s \
     $(SRC_DIR)/tcp-fc.s \
+    $(SRC_DIR)/tcp-rx-stats.s \
     $(SRC_DIR)/tcp-write-serq.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

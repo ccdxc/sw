@@ -18,7 +18,7 @@ namespace hal {
 #define SERVICE_LIF_START                       1001
 
 #define PROXY_TCP_DEF_QTYPE                     0
-#define PROXY_TCP_DEF_QSTATE_SZ                 4       // 512-bytes
+#define PROXY_TCP_DEF_QSTATE_SZ                 5       // 1024-bytes
 #define PROXY_TCP_DEF_QSTATE_ENTRIES            10      // 1024: FIXME
 #define PROXY_TLS_DEF_QTYPE                     0
 #define PROXY_TLS_DEF_QSTATE_SZ                 1       // 64-bytes

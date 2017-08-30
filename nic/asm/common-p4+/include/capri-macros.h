@@ -50,6 +50,15 @@
         phvwr   p.common_te0_phv_table_addr, r1; \
         phvwri  p.app_header_table0_valid, 1;
 
+#define CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(_stage_entry) \
+        phvwri  p.common_te0_phv_table_lock_en, 1; \
+        phvwri  p.common_te0_phv_table_raw_table_size, TABLE_SIZE_0_BITS; \
+        addi    r2, r0, _stage_entry; \
+        srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
+        phvwr   p.common_te0_phv_table_pc, r1; \
+        phvwr   p.common_te0_phv_table_addr, r0; \
+        phvwri  p.app_header_table0_valid, 1;
+
 
 #define CAPRI_NEXT_TABLE1_READ(_fid, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_state_offset, _table_read_size) \
         phvwri  p.common_te1_phv_table_lock_en, 1; \
@@ -112,6 +121,23 @@
 	phvwr		p.table_addr, r1                                ;\
         phvwri		p.table_addr[63], 1                             ;\
         phvwri	        p.table_size, 8                                 ;
+
+// Increment 1 stat (sz = 0)
+// shift by 27, to get upper 6 bits of 33 bit HBM address
+// Note atomic stats region can only reside within 33 bits
+// of HBM space (+ 2G)
+// 0x80000000 (HBM base) is added by asic, so subtract it first
+#define CAPRI_ATOMIC_STATS_INCR1(_addr, _offs, _val) \
+        add             r1, _addr, _offs; \
+        subi            r1, r1, 0x80000000; \
+        srl             r2, r1, 27; \
+        andi            r1, r1, ((1 << 27) - 1); \
+        addi            r1, r1, CAPRI_MEM_SEM_ATOMIC_ADD_START; \
+        add             r2, 0, r2, 2; \
+        sll             r2, r2, 56; \
+        or              r2, r2, _val; \
+        memwr.dx        r1, r2
+        
 
 
 #define DB_ADDR_BASE                   0x68800000
@@ -329,6 +355,7 @@
 #define TABLE_SIZE_128_BITS            4
 #define TABLE_SIZE_256_BITS            5
 #define TABLE_SIZE_512_BITS            6
+#define TABLE_SIZE_0_BITS              7
 
 
 #endif /* #ifndef __CAPRI_MACROS_H__ */

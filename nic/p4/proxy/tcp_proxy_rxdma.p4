@@ -23,6 +23,8 @@
 #define rx_table_s5_t0 tcp_rx_tcp_fc
 
 #define rx_table_s6_t0 tcp_rx_write_serq
+#
+#define rx_table_s7_t0 tcp_rx_stats
 
 #define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
 
@@ -46,6 +48,8 @@
 #define rx_table_s5_t0_action tcp_fc
 
 #define rx_table_s6_t0_action write_serq
+
+#define rx_table_s7_t0_action stats
 
 #define common_p4plus_stage0_app_header_table_action_dummy read_tx2rx
 
@@ -319,6 +323,21 @@ header_type to_stage_6_phv_t {
     }
 }
 
+header_type to_stage_7_phv_t {
+    // stats
+    fields {
+        bytes_rcvd              : 16;
+        stats1                  : 16;
+        stats2                  : 16;
+        stats3                  : 16;
+
+        stats4                  : 16;
+        stats5                  : 16;
+        stats6                  : 16;
+        stats7                  : 16;
+    }
+}
+
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
@@ -427,6 +446,8 @@ metadata to_stage_4_phv_t to_s4;
 metadata to_stage_5_phv_t to_s5;
 @pragma pa_header_union ingress to_stage_6
 metadata to_stage_6_phv_t to_s6;
+@pragma pa_header_union ingress to_stage_7
+metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata common_global_phv_t common_phv;
 
@@ -442,6 +463,8 @@ metadata to_stage_4_phv_t to_s4_scratch;
 metadata to_stage_5_phv_t to_s5_scratch;
 @pragma scratch_metadata
 metadata to_stage_6_phv_t to_s6_scratch;
+@pragma scratch_metadata
+metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s1_s2s_phv_t s1_s2s_scratch;
 @pragma scratch_metadata
@@ -832,4 +855,21 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts) {
     modify_field(write_serq_d.nde_offset, nde_offset);
     modify_field(write_serq_d.nde_len, nde_len);
     modify_field(write_serq_d.curr_ts, curr_ts);
+}
+
+/*
+ * Stage 7 table 0 action
+ */
+action stats() {
+    // k + i for stage 7
+
+    // from to_stage 7
+    modify_field(to_s7_scratch.bytes_rcvd, to_s7.bytes_rcvd);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage 6 to stage 7
+
+    // d for stage 7 table 0
 }

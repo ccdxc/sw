@@ -17,6 +17,7 @@
 #define CAPRI_SEM_RAW_OFFSET                0x1000
 #define CAPRI_SEM_INC_OFFSET                0x2000
 #define CAPRI_SEM_INC_NOT_FULL_OFFSET       0x4000
+#define CAPRI_SEM_ATOMIC_ADD_BYTE_OFFSET    0x8000000
 #define CAPRI_SEM_INF_OFFSET                CAPRI_SEM_INC_NOT_FULL_OFFSET
 #define CAPRI_SEM_INC_NOT_FULL_SIZE         8
 #define CAPRI_SEM_INC_NOT_FULL_PI_OFFSET    0
@@ -28,6 +29,8 @@
                     (CAPRI_MEM_SEMA_START + CAPRI_SEM_INC_OFFSET)
 #define CAPRI_MEM_SEM_INF_START \
                     (CAPRI_MEM_SEMA_START + CAPRI_SEM_INC_NOT_FULL_OFFSET)
+#define CAPRI_MEM_SEM_ATOMIC_ADD_START \
+                    (CAPRI_MEM_SEMA_START + CAPRI_SEM_ATOMIC_ADD_BYTE_OFFSET)
 
 // 1K 32 bit semaphores or 512 PI/CI (inc not full) pairs
 #define CAPRI_SEM_RNMDR_ADDR                (CAPRI_MEM_SEMA_START + 8 * 0)

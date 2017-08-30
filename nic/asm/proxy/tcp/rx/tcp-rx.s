@@ -78,7 +78,17 @@ tcp_queue_rcv:
 tcp_rcv_nxt_update:
 	sub		r1, k.s1_s2s_end_seq, d.u.tcp_rx_d.rcv_nxt
 	tblwr		d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_end_seq
+        add             r2, r1, d.u.tcp_rx_d.bytes_rcvd
+        bgei            r2, 0xffff, tcp_rcv_nxt_stats_update
+        // bgei            r2, 0, tcp_rcv_nxt_stats_update // TODO for debugging remove
+        nop
 	tbladd		d.u.tcp_rx_d.bytes_rcvd, r1
+        b               tcp_event_data_recv
+        nop
+tcp_rcv_nxt_stats_update:
+        phvwr           p.to_s7_bytes_rcvd, d.u.tcp_rx_d.bytes_rcvd
+        // phvwr           p.to_s7_bytes_rcvd, r1 // TODO for debugging REMOVE
+        tblwr           d.u.tcp_rx_d.bytes_rcvd, r1
 	
 tcp_event_data_recv:
 	/* SCHEDULE_ACK(tp) */
