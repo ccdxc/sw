@@ -11,10 +11,10 @@ entries:
         backends:
             - port  : const/8080
               count : const/2
-              type  : local
+              remote: False
             - port  : const/8080
               count : const/2
-              type  : remote
+              remote: True
 
     - entry:
         label       : twice-nat
@@ -26,10 +26,10 @@ entries:
         backends:
             - port  : const/8443
               count : const/2
-              type  : local
+              remote: False
             - port  : const/8443
               count : const/2
-              type  : remote
+              remote: True
 
     - entry:
         label       : nat
@@ -39,10 +39,10 @@ entries:
         backends:
             - port  : const/2021
               count : const/2
-              type  : local
+              remote: False
             - port  : const/2021
               count : const/2
-              type  : remote
+              remote: True
 
     - entry:
         label       : twice-nat
@@ -54,7 +54,7 @@ entries:
         backends:
             - port  : const/2022
               count : const/2
-              type  : local
+              remote: False
             - port  : const/2022
               count : const/2
-              type  : remote
+              remote: True

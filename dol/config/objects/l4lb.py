@@ -4,6 +4,7 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
 import config.resmgr            as resmgr
+import config.objects.endpoint  as endpoint
 
 from infra.common.logging       import cfglogger
 from config.store               import Store
@@ -24,13 +25,20 @@ class L4LbBackendObject(base.ConfigObjectBase):
 
     def Init(self, service, spec):
         self.service    = service
-        self.ip         = spec.subnet.get()
         self.port       = spec.port
+        self.remote     = spec.remote
+        self.ep         = service.tenant.AllocL4LbBackend()
+        self.ep.AttachL4LbBackend(self)
         return
+
+    def GetIpAddress(self):
+        return self.ep.GetIpAddress()
+    def GetIpv6Address(self):
+        return self.ep.GetIpv6Address()
 
     def Show(self):
         cfglogger.info("- Backend = %s  %s:%d" %\
-                       (self.GID(), self.ip.get(), self.port.get()))
+                       (self.GID(), self.ep.GID(), self.port.get()))
         return
 
 class L4LbBackendObjectHelper:
@@ -42,12 +50,12 @@ class L4LbBackendObjectHelper:
         return
 
     def Generate(self, service, bspec_list):
-        #for bspec in bspec_list:
-        #    count = bspec.subnet.GetCount()
-        #    for c in range(count):
-        #        bend = L4LbBackendObject()
-        #        bend.Init(service, bspec)
-        #        self.bends.append(bend)
+        for bspec in bspec_list:
+            count = bspec.count.get()
+            for c in range(count):
+                bend = L4LbBackendObject()
+                bend.Init(service, bspec)
+                self.bends.append(bend)
         return
         
 
@@ -63,9 +71,11 @@ class L4LbServiceObject(base.ConfigObjectBase):
         self.spec       = spec
         self.label      = spec.label.upper()
         self.proto      = spec.proto.upper()
+        
         self.vip        = resmgr.L4LbServiceIpAllocator.get()
         self.vip6       = resmgr.L4LbServiceIpv6Allocator.get()
         self.vmac       = resmgr.L4LbVMacAllocator.get()
+        
         self.port       = spec.port
         self.mode       = spec.mode.upper()
         self.snat_ips   = []
@@ -77,8 +87,11 @@ class L4LbServiceObject(base.ConfigObjectBase):
                 sport = spec.snat_ports.get()
                 self.snat_ports.append(sport)
 
+        self.bend_idx = 0
         self.obj_helper_bend = L4LbBackendObjectHelper()
         self.obj_helper_bend.Generate(self, spec.backends)
+       
+        self.__create_ep()
         self.Show()
         return
 
@@ -86,6 +99,24 @@ class L4LbServiceObject(base.ConfigObjectBase):
         return self.mode == 'NAT'
     def IsTwiceNAT(self):
         return self.mode == 'TWICE_NAT'
+
+    def SelectBackend(self):
+        if self.bend_idx >= len(self.obj_helper_bend.bends):
+            return None
+        bend = self.obj_helper_bend.bends[self.bend_idx]
+        self.bend_idx += 1
+        return bend
+
+    def __create_ep(self):
+        # Create a dummy endpoint for the service
+        self.ep = endpoint.EndpointObject()
+        self.ep.macaddr = self.vmac
+        self.ep.SetIpAddress(self.vip)
+        self.ep.SetIpv6Address(self.vip6)
+        self.ep.SetL4LbService()
+        self.ep.tenant = self.tenant
+        return
+
 
     def Show(self):
         cfglogger.info("L4LbService: %s" % self.GID())
@@ -122,7 +153,8 @@ class L4LbServiceObjectHelper:
         for espec in spec.entries:
             svc = L4LbServiceObject()
             svc.Init(tenant, espec.entry)
-        self.svcs.append(svc)
+            self.svcs.append(svc)
+        Store.objects.SetAll(self.svcs)
         return
 
     def Configure(self):

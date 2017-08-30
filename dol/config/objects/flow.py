@@ -30,8 +30,8 @@ class FlowObject(base.ConfigObjectBase):
         self.__dep      = dfep.ep
         self.__sfep     = sfep
         self.__dfep     = dfep
-        self.__sseg     = sfep.ep.segment
-        self.__dseg     = dfep.ep.segment
+        self.__sseg     = sfep.GetSegment()
+        self.__dseg     = dfep.GetSegment()
         self.__sten     = self.__sseg.tenant
         self.__dten     = self.__dseg.tenant
         self.ing_mirror_sessions = []
@@ -64,34 +64,54 @@ class FlowObject(base.ConfigObjectBase):
         self.dmac       = None
         self.state      = self.__sfep.flow_info.state.upper()
         self.action     = self.__sfep.flow_info.action.upper()
-        self.nat_type   = self.__sfep.flow_info.nat_type.upper()
         self.in_qos     = self.__sfep.flow_info.in_qos
         self.eg_qos     = self.__dfep.flow_info.eg_qos
        
         self.__init_key()
         self.__init_info()
+        self.__init_nat()
+        return
+
+    def __init_nat(self):
+        if self.__sfep.IsL4LbServiceFlowEp():
+            self.nat_type = 'SNAT'
+        elif self.__dfep.IsL4LbServiceFlowEp():
+            self.nat_type = 'DNAT'
+        else:
+            self.nat_type = 'NONE'
+
+        self.nat_sip = self.__sfep.GetNatSip()
+        self.nat_sport = self.__sfep.GetNatSport()
+        self.nat_dip = self.__dfep.GetNatDip()
+        self.nat_dport = self.__dfep.GetNatDport()
+        return
+       
+   
+    def __init_ip_flow_key(self):
+        self.sip = self.__sfep.GetFlowSip()
+        self.dip = self.__dfep.GetFlowDip()
+        assert(self.__sfep.proto == self.__dfep.proto)
+        self.proto = self.__sfep.proto
+        if self.IsTCP() or self.IsUDP():
+            self.sport = self.__sfep.GetFlowSport()
+            self.dport = self.__dfep.GetFlowDport()
+        elif self.IsICMP():
+            self.icmpid     = self.__sfep.icmp_id
+            self.icmptype   = self.__sfep.icmp_type
+            self.icmpcode   = self.__sfep.icmp_code
+        return
+
+    def __init_mac_flow_key(self):
+        self.smac = self.__sfep.addr
+        self.dmac = self.__dfep.addr
+        self.ethertype = self.__sfep.ethertype
         return
 
     def __init_key(self):
         if self.IsIP():
-            self.sip = self.__sfep.addr
-            self.dip = self.__dfep.addr
-            assert(self.__sfep.proto == self.__dfep.proto)
-            self.proto = self.__sfep.proto
-            if self.IsTCP():
-                self.sport = self.__sfep.port
-                self.dport = self.__dfep.port
-            elif self.IsUDP():
-                self.sport = self.__sfep.port
-                self.dport = self.__dfep.port
-            elif self.IsICMP():
-                self.icmpid     = self.__sfep.icmp_id
-                self.icmptype   = self.__sfep.icmp_type
-                self.icmpcode   = self.__sfep.icmp_code
+            self.__init_ip_flow_key()
         elif self.IsMAC():
-            self.smac = self.__sfep.addr
-            self.dmac = self.__dfep.addr
-            self.ethertype = self.__sfep.ethertype
+            self.__init_mac_flow_key()
         else:
             assert(0)
         return
@@ -137,6 +157,15 @@ class FlowObject(base.ConfigObjectBase):
         if idx > len(self.egr_mirror_sessions):
             return None
         return self.egr_mirror_sessions[idx - 1]
+    
+    def IsSnat(self):
+        return self.nat_type == 'SNAT'
+
+    def IsDnat(self):
+        return self.nat_type == 'DNAT'
+
+    def IsNat(self):
+        return self.nat_type != 'NONE'
 
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():
@@ -181,19 +210,19 @@ class FlowObject(base.ConfigObjectBase):
         nat_type = "NAT_TYPE_" + self.nat_type
         req_spec.flow_data.flow_info.nat_type = haldefs.session.NatType.Value(nat_type)
 
-        if self.IsIPV4():
-            req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET
-            req_spec.flow_data.flow_info.nat_sip.v4_addr = self.__sfep.flow_info.nat_sip.getnum()
-            req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET
-            req_spec.flow_data.flow_info.nat_dip.v4_addr = self.__sfep.flow_info.nat_dip.getnum()
-        elif self.IsIPV6():
-            req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET6
-            req_spec.flow_data.flow_info.nat_sip.v6_addr = self.__sfep.flow_info.nat_sip.getnum().to_bytes(16, 'big')
-            req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
-            req_spec.flow_data.flow_info.nat_dip.v6_addr = self.__sfep.flow_info.nat_dip.getnum().to_bytes(16, 'big')
-
-        req_spec.flow_data.flow_info.nat_sport = self.__sfep.flow_info.nat_sport.get()
-        req_spec.flow_data.flow_info.nat_dport = self.__sfep.flow_info.nat_dport.get()
+        if self.IsNat():
+            if self.IsIPV4():
+                req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET
+                req_spec.flow_data.flow_info.nat_sip.v4_addr = self.nat_sip.getnum()
+                req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET
+                req_spec.flow_data.flow_info.nat_dip.v4_addr = self.nat_dip.getnum()
+            elif self.IsIPV6():
+                req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET6
+                req_spec.flow_data.flow_info.nat_sip.v6_addr = self.nat_sip.getnum().to_bytes(16, 'big')
+                req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
+                req_spec.flow_data.flow_info.nat_dip.v6_addr = self.nat_dip.getnum().to_bytes(16, 'big')
+            req_spec.flow_data.flow_info.nat_sport = self.nat_sport
+            req_spec.flow_data.flow_info.nat_dport = self.nat_dport
 
         if self.IsTCP():
             tcp_state = "FLOW_TCP_STATE_" + self.state
@@ -219,7 +248,7 @@ class FlowObject(base.ConfigObjectBase):
             ssn_spec.session_id = ssn.id
         return
 
-    def __str__(self):
+    def Show(self):
         string = "%s:%s:" % (self.__session.GID(), self.direction)
         string += self.type + '/'
         if self.IsIP():
@@ -237,24 +266,35 @@ class FlowObject(base.ConfigObjectBase):
             string += "%04x" % (self.ethertype)
         else:
             assert(0)
-
-        string += " --> %s" % self.action
+        
+        cfglogger.info("- %s    : %s" % (self.direction, string))
+        string = "%s" % self.action
         if self.IsTCP():
             string += "/%s" % self.state
-        string += '/[IngSpan:'
+
+        if self.IsSnat():
+            string += '/%s/%s/%d' % (self.nat_type, self.nat_sip.get(), self.nat_sport)
+        if self.IsDnat():
+            string += '/%s/%s/%d' % (self.nat_type, self.nat_dip.get(), self.nat_dport)
+        cfglogger.info("  - info   : %s" % string)
+
+        string = ''
         for ssn in self.ing_mirror_sessions:
             string += ssn.GID() + ' '
+        cfglogger.info("  - IngSpan: %s" % string)
 
-        string += ']/[EgrSpan:'
+        string = ''
         for ssn in self.egr_mirror_sessions:
             string += ssn.GID() + ' '
-        string += ']'
+        cfglogger.info("  - EgrSpan: %s" % string)
         return string
+
+        return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.flow_handle
         if resp_spec.flow_coll: self.label = FLOW_COLLISION_LABEL
-        cfglogger.info("  - %s %s = (HDL = %x), Label = %s" %\
+        cfglogger.info("- %s %s = (HDL = %x), Label = %s" %\
                        (self.direction, self.GID(),
                         self.hal_handle, self.label))
         return
@@ -323,5 +363,5 @@ class FlowObject(base.ConfigObjectBase):
         logger.info("- Src IF: %s" % obj.src.endpoint.intf.GID())
         logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
         logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
-        logger.info("- Flow  : %s" % obj.flow)
+        logger.info("- Flow  : %s" % obj.flow.GID())
 

@@ -33,8 +33,8 @@ IpSubnetAllocator               = objects.TemplateFieldObject("ipstep/64.0.0.0/0
 Ipv6SubnetAllocator             = objects.TemplateFieldObject("ipv6step/2000::0:0/0::1:0:0")
 TepIpSubnetAllocator            = objects.TemplateFieldObject("ipstep/10.0.0.0/0.1.0.0")
 TepIpv6SubnetAllocator          = objects.TemplateFieldObject("ipv6step/1000::0:0/0::1:0:0")
-L4LbServiceIpAllocator          = objects.TemplateFieldObject("ipstep/200.0.0.0/0.0.0.1")
-L4LbServiceIpv6Allocator        = objects.TemplateFieldObject("ipv6step/3333::0:0/0::1")
+L4LbServiceIpAllocator          = objects.TemplateFieldObject("ipstep/200.0.0.1/0.0.0.1")
+L4LbServiceIpv6Allocator        = objects.TemplateFieldObject("ipv6step/3333::0:1/0::1")
 L4LbBackendIpSubnetAllocator    = objects.TemplateFieldObject("ipstep/172.16.0.0/0.1.0.0")
 L4LbBackendIpv6SubnetAllocator  = objects.TemplateFieldObject("ipv6step/4444::0/0::1:0:0")
 

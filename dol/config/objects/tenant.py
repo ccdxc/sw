@@ -79,9 +79,18 @@ class TenantObject(base.ConfigObjectBase):
         return self.overlay == 'VXLAN'
     def IsOverlayVlan(self):
         return self.overlay == 'VLAN'
+
+    def IsL4LbEnabled(self):
+        return self.l4lb_enable == True
+    def AllocL4LbBackend(self):
+        return self.obj_helper_segment.AllocL4LbBackend()
    
     def __create_l4lb_services(self):
-        if 'l4lb' not in self.spec.__dict__: return
+        if 'l4lb' not in self.spec.__dict__:
+            self.l4lb_enable = False
+            return
+
+        self.l4lb_enable = True
         spec = self.spec.l4lb.Get(Store)
         self.obj_helper_l4lb.Generate(self, spec)
         return

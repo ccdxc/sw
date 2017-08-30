@@ -20,6 +20,9 @@ class EndpointObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('ENDPOINT'))
         self.id = resmgr.EpIdAllocator.get()
         self.GID("EP%04d" % self.id)
+        self.ipaddrs = []
+        self.ipv6addrs = []
+        self.security_groups = []
         return
 
     def Init(self, segment, backend):
@@ -28,7 +31,10 @@ class EndpointObject(base.ConfigObjectBase):
         self.tenant     = segment.tenant
         self.segment    = segment
         self.remote     = False
-        self.backend = backend
+
+        self.is_l4lb_backend = backend
+        self.is_l4lb_service = False
+        self.l4lb_backend = None
 
         num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
         num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
@@ -36,31 +42,48 @@ class EndpointObject(base.ConfigObjectBase):
             num_ip_addrs = 1
             num_ipv6_addrs = 1
 
-        self.ipaddrs = []
         for ipidx in range(num_ip_addrs):
-            ipaddr = segment.AllocIpv4Address(self.backend)
-            self.ipaddrs.append(ipaddr)
+            ipaddr = segment.AllocIpv4Address(self.IsL4LbBackend())
+            self.SetIpAddress(ipaddr)
 
-        self.ipv6addrs = []
         for ipidx in range(num_ipv6_addrs):
-            ipv6addr = segment.AllocIpv6Address(self.backend)
-            self.ipv6addrs.append(ipv6addr)
-
-        self.security_groups = []
+            ipv6addr = segment.AllocIpv6Address(self.IsL4LbBackend())
+            self.SetIpv6Address(ipv6addr)
 
         self.useg_vlan_id = 0
         return
 
     def IsL4LbBackend(self):
-        return self.backend
+        return self.is_l4lb_backend
+
+    def IsL4LbService(self):
+        return self.is_l4lb_service
+
+    def SetL4LbService(self):
+        self.is_l4lb_service = True
+        return
+
+    def AttachL4LbBackend(self, backend):
+        self.l4lb_backend = backend
+        return
 
     def SetRemote(self):
         self.remote = True
         return
-    
+
+    def SetMacAddress(self, mac):
+        self.macaddr = mac
+        return
+
+    def SetIpAddress(self, ip):
+        self.ipaddrs.append(ip)
+        return
     def GetIpAddress(self, idx = 0):
         return self.ipaddrs[idx]
     
+    def SetIpv6Address(self, ip6):
+        self.ipv6addrs.append(ip6)
+        return
     def GetIpv6Address(self, idx = 0):
         return self.ipv6addrs[idx]
     
@@ -70,12 +93,12 @@ class EndpointObject(base.ConfigObjectBase):
     def AttachInterface(self, intf):
         self.intf       = intf
         if self.remote:
-            self.macaddr    = resmgr.RemoteEpMacAllocator.get()
+            self.SetMacAddress(resmgr.RemoteEpMacAllocator.get())
         else:
-            self.macaddr    = intf.macaddr
+            self.SetMacAddress(intf.macaddr)
 
         cfglogger.info("- Endpoint = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - Backend   = %s" % self.backend)
+        cfglogger.info("  - IsBackend = %s" % self.IsL4LbBackend())
         cfglogger.info("  - Tenant    = %s" % self.tenant)
         cfglogger.info("  - Macaddr   = %s" % self.macaddr.get())
         cfglogger.info("  - Interface = %s" % self.intf.GID())
@@ -169,13 +192,15 @@ class EndpointObjectHelper:
             elif segment.tenant.IsOverlayVxlan():
                 remote_intfs = Store.GetTunnelsVxlan()
             self.remote = self.__create(segment, remote_intfs, 
-                                        spec.remote, remote = True,
+                                        spec.remote, 
+                                        remote = True,
                                         backend = False)
             if segment.l4lb:
                 cfglogger.info("Creating %d REMOTE L4LB Backend EPs in Segment = %s" %\
                                (spec.remote, segment.GID()))
                 self.backend_remote = self.__create(segment, remote_intfs, 
-                                                    spec.remote, remote = True,
+                                                    spec.remote, 
+                                                    remote = True,
                                                     backend = True)
         return
 
@@ -192,7 +217,8 @@ class EndpointObjectHelper:
                                (spec.direct, segment.GID()))
                 direct_enics = segment.GetDirectEnics(backend = True)
                 self.backend_direct = self.__create(segment, direct_enics,
-                                                    spec.direct, backend = True)
+                                                    spec.direct, 
+                                                    backend = True)
                 self.backend_local += self.backend_direct
 
         if spec.pvlan:
@@ -207,7 +233,8 @@ class EndpointObjectHelper:
                                (spec.pvlan, segment.GID()))
                 pvlan_enics = segment.GetPvlanEnics(backend = True)
                 self.backend_pvlan = self.__create(segment, pvlan_enics,
-                                                   spec.pvlan, backend = True)
+                                                   spec.pvlan, 
+                                                   backend = True)
                 self.backend_local += self.backend_pvlan
 
         if spec.useg:
@@ -222,7 +249,8 @@ class EndpointObjectHelper:
                                (spec.useg, segment.GID()))
                 useg_enics = segment.GetUsegEnics(backend = True)
                 self.backend_useg = self.__create(segment, useg_enics,
-                                                  spec.useg, backend = True)
+                                                  spec.useg, 
+                                                  backend = True)
                 self.backend_local += self.backend_useg
         return
          

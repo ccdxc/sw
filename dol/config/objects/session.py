@@ -13,6 +13,7 @@ import config.objects.flow          as flow
 import config.objects.flow_endpoint as flowep
 import config.objects.endpoint      as endpoint
 import config.objects.tenant        as tenant
+import config.objects.l4lb          as l4lb
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
@@ -30,10 +31,18 @@ class SessionObject(base.ConfigObjectBase):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
         self.spec = spec
+
         self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
-        self.responder = flowep.FlowEndpointObject(srcobj = responder)
         self.initiator.SetInfo(spec.initiator)
+        status = self.initiator.SelectL4LbBackend()
+        if status != defs.status.SUCCESS: return status
+        
+        self.responder = flowep.FlowEndpointObject(srcobj = responder)
         self.responder.SetInfo(spec.responder)
+        status = self.responder.SelectL4LbBackend()
+        if status != defs.status.SUCCESS: return status
+
+        
         self.label = self.spec.label.upper()
         
         assert(initiator.proto == responder.proto)
@@ -47,15 +56,19 @@ class SessionObject(base.ConfigObjectBase):
                                      self.spec.responder.span)
 
         cfglogger.info("Created Session with GID:%s" % self.GID())
-        cfglogger.info("  - Label           : %s" % self.spec.label)
+        cfglogger.info("- Label    : %s" % self.label)
+        string = None
         if self.IsTCP():
-            cfglogger.info("  - Tracking        : %s" % self.spec.tracking)
-            cfglogger.info("  - Timestamp       : %s" % self.spec.timestamp)
-        cfglogger.info("  - Initiator       : %s" % self.initiator)
-        cfglogger.info("  - Responder       : %s" % self.responder)
-        cfglogger.info("  - Initiator Flow  : %s" % self.iflow)
-        cfglogger.info("  - Responder Flow  : %s" % self.rflow)
-        return
+            if self.spec.tracking: string = 'Tracking'
+            if self.spec.timestamp: string += '/Timestamp'
+        
+        if string:
+           cfglogger.info("- Info     : %s" % string)
+        self.initiator.Show('Initiator')
+        self.responder.Show('Responder')
+        self.iflow.Show()
+        self.rflow.Show()
+        return defs.status.SUCCESS
 
     def IsTCP(self):
         return self.initiator.IsTCP()
@@ -73,10 +86,8 @@ class SessionObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("Configuring Session with GID:%s" % self.GID())
-        cfglogger.info("  - Initiator       : %s" % self.initiator)
         self.iflow.ProcessHALResponse(req_spec.initiator_flow,
                                       resp_spec.status.iflow_status)
-        cfglogger.info("  - Responder       : %s" % self.responder)
         self.rflow.ProcessHALResponse(req_spec.responder_flow,
                                       resp_spec.status.rflow_status)
 
@@ -151,45 +162,45 @@ class SessionObjectHelper:
     def __process_session_specs(self, flowep1, flowep2, refs):
         for ref in refs:
             spec = ref.Get(Store)
-            assert(spec)
-            if spec.proto:
-                proto = spec.proto.upper()
-                flowep1.proto = proto
-                flowep2.proto = proto
-            else:
-                flowep1.proto = None
-                flowep2.proto = None
+            
+            proto = spec.proto.upper() if spec.proto else None
+
+            if flowep1.IsProtoMatch(proto) == False: return
+            if flowep2.IsProtoMatch(proto) == False: return
+            
+            flowep1.proto = proto
+            flowep2.proto = proto
 
             for t in spec.entries:
                 self.__pre_process_spec_entry(t.entry)
                 session = SessionObject()
-                session.Init(flowep1, flowep2, t.entry)
-                self.objlist.append(session)
+                status = session.Init(flowep1, flowep2, t.entry)
+                if status == defs.status.SUCCESS:
+                    self.objlist.append(session)
         return
             
     def __process_ipv6(self, flowep1, flowep2, entries):
         flowep1.type = 'IPV6'
         flowep2.type = 'IPV6'
 
-        flowep1.dom = flowep1.ep.tenant.id
-        flowep2.dom = flowep2.ep.tenant.id
-        for addr1 in flowep1.ep.ipv6addrs:
-            for addr2 in flowep2.ep.ipv6addrs:
+        flowep1.dom = flowep1.GetTenantId()
+        flowep2.dom = flowep2.GetTenantId()
+        for addr1 in flowep1.GetIpv6Addrs():
+            for addr2 in flowep2.GetIpv6Addrs():
                 flowep1.addr = addr1
                 flowep2.addr = addr2
                 self.__process_session_specs(flowep1, flowep2, entries)
         return
 
-
     def __process_ipv4(self, flowep1, flowep2, entries):
         flowep1.type = 'IPV4'
         flowep2.type = 'IPV4'
 
-        flowep1.dom = flowep1.ep.tenant.id
-        flowep2.dom = flowep2.ep.tenant.id
+        flowep1.dom = flowep1.GetTenantId()
+        flowep2.dom = flowep2.GetTenantId()
 
-        for addr1 in flowep1.ep.ipaddrs:
-            for addr2 in flowep2.ep.ipaddrs:
+        for addr1 in flowep1.GetIpAddrs():
+            for addr2 in flowep2.GetIpAddrs():
                 flowep1.addr = addr1
                 flowep2.addr = addr2
                 self.__process_session_specs(flowep1, flowep2, entries)
@@ -227,20 +238,21 @@ class SessionObjectHelper:
             return
 
         if tenant.spec.sessions.unidest.ipv4:
-            entries = tenant.spec.sessions.unidest.ipv4
-            self.__process_ipv4(flowep1, flowep2, entries)
+            self.__process_ipv4(flowep1, flowep2,
+                                tenant.spec.sessions.unidest.ipv4)
 
         if tenant.spec.sessions.unidest.ipv6:
-            entries = tenant.spec.sessions.unidest.ipv6
-            self.__process_ipv6(flowep1, flowep2, entries)
+            self.__process_ipv6(flowep1, flowep2,
+                                tenant.spec.sessions.unidest.ipv6)
 
         if tenant.spec.sessions.unidest.mac:
-            entries = tenant.spec.sessions.unidest.mac
-            self.__process_mac(flowep1, flowep2, entries)
+            self.__process_mac(flowep1, flowep2,
+                               tenant.spec.sessions.unidest.mac)
         return
 
 
     def __process_ep_pair(self, ep1, ep2):
+        if ep1.IsL4LbBackend() or ep2.IsL4LbBackend(): return
         self.__process_unidest(ep1, ep2)
         self.__process_multidest(ep2, ep2)
         return
@@ -252,11 +264,41 @@ class SessionObjectHelper:
             eps += t.GetEps()
         return eps
 
+    def __process_l4lb_service(self, ep, svc):
+        tenant = ep.tenant
+        if tenant.IsL4LbEnabled() == False:
+            return
+        
+        # Twice NAT disabled for now.
+        if svc.IsTwiceNAT():
+            return
+
+        flowep1 = flowep.FlowEndpointObject(ep = ep)
+        flowep2 = flowep.FlowEndpointObject(l4lbsvc = svc)
+        if tenant.spec.sessions.l4lb.ipv4:
+            self.__process_ipv4(flowep1, flowep2,
+                                tenant.spec.sessions.l4lb.ipv4)
+        if tenant.spec.sessions.l4lb.ipv6:
+            self.__process_ipv6(flowep1, flowep2,
+                                tenant.spec.sessions.l4lb.ipv6)
+        return
+
+    def __process_l4lb(self, ep_list):
+        svcs = Store.objects.GetAllByClass(l4lb.L4LbServiceObject)
+        for ep in ep_list:
+            for svc in svcs:
+                if ep.tenant != svc.tenant: continue
+                self.__process_l4lb_service(ep, svc)
+        return
+
     def Generate(self):
-        ep1_list = self.__get_eps()
-        ep2_list = ep1_list
-        for ep1 in ep1_list:
-            for ep2 in ep2_list:
+        ep_list = self.__get_eps()
+        
+        # Generate L4LbService Flows for each EP.
+        self.__process_l4lb(ep_list)
+
+        for ep1 in ep_list:
+            for ep2 in ep_list:
                 if ep1 == ep2: continue
                 if ep1.tenant != ep2.tenant: continue
                 self.__process_ep_pair(ep1, ep2)
