@@ -100,12 +100,14 @@ header_type tls_stage_bld_barco_req_d_t {
         command_mode                    : 4;
         command_op                      : 4;
         command_param                   : 20;
-        // TBD: Total used   : 96 bits, pending: 416
-        pad                             : 416;
+        idesc                           : ADDRESS_WIDTH;
+        odesc                           : ADDRESS_WIDTH;
+        // TBD: Total used   : 224 bits, pending: 288
+        pad                             : 288;
     }
 }
 #define STG_BLD_BARCO_REQ_ACTION_PARAMS                                                                 \
-key_addr, iv_addr, command_core, command_mode, command_op, command_param
+key_addr, iv_addr, command_core, command_mode, command_op, command_param,idesc, odesc
 #
 
 #define GENERATE_STG_BLD_BARCO_REQ_D                                                                    \
@@ -114,7 +116,9 @@ key_addr, iv_addr, command_core, command_mode, command_op, command_param
     modify_field(tls_bld_barco_req_d.command_core, command_core);                                       \
     modify_field(tls_bld_barco_req_d.command_mode, command_mode);                                       \
     modify_field(tls_bld_barco_req_d.command_op, command_op);                                           \
-    modify_field(tls_bld_barco_req_d.command_param, command_param);
+    modify_field(tls_bld_barco_req_d.command_param, command_param);                                     \
+    modify_field(tls_bld_barco_req_d.idesc, idesc);                                                     \
+    modify_field(tls_bld_barco_req_d.odesc, odesc);
 
 header_type tls_stage_queue_brq_d_t {
     fields {
@@ -243,8 +247,8 @@ header_type to_stage_3_phv_t {
 
 header_type to_stage_4_phv_t {
     fields {
-        idesc                           : HBM_ADDRESS_WIDTH;
-        odesc                           : HBM_ADDRESS_WIDTH;
+        idesc                           : ADDRESS_WIDTH;
+        odesc                           : ADDRESS_WIDTH;
     }
 }
 

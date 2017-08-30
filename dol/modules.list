@@ -206,6 +206,16 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PKT_TO_BRQ
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : pkt_to_brq
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : PKT_TO_BSQ
         enable  : False
         package : test.tcp-tls-proxy

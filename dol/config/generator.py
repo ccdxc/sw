@@ -43,6 +43,7 @@ def process(topospec):
     # Global descriptors and page rings
     SwDscrRingHelper.main("NMDR")
     SwDscrRingHelper.main("NMPR")
+    SwDscrRingHelper.main("BRQ")
 
     TcpCbHelper.main()    
     #TcpCbHelper.Configure(TcpCbHelper.objlist)
