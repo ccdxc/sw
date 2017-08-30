@@ -103,7 +103,7 @@ class capri_p4pd:
     def cfield_get_p4name_width_mask(self, cf, ctype):
         hname = cf.get_p4_hdr().name
         p4fldname = hname + '_' + cf.p4_fld.name
-        p4fldwidth = cf.p4_fld.width
+        p4fldwidth = cf.width
         if ctype == p4.p4_match_type.P4_MATCH_EXACT:
             mask = (1 << p4fldwidth) - 1
         elif ctype == p4.p4_match_type.P4_MATCH_VALID:
@@ -122,7 +122,7 @@ class capri_p4pd:
         if cf.get_p4_hdr():
             hname = cf.get_p4_hdr().name
             p4fldname = hname + '_' + cf.p4_fld.name
-            p4fldwidth = cf.p4_fld.width
+            p4fldwidth = cf.width
         else:
             p4fldname = cf.hfname
             p4fldwidth = cf.width
