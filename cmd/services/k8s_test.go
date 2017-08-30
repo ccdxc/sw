@@ -8,6 +8,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/globals"
+	"github.com/pensando/sw/utils/runtime"
 )
 
 func checkForServices(t *testing.T, client *k8sclient.Clientset, stopCh, doneCh chan struct{}) {
@@ -66,7 +68,7 @@ func TestK8sService(t *testing.T) {
 	client := k8sclient.NewSimpleClientset()
 
 	// Aggressive for testing
-	interval = time.Second
+	interval = time.Millisecond * 100
 
 	po := &podObserver{}
 	k8sSvc := NewK8sService(client)
@@ -91,12 +93,13 @@ func TestK8sService(t *testing.T) {
 	// Create a dummy DaemonSet.
 	createDaemonSet(client, &types.Module{
 		TypeMeta: api.TypeMeta{
-			Kind: daemonSet,
+			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
 		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Image: "pen-apigw",
@@ -110,6 +113,38 @@ func TestK8sService(t *testing.T) {
 	})
 
 	verifyK8sServices(t, client)
+
+	// Create a dummy Deployment.
+	createDeployment(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: deployment,
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_Deployment,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-npm",
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: "pen-npm",
+							Port: runtime.MustUint32(globals.NpmRPCPort),
+						},
+					},
+					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
+
+	verifyK8sServices(t, client)
+
 	k8sSvc.UnRegister(po)
 	k8sSvc.Stop()
 }

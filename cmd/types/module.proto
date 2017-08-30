@@ -27,15 +27,15 @@ message ModuleSpec {
         // DaemonSet module type runs on all controller nodes.
         DaemonSet = 1;
 
-        // ReplicaSet module type runs NumCopies number of instances.
-        ReplicaSet = 2;
+        // Deployment module type runs NumCopies number of instances.
+        Deployment = 2;
     }
 
     // Type contains the type of the module.
     ModuleType Type = 1;
 
     // NumCopies identifies the number of instances to run, for example with
-    // ReplicaSet.
+    // Deployment.
     uint32 NumCopies = 2;
 
     // Submodule contains the information about a single process in a module.
@@ -60,6 +60,12 @@ message ModuleSpec {
 
         // Privileged specifies whether this is a privileged submodule.
         bool Privileged = 4;
+
+        // Args specify the arguments for the submodule.
+        repeated string Args = 5;
+
+        // EnvVars specify the environment variables for this submodule.
+        map<string, string> EnvVars = 6;
     }
 
     // Submodules contains the list of submodules for this module.

@@ -27,6 +27,7 @@ const (
 	maxModules = 32
 	waitTime   = time.Second
 	daemonSet  = "DaemonSet"
+	deployment = "Deployment"
 	defaultNS  = "default"
 )
 
@@ -68,12 +69,13 @@ var filebeatConfigVolume = types.ModuleSpec_Volume{
 var k8sModules = map[string]types.Module{
 	"pen-apigw": {
 		TypeMeta: api.TypeMeta{
-			Kind: daemonSet,
+			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "pen-apigw",
 		},
 		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:  "pen-apigw",
@@ -94,12 +96,13 @@ var k8sModules = map[string]types.Module{
 	},
 	"pen-filebeat": {
 		TypeMeta: api.TypeMeta{
-			Kind: daemonSet,
+			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "pen-filebeat",
 		},
 		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:  "pen-filebeat",
@@ -114,12 +117,13 @@ var k8sModules = map[string]types.Module{
 	},
 	"pen-ntp": {
 		TypeMeta: api.TypeMeta{
-			Kind: daemonSet,
+			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "pen-ntp",
 		},
 		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:       "pen-ntp",
@@ -251,14 +255,31 @@ func (k *k8sService) runUntilCancel() {
 // getModules gets deployed modules.
 func getModules(client k8sclient.Interface) (map[string]types.Module, error) {
 	foundModules := make(map[string]types.Module)
-	dList, err := client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{})
+	dsList, err := client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for ii := range dsList.Items {
+		foundModules[dsList.Items[ii].Name] = types.Module{
+			TypeMeta: api.TypeMeta{
+				Kind: "Module",
+			},
+			Spec: &types.ModuleSpec{
+				Type: types.ModuleSpec_DaemonSet,
+			},
+		}
+	}
+	dList, err := client.Extensions().Deployments(defaultNS).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	for ii := range dList.Items {
 		foundModules[dList.Items[ii].Name] = types.Module{
 			TypeMeta: api.TypeMeta{
-				Kind: daemonSet,
+				Kind: "Module",
+			},
+			Spec: &types.ModuleSpec{
+				Type: types.ModuleSpec_Deployment,
 			},
 		}
 	}
@@ -267,9 +288,11 @@ func getModules(client k8sclient.Interface) (map[string]types.Module, error) {
 
 // deployModule deploys the provided module using k8s.
 func (k *k8sService) deployModule(module *types.Module) {
-	switch module.Kind {
-	case daemonSet:
+	switch module.Spec.Type {
+	case types.ModuleSpec_DaemonSet:
 		createDaemonSet(k.client, module)
+	case types.ModuleSpec_Deployment:
+		createDeployment(k.client, module)
 	}
 }
 
@@ -280,8 +303,7 @@ func (k *k8sService) deployModules(modules map[string]types.Module) {
 	}
 }
 
-// createDaemonSet creates a DaemonSet object.
-func createDaemonSet(client k8sclient.Interface, module *types.Module) {
+func makeVolumes(module *types.Module) ([]v1.Volume, []v1.VolumeMount) {
 	volumes := make([]v1.Volume, 0)
 	volumeMounts := make([]v1.VolumeMount, 0)
 	for _, vol := range module.Spec.Volumes {
@@ -298,7 +320,10 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) {
 			MountPath: vol.MountPath,
 		})
 	}
+	return volumes, volumeMounts
+}
 
+func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Container {
 	containers := make([]v1.Container, 0)
 	for _, sm := range module.Spec.Submodules {
 		ports := make([]v1.ContainerPort, 0)
@@ -317,8 +342,16 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) {
 			SecurityContext: &v1.SecurityContext{
 				Privileged: &sm.Privileged,
 			},
+			Args: sm.Args,
 		})
 	}
+	return containers
+}
+
+// createDaemonSet creates a DaemonSet object.
+func createDaemonSet(client k8sclient.Interface, module *types.Module) {
+	volumes, volumeMounts := makeVolumes(module)
+	containers := makeContainers(module, volumeMounts)
 
 	d := &v1beta1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -351,19 +384,57 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) {
 	}
 }
 
+// createDeployment creates a Deployment object.
+func createDeployment(client k8sclient.Interface, module *types.Module) {
+	volumes, volumeMounts := makeVolumes(module)
+	containers := makeContainers(module, volumeMounts)
+
+	d := &v1beta1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: module.Name,
+		},
+		Spec: v1beta1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"name": module.Name,
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers:  containers,
+					Volumes:     volumes,
+					HostNetwork: true,
+				},
+			},
+		},
+	}
+	d, err := client.Extensions().Deployments(defaultNS).Create(d)
+	if err == nil {
+		log.Infof("Created Deployment %+v", d)
+		return
+	} else if errors.IsAlreadyExists(err) {
+		log.Infof("Deployment %+v already exists", d)
+		return
+	} else {
+		log.Errorf("Failed to create Deployment %+v with error: %v", d, err)
+	}
+}
+
 // deleteModules deletes modules using k8s.
 func (k *k8sService) deleteModules(modules map[string]types.Module) {
 	for name, module := range modules {
-		switch module.Kind {
-		case daemonSet:
+		switch module.Spec.Type {
+		case types.ModuleSpec_DaemonSet:
 			k.deleteDaemonSet(name)
+		case types.ModuleSpec_Deployment:
+			k.deleteDeployment(name)
 		}
 	}
 }
 
 // deleteDaemonSet deletes a DaemonSet object.
 func (k *k8sService) deleteDaemonSet(name string) {
-	err := k.client.Extensions().DaemonSets("default").Delete(name, nil)
+	err := k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted DaemonSet %v", name)
 		return
@@ -372,6 +443,20 @@ func (k *k8sService) deleteDaemonSet(name string) {
 		return
 	} else {
 		log.Errorf("Failed to delete DaemonSet %v with error: %v", name, err)
+	}
+}
+
+// deleteDeployment deletes a Deployment object.
+func (k *k8sService) deleteDeployment(name string) {
+	err := k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
+	if err == nil {
+		log.Infof("Deleted Deployment %v", name)
+		return
+	} else if errors.IsNotFound(err) {
+		log.Infof("Deployment %v not found", name)
+		return
+	} else {
+		log.Errorf("Failed to delete Deployment %v with error: %v", name, err)
 	}
 }
 
