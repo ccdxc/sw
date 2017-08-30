@@ -11,10 +11,10 @@ def IsRarpResponse(val):
 
 def GetArpOpcode(testcase, packet):
     val = testcase.module.iterator.Get()
-    if IsRarpRequest(val): return 0x3
-    elif IsRarpResponse(val): return 0x4
-    elif IsArpRequest(val): return 0x1
-    elif IsArpResponse(val): return 0x2
+    if IsRarpRequest(val.type): return 0x3
+    elif IsRarpResponse(val.type): return 0x4
+    elif IsArpRequest(val.type): return 0x1
+    elif IsArpResponse(val.type): return 0x2
     assert(0)
     return 0x0
 def GetArpSourceMAC(testcase, packet):

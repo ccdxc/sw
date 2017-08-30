@@ -1,139 +1,45 @@
 # This file contains the list of DOL test modules.
 modules:
     - module:
-        name    : L2UC_QTAG_IPV4_UDP
+        name    : L2UC
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        args    :
-            flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
-            segment : filter://native=False
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
 
     - module:
-        name    : L2UC_UNTAG_IPV4_UDP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
-            segment : filter://native=True
-
-    - module:
-        name    : L2UC_QTAG_IPV4_TCP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        args    :
-            flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
-            segment : filter://native=False
-
-    - module:
-        name    : L2UC_UNTAG_IPV4_TCP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
-            segment : filter://native=True
-
-    - module:
-        name    : L2UC_QTAG_IPV4_ICMP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
-            segment : filter://native=False
-
-    - module:
-        name    : L2UC_UNTAG_IPV4_ICMP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
-            segment : filter://native=True
-
-    - module:
-        name    : L2UC_QTAG_IPV6_UDP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        args    :
-            flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
-            segment : filter://native=False
-
-    - module:
-        name    : L2UC_UNTAG_IPV6_UDP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
-            segment : filter://native=True
-
-    - module:
-        name    : L2UC_QTAG_IPV6_TCP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        args    :
-            flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
-            segment : filter://native=False
-
-    - module:
-        name    : L2UC_UNTAG_IPV6_TCP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        ignore  : False
-        args    :
-            flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
-            segment : filter://native=True
-
-    - module:
-        name    : L2UC_QTAG_IPV4_TCP_RECIRC
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc.testspec
-        args    :
-            flow    : filter://type=IPV4,proto=TCP,label=RECIRC
-            segment : filter://native=False
-    - module:
-        name    : L2UC_QTAG_NONIP
+        name    : L2UC_NONIP
         enable  : True
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
         ignore  : False
-        args    :
-            segment: filter://native=False
-
-    - module:
-        name    : L2UC_UNTAG_NONIP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l2uc_nonip.testspec
-        ignore  : False
-        args    :
-            segment: filter://native=True
+        iterate :
+            - segment: filter://native=False
+              flow   : filter://label=NETWORKING
+            - segment: filter://native=True
+              flow   : filter://label=NETWORKING
 
     - module:
         name    : L2UC_QTAG_ARP_RARP
@@ -145,10 +51,10 @@ modules:
         args    :
             segment: filter://native=False
         iterate :
-            - ARP_REQ_UC
-            - ARP_RESP
-            - RARP_REQ_UC
-            - RARP_RESP
+            - type: ARP_REQ_UC
+            - type: ARP_RESP
+            - type: RARP_REQ_UC
+            - type: RARP_RESP
 
     - module:
         name    : L2UC_UNTAG_ARP_RARP
@@ -160,10 +66,10 @@ modules:
         args    :
             segment: filter://native=True
         iterate :
-            - ARP_REQ_UC
-            - ARP_RESP
-            - RARP_REQ_UC
-            - RARP_RESP
+            - type: ARP_REQ_UC
+            - type: ARP_RESP
+            - type: RARP_REQ_UC
+            - type: RARP_RESP
 
     - module:
         name    : L2UC_VXLAN_IPV4_UDP
@@ -172,28 +78,78 @@ modules:
         module  : networking
         spec    : l2uc_vxlan.testspec
         ignore  : True
-        args    :
-            flow    : filter://type=IPV4,proto=UDP
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
 
     - module:
-        name    : L3UC_IPV4_UDP
+        name    : L3UC
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : RECIRC_L2UC
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : False
+        args    :
+            maxflows : 1
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=True
+
+    - module:
+        name    : RECIRC_L2UC_NONIP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : True
+        args    :
+            maxflows : 1
+        iterate:
+            - segment  : filter://native=False
+              flow     : filter://label=FLOW-COLLISION
+            - segment  : filter://native=True
+              flow     : filter://label=FLOW-COLLISION
+
+    - module:
+        name    : RECIRC_L3UC
         enable  : True
         package : test.networking
         module  : networking
         spec    : l3uc.testspec
         ignore  : False
         args    :
-            flow: filter://type=IPV4,proto=UDP
-
-    - module:
-        name    : L3UC_IPV6_UDP
-        enable  : True
-        package : test.networking
-        module  : networking
-        spec    : l3uc.testspec
-        ignore  : False
-        args    :
-            flow: filter://type=IPV6,proto=UDP
+            maxflows : 1
+        iterate:
+            - flow     : filter://fwtype=L3,type=IPV4,proto=UDP,label=FLOW-COLLISION
+            - flow     : filter://fwtype=L3,type=IPV6,proto=UDP,label=FLOW-COLLISION
 
     - module:
         name    : PKT_TO_SERQ

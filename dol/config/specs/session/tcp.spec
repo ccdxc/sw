@@ -6,19 +6,6 @@ proto: tcp
 
 entries:
     - entry:
-        label: networking
-        tracking: False
-        timestamp: False
-        responder: 
-            port : const/42001
-            flow_info:
-                eg_qos:    
-                    cos_rw  : const/1
-                    cos     : const/4
-        initiator: 
-            port : const/42002
-
-    - entry:
         label: firewall
         tracking: True
         timestamp: True
@@ -70,7 +57,7 @@ entries:
             port : const/47273
 
     - entry:
-        label: recirc
+        label: networking
         tracking: False
         timestamp: False
         responder: 
@@ -91,7 +78,7 @@ entries:
                     dscp    : const/2
 
     - entry:
-        label: recirc
+        label: networking
         tracking: False
         timestamp: False
         responder: 

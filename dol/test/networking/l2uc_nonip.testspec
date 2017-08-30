@@ -8,7 +8,7 @@ config_filter:
         tenant  : filter://overlay=VLAN,type=TENANT
         segment : filter://any
         endpoint: filter://remote=True
-    flow        : filter://fwtype=L2,type=MAC,label=NETWORKING
+    flow        : filter://fwtype=L2,type=MAC
     maxflows    : None
 
 packets:

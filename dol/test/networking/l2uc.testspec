@@ -11,7 +11,7 @@ config_filter:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://fwtype=L2
-    maxflows    : None
+    maxflows    : 64
 
 packets:
     - packet:
