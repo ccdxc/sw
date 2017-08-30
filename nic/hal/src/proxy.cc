@@ -146,11 +146,13 @@ proxy_program_lif(proxy_t* proxy)
     intf::LifSpec       lif_spec;
     intf::LifResponse   rsp;
     LIFQStateParams     qstate_params = {0};
+    lif_hal_info_t      lif_hal_info = {0};
     
     // Create LIF 
     lif_spec.mutable_key_or_handle()->set_lif_id(proxy->lif_id); 
     lif_spec.set_admin_status(intf::IF_STATUS_UP);
-    ret = lif_create(lif_spec, &rsp);
+    lif_hal_info.hw_lif_id = proxy->lif_id;
+    ret = lif_create(lif_spec, &rsp, &lif_hal_info);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("lif creation failed for proxy service" );
         return ret;

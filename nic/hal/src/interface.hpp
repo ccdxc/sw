@@ -43,6 +43,11 @@ typedef struct lif_s {
     void                *pd_lif;
 } __PACK__ lif_t;
 
+typedef struct lif_hal_info_s {
+    bool        with_hw_lif_id;
+    uint32_t    hw_lif_id;
+} lif_hal_info_t;
+
 // Interface strucutre
 typedef struct if_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
@@ -329,11 +334,12 @@ if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_hdl);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 
-hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp);
+hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp, 
+                     lif_hal_info_t *lif_hal_info);
 hal_ret_t lif_p4_create(intf::LifSpec& spec, 
                         intf::LifResponse *rsp,
                         lif_t *lif,
-                        uint32_t hw_lif_id);
+                        lif_hal_info_t *lif_hal_info);
 
 
 hal_ret_t interface_create(intf::InterfaceSpec& spec,

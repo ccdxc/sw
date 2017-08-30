@@ -693,14 +693,12 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
 {
     hal_ret_t   ret = HAL_RET_OK;
     flow_t      *flow = NULL, *assoc_flow = NULL;
-    ep_t        *sep = NULL, *dep = NULL;
     l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
-    if_t        *sif = NULL, *dif = NULL;
+    if_t        *dif = NULL;
 
     flow = session->iflow;
     assoc_flow = flow->assoc_flow;
-    sep = flow->sep;
-    dep = flow->dep;
+    dif = flow->dif;
     sl2seg = flow->sl2seg;
     dl2seg = flow->dl2seg;
 
@@ -708,12 +706,6 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
     if (assoc_flow) {
         assoc_flow->pgm_attrs.role = flow->role;
     }
-
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
 
     // check which of iflows will have rewrite info
     if (!flow->assoc_flow) {
@@ -790,14 +782,12 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
 {
     hal_ret_t   ret = HAL_RET_OK;
     flow_t      *flow = NULL, *assoc_flow = NULL;
-    ep_t        *sep = NULL, *dep = NULL;
     l2seg_t     *sl2seg = NULL, *dl2seg = NULL;
-    if_t        *sif = NULL, *dif = NULL;
+    if_t        *dif = NULL;
 
     flow = session->rflow;
     assoc_flow = flow->assoc_flow;
-    sep = flow->sep;
-    dep = flow->dep;
+    dif = flow->dif;
     sl2seg = flow->sl2seg;
     dl2seg = flow->dl2seg;
 
@@ -805,12 +795,6 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
     if (assoc_flow) {
         assoc_flow->pgm_attrs.role = flow->role;
     }
-
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
 
     // check which of iflows will have rewrite info
     if (!flow->assoc_flow) {
@@ -1086,6 +1070,12 @@ process_rflow_for_lb(const session_args_t *args, session_t *session)
     rflow = session->rflow;
     flow_cfg = &rflow->config;
 
+    if (!rflow) {
+        // No rflow, nothing to process
+        return ret;
+    }
+
+
     // No-op if there is no DNAT or Twice NAT
     if (flow_cfg->nat_type != NAT_TYPE_DNAT && 
             flow_cfg->nat_type != NAT_TYPE_TWICE_NAT) {
@@ -1169,19 +1159,19 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     // get the src and dst EPs from the flow key
     if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
                                   args->spec->initiator_flow().flow_key(),
-                              &iflow->sep, &iflow->dep) != HAL_RET_OK) {
-        if (iflow->sep == NULL) {
+                                  &sep, &dep) != HAL_RET_OK) {
+        if (sep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
         }
-        if (iflow->dep == NULL) {
+        if (dep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
         }
         args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    sep = iflow->sep;
-    dep = iflow->dep;
+    iflow->sep = sep;
+    iflow->dep = dep;
 
     iflow->config.key.dir = 
         (sep->ep_flags & EP_FLAGS_LOCAL) ? FLOW_DIR_FROM_ENIC : 
@@ -1208,7 +1198,7 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
 
     HAL_TRACE_DEBUG("PI-Session:{} iflow: sep:{}, dep:{}, sif_id:{}, "
             "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
-            ep_l2_key_to_str(sep), ep_l2_key_to_str(dep),
+            ep_l2_key_to_str(iflow->sep), ep_l2_key_to_str(iflow->dep),
             iflow->sif->if_id, iflow->dif->if_id, 
             iflow->sl2seg->seg_id, iflow->dl2seg->seg_id);
     return ret;
@@ -1225,23 +1215,27 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
     ep_t                    *sep = NULL, *dep = NULL;
 
     rflow = session->rflow;
+    if (!rflow) {
+        // No rflow, nothing to process
+        return ret;
+    }
 
     // get the src and dst EPs from the flow key
     if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
                                   args->spec->responder_flow().flow_key(),
-                              &rflow->sep, &rflow->dep) != HAL_RET_OK) {
-        if (rflow->sep == NULL) {
+                                  &sep, &dep) != HAL_RET_OK) {
+        if (sep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
         }
-        if (rflow->dep == NULL) {
+        if (dep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
         }
         args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    sep = rflow->sep;
-    dep = rflow->dep;
+    rflow->sep = sep;
+    rflow->dep = dep;
 
     rflow->config.key.dir = 
         (sep->ep_flags & EP_FLAGS_LOCAL) ? FLOW_DIR_FROM_ENIC : 
@@ -1268,9 +1262,10 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
 
     HAL_TRACE_DEBUG("PI-Session:{} rflow: sep:{}, dep:{}, sif_id:{}, "
             "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
-            ep_l2_key_to_str(sep), ep_l2_key_to_str(dep),
+            ep_l2_key_to_str(rflow->sep), ep_l2_key_to_str(rflow->dep),
             rflow->sif->if_id, rflow->dif->if_id, 
             rflow->sl2seg->seg_id, rflow->dl2seg->seg_id);
+
     return ret;
 }
 
@@ -1288,7 +1283,6 @@ process_session_base_spec(const session_args_t *args, session_t *session)
                 __FUNCTION__);
         goto end;
     }
-
 
     ret = process_rflow_base_spec(args, session);
     if (ret != HAL_RET_OK) {
@@ -1311,19 +1305,13 @@ pre_process_iflow(const session_args_t *args, session_t *session)
 {
     hal_ret_t               ret = HAL_RET_OK;
     flow_t                  *iflow = NULL, *assoc_flow = NULL;
-    ep_t                    *sep = NULL, *dep = NULL;
     if_t                    *sif = NULL, *dif = NULL;
 
     iflow = session->iflow;
     assoc_flow = iflow->assoc_flow;
 
-    sep = iflow->sep;
-    dep = iflow->dep;
-
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+    sif = iflow->sif;
+    dif = iflow->dif;
 
     // set role
     iflow->role = FLOW_ROLE_INITIATOR;
@@ -1360,12 +1348,12 @@ pre_process_iflow(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, src_type:{}, dst_type:{}",
             __FUNCTION__, iflow->role, iflow->src_type, iflow->dst_type);
     if (assoc_flow) {
-    HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, src_type:{}, "
-            "dst_type:{}",
-            __FUNCTION__, assoc_flow->role, assoc_flow->src_type, 
-            assoc_flow->dst_type);
+        HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, src_type:{}, "
+                "dst_type:{}",
+                __FUNCTION__, assoc_flow->role, assoc_flow->src_type, 
+                assoc_flow->dst_type);
     }
-    
+
     return ret;
 }
 
@@ -1377,32 +1365,18 @@ pre_process_rflow(const session_args_t *args, session_t *session)
 {
     hal_ret_t               ret = HAL_RET_OK;
     flow_t                  *rflow = NULL, *assoc_flow = NULL;
-    ep_t                    *sep = NULL, *dep = NULL;
     if_t                    *sif = NULL, *dif = NULL;
 
     rflow = session->rflow;
     assoc_flow = rflow->assoc_flow;
 
-    // get the src and dst EPs from the flow key
-    if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
-                                  args->spec->responder_flow().flow_key(),
-                                  &rflow->sep, &rflow->dep) != HAL_RET_OK) {
-        if (rflow->sep == NULL) {
-            HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
-        }
-        if (rflow->dep == NULL) {
-            HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
-        }
-        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return HAL_RET_EP_NOT_FOUND;
+    if (!rflow) {
+        // No rflow, nothing to process
+        return ret;
     }
-    sep = rflow->dep;
-    dep = rflow->sep;
 
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+    sif = rflow->sif;
+    dif = rflow->dif;
 
     // set role
     rflow->role = FLOW_ROLE_RESPONDER;
@@ -1454,16 +1428,10 @@ hal_ret_t
 pre_process_session(const session_args_t *args, session_t *session)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    ep_t                    *sep = NULL, *dep = NULL;
     if_t                    *sif = NULL, *dif = NULL;
 
-    sep = session->iflow->sep;
-    dep = session->iflow->dep;
-
-    sif = ep_find_if_by_handle(sep);
-    HAL_ASSERT_RETURN(sif != NULL, HAL_RET_IF_NOT_FOUND);
-    dif = ep_find_if_by_handle(dep);
-    HAL_ASSERT_RETURN(dif != NULL, HAL_RET_IF_NOT_FOUND);
+    sif = session->iflow->sif;
+    dif = session->iflow->dif;
 
     if (sif->if_type == intf::IF_TYPE_ENIC) {
         session->src_dir = SESSION_DIR_H;
@@ -1497,7 +1465,6 @@ pre_process_flows(const session_args_t *args, session_t *session)
                 __FUNCTION__);
         goto end;
     }
-
 
     ret = pre_process_rflow(args, session);
     if (ret != HAL_RET_OK) {
@@ -1582,12 +1549,6 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
     nwsec_profile_t         *nwsec_prof;
     pd::pd_session_args_t    pd_session_args;
     session_t               *session;
-
-#if 0
-    // TODO: This can be removed if session args doesnt have ifs, l2segs, eps
-    HAL_ASSERT(args->tenant && args->iflow && args->sep && args->dep &&
-               args->sif && args->dif && args->sl2seg && args->dl2seg);
-#endif
 
     // allocate a session
     session = (session_t *)g_hal_state->session_slab()->alloc();
@@ -1743,21 +1704,6 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         args.rflow = &rflow;
     }
 
-#if 0
-    // get the src and dst EPs from the flow key
-    if (ep_get_from_flow_key_spec(tid, spec.initiator_flow().flow_key(),
-                                  &args.sep, &args.dep) != HAL_RET_OK) {
-        if (args.sep == NULL) {
-            HAL_TRACE_ERR("Source EP not found");
-        }
-        if (args.dep == NULL) {
-            HAL_TRACE_ERR("Destination EP not found");
-        }
-        rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return HAL_RET_EP_NOT_FOUND;
-    }
-#endif
-
     // extract initiator's flow key and data from flow spec
     extract_flow_key_from_spec(tid, &args.iflow->key, spec.initiator_flow());
     ret = extract_flow_info_from_spec(args.iflow, TRUE, spec.initiator_flow());
@@ -1787,45 +1733,6 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
                           spec.responder_flow().flow_data().conn_track_info());
         }
     }
-
-#if 0
-    // lookup ingress & egress interfaces
-    args.sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&args.sep->if_handle);
-    args.dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&args.dep->if_handle);
-    if ((args.sif == NULL) || (args.dif == NULL)) {
-        HAL_TRACE_ERR("Src/Dst interface not found");
-        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
-        return  HAL_RET_IF_NOT_FOUND;
-    }
-
-    // lookup ingress & egress L2 segments
-    args.sl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&args.sep->l2seg_handle);
-    args.dl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&args.dep->l2seg_handle);
-    if ((args.sl2seg == NULL) || (args.dl2seg == NULL)) {
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
-    }
-
-
-    // update flows for dnat
-    ret = update_flow_for_dest_nat(args.tenant, args.iflow, &args.dl2seg, &args.dif, &args.dep);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return ret;
-    }
-    ret = update_flow_for_dest_nat(args.tenant, args.rflow, &args.sl2seg, &args.sif, &args.sep);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return ret;
-    }
-
-    ret = update_session_forwarding_info(&args, rsp);
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-#endif 
 
     ret = extract_mirror_sessions(spec.initiator_flow(), &ingress, &egress);
     if (ret != HAL_RET_OK) {

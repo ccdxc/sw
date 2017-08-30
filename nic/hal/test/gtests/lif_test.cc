@@ -8,6 +8,7 @@
 using intf::LifSpec;
 using intf::LifResponse;
 using intf::LifKeyHandle;
+using hal::lif_hal_info_t;
 
 void
 hal_initialize()
@@ -89,15 +90,41 @@ TEST_F(lif_test, test1)
     spec.set_enable_rdma(1);
     spec.mutable_key_or_handle()->set_lif_id(1);
 
-    ret = hal::lif_create(spec, &rsp);
+    ret = hal::lif_create(spec, &rsp, NULL);
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // ----------------------------------------------------------------------------
-// Creating muliple lifs
+// Creating muliple lifs with hwlifid
 // ----------------------------------------------------------------------------
 TEST_F(lif_test, test2) 
+{
+    hal_ret_t            ret;
+    LifSpec             spec;
+    LifResponse         rsp;
+    lif_hal_info_t      lif_info = {0};
+
+    uint32_t            hw_lif_id = 100;
+    for (int i = 0; i < 10; i++) {
+        spec.set_port_num(i);
+        spec.set_vlan_strip_en(i & 1);
+        spec.set_allmulti(i & 1);
+        spec.set_enable_rdma(i & 1);
+        spec.mutable_key_or_handle()->set_lif_id(i);
+
+        lif_info.with_hw_lif_id = true;
+        lif_info.hw_lif_id = hw_lif_id;
+        ret = hal::lif_create(spec, &rsp, &lif_info);
+        ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+        hw_lif_id++;
+    }
+
+}
+// ----------------------------------------------------------------------------
+// Creating muliple lifs
+// ----------------------------------------------------------------------------
+TEST_F(lif_test, test3) 
 {
     hal_ret_t            ret;
     LifSpec spec;
@@ -110,7 +137,7 @@ TEST_F(lif_test, test2)
         spec.set_enable_rdma(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(i);
 
-        ret = hal::lif_create(spec, &rsp);
+        ret = hal::lif_create(spec, &rsp, NULL);
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 

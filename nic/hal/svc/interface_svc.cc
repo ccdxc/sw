@@ -23,7 +23,7 @@ InterfaceServiceImpl::LifCreate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::lif_create(spec, response);
+        hal::lif_create(spec, response, NULL);
     }
     return Status::OK;
 }

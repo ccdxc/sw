@@ -145,11 +145,12 @@ add_lif_to_db (lif_t *lif)
 // process lif create
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_create (LifSpec& spec, LifResponse *rsp)
+lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 {
     hal_ret_t            ret = HAL_RET_OK;
     lif_t                *lif = NULL;
     uint32_t             hw_lif_id = 0;
+    int32_t              ec = 0;
     
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: Lif Create for id {}", __FUNCTION__, 
@@ -195,10 +196,15 @@ lif_create (LifSpec& spec, LifResponse *rsp)
     lif->enable_rdma = spec.enable_rdma();
 
     // Allocate a hw lif id
-    hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
-    if (((int32_t)hw_lif_id) < 0) {
-      HAL_TRACE_ERR("Failed to allocate lif, ret : {}", hw_lif_id);
-      goto end;
+    if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
+        hw_lif_id = lif_hal_info->hw_lif_id;
+    } else {
+        hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+        if (((int32_t)hw_lif_id) < 0) {
+            HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
+            ret = HAL_RET_NO_RESOURCE;
+            goto end;
+        }
     }
 
     // Init queues
@@ -218,14 +224,16 @@ lif_create (LifSpec& spec, LifResponse *rsp)
         qs_params.type[ent.type_num()].size = ent.size();
         qs_params.type[ent.type_num()].entries = ent.entries();
     }
-    if (g_lif_manager->InitLIFQState(hw_lif_id, &qs_params) < 0) {
-        HAL_TRACE_ERR("Failed to initialize LIFQState");
+    // Please make sure that when you are creating with hw_lif_id the lif 
+    // is alloced already. Otherwise this call may return an error.
+    if ((ec = g_lif_manager->InitLIFQState(hw_lif_id, &qs_params)) < 0) {
+        HAL_TRACE_ERR("Failed to initialize LIFQState: err_code:{}", ec);
+        ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    ret = HAL_RET_OK;
 
     // Make P4 Call
-    ret = lif_p4_create(spec, rsp, lif, hw_lif_id);
+    ret = lif_p4_create(spec, rsp, lif, lif_hal_info);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
         goto end;
@@ -304,7 +312,8 @@ LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp)
 
 
 hal_ret_t
-lif_p4_create (LifSpec& spec, LifResponse *rsp, lif_t *lif, uint32_t hw_lif_id)
+lif_p4_create (LifSpec& spec, LifResponse *rsp, lif_t *lif, 
+               lif_hal_info_t *lif_hal_info)
 {
     hal_ret_t            ret = HAL_RET_OK;
     pd::pd_lif_args_t    pd_lif_args;
@@ -315,7 +324,10 @@ lif_p4_create (LifSpec& spec, LifResponse *rsp, lif_t *lif, uint32_t hw_lif_id)
     // allocate all PD resources and finish programming, if any
     pd::pd_lif_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
-    pd_lif_args.hw_lif_id = hw_lif_id;
+    if (lif_hal_info) {
+        pd_lif_args.with_hw_lif_id = lif_hal_info->with_hw_lif_id;
+        pd_lif_args.hw_lif_id = lif_hal_info->hw_lif_id;
+    }
     ret = pd::pd_lif_create(&pd_lif_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD lif create failure, err : {}", ret);

@@ -32,7 +32,7 @@ pd_lif_create (pd_lif_args_t *args)
     link_pi_pd(pd_lif, args->lif);
 
     // Allocate Resources
-    ret = lif_pd_alloc_res(pd_lif);
+    ret = lif_pd_alloc_res(pd_lif, args);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
         HAL_TRACE_ERR("PD-LIF::{}: lif_id:{} Unable to alloc. resources for Lif",
@@ -95,7 +95,7 @@ lif_pd_init (pd_lif_t *lif)
 // Allocate resources for PD Lif
 // ----------------------------------------------------------------------------
 hal_ret_t 
-lif_pd_alloc_res(pd_lif_t *pd_lif)
+lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
@@ -106,10 +106,14 @@ lif_pd_alloc_res(pd_lif_t *pd_lif)
         return ret;
     }
 
-    // Allocate lif hwid
-    rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_lif->hw_lif_id);
-    if (rs != indexer::SUCCESS) {
-        return HAL_RET_NO_RESOURCE;
+    if (args->with_hw_lif_id) {
+        pd_lif->hw_lif_id = args->hw_lif_id;
+    } else {
+        // Allocate lif hwid
+        rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_lif->hw_lif_id);
+        if (rs != indexer::SUCCESS) {
+            return HAL_RET_NO_RESOURCE;
+        }
     }
     HAL_TRACE_DEBUG("PD-LIF:{}: lif_id:{} Allocated hw_lif_id:{}", 
                     __FUNCTION__, 

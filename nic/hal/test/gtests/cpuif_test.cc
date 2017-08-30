@@ -137,13 +137,13 @@ TEST_F(cpuif_test, test1)
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
-    ret = hal::lif_create(lif_spec, &lif_rsp);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create a lif
     lif_spec.set_port_num(11);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
-    ret = hal::lif_create(lif_spec, &lif_rsp);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create cpuif

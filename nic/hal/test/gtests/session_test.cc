@@ -323,7 +323,7 @@ TEST_F(session_test, test2)
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(3);
-    ret = hal::lif_create(lif_spec, &lif_rsp);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
@@ -528,7 +528,7 @@ TEST_F(session_test, test3)
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
-    ret = hal::lif_create(lif_spec, &lif_rsp);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
