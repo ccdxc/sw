@@ -97,6 +97,23 @@ cleanup:
     return ret;
 }
 
+hal_ret_t
+p4pd_get_tls_tx_stage0_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "tls_tx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret < 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    *offset >>= MPU_PC_ADDR_SHIFT;
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
 p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 {
@@ -108,8 +125,15 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
     
     if(!del) {
-        /* TODO : Need action id from loader api */
-        data.action_id = 0;
+        uint64_t pc_offset;
+        // get pc address
+        if(p4pd_get_tls_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+            ret = HAL_RET_HW_FAIL;
+        }
+        HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received pc address 0x{0:x}", pc_offset);
+
+        data.action_id = pc_offset;
         data.u.read_tls_stg0_d.total = 2;
 
         // Get Serq address

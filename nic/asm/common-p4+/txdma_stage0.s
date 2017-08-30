@@ -17,12 +17,7 @@
 %%
 
     .param      storage_tx_q_state_pop_start
-    .param	tls_stage0
-
-
-tls_tx_stage0:
-    j  tls_stage0
-    nop
+    .param	    tls_stage0
 
 .align
 eth_tx_stage0:
@@ -30,6 +25,18 @@ eth_tx_stage0:
    nop
 
 .align
+tcp_tx_stage0:
+    nop
+    nop
+
+.align
+tls_tx_stage0:
+    j  tls_stage0
+    nop
+
+.align
 storage_tx_stage0:
    j    storage_tx_q_state_pop_start
    nop
+
+

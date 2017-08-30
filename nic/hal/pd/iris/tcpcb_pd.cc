@@ -42,7 +42,7 @@ tcpcb_pd_compare_hw_key_func (void *key1, void *key2)
  * ******************************************/
 
 hal_ret_t
-p4pd_get_stage0_prog_addr(uint64_t* offset)
+p4pd_get_tcp_rx_stage0_prog_addr(uint64_t* offset)
 {
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "tcp_rx_stage0";
@@ -54,6 +54,7 @@ p4pd_get_stage0_prog_addr(uint64_t* offset)
     if(ret < 0) {
         return HAL_RET_HW_FAIL;
     }
+    *offset >>= MPU_PC_ADDR_SHIFT;
     return HAL_RET_OK;
 }
 
@@ -69,18 +70,15 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
 
     if(!del) {
+        uint64_t pc_offset;
         // get pc address
-        //if(p4pd_get_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
-        //    HAL_TRACE_ERR("Failed to get pc address");
-            //ret = HAL_RET_HW_FAIL;
-        //}
-        //HAL_TRACE_DEBUG("Received pc address", pc_offset);
-        data.u.read_tx2rx_d.pc = 0x0;
-#if 1        
+        if(p4pd_get_tcp_rx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+            ret = HAL_RET_HW_FAIL;
+        }
+        HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
+        data.action_id = pc_offset;
         data.u.read_tx2rx_d.snd_nxt = tcpcb_pd->tcpcb->snd_nxt;
-#else
-	data.u.read_tx2rx_d.snd_nxt = 0xEFEFEFEF;
-#endif
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.u.read_tx2rx_d.snd_nxt);
     }
@@ -103,7 +101,6 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_RX);
 
     if(!del) {
-#if 1
         data.u.tcp_rx_d.rcv_nxt = tcpcb_pd->tcpcb->rcv_nxt;
         data.u.tcp_rx_d.snd_una = tcpcb_pd->tcpcb->snd_una;
         data.u.tcp_rx_d.rcv_tsval = tcpcb_pd->tcpcb->rcv_tsval;
@@ -111,13 +108,6 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         if (tcpcb_pd->tcpcb->debug_dol) {
             data.u.tcp_rx_d.debug_dol = 0x1;
         }
-#else
-        // HACK - delete
-        data.u.tcp_rx_d.rcv_nxt = 0xBABABABA;
-        data.u.tcp_rx_d.snd_una = 0xEFEFEFEF;
-        data.u.tcp_rx_d.rcv_tsval = 0xFEFEFEFA;
-        data.u.tcp_rx_d.ts_recent = 0xFEFEFEFE;
-#endif
         HAL_TRACE_DEBUG("TCPCB rcv_nxt: 0x{0:x}", data.u.tcp_rx_d.rcv_nxt);
         HAL_TRACE_DEBUG("TCPCB snd_una: 0x{0:x}", data.u.tcp_rx_d.snd_una);
         HAL_TRACE_DEBUG("TCPCB rcv_tsval: 0x{0:x}", data.u.tcp_rx_d.rcv_tsval);
@@ -335,6 +325,23 @@ cleanup:
  * TxDMA
  * ******************************************/
 
+hal_ret_t
+p4pd_get_tcp_tx_stage0_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "tcp_tx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret < 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    *offset >>= MPU_PC_ADDR_SHIFT;
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
 p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
@@ -346,6 +353,14 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX);
     
     if(!del) {
+        uint64_t pc_offset;
+        // get pc address
+        if(p4pd_get_tcp_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+            // ret = HAL_RET_HW_FAIL;
+        }
+        HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
+        data.action_id = pc_offset;
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
