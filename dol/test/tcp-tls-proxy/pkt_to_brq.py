@@ -64,6 +64,16 @@ def TestCaseVerify(tc):
         print("Page handle not as expected in brq_cur.swdre_list")
         #return False
 
+    # 4. Verify pi/ci got update got updated
+    tlscb = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    print("pre-sync: tlscb.serq_pi %d tlscb.serq_ci %d" % (tlscb.serq_pi, tlscb.serq_ci))
+    tlscb.GetObjValPd()
+    print("post-sync: tlscb.serq_pi %d tlscb.serq_ci %d" % (tlscb.serq_pi, tlscb.serq_ci))
+    if (tlscb.serq_pi != 1 or tlscb.serq_ci != 1):
+        print("serq pi/ci not as expected")
+        return False
+    print("serq pi/ci not expected")
+
     return True
 
 def TestCaseTeardown(tc):

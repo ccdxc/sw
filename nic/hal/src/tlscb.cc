@@ -211,6 +211,10 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->mutable_key_or_handle()->set_tlscb_id(rtlscb.cb_id);
     
     rsp->mutable_spec()->set_cipher_type(rtlscb.cipher_type);
+    rsp->mutable_spec()->set_serq_pi(rtlscb.serq_pi);
+    rsp->mutable_spec()->set_serq_ci(rtlscb.serq_ci);
+    rsp->mutable_spec()->set_bsq_pi(rtlscb.bsq_pi);
+    rsp->mutable_spec()->set_bsq_ci(rtlscb.bsq_ci);
 
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);

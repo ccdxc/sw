@@ -9,4 +9,7 @@ nic_dec_tail          : None
 tcpcb                 : None
 serq                  : None
 bsq                   : None
-
+serq_pi               : 0
+serq_ci               : 0
+bsq_pi                : 0
+bsq_ci                : 0

@@ -38,10 +38,18 @@ class TlsCbObject(base.ConfigObjectBase):
         cfglogger.info("  - TlsCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        if resp_spec.__class__.__name__ != 'TlsCbResponse':
+            self.serq_pi = resp_spec.spec.serq_pi
         return
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
+
+    def GetObjValPd(self):
+        lst = []
+        lst.append(self)
+        halapi.GetTlsCbs(lst)
+        return
 
     def Read(self):
         return

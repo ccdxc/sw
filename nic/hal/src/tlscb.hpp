@@ -20,6 +20,10 @@ typedef struct tlscb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tlscb_id_t            cb_id;                   // TLS CB id
     uint8_t               cipher_type;
+    uint16_t              serq_pi;
+    uint16_t              serq_ci;
+    uint16_t              bsq_pi;
+    uint16_t              bsq_ci;
 
     // operational state of TLS Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
