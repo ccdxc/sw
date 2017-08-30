@@ -157,7 +157,7 @@ modules:
         package : test.tcp-tls-proxy
         module  : tcp_proxy
         spec    : tcp_proxy.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow: filter://type=IPV4
 
@@ -167,7 +167,7 @@ modules:
         package : test.tcp-tls-proxy
         module  : tcp_proxy
         spec    : tcp_proxy.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow: filter://type=IPV6
 
@@ -177,7 +177,7 @@ modules:
         package : test.tcp-tls-proxy
         module  : pkt_to_brq
         spec    : tcp_proxy.testspec
-        ignore  : True
+        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
 
