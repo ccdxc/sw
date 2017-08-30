@@ -17,23 +17,25 @@ namespace hal {
 #define HAL_MAX_QID                             16777215
 #define SERVICE_LIF_START                       1001
 
-#define PROXY_TCP_DEF_QTYPE                     0
-#define PROXY_TCP_DEF_QSTATE_SZ                 5       // 1024-bytes
-#define PROXY_TCP_DEF_QSTATE_ENTRIES            10      // 1024: FIXME
-#define PROXY_TLS_DEF_QTYPE                     0
-#define PROXY_TLS_DEF_QSTATE_SZ                 1       // 64-bytes
-#define PROXY_TLS_DEF_QSTATE_ENTRIES            10      // 1024: FIXME
-
 enum {
     SERVICE_LIF_TCP_PROXY = SERVICE_LIF_START,
     SERVICE_LIF_TLS_PROXY,
     SERVICE_LIF_CPU,
+    SERVICE_LIF_IPSEC_ESP,
     SERVICE_LIF_END
 };
 
 typedef uint32_t lif_id_t;
 typedef uint8_t  qtype_t;
 typedef uint32_t  qid_t;
+
+typedef struct proxy_meta_s {
+    bool        is_system_svc;
+    lif_id_t    lif_id;
+    qtype_t     qtype;
+    uint8_t     qstate_size;
+    uint8_t     qstate_entries;
+} proxy_meta_t;
 
 typedef struct proxy_s {
     hal_spinlock_t        slock;                   // lock to protect this structure

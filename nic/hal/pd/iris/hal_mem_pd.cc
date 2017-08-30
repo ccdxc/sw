@@ -25,6 +25,7 @@
 #include <wring_pd.hpp>
 #include <proxy.hpp>
 #include <crypto_keys_pd.hpp>
+#include <ipseccb_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -228,6 +229,18 @@ hal_state_pd::init(void)
     // Indexer based allocator to manage the crypto session keys
     session_keys_idxr_ = new hal::utils::indexer(CRYPTO_KEY_COUNT_MAX);
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
+    
+    // initialize IPSECCB related data structures
+    ipseccb_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,
+                                 sizeof(hal::pd::pd_ipseccb_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((ipseccb_slab_ != NULL), false);
+
+    ipseccb_hwid_ht_ = ht::factory(HAL_MAX_HW_IPSECCBS,
+                                 hal::pd::ipseccb_pd_get_hw_key_func,
+                                 hal::pd::ipseccb_pd_compute_hw_hash_func,
+                                 hal::pd::ipseccb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((ipseccb_hwid_ht_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -307,6 +320,9 @@ hal_state_pd::hal_state_pd()
     
     wring_slab_ = NULL;
     wring_hwid_ht_ = NULL;
+    
+    ipseccb_slab_ = NULL;
+    ipseccb_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -367,6 +383,8 @@ hal_state_pd::~hal_state_pd()
     wring_slab_ ? delete wring_slab_ : HAL_NOP;
     wring_hwid_ht_ ? delete wring_hwid_ht_ : HAL_NOP;
 
+    ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
+    ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -858,6 +876,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_WRING_PD:
         g_hal_state_pd->wring_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_IPSECCB_PD:
+        g_hal_state_pd->ipseccb_slab()->free_(elem);
         break;
 
     default:

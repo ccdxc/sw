@@ -31,6 +31,7 @@ SOURCES = \
 		proxy_svc.cc \
 		telemetry_svc.cc \
 		crypto_keys_svc.cc \
+		ipseccb_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

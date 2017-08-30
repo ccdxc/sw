@@ -21,6 +21,7 @@ LCXXFLAGS = \
 			-I../../../gen/tcp_proxy_txdma/include \
                         -I../../../gen/common_rxdma_actions/include \
 			-I../../../gen/tls_txdma_pre_crypto/include \
+			-I../../../gen/ipsec_rxdma_actions/include \
 			-I../../../p4/nw/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \
@@ -59,6 +60,7 @@ SOURCES = \
 		  descriptor_aol_pd.cc \
 		  telemetry_pd.cc \
 		  crypto_keys_pd.cc \
+		  ipseccb_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

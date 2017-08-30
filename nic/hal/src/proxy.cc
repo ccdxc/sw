@@ -9,6 +9,28 @@
 
 namespace hal {
 
+static proxy_meta_t g_meta[types::ProxyType_MAX];
+
+hal_ret_t  
+proxy_meta_init() {
+    /*
+     * Add meta info for each service
+     * Fomat: is system, lif, qtype, qstate size, qstate entries 
+     */
+
+    g_meta[types::PROXY_TYPE_TCP] = 
+        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 4, 10};
+ 
+    g_meta[types::PROXY_TYPE_TLS] = 
+        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 1, 10};
+
+    g_meta[types::PROXY_TYPE_IPSEC] = 
+        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
+
+    return HAL_RET_OK;
+}
+
+
 void *
 proxy_get_key_func (void *entry)
 {
@@ -188,27 +210,12 @@ proxy_init_default_params(proxy_t* proxy)
     {
         return HAL_RET_INVALID_ARG;    
     }
-
-    switch(proxy->type) {
-        case types::PROXY_TYPE_TCP:
-            proxy->lif_id = SERVICE_LIF_TCP_PROXY;
-            proxy->qtype = PROXY_TCP_DEF_QTYPE; 
-            proxy->qstate_size = PROXY_TCP_DEF_QSTATE_SZ;
-            proxy->qstate_entries = PROXY_TCP_DEF_QSTATE_ENTRIES;
-            break;
-
-        case types::PROXY_TYPE_TLS:
-            proxy->lif_id = SERVICE_LIF_TLS_PROXY;
-            proxy->qtype = PROXY_TLS_DEF_QTYPE; 
-            proxy->qstate_size = PROXY_TLS_DEF_QSTATE_SZ;
-            proxy->qstate_entries = PROXY_TLS_DEF_QSTATE_ENTRIES;
-            break;
-
-        default:
-            return HAL_RET_INVALID_ARG;
-        
-    }
-
+    proxy_meta_t* meta = &g_meta[proxy->type];
+    proxy->lif_id = meta->lif_id;
+    proxy->qtype = meta->qtype; 
+    proxy->qstate_size = meta->qstate_size;
+    proxy->qstate_entries = meta->qstate_entries;
+ 
     return HAL_RET_OK;
 }
 
@@ -275,10 +282,31 @@ proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
 //------------------------------------------------------------------------------
 // Initialize default proxy services
 //------------------------------------------------------------------------------
+hal_ret_t 
+hal_proxy_system_svc_init(void)
+{
+    for(int i = 1; i < types::ProxyType_ARRAYSIZE; i++) {
+        if(!g_meta[i].is_system_svc) {
+            continue;
+        }
+        if(NULL ==  proxy_factory(types::ProxyType(i))) {
+            HAL_TRACE_ERR("Failed to initialize service of type: {}", 
+                            types::ProxyType(i));
+            return HAL_RET_NO_RESOURCE;
+        }
+        HAL_TRACE_DEBUG("Initialized service of type: {}", 
+                          types::ProxyType_Name(types::ProxyType(i)));
+    }
+
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t 
 hal_proxy_svc_init(void)
 {
+    hal_ret_t       ret = HAL_RET_OK;
+
     // Reserve Service LIFs
     if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START)) 
             <= 0) 
@@ -286,7 +314,21 @@ hal_proxy_svc_init(void)
         HAL_TRACE_ERR("Failed to reserve service LIF");
         return HAL_RET_NO_RESOURCE;
     }
-    
+ 
+    // Initialize meta
+    ret = proxy_meta_init();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize meta for proxy services");
+        return ret;
+    }
+
+    // Enable system services
+    ret = hal_proxy_system_svc_init();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize proxy system services");
+        return ret;
+    }
+   
     return HAL_RET_OK;
 }
 

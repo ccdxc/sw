@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+// protobuf specification for ipseccb
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package ipseccb;
+
+// The ipsec cb service definition
+service IpsecCb {
+  rpc IpsecCbCreate (IpsecCbRequestMsg) returns (IpsecCbResponseMsg) {}
+  rpc IpsecCbUpdate (IpsecCbRequestMsg) returns (IpsecCbResponseMsg) {}
+  rpc IpsecCbDelete (IpsecCbDeleteRequestMsg) returns (IpsecCbDeleteResponseMsg) {}
+  rpc IpsecCbGet (IpsecCbGetRequestMsg) returns (IpsecCbGetResponseMsg) {}
+}
+
+// IpsecCbKeyHandle is used to operate on a ipsec_cb either by its key or handle
+message IpsecCbKeyHandle {
+  oneof key_or_handle {
+    uint32     ipseccb_id          = 1;    // unique ipsec_cb id allocated by app
+    fixed64    ipseccb_handle      = 2;    // ipsec_cb handle returned by HAL
+  }
+}
+
+// IpsecCbSpec captures all the ipsec_cb level configuration
+message IpsecCbSpec {
+  IpsecCbKeyHandle        key_or_handle              = 1;    // ipsec_cb being created/updated
+}
+
+// IpsecCbRequestMsg is batched add or modify ipseccb request
+message IpsecCbRequestMsg {
+  repeated IpsecCbSpec    request = 1;    // batched request
+}
+
+// IpsecCbStatus is the operational status of a given ipseccb
+message IpsecCbStatus {
+  fixed64    ipseccb_handle     = 1;    // id of ipseccb returned by HAL
+}
+
+// IpsecCbResponse is response to IpsecCbSpec
+message IpsecCbResponse {
+  types.ApiStatus        api_status            = 1;    // API status code
+  IpsecCbStatus       ipseccb_status   = 2;    // ipseccb status, if api succeeded
+}
+
+// IpsecCbResponseMsg is batched response to IpsecCbRequestMsg
+message IpsecCbResponseMsg {
+  repeated IpsecCbResponse    response = 1;    // batched response
+}
+
+// IpsecCbDeleteRequest is used to delete a ipseccb
+message IpsecCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  IpsecCbKeyHandle     key_or_handle = 2;    // IpsecCb key or handle
+}
+
+// IpsecCbDeleteRequestMsg is used to delete a batch of ipseccbs
+message IpsecCbDeleteRequestMsg {
+  repeated IpsecCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// IpsecCbDeleteResponseMsg is batched response to IpsecCbDeleteRequestMsg
+message IpsecCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// IpsecCbGetRequest is used to get information about a ipseccb
+message IpsecCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  IpsecCbKeyHandle            key_or_handle = 2;    // IpsecCb key or handle
+}
+
+// IpsecCbGetRequestMsg is batched GET requests for ipseccbs
+message IpsecCbGetRequestMsg {
+  repeated IpsecCbGetRequest    request = 1;    // batched get request
+}
+
+// IpsecCbStats is the statistics object for each ipseccb
+message IpsecCbStats {
+}
+
+// IpsecCbGetResponse captures all the information about a ipseccb
+// only if api_status indicates success, other fields are valid
+message IpsecCbGetResponse {
+  types.ApiStatus        api_status = 1;    // API status code
+  IpsecCbSpec         spec       = 2;    // ipseccb configuration
+  IpsecCbStatus       status     = 3;    // operational state of ipseccb
+  IpsecCbStats        stats      = 4;    // stats of the ipseccb
+}
+
+// IpsecCbGetResponseMsg is batched response to IpsecCbGetRequestMsg
+message IpsecCbGetResponseMsg {
+  repeated IpsecCbGetResponse    response = 1;    // batch get response
+}

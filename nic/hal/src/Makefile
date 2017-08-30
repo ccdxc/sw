@@ -50,6 +50,7 @@ SOURCES = \
 		  descriptor_aol.cc \
 		  telemetry.cc \
 		  crypto_keys.cc \
+		  ipseccb.cc \
 		  $(NULL)
 
 

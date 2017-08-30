@@ -40,6 +40,7 @@
 #include <proxy_svc.hpp>
 #include <acl_svc.hpp>
 #include <telemetry_svc.hpp>
+#include <ipseccb_svc.hpp>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -70,6 +71,7 @@ svc_reg (const std::string& server_addr)
     DescrAolServiceImpl      descraol_svc;
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
+    IpsecCbServiceImpl       ipseccb_svc;
  
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
@@ -95,6 +97,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&proxy_svc);
     server_builder.RegisterService(&acl_svc);
     server_builder.RegisterService(&telemetry_svc);
+    server_builder.RegisterService(&ipseccb_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 
