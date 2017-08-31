@@ -30,6 +30,7 @@ SOURCES = \
 		wring_svc.cc \
 		proxy_svc.cc \
 		telemetry_svc.cc \
+		crypto_keys_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

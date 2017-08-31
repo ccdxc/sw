@@ -1,0 +1,87 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Crypto Key APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package cryptokey;
+
+
+service CryptoKey {
+    rpc CryptoKeyCreate (CryptoKeyCreateRequestMsg) returns (CryptoKeyCreateResponseMsg) {}
+    rpc CryptoKeyRead (CryptoKeyReadRequestMsg) returns (CryptoKeyReadResponseMsg) {}
+    rpc CryptoKeyUpdate (CryptoKeyUpdateRequestMsg) returns (CryptoKeyUpdateResponseMsg) {}
+    rpc CryptoKeyDelete (CryptoKeyDeleteRequestMsg) returns (CryptoKeyDeleteResponseMsg) {}
+}
+
+
+message CryptoKeyCreateRequest {
+  types.ObjectMeta      meta                    = 1;    // common object meta
+}
+message CryptoKeyCreateRequestMsg {
+    repeated CryptoKeyCreateRequest request     = 1;
+}
+message CryptoKeyCreateResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyCreateResponseMsg {
+    repeated CryptoKeyCreateResponse response   = 1;
+}
+
+message CryptoKeySpec {
+  uint32                keyindex                = 1;
+  types.CryptoKeyType   key_type                = 2;
+  uint32                key_size                = 3;
+  bytes                 key                     = 4;
+}
+
+
+message CryptoKeyReadRequest {
+  types.ObjectMeta      meta                    = 1;    // common object meta
+  uint32                keyindex                = 2;
+}
+message CryptoKeyReadRequestMsg {
+    repeated CryptoKeyReadRequest request       = 1;
+}
+message CryptoKeyReadResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  CryptoKeySpec         key                     = 2;
+}
+message CryptoKeyReadResponseMsg {
+    repeated CryptoKeyReadResponse response     = 1;
+}
+
+
+message CryptoKeyUpdateRequest {
+  types.ObjectMeta      meta                    = 1;    // common object meta
+  CryptoKeySpec         key                     = 2;
+}
+message CryptoKeyUpdateRequestMsg {
+    repeated CryptoKeyUpdateRequest request     = 1;
+}
+message CryptoKeyUpdateResponse{
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyUpdateResponseMsg {
+    repeated CryptoKeyUpdateResponse response   = 1;
+}
+
+
+message CryptoKeyDeleteRequest {
+  types.ObjectMeta      meta                    = 1;    // common object meta
+  uint32                keyindex                = 2;
+}
+message CryptoKeyDeleteRequestMsg {
+    repeated CryptoKeyDeleteRequest request     = 1;
+}
+message CryptoKeyDeleteResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyDeleteResponseMsg {
+    repeated CryptoKeyDeleteResponse response   = 1;
+}

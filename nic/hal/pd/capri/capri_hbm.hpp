@@ -50,6 +50,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_PAGE_SMALL_RX      "page-small-rx"
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
 #define CAPRI_HBM_REG_BRQ                "brq"
+#define CAPRI_BARCO_KEY_DESC             "key-desc-array"
+#define CAPRI_BARCO_KEY_MEM              "key-mem"
 
 #define CAPRI_NUM_SEMAPHORES            512
 
