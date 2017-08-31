@@ -14,7 +14,7 @@ Bitmap::Bitmap(uint32_t size) {
 }
 
 Bitmap::~Bitmap() {
-  delete bmp_;
+  delete[] bmp_;
 }
 
 bool Bitmap::IsBitSet(uint32_t ndx) {
