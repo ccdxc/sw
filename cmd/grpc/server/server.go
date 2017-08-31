@@ -21,6 +21,9 @@ func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 	// create and register the RPC handler for cluster object.
 	grpc.RegisterClusterServer(rpcServer.GrpcServer, &clusterRPCHandler{})
 
+	// create and register the RPC handler for SmartNIC service
+	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, NewSmartNICServer())
+
 	// wait forever
 	<-stopChannel
 }

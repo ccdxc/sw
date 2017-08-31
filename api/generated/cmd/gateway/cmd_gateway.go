@@ -47,6 +47,12 @@ func (a adapterCmdV1) AutoAddNode(oldctx oldcontext.Context, t *cmd.Node, option
 	return a.service.AutoAddNode(ctx, t)
 }
 
+func (a adapterCmdV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoAddSmartNIC(ctx, t)
+}
+
 func (a adapterCmdV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -57,6 +63,12 @@ func (a adapterCmdV1) AutoDeleteNode(oldctx oldcontext.Context, t *cmd.Node, opt
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoDeleteNode(ctx, t)
+}
+
+func (a adapterCmdV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoDeleteSmartNIC(ctx, t)
 }
 
 func (a adapterCmdV1) AutoGetCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
@@ -71,6 +83,12 @@ func (a adapterCmdV1) AutoGetNode(oldctx oldcontext.Context, t *cmd.Node, option
 	return a.service.AutoGetNode(ctx, t)
 }
 
+func (a adapterCmdV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetSmartNIC(ctx, t)
+}
+
 func (a adapterCmdV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgClusterListHelper, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -81,6 +99,12 @@ func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOp
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListNode(ctx, t)
+}
+
+func (a adapterCmdV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgSmartNICListHelper, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoListSmartNIC(ctx, t)
 }
 
 func (a adapterCmdV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cmd.Cluster, options ...grpc.CallOption) (*cmd.Cluster, error) {
@@ -95,14 +119,25 @@ func (a adapterCmdV1) AutoUpdateNode(oldctx oldcontext.Context, t *cmd.Node, opt
 	return a.service.AutoUpdateNode(ctx, t)
 }
 
-func (a adapterCmdV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchNodeClient, error) {
+func (a adapterCmdV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC, options ...grpc.CallOption) (*cmd.SmartNIC, error) {
+	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchNode(ctx, in)
+	return a.service.AutoUpdateSmartNIC(ctx, t)
 }
 
 func (a adapterCmdV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchClusterClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchCluster(ctx, in)
+}
+
+func (a adapterCmdV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchNodeClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchNode(ctx, in)
+}
+
+func (a adapterCmdV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cmd.CmdV1_AutoWatchSmartNICClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSmartNIC(ctx, in)
 }
 
 func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,

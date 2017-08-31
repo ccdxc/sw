@@ -96,4 +96,4 @@ done < ${curdir}/generated/manifest
 cd ${curdir}
 echo "++ running go fmt"
 # Go format code
-gofmt -w generated
+gofmt -s -w generated

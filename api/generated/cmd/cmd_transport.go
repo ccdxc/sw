@@ -26,16 +26,21 @@ var _ api.ObjectMeta
 type grpcServerCmdV1 struct {
 	Endpoints EndpointsCmdV1Server
 
-	AutoAddClusterHdlr    grpctransport.Handler
-	AutoAddNodeHdlr       grpctransport.Handler
-	AutoDeleteClusterHdlr grpctransport.Handler
-	AutoDeleteNodeHdlr    grpctransport.Handler
-	AutoGetClusterHdlr    grpctransport.Handler
-	AutoGetNodeHdlr       grpctransport.Handler
-	AutoListClusterHdlr   grpctransport.Handler
-	AutoListNodeHdlr      grpctransport.Handler
-	AutoUpdateClusterHdlr grpctransport.Handler
-	AutoUpdateNodeHdlr    grpctransport.Handler
+	AutoAddClusterHdlr     grpctransport.Handler
+	AutoAddNodeHdlr        grpctransport.Handler
+	AutoAddSmartNICHdlr    grpctransport.Handler
+	AutoDeleteClusterHdlr  grpctransport.Handler
+	AutoDeleteNodeHdlr     grpctransport.Handler
+	AutoDeleteSmartNICHdlr grpctransport.Handler
+	AutoGetClusterHdlr     grpctransport.Handler
+	AutoGetNodeHdlr        grpctransport.Handler
+	AutoGetSmartNICHdlr    grpctransport.Handler
+	AutoListClusterHdlr    grpctransport.Handler
+	AutoListNodeHdlr       grpctransport.Handler
+	AutoListSmartNICHdlr   grpctransport.Handler
+	AutoUpdateClusterHdlr  grpctransport.Handler
+	AutoUpdateNodeHdlr     grpctransport.Handler
+	AutoUpdateSmartNICHdlr grpctransport.Handler
 }
 
 // MakeGRPCServerCmdV1 creates a GRPC server for CmdV1 service
@@ -60,6 +65,13 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddNode", logger)))...,
 		),
 
+		AutoAddSmartNICHdlr: grpctransport.NewServer(
+			endpoints.AutoAddSmartNICEndpoint,
+			DecodeGrpcReqSmartNIC,
+			EncodeGrpcRespSmartNIC,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSmartNIC", logger)))...,
+		),
+
 		AutoDeleteClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteClusterEndpoint,
 			DecodeGrpcReqCluster,
@@ -72,6 +84,13 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteNode", logger)))...,
+		),
+
+		AutoDeleteSmartNICHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteSmartNICEndpoint,
+			DecodeGrpcReqSmartNIC,
+			EncodeGrpcRespSmartNIC,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSmartNIC", logger)))...,
 		),
 
 		AutoGetClusterHdlr: grpctransport.NewServer(
@@ -88,6 +107,13 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetNode", logger)))...,
 		),
 
+		AutoGetSmartNICHdlr: grpctransport.NewServer(
+			endpoints.AutoGetSmartNICEndpoint,
+			DecodeGrpcReqSmartNIC,
+			EncodeGrpcRespSmartNIC,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSmartNIC", logger)))...,
+		),
+
 		AutoListClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoListClusterEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -102,6 +128,13 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListNode", logger)))...,
 		),
 
+		AutoListSmartNICHdlr: grpctransport.NewServer(
+			endpoints.AutoListSmartNICEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespAutoMsgSmartNICListHelper,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSmartNIC", logger)))...,
+		),
+
 		AutoUpdateClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateClusterEndpoint,
 			DecodeGrpcReqCluster,
@@ -114,6 +147,13 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateNode", logger)))...,
+		),
+
+		AutoUpdateSmartNICHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateSmartNICEndpoint,
+			DecodeGrpcReqSmartNIC,
+			EncodeGrpcRespSmartNIC,
+			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSmartNIC", logger)))...,
 		),
 	}
 }
@@ -154,6 +194,24 @@ func decodeHTTPrespCmdV1AutoAddNode(_ context.Context, r *http.Response) (interf
 	return &resp, err
 }
 
+func (s *grpcServerCmdV1) AutoAddSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
+	_, resp, err := s.AutoAddSmartNICHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respCmdV1AutoAddSmartNIC).V
+	return &r, resp.(respCmdV1AutoAddSmartNIC).Err
+}
+
+func decodeHTTPrespCmdV1AutoAddSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SmartNIC
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerCmdV1) AutoDeleteCluster(ctx oldcontext.Context, req *Cluster) (*Cluster, error) {
 	_, resp, err := s.AutoDeleteClusterHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -186,6 +244,24 @@ func decodeHTTPrespCmdV1AutoDeleteNode(_ context.Context, r *http.Response) (int
 		return nil, errorDecoder(r)
 	}
 	var resp Node
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerCmdV1) AutoDeleteSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
+	_, resp, err := s.AutoDeleteSmartNICHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respCmdV1AutoDeleteSmartNIC).V
+	return &r, resp.(respCmdV1AutoDeleteSmartNIC).Err
+}
+
+func decodeHTTPrespCmdV1AutoDeleteSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SmartNIC
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -226,6 +302,24 @@ func decodeHTTPrespCmdV1AutoGetNode(_ context.Context, r *http.Response) (interf
 	return &resp, err
 }
 
+func (s *grpcServerCmdV1) AutoGetSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
+	_, resp, err := s.AutoGetSmartNICHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respCmdV1AutoGetSmartNIC).V
+	return &r, resp.(respCmdV1AutoGetSmartNIC).Err
+}
+
+func decodeHTTPrespCmdV1AutoGetSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SmartNIC
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerCmdV1) AutoListCluster(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgClusterListHelper, error) {
 	_, resp, err := s.AutoListClusterHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -258,6 +352,24 @@ func decodeHTTPrespCmdV1AutoListNode(_ context.Context, r *http.Response) (inter
 		return nil, errorDecoder(r)
 	}
 	var resp AutoMsgNodeListHelper
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerCmdV1) AutoListSmartNIC(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error) {
+	_, resp, err := s.AutoListSmartNICHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respCmdV1AutoListSmartNIC).V
+	return &r, resp.(respCmdV1AutoListSmartNIC).Err
+}
+
+func decodeHTTPrespCmdV1AutoListSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AutoMsgSmartNICListHelper
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -298,12 +410,34 @@ func decodeHTTPrespCmdV1AutoUpdateNode(_ context.Context, r *http.Response) (int
 	return &resp, err
 }
 
-func (s *grpcServerCmdV1) AutoWatchNode(in *api.ListWatchOptions, stream CmdV1_AutoWatchNodeServer) error {
-	return s.Endpoints.AutoWatchNode(in, stream)
+func (s *grpcServerCmdV1) AutoUpdateSmartNIC(ctx oldcontext.Context, req *SmartNIC) (*SmartNIC, error) {
+	_, resp, err := s.AutoUpdateSmartNICHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respCmdV1AutoUpdateSmartNIC).V
+	return &r, resp.(respCmdV1AutoUpdateSmartNIC).Err
+}
+
+func decodeHTTPrespCmdV1AutoUpdateSmartNIC(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SmartNIC
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerCmdV1) AutoWatchCluster(in *api.ListWatchOptions, stream CmdV1_AutoWatchClusterServer) error {
 	return s.Endpoints.AutoWatchCluster(in, stream)
+}
+
+func (s *grpcServerCmdV1) AutoWatchNode(in *api.ListWatchOptions, stream CmdV1_AutoWatchNodeServer) error {
+	return s.Endpoints.AutoWatchNode(in, stream)
+}
+
+func (s *grpcServerCmdV1) AutoWatchSmartNIC(in *api.ListWatchOptions, stream CmdV1_AutoWatchSmartNICServer) error {
+	return s.Endpoints.AutoWatchSmartNIC(in, stream)
 }
 
 func encodeHTTPAutoMsgClusterListHelper(ctx context.Context, req *http.Request, request interface{}) error {
@@ -371,6 +505,40 @@ func EncodeGrpcRespAutoMsgNodeListHelper(ctx context.Context, response interface
 
 // DecodeGrpcRespAutoMsgNodeListHelper decodes the GRPC response
 func DecodeGrpcRespAutoMsgNodeListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPAutoMsgSmartNICListHelper(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPAutoMsgSmartNICListHelper(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AutoMsgSmartNICListHelper
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqAutoMsgSmartNICListHelper encodes GRPC request
+func EncodeGrpcReqAutoMsgSmartNICListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSmartNICListHelper)
+	return req, nil
+}
+
+// DecodeGrpcReqAutoMsgSmartNICListHelper decodes GRPC request
+func DecodeGrpcReqAutoMsgSmartNICListHelper(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AutoMsgSmartNICListHelper)
+	return req, nil
+}
+
+// EncodeGrpcRespAutoMsgSmartNICListHelper endodes the GRPC response
+func EncodeGrpcRespAutoMsgSmartNICListHelper(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespAutoMsgSmartNICListHelper decodes the GRPC response
+func DecodeGrpcRespAutoMsgSmartNICListHelper(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -510,6 +678,40 @@ func DecodeGrpcRespNode(ctx context.Context, response interface{}) (interface{},
 	return response, nil
 }
 
+func encodeHTTPNodeCondition(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPNodeCondition(_ context.Context, r *http.Request) (interface{}, error) {
+	var req NodeCondition
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqNodeCondition encodes GRPC request
+func EncodeGrpcReqNodeCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NodeCondition)
+	return req, nil
+}
+
+// DecodeGrpcReqNodeCondition decodes GRPC request
+func DecodeGrpcReqNodeCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*NodeCondition)
+	return req, nil
+}
+
+// EncodeGrpcRespNodeCondition encodes GRC response
+func EncodeGrpcRespNodeCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespNodeCondition decodes GRPC response
+func DecodeGrpcRespNodeCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPNodeSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -575,5 +777,243 @@ func EncodeGrpcRespNodeStatus(ctx context.Context, response interface{}) (interf
 
 // DecodeGrpcRespNodeStatus decodes GRPC response
 func DecodeGrpcRespNodeStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPortCondition(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPortCondition(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PortCondition
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPortCondition encodes GRPC request
+func EncodeGrpcReqPortCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortCondition)
+	return req, nil
+}
+
+// DecodeGrpcReqPortCondition decodes GRPC request
+func DecodeGrpcReqPortCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortCondition)
+	return req, nil
+}
+
+// EncodeGrpcRespPortCondition encodes GRC response
+func EncodeGrpcRespPortCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPortCondition decodes GRPC response
+func DecodeGrpcRespPortCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPortSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPortSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PortSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPortSpec encodes GRPC request
+func EncodeGrpcReqPortSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqPortSpec decodes GRPC request
+func DecodeGrpcReqPortSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespPortSpec encodes GRC response
+func EncodeGrpcRespPortSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPortSpec decodes GRPC response
+func DecodeGrpcRespPortSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPortStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPortStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PortStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPortStatus encodes GRPC request
+func EncodeGrpcReqPortStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqPortStatus decodes GRPC request
+func DecodeGrpcReqPortStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PortStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespPortStatus encodes GRC response
+func EncodeGrpcRespPortStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPortStatus decodes GRPC response
+func DecodeGrpcRespPortStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSmartNIC(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSmartNIC(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SmartNIC
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSmartNIC encodes GRPC request
+func EncodeGrpcReqSmartNIC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNIC)
+	return req, nil
+}
+
+// DecodeGrpcReqSmartNIC decodes GRPC request
+func DecodeGrpcReqSmartNIC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNIC)
+	return req, nil
+}
+
+// EncodeGrpcRespSmartNIC encodes GRC response
+func EncodeGrpcRespSmartNIC(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSmartNIC decodes GRPC response
+func DecodeGrpcRespSmartNIC(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSmartNICCondition(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSmartNICCondition(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SmartNICCondition
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSmartNICCondition encodes GRPC request
+func EncodeGrpcReqSmartNICCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICCondition)
+	return req, nil
+}
+
+// DecodeGrpcReqSmartNICCondition decodes GRPC request
+func DecodeGrpcReqSmartNICCondition(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICCondition)
+	return req, nil
+}
+
+// EncodeGrpcRespSmartNICCondition encodes GRC response
+func EncodeGrpcRespSmartNICCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSmartNICCondition decodes GRPC response
+func DecodeGrpcRespSmartNICCondition(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSmartNICSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSmartNICSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SmartNICSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSmartNICSpec encodes GRPC request
+func EncodeGrpcReqSmartNICSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqSmartNICSpec decodes GRPC request
+func DecodeGrpcReqSmartNICSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespSmartNICSpec encodes GRC response
+func EncodeGrpcRespSmartNICSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSmartNICSpec decodes GRPC response
+func DecodeGrpcRespSmartNICSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSmartNICStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSmartNICStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SmartNICStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSmartNICStatus encodes GRPC request
+func EncodeGrpcReqSmartNICStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqSmartNICStatus decodes GRPC request
+func DecodeGrpcReqSmartNICStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespSmartNICStatus encodes GRC response
+func EncodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSmartNICStatus decodes GRPC response
+func DecodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

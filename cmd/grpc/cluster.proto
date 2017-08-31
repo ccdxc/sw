@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package grpc;
 
+// Mandatory imports.
+import "google/api/annotations.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/protos/cmd.proto";
+
+// --------------------------------- C L U S T E R -------------------------------------------------
 service Cluster {
 	rpc PreJoin (ClusterPreJoinReq)  returns (ClusterPreJoinResp) {};
 	rpc Join (ClusterJoinReq)  returns (ClusterJoinResp) {};
@@ -53,4 +59,48 @@ message ClusterDisjoinReq {
 
 // Cluster Disjoin response
 message ClusterDisjoinResp {
+}
+
+// --------------------------------- SmartNIC service API  -----------------------------------
+
+// SmartNIC service API
+// NMD/agent on Naples will be the client of this API
+service SmartNIC {
+	// Register NIC
+	// - registers the NIC when the mode is switched from classic
+	//   to managed mode
+	rpc RegisterNIC (RegisterNICRequest) returns (RegisterNICResponse) {};
+
+	// Update NIC
+	// - updates the SmartNIC and associcated port attributes, status
+	rpc UpdateNIC (UpdateNICRequest) returns (UpdateNICResponse) {};
+}
+
+// Register NIC request
+message RegisterNICRequest {
+
+	// SmartNIC object
+	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+
+	// Factory Certificate
+	bytes Cert       = 2 [(gogoproto.jsontag) = "cert,omitempty"];
+}
+
+// Register NIC response
+message RegisterNICResponse {
+
+	// Admission Status of NIC
+	cmd.SmartNICPhase Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// Update NIC request
+message UpdateNICRequest {
+
+	// SmartNIC object
+	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+}
+
+// Update NIC response
+message UpdateNICResponse {
+
 }

@@ -37,8 +37,20 @@ type NodeInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// SmartNICInterface exposes the CRUD methods for SmartNIC
+type SmartNICInterface interface {
+	Create(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
+	Update(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*SmartNIC, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // CmdV1Interface exposes objects with CRUD operations allowed by the service
 type CmdV1Interface interface {
-	Node() NodeInterface
 	Cluster() ClusterInterface
+	Node() NodeInterface
+	SmartNIC() SmartNICInterface
 }

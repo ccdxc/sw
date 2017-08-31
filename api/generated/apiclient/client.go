@@ -25,7 +25,7 @@ type Services interface {
 
 	// Package is bookstore and len of messages is 3
 	BookstoreV1() bookstore.BookstoreV1Interface
-	// Package is cmd and len of messages is 2
+	// Package is cmd and len of messages is 3
 	CmdV1() cmd.CmdV1Interface
 	// Package is network and len of messages is 1
 	EndpointV1() network.EndpointV1Interface

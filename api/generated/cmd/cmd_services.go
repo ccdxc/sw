@@ -18,32 +18,44 @@ var _ api.ObjectMeta
 type ServiceCmdV1Client interface {
 	AutoAddCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
+	AutoAddSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoDeleteCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoDeleteNode(ctx context.Context, t *Node) (*Node, error)
+	AutoDeleteSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoGetCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoGetNode(ctx context.Context, t *Node) (*Node, error)
+	AutoGetSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoListCluster(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgClusterListHelper, error)
 	AutoListNode(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
+	AutoListSmartNIC(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error)
 	AutoUpdateCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
+	AutoUpdateSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 
-	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchNodeClient, error)
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchClusterClient, error)
+	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchNodeClient, error)
+	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions) (CmdV1_AutoWatchSmartNICClient, error)
 }
 
 // ServiceCmdV1Server is the server interface for the service.
 type ServiceCmdV1Server interface {
 	AutoAddCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoAddNode(ctx context.Context, t Node) (Node, error)
+	AutoAddSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoDeleteCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoDeleteNode(ctx context.Context, t Node) (Node, error)
+	AutoDeleteSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoGetCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoGetNode(ctx context.Context, t Node) (Node, error)
+	AutoGetSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoListCluster(ctx context.Context, t api.ListWatchOptions) (AutoMsgClusterListHelper, error)
 	AutoListNode(ctx context.Context, t api.ListWatchOptions) (AutoMsgNodeListHelper, error)
+	AutoListSmartNIC(ctx context.Context, t api.ListWatchOptions) (AutoMsgSmartNICListHelper, error)
 	AutoUpdateCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
+	AutoUpdateSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 
-	AutoWatchNode(in *api.ListWatchOptions, stream CmdV1_AutoWatchNodeServer) error
 	AutoWatchCluster(in *api.ListWatchOptions, stream CmdV1_AutoWatchClusterServer) error
+	AutoWatchNode(in *api.ListWatchOptions, stream CmdV1_AutoWatchNodeServer) error
+	AutoWatchSmartNIC(in *api.ListWatchOptions, stream CmdV1_AutoWatchSmartNICServer) error
 }

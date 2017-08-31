@@ -12,7 +12,7 @@ import (
 // Statemgr is the object state manager
 type Statemgr struct {
 	memDB  *memdb.Memdb  // database of all objects
-	writer writer.Writer // writer to apis erver
+	writer writer.Writer // writer to apiserver
 }
 
 // FindObject looks up an object in local db

@@ -7,64 +7,363 @@ import  public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-// NodeSpec contains the configuration of the node.
-message NodeSpec {
-  string Name = 1; // TODO
-}
+// --------------------------------- CLUSTER ---------------------------------------------
+//
+// Cluster represents a full cluster
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o NetOps-admin
+//              - initial cluster creation
+//      Modify:
+//          o NetOps-admin
+//              - update spec attributes
+//          o CMD
+//              - update status attributes
+//      Delete:
+//          o NetOps-admin
+//              - TBD
+//
+message Cluster {
 
-// NodeStatus contains the current state of the node.
-message NodeStatus {
-  string Status = 1; // TODO
-}
+    option (venice.objectPrefix) = "cluster";
 
-// Node is representation of a single node in the cluster.
-message Node {
-    option (venice.objectPrefix) = "nodes";
-    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
 
-    // Spec contains the configuration of the node.
-    NodeSpec Spec = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "metadata,omitempty"];
 
-    // Status contains the current state of the node.
-    NodeStatus Status = 4 [(gogoproto.jsontag) = "status,omitempty"];
+    // Spec contains the configuration of the cluster.
+    ClusterSpec Spec     = 3 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the cluster.
+    ClusterStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // ClusterSpec contains the configuration of the cluster.
 message ClusterSpec {
+
     // QuorumNodes contains the list of hostnames for nodes configured to be quorum
     // nodes in the cluster.
     repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorumNodes,omitempty"];
 
     // VirtualIP is the IP address for managing the cluster. It will be hosted by
     // the winner of election between quorum nodes.
-    string VirtualIP = 2 [(gogoproto.jsontag) = "virtualIP,omitempty"];
+    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtualIp,omitempty"];
 
     // NTPServers contains the list of NTP servers for the cluster.
-    repeated string NTPServers = 3 [(gogoproto.jsontag) = "ntpServers,omitempty"];
+    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntpServers,omitempty"];
 
     // DNSSubDomain is the DNS subdomain for the default tenant.
-    string DNSSubDomain = 4 [(gogoproto.jsontag) = "dnsSubDomain,omitempty"];
+    string DNSSubDomain         = 4 [(gogoproto.jsontag) = "dnsSubdomain,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.
 message ClusterStatus {
+
     // Leader contains the node name of the cluster leader.
     string Leader = 1 [(gogoproto.jsontag) = "leader,omitempty"];
 }
 
-// Cluster represents a full cluster
-message Cluster {
-    option (venice.objectPrefix) = "cluster";
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,omitempty"];
+//---------------------------------- NODE -------------------------------------------
+//
+// Node is representation of a single node in the system.
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o NetOps-admin
+//              - initial node creation for Baremetal node
+//          o CMD
+//              - auto created when Hypervisor Node and NIC are
+//                discovered via Orchestrator interface, NIC registration
+//      Modify:
+//          o NetOps-admin
+//              - update spec for Baremetal node
+//          o CMD
+//              - update spec attributes for Hypervisor node
+//              - update status attributes
+//      Delete:
+//          o NetOps-admin
+//              - when Baremetal node is decommissioned
+//          o CMD
+//              - TBD
+//
+message Node {
+    
+    option (venice.objectPrefix) = "nodes";
 
-    // Spec contains the configuration of the cluster.
-    ClusterSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
 
-    // Status contains the current state of the cluster.
-    ClusterStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "metadata,omitempty"];
+
+    // Spec contains the configuration of the node.
+    NodeSpec Spec       = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the node.
+    NodeStatus Status   = 4 [(gogoproto.nullable) = true,
+                            (gogoproto.jsontag) = "status,omitempty"];
 }
+
+// NodeSpec contains the configuration of the node.
+message NodeSpec {
+
+    // NodeRole Type
+    enum NodeRole {
+        CONTROLLER_NODE = 0x0;  // Node which is part of Venice cluster
+        WORKLOAD_NODE   = 0x1;  // Node which runs workloads
+        QUORUM_NODE     = 0x2;  // Node which is part of quorum in Venice cluster
+    }
+
+    // Roles is of list of roles a node can be configured with.
+    repeated NodeRole Roles = 1 [(gogoproto.jsontag) = "roles,omitempty"];
+}
+
+// NodeStatus contains the current state of the node.
+message NodeStatus {
+
+    // Current lifecycle phase of the node.
+    NodePhase Phase                     = 1 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "phase,omitempty"];
+
+    // List of current node conditions
+    repeated NodeCondition Conditions   = 2 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "conditions,omitempty"];
+
+    // Nics holds a list of Mac addresses each uniquely identifying
+    // a SmartNIC subsystem that is part of the Node
+    repeated string Nics                = 3 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "nics,omitempty"];
+}
+
+// Various phases in lifecycle of a Node
+enum NodePhase {
+    NODE_UNKNOWN    = 0; // Unknown status
+    NODE_PENDING    = 1; // Node is waiting to join the venice cluster
+    NODE_JOINED     = 2; // Node is part of the venice cluster
+    NODE_FAILED     = 3; // Node failed to join the venice cluster
+}
+
+// These are valid conditions of a Node
+enum NodeConditionType {
+    NODE_LEADER     = 0; // Node is the elected leader in Venice cluster
+}
+
+// NodeCondition describes the state of a Node at a certain point.
+message NodeCondition {
+
+    // Type indicates a certain node condition
+    NodeConditionType Type          = 1 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason                   = 4 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                  = 5 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "message,omitempty"];
+}
+
+// These are valid condition statuses.
+enum ConditionStatus {
+    CONDITION_UNKNOWN   = 0; // Condition is unknown
+    CONDITION_TRUE      = 1; // Condition is met
+    CONDITION_FALSE     = 2; // Condition is not met
+}
+
+//------------------------------------ SMART NIC  -------------------------------------------
+//
+// SmartNIC represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
+message SmartNIC {
+
+    option (venice.objectPrefix) = "smartnics";
+
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+
+    //Object name is Serial-Number of the SmartNIC
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "metadata,omitempty"];
+
+    // SmartNICSpec contains the configuration of the network adapter.
+    SmartNICSpec Spec       = 3 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "spec,omitempty"];
+
+    // SmartNICStatus contains the current state of the network adapter.
+    SmartNICStatus Status   = 4 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
+message SmartNICSpec {
+
+    // Ports holds a list of Port Specs
+    repeated PortSpec Ports = 1 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "ports,omitempty"];
+}
+
+// SmartNICStatus contains current status of a SmartNIC
+message SmartNICStatus {
+
+    // Current lifecycle phase of the SmartNIC.
+    SmartNICPhase Phase                     = 1 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "phase,omitempty"];
+
+    // List of current NIC conditions
+    repeated SmartNICCondition Conditions   = 2 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "conditions,omitempty"];
+
+    // Serial number
+    string SerialNum                        = 3 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "serialNumber,omitempty"];
+
+    // Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
+    string PrimaryMacAddress                = 4 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "primaryMacAddress,omitempty"];
+
+    // Node name, will be populated by an entity in Venice (CMD)
+    // based on host & nic inventory discovered via Orchestration interface
+    string NodeName                         = 5 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "nodeName,omitempty"];
+
+    // Ports holds a list of PortStatus
+    repeated PortStatus Ports               = 6 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "ports,omitempty"];
+}
+
+// Various phases in lifecycle of a SmartNIC
+enum SmartNICPhase {
+    NIC_UNKNOWN      = 0; // Unknown status
+    NIC_REJECTED     = 1; // NIC is rejected
+    NIC_PENDING      = 2; // NIC is validated but waiting for manual approval
+    NIC_ADMITTED     = 3; // NIC is validated and admitted
+}
+
+// These are valid conditions of a SmartNIC
+enum SmartNICConditionType {
+    NIC_HEALTHY = 0; // NIC is healthy
+
+    // more conditions to be added ...
+}
+
+// SmartNICCondition describes the state of a SmartNIC at a certain point.
+message SmartNICCondition {
+
+    // Type indicates a certain NIC condition
+    SmartNICConditionType Type      = 1 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason                   = 4 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                  = 5 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "message,omitempty"];
+}
+
+// PortSpec contains configuration of a port in SmartNIC
+message PortSpec {
+
+    // Mac address of the Port, which is key identifier of the port
+    string MacAddress   = 1 [(gogoproto.nullable) = true,
+                            (gogoproto.jsontag) = "macAddress,omitempty"];
+
+    // More fields to follow ...
+}
+
+// PortStatus contains current status of a Port
+message PortStatus {
+
+    // Mac address of the Port, which is key identifier of the port
+    string MacAddress                   = 1 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "macAddress,omitempty"];
+
+    // LinkSpeed of the Port
+    string LinkSpeed                    = 2 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "linkSpeed,omitempty"];
+
+    // List of current Port conditions
+    repeated PortCondition Conditions   = 3 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "conditions,omitempty"];
+}
+
+// These are valid conditions of a Port
+enum PortConditionType {
+    PORT_UP     = 0; // Port is Up
+}
+
+// PortCondition describes the state of a Port at a certain point.
+message PortCondition {
+
+    // Type indicates a certain Port condition
+    PortConditionType Type          = 1 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason                   = 4 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                  = 5 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "message,omitempty"];
+}
+
+//-------------------------------- R E S T  A P I ----------------------------------------------------
 
 // This should usually be a ServiceDiscovery key like (sd:/apiservers/bookstore). A IP address for now
 option(venice.fileGrpcDest) = "localhost:8082";
@@ -75,8 +374,20 @@ service CmdV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    option(venice.apiGrpcCrudService) = "Node";
     option(venice.apiGrpcCrudService) = "Cluster";
+    option(venice.apiGrpcCrudService) = "Node";
+    option(venice.apiGrpcCrudService) = "SmartNIC";
+
+    option(venice.apiRestService) = {
+        Object: "Cluster"
+        Method: [ "list"]
+        Pattern: "/cluster"
+    };
+    option(venice.apiRestService) = {
+        Object: "Cluster"
+        Method: ["put", "get", "delete"]
+        Pattern: "/cluster/{O.Name}"
+    };
 
     option(venice.apiRestService) = {
         Object: "Node"
@@ -90,13 +401,13 @@ service CmdV1 {
     };
 
     option(venice.apiRestService) = {
-        Object: "Cluster"
-        Method: [ "list"]
-        Pattern: "/cluster"
+        Object: "SmartNIC"
+        Method: ["put", "get", "delete"]
+        Pattern: "/smartnics/{O.Name}"
     };
     option(venice.apiRestService) = {
-        Object: "Cluster"
-        Method: ["put", "get", "delete"]
-        Pattern: "/cluster/{O.Name}"
+        Object: "SmartNIC"
+        Method: ["list"]
+        Pattern: "/smartnics"
     };
 }

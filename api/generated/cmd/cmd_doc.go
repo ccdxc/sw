@@ -11,28 +11,44 @@ The following Messages are defined.
   AutoMsgClusterWatchHelper
   AutoMsgNodeListHelper
   AutoMsgNodeWatchHelper
+  AutoMsgSmartNICListHelper
+  AutoMsgSmartNICWatchHelper
   Cluster
   ClusterSpec
   ClusterStatus
   Node
+  NodeCondition
   NodeSpec
   NodeStatus
+  PortCondition
+  PortSpec
+  PortStatus
+  SmartNIC
+  SmartNICCondition
+  SmartNICSpec
+  SmartNICStatus
 
 The following Services and Methods are defined.
 
  Service: CmdV1
    AutoAddCluster
    AutoAddNode
+   AutoAddSmartNIC
    AutoDeleteCluster
    AutoDeleteNode
+   AutoDeleteSmartNIC
    AutoGetCluster
    AutoGetNode
+   AutoGetSmartNIC
    AutoListCluster
    AutoListNode
+   AutoListSmartNIC
    AutoUpdateCluster
    AutoUpdateNode
+   AutoUpdateSmartNIC
    AutoWatchCluster
    AutoWatchNode
+   AutoWatchSmartNIC
 
 */
 package cmd

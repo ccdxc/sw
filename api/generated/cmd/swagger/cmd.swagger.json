@@ -158,13 +158,14 @@
           },
           {
             "name": "Spec.VirtualIP",
+            "description": "Object name is Serial-Number of the SmartNIC.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.NTPServers",
-            "description": "Spec contains the configuration of the cluster.",
+            "description": "SmartNICSpec contains the configuration of the network adapter.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -174,13 +175,14 @@
           },
           {
             "name": "Spec.DNSSubDomain",
-            "description": "Status contains the current state of the cluster.",
+            "description": "SmartNICStatus contains the current state of the network adapter.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Status.Leader",
+            "description": "Ports holds a list of Port Specs.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -400,16 +402,43 @@
             "type": "string"
           },
           {
-            "name": "Spec.Name",
+            "name": "Spec.Roles",
+            "description": "Mac address of the Port, which is key identifier of the port.",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "CONTROLLER_NODE",
+                "WORKLOAD_NODE",
+                "QUORUM_NODE"
+              ]
+            }
           },
           {
-            "name": "Status.Status",
+            "name": "Status.Phase",
+            "description": "Mac address of the Port, which is key identifier of the port.",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "NODE_UNKNOWN",
+              "NODE_PENDING",
+              "NODE_JOINED",
+              "NODE_FAILED"
+            ],
+            "default": "NODE_UNKNOWN"
+          },
+          {
+            "name": "Status.Nics",
+            "description": "List of current Port conditions.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -468,9 +497,239 @@
           "CmdV1"
         ]
       }
+    },
+    "/smartnics": {
+      "get": {
+        "operationId": "AutoListSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/cmdAutoMsgSmartNICListHelper"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "CmdV1"
+        ]
+      }
+    },
+    "/smartnics/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Phase",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NIC_UNKNOWN",
+              "NIC_REJECTED",
+              "NIC_PENDING",
+              "NIC_ADMITTED"
+            ],
+            "default": "NIC_UNKNOWN"
+          },
+          {
+            "name": "Status.SerialNum",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.PrimaryMacAddress",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.NodeName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CmdV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CmdV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateSmartNIC",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cmdSmartNIC"
+            }
+          }
+        ],
+        "tags": [
+          "CmdV1"
+        ]
+      }
     }
   },
   "definitions": {
+    "NodeSpecNodeRole": {
+      "type": "string",
+      "enum": [
+        "CONTROLLER_NODE",
+        "WORKLOAD_NODE",
+        "QUORUM_NODE"
+      ],
+      "default": "CONTROLLER_NODE"
+    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -552,28 +811,33 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/cmdCluster"
-          }
+          },
+          "description": "Spec contains the configuration of the cluster."
         }
       },
-      "description": "NodeSpec contains the configuration of the node."
+      "description": "Cluster represents a full cluster\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
+      "title": "--------------------------------- CLUSTER ---------------------------------------------"
     },
     "cmdAutoMsgClusterWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string"
+          "type": "string",
+          "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster."
         },
         "Object": {
-          "$ref": "#/definitions/cmdCluster"
+          "$ref": "#/definitions/cmdCluster",
+          "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes."
         }
       },
-      "description": "NodeStatus contains the current state of the node."
+      "description": "ClusterSpec contains the configuration of the cluster."
     },
     "cmdAutoMsgNodeListHelper": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Leader contains the node name of the cluster leader."
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta"
@@ -582,44 +846,78 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/cmdNode"
-          },
-          "description": "Spec contains the configuration of the node."
+          }
         }
       },
-      "description": "Node is representation of a single node in the cluster."
+      "description": "ClusterStatus contains the current state of the Cluster."
     },
     "cmdAutoMsgNodeWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string",
-          "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster."
+          "type": "string"
         },
         "Object": {
-          "$ref": "#/definitions/cmdNode",
-          "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes."
+          "$ref": "#/definitions/cmdNode"
         }
       },
-      "description": "ClusterSpec contains the configuration of the cluster."
+      "description": "Node is representation of a single node in the system.\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial node creation for Baremetal node\n         o CMD\n             - auto created when Hypervisor Node and NIC are\n               discovered via Orchestrator interface, NIC registration\n     Modify:\n         o NetOps-admin\n             - update spec for Baremetal node\n         o CMD\n             - update spec attributes for Hypervisor node\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - when Baremetal node is decommissioned\n         o CMD\n             - TBD",
+      "title": "---------------------------------- NODE -------------------------------------------"
+    },
+    "cmdAutoMsgSmartNICListHelper": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Roles is of list of roles a node can be configured with."
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdSmartNIC"
+          }
+        }
+      },
+      "description": "NodeSpec contains the configuration of the node."
+    },
+    "cmdAutoMsgSmartNICWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "description": "Current lifecycle phase of the node."
+        },
+        "Object": {
+          "$ref": "#/definitions/cmdSmartNIC",
+          "title": "List of current node conditions"
+        }
+      },
+      "description": "NodeStatus contains the current state of the node."
     },
     "cmdCluster": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "description": "Leader contains the node name of the cluster leader."
+          "title": "Type indicates a certain node condition"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta"
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Condition Status"
         },
         "Spec": {
-          "$ref": "#/definitions/cmdClusterSpec"
+          "$ref": "#/definitions/cmdClusterSpec",
+          "title": "The last time the condition transitioned"
         },
         "Status": {
-          "$ref": "#/definitions/cmdClusterStatus"
+          "$ref": "#/definitions/cmdClusterStatus",
+          "title": "The reason for the condition's last transition"
         }
       },
-      "description": "ClusterStatus contains the current state of the Cluster."
+      "description": "NodeCondition describes the state of a Node at a certain point."
     },
     "cmdClusterSpec": {
       "type": "object",
@@ -631,31 +929,210 @@
           }
         },
         "VirtualIP": {
-          "type": "string"
+          "type": "string",
+          "title": "Object name is Serial-Number of the SmartNIC"
         },
         "NTPServers": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "Spec contains the configuration of the cluster."
+          "description": "SmartNICSpec contains the configuration of the network adapter."
         },
         "DNSSubDomain": {
           "type": "string",
-          "description": "Status contains the current state of the cluster."
+          "description": "SmartNICStatus contains the current state of the network adapter."
         }
       },
-      "title": "Cluster represents a full cluster"
+      "description": "SmartNIC represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
+      "title": "------------------------------------ SMART NIC  -------------------------------------------"
     },
     "cmdClusterStatus": {
       "type": "object",
       "properties": {
         "Leader": {
+          "type": "string",
+          "title": "Ports holds a list of Port Specs"
+        }
+      },
+      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
+    },
+    "cmdConditionStatus": {
+      "type": "string",
+      "enum": [
+        "CONDITION_UNKNOWN",
+        "CONDITION_TRUE",
+        "CONDITION_FALSE"
+      ],
+      "default": "CONDITION_UNKNOWN",
+      "description": "These are valid condition statuses."
+    },
+    "cmdNode": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Current lifecycle phase of the SmartNIC."
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "List of current NIC conditions"
+        },
+        "Spec": {
+          "$ref": "#/definitions/cmdNodeSpec",
+          "title": "Serial number"
+        },
+        "Status": {
+          "$ref": "#/definitions/cmdNodeStatus",
+          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
+        }
+      },
+      "title": "SmartNICStatus contains current status of a SmartNIC"
+    },
+    "cmdNodeCondition": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "$ref": "#/definitions/cmdNodeConditionType",
+          "title": "Type indicates a certain NIC condition"
+        },
+        "Status": {
+          "$ref": "#/definitions/cmdConditionStatus",
+          "title": "Condition Status"
+        },
+        "LastTransitionTime": {
+          "type": "string",
+          "format": "int64",
+          "title": "The last time the condition transitioned"
+        },
+        "Reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "Message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
+    },
+    "cmdNodeConditionType": {
+      "type": "string",
+      "enum": [
+        "NODE_LEADER"
+      ],
+      "default": "NODE_LEADER",
+      "title": "These are valid conditions of a Node"
+    },
+    "cmdNodePhase": {
+      "type": "string",
+      "enum": [
+        "NODE_UNKNOWN",
+        "NODE_PENDING",
+        "NODE_JOINED",
+        "NODE_FAILED"
+      ],
+      "default": "NODE_UNKNOWN",
+      "title": "Various phases in lifecycle of a Node"
+    },
+    "cmdNodeSpec": {
+      "type": "object",
+      "properties": {
+        "Roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NodeSpecNodeRole"
+          },
+          "title": "Mac address of the Port, which is key identifier of the port"
+        }
+      },
+      "title": "PortSpec contains configuration of a port in SmartNIC"
+    },
+    "cmdNodeStatus": {
+      "type": "object",
+      "properties": {
+        "Phase": {
+          "$ref": "#/definitions/cmdNodePhase",
+          "title": "Mac address of the Port, which is key identifier of the port"
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdNodeCondition"
+          },
+          "title": "LinkSpeed of the Port"
+        },
+        "Nics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of current Port conditions"
+        }
+      },
+      "title": "PortStatus contains current status of a Port"
+    },
+    "cmdPortCondition": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "$ref": "#/definitions/cmdPortConditionType",
+          "title": "Type indicates a certain Port condition"
+        },
+        "Status": {
+          "$ref": "#/definitions/cmdConditionStatus",
+          "title": "Condition Status"
+        },
+        "LastTransitionTime": {
+          "type": "string",
+          "format": "int64",
+          "title": "The last time the condition transitioned"
+        },
+        "Reason": {
+          "type": "string",
+          "title": "The reason for the condition's last transition"
+        },
+        "Message": {
+          "type": "string",
+          "description": "A detailed message indicating details about the transition."
+        }
+      },
+      "description": "PortCondition describes the state of a Port at a certain point."
+    },
+    "cmdPortConditionType": {
+      "type": "string",
+      "enum": [
+        "PORT_UP"
+      ],
+      "default": "PORT_UP",
+      "title": "These are valid conditions of a Port"
+    },
+    "cmdPortSpec": {
+      "type": "object",
+      "properties": {
+        "MacAddress": {
           "type": "string"
         }
       }
     },
-    "cmdNode": {
+    "cmdPortStatus": {
+      "type": "object",
+      "properties": {
+        "MacAddress": {
+          "type": "string"
+        },
+        "LinkSpeed": {
+          "type": "string"
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdPortCondition"
+          }
+        }
+      }
+    },
+    "cmdSmartNIC": {
       "type": "object",
       "properties": {
         "T": {
@@ -665,26 +1142,90 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/cmdNodeSpec"
+          "$ref": "#/definitions/cmdSmartNICSpec"
         },
         "Status": {
-          "$ref": "#/definitions/cmdNodeStatus"
+          "$ref": "#/definitions/cmdSmartNICStatus"
         }
       }
     },
-    "cmdNodeSpec": {
+    "cmdSmartNICCondition": {
       "type": "object",
       "properties": {
-        "Name": {
-          "type": "string"
-        }
-      }
-    },
-    "cmdNodeStatus": {
-      "type": "object",
-      "properties": {
+        "Type": {
+          "$ref": "#/definitions/cmdSmartNICConditionType"
+        },
         "Status": {
+          "$ref": "#/definitions/cmdConditionStatus"
+        },
+        "LastTransitionTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Reason": {
           "type": "string"
+        },
+        "Message": {
+          "type": "string"
+        }
+      }
+    },
+    "cmdSmartNICConditionType": {
+      "type": "string",
+      "enum": [
+        "NIC_HEALTHY"
+      ],
+      "default": "NIC_HEALTHY",
+      "title": "These are valid conditions of a SmartNIC"
+    },
+    "cmdSmartNICPhase": {
+      "type": "string",
+      "enum": [
+        "NIC_UNKNOWN",
+        "NIC_REJECTED",
+        "NIC_PENDING",
+        "NIC_ADMITTED"
+      ],
+      "default": "NIC_UNKNOWN",
+      "title": "Various phases in lifecycle of a SmartNIC"
+    },
+    "cmdSmartNICSpec": {
+      "type": "object",
+      "properties": {
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdPortSpec"
+          }
+        }
+      }
+    },
+    "cmdSmartNICStatus": {
+      "type": "object",
+      "properties": {
+        "Phase": {
+          "$ref": "#/definitions/cmdSmartNICPhase"
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdSmartNICCondition"
+          }
+        },
+        "SerialNum": {
+          "type": "string"
+        },
+        "PrimaryMacAddress": {
+          "type": "string"
+        },
+        "NodeName": {
+          "type": "string"
+        },
+        "Ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cmdPortStatus"
+          }
         }
       }
     }

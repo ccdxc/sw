@@ -29,6 +29,11 @@ func (m *Node) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *SmartNIC) MakeKey(prefix string) string {
+	return fmt.Sprint("/venice/", prefix, "/", "smartnics/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgClusterListHelper) MakeKey(prefix string) string {
 	obj := Cluster{}
 	return obj.MakeKey(prefix)
@@ -41,6 +46,12 @@ func (m *AutoMsgNodeListHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AutoMsgSmartNICListHelper) MakeKey(prefix string) string {
+	obj := SmartNIC{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 	obj := Cluster{}
 	return obj.MakeKey(prefix)
@@ -49,5 +60,11 @@ func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgNodeWatchHelper) MakeKey(prefix string) string {
 	obj := Node{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgSmartNICWatchHelper) MakeKey(prefix string) string {
+	obj := SmartNIC{}
 	return obj.MakeKey(prefix)
 }

@@ -14,12 +14,22 @@
 		AutoMsgClusterWatchHelper
 		AutoMsgNodeListHelper
 		AutoMsgNodeWatchHelper
+		AutoMsgSmartNICListHelper
+		AutoMsgSmartNICWatchHelper
 		Cluster
 		ClusterSpec
 		ClusterStatus
 		Node
+		NodeCondition
 		NodeSpec
 		NodeStatus
+		PortCondition
+		PortSpec
+		PortStatus
+		SmartNIC
+		SmartNICCondition
+		SmartNICSpec
+		SmartNICStatus
 */
 package cmd
 
@@ -49,11 +59,191 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// NodeSpec contains the configuration of the node.
+// Various phases in lifecycle of a Node
+type NodePhase int32
+
+const (
+	NodePhase_NODE_UNKNOWN NodePhase = 0
+	NodePhase_NODE_PENDING NodePhase = 1
+	NodePhase_NODE_JOINED  NodePhase = 2
+	NodePhase_NODE_FAILED  NodePhase = 3
+)
+
+var NodePhase_name = map[int32]string{
+	0: "NODE_UNKNOWN",
+	1: "NODE_PENDING",
+	2: "NODE_JOINED",
+	3: "NODE_FAILED",
+}
+var NodePhase_value = map[string]int32{
+	"NODE_UNKNOWN": 0,
+	"NODE_PENDING": 1,
+	"NODE_JOINED":  2,
+	"NODE_FAILED":  3,
+}
+
+func (x NodePhase) String() string {
+	return proto.EnumName(NodePhase_name, int32(x))
+}
+func (NodePhase) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{0} }
+
+// These are valid conditions of a Node
+type NodeConditionType int32
+
+const (
+	NodeConditionType_NODE_LEADER NodeConditionType = 0
+)
+
+var NodeConditionType_name = map[int32]string{
+	0: "NODE_LEADER",
+}
+var NodeConditionType_value = map[string]int32{
+	"NODE_LEADER": 0,
+}
+
+func (x NodeConditionType) String() string {
+	return proto.EnumName(NodeConditionType_name, int32(x))
+}
+func (NodeConditionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{1} }
+
+// These are valid condition statuses.
+type ConditionStatus int32
+
+const (
+	ConditionStatus_CONDITION_UNKNOWN ConditionStatus = 0
+	ConditionStatus_CONDITION_TRUE    ConditionStatus = 1
+	ConditionStatus_CONDITION_FALSE   ConditionStatus = 2
+)
+
+var ConditionStatus_name = map[int32]string{
+	0: "CONDITION_UNKNOWN",
+	1: "CONDITION_TRUE",
+	2: "CONDITION_FALSE",
+}
+var ConditionStatus_value = map[string]int32{
+	"CONDITION_UNKNOWN": 0,
+	"CONDITION_TRUE":    1,
+	"CONDITION_FALSE":   2,
+}
+
+func (x ConditionStatus) String() string {
+	return proto.EnumName(ConditionStatus_name, int32(x))
+}
+func (ConditionStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{2} }
+
+// Various phases in lifecycle of a SmartNIC
+type SmartNICPhase int32
+
+const (
+	SmartNICPhase_NIC_UNKNOWN  SmartNICPhase = 0
+	SmartNICPhase_NIC_REJECTED SmartNICPhase = 1
+	SmartNICPhase_NIC_PENDING  SmartNICPhase = 2
+	SmartNICPhase_NIC_ADMITTED SmartNICPhase = 3
+)
+
+var SmartNICPhase_name = map[int32]string{
+	0: "NIC_UNKNOWN",
+	1: "NIC_REJECTED",
+	2: "NIC_PENDING",
+	3: "NIC_ADMITTED",
+}
+var SmartNICPhase_value = map[string]int32{
+	"NIC_UNKNOWN":  0,
+	"NIC_REJECTED": 1,
+	"NIC_PENDING":  2,
+	"NIC_ADMITTED": 3,
+}
+
+func (x SmartNICPhase) String() string {
+	return proto.EnumName(SmartNICPhase_name, int32(x))
+}
+func (SmartNICPhase) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{3} }
+
+// These are valid conditions of a SmartNIC
+type SmartNICConditionType int32
+
+const (
+	SmartNICConditionType_NIC_HEALTHY SmartNICConditionType = 0
+)
+
+var SmartNICConditionType_name = map[int32]string{
+	0: "NIC_HEALTHY",
+}
+var SmartNICConditionType_value = map[string]int32{
+	"NIC_HEALTHY": 0,
+}
+
+func (x SmartNICConditionType) String() string {
+	return proto.EnumName(SmartNICConditionType_name, int32(x))
+}
+func (SmartNICConditionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{4} }
+
+// These are valid conditions of a Port
+type PortConditionType int32
+
+const (
+	PortConditionType_PORT_UP PortConditionType = 0
+)
+
+var PortConditionType_name = map[int32]string{
+	0: "PORT_UP",
+}
+var PortConditionType_value = map[string]int32{
+	"PORT_UP": 0,
+}
+
+func (x PortConditionType) String() string {
+	return proto.EnumName(PortConditionType_name, int32(x))
+}
+func (PortConditionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{5} }
+
+type NodeSpec_NodeRole int32
+
+const (
+	NodeSpec_CONTROLLER_NODE NodeSpec_NodeRole = 0
+	NodeSpec_WORKLOAD_NODE   NodeSpec_NodeRole = 1
+	NodeSpec_QUORUM_NODE     NodeSpec_NodeRole = 2
+)
+
+var NodeSpec_NodeRole_name = map[int32]string{
+	0: "CONTROLLER_NODE",
+	1: "WORKLOAD_NODE",
+	2: "QUORUM_NODE",
+}
+var NodeSpec_NodeRole_value = map[string]int32{
+	"CONTROLLER_NODE": 0,
+	"WORKLOAD_NODE":   1,
+	"QUORUM_NODE":     2,
+}
+
+func (x NodeSpec_NodeRole) String() string {
+	return proto.EnumName(NodeSpec_NodeRole_name, int32(x))
+}
+func (NodeSpec_NodeRole) EnumDescriptor() ([]byte, []int) { return fileDescriptorCmd, []int{11, 0} }
+
+// --------------------------------- CLUSTER ---------------------------------------------
+//
+// Cluster represents a full cluster
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o NetOps-admin
+//              - initial cluster creation
+//      Modify:
+//          o NetOps-admin
+//              - update spec attributes
+//          o CMD
+//              - update status attributes
+//      Delete:
+//          o NetOps-admin
+//              - TBD
+//
 type AutoMsgClusterListHelper struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	// Spec contains the configuration of the cluster.
+	Items []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AutoMsgClusterListHelper) Reset()                    { *m = AutoMsgClusterListHelper{} }
@@ -68,9 +258,13 @@ func (m *AutoMsgClusterListHelper) GetItems() []*Cluster {
 	return nil
 }
 
-// NodeStatus contains the current state of the node.
+// ClusterSpec contains the configuration of the cluster.
 type AutoMsgClusterWatchHelper struct {
-	Type   string   `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
+	// nodes in the cluster.
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	// VirtualIP is the IP address for managing the cluster. It will be hosted by
+	// the winner of election between quorum nodes.
 	Object *Cluster `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
@@ -93,12 +287,12 @@ func (m *AutoMsgClusterWatchHelper) GetObject() *Cluster {
 	return nil
 }
 
-// Node is representation of a single node in the cluster.
+// ClusterStatus contains the current state of the Cluster.
 type AutoMsgNodeListHelper struct {
+	// Leader contains the node name of the cluster leader.
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
 	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	// Spec contains the configuration of the node.
-	Items []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+	Items        []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
 }
 
 func (m *AutoMsgNodeListHelper) Reset()                    { *m = AutoMsgNodeListHelper{} }
@@ -113,14 +307,33 @@ func (m *AutoMsgNodeListHelper) GetItems() []*Node {
 	return nil
 }
 
-// ClusterSpec contains the configuration of the cluster.
+// ---------------------------------- NODE -------------------------------------------
+//
+// Node is representation of a single node in the system.
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o NetOps-admin
+//              - initial node creation for Baremetal node
+//          o CMD
+//              - auto created when Hypervisor Node and NIC are
+//                discovered via Orchestrator interface, NIC registration
+//      Modify:
+//          o NetOps-admin
+//              - update spec for Baremetal node
+//          o CMD
+//              - update spec attributes for Hypervisor node
+//              - update status attributes
+//      Delete:
+//          o NetOps-admin
+//              - when Baremetal node is decommissioned
+//          o CMD
+//              - TBD
+//
 type AutoMsgNodeWatchHelper struct {
-	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
-	// nodes in the cluster.
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// VirtualIP is the IP address for managing the cluster. It will be hosted by
-	// the winner of election between quorum nodes.
-	Object *Node `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Node  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
 func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
@@ -142,19 +355,69 @@ func (m *AutoMsgNodeWatchHelper) GetObject() *Node {
 	return nil
 }
 
-// ClusterStatus contains the current state of the Cluster.
+// NodeSpec contains the configuration of the node.
+type AutoMsgSmartNICListHelper struct {
+	// Roles is of list of roles a node can be configured with.
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*SmartNIC `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *AutoMsgSmartNICListHelper) Reset()                    { *m = AutoMsgSmartNICListHelper{} }
+func (m *AutoMsgSmartNICListHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgSmartNICListHelper) ProtoMessage()               {}
+func (*AutoMsgSmartNICListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{4} }
+
+func (m *AutoMsgSmartNICListHelper) GetItems() []*SmartNIC {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// NodeStatus contains the current state of the node.
+type AutoMsgSmartNICWatchHelper struct {
+	// Current lifecycle phase of the node.
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	// List of current node conditions
+	Object *SmartNIC `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Reset()                    { *m = AutoMsgSmartNICWatchHelper{} }
+func (m *AutoMsgSmartNICWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgSmartNICWatchHelper) ProtoMessage()               {}
+func (*AutoMsgSmartNICWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{5} }
+
+func (m *AutoMsgSmartNICWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgSmartNICWatchHelper) GetObject() *SmartNIC {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+// NodeCondition describes the state of a Node at a certain point.
 type Cluster struct {
-	// Leader contains the node name of the cluster leader.
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	// Type indicates a certain node condition
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	// Condition Status
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
-	Spec           ClusterSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         ClusterStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	// The last time the condition transitioned
+	Spec ClusterSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	// The reason for the condition's last transition
+	Status ClusterStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *Cluster) Reset()                    { *m = Cluster{} }
 func (m *Cluster) String() string            { return proto.CompactTextString(m) }
 func (*Cluster) ProtoMessage()               {}
-func (*Cluster) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{4} }
+func (*Cluster) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{6} }
 
 func (m *Cluster) GetSpec() ClusterSpec {
 	if m != nil {
@@ -170,20 +433,39 @@ func (m *Cluster) GetStatus() ClusterStatus {
 	return ClusterStatus{}
 }
 
-// Cluster represents a full cluster
+// ------------------------------------ SMART NIC  -------------------------------------------
+//
+// SmartNIC represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
 type ClusterSpec struct {
 	QuorumNodes []string `protobuf:"bytes,1,rep,name=QuorumNodes" json:"quorumNodes,omitempty"`
-	VirtualIP   string   `protobuf:"bytes,2,opt,name=VirtualIP,proto3" json:"virtualIP,omitempty"`
-	// Spec contains the configuration of the cluster.
+	// Object name is Serial-Number of the SmartNIC
+	VirtualIP string `protobuf:"bytes,2,opt,name=VirtualIP,proto3" json:"virtualIp,omitempty"`
+	// SmartNICSpec contains the configuration of the network adapter.
 	NTPServers []string `protobuf:"bytes,3,rep,name=NTPServers" json:"ntpServers,omitempty"`
-	// Status contains the current state of the cluster.
-	DNSSubDomain string `protobuf:"bytes,4,opt,name=DNSSubDomain,proto3" json:"dnsSubDomain,omitempty"`
+	// SmartNICStatus contains the current state of the network adapter.
+	DNSSubDomain string `protobuf:"bytes,4,opt,name=DNSSubDomain,proto3" json:"dnsSubdomain,omitempty"`
 }
 
 func (m *ClusterSpec) Reset()                    { *m = ClusterSpec{} }
 func (m *ClusterSpec) String() string            { return proto.CompactTextString(m) }
 func (*ClusterSpec) ProtoMessage()               {}
-func (*ClusterSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{5} }
+func (*ClusterSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7} }
 
 func (m *ClusterSpec) GetQuorumNodes() []string {
 	if m != nil {
@@ -213,14 +495,16 @@ func (m *ClusterSpec) GetDNSSubDomain() string {
 	return ""
 }
 
+// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
 type ClusterStatus struct {
+	// Ports holds a list of Port Specs
 	Leader string `protobuf:"bytes,1,opt,name=Leader,proto3" json:"leader,omitempty"`
 }
 
 func (m *ClusterStatus) Reset()                    { *m = ClusterStatus{} }
 func (m *ClusterStatus) String() string            { return proto.CompactTextString(m) }
 func (*ClusterStatus) ProtoMessage()               {}
-func (*ClusterStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{6} }
+func (*ClusterStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{8} }
 
 func (m *ClusterStatus) GetLeader() string {
 	if m != nil {
@@ -229,23 +513,28 @@ func (m *ClusterStatus) GetLeader() string {
 	return ""
 }
 
+// SmartNICStatus contains current status of a SmartNIC
 type Node struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	// Current lifecycle phase of the SmartNIC.
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	// List of current NIC conditions
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
-	Spec           *NodeSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         *NodeStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	// Serial number
+	Spec NodeSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	// Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
+	Status *NodeStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *Node) Reset()                    { *m = Node{} }
 func (m *Node) String() string            { return proto.CompactTextString(m) }
 func (*Node) ProtoMessage()               {}
-func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7} }
+func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{9} }
 
-func (m *Node) GetSpec() *NodeSpec {
+func (m *Node) GetSpec() NodeSpec {
 	if m != nil {
 		return m.Spec
 	}
-	return nil
+	return NodeSpec{}
 }
 
 func (m *Node) GetStatus() *NodeStatus {
@@ -255,36 +544,360 @@ func (m *Node) GetStatus() *NodeStatus {
 	return nil
 }
 
+// SmartNICCondition describes the state of a SmartNIC at a certain point.
+type NodeCondition struct {
+	// Type indicates a certain NIC condition
+	Type NodeConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.NodeConditionType" json:"type,omitempty"`
+	// Condition Status
+	Status ConditionStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
+	// The last time the condition transitioned
+	LastTransitionTime int64 `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
+	Message string `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
+}
+
+func (m *NodeCondition) Reset()                    { *m = NodeCondition{} }
+func (m *NodeCondition) String() string            { return proto.CompactTextString(m) }
+func (*NodeCondition) ProtoMessage()               {}
+func (*NodeCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{10} }
+
+func (m *NodeCondition) GetType() NodeConditionType {
+	if m != nil {
+		return m.Type
+	}
+	return NodeConditionType_NODE_LEADER
+}
+
+func (m *NodeCondition) GetStatus() ConditionStatus {
+	if m != nil {
+		return m.Status
+	}
+	return ConditionStatus_CONDITION_UNKNOWN
+}
+
+func (m *NodeCondition) GetLastTransitionTime() int64 {
+	if m != nil {
+		return m.LastTransitionTime
+	}
+	return 0
+}
+
+func (m *NodeCondition) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *NodeCondition) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+// PortSpec contains configuration of a port in SmartNIC
 type NodeSpec struct {
-	Name string `protobuf:"bytes,1,opt,name=Name,proto3" json:"Name,omitempty"`
+	// Mac address of the Port, which is key identifier of the port
+	Roles []NodeSpec_NodeRole `protobuf:"varint,1,rep,packed,name=Roles,enum=cmd.NodeSpec_NodeRole" json:"roles,omitempty"`
 }
 
 func (m *NodeSpec) Reset()                    { *m = NodeSpec{} }
 func (m *NodeSpec) String() string            { return proto.CompactTextString(m) }
 func (*NodeSpec) ProtoMessage()               {}
-func (*NodeSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{8} }
+func (*NodeSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{11} }
 
-func (m *NodeSpec) GetName() string {
+func (m *NodeSpec) GetRoles() []NodeSpec_NodeRole {
 	if m != nil {
-		return m.Name
+		return m.Roles
 	}
-	return ""
+	return nil
 }
 
+// PortStatus contains current status of a Port
 type NodeStatus struct {
-	Status string `protobuf:"bytes,1,opt,name=Status,proto3" json:"Status,omitempty"`
+	// Mac address of the Port, which is key identifier of the port
+	Phase NodePhase `protobuf:"varint,1,opt,name=Phase,proto3,enum=cmd.NodePhase" json:"phase,omitempty"`
+	// LinkSpeed of the Port
+	Conditions []*NodeCondition `protobuf:"bytes,2,rep,name=Conditions" json:"conditions,omitempty"`
+	// List of current Port conditions
+	Nics []string `protobuf:"bytes,3,rep,name=Nics" json:"nics,omitempty"`
 }
 
 func (m *NodeStatus) Reset()                    { *m = NodeStatus{} }
 func (m *NodeStatus) String() string            { return proto.CompactTextString(m) }
 func (*NodeStatus) ProtoMessage()               {}
-func (*NodeStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{9} }
+func (*NodeStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{12} }
 
-func (m *NodeStatus) GetStatus() string {
+func (m *NodeStatus) GetPhase() NodePhase {
+	if m != nil {
+		return m.Phase
+	}
+	return NodePhase_NODE_UNKNOWN
+}
+
+func (m *NodeStatus) GetConditions() []*NodeCondition {
+	if m != nil {
+		return m.Conditions
+	}
+	return nil
+}
+
+func (m *NodeStatus) GetNics() []string {
+	if m != nil {
+		return m.Nics
+	}
+	return nil
+}
+
+// PortCondition describes the state of a Port at a certain point.
+type PortCondition struct {
+	// Type indicates a certain Port condition
+	Type PortConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.PortConditionType" json:"type,omitempty"`
+	// Condition Status
+	Status ConditionStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
+	// The last time the condition transitioned
+	LastTransitionTime int64 `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
+	// The reason for the condition's last transition
+	Reason string `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
+	// A detailed message indicating details about the transition.
+	Message string `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
+}
+
+func (m *PortCondition) Reset()                    { *m = PortCondition{} }
+func (m *PortCondition) String() string            { return proto.CompactTextString(m) }
+func (*PortCondition) ProtoMessage()               {}
+func (*PortCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{13} }
+
+func (m *PortCondition) GetType() PortConditionType {
+	if m != nil {
+		return m.Type
+	}
+	return PortConditionType_PORT_UP
+}
+
+func (m *PortCondition) GetStatus() ConditionStatus {
 	if m != nil {
 		return m.Status
 	}
+	return ConditionStatus_CONDITION_UNKNOWN
+}
+
+func (m *PortCondition) GetLastTransitionTime() int64 {
+	if m != nil {
+		return m.LastTransitionTime
+	}
+	return 0
+}
+
+func (m *PortCondition) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
 	return ""
+}
+
+func (m *PortCondition) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type PortSpec struct {
+	MacAddress string `protobuf:"bytes,1,opt,name=MacAddress,proto3" json:"macAddress,omitempty"`
+}
+
+func (m *PortSpec) Reset()                    { *m = PortSpec{} }
+func (m *PortSpec) String() string            { return proto.CompactTextString(m) }
+func (*PortSpec) ProtoMessage()               {}
+func (*PortSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{14} }
+
+func (m *PortSpec) GetMacAddress() string {
+	if m != nil {
+		return m.MacAddress
+	}
+	return ""
+}
+
+type PortStatus struct {
+	MacAddress string           `protobuf:"bytes,1,opt,name=MacAddress,proto3" json:"macAddress,omitempty"`
+	LinkSpeed  string           `protobuf:"bytes,2,opt,name=LinkSpeed,proto3" json:"linkSpeed,omitempty"`
+	Conditions []*PortCondition `protobuf:"bytes,3,rep,name=Conditions" json:"conditions,omitempty"`
+}
+
+func (m *PortStatus) Reset()                    { *m = PortStatus{} }
+func (m *PortStatus) String() string            { return proto.CompactTextString(m) }
+func (*PortStatus) ProtoMessage()               {}
+func (*PortStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{15} }
+
+func (m *PortStatus) GetMacAddress() string {
+	if m != nil {
+		return m.MacAddress
+	}
+	return ""
+}
+
+func (m *PortStatus) GetLinkSpeed() string {
+	if m != nil {
+		return m.LinkSpeed
+	}
+	return ""
+}
+
+func (m *PortStatus) GetConditions() []*PortCondition {
+	if m != nil {
+		return m.Conditions
+	}
+	return nil
+}
+
+type SmartNIC struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
+	Spec           SmartNICSpec    `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         *SmartNICStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+}
+
+func (m *SmartNIC) Reset()                    { *m = SmartNIC{} }
+func (m *SmartNIC) String() string            { return proto.CompactTextString(m) }
+func (*SmartNIC) ProtoMessage()               {}
+func (*SmartNIC) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{16} }
+
+func (m *SmartNIC) GetSpec() SmartNICSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return SmartNICSpec{}
+}
+
+func (m *SmartNIC) GetStatus() *SmartNICStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+type SmartNICCondition struct {
+	Type               SmartNICConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.SmartNICConditionType" json:"type,omitempty"`
+	Status             ConditionStatus       `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
+	LastTransitionTime int64                 `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
+	Reason             string                `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
+	Message            string                `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
+}
+
+func (m *SmartNICCondition) Reset()                    { *m = SmartNICCondition{} }
+func (m *SmartNICCondition) String() string            { return proto.CompactTextString(m) }
+func (*SmartNICCondition) ProtoMessage()               {}
+func (*SmartNICCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{17} }
+
+func (m *SmartNICCondition) GetType() SmartNICConditionType {
+	if m != nil {
+		return m.Type
+	}
+	return SmartNICConditionType_NIC_HEALTHY
+}
+
+func (m *SmartNICCondition) GetStatus() ConditionStatus {
+	if m != nil {
+		return m.Status
+	}
+	return ConditionStatus_CONDITION_UNKNOWN
+}
+
+func (m *SmartNICCondition) GetLastTransitionTime() int64 {
+	if m != nil {
+		return m.LastTransitionTime
+	}
+	return 0
+}
+
+func (m *SmartNICCondition) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *SmartNICCondition) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type SmartNICSpec struct {
+	Ports []PortSpec `protobuf:"bytes,1,rep,name=Ports" json:"ports,omitempty"`
+}
+
+func (m *SmartNICSpec) Reset()                    { *m = SmartNICSpec{} }
+func (m *SmartNICSpec) String() string            { return proto.CompactTextString(m) }
+func (*SmartNICSpec) ProtoMessage()               {}
+func (*SmartNICSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{18} }
+
+func (m *SmartNICSpec) GetPorts() []PortSpec {
+	if m != nil {
+		return m.Ports
+	}
+	return nil
+}
+
+type SmartNICStatus struct {
+	Phase             SmartNICPhase        `protobuf:"varint,1,opt,name=Phase,proto3,enum=cmd.SmartNICPhase" json:"phase,omitempty"`
+	Conditions        []*SmartNICCondition `protobuf:"bytes,2,rep,name=Conditions" json:"conditions,omitempty"`
+	SerialNum         string               `protobuf:"bytes,3,opt,name=SerialNum,proto3" json:"serialNumber,omitempty"`
+	PrimaryMacAddress string               `protobuf:"bytes,4,opt,name=PrimaryMacAddress,proto3" json:"primaryMacAddress,omitempty"`
+	NodeName          string               `protobuf:"bytes,5,opt,name=NodeName,proto3" json:"nodeName,omitempty"`
+	Ports             []*PortStatus        `protobuf:"bytes,6,rep,name=Ports" json:"ports,omitempty"`
+}
+
+func (m *SmartNICStatus) Reset()                    { *m = SmartNICStatus{} }
+func (m *SmartNICStatus) String() string            { return proto.CompactTextString(m) }
+func (*SmartNICStatus) ProtoMessage()               {}
+func (*SmartNICStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{19} }
+
+func (m *SmartNICStatus) GetPhase() SmartNICPhase {
+	if m != nil {
+		return m.Phase
+	}
+	return SmartNICPhase_NIC_UNKNOWN
+}
+
+func (m *SmartNICStatus) GetConditions() []*SmartNICCondition {
+	if m != nil {
+		return m.Conditions
+	}
+	return nil
+}
+
+func (m *SmartNICStatus) GetSerialNum() string {
+	if m != nil {
+		return m.SerialNum
+	}
+	return ""
+}
+
+func (m *SmartNICStatus) GetPrimaryMacAddress() string {
+	if m != nil {
+		return m.PrimaryMacAddress
+	}
+	return ""
+}
+
+func (m *SmartNICStatus) GetNodeName() string {
+	if m != nil {
+		return m.NodeName
+	}
+	return ""
+}
+
+func (m *SmartNICStatus) GetPorts() []*PortStatus {
+	if m != nil {
+		return m.Ports
+	}
+	return nil
 }
 
 func init() {
@@ -292,12 +905,29 @@ func init() {
 	proto.RegisterType((*AutoMsgClusterWatchHelper)(nil), "cmd.AutoMsgClusterWatchHelper")
 	proto.RegisterType((*AutoMsgNodeListHelper)(nil), "cmd.AutoMsgNodeListHelper")
 	proto.RegisterType((*AutoMsgNodeWatchHelper)(nil), "cmd.AutoMsgNodeWatchHelper")
+	proto.RegisterType((*AutoMsgSmartNICListHelper)(nil), "cmd.AutoMsgSmartNICListHelper")
+	proto.RegisterType((*AutoMsgSmartNICWatchHelper)(nil), "cmd.AutoMsgSmartNICWatchHelper")
 	proto.RegisterType((*Cluster)(nil), "cmd.Cluster")
 	proto.RegisterType((*ClusterSpec)(nil), "cmd.ClusterSpec")
 	proto.RegisterType((*ClusterStatus)(nil), "cmd.ClusterStatus")
 	proto.RegisterType((*Node)(nil), "cmd.Node")
+	proto.RegisterType((*NodeCondition)(nil), "cmd.NodeCondition")
 	proto.RegisterType((*NodeSpec)(nil), "cmd.NodeSpec")
 	proto.RegisterType((*NodeStatus)(nil), "cmd.NodeStatus")
+	proto.RegisterType((*PortCondition)(nil), "cmd.PortCondition")
+	proto.RegisterType((*PortSpec)(nil), "cmd.PortSpec")
+	proto.RegisterType((*PortStatus)(nil), "cmd.PortStatus")
+	proto.RegisterType((*SmartNIC)(nil), "cmd.SmartNIC")
+	proto.RegisterType((*SmartNICCondition)(nil), "cmd.SmartNICCondition")
+	proto.RegisterType((*SmartNICSpec)(nil), "cmd.SmartNICSpec")
+	proto.RegisterType((*SmartNICStatus)(nil), "cmd.SmartNICStatus")
+	proto.RegisterEnum("cmd.NodePhase", NodePhase_name, NodePhase_value)
+	proto.RegisterEnum("cmd.NodeConditionType", NodeConditionType_name, NodeConditionType_value)
+	proto.RegisterEnum("cmd.ConditionStatus", ConditionStatus_name, ConditionStatus_value)
+	proto.RegisterEnum("cmd.SmartNICPhase", SmartNICPhase_name, SmartNICPhase_value)
+	proto.RegisterEnum("cmd.SmartNICConditionType", SmartNICConditionType_name, SmartNICConditionType_value)
+	proto.RegisterEnum("cmd.PortConditionType", PortConditionType_name, PortConditionType_value)
+	proto.RegisterEnum("cmd.NodeSpec_NodeRole", NodeSpec_NodeRole_name, NodeSpec_NodeRole_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -313,16 +943,22 @@ const _ = grpc.SupportPackageIsVersion4
 type CmdV1Client interface {
 	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoAddSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error)
 	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNodeListHelper, error)
+	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSmartNICListHelper, error)
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchClusterClient, error)
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchNodeClient, error)
+	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchSmartNICClient, error)
 }
 
 type cmdV1Client struct {
@@ -351,6 +987,15 @@ func (c *cmdV1Client) AutoAddNode(ctx context.Context, in *Node, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *cmdV1Client) AutoAddSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error) {
+	out := new(SmartNIC)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoAddSmartNIC", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cmdV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoDeleteCluster", in, out, c.cc, opts...)
@@ -363,6 +1008,15 @@ func (c *cmdV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster, opts .
 func (c *cmdV1Client) AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoDeleteNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error) {
+	out := new(SmartNIC)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoDeleteSmartNIC", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -387,6 +1041,15 @@ func (c *cmdV1Client) AutoGetNode(ctx context.Context, in *Node, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *cmdV1Client) AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error) {
+	out := new(SmartNIC)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoGetSmartNIC", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error) {
 	out := new(AutoMsgClusterListHelper)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListCluster", in, out, c.cc, opts...)
@@ -405,6 +1068,15 @@ func (c *cmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions
 	return out, nil
 }
 
+func (c *cmdV1Client) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSmartNICListHelper, error) {
+	out := new(AutoMsgSmartNICListHelper)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListSmartNIC", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cmdV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error) {
 	out := new(Cluster)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoUpdateCluster", in, out, c.cc, opts...)
@@ -417,6 +1089,15 @@ func (c *cmdV1Client) AutoUpdateCluster(ctx context.Context, in *Cluster, opts .
 func (c *cmdV1Client) AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoUpdateNode", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cmdV1Client) AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error) {
+	out := new(SmartNIC)
+	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoUpdateSmartNIC", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -487,21 +1168,59 @@ func (x *cmdV1AutoWatchNodeClient) Recv() (*AutoMsgNodeWatchHelper, error) {
 	return m, nil
 }
 
+func (c *cmdV1Client) AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (CmdV1_AutoWatchSmartNICClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_CmdV1_serviceDesc.Streams[2], c.cc, "/cmd.CmdV1/AutoWatchSmartNIC", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cmdV1AutoWatchSmartNICClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CmdV1_AutoWatchSmartNICClient interface {
+	Recv() (*AutoMsgSmartNICWatchHelper, error)
+	grpc.ClientStream
+}
+
+type cmdV1AutoWatchSmartNICClient struct {
+	grpc.ClientStream
+}
+
+func (x *cmdV1AutoWatchSmartNICClient) Recv() (*AutoMsgSmartNICWatchHelper, error) {
+	m := new(AutoMsgSmartNICWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for CmdV1 service
 
 type CmdV1Server interface {
 	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoAddNode(context.Context, *Node) (*Node, error)
+	AutoAddSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoDeleteNode(context.Context, *Node) (*Node, error)
+	AutoDeleteSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoGetNode(context.Context, *Node) (*Node, error)
+	AutoGetSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoListCluster(context.Context, *api.ListWatchOptions) (*AutoMsgClusterListHelper, error)
 	AutoListNode(context.Context, *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
+	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error)
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
+	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	AutoWatchCluster(*api.ListWatchOptions, CmdV1_AutoWatchClusterServer) error
 	AutoWatchNode(*api.ListWatchOptions, CmdV1_AutoWatchNodeServer) error
+	AutoWatchSmartNIC(*api.ListWatchOptions, CmdV1_AutoWatchSmartNICServer) error
 }
 
 func RegisterCmdV1Server(s *grpc.Server, srv CmdV1Server) {
@@ -544,6 +1263,24 @@ func _CmdV1_AutoAddNode_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CmdV1_AutoAddSmartNIC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SmartNIC)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoAddSmartNIC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoAddSmartNIC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoAddSmartNIC(ctx, req.(*SmartNIC))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CmdV1_AutoDeleteCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Cluster)
 	if err := dec(in); err != nil {
@@ -576,6 +1313,24 @@ func _CmdV1_AutoDeleteNode_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CmdV1Server).AutoDeleteNode(ctx, req.(*Node))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoDeleteSmartNIC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SmartNIC)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoDeleteSmartNIC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoDeleteSmartNIC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoDeleteSmartNIC(ctx, req.(*SmartNIC))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -616,6 +1371,24 @@ func _CmdV1_AutoGetNode_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CmdV1_AutoGetSmartNIC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SmartNIC)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoGetSmartNIC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoGetSmartNIC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoGetSmartNIC(ctx, req.(*SmartNIC))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CmdV1_AutoListCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -652,6 +1425,24 @@ func _CmdV1_AutoListNode_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CmdV1_AutoListSmartNIC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoListSmartNIC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoListSmartNIC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoListSmartNIC(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CmdV1_AutoUpdateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Cluster)
 	if err := dec(in); err != nil {
@@ -684,6 +1475,24 @@ func _CmdV1_AutoUpdateNode_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CmdV1Server).AutoUpdateNode(ctx, req.(*Node))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CmdV1_AutoUpdateSmartNIC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SmartNIC)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CmdV1Server).AutoUpdateSmartNIC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cmd.CmdV1/AutoUpdateSmartNIC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CmdV1Server).AutoUpdateSmartNIC(ctx, req.(*SmartNIC))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -730,6 +1539,27 @@ func (x *cmdV1AutoWatchNodeServer) Send(m *AutoMsgNodeWatchHelper) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _CmdV1_AutoWatchSmartNIC_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CmdV1Server).AutoWatchSmartNIC(m, &cmdV1AutoWatchSmartNICServer{stream})
+}
+
+type CmdV1_AutoWatchSmartNICServer interface {
+	Send(*AutoMsgSmartNICWatchHelper) error
+	grpc.ServerStream
+}
+
+type cmdV1AutoWatchSmartNICServer struct {
+	grpc.ServerStream
+}
+
+func (x *cmdV1AutoWatchSmartNICServer) Send(m *AutoMsgSmartNICWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _CmdV1_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cmd.CmdV1",
 	HandlerType: (*CmdV1Server)(nil),
@@ -743,12 +1573,20 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _CmdV1_AutoAddNode_Handler,
 		},
 		{
+			MethodName: "AutoAddSmartNIC",
+			Handler:    _CmdV1_AutoAddSmartNIC_Handler,
+		},
+		{
 			MethodName: "AutoDeleteCluster",
 			Handler:    _CmdV1_AutoDeleteCluster_Handler,
 		},
 		{
 			MethodName: "AutoDeleteNode",
 			Handler:    _CmdV1_AutoDeleteNode_Handler,
+		},
+		{
+			MethodName: "AutoDeleteSmartNIC",
+			Handler:    _CmdV1_AutoDeleteSmartNIC_Handler,
 		},
 		{
 			MethodName: "AutoGetCluster",
@@ -759,6 +1597,10 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _CmdV1_AutoGetNode_Handler,
 		},
 		{
+			MethodName: "AutoGetSmartNIC",
+			Handler:    _CmdV1_AutoGetSmartNIC_Handler,
+		},
+		{
 			MethodName: "AutoListCluster",
 			Handler:    _CmdV1_AutoListCluster_Handler,
 		},
@@ -767,12 +1609,20 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _CmdV1_AutoListNode_Handler,
 		},
 		{
+			MethodName: "AutoListSmartNIC",
+			Handler:    _CmdV1_AutoListSmartNIC_Handler,
+		},
+		{
 			MethodName: "AutoUpdateCluster",
 			Handler:    _CmdV1_AutoUpdateCluster_Handler,
 		},
 		{
 			MethodName: "AutoUpdateNode",
 			Handler:    _CmdV1_AutoUpdateNode_Handler,
+		},
+		{
+			MethodName: "AutoUpdateSmartNIC",
+			Handler:    _CmdV1_AutoUpdateSmartNIC_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -784,6 +1634,11 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchNode",
 			Handler:       _CmdV1_AutoWatchNode_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchSmartNIC",
+			Handler:       _CmdV1_AutoWatchSmartNIC_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -950,6 +1805,86 @@ func (m *AutoMsgNodeWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AutoMsgSmartNICListHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSmartNICListHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgSmartNICWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
+		n9, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
+
 func (m *Cluster) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -968,35 +1903,35 @@ func (m *Cluster) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n8, err := m.ObjectMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n8
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
-	n9, err := m.Spec.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n9
-	dAtA[i] = 0x22
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
-	n10, err := m.Status.MarshalTo(dAtA[i:])
+	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n10
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n11, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n11
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
+	n12, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n12
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
+	n13, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n13
 	return i, nil
 }
 
@@ -1102,38 +2037,81 @@ func (m *Node) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n14
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n12, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n15, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n12
-	if m.Spec != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
-		n13, err := m.Spec.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n13
+	i += n15
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
+	n16, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
 	}
+	i += n16
 	if m.Status != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
-		n14, err := m.Status.MarshalTo(dAtA[i:])
+		n17, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n17
+	}
+	return i, nil
+}
+
+func (m *NodeCondition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NodeCondition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Type))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.LastTransitionTime))
+	}
+	if len(m.Reason) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Reason)))
+		i += copy(dAtA[i:], m.Reason)
+	}
+	if len(m.Message) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
 	}
 	return i, nil
 }
@@ -1153,11 +2131,22 @@ func (m *NodeSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Name) > 0 {
+	if len(m.Roles) > 0 {
+		dAtA19 := make([]byte, len(m.Roles)*10)
+		var j18 int
+		for _, num := range m.Roles {
+			for num >= 1<<7 {
+				dAtA19[j18] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j18++
+			}
+			dAtA19[j18] = uint8(num)
+			j18++
+		}
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintCmd(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
+		i = encodeVarintCmd(dAtA, i, uint64(j18))
+		i += copy(dAtA[i:], dAtA19[:j18])
 	}
 	return i, nil
 }
@@ -1177,11 +2166,340 @@ func (m *NodeStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Status) > 0 {
+	if m.Phase != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Phase))
+	}
+	if len(m.Conditions) > 0 {
+		for _, msg := range m.Conditions {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.Nics) > 0 {
+		for _, s := range m.Nics {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *PortCondition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PortCondition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Type))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.LastTransitionTime))
+	}
+	if len(m.Reason) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Reason)))
+		i += copy(dAtA[i:], m.Reason)
+	}
+	if len(m.Message) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *PortSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PortSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.MacAddress) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintCmd(dAtA, i, uint64(len(m.Status)))
-		i += copy(dAtA[i:], m.Status)
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.MacAddress)))
+		i += copy(dAtA[i:], m.MacAddress)
+	}
+	return i, nil
+}
+
+func (m *PortStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PortStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.MacAddress) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.MacAddress)))
+		i += copy(dAtA[i:], m.MacAddress)
+	}
+	if len(m.LinkSpeed) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.LinkSpeed)))
+		i += copy(dAtA[i:], m.LinkSpeed)
+	}
+	if len(m.Conditions) > 0 {
+		for _, msg := range m.Conditions {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *SmartNIC) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SmartNIC) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n20, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n20
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n21, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n21
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
+	n22, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n22
+	if m.Status != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
+		n23, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	return i, nil
+}
+
+func (m *SmartNICCondition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SmartNICCondition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Type))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.LastTransitionTime))
+	}
+	if len(m.Reason) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Reason)))
+		i += copy(dAtA[i:], m.Reason)
+	}
+	if len(m.Message) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.Message)))
+		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *SmartNICSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SmartNICSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Ports) > 0 {
+		for _, msg := range m.Ports {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *SmartNICStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SmartNICStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Phase != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(m.Phase))
+	}
+	if len(m.Conditions) > 0 {
+		for _, msg := range m.Conditions {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.SerialNum) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.SerialNum)))
+		i += copy(dAtA[i:], m.SerialNum)
+	}
+	if len(m.PrimaryMacAddress) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.PrimaryMacAddress)))
+		i += copy(dAtA[i:], m.PrimaryMacAddress)
+	}
+	if len(m.NodeName) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCmd(dAtA, i, uint64(len(m.NodeName)))
+		i += copy(dAtA[i:], m.NodeName)
+	}
+	if len(m.Ports) > 0 {
+		for _, msg := range m.Ports {
+			dAtA[i] = 0x32
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -1273,6 +2591,36 @@ func (m *AutoMsgNodeWatchHelper) Size() (n int) {
 	return n
 }
 
+func (m *AutoMsgSmartNICListHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
 func (m *Cluster) Size() (n int) {
 	var l int
 	_ = l
@@ -1330,12 +2678,33 @@ func (m *Node) Size() (n int) {
 	n += 1 + l + sovCmd(uint64(l))
 	l = m.ObjectMeta.Size()
 	n += 1 + l + sovCmd(uint64(l))
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovCmd(uint64(l))
-	}
+	l = m.Spec.Size()
+	n += 1 + l + sovCmd(uint64(l))
 	if m.Status != nil {
 		l = m.Status.Size()
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *NodeCondition) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovCmd(uint64(m.Type))
+	}
+	if m.Status != 0 {
+		n += 1 + sovCmd(uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		n += 1 + sovCmd(uint64(m.LastTransitionTime))
+	}
+	l = len(m.Reason)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.Message)
+	if l > 0 {
 		n += 1 + l + sovCmd(uint64(l))
 	}
 	return n
@@ -1344,9 +2713,12 @@ func (m *Node) Size() (n int) {
 func (m *NodeSpec) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovCmd(uint64(l))
+	if len(m.Roles) > 0 {
+		l = 0
+		for _, e := range m.Roles {
+			l += sovCmd(uint64(e))
+		}
+		n += 1 + sovCmd(uint64(l)) + l
 	}
 	return n
 }
@@ -1354,9 +2726,157 @@ func (m *NodeSpec) Size() (n int) {
 func (m *NodeStatus) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Status)
+	if m.Phase != 0 {
+		n += 1 + sovCmd(uint64(m.Phase))
+	}
+	if len(m.Conditions) > 0 {
+		for _, e := range m.Conditions {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	if len(m.Nics) > 0 {
+		for _, s := range m.Nics {
+			l = len(s)
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PortCondition) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovCmd(uint64(m.Type))
+	}
+	if m.Status != 0 {
+		n += 1 + sovCmd(uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		n += 1 + sovCmd(uint64(m.LastTransitionTime))
+	}
+	l = len(m.Reason)
 	if l > 0 {
 		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *PortSpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.MacAddress)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *PortStatus) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.MacAddress)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.LinkSpeed)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	if len(m.Conditions) > 0 {
+		for _, e := range m.Conditions {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SmartNIC) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *SmartNICCondition) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovCmd(uint64(m.Type))
+	}
+	if m.Status != 0 {
+		n += 1 + sovCmd(uint64(m.Status))
+	}
+	if m.LastTransitionTime != 0 {
+		n += 1 + sovCmd(uint64(m.LastTransitionTime))
+	}
+	l = len(m.Reason)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *SmartNICSpec) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Ports) > 0 {
+		for _, e := range m.Ports {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SmartNICStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.Phase != 0 {
+		n += 1 + sovCmd(uint64(m.Phase))
+	}
+	if len(m.Conditions) > 0 {
+		for _, e := range m.Conditions {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
+	l = len(m.SerialNum)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.PrimaryMacAddress)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	l = len(m.NodeName)
+	if l > 0 {
+		n += 1 + l + sovCmd(uint64(l))
+	}
+	if len(m.Ports) > 0 {
+		for _, e := range m.Ports {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
 	}
 	return n
 }
@@ -1854,6 +3374,259 @@ func (m *AutoMsgNodeWatchHelper) Unmarshal(dAtA []byte) error {
 			}
 			if m.Object == nil {
 				m.Object = &Node{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSmartNICListHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSmartNICListHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSmartNICListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &SmartNIC{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgSmartNICWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgSmartNICWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgSmartNICWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &SmartNIC{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2410,9 +4183,6 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Spec == nil {
-				m.Spec = &NodeSpec{}
-			}
 			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2471,6 +4241,171 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *NodeCondition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NodeCondition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NodeCondition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (NodeConditionType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (ConditionStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
+			}
+			m.LastTransitionTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastTransitionTime |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *NodeSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2501,34 +4436,67 @@ func (m *NodeSpec) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
+			if wireType == 0 {
+				var v NodeSpec_NodeRole
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCmd
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (NodeSpec_NodeRole(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Roles = append(m.Roles, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCmd
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthCmd
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
+				for iNdEx < postIndex {
+					var v NodeSpec_NodeRole
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCmd
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (NodeSpec_NodeRole(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Roles = append(m.Roles, v)
 				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Roles", wireType)
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCmd(dAtA[iNdEx:])
@@ -2580,8 +4548,58 @@ func (m *NodeStatus) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Phase", wireType)
+			}
+			m.Phase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Phase |= (NodePhase(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Conditions = append(m.Conditions, &NodeCondition{})
+			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nics", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2606,7 +4624,1027 @@ func (m *NodeStatus) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Status = string(dAtA[iNdEx:postIndex])
+			m.Nics = append(m.Nics, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PortCondition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PortCondition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PortCondition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (PortConditionType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (ConditionStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
+			}
+			m.LastTransitionTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastTransitionTime |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PortSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PortSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PortSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MacAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MacAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PortStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PortStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PortStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MacAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MacAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LinkSpeed", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LinkSpeed = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Conditions = append(m.Conditions, &PortCondition{})
+			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SmartNIC) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SmartNIC: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SmartNIC: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &SmartNICStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SmartNICCondition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SmartNICCondition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SmartNICCondition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (SmartNICConditionType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (ConditionStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
+			}
+			m.LastTransitionTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastTransitionTime |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SmartNICSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SmartNICSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SmartNICSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Ports = append(m.Ports, PortSpec{})
+			if err := m.Ports[len(m.Ports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SmartNICStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SmartNICStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SmartNICStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Phase", wireType)
+			}
+			m.Phase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Phase |= (SmartNICPhase(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Conditions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Conditions = append(m.Conditions, &SmartNICCondition{})
+			if err := m.Conditions[len(m.Conditions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerialNum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SerialNum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrimaryMacAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PrimaryMacAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Ports = append(m.Ports, &PortStatus{})
+			if err := m.Ports[len(m.Ports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2737,76 +5775,132 @@ var (
 func init() { proto.RegisterFile("cmd.proto", fileDescriptorCmd) }
 
 var fileDescriptorCmd = []byte{
-	// 1121 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x4b, 0x6f, 0x1b, 0x45,
-	0x1c, 0xcf, 0xc4, 0x8e, 0x1b, 0x8f, 0x63, 0x27, 0x9d, 0x3a, 0xe9, 0xee, 0xb6, 0xd8, 0x61, 0x05,
-	0x28, 0x09, 0xc1, 0x9b, 0x06, 0x55, 0x8a, 0x42, 0x53, 0xa9, 0x6e, 0x44, 0xa9, 0x68, 0x93, 0x34,
-	0x09, 0x01, 0x21, 0x38, 0xac, 0x77, 0x07, 0x67, 0xd1, 0xbe, 0xf0, 0xce, 0xa6, 0xaa, 0x10, 0x97,
-	0x9a, 0x9e, 0xb8, 0x20, 0x88, 0x38, 0xf4, 0xd8, 0x63, 0x8e, 0x1c, 0xf9, 0x04, 0x3d, 0x56, 0xed,
-	0x05, 0xf5, 0x60, 0xa1, 0x88, 0x93, 0x3f, 0x01, 0x12, 0x17, 0x34, 0xb3, 0xb3, 0xde, 0xd9, 0xf8,
-	0x41, 0x2e, 0x70, 0xdb, 0x99, 0xfd, 0xff, 0x1e, 0xff, 0xc7, 0xec, 0x2c, 0xcc, 0x1b, 0x8e, 0x59,
-	0xf3, 0x5b, 0x1e, 0xf1, 0x50, 0xc6, 0x70, 0x4c, 0xe5, 0x6a, 0xd3, 0xf3, 0x9a, 0x36, 0xd6, 0x74,
-	0xdf, 0xd2, 0x74, 0xd7, 0xf5, 0x88, 0x4e, 0x2c, 0xcf, 0x0d, 0xa2, 0x10, 0xe5, 0x66, 0xd3, 0x22,
-	0x87, 0x61, 0xa3, 0x66, 0x78, 0x8e, 0xe6, 0x63, 0x37, 0xd0, 0x5d, 0xd3, 0xd3, 0x82, 0x87, 0x5a,
-	0x48, 0x2c, 0x3b, 0xa0, 0x98, 0x26, 0x76, 0x45, 0x98, 0x66, 0xb9, 0x86, 0x1d, 0x9a, 0x38, 0xc6,
-	0xbf, 0x27, 0xe0, 0x9b, 0x5e, 0xd3, 0xd3, 0xd8, 0x76, 0x23, 0xfc, 0x8a, 0xad, 0xd8, 0x82, 0x3d,
-	0xf1, 0xf0, 0xb7, 0x87, 0xc8, 0x51, 0x73, 0x0e, 0x26, 0x7a, 0x14, 0xa6, 0xfe, 0x02, 0xa0, 0x74,
-	0x2b, 0x24, 0xde, 0xfd, 0xa0, 0x79, 0xdb, 0x0e, 0x03, 0x82, 0x5b, 0xf7, 0xac, 0x80, 0x7c, 0x84,
-	0x6d, 0x1f, 0xb7, 0x90, 0x0a, 0xc1, 0xbe, 0x34, 0x3e, 0x0f, 0x16, 0x0a, 0xab, 0xc5, 0x9a, 0xee,
-	0x5b, 0xb5, 0xfd, 0x47, 0x3e, 0xbe, 0x8f, 0x89, 0x5e, 0x9f, 0x7c, 0xde, 0xa9, 0x8e, 0xbd, 0xe8,
-	0x54, 0x01, 0x5a, 0x84, 0x93, 0x14, 0x41, 0x77, 0xa5, 0x8c, 0x10, 0x1a, 0x6f, 0x0a, 0xa1, 0x57,
-	0xe0, 0xc4, 0x5d, 0x82, 0x9d, 0x40, 0xca, 0xce, 0x67, 0x16, 0x0a, 0xab, 0x53, 0x35, 0x5a, 0x3f,
-	0xae, 0xba, 0x5e, 0x7a, 0x7d, 0x5c, 0x86, 0xb6, 0x15, 0x90, 0x43, 0xa6, 0xad, 0x7e, 0x06, 0xe5,
-	0xb4, 0xaf, 0x4f, 0x75, 0x62, 0x1c, 0x72, 0x63, 0x53, 0x30, 0x4b, 0xad, 0x48, 0x60, 0x1e, 0x2c,
-	0xe4, 0xd1, 0x55, 0x98, 0xdb, 0x6e, 0x7c, 0x8d, 0x0d, 0xc2, 0xbd, 0xa6, 0x89, 0xa7, 0x5f, 0x1f,
-	0x97, 0x0b, 0x0f, 0x29, 0x98, 0x33, 0xff, 0x08, 0xe0, 0x2c, 0xa7, 0xde, 0xf2, 0x4c, 0xfc, 0xdf,
-	0xe5, 0x2b, 0xa5, 0xf3, 0xcd, 0x33, 0x5b, 0x54, 0xb2, 0x2f, 0xd9, 0x5d, 0x38, 0x27, 0x38, 0x1a,
-	0x9e, 0xa9, 0x7c, 0x26, 0x53, 0x81, 0xb2, 0x2f, 0xcd, 0x1f, 0xc6, 0xe1, 0x05, 0x5e, 0x03, 0xb4,
-	0x42, 0x13, 0x03, 0x83, 0x12, 0xbb, 0x14, 0xbb, 0xed, 0x76, 0xaa, 0x17, 0x96, 0x2d, 0xd7, 0xb6,
-	0x5c, 0xbc, 0x0b, 0xf6, 0xd1, 0x06, 0x04, 0xdb, 0x5c, 0x64, 0x9a, 0x21, 0x22, 0x5d, 0x86, 0xa9,
-	0x08, 0x18, 0x44, 0x67, 0xc9, 0xd4, 0x89, 0xbe, 0xec, 0x39, 0x16, 0xc1, 0x8e, 0x4f, 0x1e, 0xed,
-	0x82, 0x6d, 0x74, 0x03, 0x66, 0xf7, 0x7c, 0x6c, 0xf0, 0x0a, 0xcd, 0x88, 0x0d, 0xa1, 0xfb, 0xf5,
-	0x39, 0x4a, 0xd1, 0xed, 0x54, 0x4b, 0x81, 0x8f, 0x0d, 0x01, 0xca, 0x50, 0x68, 0x13, 0xe6, 0xf6,
-	0x88, 0x4e, 0x42, 0x5a, 0x39, 0x8a, 0x47, 0x29, 0x3c, 0x7b, 0x53, 0x97, 0x38, 0xc3, 0x4c, 0xc0,
-	0xd6, 0x02, 0x07, 0xc7, 0xae, 0x17, 0x5e, 0x3e, 0x91, 0x2f, 0x18, 0x11, 0x48, 0xfd, 0x1b, 0xc0,
-	0x82, 0x60, 0x00, 0x7d, 0x00, 0x0b, 0x0f, 0x42, 0xaf, 0x15, 0x3a, 0xb4, 0x78, 0x81, 0x04, 0xe6,
-	0x33, 0x0b, 0xf9, 0xba, 0xdc, 0xed, 0x54, 0x67, 0xbf, 0x49, 0xb6, 0x05, 0x52, 0x31, 0x1a, 0x5d,
-	0x87, 0xf9, 0x03, 0xab, 0x45, 0x42, 0xdd, 0xbe, 0xbb, 0xc3, 0x8a, 0x94, 0xaf, 0x5f, 0xee, 0x76,
-	0xaa, 0x97, 0x8e, 0xe2, 0x4d, 0x01, 0x98, 0x44, 0xa2, 0x35, 0x08, 0xb7, 0xf6, 0x77, 0xf6, 0x70,
-	0xeb, 0x08, 0xb7, 0x02, 0x29, 0xc3, 0x24, 0xa5, 0x6e, 0xa7, 0x5a, 0x76, 0x89, 0xcf, 0x77, 0x05,
-	0xa0, 0x10, 0x8b, 0x6e, 0xc2, 0xa9, 0xcd, 0xad, 0xbd, 0xbd, 0xb0, 0xb1, 0xe9, 0x39, 0xba, 0xe5,
-	0xb2, 0xb2, 0xe4, 0xeb, 0x4a, 0xb7, 0x53, 0x9d, 0x33, 0xdd, 0xa0, 0xb7, 0x2f, 0xa0, 0x53, 0xf1,
-	0xea, 0x06, 0x2c, 0xa6, 0xaa, 0x87, 0x96, 0x61, 0xee, 0x1e, 0xd6, 0x4d, 0xdc, 0x8a, 0x06, 0xab,
-	0x5e, 0xa6, 0x95, 0xb4, 0xd9, 0x8e, 0x58, 0xc9, 0x28, 0x46, 0xfd, 0x0b, 0xc0, 0x2c, 0xcd, 0xfc,
-	0xff, 0x9f, 0xa3, 0xeb, 0xa9, 0x39, 0x2a, 0xf6, 0xc6, 0x9d, 0x0d, 0x11, 0x1a, 0x3a, 0x40, 0x1b,
-	0x67, 0x06, 0x68, 0x3a, 0x01, 0x46, 0xd3, 0x53, 0x1e, 0x39, 0x39, 0xf9, 0x97, 0x4f, 0xe4, 0x09,
-	0x97, 0xb6, 0x5a, 0xad, 0xc0, 0xc9, 0x58, 0x0f, 0x21, 0x98, 0xdd, 0xd2, 0x1d, 0x7e, 0x16, 0x77,
-	0xd9, 0xb3, 0xfa, 0x16, 0x84, 0x09, 0x2d, 0x9a, 0xeb, 0xe9, 0x46, 0x31, 0x7c, 0xb5, 0xfa, 0x2a,
-	0x0f, 0x27, 0x6e, 0x3b, 0xe6, 0xc1, 0x35, 0x74, 0x03, 0x96, 0xe8, 0x49, 0xbf, 0x65, 0x9a, 0xf1,
-	0xd9, 0x4c, 0x7d, 0xad, 0x94, 0xd4, 0x4a, 0x2d, 0xfd, 0x7e, 0x5c, 0x06, 0xbf, 0x7e, 0x2f, 0xe7,
-	0x8c, 0x16, 0xd6, 0x09, 0x46, 0x1f, 0xc2, 0x02, 0x47, 0xb3, 0x76, 0x24, 0xc7, 0x5f, 0x49, 0x1e,
-	0xd5, 0x37, 0xd3, 0xa0, 0xc7, 0xaf, 0xfe, 0xfc, 0x79, 0xbc, 0x08, 0xc7, 0xd6, 0xc1, 0x92, 0x9a,
-	0xd3, 0x58, 0x56, 0xe8, 0x0b, 0x78, 0x91, 0xf2, 0x6c, 0x62, 0x1b, 0x13, 0x7c, 0x1e, 0x23, 0xef,
-	0xc6, 0x9c, 0x26, 0x83, 0x30, 0xce, 0xcb, 0x70, 0x6c, 0x7d, 0x6c, 0xe9, 0xa2, 0xc6, 0x8f, 0x98,
-	0xf6, 0xed, 0x76, 0x8d, 0x96, 0xe4, 0x3b, 0xf4, 0x20, 0xca, 0x31, 0x62, 0x1f, 0x61, 0x74, 0x71,
-	0x00, 0xe9, 0x2c, 0x23, 0x9d, 0x8e, 0x7c, 0x26, 0x94, 0x07, 0x11, 0xe5, 0x1d, 0x4c, 0xce, 0xe3,
-	0x76, 0x81, 0x13, 0x67, 0x9a, 0x98, 0x24, 0x56, 0xd1, 0x00, 0xab, 0x1f, 0x47, 0x05, 0xbd, 0x83,
-	0xc9, 0x08, 0x9f, 0xef, 0x9c, 0xa5, 0x63, 0x26, 0x51, 0x9f, 0x49, 0x0b, 0x4e, 0x53, 0x32, 0x7a,
-	0x13, 0xc4, 0x2e, 0x67, 0x7b, 0x77, 0x03, 0xfb, 0xa8, 0x6f, 0xfb, 0xec, 0x6a, 0x57, 0xde, 0x60,
-	0xe4, 0xc3, 0xee, 0x5d, 0x75, 0x9e, 0x0b, 0x66, 0xe9, 0x15, 0xc1, 0x14, 0x4b, 0x4c, 0x71, 0x32,
-	0x4e, 0x00, 0xe9, 0x70, 0x2a, 0x96, 0x62, 0xc6, 0x87, 0xe8, 0x28, 0xa2, 0x4e, 0xfa, 0xb2, 0x53,
-	0x2b, 0x7d, 0x22, 0x53, 0x4c, 0x24, 0x9e, 0x91, 0x2f, 0xa3, 0x19, 0xf9, 0xc4, 0x37, 0xf5, 0xf3,
-	0xcd, 0xc8, 0x72, 0xdc, 0xce, 0x90, 0x41, 0x18, 0xa5, 0xc4, 0xe6, 0x4e, 0x19, 0x50, 0xf9, 0xdd,
-	0xa8, 0xa3, 0x11, 0xfd, 0x88, 0xe2, 0x2f, 0x0d, 0x60, 0x9d, 0x8b, 0x58, 0xfb, 0x1a, 0xf0, 0x39,
-	0x9c, 0xa1, 0x9c, 0xac, 0x04, 0xff, 0xd2, 0x81, 0xca, 0x80, 0x0e, 0x08, 0xf7, 0xae, 0x5a, 0xe4,
-	0xb2, 0x13, 0xec, 0x4a, 0x5d, 0x01, 0x68, 0x1f, 0x16, 0x7b, 0xdc, 0xa3, 0x4a, 0x7e, 0xe5, 0x6c,
-	0xc9, 0x47, 0xb1, 0x2a, 0xbf, 0x81, 0x9f, 0xda, 0xf2, 0xf8, 0xd1, 0xb5, 0xa7, 0x6d, 0x99, 0xfe,
-	0x42, 0x3e, 0x6b, 0xcb, 0xec, 0x43, 0xfb, 0xac, 0x2d, 0xc7, 0x77, 0xf7, 0x49, 0x5b, 0x5e, 0xe4,
-	0x5f, 0xdf, 0x8c, 0x1f, 0x12, 0x44, 0x87, 0x10, 0xf1, 0x13, 0xd3, 0x57, 0x81, 0x93, 0xb6, 0xac,
-	0xf0, 0xe0, 0xac, 0xef, 0x05, 0x04, 0xb1, 0xe6, 0x2a, 0xbc, 0xa5, 0x27, 0x6d, 0x59, 0x4e, 0xfe,
-	0x09, 0xa2, 0x57, 0xbd, 0x91, 0x3a, 0x69, 0xcb, 0xb5, 0xe4, 0x65, 0xbf, 0x54, 0x7f, 0x0b, 0xeb,
-	0x95, 0xa7, 0x8f, 0xe5, 0x92, 0xed, 0x19, 0xba, 0x7d, 0xe8, 0x05, 0x64, 0x7d, 0x6d, 0x65, 0x6d,
-	0xf5, 0xf9, 0x69, 0x05, 0xbc, 0x38, 0xad, 0x80, 0x3f, 0x4e, 0x2b, 0x60, 0x07, 0x34, 0x72, 0xec,
-	0x27, 0xf3, 0xfd, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xa7, 0xfd, 0x1f, 0xb3, 0x2a, 0x0b, 0x00,
-	0x00,
+	// 2022 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x59, 0x4b, 0x6f, 0x1b, 0xd7,
+	0x15, 0xe6, 0x90, 0x7a, 0xf1, 0x48, 0x7c, 0x5d, 0x3d, 0xcc, 0xa1, 0x15, 0x51, 0x9d, 0xa6, 0x85,
+	0xcc, 0x3a, 0xa2, 0xad, 0xa0, 0x85, 0xa3, 0xca, 0x2e, 0xf8, 0xb2, 0xcd, 0x98, 0x22, 0x29, 0x92,
+	0xb2, 0xdb, 0xb4, 0x85, 0x31, 0x22, 0x6f, 0xa5, 0x69, 0x39, 0x9c, 0x29, 0x67, 0xe8, 0xc0, 0x28,
+	0x0a, 0x14, 0x61, 0xbd, 0xea, 0x26, 0x48, 0x8d, 0xa2, 0x48, 0x77, 0x5e, 0x6a, 0x99, 0x5f, 0x91,
+	0xee, 0x02, 0x77, 0xd1, 0x20, 0x0b, 0x21, 0x30, 0x8a, 0x2e, 0xf4, 0x17, 0xba, 0x29, 0xee, 0x63,
+	0x66, 0xee, 0x90, 0x94, 0xc2, 0x20, 0x48, 0x56, 0xde, 0x71, 0xce, 0x9c, 0xf3, 0x9d, 0xd7, 0x77,
+	0xee, 0xbd, 0x73, 0x09, 0xe1, 0xb6, 0xde, 0xd9, 0x36, 0xfb, 0x86, 0x6d, 0xa0, 0x50, 0x5b, 0xef,
+	0xa4, 0xd6, 0x8f, 0x0d, 0xe3, 0xb8, 0x8b, 0xb3, 0xaa, 0xa9, 0x65, 0xd5, 0x5e, 0xcf, 0xb0, 0x55,
+	0x5b, 0x33, 0x7a, 0x16, 0x53, 0x49, 0xdd, 0x39, 0xd6, 0xec, 0x93, 0xc1, 0xd1, 0x76, 0xdb, 0xd0,
+	0xb3, 0x26, 0xee, 0x59, 0x6a, 0xaf, 0x63, 0x64, 0xad, 0xf7, 0xb3, 0x03, 0x5b, 0xeb, 0x5a, 0xc4,
+	0xe6, 0x18, 0xf7, 0x44, 0xb3, 0xac, 0xd6, 0x6b, 0x77, 0x07, 0x1d, 0xec, 0xd8, 0xbf, 0x25, 0xd8,
+	0x1f, 0x1b, 0xc7, 0x46, 0x96, 0x8a, 0x8f, 0x06, 0xbf, 0xa1, 0x4f, 0xf4, 0x81, 0xfe, 0xe2, 0xea,
+	0x3f, 0xb8, 0xc0, 0x1d, 0x09, 0x4e, 0xc7, 0xb6, 0xca, 0xd4, 0x94, 0xbf, 0x49, 0x90, 0xcc, 0x0d,
+	0x6c, 0x63, 0xdf, 0x3a, 0x2e, 0x74, 0x07, 0x96, 0x8d, 0xfb, 0x15, 0xcd, 0xb2, 0xef, 0xe3, 0xae,
+	0x89, 0xfb, 0x48, 0x01, 0xa9, 0x95, 0x0c, 0x6e, 0x4a, 0x5b, 0x8b, 0x3b, 0x91, 0x6d, 0xd5, 0xd4,
+	0xb6, 0x5b, 0x4f, 0x4d, 0xbc, 0x8f, 0x6d, 0x35, 0xbf, 0xf0, 0xe9, 0x59, 0x3a, 0xf0, 0xd9, 0x59,
+	0x5a, 0x42, 0xd7, 0x60, 0x81, 0x58, 0x10, 0x69, 0x32, 0x24, 0xa8, 0x3a, 0x42, 0x41, 0xf5, 0x2a,
+	0xcc, 0x96, 0x6d, 0xac, 0x5b, 0xc9, 0x99, 0xcd, 0xd0, 0xd6, 0xe2, 0xce, 0xd2, 0x36, 0xa9, 0x1f,
+	0xf7, 0xba, 0x1b, 0xfd, 0xe2, 0xf9, 0x0a, 0x74, 0x35, 0xcb, 0x3e, 0xa1, 0xbe, 0x95, 0x9f, 0x83,
+	0xec, 0x8f, 0xeb, 0x91, 0x6a, 0xb7, 0x4f, 0x78, 0x60, 0x4b, 0x30, 0x43, 0x42, 0x49, 0x4a, 0x9b,
+	0xd2, 0x56, 0x18, 0xad, 0xc3, 0x5c, 0xed, 0xe8, 0xb7, 0xb8, 0x6d, 0xf3, 0x58, 0xfd, 0xc0, 0xb1,
+	0x2f, 0x9e, 0xaf, 0x2c, 0xbe, 0x4f, 0x8c, 0x39, 0xf2, 0x87, 0x12, 0xac, 0x72, 0xe8, 0xaa, 0xd1,
+	0xc1, 0xdf, 0x5e, 0xbe, 0x49, 0x7f, 0xbe, 0x61, 0x1a, 0x16, 0x71, 0x39, 0x96, 0x6c, 0x03, 0xd6,
+	0x84, 0x88, 0x2e, 0xce, 0x54, 0x1e, 0xc9, 0x54, 0x80, 0x1c, 0x4b, 0xf3, 0xef, 0x92, 0x5b, 0xc1,
+	0xa6, 0xae, 0xf6, 0xed, 0x6a, 0xb9, 0xf0, 0xed, 0xa5, 0xba, 0xee, 0x4f, 0x35, 0x42, 0xe3, 0x72,
+	0xdc, 0x8e, 0xa5, 0xfb, 0x1e, 0xa4, 0x46, 0x22, 0xbb, 0x38, 0xe5, 0x37, 0x46, 0x52, 0x1e, 0x81,
+	0x1e, 0x4b, 0xfb, 0x2f, 0x41, 0x98, 0xe7, 0xad, 0x47, 0x37, 0x48, 0x92, 0xd2, 0xa4, 0x24, 0x97,
+	0x9d, 0xc8, 0xcf, 0xcf, 0xd2, 0xf3, 0xd7, 0xb5, 0x5e, 0x57, 0xeb, 0xe1, 0x86, 0xd4, 0x42, 0xb7,
+	0x41, 0xaa, 0x71, 0x47, 0x31, 0x6a, 0xc1, 0x7c, 0x53, 0x9b, 0x0d, 0xc1, 0x06, 0x91, 0x11, 0xea,
+	0xa8, 0xb6, 0x7a, 0xdd, 0xd0, 0x35, 0x1b, 0xeb, 0xa6, 0xfd, 0xb4, 0x21, 0xd5, 0xd0, 0x1e, 0xcc,
+	0x34, 0x4d, 0xdc, 0xe6, 0xd5, 0x8a, 0x8b, 0x3c, 0x24, 0xf2, 0xfc, 0x1a, 0x81, 0x38, 0x3f, 0x4b,
+	0x47, 0x2d, 0x13, 0xb7, 0x05, 0x53, 0x6a, 0x85, 0x8a, 0x30, 0xd7, 0xb4, 0x55, 0x7b, 0x40, 0xaa,
+	0x48, 0xec, 0x91, 0xcf, 0x9e, 0xbe, 0xc9, 0x27, 0x39, 0x42, 0xdc, 0xa2, 0xcf, 0x02, 0x06, 0xb7,
+	0xdd, 0x5d, 0x7c, 0xf9, 0x4c, 0x9e, 0x6f, 0x33, 0x23, 0xe5, 0x7f, 0x12, 0x2c, 0x0a, 0x01, 0xa0,
+	0x9f, 0xc2, 0xe2, 0xc1, 0xc0, 0xe8, 0x0f, 0x74, 0xc2, 0x19, 0x2b, 0x29, 0x6d, 0x86, 0xb6, 0xc2,
+	0x79, 0xf9, 0xfc, 0x2c, 0xbd, 0xfa, 0x7b, 0x4f, 0x2c, 0x80, 0x8a, 0xda, 0xe8, 0xc7, 0x10, 0x7e,
+	0xa8, 0xf5, 0xed, 0x81, 0xda, 0x2d, 0xd7, 0x69, 0x91, 0xc2, 0xf9, 0x2b, 0xe7, 0x67, 0xe9, 0xe5,
+	0x27, 0x5c, 0x68, 0x0a, 0x86, 0x9e, 0x26, 0xba, 0x05, 0x50, 0x6d, 0xd5, 0x9b, 0xb8, 0xff, 0x04,
+	0xf7, 0xad, 0x64, 0x88, 0xba, 0x4c, 0x9e, 0x9f, 0xa5, 0x57, 0x7a, 0xb6, 0xc9, 0xa5, 0x82, 0xa1,
+	0xa0, 0x8b, 0xee, 0xc0, 0x52, 0xb1, 0xda, 0x6c, 0x0e, 0x8e, 0x8a, 0x86, 0xae, 0x6a, 0x3d, 0x5a,
+	0x96, 0x70, 0x3e, 0x75, 0x7e, 0x96, 0x5e, 0xeb, 0xf4, 0xac, 0xe6, 0xe0, 0xa8, 0x43, 0xe5, 0x82,
+	0xb5, 0x4f, 0x5f, 0xb9, 0x0d, 0x11, 0x5f, 0xf5, 0xd0, 0x75, 0x98, 0xab, 0x60, 0xb5, 0x83, 0xfb,
+	0x8c, 0x5c, 0xf9, 0x15, 0x52, 0xc9, 0x2e, 0x95, 0x88, 0x95, 0x64, 0x3a, 0xca, 0x9f, 0x82, 0x30,
+	0x43, 0x32, 0xff, 0xee, 0x79, 0xf4, 0x8e, 0x8f, 0x47, 0x11, 0x77, 0xca, 0xa7, 0x20, 0x51, 0x6e,
+	0x84, 0x44, 0x31, 0xcf, 0xd8, 0x63, 0x90, 0x74, 0x29, 0x83, 0xc2, 0x2f, 0x9f, 0xc9, 0xb3, 0x3d,
+	0xd2, 0x72, 0xe5, 0xf3, 0x20, 0x44, 0x88, 0x6d, 0xc1, 0xe8, 0x75, 0x34, 0xb2, 0x2d, 0xa1, 0xbc,
+	0x30, 0x9d, 0xd1, 0x9d, 0x35, 0x17, 0xdd, 0xd5, 0x20, 0x6f, 0x69, 0x8c, 0xc4, 0x49, 0xd4, 0x7e,
+	0x6a, 0x62, 0x31, 0x46, 0xf2, 0x16, 0xdd, 0x75, 0x63, 0x0c, 0x52, 0x94, 0x15, 0x46, 0x74, 0x07,
+	0x61, 0xda, 0x40, 0x51, 0x0b, 0x50, 0x45, 0xb5, 0xec, 0x56, 0x5f, 0xed, 0x59, 0xcc, 0xb7, 0xa6,
+	0x63, 0x5a, 0xb4, 0x50, 0xfe, 0x4d, 0x6e, 0xbd, 0xde, 0x1d, 0xd3, 0x10, 0x90, 0x26, 0xd8, 0xa3,
+	0x1b, 0x30, 0xd7, 0xc0, 0xaa, 0x65, 0x38, 0x7c, 0x73, 0xe3, 0xe8, 0x53, 0xa9, 0x18, 0x07, 0xd3,
+	0x43, 0x6f, 0xc3, 0xfc, 0x3e, 0xb6, 0x2c, 0xf5, 0x18, 0x27, 0x67, 0xa9, 0x89, 0xcc, 0x4d, 0x12,
+	0x3a, 0x13, 0x0b, 0x36, 0x8e, 0xa6, 0xf2, 0x91, 0x04, 0x0b, 0x4e, 0x4f, 0x51, 0x0e, 0x66, 0x1b,
+	0x46, 0x97, 0x4f, 0xa4, 0x58, 0x56, 0xf2, 0x96, 0xfe, 0x20, 0xaf, 0xf3, 0xcb, 0xe7, 0x67, 0xe9,
+	0x58, 0x9f, 0x28, 0x0a, 0x88, 0xcc, 0x52, 0x29, 0x30, 0x38, 0xf2, 0x80, 0x96, 0x21, 0x56, 0xa8,
+	0x55, 0x5b, 0x8d, 0x5a, 0xa5, 0x52, 0x6a, 0x3c, 0xae, 0xd6, 0x8a, 0xa5, 0x78, 0x00, 0x25, 0x20,
+	0xf2, 0xa8, 0xd6, 0x78, 0x50, 0xa9, 0xe5, 0x8a, 0x4c, 0x24, 0xa1, 0x18, 0x2c, 0x1e, 0x1c, 0xd6,
+	0x1a, 0x87, 0xfb, 0x4c, 0x10, 0x54, 0xfe, 0x29, 0x01, 0x78, 0x5c, 0x41, 0xb7, 0x61, 0xb6, 0x7e,
+	0xa2, 0x5a, 0x4e, 0xb7, 0xa3, 0x6e, 0x58, 0x54, 0x9a, 0xbf, 0xc2, 0xd3, 0x8c, 0x99, 0xe4, 0x51,
+	0x0c, 0x89, 0xbe, 0x47, 0x75, 0x00, 0xb7, 0xa9, 0xa4, 0xd7, 0x21, 0x77, 0x51, 0xf3, 0x31, 0x26,
+	0xbf, 0xce, 0x71, 0x56, 0xda, 0xae, 0xb6, 0xb8, 0x22, 0x78, 0x18, 0x28, 0x03, 0x33, 0x55, 0xad,
+	0xed, 0xac, 0x22, 0x2e, 0xcb, 0x7a, 0x5a, 0x5b, 0xb4, 0xa0, 0x3a, 0x94, 0xbb, 0x75, 0xa3, 0x6f,
+	0x5f, 0xce, 0x5d, 0x9f, 0xc6, 0x6b, 0xee, 0x4e, 0xc7, 0xdd, 0xfb, 0xb0, 0x40, 0xea, 0x46, 0xa9,
+	0xbb, 0x07, 0xb0, 0xaf, 0xb6, 0x73, 0x9d, 0x4e, 0x1f, 0x5b, 0x16, 0x5f, 0x57, 0xdd, 0x86, 0xea,
+	0xee, 0x1b, 0xb1, 0xa1, 0x9e, 0xbe, 0xf2, 0x6f, 0x09, 0x80, 0x42, 0xb1, 0xaa, 0x7c, 0x23, 0x30,
+	0xf4, 0x0e, 0x84, 0x2b, 0x5a, 0xef, 0x77, 0x4d, 0x13, 0xe3, 0x0e, 0xdf, 0xa0, 0xae, 0x72, 0xe3,
+	0xe5, 0xae, 0xf3, 0x42, 0xdc, 0xa4, 0x5c, 0xed, 0x11, 0xaa, 0x86, 0x04, 0xaa, 0xfa, 0x08, 0x32,
+	0x3d, 0x55, 0x95, 0x0f, 0x83, 0xb0, 0xe0, 0x1c, 0x53, 0xbe, 0xfb, 0x1d, 0xe4, 0xb6, 0x6f, 0x07,
+	0x49, 0xf8, 0x0e, 0x4d, 0x53, 0xec, 0x22, 0xa5, 0x91, 0x5d, 0x64, 0xd9, 0x0f, 0x30, 0xed, 0x4e,
+	0x12, 0x79, 0xf9, 0x4c, 0x0e, 0x5b, 0xc4, 0x8a, 0x4c, 0xa8, 0xf2, 0x65, 0x10, 0x12, 0x0e, 0x86,
+	0x37, 0x95, 0x77, 0x7d, 0x53, 0x99, 0xf2, 0x79, 0x7a, 0x3d, 0x99, 0x5f, 0x73, 0x32, 0x2b, 0xb0,
+	0x24, 0xb6, 0x19, 0xed, 0xc1, 0x2c, 0x21, 0x30, 0xdb, 0x58, 0x9c, 0xa3, 0x84, 0x33, 0xbb, 0x74,
+	0x01, 0x0f, 0xd0, 0x05, 0x9c, 0xe8, 0xf8, 0x16, 0x70, 0x22, 0x50, 0x3e, 0x09, 0x41, 0xd4, 0xdf,
+	0x74, 0xb2, 0x53, 0x89, 0x5b, 0x02, 0xf2, 0xb5, 0x6b, 0xba, 0x6d, 0xa1, 0x35, 0x61, 0x5b, 0x58,
+	0x9b, 0xdc, 0xf6, 0xaf, 0xb1, 0x35, 0xec, 0x41, 0xb8, 0x89, 0xfb, 0x9a, 0xda, 0xad, 0x0e, 0x74,
+	0xda, 0xad, 0x30, 0x9d, 0x13, 0x62, 0xbc, 0x66, 0x39, 0x2f, 0x8e, 0x7c, 0x07, 0x3d, 0xcf, 0x00,
+	0x1d, 0x40, 0xa2, 0xde, 0xd7, 0x74, 0xb5, 0xff, 0x54, 0x58, 0x7f, 0x58, 0xa7, 0xbe, 0xcf, 0x51,
+	0xae, 0x9a, 0xa3, 0x0a, 0x02, 0xd4, 0xb8, 0x35, 0xfa, 0x09, 0xdb, 0x90, 0xab, 0xaa, 0xee, 0x34,
+	0x30, 0xc5, 0x91, 0x50, 0x8f, 0xcb, 0x05, 0x00, 0x57, 0x17, 0xdd, 0x71, 0x5a, 0x36, 0x47, 0x2b,
+	0x13, 0xf3, 0x5a, 0xc6, 0x18, 0xec, 0x95, 0x77, 0x62, 0xd3, 0x32, 0x07, 0x10, 0x76, 0xb7, 0x68,
+	0x14, 0x87, 0x25, 0xb2, 0xb5, 0x3f, 0x3e, 0xac, 0x3e, 0xa8, 0xd6, 0x1e, 0x55, 0xe3, 0x01, 0x57,
+	0x52, 0x2f, 0x55, 0x8b, 0xe5, 0xea, 0x3d, 0x76, 0x0a, 0xa0, 0x92, 0x77, 0x6b, 0xe5, 0x6a, 0xa9,
+	0x18, 0x0f, 0xba, 0x82, 0xbb, 0xb9, 0x72, 0xa5, 0x54, 0x8c, 0x87, 0x32, 0x6f, 0x42, 0x62, 0xec,
+	0x8c, 0xe7, 0x6a, 0x55, 0x4a, 0xb9, 0x62, 0xa9, 0x11, 0x0f, 0x64, 0x0e, 0x20, 0x36, 0x32, 0x6d,
+	0x68, 0x15, 0x12, 0x85, 0x5a, 0xb5, 0x58, 0x6e, 0x95, 0x6b, 0x55, 0x21, 0x06, 0x04, 0x51, 0x4f,
+	0xdc, 0x6a, 0x1c, 0x92, 0xb3, 0x08, 0x3b, 0xb3, 0x70, 0xd9, 0xdd, 0x5c, 0xa5, 0x59, 0x8a, 0x07,
+	0x33, 0x87, 0x10, 0xf1, 0x71, 0x8b, 0x3a, 0x2d, 0x17, 0x46, 0xd2, 0x29, 0x17, 0x1e, 0x37, 0x4a,
+	0xef, 0x96, 0x0a, 0xad, 0x52, 0x91, 0xa7, 0x53, 0x2e, 0xb8, 0xf9, 0x05, 0x1d, 0x95, 0x5c, 0x71,
+	0xbf, 0xdc, 0x6a, 0xd1, 0x7c, 0xb6, 0x60, 0x75, 0xe2, 0x0a, 0xe3, 0xd8, 0xde, 0x2f, 0xe5, 0x2a,
+	0xad, 0xfb, 0xbf, 0x88, 0x07, 0x32, 0x9b, 0x90, 0x18, 0x3b, 0x21, 0xa0, 0x45, 0x98, 0xaf, 0xd7,
+	0x1a, 0xad, 0xc7, 0x87, 0xf5, 0x78, 0x60, 0xe7, 0xbf, 0x51, 0x98, 0x2d, 0xe8, 0x9d, 0x87, 0x37,
+	0xd1, 0x1e, 0x44, 0xc9, 0x67, 0x6d, 0xae, 0xd3, 0x71, 0x3e, 0x40, 0x7d, 0x37, 0x11, 0x29, 0xdf,
+	0x93, 0x12, 0xfd, 0xfc, 0xf9, 0x8a, 0xf4, 0xc9, 0x9f, 0xe5, 0xb9, 0x76, 0x1f, 0xab, 0x36, 0x59,
+	0xbe, 0x16, 0xb9, 0x35, 0xfd, 0xe6, 0xf0, 0x3e, 0xed, 0x53, 0xde, 0x4f, 0xe5, 0x7b, 0x7e, 0xa3,
+	0x0f, 0xfe, 0xf5, 0x9f, 0xbf, 0x06, 0x23, 0x10, 0xd8, 0x95, 0x32, 0xca, 0x5c, 0x96, 0x1e, 0xd9,
+	0xd1, 0xcf, 0x20, 0xc6, 0x71, 0xdc, 0xdd, 0xc7, 0xff, 0xcd, 0x9c, 0xf2, 0x3f, 0x8e, 0x05, 0xf2,
+	0x2b, 0x48, 0x10, 0x80, 0x22, 0xee, 0x62, 0x1b, 0x4f, 0x93, 0xc9, 0x8f, 0x1c, 0x80, 0x0e, 0x35,
+	0xa1, 0x41, 0x5d, 0x81, 0xc0, 0x6e, 0x20, 0x93, 0xc8, 0xf2, 0x0f, 0xd1, 0xec, 0x1f, 0x6a, 0xdb,
+	0x84, 0xdc, 0x7f, 0x44, 0x07, 0xac, 0x48, 0x0c, 0xfd, 0x92, 0x4c, 0xaf, 0x4d, 0x00, 0x5d, 0xa5,
+	0xa0, 0x31, 0x96, 0xa8, 0x07, 0xa9, 0x02, 0xf2, 0x20, 0xa7, 0x4c, 0xfa, 0xad, 0x09, 0xf0, 0x32,
+	0x85, 0x5f, 0xce, 0xba, 0x1b, 0x96, 0xe7, 0xe2, 0x21, 0x8b, 0xfa, 0x1e, 0xb6, 0xa7, 0x29, 0xc8,
+	0x16, 0x07, 0x0f, 0x1d, 0x63, 0xdb, 0xab, 0x06, 0x9a, 0x50, 0x8d, 0x07, 0xac, 0xe9, 0xf7, 0xb0,
+	0x7d, 0x49, 0x29, 0x7e, 0x38, 0x0a, 0x47, 0xeb, 0x80, 0xc6, 0xea, 0xf0, 0x4b, 0xd6, 0xf9, 0x7b,
+	0xd8, 0x9e, 0xb2, 0x08, 0x99, 0x51, 0x60, 0x5a, 0x01, 0x34, 0xb1, 0x02, 0x1a, 0x03, 0xaf, 0x68,
+	0x96, 0x5b, 0x82, 0x55, 0xf7, 0x36, 0x88, 0x5e, 0xdf, 0xd4, 0x4c, 0xba, 0x10, 0xa7, 0xde, 0xa0,
+	0x4e, 0x2e, 0xba, 0x54, 0x54, 0x36, 0xb9, 0xd3, 0x99, 0xae, 0x66, 0x31, 0xaf, 0x51, 0xea, 0x75,
+	0xc1, 0xa9, 0x0e, 0x52, 0x61, 0xc9, 0x71, 0x45, 0xab, 0x72, 0x81, 0x9f, 0x94, 0xe8, 0xc7, 0x7f,
+	0x93, 0xa7, 0x6c, 0x8c, 0x39, 0x59, 0xa2, 0x4e, 0x9c, 0x21, 0xd1, 0x21, 0xee, 0xb8, 0x70, 0x6b,
+	0x75, 0x81, 0x9b, 0x0d, 0xd1, 0xcd, 0xf8, 0x4d, 0x9a, 0xa2, 0x8c, 0xb9, 0x8a, 0x53, 0x57, 0xe0,
+	0x55, 0x11, 0xfd, 0x9a, 0x8d, 0xd4, 0xa1, 0xd9, 0x51, 0xa7, 0x1b, 0xa9, 0xeb, 0x0e, 0x3d, 0x07,
+	0xd4, 0x84, 0xc2, 0x26, 0xe9, 0x9c, 0xa7, 0x26, 0xb0, 0xa8, 0xc1, 0xd8, 0xc9, 0xe0, 0x2f, 0x21,
+	0x52, 0x66, 0x02, 0xea, 0x1a, 0x43, 0x1d, 0x23, 0xd3, 0x11, 0x1b, 0x2a, 0x86, 0x39, 0x25, 0x9f,
+	0xb6, 0x27, 0xe0, 0xa7, 0x18, 0xfe, 0x44, 0x4e, 0xbd, 0xc7, 0xba, 0x40, 0xcb, 0xfd, 0x15, 0xa4,
+	0xda, 0x98, 0x40, 0x2a, 0xe1, 0xd2, 0x50, 0x89, 0x70, 0xd7, 0xb3, 0xf4, 0x2e, 0xf0, 0x86, 0x84,
+	0x5a, 0x10, 0x71, 0xb1, 0x2f, 0x63, 0xd1, 0xd5, 0x51, 0x16, 0x5d, 0x8a, 0xca, 0xd7, 0x46, 0xaa,
+	0xf3, 0x55, 0xc4, 0x49, 0x4f, 0x22, 0xce, 0x65, 0xe8, 0xa9, 0x7f, 0x04, 0x3f, 0x1a, 0xca, 0xc1,
+	0x27, 0x37, 0x3f, 0x1e, 0xca, 0xa1, 0xb6, 0xde, 0x79, 0x31, 0x94, 0x9d, 0xab, 0xcc, 0x17, 0x43,
+	0x99, 0x5e, 0x45, 0xbd, 0x18, 0xca, 0xee, 0x47, 0xc5, 0xe9, 0x50, 0x96, 0xbd, 0xbb, 0x4e, 0x4a,
+	0xbf, 0x94, 0x3b, 0x44, 0xa7, 0x43, 0x79, 0xdb, 0x7b, 0x19, 0x32, 0x07, 0x36, 0x22, 0x53, 0x8e,
+	0xf8, 0x7a, 0x37, 0x81, 0x45, 0xa7, 0x43, 0xf9, 0x1a, 0xbf, 0xef, 0x1a, 0x57, 0x1f, 0xa5, 0xc7,
+	0xe9, 0x50, 0x4e, 0x71, 0xe5, 0x19, 0xd3, 0xb0, 0x6c, 0xee, 0x9e, 0x8f, 0xd7, 0xe9, 0x50, 0xbe,
+	0x29, 0x7c, 0xfc, 0x8c, 0xc3, 0x4d, 0x62, 0xc3, 0xe9, 0x50, 0x5e, 0x17, 0x8c, 0x18, 0xa0, 0x30,
+	0x44, 0xf9, 0x8d, 0x8f, 0x3f, 0x90, 0xa3, 0x5d, 0xa3, 0xad, 0x76, 0x4f, 0x0c, 0xcb, 0xde, 0xbd,
+	0x75, 0xe3, 0xd6, 0xce, 0xa7, 0xaf, 0x36, 0xa4, 0xcf, 0x5e, 0x6d, 0x48, 0x5f, 0xbe, 0xda, 0x90,
+	0xea, 0xd2, 0xd1, 0x1c, 0xfd, 0x4f, 0xe3, 0xed, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0xf8, 0x48,
+	0xac, 0xb9, 0x99, 0x19, 0x00, 0x00,
 }

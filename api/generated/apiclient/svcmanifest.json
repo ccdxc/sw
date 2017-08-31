@@ -19,8 +19,9 @@
       "CmdV1": {
         "Version": "v1",
         "Messages": [
+          "Cluster",
           "Node",
-          "Cluster"
+          "SmartNIC"
         ]
       }
     },
