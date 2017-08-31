@@ -117,9 +117,58 @@ action p4plus_app_rdma() {
 
 action p4plus_app_cpu() {
     add_header(p4_to_p4plus_cpu);
+    add_header(p4_to_p4plus_cpu_pkt);
     modify_field(p4_to_p4plus_cpu.p4plus_app_id,
                  control_metadata.p4plus_app_id);
 
+    modify_field(scratch_metadata.cpu_flags, 0);
+    if ((inner_ethernet.valid == TRUE) or (inner_ipv4.valid == TRUE) or
+        (inner_ipv6.valid == TRUE)) {
+        add_header(p4_to_p4plus_cpu_inner_ip);
+        if (inner_ipv4.valid == TRUE) {
+            modify_field(p4_to_p4plus_cpu.ip_proto, inner_ipv4.protocol);
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   CPU_FLAGS_INNER_IPV4_VALID);
+        }
+        if (inner_ipv6.valid == TRUE) {
+            modify_field(p4_to_p4plus_cpu.ip_proto, inner_ipv6.nextHdr);
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   CPU_FLAGS_INNER_IPV6_VALID);
+        }
+    } else {
+        add_header(p4_to_p4plus_cpu_ip);
+        if ((ipv4.valid == TRUE) or (ipv6.valid == TRUE)) {
+            if (ipv4.valid == TRUE) {
+                modify_field(p4_to_p4plus_cpu.ip_proto, ipv4.protocol);
+                bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                       CPU_FLAGS_IPV4_VALID);
+            }
+            if (ipv6.valid == TRUE) {
+                modify_field(p4_to_p4plus_cpu.ip_proto, ipv6.nextHdr);
+                bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                       CPU_FLAGS_IPV6_VALID);
+            }
+        }
+    }
+
+    if (inner_udp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, inner_udp.srcPort);
+        modify_field(p4_to_p4plus_cpu.l4_dport, inner_udp.dstPort);
+    } else {
+        if (udp.valid == TRUE) {
+            modify_field(p4_to_p4plus_cpu.l4_sport, udp.srcPort);
+            modify_field(p4_to_p4plus_cpu.l4_dport, udp.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(p4_to_p4plus_cpu.l4_sport, tcp.srcPort);
+            modify_field(p4_to_p4plus_cpu.l4_dport, tcp.dstPort);
+        }
+        if (icmp.valid == TRUE) {
+            modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
+        }
+    }
+
+    modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,

@@ -171,32 +171,41 @@ header ipv6_t p4_to_p4plus_roce_ip;
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_ip.ip_sa        ipv6.srcAddr
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_ip.ip_da        ipv6.dstAddr
-header p4_to_p4plus_classic_nic_ip_header_t p4_to_p4plus_classic_nic_ip;
+header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_ip;
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_inner_ip.ip_sa  inner_ipv6.srcAddr
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_inner_ip.ip_da  inner_ipv6.dstAddr
-header p4_to_p4plus_classic_nic_ip_header_t p4_to_p4plus_classic_nic_inner_ip;
+header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_inner_ip;
 header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
 
 @pragma synthetic_header
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_flags        tcp.flags
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_seqNo        tcp.seqNo
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_ackNo        tcp.ackNo
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_window       tcp.window
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_mss          tcp_option_mss.value
-@pragma pa_field_union egress p4_to_p4plus_cpu.tcp_ws           tcp_option_ws.value
-@pragma pa_field_union egress p4_to_p4plus_cpu.mac_sa_outer     ethernet.srcAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.mac_da_outer     ethernet.dstAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.ip_sa_outer      ipv6.srcAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.ip_da_outer      ipv6.dstAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.l4_sport_outer   udp.srcPort
-@pragma pa_field_union egress p4_to_p4plus_cpu.l4_dport_outer   udp.dstPort
-@pragma pa_field_union egress p4_to_p4plus_cpu.mac_sa_inner     inner_ethernet.srcAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.mac_da_inner     inner_ethernet.dstAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.ip_sa_inner      inner_ipv6.srcAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.ip_da_inner      inner_ipv6.dstAddr
-@pragma pa_field_union egress p4_to_p4plus_cpu.l4_sport_inner   tcp.srcPort
-@pragma pa_field_union egress p4_to_p4plus_cpu.l4_dport_inner   tcp.dstPort
+@pragma pa_field_union egress p4_to_p4plus_cpu_ip.ip_sa             ipv6.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_ip.ip_da             ipv6.dstAddr
+header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_ip;
+@pragma synthetic_header
+@pragma pa_field_union egress p4_to_p4plus_cpu_inner_ip.ip_sa       inner_ipv6.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_inner_ip.ip_da       inner_ipv6.dstAddr
+header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_inner_ip;
+@pragma synthetic_header
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_flags        tcp.flags
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_seqNo        tcp.seqNo
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_ackNo        tcp.ackNo
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_window       tcp.window
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_mss          tcp_option_mss.value
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_ws           tcp_option_ws.value
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.mac_sa_outer     ethernet.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.mac_da_outer     ethernet.dstAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.ip_sa_outer      ipv6.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.ip_da_outer      ipv6.dstAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.l4_sport_outer   udp.srcPort
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.l4_dport_outer   udp.dstPort
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.mac_sa_inner     inner_ethernet.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.mac_da_inner     inner_ethernet.dstAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.ip_sa_inner      inner_ipv6.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.ip_da_inner      inner_ipv6.dstAddr
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.l4_sport_inner   tcp.srcPort
+@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.l4_dport_inner   tcp.dstPort
+header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
 header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
 header p4plus_to_p4_header_t p4plus_to_p4;
@@ -238,6 +247,9 @@ parser deparse_rxdma {
     extract(capri_rxdma_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_cpu);
+    extract(p4_to_p4plus_cpu_ip);
+    extract(p4_to_p4plus_cpu_inner_ip);
+    extract(p4_to_p4plus_cpu_pkt);
     extract(p4_to_p4plus_classic_nic);
     extract(p4_to_p4plus_classic_nic_ip);
     extract(p4_to_p4plus_classic_nic_inner_ip);

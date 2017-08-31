@@ -196,6 +196,7 @@ header_type scratch_metadata_t {
         icmp_type                     : 8;
 
         classic_nic_flags             : 16;
+        cpu_flags                     : 24;
     }
 }
 

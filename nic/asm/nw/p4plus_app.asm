@@ -58,8 +58,7 @@ p4plus_app_classic_nic_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_common
   phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.udp_srcPort
-  phvwr       p.p4_to_p4plus_classic_nic_l4_dport[15:8], k.udp_dstPort_sbit0_ebit7
-  phvwr       p.p4_to_p4plus_classic_nic_l4_dport[7:0], k.udp_dstPort_sbit8_ebit15
+  phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.udp_dstPort
   phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.udp_checksum
 
 p4plus_app_classic_nic_common:
@@ -103,7 +102,59 @@ p4plus_app_tcp_proxy:
 
 .align
 p4plus_app_cpu:
+  or          r1, r0, r0
+  seq         c1, k.inner_ipv4_valid, TRUE
+  seq         c2, k.inner_ipv6_valid, TRUE
+  seq         c3, k.inner_ethernet_valid, TRUE
+  setcf       c4, [c1|c2|c3]
+  bcf         [!c4], p4plus_app_cpu_native
+  phvwr.c4    p.p4_to_p4plus_cpu_inner_ip_valid, TRUE
+
+  or.c1       r1, r1, CPU_FLAGS_INNER_IPV4_VALID
+  phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv4_protocol
+  or.c2       r1, r1, CPU_FLAGS_INNER_IPV6_VALID
+  b           p4plus_app_cpu_l4_tcp
+  phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv6_nextHdr
+
+p4plus_app_cpu_native:
+  phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
+  seq         c1, k.ipv4_valid, TRUE
+  seq         c2, k.ipv6_valid, TRUE
+  or.c1       r1, r1, CPU_FLAGS_IPV4_VALID
+  phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol
+  or.c2       r1, r1, CPU_FLAGS_IPV6_VALID
+  phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr
+
+p4plus_app_cpu_l4_tcp:
+  seq         c1, k.tcp_valid, TRUE
+  bcf         [!c1], p4plus_app_cpu_l4_icmp
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.tcp_srcPort
+  b           p4plus_app_cpu_common
+  phvwr       p.p4_to_p4plus_cpu_l4_dport, k.tcp_dstPort
+
+p4plus_app_cpu_l4_icmp:
+  seq         c1, k.icmp_valid, TRUE
+  bcf         [!c1], p4plus_app_cpu_l4_inner_udp
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.icmp_typeCode
+  b           p4plus_app_cpu_common
+  nop
+
+p4plus_app_cpu_l4_inner_udp:
+  seq         c1, k.inner_udp_valid, TRUE
+  bcf         [!c1], p4plus_app_cpu_l4_udp
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.inner_udp_srcPort
+  b           p4plus_app_cpu_common
+  phvwr       p.p4_to_p4plus_cpu_l4_dport, k.inner_udp_dstPort
+
+p4plus_app_cpu_l4_udp:
+  seq         c1, k.udp_valid, TRUE
+  bcf         [!c1], p4plus_app_cpu_common
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.udp_srcPort
+  phvwr       p.p4_to_p4plus_cpu_l4_dport, k.udp_dstPort
+
+p4plus_app_cpu_common:
   phvwr       p.p4_to_p4plus_cpu_valid, TRUE
+  phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \

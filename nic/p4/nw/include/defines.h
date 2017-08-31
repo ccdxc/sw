@@ -372,14 +372,14 @@
 #define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_CPU
 
 /*****************************************************************************/
-/* P4+ header size constants                                                 */
+/* P4+ header size constants (in bytes)                                      */
 /*****************************************************************************/
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
 #define P4PLUS_ROCE_HDR_SZ             6
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      44
-#define P4PLUS_CPU_HDR_SZ              6
+#define P4PLUS_CPU_HDR_SZ              44
 
 /*****************************************************************************/
 /* Classic NIC flags                                                         */
@@ -396,6 +396,19 @@
 #define CLASSIC_NIC_FLAGS_INNER_CSUM_VERIFIED  0x0200
 #define CLASSIC_NIC_FLAGS_INNER_IP_CSUM_OK     0x0400
 #define CLASSIC_NIC_FLAGS_INNER_L4_CSUM_OK     0x0800
+
+/*****************************************************************************/
+/* CPU flags                                                                 */
+/*****************************************************************************/
+#define CPU_FLAGS_TUNNEL_TERMINATE             0x000001
+#define CPU_FLAGS_VLAN_VALID                   0x000002
+#define CPU_FLAGS_IPV4_VALID                   0x000004
+#define CPU_FLAGS_IPV6_VALID                   0x000008
+#define CPU_FLAGS_IP_OPTIONS_PRESENT           0x000100
+#define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x000200
+#define CPU_FLAGS_INNER_VLAN_VALID             0x000400
+#define CPU_FLAGS_INNER_IPV4_VALID             0x000800
+#define CPU_FLAGS_INNER_IPV6_VALID             0x001000
 
 /*****************************************************************************/
 /* ROCE flags                                                                */

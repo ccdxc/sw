@@ -1,56 +1,56 @@
 header_type cap_phv_intr_global_t {
     fields {
-        tm_iport           : 4;
-        tm_oport           : 4;
-        tm_iq              : 5;
-        lif                : 11;
-        timestamp          : 48;
-        tm_span_session    : 8;
-        error_bits         : 4;
-        tm_instance_type   : 4;
-        tm_replicate_ptr   : 16;
-        bypass             : 1;
-        tm_replicate_en    : 1;
-        tm_q_depth         : 14;
-        drop               : 1;
-        hw_error           : 1;
-        tm_cpu             : 1;
-        tm_oq              : 5;
-        debug_trace        : 1;
-        glb_rsv            : 7;
+        tm_iport            : 4;
+        tm_oport            : 4;
+        tm_iq               : 5;
+        lif                 : 11;
+        timestamp           : 48;
+        tm_span_session     : 8;
+        error_bits          : 4;
+        tm_instance_type    : 4;
+        tm_replicate_ptr    : 16;
+        bypass              : 1;
+        tm_replicate_en     : 1;
+        tm_q_depth          : 14;
+        drop                : 1;
+        hw_error            : 1;
+        tm_cpu              : 1;
+        tm_oq               : 5;
+        debug_trace         : 1;
+        glb_rsv             : 7;
     }
 }
 
 header_type cap_phv_intr_p4_t {
     fields {
-        no_data            : 1;
-        recirc             : 1;
-        frame_size         : 14;
-        p4_pad0            : 2;
-        packet_len         : 14;
-        recirc_count       : 3;
-        p4_pad             : 5;
+        no_data             : 1;
+        recirc              : 1;
+        frame_size          : 14;
+        p4_pad0             : 2;
+        packet_len          : 14;
+        recirc_count        : 3;
+        p4_pad              : 5;
     }
 }
 
 header_type cap_phv_intr_txdma_t {
     fields {
-        qid                : 24;
-        dma_cmd_ptr        : 6;
-        qstate_addr        : 34;
-        qtype              : 3;
-        txdma_rsv          : 5;
+        qid                 : 24;
+        dma_cmd_ptr         : 6;
+        qstate_addr         : 34;
+        qtype               : 3;
+        txdma_rsv           : 5;
     }
 }
 
 header_type cap_phv_intr_rxdma_t {
     fields {
-        qid                : 24;
-        dma_cmd_ptr        : 6;
-        qstate_addr        : 34;
-        qtype              : 3;
-        rx_splitter_offset : 10;
-        rxdma_rsv          : 3;
+        qid                 : 24;
+        dma_cmd_ptr         : 6;
+        qstate_addr         : 34;
+        qtype               : 3;
+        rx_splitter_offset  : 10;
+        rxdma_rsv           : 3;
     }
 }
 
@@ -108,14 +108,14 @@ header_type p4_to_p4plus_tcp_proxy_base_header_t {
 
 header_type p4_to_p4plus_tcp_proxy_sack_header_t {
     fields {
-        start_seq0       : 32;
-        end_seq0         : 32;
-        start_seq1       : 32;
-        end_seq1         : 32;
-        start_seq2       : 32;
-        end_seq2         : 32;
-        start_seq3       : 32;
-        end_seq3         : 32;
+        start_seq0          : 32;
+        end_seq0            : 32;
+        start_seq1          : 32;
+        end_seq1            : 32;
+        start_seq2          : 32;
+        end_seq2            : 32;
+        start_seq3          : 32;
+        end_seq3            : 32;
     }
 }
 
@@ -137,101 +137,104 @@ header_type p4_to_p4plus_tcp_proxy_sack_header_t {
  */
 header_type p4_to_p4plus_classic_nic_header_t {
     fields {
-        p4plus_app_id  : 4;
-        pad            : 4;
-        flags          : 16;
-        vlan_pcp       : 3;
-        vlan_dei       : 1;
-        vlan_vid       : 12;
-        l4_checksum    : 16;
-        ip_proto       : 8;
-        l4_sport       : 16;
-        l4_dport       : 16;
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        flags               : 16;
+        vlan_pcp            : 3;
+        vlan_dei            : 1;
+        vlan_vid            : 12;
+        l4_checksum         : 16;
+        ip_proto            : 8;
+        l4_sport            : 16;
+        l4_dport            : 16;
     }
 }
 
-header_type p4_to_p4plus_classic_nic_ip_header_t {
+header_type p4_to_p4plus_ip_addr_t {
     fields {
-        ip_sa    : 128;
-        ip_da    : 128;
+        ip_sa               : 128;
+        ip_da               : 128;
+    }
+}
+
+header_type p4_to_p4plus_cpu_header_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        ip_proto            : 8;
+        l4_sport            : 16;
+        l4_dport            : 16;
+        packet_len          : 16;
+        flow_hash           : 32;
     }
 }
 
 /*
  * flags bits:
- *  0 : fcs ok
- *  1 : tunnel terminate
- *  2 : ip options are present
- *  3 : tcp options are present
- *
- * flags_outer bits:
- *  0     : vlan valid
- *  1     : ipv4 valid
- *  2     : ipv6 valid
- *  3     : checksum verified by hardware
- *  4     : l3 checksum ok
- *  5     : l4 checksum ok
- *  [8-6] : ipv4 flags bits
- *
- * flags_inner bits:
- *  0     : vlan valid
- *  1     : ipv4 valid
- *  2     : ipv6 valid
- *  3     : checksum verified by hardware
- *  4     : l3 checksum ok
- *  5     : l4 checksum ok
- *  [8-6] : ipv4 flags bits
- *  9     : vlan or vni
+ *  0       : tunnel terminate
+ *  1       : outer vlan valid
+ *  2       : outer ipv4 valid
+ *  3       : outer ipv6 valid
+ *  [4-7]   : outer ipv4 flags bits
+ *  8       : ip options are present
+ *  9       : tcp options are present
+ *  10      : inner vlan valid
+ *  11      : inner ipv4 valid
+ *  12      : inner ipv6 valid
+ *  [13-16] : inner ipv4 flags bits
+ *  17      : vlan or vni
  */
-header_type p4_to_p4plus_cpu_header_t {
+header_type p4_to_p4plus_cpu_pkt_t {
     fields {
-        p4plus_app_id    : 4;
-        src_iport        : 4;
-        reason           : 8;
-        packet_len       : 16;
-        pad              : 5;
-        src_lif          : 11;
+        pad                 : 5;
+        src_lif             : 11;
+        reason              : 8;
 
-        flags            : 4;
-        lkp_type         : 4;
-        lkp_vrf          : 16;
+        lkp_type            : 4;
+        src_iport           : 4;
+        lkp_vrf             : 16;
+        flags               : 24;
 
         // outer
-        flags_outer      : 16;
-        mac_sa_outer     : 48;
-        mac_da_outer     : 48;
-        vlan_pcp_outer   : 3;
-        vlan_dei_outer   : 1;
-        vlan_id_outer    : 12;
-        ip_sa_outer      : 128;
-        ip_da_outer      : 128;
-        ip_proto_outer   : 8;
-        ip_ttl_outer     : 8;
-        l4_sport_outer   : 16;
-        l4_dport_outer   : 16;
+        mac_sa_outer        : 48;
+        mac_da_outer        : 48;
+        vlan_pcp_outer      : 3;
+        vlan_dei_outer      : 1;
+        vlan_id_outer       : 12;
+        ip_sa_outer         : 128;
+        ip_da_outer         : 128;
+        ip_proto_outer      : 8;
+        ip_ttl_outer        : 8;
+        l4_sport_outer      : 16;
+        l4_dport_outer      : 16;
 
         // inner
-        flags_inner      : 16;
-        mac_sa_inner     : 48;
-        mac_da_inner     : 48;
-        vlan_pcp_inner   : 3;
-        vlan_dei_inner   : 1;
-        vlan_id_inner    : 28;
-        ip_sa_inner      : 128;
-        ip_da_inner      : 128;
-        ip_proto_inner   : 8;
-        ip_ttl_inner     : 8;
-        l4_sport_inner   : 16;
-        l4_dport_inner   : 16;
+        mac_sa_inner        : 48;
+        mac_da_inner        : 48;
+        vlan_pcp_inner      : 3;
+        vlan_dei_inner      : 1;
+        vlan_id_inner       : 28;
+        ip_sa_inner         : 128;
+        ip_da_inner         : 128;
+        ip_proto_inner      : 8;
+        ip_ttl_inner        : 8;
+        l4_sport_inner      : 16;
+        l4_dport_inner      : 16;
 
         // tcp
-        tcp_flags        : 8;
-        tcp_seqNo        : 32;
-        tcp_AckNo        : 32;
-        tcp_window       : 16;
-        tcp_options      : 8;
-        tcp_mss          : 16;
-        tcp_ws           : 8;
+        tcp_flags           : 8;
+        tcp_seqNo           : 32;
+        tcp_AckNo           : 32;
+        tcp_window          : 16;
+        tcp_options         : 8;
+        tcp_mss             : 16;
+        tcp_ws              : 8;
     }
 }
 
@@ -248,16 +251,16 @@ header_type p4_to_p4plus_cpu_header_t {
  */
 header_type p4plus_to_p4_header_t {
     fields {
-        p4plus_app_id    : 4;
-        pad              : 4;
-        flags            : 8;
-        ip_id            : 16;
-        ip_len           : 16;
-        udp_len          : 16;
-        tcp_seq_no       : 32;
-        vlan_pcp         : 3;
-        vlan_dei         : 1;
-        vlan_id          : 12;
+        p4plus_app_id       : 4;
+        pad                 : 4;
+        flags               : 8;
+        ip_id               : 16;
+        ip_len              : 16;
+        udp_len             : 16;
+        tcp_seq_no          : 32;
+        vlan_pcp            : 3;
+        vlan_dei            : 1;
+        vlan_id             : 12;
     }
 }
 
@@ -270,14 +273,14 @@ header_type p4plus_to_p4_header_t {
  */
 header_type cpu_to_p4_header_t {
     fields {
-        p4plus_app_id    : 4;
-        flags            : 4;
-        src_lif          : 11;
-        dst_lif          : 11;
-        iclass           : 4;
-        oclass           : 4;
-        dest_type        : 2;
-        dest             : 16;
-        oqueue           : 5;
+        p4plus_app_id       : 4;
+        flags               : 4;
+        src_lif             : 11;
+        dst_lif             : 11;
+        iclass              : 4;
+        oclass              : 4;
+        dest_type           : 2;
+        dest                : 16;
+        oqueue              : 5;
     }
 }
