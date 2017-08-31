@@ -8,11 +8,9 @@
 #include <common_rxdma_actions_p4pd.h>
 #include <stdlib.h>
 
-#include <hal.hpp>
-#include "hal_pd.hpp"
-#include "asic_rw.hpp"
+#include "base.h"
+#include "p4pd.h"
 #include "p4pd_api.hpp"
-#include "../iris/hal_state_pd.hpp"
 
 
 /*
