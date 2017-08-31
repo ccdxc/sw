@@ -55,7 +55,10 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
         HAL_TRACE_ERR("Failed to get tx: s0_t0_read_tls_stg0 entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
-
+    tlscb_pd->tlscb->serq_pi = data.u.read_tls_stg0_d.pi_0;
+    tlscb_pd->tlscb->serq_ci = data.u.read_tls_stg0_d.ci_0;
+    tlscb_pd->tlscb->bsq_pi = data.u.read_tls_stg0_d.pi_1;
+    tlscb_pd->tlscb->bsq_ci = data.u.read_tls_stg0_d.ci_1;
     return HAL_RET_OK;
 }
 

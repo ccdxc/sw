@@ -32,6 +32,10 @@ message TlsCbSpec {
   uint32                nic_dec_tail               = 4;
   uint32                cipher_type                = 5;
   uint32                debug_dol                  = 6;
+  uint32                serq_pi                    = 7;
+  uint32                serq_ci                    = 8;
+  uint32                bsq_pi                     = 9;
+  uint32                bsq_ci                     = 10;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

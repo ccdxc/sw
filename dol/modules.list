@@ -152,14 +152,24 @@ modules:
             - flow     : filter://fwtype=L3,type=IPV6,proto=UDP,label=FLOW-COLLISION
 
     - module:
-        name    : PKT_TO_SERQ
+        name    : PKT_TO_SERQ_V4
         enable  : True
         package : test.tcp-tls-proxy
         module  : tcp_proxy
         spec    : tcp_proxy.testspec
         ignore  : False
-        args    :
-            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_SERQ_V6
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : tcp_proxy
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV6
 
     - module:
         name    : PKT_TO_BRQ
@@ -177,7 +187,7 @@ modules:
         package : test.tcp-tls-proxy
         module  : pkt_to_bsq
         spec    : tcp_proxy.testspec
-        ignore  : False
+        ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
 

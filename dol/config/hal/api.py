@@ -35,7 +35,7 @@ import nwsec_pb2_grpc           as nwsec_pb2_grpc
 import nw_pb2_grpc              as nw_pb2_grpc
 import telemetry_pb2_grpc       as telemetry_pb2_grpc
 import tcp_proxy_cb_pb2_grpc    as tcpcb_pb2_grpc
-import tls_proxy_cb_pb2_grpc    as tls_pb2_grpc
+import tls_proxy_cb_pb2_grpc    as tlscb_pb2_grpc
 import descriptor_aol_pb2_grpc  as descriptor_aol_pb2_grpc
 import wring_pb2_grpc           as wring_pb2_grpc
 import acl_pb2_grpc             as acl_pb2_grpc
@@ -174,6 +174,13 @@ def GetTcpCbs(objlist):
              stub.TcpCbGet)
     return
 
+def GetTlsCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)
+    __config(objlist, tlscb_pb2.TlsCbGetRequestMsg,
+             stub.TlsCbGet)
+    return
+
 def ConfigureProxyService(objlist):
     if IsHalDisabled(): return
     stub = proxy_pb2_grpc.ProxyStub(HalChannel)
@@ -183,7 +190,7 @@ def ConfigureProxyService(objlist):
 
 def ConfigureTlsCbs(objlist):
     if IsHalDisabled(): return
-    stub = tls_pb2_grpc.TlsCbStub(HalChannel)
+    stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)
     __config(objlist, tlscb_pb2.TlsCbRequestMsg,
              stub.TlsCbCreate)
     return

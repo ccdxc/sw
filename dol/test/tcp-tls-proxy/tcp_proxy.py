@@ -8,9 +8,12 @@ from config.store               import Store
 rnmdr = 0
 rnmpr = 0
 serq = 0
+tlscb = 0 
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    elem = module.iterator.Get()
+    module.testspec.config_filter.flow.Extend(elem.flow)
     return
 
 def Teardown(infra, module):
@@ -21,6 +24,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
     global serq
+    global tlscb 
 
     print("TestCaseSetup(): Sample Implementation.")
     
@@ -38,6 +42,7 @@ def TestCaseSetup(tc):
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"])
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
     
     return
 
@@ -45,6 +50,7 @@ def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
     global serq
+    global tlscb 
 
     # 1. Verify rcv_nxt got updated
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
@@ -77,6 +83,16 @@ def TestCaseVerify(tc):
     if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in serq_cur.swdre_list")
         #return False
+
+    # 5. Verify pi/ci got update got updated
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    tlscb_cur.GetObjValPd()
+    print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    if (tlscb_cur.serq_pi != tlscb.serq_pi or tlscb_cur.serq_ci != tlscb.serq_ci):
+        print("serq pi/ci not as expected")
+        #return False
+    print("serq pi/ci not expected")
 
     return True
 
