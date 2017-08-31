@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime/debug"
+	"strings"
 	"testing"
 	"time"
 
@@ -767,18 +768,23 @@ func TestNwIFInspect(t *testing.T) {
 
 	// Generate errors from store.
 	wCtx, wCancel = context.WithCancel(context.Background())
-	stream, err = suite.vcHubClient.WatchNwIFs(wCtx, ws)
-	if err != nil {
-		t.Fatalf("Watch failed -- %v", err)
-	}
 
 	doneCh := make(chan bool)
 	go func() {
 		for {
-			_, err = stream.Recv()
+			stream, err = suite.vcHubClient.WatchNwIFs(wCtx, ws)
 			if err != nil {
-				close(doneCh)
-				return
+				t.Fatalf("Watch failed -- %v", err)
+			}
+			for {
+				_, err = stream.Recv()
+				if err != nil && strings.Contains(err.Error(), "Watch session closed") {
+					close(doneCh)
+					return
+				} else if err != nil {
+					log.Infof("Unexpected ERR %s ", err.Error())
+					break
+				}
 			}
 		}
 	}()
