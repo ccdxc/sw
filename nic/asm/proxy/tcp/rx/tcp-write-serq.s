@@ -15,6 +15,7 @@ struct tcp_rx_write_serq_k k;
 struct tcp_rx_write_serq_write_serq_d d;
 
 %%
+        .param          tcp_rx_stats_stage7_start
 	.align	
 tcp_rx_write_serq_stage6_start:
         CAPRI_CLEAR_TABLE0_VALID
@@ -127,6 +128,7 @@ ring_doorbell:
         phvwri          p.dma_cmd4_dma_cmd_wr_fence, 1
 	
 flow_write_serq_process_done:
+        CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage7_start)
 	nop.e
 	nop
 

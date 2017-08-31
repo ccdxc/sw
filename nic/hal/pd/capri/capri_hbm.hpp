@@ -64,6 +64,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define TNMDR_TABLE_BASE        "hbm_tnmdr_table_base"
 #define TNMPR_TABLE_BASE        "hbm_tnmpr_table_base"
 #define BRQ_BASE                "hbm_brq_base"
+#define TCP_RX_STATS_TABLE_BASE "hbm_tcp_rx_stats_table_base"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];
