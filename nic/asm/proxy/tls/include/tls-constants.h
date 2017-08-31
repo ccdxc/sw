@@ -362,5 +362,11 @@
 
 #define BARCO_SYM_STATUS_SUCCESS 0
 
+/* debug dol encoding to affect the runtime TLS processing */
+#define TLS_DDOL_BYPASS_BARCO           1    /* Enqueue the request to BRQ, but bypass updating the PI of barco and 
+                                              * ring BSQ doorbell 
+                                              */
+#define TLS_DDOL_SESQ_STOP              2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
+
 
 #endif /* #ifndef _TLS_CONSTANTS_H_ */

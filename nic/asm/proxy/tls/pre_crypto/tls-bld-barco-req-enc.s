@@ -25,21 +25,39 @@ table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_status_address, k.{to_s4_idesc}.dx
     phvwr       p.barco_desc_input_list_address, k.{to_s4_idesc}.dx
-    add         r1, r0, d.idesc
+    CAPRI_OPERAND_DEBUG(d.idesc)
+
     phvwr       p.barco_desc_output_list_address, k.{to_s4_odesc}.dx
-    add         r1, r0, d.odesc        
+    CAPRI_OPERAND_DEBUG(d.odesc)
+
     phvwr       p.barco_desc_key_desc_index, d.{key_addr}.dx
-    add         r1, r0, d.key_addr
+    CAPRI_OPERAND_DEBUG(d.key_addr)
+
     phvwr       p.barco_desc_iv_address, d.{iv_addr}.dx
-    add         r1, r0, d.iv_addr
+    CAPRI_OPERAND_DEBUG(d.iv_addr)
+
     phvwr       p.barco_desc_command_core,  d.command_core
-    add         r1, r0, d.command_core
+    CAPRI_OPERAND_DEBUG(d.command_core)
+
     phvwr       p.barco_desc_command_mode, d.command_mode
-    add         r1, r0, d.command_mode
+    CAPRI_OPERAND_DEBUG(d.command_mode)
+
     phvwr       p.barco_desc_command_op, d.command_op
-    add         r1, r0, d.command_op
+    CAPRI_OPERAND_DEBUG(d.command_op)
+        
     phvwr       p.barco_desc_command_param, d.command_param
-    add         r1, r0, d.command_param
+    CAPRI_OPERAND_DEBUG(d.command_param)
+
+	/* address will be in r4 */
+	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    phvwr       p.barco_desc_doorbell_address, r4
+    CAPRI_OPERAND_DEBUG(r4)
+
+    
+	/* data will be in r3 */
+	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    phvwr       p.barco_desc_doorbell_data, r3
+    CAPRI_OPERAND_DEBUG(r3)
         
     addi        r3, r0, BRQ_QPCB_BASE        
     CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_brq_enc_process,
