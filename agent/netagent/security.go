@@ -13,25 +13,20 @@ import (
 
 // addSgRules adds sg rules
 func (ag *NetAgent) addSgRules(sg *netproto.SecurityGroup) error {
-	var err error
-
 	for _, rule := range sg.Spec.Rules {
-		peersg := &netproto.SecurityGroup{}
 		// find peer sg
 		if rule.PeerGroup != "" {
-			peersg, err = ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
+			peersg, err := ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
 			if err != nil {
 				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err
 			}
+
+			// set peer sg id
+			rule.PeerGroupID = peersg.Status.SecurityGroupID
 		}
 
-		// add rule
-		err = ag.datapath.AddSecurityRule(sg, &rule, peersg)
-		if err != nil {
-			log.Errorf("Error adding rule in datapath. Rule{%+v}, Err: %v", rule, err)
-			return err
-		}
+		// FIXME: add references
 	}
 
 	return nil
@@ -42,22 +37,16 @@ func (ag *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 	var err error
 
 	for _, rule := range sg.Spec.Rules {
-		peersg := &netproto.SecurityGroup{}
-
 		// find peer sg
 		if rule.PeerGroup != "" {
-			peersg, err = ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
+			_, err = ag.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Name: rule.PeerGroup})
 			if err != nil {
 				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
 				return err
 			}
 		}
 
-		// delete rule
-		err = ag.datapath.DeleteSecurityRule(sg, &rule, peersg)
-		if err != nil {
-			log.Errorf("Error deleting the rule. rule {%+v} err: %v", rule, err)
-		}
+		// FIXME: remove references
 	}
 
 	return nil
@@ -66,9 +55,8 @@ func (ag *NetAgent) delSgRules(sg *netproto.SecurityGroup) error {
 // CreateSecurityGroup creates a security group
 func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// check if sg already exists
-	key := objectKey(sg.ObjectMeta)
-	oldSg, ok := ag.secgroupDB[key]
-	if ok {
+	oldSg, err := ag.FindSecurityGroup(sg.ObjectMeta)
+	if err == nil {
 		// check if sg contents are same
 		if !proto.Equal(oldSg, sg) {
 			log.Errorf("Security group %+v already exists", oldSg)
@@ -84,7 +72,7 @@ func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	ag.currentSgID++
 
 	// create it in datapath
-	err := ag.datapath.CreateSecurityGroup(sg)
+	err = ag.datapath.CreateSecurityGroup(sg)
 	if err != nil {
 		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg, err)
 		return err
@@ -98,12 +86,21 @@ func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// save it in db
+	key := objectKey(sg.ObjectMeta)
+	ag.Lock()
 	ag.secgroupDB[key] = sg
-	return nil
+	ag.Unlock()
+	err = ag.store.Write(sg)
+
+	return err
 }
 
 // FindSecurityGroup finds a security group
 func (ag *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
+	// lock the db
+	ag.Lock()
+	defer ag.Unlock()
+
 	// lookup the database
 	key := objectKey(meta)
 	sg, ok := ag.secgroupDB[key]
@@ -117,9 +114,8 @@ func (ag *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGr
 // UpdateSecurityGroup updates an existing security group
 func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// check if sg already exists
-	key := objectKey(sg.ObjectMeta)
-	esg, ok := ag.secgroupDB[key]
-	if !ok {
+	esg, err := ag.FindSecurityGroup(sg.ObjectMeta)
+	if err != nil {
 		log.Errorf("Security group %+v not found", sg.ObjectMeta)
 		return errors.New("Security group not found")
 	}
@@ -128,7 +124,7 @@ func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	sg.Status.SecurityGroupID = esg.Status.SecurityGroupID
 
 	// update sg in datapath
-	err := ag.datapath.UpdateSecurityGroup(sg)
+	err = ag.datapath.UpdateSecurityGroup(sg)
 	if err != nil {
 		log.Errorf("Error updating security group in datapath. Sg{%+v} Err: %v", sg, err)
 		return err
@@ -150,23 +146,26 @@ func (ag *NetAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// update it in db
+	key := objectKey(sg.ObjectMeta)
+	ag.Lock()
 	ag.secgroupDB[key] = sg
+	ag.Unlock()
+	err = ag.store.Write(sg)
 
-	return nil
+	return err
 }
 
 // DeleteSecurityGroup deletes a security group
 func (ag *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// check if sg already exists
-	key := objectKey(sg.ObjectMeta)
-	sgrp, ok := ag.secgroupDB[key]
-	if !ok {
+	sgrp, err := ag.FindSecurityGroup(sg.ObjectMeta)
+	if err != nil {
 		log.Errorf("Security group %+v not found", sg.ObjectMeta)
 		return errors.New("Security group not found")
 	}
 
 	// delete the sg in datapath
-	err := ag.datapath.DeleteSecurityGroup(sgrp)
+	err = ag.datapath.DeleteSecurityGroup(sgrp)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", sgrp, err)
 	}
@@ -179,6 +178,11 @@ func (ag *NetAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// delete from db
+	key := objectKey(sg.ObjectMeta)
+	ag.Lock()
 	delete(ag.secgroupDB, key)
-	return nil
+	ag.Unlock()
+	err = ag.store.Delete(sg)
+
+	return err
 }

@@ -8,12 +8,14 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/emstore"
 	"github.com/pensando/sw/utils/log"
 )
 
 // NetAgent is the network agent instance
 type NetAgent struct {
 	sync.Mutex                                          // global lock for the agent
+	store            emstore.Emstore                    // embedded db
 	NodeUUID         string                             // Node's UUID
 	datapath         NetDatapathAPI                     // network datapath
 	ctrlerif         CtrlerAPI                          // controller object
@@ -25,9 +27,24 @@ type NetAgent struct {
 }
 
 // NewNetAgent returns a new network agent
-func NewNetAgent(dp NetDatapathAPI, nodeUUID string) (*NetAgent, error) {
+func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) {
+	var emdb emstore.Emstore
+	var err error
+
+	// open the embedded database
+	if dbPath == "" {
+		emdb, err = emstore.NewEmstore(emstore.MemStoreType, "")
+	} else {
+		emdb, err = emstore.NewEmstore(emstore.BoltDBType, dbPath)
+	}
+	if err != nil {
+		log.Errorf("Error opening the embedded db. Err: %v", err)
+		return nil, err
+	}
+
 	// create netagent object
 	agent := NetAgent{
+		store:            emdb,
 		NodeUUID:         nodeUUID,
 		datapath:         dp,
 		networkDB:        make(map[string]*netproto.Network),
@@ -38,8 +55,10 @@ func NewNetAgent(dp NetDatapathAPI, nodeUUID string) (*NetAgent, error) {
 	}
 
 	// register the agent with datapath
-	err := dp.SetAgent(&agent)
+	err = dp.SetAgent(&agent)
 	if err != nil {
+		// cleanup emstore and return
+		emdb.Close()
 		return nil, err
 	}
 
@@ -57,6 +76,11 @@ func (ag *NetAgent) RegisterCtrlerIf(ctrlerif CtrlerAPI) error {
 	ag.ctrlerif = ctrlerif
 
 	return nil
+}
+
+// Stop stops the netagent
+func (ag *NetAgent) Stop() error {
+	return ag.store.Close()
 }
 
 // objectKey returns object key from object meta

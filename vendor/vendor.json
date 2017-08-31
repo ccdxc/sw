@@ -646,13 +646,6 @@
 			"revision": "09691a3b6378b740595c1002f40c34dd5f218a22"
 		},
 		{
-			"checksumSHA1": "/D9Xi0GGJyB5DVLsjn3jVmaDIkI=",
-			"origin": "k8s.io/client-go/vendor/github.com/emicklei/go-restful-swagger12",
-			"path": "github.com/emicklei/go-restful-swagger12",
-			"revision": "b1ed43528171d6a3c0292ff33a4025b2e89a912e",
-			"revisionTime": "2017-07-06T23:49:42Z"
-		},
-		{
 			"comment": "v1.2-96-g09691a3",
 			"path": "github.com/emicklei/go-restful/log",
 			"revision": "09691a3b6378b740595c1002f40c34dd5f218a22"
@@ -768,8 +761,10 @@
 			"revision": "8ee79997227bf9b34611aee7946ae64735e6fd93"
 		},
 		{
+			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
-			"revision": "8ee79997227bf9b34611aee7946ae64735e6fd93"
+			"revision": "ab9f9a6dab164b7d1246e0e688b0ab7b94d8553e",
+			"revisionTime": "2017-08-16T00:15:14Z"
 		},
 		{
 			"checksumSHA1": "ZIqcmeEc/EU9HsKJHuJ1Iy+ZNgE=",
@@ -1303,22 +1298,22 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "evc0WqVQO/RXJlSE096rr+pBh7w=",
+			"checksumSHA1": "m4B/NP+D0S1YzRZi14oDyHhEImg=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator",
-			"revision": "f721f477e1977b695a8476ee6d89df7fd3c55088",
-			"revisionTime": "2017-08-15T22:34:32Z"
+			"revision": "ce769c2150752990dacdd017469bb3f01e4566da",
+			"revisionTime": "2017-08-23T21:50:57Z"
 		},
 		{
 			"checksumSHA1": "h0ZnuRkQke+V5NsTBUa/M6ZuuG0=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator/esx",
-			"revision": "032086dd56b39b73c3b72d8758ad9ab2b3557a64",
-			"revisionTime": "2017-08-01T01:44:48Z"
+			"revision": "ce769c2150752990dacdd017469bb3f01e4566da",
+			"revisionTime": "2017-08-23T21:50:57Z"
 		},
 		{
 			"checksumSHA1": "+HELhEOoXHFoSDGXtd4d0lSD028=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator/vc",
-			"revision": "fbffc215d34cc7bf8b8d7e3a985effd5543606b1",
-			"revisionTime": "2017-07-06T21:30:02Z"
+			"revision": "ce769c2150752990dacdd017469bb3f01e4566da",
+			"revisionTime": "2017-08-23T21:50:57Z"
 		},
 		{
 			"checksumSHA1": "hNxTczpwjMFOoLeffAvJLuMFJFw=",
@@ -1713,8 +1708,10 @@
 			"revision": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
 		},
 		{
+			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
 			"path": "golang.org/x/net/context",
-			"revision": "e90d6d0afc4c315a0d87a568ae68577cc15149a0"
+			"revision": "e90d6d0afc4c315a0d87a568ae68577cc15149a0",
+			"revisionTime": "2016-07-15T16:59:30Z"
 		},
 		{
 			"path": "golang.org/x/net/context/ctxhttp",
@@ -1855,32 +1852,42 @@
 			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
 		},
 		{
+			"checksumSHA1": "4lEP/dEWOMb4r2Aehu0D9iBDgIU=",
 			"path": "google.golang.org/appengine/internal",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
 			"path": "google.golang.org/appengine/internal/app_identity",
 			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
 		},
 		{
+			"checksumSHA1": "TsNO8P0xUlLNyh3Ic/tzSp/fDWM=",
 			"path": "google.golang.org/appengine/internal/base",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
+			"checksumSHA1": "5QsV5oLGSfKZqTCVXP6NRz5T4Tw=",
 			"path": "google.golang.org/appengine/internal/datastore",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
+			"checksumSHA1": "Gep2T9zmVYV8qZfK2gu3zrmG6QE=",
 			"path": "google.golang.org/appengine/internal/log",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
 			"path": "google.golang.org/appengine/internal/modules",
 			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
 		},
 		{
+			"checksumSHA1": "a1XY7rz3BieOVqVI2Et6rKiwQCk=",
 			"path": "google.golang.org/appengine/internal/remote_api",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
 			"checksumSHA1": "QtAbHtHmDzcf6vOV9eqlCpKgjiw=",
@@ -1889,8 +1896,10 @@
 			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
+			"checksumSHA1": "akOV9pYnCbcPA8wJUutSQVibdyg=",
 			"path": "google.golang.org/appengine/urlfetch",
-			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
+			"revision": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05",
+			"revisionTime": "2016-08-19T23:33:10Z"
 		},
 		{
 			"checksumSHA1": "B22iMMY2vi1Q9kseWb/ZznpW8lQ=",

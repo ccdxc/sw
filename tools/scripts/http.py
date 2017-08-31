@@ -37,7 +37,7 @@ def httpPost(url, data):
         elif err.code == 403:
             print "Access denied!"
         else:
-            print "HTTP Error! Error code", err.code
+            print "HTTP Error! Error code", err.code, err.reason
         return "Error"
     except urllib2.URLError, err:
         print "URL error:", err.reason

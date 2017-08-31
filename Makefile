@@ -50,10 +50,10 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd ${TO_STRIP}
-	@cp -p ${PWD}/bin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd ${TO_STRIP}
+	@cp -p ${PWD}/bin/cbin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
 	@tools/scripts/create-container.sh createBaseContainer
-	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
+	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
 qdeploy:
@@ -67,7 +67,7 @@ deploy:
 	$(MAKE) c-start
 
 cluster:
-	$(MAKE) container-compile
+	$(MAKE) container-qcompile
 	$(MAKE) install
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 
@@ -82,10 +82,12 @@ helper-containers:
 	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.3 .
 
 container-qcompile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
+	mkdir -p ${PWD}/bin/cbin
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
 
 container-compile:
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
+	mkdir -p ${PWD}/bin/cbin
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
 
 ws-tools:
 	$(info +++ building WS tools)
@@ -170,9 +172,14 @@ dev-clean:
 
 test-cluster:
 	scripts/bringup-dev.sh Vagrantfile.e2e
-	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make cluster'
+	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make qbuild && make cluster'
 	scripts/setup_hostsim.sh
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startAgent.py -nodes $$NAPLES_NODES'
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin'
+
+restart-test-cluster:
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin -stop'
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes $$PENS_NODES -quorum $$PENS_QUORUM_NODENAMES'
+	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin'
 
 e2e-test:
 	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/test/e2e; sudo -E E2E_TEST=1 GOPATH=/import /usr/local/go/bin/go test -v .'

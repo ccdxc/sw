@@ -4,6 +4,7 @@ package statemgr
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/utils/log"
@@ -13,6 +14,7 @@ import (
 // EndpointState is a wrapper for endpoint object
 type EndpointState struct {
 	network.Endpoint                                // embedding endpoint object
+	sync.Mutex                                      // lock for the ep object
 	groups           map[string]*SecurityGroupState // list of security groups
 	stateMgr         *Statemgr                      // state manager
 }
@@ -59,6 +61,10 @@ func (eps *EndpointState) MatchAttributes(attrs []string) bool {
 
 // AddSecurityGroup adds a security group to an endpoint
 func (eps *EndpointState) AddSecurityGroup(sgs *SecurityGroupState) error {
+	// lock the endpoint
+	eps.Lock()
+	defer eps.Unlock()
+
 	// add security group to the list
 	eps.Status.SecurityGroups = append(eps.Status.SecurityGroups, sgs.Name)
 	eps.groups[sgs.Name] = sgs
@@ -68,10 +74,18 @@ func (eps *EndpointState) AddSecurityGroup(sgs *SecurityGroupState) error {
 
 // DelSecurityGroup removes a security group from an endpoint
 func (eps *EndpointState) DelSecurityGroup(sgs *SecurityGroupState) error {
+	// lock the endpoint
+	eps.Lock()
+	defer eps.Unlock()
+
 	// remove the security group from the list
 	for i, sgname := range eps.Status.SecurityGroups {
 		if sgname == sgs.Name {
-			eps.Status.SecurityGroups = append(eps.Status.SecurityGroups[:i], eps.Status.SecurityGroups[i+1:]...)
+			if i < (len(eps.Status.SecurityGroups) - 1) {
+				eps.Status.SecurityGroups = append(eps.Status.SecurityGroups[:i], eps.Status.SecurityGroups[i+1:]...)
+			} else {
+				eps.Status.SecurityGroups = eps.Status.SecurityGroups[:i]
+			}
 		}
 	}
 	delete(eps.groups, sgs.Name)

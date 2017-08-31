@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/google/gopacket"
@@ -35,10 +36,17 @@ type DpIntf interface {
 type FwdEntry struct {
 	MacAddr  net.HardwareAddr   // Mac addr
 	IPv4Addr net.IP             // IP addr
-	Vlan     uint32             // vlan
+	Network  string             // network
 	Vrf      string             // VRF
-	Port     string             // port name
+	Lif      *LifEntry          // outgoing lif
 	Endpoint *netproto.Endpoint // endpoint
+}
+
+// LifEntry represents a <port, vlan> combination
+type LifEntry struct {
+	Port    string // port, this lif exists on
+	Vlan    uint32 // LIF's vlan
+	Network string // network this LIF belongs to
 }
 
 // Fswitch is a switch instance
@@ -51,8 +59,9 @@ type Fswitch struct {
 	pcapHandles     map[string]*pcap.Handle       // Pcap handles
 	localEndpoints  map[string]*netproto.Endpoint // local endpoints
 	remoteEndpoints map[string]*netproto.Endpoint // remote endpoints
-	macaddrTable    map[string]*FwdEntry          // forwarding table indexed by mac addr, vlan
+	macaddrTable    map[string]*FwdEntry          // forwarding table indexed by mac addr, network
 	ipaddrTable     map[string]*FwdEntry          // forwarding table indexed by ip addr, vrf
+	lifTable        map[string]*LifEntry          // Lif table indexed by port,vlan
 }
 
 // runListener loops forever and receives messages
@@ -60,7 +69,7 @@ func (fs *Fswitch) runListener(port string) error {
 	// Select the interface to receive traffic.
 	ifi, err := net.InterfaceByName(port)
 	if err != nil {
-		log.Errorf("failed to open interface: %v", err)
+		log.Errorf("failed to open interface %s: %v", port, err)
 		return err
 	}
 
@@ -94,6 +103,12 @@ func (fs *Fswitch) runPcapListener(port string) error {
 	}
 	fs.pcapHandles[port] = handle
 
+	// set direction to receive only incoming packets
+	err = handle.SetDirection(pcap.DirectionIn)
+	if err != nil {
+		log.Fatal("PCAP SetDirection error:", err)
+	}
+
 	// find the pcap decoder
 	dec, ok := gopacket.DecodersByLayerName["Ethernet"]
 	if !ok {
@@ -116,7 +131,7 @@ func (fs *Fswitch) runPcapListener(port string) error {
 			}
 
 			// Display source of message and message itself.
-			log.Infof("Switch Received Ethernet frame [%s->%s] vlan {%+v} etype 0x%x: %v", f.Source.String(), f.Destination.String(), f.VLAN, uint(f.EtherType), f.Payload)
+			log.Debugf("Switch Received Ethernet frame [%s->%s] vlan {%+v} etype 0x%x: %v", f.Source.String(), f.Destination.String(), f.VLAN, uint(f.EtherType), f.Payload)
 
 			// process the frame
 			err = fs.processFrame(port, &f)
@@ -200,36 +215,36 @@ func (fs *Fswitch) SendFrame(port string, frame *ethernet.Frame) error {
 }
 
 // addFwdEntry adds forwarding entries in ip and mac table
-func (fs *Fswitch) addFwdEntry(port string, ep *netproto.Endpoint) error {
+func (fs *Fswitch) addFwdEntry(ntwork string, ep *netproto.Endpoint, lif *LifEntry) error {
 	// build forwarding entry
 	mac, _ := net.ParseMAC(ep.Status.MacAddress)
 	ip, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 	fwd := FwdEntry{
 		MacAddr:  mac,
 		IPv4Addr: ip,
-		Vlan:     ep.Status.UsegVlan,
+		Network:  ntwork,
 		Vrf:      DefaultVRF,
-		Port:     port,
+		Lif:      lif,
 		Endpoint: ep,
 	}
 
 	// add to mac table
-	macKey := fmt.Sprintf("%d|%s", ep.Status.UsegVlan, ep.Status.MacAddress)
+	macKey := fmt.Sprintf("%s|%s", ntwork, mac.String())
 	fs.macaddrTable[macKey] = &fwd
 
 	// add to ip addr table
 	ipKey := fmt.Sprintf("%s|%s", fwd.Vrf, fwd.IPv4Addr.String())
 	fs.ipaddrTable[ipKey] = &fwd
 
-	log.Infof("Added fwd entry: {%+v}", fwd)
+	log.Infof("Added fwd entry: {%+v}, Lif: {%+v}", fwd, lif)
 
 	return nil
 }
 
 // delFwdEntry deletes forwarding entry
-func (fs *Fswitch) delFwdEntry(port string, ep *netproto.Endpoint) error {
+func (fs *Fswitch) delFwdEntry(ntwork string, ep *netproto.Endpoint) error {
 	// delete from mac table
-	macKey := fmt.Sprintf("%d|%s", ep.Status.UsegVlan, ep.Status.MacAddress)
+	macKey := fmt.Sprintf("%s|%s", ntwork, strings.ToLower(ep.Status.MacAddress))
 	delete(fs.macaddrTable, macKey)
 
 	// delete from ip addr table
@@ -240,10 +255,58 @@ func (fs *Fswitch) delFwdEntry(port string, ep *netproto.Endpoint) error {
 	return nil
 }
 
+// add lif adds a lif to lif table
+func (fs *Fswitch) addLif(port, ntwork string, vlan uint32) (*LifEntry, error) {
+	// create lif entry
+	lif := LifEntry{
+		Port:    port,
+		Vlan:    vlan,
+		Network: ntwork,
+	}
+
+	// add it to the table
+	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+	fs.lifTable[lifKey] = &lif
+
+	return &lif, nil
+}
+
+// delLif deletes a LIF from lif table
+func (fs *Fswitch) delLif(port string, vlan uint32) error {
+	// delete it from the table
+	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+	delete(fs.lifTable, lifKey)
+
+	return nil
+}
+
+// findLif finds a lif by vlan
+func (fs *Fswitch) findLif(port string, vlan uint32) (*LifEntry, error) {
+	// find the lif by port, vlan
+	lifKey := fmt.Sprintf("%s|%d", port, vlan)
+	lif, ok := fs.lifTable[lifKey]
+	if !ok {
+		// find the lif by wildcard
+		lifKey = fmt.Sprintf("%s|%d", port, 0)
+		lif, ok = fs.lifTable[lifKey]
+		if !ok {
+			return nil, errors.New("Lif not found")
+		}
+	}
+
+	return lif, nil
+}
+
 // AddLocalEndpoint adds local endpoint
 func (fs *Fswitch) AddLocalEndpoint(port string, ep *netproto.Endpoint) error {
+	// add a lif for the local endpoint
+	lif, err := fs.addLif(port, ep.Spec.NetworkName, ep.Status.UsegVlan)
+	if err != nil {
+		return err
+	}
+
 	// add a forwarding entry
-	err := fs.addFwdEntry(port, ep)
+	err = fs.addFwdEntry(ep.Spec.NetworkName, ep, lif)
 	if err != nil {
 		log.Errorf("Error adding fwd entry. Err: %v", err)
 		return err
@@ -258,10 +321,16 @@ func (fs *Fswitch) AddLocalEndpoint(port string, ep *netproto.Endpoint) error {
 // DelLocalEndpoint deletes local endpoint
 func (fs *Fswitch) DelLocalEndpoint(port string, ep *netproto.Endpoint) error {
 	// delete fwd entries
-	err := fs.delFwdEntry(port, ep)
+	err := fs.delFwdEntry(ep.Spec.NetworkName, ep)
 	if err != nil {
 		log.Errorf("Error adding fwd entry. Err: %v", err)
 		return err
+	}
+
+	// delete lif for the local endpoint
+	err = fs.delLif(port, ep.Status.UsegVlan)
+	if err != nil {
+		return nil
 	}
 
 	// remove from local epdb
@@ -271,9 +340,16 @@ func (fs *Fswitch) DelLocalEndpoint(port string, ep *netproto.Endpoint) error {
 }
 
 // AddRemoteEndpoint adds remote endpoint
-func (fs *Fswitch) AddRemoteEndpoint(ep *netproto.Endpoint) error {
+func (fs *Fswitch) AddRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
+	// find the uplink lif
+	lif, err := fs.findLif(fs.uplink, nw.Status.AllocatedVlanID)
+	if err != nil {
+		log.Errorf("Could not find the uplink LIF %s, %d", fs.uplink, nw.Status.AllocatedVlanID)
+		return err
+	}
+
 	// add a forwarding entry
-	err := fs.addFwdEntry(fs.uplink, ep)
+	err = fs.addFwdEntry(ep.Spec.NetworkName, ep, lif)
 	if err != nil {
 		log.Errorf("Error adding fwd entry. Err: %v", err)
 		return err
@@ -288,7 +364,7 @@ func (fs *Fswitch) AddRemoteEndpoint(ep *netproto.Endpoint) error {
 // DelRemoteEndpoint deletes remote endpoint
 func (fs *Fswitch) DelRemoteEndpoint(ep *netproto.Endpoint) error {
 	// delete fwd entries
-	err := fs.delFwdEntry(fs.uplink, ep)
+	err := fs.delFwdEntry(ep.Spec.NetworkName, ep)
 	if err != nil {
 		log.Errorf("Error adding fwd entry. Err: %v", err)
 		return err
@@ -298,6 +374,22 @@ func (fs *Fswitch) DelRemoteEndpoint(ep *netproto.Endpoint) error {
 	delete(fs.remoteEndpoints, ep.Name)
 
 	return nil
+}
+
+// CreateNetwork creates a network in datapath
+func (fs *Fswitch) CreateNetwork(nw *netproto.Network) error {
+	// create the port,vlan LIF on the uplink
+	_, err := fs.addLif(fs.uplink, nw.Name, nw.Status.AllocatedVlanID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteNetwork deletes a network from datapath
+func (fs *Fswitch) DeleteNetwork(nw *netproto.Network) error {
+	return fs.delLif(fs.uplink, nw.Status.AllocatedVlanID)
 }
 
 // NewFswitch creates a new switch instance and returns
@@ -313,6 +405,7 @@ func NewFswitch(dpi DpIntf, uplink string) (*Fswitch, error) {
 		remoteEndpoints: make(map[string]*netproto.Endpoint),
 		macaddrTable:    make(map[string]*FwdEntry),
 		ipaddrTable:     make(map[string]*FwdEntry),
+		lifTable:        make(map[string]*LifEntry),
 	}
 
 	// start listener on the uplink

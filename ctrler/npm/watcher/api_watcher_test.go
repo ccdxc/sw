@@ -95,13 +95,13 @@ func TestApiWatcher(t *testing.T) {
 			Name:   "test",
 		},
 		Spec: network.NetworkSpec{
-			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
 		},
 	}
 	ns, err := apicl.NetworkV1().Network().Create(context.Background(), &net)
 	AssertOk(t, err, "Error creating network")
-	Assert(t, (ns.Spec.IPv4Subnet == "10.1.1.1/24"), "Got invalid network", ns)
+	Assert(t, (ns.Spec.IPv4Subnet == "10.1.1.0/24"), "Got invalid network", ns)
 
 	// verify network got created
 	AssertEventually(t, func() bool {
@@ -110,7 +110,7 @@ func TestApiWatcher(t *testing.T) {
 	}, "Network not found in statemgr")
 	nw, err := stateMgr.FindNetwork("default", "test")
 	AssertOk(t, err, "Could not find the network")
-	Assert(t, (nw.Spec.IPv4Subnet == "10.1.1.1/24"), "Got invalid network", nw)
+	Assert(t, (nw.Spec.IPv4Subnet == "10.1.1.0/24"), "Got invalid network", nw)
 
 	// create a vmm nwif
 	nwif := orch.NwIF{
@@ -118,13 +118,16 @@ func TestApiWatcher(t *testing.T) {
 		ObjectMeta: &api.ObjectMeta{
 			Tenant: "default",
 			Name:   "test-nwif",
+			UUID:   "test-nwif",
 		},
 		Config: &orch.NwIF_Config{
 			LocalVLAN: 22,
 		},
 		Status: &orch.NwIF_Status{
+			IpAddress:   "10.1.1.1",
 			MacAddress:  "11:11:11:11:11:11",
 			PortGroup:   "test",
+			Network:     "test",
 			SmartNIC_ID: "test-host",
 		},
 	}

@@ -89,7 +89,7 @@ func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto
 
 // CreateRemoteEndpoint creates remote endpoint
 func (fdp *FakeDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
-	return fdp.fSwitch.AddRemoteEndpoint(ep)
+	return fdp.fSwitch.AddRemoteEndpoint(ep, nw)
 }
 
 // UpdateLocalEndpoint updates an existing endpoint
@@ -133,7 +133,7 @@ func (fdp *FakeDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 
 // CreateNetwork creates a network in datapath
 func (fdp *FakeDatapath) CreateNetwork(nw *netproto.Network) error {
-	return nil
+	return fdp.fSwitch.CreateNetwork(nw)
 }
 
 // UpdateNetwork updates a network in datapath
@@ -143,7 +143,7 @@ func (fdp *FakeDatapath) UpdateNetwork(nw *netproto.Network) error {
 
 // DeleteNetwork deletes a network from datapath
 func (fdp *FakeDatapath) DeleteNetwork(nw *netproto.Network) error {
-	return nil
+	return fdp.fSwitch.DeleteNetwork(nw)
 }
 
 // CreateSecurityGroup creates a security group
@@ -158,15 +158,5 @@ func (fdp *FakeDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // DeleteSecurityGroup deletes a security group
 func (fdp *FakeDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// AddSecurityRule adds a security rule
-func (fdp *FakeDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteSecurityRule deletes a security rule
-func (fdp *FakeDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
 	return nil
 }

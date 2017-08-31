@@ -4,9 +4,11 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
+import "qos.proto";
 
-package halproto;
+package l4lb;
+option go_package="halproto";
 
 // The L4 LB service definition
 service L4Lb {
@@ -98,13 +100,14 @@ message L4LbServiceKeyHandle {
 
 // L4LbServiceSpec message represents one service request
 message L4LbServiceSpec {
-  types.ObjectMeta        meta                     = 1;    // object meta
-  L4LbServiceKeyHandle    key_or_handle            = 2;    // service being created/updated
-  bool                    proxy_arp_enable         = 3;    // proxy ARP for VIP or not
-  fixed64                 service_mac              = 4;    // service MAC to use in case proxy ARP is enabled
-  SessionAffinity         session_affinity         = 5;    // session affinity, if any
-  LBMethod                load_balancer_type       = 6;    // load balancing method
-  HealthCheck             health_check             = 7;    // health check configuration
+  types.ObjectMeta     meta               = 1;    // object meta
+  L4LbServiceKeyHandle key_or_handle      = 2;    // service being created/updated
+  bool                 proxy_arp_enable   = 3;    // proxy ARP for VIP or not
+  fixed64              service_mac        = 4;    // service MAC to use in case proxy ARP is enabled
+  SessionAffinity      session_affinity   = 5;    // session affinity, if any
+  LBMethod             load_balancer_type = 6;    // load balancing method
+  HealthCheck          health_check       = 7;    // health check configuration
+  qos.QOSActions       qos_actions        = 8;    // QOS actions
 }
 
 // L4LbServiceRequestMsg is batched request message that is used to do

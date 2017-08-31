@@ -153,8 +153,8 @@ func TestMemdbWatch(t *testing.T) {
 
 func TestMemdbConcurrency(t *testing.T) {
 	// concurrency parameters
-	const watchConcur = 1000
-	const objConcur = 1000
+	const watchConcur = 200
+	const objConcur = 200
 	runtime.GOMAXPROCS(32)
 	objErrChan := make(chan error, (objConcur + 1))
 	watchDoneChan := make(chan Event, ((watchConcur + 1) * (objConcur + 1)))

@@ -9,7 +9,7 @@ const (
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
 
-	// API GW
+	// API gw Port
 	APIGwRESTPort = "9000"
 
 	// CMD

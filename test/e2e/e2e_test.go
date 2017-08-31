@@ -1,43 +1,42 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package e2e_test
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
-	. "testing"
+	"testing"
 
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/orch"
-	"github.com/pensando/sw/orch/simapi"
 	"github.com/pensando/sw/utils/log"
-	n "github.com/pensando/sw/utils/netutils"
-	tu "github.com/pensando/sw/utils/testutils"
+	"github.com/pensando/sw/utils/rpckit"
+	. "github.com/pensando/sw/utils/testutils"
 )
 
 const (
 	vmsPerHost         = 2
 	vchContainerName   = "vcHub"
 	vcSimContainerName = "vcSim"
-	vchApiAddr         = "127.0.0.1:" + globals.VCHubAPIPort
-	defVCSimURL        = "http://127.0.0.1:18086"
-	defSoapURL         = "http://user:pass@127.0.0.1:8989/sdk"
+	vchApiAddr         = "pen-master:" + globals.VCHubAPIPort
+	defVCSimURL        = "http://pen-master:18086"
+	defSoapURL         = "http://user:pass@pen-master:8989/sdk"
 	hostSimURL         = "http://192.168.30.121:5050"
 	hostMac            = "02:02:02:02:02:01"
+	apigwURL           = "pen-master:9000"
 )
 
 type e2eSuite struct {
-	name string
+	name           string
+	vchubRpcClient *rpckit.RPCClient
+	vcHubClient    orch.OrchApiClient
+	restClient     apiclient.Services
 }
 
-var sts = &e2eSuite{}
-var _ = Suite(sts)
-
 // TestMain is the entry point for e2e tests
-func TestMain(m *M) {
+func TestMain(m *testing.M) {
 	if os.Getenv("E2E_TEST") == "" {
 		os.Exit(0)
 	}
@@ -45,125 +44,67 @@ func TestMain(m *M) {
 }
 
 func (s *e2eSuite) SetUpSuite(c *C) {
-	dockerPath, err := exec.LookPath("docker")
+	// Open a vch api client
+	rpcClient, err := rpckit.NewRPCClient("e2e-test-vchubclient", vchApiAddr)
+	c.Assert(err, IsNil)
+	s.vchubRpcClient = rpcClient
+	s.vcHubClient = orch.NewOrchApiClient(rpcClient.ClientConn)
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient(apigwURL)
 	if err != nil {
-		log.Fatalf("docker not found %v", err)
+		c.Fatalf("cannot create REST client. Err: %v", err)
 	}
+	s.restClient = restcl
 
-	runVCSim(dockerPath)
+	// create the default network, if it doesnt exist
+	s.createNetwork("default", "default", "10.1.1.0/24", "10.1.1.254")
 
-	// start a vchub binary
-	runVCH(dockerPath, defSoapURL)
 }
 
-func TestE2E(t *T) {
+func TestE2E(t *testing.T) {
 	if os.Getenv("E2E_TEST") == "" {
 		os.Exit(0)
 	}
+
+	// test context
+	var sts = &e2eSuite{}
+	var _ = Suite(sts)
+
 	TestingT(t)
-}
-
-func runVCSim(dockerPath string) {
-	out, err := exec.Command(dockerPath, "run", "--net=host", "--name", vcSimContainerName, "-d", "pen-vcsim", "-hostsim-urls", hostSimURL, "-snic-list", hostMac).CombinedOutput()
-	if err != nil {
-		log.Infof("runVCSim: %v, %s", err, string(out))
-	}
-
-}
-
-func runVCH(dockerPath, url string) {
-	out, err := exec.Command(dockerPath, "run", "--net=host", "--name", vchContainerName, "-d", "pen-vchub", "-vcenter-list", url).CombinedOutput()
-	if err != nil {
-		log.Infof("runVCH: %v, %s", err, string(out))
-	}
 }
 
 // TestVCHBasic tests basic vchub functionality
 func (s *e2eSuite) TestVCHBasic(c *C) {
-	// Open a vch api client
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(vchApiAddr, opts...)
-	c.Assert(err, IsNil)
-
-	vcHubClient := orch.NewOrchApiClient(conn)
-
-	tu.AssertEventually(c, func() bool {
-		filter := &orch.Filter{}
-		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
-		if err != nil {
-			return false
-		}
-		nics := nicList.GetItems()
-		if len(nics) == 1 {
-			for _, nic := range nics {
-				log.Infof("nic: %+v", nic.Status)
-			}
+	// make sure vchub has the smart nics
+	AssertEventually(c, func() bool {
+		nics, err := s.vchubGetNics()
+		if err == nil && len(nics) >= 1 {
 			return true
 		}
 		return false
-	}, "50ms", "10s")
+	}, "Error getting smartnic list", "50ms", "10s")
 
 	// Add a NwIF
+	resp, err := s.createVM("testNwIF", "10.1.1.1/24", "21", "default", hostMac)
+	AssertOk(c, err, "Error creating VM in vcsim")
+	log.Infof("VM create Response: %+v", resp)
 
-	nwReq := &simapi.NwIFSetReq{
-		Name:      "testNwIF",
-		IPAddr:    "111.11.11.11",
-		Vlan:      "115",
-		PortGroup: "dvportGroup-13",
-		SmartNIC:  hostMac,
-	}
-	resp := &simapi.NwIFSetResp{}
-	err = n.HTTPPost(defVCSimURL+"/nwifs/create", nwReq, resp)
-	c.Assert(err, IsNil)
-	log.Infof("Response: %+v", resp)
-
-	tu.AssertEventually(c, func() bool {
-		filter := &orch.Filter{}
-		ifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
-		if err != nil {
-			return false
-		}
-		nwIfs := ifList.GetItems()
-		for _, nwif := range nwIfs {
-			if nwif.Status.IpAddress == nwReq.IPAddr && nwif.Status.SmartNIC_ID == hostMac {
-				log.Infof("%+v", nwif.Status)
-				return true
-			} else {
-				log.Infof("%s", nwif.Status.IpAddress)
-			}
-		}
-		return false
-	}, "50ms", "10s")
+	// verify VM got created
+	AssertEventually(c, func() bool {
+		return s.vchubNwifExists("10.1.1.1", hostMac)
+	}, "Error getting vm nwifs", "50ms", "10s")
 
 	// delete the ep and verify
-	r := &simapi.NwIFSetReq{}
-	del := &simapi.NwIFDelResp{}
-	u1 := fmt.Sprintf("%s/nwifs/%s/delete", defVCSimURL, resp.UUID)
-	err = n.HTTPPost(u1, r, del)
+	err = s.deleteVM(resp.UUID)
 	c.Assert(err, IsNil)
 
-	tu.AssertEventually(c, func() bool {
-		filter := &orch.Filter{}
-		ifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
-		if err != nil {
-			return false
-		}
-		nwIfs := ifList.GetItems()
-		found := false
-		for _, nwif := range nwIfs {
-			if nwif.Status.IpAddress == nwReq.IPAddr {
-				found = true
-				break
-			}
-		}
-
-		return !found
-	}, "50ms", "10s")
+	// verify vm was removed
+	AssertEventually(c, func() bool {
+		return !s.vchubNwifExists("10.1.1.1", "")
+	}, "VM nwif is not deleted", "50ms", "10s")
 }
 
 func (s *e2eSuite) TearDownSuite(c *C) {
-	dockerPath, _ := exec.LookPath("docker")
-	exec.Command(dockerPath, "rm", "-f", vchContainerName).CombinedOutput()
-	exec.Command(dockerPath, "rm", "-f", vcSimContainerName).CombinedOutput()
+	s.vchubRpcClient.Close()
 }

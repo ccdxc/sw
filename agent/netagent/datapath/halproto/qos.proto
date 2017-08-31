@@ -1,0 +1,380 @@
+//------------------------------------------------------------------------------
+// protobuf specification for QOS APIs
+// These APIs are used to control
+//     - admission control using buffer pools
+//     - queuing block
+//     - Policer configuration
+//     - Packet marking action
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package qos;
+option go_package="halproto";
+
+// QOS service definition
+service QOS {
+  // Buffer Pool Group related APIs
+  // Create a Buffer pool on a port given the buffer requirements
+  rpc BufPoolCreate(BufPoolRequestMsg) returns (BufPoolResponseMsg) {}
+  rpc BufPoolUpdate(BufPoolRequestMsg) returns (BufPoolResponseMsg) {}
+  rpc BufPoolDelete(BufPoolDeleteRequestMsg) returns (BufPoolDeleteResponseMsg) {}
+  rpc BufPoolGet(BufPoolGetRequestMsg) returns (BufPoolGetResponseMsg) {}
+
+  // Output Queue related APIs
+  rpc QueueCreate(QueueRequestMsg) returns (QueueResponseMsg) {}
+  rpc QueueUpdate(QueueRequestMsg) returns (QueueResponseMsg) {}
+  rpc QueueDelete(QueueDeleteRequestMsg) returns (QueueDeleteResponseMsg) {}
+  rpc QueueGet(QueueGetRequestMsg) returns (QueueGetResponseMsg) {}
+
+  // Policers
+  rpc PolicerCreate(PolicerRequestMsg) returns (PolicerResponseMsg) {}
+  rpc PolicerUpdate(PolicerRequestMsg) returns (PolicerResponseMsg) {}
+  rpc PolicerDelete(PolicerDeleteRequestMsg) returns (PolicerDeleteResponseMsg) {}
+  rpc PolicerGet(PolicerGetRequestMsg) returns (PolicerGetResponseMsg) {}
+
+}
+
+// Marking action object
+message MarkingActionSpec {
+    bool   pcp_rewrite_en  = 1;    // Enable 802.1q PCP rewrite
+    uint32 pcp             = 2;    // Value of PCP to rewrite with
+    bool   dscp_rewrite_en = 3;    // Enable ip dscp rewrite
+    uint32 dscp            = 4;    // Value of dscp to rewrite with
+}
+
+// QOS actions used by other proto files to attach the QOS actions
+// at respective attachment points
+message QOSActions {
+  QueueKeyHandle         queue_key_or_handle       = 1;    // Queue key or handle
+  PolicerKeyHandle       policer_key_or_handle     = 2;    // Optional policer handle for policing traffic
+  MarkingActionSpec      marking_spec              = 3;    // Optional packet marking action
+}
+
+// Traffic class identifier
+message TrafficClass {
+  uint32 cos = 1;    // The class of service
+}
+
+// Mapping from the Traffic Class to Queues.
+message TrafficClassQueueMap {
+  TrafficClass   traffic_class    = 1;    // The traffic class
+  QueueKeyHandle queue_key_handle = 2;    // The queue to use for this traffic class
+}
+
+// Buffer Pool handle - uniquely identifies a buffer pool
+message BufPoolHandle {
+  fixed64 handle = 1;    // unique buffer pool id returned by HAL
+}
+
+// BufPoolKeyHandle uniquely identifies a Buffer Pool
+message BufPoolKeyHandle {
+  oneof key_or_handle {
+    fixed32       buf_pool_id     = 1;    // app allocated unique Buffer Pool id
+    BufPoolHandle buf_pool_handle = 2;    // id of buffer pool returned by HAL
+  }
+}
+
+// Buffer Pool specification
+message BufPoolSpec {
+  types.ObjectMeta      meta             = 1;     // object meta
+  BufPoolKeyHandle      key_or_handle    = 2;     // Buffer pool's key or handle
+  uint32                port_num         = 3;     // Port number (TM port#)
+  uint32                reserved_bytes   = 4;     // Number of bytes reserved for
+                                                  // this pool
+  uint32                headroom_bytes   = 5;     // Number of additional bytes
+                                                  // reserved for this pool
+                                                  // Before this is used, xoff will be asserted
+  uint32                sharing_factor   = 6;     // Sharing factor used to grab
+                                                  // buffers from shared pool
+  uint32                xon_threshold    = 7;     // Relative threshold from the
+                                                  // max occupancy at which xoff will be cleared
+  uint32                xoff_clear_limit = 8;     // When the pool occupancy goes
+                                                  // below this limit, xoff will be cleared
+  uint32                mtu              = 9;     // MTU of the packets in bytes
+  repeated TrafficClass tcs              = 10;    // Traffic classes which use this pool
+}
+
+// BufPoolRequestMsg is batched request to create/update the buffer pools
+message BufPoolRequestMsg {
+  repeated BufPoolSpec request = 1;    // batch of requests
+}
+
+// BufPoolStatus represents the operational status of Buffer Pool
+message BufPoolStatus {
+  BufPoolHandle buf_pool_handle = 1;    // Handle for the buffer pool
+}
+
+// BufPoolResponse is response to one BufPoolSpec
+message BufPoolResponse {
+  types.ApiStatus api_status = 1;    // API status code
+  BufPoolStatus   status     = 2;    // operational status
+}
+
+// BufPoolResponseMsg is response to BufPoolRequestMsg
+message BufPoolResponseMsg {
+  repeated BufPoolResponse response = 1;    // batch of responses
+}
+
+// BufPoolDeleteRequest  is used to delete a Buffer Pool object
+message BufPoolDeleteRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  BufPoolKeyHandle key_or_handle = 2;    // Buffer pool being deleted
+}
+
+// BufPoolDeleteRequestMsg is used to delete a batch of Buffer pools
+message BufPoolDeleteRequestMsg {
+  repeated BufPoolDeleteRequest request = 1;    // batch of requests
+}
+
+// BufPoolDeleteResponseMsg is batched response to BufPoolDeleteRequestMsg
+message BufPoolDeleteResponseMsg {
+  repeated types.ApiStatus api_status = 1;    // API status code
+}
+
+// BufPoolStats captures all the statistics of given Buffer Pool
+message BufPoolStats {
+  uint32 occupancy = 1;    // Occupancy of the buffer pool in bytes
+}
+
+// BufPoolGetRequest is used to get information about a Buffer Pool
+message BufPoolGetRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  BufPoolKeyHandle key_or_handle = 2;    // Key or handle for the buffer pool
+}
+
+// Batched request message to get the stats about a batch of Buffer pools
+message BufPoolGetRequestMsg {
+  repeated BufPoolGetRequest request = 1;    // batch of requests
+}
+
+// BufPoolGetResponse captures all the information about a Buffer Pool
+message BufPoolGetResponse {
+  BufPoolSpec   spec   = 1;    // Buffer Pool configuration
+  BufPoolStatus status = 2;    // Buffer Pool operational status
+  BufPoolStats  stats  = 3;    // Buffer Pool statistics
+}
+
+// BufPoolGetResponseMsg is response to BufPoolGetRequestMsg
+message BufPoolGetResponseMsg {
+  repeated BufPoolGetResponse response = 1;    // batched get responses
+}
+
+// Pre-defined trees for the hierarchical scheduler.
+enum QueueSchedulerPolicy{
+  TM_QUEUE_SCHEDULER_2_4 = 0;    // Scheduler with 2 queues per L1 node,
+                                 // 4 L1 nodes per L2 node
+  TM_QUEUE_SCHEDULER_4_2 = 1;    // Scheduler with 4 queues per L1 node
+                                 // 2 L1 nodes per L2 node
+  TM_QUEUE_SCHEDULER_8_1 = 2;    // Scheduler with 8 queues per L1 node
+                                 // 1 L1 node per L2 node
+}
+
+// Queue handle - uniquely identifies a queue
+message QueueHandle {
+  fixed64 handle = 1;    // unique queue id returned by HAL
+}
+
+// QueueKeyHandle uniquely identifies a queue
+message QueueKeyHandle {
+  oneof key_or_handle {
+    fixed32     queue_id     = 1;    // app allocated unique queue id
+    QueueHandle queue_handle = 2;    // id of queue returned by HAL
+  }
+}
+
+// DWRR specific information
+message DWRRInfo {
+  uint32 weight = 1;    // Weight for the queue in DWRR ring
+}
+
+// Strict Priority specific information for the queue
+message StrictPriorityInfo {
+  uint32 rate = 1;    // Rate for the queue
+}
+
+// Info about a node in Queue schedule tree
+message QueueSchedulerNode {
+  uint32               priority = 1;    // Priority of the queue, 0 has the highest priority
+  oneof QueueType {
+    DWRRInfo           dwrr     = 2;    // Queue is DWRR type
+    StrictPriorityInfo strict   = 3;    // Queue is Strict priority type
+  }
+}
+
+message QueueInfo {
+  QueueKeyHandle     key_or_handle = 1;    // Queue's key or handle
+  QueueSchedulerNode queue_info    = 2;    // Info about the queue
+}
+
+// Output queue specification
+// Output queues are created in a batch. Multiple queues are created at a
+// TM Port at one time and the scheduling policy is picked from a
+// predefined template.
+// A QueueHandle will be returned for each of the queues created which
+// can be used to specify the queue a particular flow should take
+message QueueSpec {
+  types.ObjectMeta            meta             = 1;    // object meta
+  uint32                      port_num         = 2;    // Queue port number (TM port#)
+  QueueSchedulerPolicy        scheduler_policy = 3;    // Indicates the predefined scheduling policy to use
+  repeated QueueInfo          queues           = 4;    // Queue info
+  repeated QueueSchedulerNode l1_nodes         = 5;    // L1 node info
+}
+
+// QueueRequestMsg is batched request used to create/update Queues
+message QueueRequestMsg {
+  repeated QueueSpec request = 1;    // batch of requests
+}
+
+message QueueStatus {
+  QueueHandle queue_handle = 1;    // Handle for the queue
+}
+
+// Response message for creating queues
+message QueueResponse {
+  types.ApiStatus      api_status = 1;    // API status code
+  repeated QueueStatus status     = 2;    // operational staus of queues, one for each queue in the request
+}
+
+// QueueResponseMsg is response to QueueRequestMsg
+message QueueResponseMsg {
+  repeated QueueResponse response = 1;    // batch of responses
+}
+
+// QueueDeleteRequest  is used to delete a Queue object
+message QueueDeleteRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  QueueKeyHandle   key_or_handle = 2;    // Handle for the queue
+}
+
+// QueueDeleteRequestMsg is used to delete a batch of Queues
+message QueueDeleteRequestMsg {
+  repeated QueueDeleteRequest request = 1;    // batch of requests
+}
+
+// QueueDeleteResponseMsg is batched response to QueueDeleteRequestMsg
+message QueueDeleteResponseMsg {
+  repeated types.ApiStatus api_status = 1;    // API status code
+}
+
+// QueueStats captures all the statistics of given Queue
+message QueueStats {
+  uint32 queue_depth = 1;    // Depth of the queue in no of packets
+}
+
+// QueueGetRequest is used to get information about a Queue
+message QueueGetRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  QueueKeyHandle   key_or_handle = 2;    // Handle for the queue
+}
+
+message QueueGetRequestMsg {
+  repeated QueueGetRequest request = 1;    // batched get requests
+}
+
+// QueueGetResponse captures all the information about a Queue
+message QueueGetResponse {
+  QueueSpec   spec   = 1;    // Queue configuration
+  QueueStatus status = 2;    // Queue operational status
+  QueueStats  stats  = 3;    // Queue statistics
+}
+
+// QueueGetResponseMsg is response to QueueGetRequestMsg
+message QueueGetResponseMsg {
+  repeated QueueGetResponse response = 1;    // batched get responses
+}
+
+// Handle of the policer
+message PolicerHandle {
+  fixed64 handle = 1;    // Handle of the policer
+}
+
+// PolicerKeyHandle uniquely identifies a Policer
+message PolicerKeyHandle {
+  oneof key_or_handle {
+    fixed32       policer_id     = 1;    // app allocated unique Policer id
+    PolicerHandle policer_handle = 2;    // id of policer returned by HAL
+  }
+}
+
+enum PolicerDirection {
+    INGRESS_POLICER = 0;    // Ingress policer
+    EGRESS_POLICER  = 1;    // Egress policer
+}
+
+// Specifications of a policer
+message PolicerSpec {
+  types.ObjectMeta       meta                      = 1;    // object meta
+  PolicerKeyHandle       key_or_handle             = 2;    // Policer's key or handle
+  PolicerDirection       direction                 = 3;    // Policer direction
+  uint32                 bandwidth                 = 4;    // Bandwidth for this policer
+  uint32                 burst_size                = 5;    // Burst size allowed for the policer
+  MarkingActionSpec      marking_spec              = 6;    // Optional packet marking action
+}
+
+// Batched requests to create/update policers
+message PolicerRequestMsg {
+  repeated PolicerSpec request = 1;    // batched policers
+}
+
+message PolicerStatus {
+  PolicerHandle policer_handle = 1;    // id of the policer returned by HAL
+}
+
+// PolicerResponse is response to one Policer
+message PolicerResponse {
+  types.ApiStatus api_status = 1;    // API status code
+  PolicerStatus   status     = 2;    // Policer operational state
+}
+
+// Batched responses to create/update policers
+message PolicerResponseMsg {
+  repeated PolicerResponse response = 1;    // batched responses
+}
+
+message PolicerDeleteRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  PolicerKeyHandle key_or_handle = 2;    // Policer's key or handle
+}
+
+// Batched requests to delete policers
+message PolicerDeleteRequestMsg {
+  repeated PolicerDeleteRequest request = 1;    // batched request
+}
+
+// PolicerDeleteResponseMsg is batched response to PolicerDeleteRequestMsg
+message PolicerDeleteResponseMsg {
+  repeated types.ApiStatus api_status = 1;    // API status code
+}
+
+// PolicerGetRequest is used to get information about a policer
+message PolicerGetRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  PolicerKeyHandle key_or_handle = 2;    // Policer's key or handle
+}
+
+message PolicerGetRequestMsg {
+  repeated PolicerGetRequest request = 1;    // batched get request
+}
+
+// PolicerStats captures all the statistics of a policer
+message PolicerStats {
+  uint64 permitted_packets = 1;    // Count of permitted packets by the policer
+  uint64 permitted_bytes   = 2;    // Count of permitted bytes by the policer
+  uint64 dropped_packets   = 3;    // Count of dropped packets by the policer
+  uint64 dropped_bytes     = 4;    // Count of dropped bytes by the policer
+}
+
+// PolicerGetResponse captures all the information about a policer
+message PolicerGetResponse {
+  PolicerSpec   spec   = 1;    // Policer configuration
+  PolicerStatus status = 2;    // Policer operational status
+  PolicerStats  stats  = 3;    // Policer statistics
+}
+
+// PolicerGetResponseMsg is response to PolicerGetRequestMsg
+message PolicerGetResponseMsg {
+  repeated PolicerGetResponse response = 1;    // batched get response
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"net/http"
 
@@ -12,7 +13,16 @@ import (
 	n "github.com/pensando/sw/utils/netutils"
 )
 
+type restAPIFunc func(r *http.Request) (interface{}, error)
+
+// uplink interface name
+var uplinkIf *string
+
 func main() {
+	// parse commandline
+	uplinkIf = flag.String("uplink", "eth2", "Uplink interface")
+	flag.Parse()
+
 	log.Infof("Starting simulator...")
 	InitDocker()
 	InitNetworking()

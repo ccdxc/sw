@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/utils/log"
@@ -21,6 +23,7 @@ var ErrorCoundNotFindEndpoint = errors.New("Could not find the endpoint")
 
 // NetworkState is a wrapper for network object
 type NetworkState struct {
+	sync.Mutex                                // lock the network object
 	network.Network                           // network object
 	endpointDB      map[string]*EndpointState // endpoint database
 	stateMgr        *Statemgr                 // pointer to network manager
@@ -79,14 +82,19 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 	// see if caller requested a specific addr
 	if reqAddr != "" {
+		reqIPAddr, _, err := net.ParseCIDR(reqAddr)
+		if err != nil {
+			reqIPAddr = net.ParseIP(reqAddr)
+		}
+
 		// verify requested address is in this subnet
-		if !ipnet.Contains(net.ParseIP(reqAddr)) {
+		if !ipnet.Contains(reqIPAddr) {
 			log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
 			return "", fmt.Errorf("requested address not in subnet")
 		}
 
 		// determine the bit in bitmask
-		addrBit := ipv42int(net.ParseIP(reqAddr)) - ipv42int(baseAddr)
+		addrBit := ipv42int(reqIPAddr) - ipv42int(baseAddr)
 
 		// check if address is already allocated
 		if bs.Test(uint(addrBit)) {
@@ -96,7 +104,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 		// alloc the bit
 		bs.Set(uint(addrBit))
-		allocatedAddr = reqAddr
+		allocatedAddr = reqIPAddr.String()
 
 		log.Infof("Allocating requested addr: %v, bit: %d", allocatedAddr, addrBit)
 	} else {
@@ -171,6 +179,10 @@ func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
 
 // FindEndpoint finds an endpoint in a network
 func (ns *NetworkState) FindEndpoint(epName string) (*EndpointState, bool) {
+	// lock the endpoint db
+	ns.Lock()
+	defer ns.Unlock()
+
 	// find the endpoint in the DB
 	eps, ok := ns.endpointDB[epName]
 	return eps, ok
@@ -179,6 +191,10 @@ func (ns *NetworkState) FindEndpoint(epName string) (*EndpointState, bool) {
 // ListEndpoints lists all endpoints on this network
 func (ns *NetworkState) ListEndpoints() []*EndpointState {
 	var eplist []*EndpointState
+
+	// lock the endpoint db
+	ns.Lock()
+	defer ns.Unlock()
 
 	// walk all endpoints
 	for _, ep := range ns.endpointDB {
@@ -193,6 +209,12 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	// see if we already have this endpoint
 	oldEps, ok := ns.FindEndpoint(epinfo.ObjectMeta.Name)
 	if ok {
+		// if we already have identical endpoint, we are done
+		if proto.Equal(oldEps, epinfo) {
+			return oldEps, nil
+		}
+
+		// FIXME: handle endpoint change
 		log.Errorf("Endpoint {%+v} already exists {%+v} in network %v", epinfo, oldEps, ns.ObjectMeta.Name)
 		return nil, fmt.Errorf("Endpoint already exists")
 	}
@@ -230,7 +252,9 @@ func (ns *NetworkState) CreateEndpoint(epinfo *network.Endpoint) (*EndpointState
 	}
 
 	// save the endpoint in the database
+	ns.Lock()
 	ns.endpointDB[eps.endpointKey()] = eps
+	ns.Unlock()
 	ns.stateMgr.memDB.AddObject(eps)
 
 	// write the modified network state to api server
@@ -265,7 +289,9 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 	}
 
 	// remove it from the database
+	ns.Lock()
 	delete(ns.endpointDB, eps.endpointKey())
+	ns.Unlock()
 	ns.stateMgr.memDB.DeleteObject(eps)
 
 	// write the modified network state to api server

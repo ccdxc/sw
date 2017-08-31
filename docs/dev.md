@@ -158,3 +158,6 @@ $ curl -XPOST -d @/tmp/cluster.json http://192.168.30.11:9001/api/v1/cluster
 To cleanup the cluster (remove configs etc):
 $ make clean
 ```
+
+### E2E cluster simulation
+Please see [E2E Simulation](docs/e2esim.md) for more info

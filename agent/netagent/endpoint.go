@@ -45,13 +45,12 @@ func (ag *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 
 // CreateEndpoint creates an endpoint
 func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
-	// lock the agent for ep state change
-	ag.Lock()
-	defer ag.Unlock()
-
 	// check if the endpoint already exists and convert it to an update
 	key := objectKey(ep.ObjectMeta)
+	ag.Lock()
 	oldEp, ok := ag.endpointDB[key]
+	ag.Unlock()
+
 	if ok {
 		// check if endpoint contents are same
 		if !proto.Equal(oldEp, ep) {
@@ -102,7 +101,10 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	}
 
 	// add the ep to database
+	ag.Lock()
 	ag.endpointDB[key] = ep
+	ag.Unlock()
+	err = ag.store.Write(ep)
 
 	// done
 	return intfInfo, err
@@ -112,7 +114,9 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// check if the endpoint already exists and convert it to an update
 	key := objectKey(ep.ObjectMeta)
+	ag.Lock()
 	oldEp, ok := ag.endpointDB[key]
+	ag.Unlock()
 	if ok {
 		// check if endpoint contents are same
 		if proto.Equal(oldEp, ep) {
@@ -162,20 +166,21 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// add the ep to database
+	ag.Lock()
 	ag.endpointDB[key] = ep
+	ag.Unlock()
+	err = ag.store.Write(ep)
 
-	return nil
+	return err
 }
 
 // DeleteEndpoint deletes an endpoint
 func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
-	// lock the agent for ep state change
-	ag.Lock()
-	defer ag.Unlock()
-
 	// check if we have the endpoint
 	key := objectKey(ep.ObjectMeta)
+	ag.Lock()
 	_, ok := ag.endpointDB[key]
+	ag.Unlock()
 	if !ok {
 		log.Errorf("Endpoint %v was not found", ep.ObjectMeta)
 		return ErrEndpointNotFound
@@ -196,7 +201,10 @@ func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// remove from the database
+	ag.Lock()
 	delete(ag.endpointDB, key)
+	ag.Unlock()
+	err = ag.store.Delete(ep)
 
 	// done
 	return err

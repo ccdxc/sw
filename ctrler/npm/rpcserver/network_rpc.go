@@ -37,6 +37,9 @@ func (n *NetworkRPCServer) GetNetwork(ctx context.Context, ometa *api.ObjectMeta
 			IPv6Subnet:  nw.Spec.IPv6Subnet,
 			IPv6Gateway: nw.Spec.IPv6Gateway,
 		},
+		Status: netproto.NetworkStatus{
+			AllocatedVlanID: nw.Spec.VlanID,
+		},
 	}
 	return &nt, nil
 }
@@ -60,6 +63,9 @@ func (n *NetworkRPCServer) ListNetworks(ctx context.Context, sel *api.ObjectMeta
 				IPv4Gateway: net.Spec.IPv4Gateway,
 				IPv6Subnet:  net.Spec.IPv6Subnet,
 				IPv6Gateway: net.Spec.IPv6Gateway,
+			},
+			Status: netproto.NetworkStatus{
+				AllocatedVlanID: net.Spec.VlanID,
 			},
 		}
 		netlist.Networks = append(netlist.Networks, &nt)
@@ -133,6 +139,9 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 						IPv4Gateway: net.Spec.IPv4Gateway,
 						IPv6Subnet:  net.Spec.IPv6Subnet,
 						IPv6Gateway: net.Spec.IPv6Gateway,
+					},
+					Status: netproto.NetworkStatus{
+						AllocatedVlanID: net.Spec.VlanID,
 					},
 				},
 			}

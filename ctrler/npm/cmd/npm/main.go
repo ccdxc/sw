@@ -6,7 +6,7 @@ import (
 	"flag"
 
 	"github.com/pensando/sw/ctrler/npm"
-	"github.com/pensando/sw/ctrler/npm/rpcserver"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/log"
 )
 
@@ -16,6 +16,9 @@ func main() {
 	var (
 		debugflag = flag.Bool("debug", false, "Enable debug mode")
 		logToFile = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
+		listenURL = flag.String("listen", ":"+globals.NpmRPCPort, "Listen URL (eg. :9004)")
+		apisrvURL = flag.String("apisrv", "localhost:"+globals.APIServerPort, "API server URL (eg. localhost:8082)")
+		vmmURL    = flag.String("vmm", "localhost:"+globals.VCHubAPIPort, "Vchub URL (eg. localhost:9003)")
 	)
 
 	// Fill logger config params
@@ -26,7 +29,7 @@ func main() {
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,
-		LogToFile:   false,
+		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
 			MaxSize:    10, // TODO: These needs to be part of Service Config Object
@@ -42,13 +45,10 @@ func main() {
 	waitCh := make(chan bool)
 
 	// create the controller
-	ctrler, err := npm.NewNetctrler(rpcserver.NetctrlerURL, "localhost:8082", "")
-	if err != nil {
+	ctrler, err := npm.NewNetctrler(*listenURL, *apisrvURL, *vmmURL)
+	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}
-
-	// FIXME: dummy code to emulate network create event from API server
-	ctrler.Watchr.CreateNetwork("default", "default", "10.1.1.0/24", "10.1.1.254")
 
 	// wait forever
 	<-waitCh

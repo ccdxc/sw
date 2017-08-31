@@ -23,6 +23,8 @@ var (
 		"pen-kube-controller-manager",
 		"pen-apiserver",
 		"pen-elasticsearch",
+		"pen-npm",
+		"pen-vchub",
 	}
 )
 

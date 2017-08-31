@@ -1,7 +1,8 @@
 default:
 	# Compile proto definitions
-	protoc --go_out=Mtypes/types.proto=github.com/pensando/sw/agent/netagent/datapath/halproto/types,plugins=grpc:. *.proto
-	protoc --go_out=plugins=grpc:. ./types/types.proto
+	# protoc --go_out=Mtypes/types.proto=github.com/pensando/sw/agent/netagent/datapath/halproto/types,plugins=grpc:. *.proto
+	# protoc --go_out=plugins=grpc:. ./types/types.proto
+	protoc --go_out=plugins=grpc:. *.proto
 	# Install gomock tool
 	go get github.com/golang/mock/gomock
 	go get github.com/golang/mock/mockgen

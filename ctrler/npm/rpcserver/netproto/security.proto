@@ -15,21 +15,22 @@ import "github.com/pensando/sw/api/meta.proto";
 message SecurityRule {
     string  Direction = 1;  // direction incoming/outgoing
     string  PeerGroup = 2;  // From/To security group
+    uint32  PeerGroupID = 3; // Peer security group id
     message Service {
         string protocol = 1;   // IP prootocol (tcp/udp/icmp)
         uint32 port     = 2;   // port number
     }
     // services (port & protocol)
-    repeated Service Services = 3[(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
-    string  Action            = 4;  // action allow/deny/reject
-    bool    Log               = 5;  // logging enabled/disabled
+    repeated Service Services = 4[(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
+    string  Action            = 5;  // action allow/deny/reject
+    bool    Log               = 6;  // logging enabled/disabled
 }
 
 // security group spec
 message SecurityGroupSpec {
     string SecurityProfile      = 1;  // security profile name
     // security rules
-    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];  
+    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
 // security group status

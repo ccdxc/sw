@@ -1,0 +1,101 @@
+//------------------------------------------------------------------------------
+// protobuf specification for tlscb
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package tlscb;
+option go_package="halproto";
+
+// The tcp cb service definition
+service TlsCb {
+  rpc TlsCbCreate (TlsCbRequestMsg) returns (TlsCbResponseMsg) {}
+  rpc TlsCbUpdate (TlsCbRequestMsg) returns (TlsCbResponseMsg) {}
+  rpc TlsCbDelete (TlsCbDeleteRequestMsg) returns (TlsCbDeleteResponseMsg) {}
+  rpc TlsCbGet (TlsCbGetRequestMsg) returns (TlsCbGetResponseMsg) {}
+}
+
+// TlsCbKeyHandle is used to operate on a tlscb either by its key or handle
+message TlsCbKeyHandle {
+  oneof key_or_handle {
+    uint32     tlscb_id          = 1;    // unique tlscb id allocated by app. This can be flow-id
+    fixed64    tlscb_handle      = 2;    // tlscb handle returned by HAL
+  }
+}
+
+// TlsCbSpec captures all the tlscb level configuration
+message TlsCbSpec {
+  types.ObjectMeta      meta                       = 1;    // common object meta
+  TlsCbKeyHandle        key_or_handle              = 2;    // tlscb being created/updated
+  uint32                nic_dec_head               = 3;
+  uint32                nic_dec_tail               = 4;
+  uint32                cipher_type                = 5;
+}
+
+// TlsCbRequestMsg is batched add or modify tlscb request
+message TlsCbRequestMsg {
+  repeated TlsCbSpec    request = 1;    // batched request
+}
+
+// TlsCbStatus is the operational status of a given tlscb
+message TlsCbStatus {
+  fixed64    tlscb_handle     = 1;    // id of tlscb returned by HAL
+}
+
+// TlsCbResponse is response to TlsCbSpec
+message TlsCbResponse {
+  types.ApiStatus       api_status     = 1;    // API status code
+  TlsCbStatus           tlscb_status   = 2;    // tlscb status, if api succeeded
+}
+
+// TlsCbResponseMsg is batched response to TlsCbRequestMsg
+message TlsCbResponseMsg {
+  repeated TlsCbResponse    response = 1;    // batched response
+}
+
+// TlsCbDeleteRequest is used to delete a tlscb
+message TlsCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  TlsCbKeyHandle          key_or_handle = 2;    // TlsCb key or handle
+}
+
+// TlsCbDeleteRequestMsg is used to delete a batch of tlscbs
+message TlsCbDeleteRequestMsg {
+  repeated TlsCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// TlsCbDeleteResponseMsg is batched response to TlsCbDeleteRequestMsg
+message TlsCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// TlsCbGetRequest is used to get information about a tlscb
+message TlsCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  TlsCbKeyHandle            key_or_handle = 2;    // TlsCb key or handle
+}
+
+// TlsCbGetRequestMsg is batched GET requests for tlscbs
+message TlsCbGetRequestMsg {
+  repeated TlsCbGetRequest    request = 1;    // batched get request
+}
+
+// TlsCbStats is the statistics object for each tlscb
+message TlsCbStats {
+}
+
+// TlsCbGetResponse captures all the information about a tlscb
+// only if api_status indicates success, other fields are valid
+message TlsCbGetResponse {
+  types.ApiStatus       api_status = 1;    // API status code
+  TlsCbSpec             spec       = 2;    // tlscb configuration
+  TlsCbStatus           status     = 3;    // operational state of tlscb
+  TlsCbStats            stats      = 4;    // stats of the tlscb
+}
+
+// TlsCbGetResponseMsg is batched response to TlsCbGetRequestMsg
+message TlsCbGetResponseMsg {
+  repeated TlsCbGetResponse    response = 1;    // batch get response
+}

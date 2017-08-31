@@ -44,7 +44,7 @@ func (fs *Fswitch) processARP(port string, frame *ethernet.Frame) error {
 		return fs.processARPRequest(port, arp, frame.VLAN)
 	case OperationReply:
 		// we can ignore ARP responses for now
-		log.Infof("Received ARP response {%+v}", arp)
+		log.Infof("Received ARP responseon port %s vlan{%v}, {%+v}", port, frame.VLAN, arp)
 	default:
 		log.Errorf("Unknown ARP operation %d", arp.Operation)
 		return errors.New("Unknown ARP operation")
@@ -109,23 +109,36 @@ func (fs *Fswitch) processIPv4(port string, frame *ethernet.Frame) error {
 		vlanID = frame.VLAN.ID
 	}
 
+	// find the incoming lif
+	inLif, err := fs.findLif(port, uint32(vlanID))
+	if err != nil {
+		log.Errorf("Can not find the incoming LIF for port: %s, vlan: %d. Err: %v", port, vlanID, err)
+		return err
+	}
+
 	// find the forwarding entry in mac table
-	macKey := fmt.Sprintf("%d|%s", vlanID, frame.Destination)
+	macKey := fmt.Sprintf("%s|%s", inLif.Network, frame.Destination)
 	fwd, ok := fs.macaddrTable[macKey]
 	if !ok {
 		log.Warnf("Received packet for unknown dest %s", macKey)
 		return errors.New("Unknown mac addr")
 	}
 
-	// dont forward from uplink to uplink
-	if (port == fwd.Port) && (uint32(vlanID) == fwd.Vlan) {
+	// dont forward from same lif-to-lif or uplink-to-uplink
+	if inLif == fwd.Lif || (port == fs.uplink && fwd.Lif.Port == fs.uplink) {
 		return nil
 	}
 
-	log.Infof("Forwarding mac %s from port %s to port %s", macKey, port, fwd.Port)
+	// override the vlan
+	frame.VLAN = nil
+	if fwd.Lif.Vlan != 0 {
+		frame.VLAN = &ethernet.VLAN{ID: uint16(fwd.Lif.Vlan)}
+	}
+
+	log.Infof("Forwarding mac %s from port,vlan %s/%d to port,vlan %s,%d", macKey, port, vlanID, fwd.Lif.Port, fwd.Lif.Vlan)
 
 	// forward to dest port
-	return fs.SendFrame(fwd.Port, frame)
+	return fs.SendFrame(fwd.Lif.Port, frame)
 }
 
 // learnIPv4 learns <IP, Mac> if IP address is unknown

@@ -1,0 +1,24 @@
+//------------------------------------------------------------------------------
+// protobuf specification for global objects. HAL's static global configuration
+// comes from hal.json that HAL uses when it comes up. However, there are few
+// knobs that are global to the NIC and can be changed after init time. Those
+// are captured here. For example, NIC can boot in classic mode and then connect
+// to Pensando controller that can make it trasition to flow mode.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+package nic;
+option go_package="halproto";
+
+// NIC boots in classic mode first and may later transition to flow mode
+enum OperatingMode {
+  OPERATING_MODE_NONE     = 0;
+  OPERATING_MODE_CLASSIC  = 1;    // classic NIC mode (default)
+  OPERATING_MODE_SMART    = 2;    // flow based forwarding mode
+}
+
+// Global config object for NIC
+message RootConfig {
+  OperatingMode    nic_mode = 1;    // one of the operating modes
+}

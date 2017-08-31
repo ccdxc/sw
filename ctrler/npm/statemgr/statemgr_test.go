@@ -3,6 +3,7 @@
 package statemgr
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -101,7 +102,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 	Assert(t, (err != nil), "Network with invalid gateway got created", "10.1.1.0")
 	err = createNetwork(stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.2.254")
 	Assert(t, (err != nil), "Network with invalid gateway got created", "10.1.2.254")
-	err = createNetwork(stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.254/24")
+	err = createNetwork(stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.25424")
 	Assert(t, (err != nil), "Network with invalid gateway got created", "10.1.1.254/24")
 	err = createNetwork(stateMgr, "default", "invalid", "10.1.1.10-20/24", "10.1.1.254")
 	Assert(t, (err != nil), "Network with invalid subnet got created", "10.1.1.10-20/24")
@@ -205,6 +206,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	Assert(t, (err != nil), "Was able to delete network with endpoint")
 
 	// verify you cant create duplicate endpoints
+	epinfo.Status.IPv4Address = "10.1.1.5"
 	_, err = nw.CreateEndpoint(&epinfo)
 	Assert(t, (err != nil), "Was able to create duplicate endpoint", epinfo)
 
@@ -576,4 +578,98 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	// verify sgpolicy is unlinked from sg
 	Assert(t, (len(prsg.policies) == 0), "sgpolicy was not removed sg", prsg)
 	Assert(t, (len(prsg.Status.Policies) == 0), "sgpolicy was not removed sg", prsg)
+}
+
+// test concurrent add/delete/change of endpoints
+func TestEndpointConcurrency(t *testing.T) {
+	var concurrency = 100
+
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create a network
+	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	AssertOk(t, err, "Error creating the network")
+
+	// find the network
+	nw, err := stateMgr.FindNetwork("default", "default")
+	AssertOk(t, err, "Could not find the network")
+
+	waitCh := make(chan error, concurrency*2)
+
+	// create endpoint
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			// endpoint object
+			epinfo := network.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   fmt.Sprintf("testEndpoint-%d", idx),
+					Tenant: "default",
+				},
+				Spec: network.EndpointSpec{},
+				Status: network.EndpointStatus{
+					EndpointUUID:       "testEndpointUUID",
+					WorkloadUUID:       "testContainerUUID",
+					WorkloadName:       "testContainerName",
+					Network:            "default",
+					HomingHostAddr:     "192.168.1.1",
+					HomingHostName:     "testHost",
+					WorkloadAttributes: []string{"env:production", "app:procurement"},
+				},
+			}
+
+			// create endpoint
+			_, eperr := nw.CreateEndpoint(&epinfo)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error creating endpoint")
+	}
+
+	// create few SGs concurrently that match on endpoints
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			_, serr := createSg(stateMgr, "default", fmt.Sprintf("testSg-%d", idx), []string{"env:production", "app:procurement"})
+			waitCh <- serr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error creating sgs")
+	}
+
+	// delete the sgs concurrently
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			serr := stateMgr.DeleteSecurityGroup("default", fmt.Sprintf("testSg-%d", idx))
+			waitCh <- serr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error deleting sgs")
+	}
+	// delete endpoint
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			ometa := api.ObjectMeta{
+				Name:   fmt.Sprintf("testEndpoint-%d", idx),
+				Tenant: "default",
+			}
+			// delete the endpoint
+			_, eperr := nw.DeleteEndpoint(&ometa)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error deleting endpoint")
+	}
 }

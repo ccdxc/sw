@@ -349,14 +349,31 @@ func TestNpmClientWatch(t *testing.T) {
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 
-	// verify client got the network
-	time.Sleep(time.Millisecond * 10)
-	Assert(t, ag.netAdded[objectKey(nt.ObjectMeta)].Name == nt.Name, "Network not found in agent", ag)
-	Assert(t, ag.netUpdated[objectKey(nt.ObjectMeta)].Name == nt.Name, "Network not found in agent", ag)
-	Assert(t, ag.netDeleted[objectKey(nt.ObjectMeta)].Name == nt.Name, "Network not found in agent", ag)
-	Assert(t, ag.epAdded[objectKey(epinfo.ObjectMeta)].Name == epinfo.Name, "Endpoint not found in agent", ag)
-	Assert(t, ag.epUpdated[objectKey(epinfo.ObjectMeta)].Name == epinfo.Name, "Endpoint not found in agent", ag)
-	Assert(t, ag.epDeleted[objectKey(epinfo.ObjectMeta)].Name == epinfo.Name, "Endpoint not found in agent", ag)
+	// verify client got the network & ep
+	AssertEventually(t, func() bool {
+		nw := ag.netAdded[objectKey(nt.ObjectMeta)]
+		return (nw != nil && nw.Name == nt.Name)
+	}, "Network add not found in agent")
+	AssertEventually(t, func() bool {
+		nw := ag.netUpdated[objectKey(nt.ObjectMeta)]
+		return (nw != nil && nw.Name == nt.Name)
+	}, "Network update not found in agent")
+	AssertEventually(t, func() bool {
+		nw := ag.netDeleted[objectKey(nt.ObjectMeta)]
+		return (nw != nil && nw.Name == nt.Name)
+	}, "Network delete not found in agent")
+	AssertEventually(t, func() bool {
+		ep, ok := ag.epAdded[objectKey(epinfo.ObjectMeta)]
+		return (ok && ep.Name == epinfo.Name)
+	}, "Endpoint add not found in agent")
+	AssertEventually(t, func() bool {
+		ep, ok := ag.epUpdated[objectKey(epinfo.ObjectMeta)]
+		return (ok && ep.Name == epinfo.Name)
+	}, "Endpoint update not found in agent")
+	AssertEventually(t, func() bool {
+		ep, ok := ag.epDeleted[objectKey(epinfo.ObjectMeta)]
+		return (ok && ep.Name == epinfo.Name)
+	}, "Endpoint delete not found in agent")
 
 	// stop the server and client
 	cl.Stop()
@@ -392,10 +409,18 @@ func TestSecurityGroupWatch(t *testing.T) {
 	Assert(t, (cl != nil), "Error creating npm client")
 
 	// verify client got the security group
-	time.Sleep(time.Millisecond * 10)
-	Assert(t, ag.sgAdded[objectKey(sg.ObjectMeta)].Name == sg.Name, "Security group not found in agent", ag)
-	Assert(t, ag.sgUpdated[objectKey(sg.ObjectMeta)].Name == sg.Name, "Security group not found in agent", ag)
-	Assert(t, ag.sgDeleted[objectKey(sg.ObjectMeta)].Name == sg.Name, "Security group not found in agent", ag)
+	AssertEventually(t, func() bool {
+		sgs, ok := ag.sgAdded[objectKey(sg.ObjectMeta)]
+		return (ok && sgs.Name == sg.Name)
+	}, "Security group add not found in agent")
+	AssertEventually(t, func() bool {
+		sgs, ok := ag.sgUpdated[objectKey(sg.ObjectMeta)]
+		return (ok && sgs.Name == sg.Name)
+	}, "Security group update not found in agent")
+	AssertEventually(t, func() bool {
+		sgs, ok := ag.sgDeleted[objectKey(sg.ObjectMeta)]
+		return (ok && sgs.Name == sg.Name)
+	}, "Security group delete not found in agent")
 
 	// stop the server and client
 	cl.Stop()

@@ -8,9 +8,10 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
 
-package halproto;
+package l2segment;
+option go_package="halproto";
 
 // The L2 Segment service definition
 service L2Segment {
@@ -51,14 +52,14 @@ enum MulticastFwdPolicy {
 
 // L2SegmentSpec message is used to do add/mod of vlan
 message L2SegmentSpec {
-  types.ObjectMeta       meta                 = 1;    // common object meta
-  L2SegmentKeyHandle     key_or_handle        = 2;    // L2 segment being created/updated
-  types.L2SegmentType    segment_type         = 3;    // L2 segment type
-  MulticastFwdPolicy     mcast_fwd_policy     = 4;    // multicast forwarding policy
-  BroadcastFwdPolicy     bcast_fwd_policy     = 5;    // broadcast forwarding policy
-  types.EncapInfo        access_encap         = 6;    // wire encap for workload
-  types.EncapInfo        fabric_encap         = 7;    // wire encap on uplink(s)
-  fixed64                l4_profile_handle    = 8;    // L4 profile, if any
+  types.ObjectMeta       meta                       = 1;    // common object meta
+  L2SegmentKeyHandle     key_or_handle              = 2;    // L2 segment being created/updated
+  fixed64                network_handle             = 3;    // network handle
+  types.L2SegmentType    segment_type               = 4;    // L2 segment type
+  MulticastFwdPolicy     mcast_fwd_policy           = 5;    // multicast forwarding policy
+  BroadcastFwdPolicy     bcast_fwd_policy           = 6;    // broadcast forwarding policy
+  types.EncapInfo        access_encap               = 7;    // wire encap for workload
+  types.EncapInfo        fabric_encap               = 8;    // wire encap on uplink(s)
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

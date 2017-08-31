@@ -78,9 +78,9 @@ class Node:
         self.npThread.start()
 
     # Start Naples agent process on vagrant node
-    def startN4sAgent(self, args=""):
+    def startN4sAgent(self, hostif, uplink):
         ssh_object = self.sshConnect(self.username, self.password)
-        command = "sudo " + self.gopath + "/bin/n4sagent " + args + "> /tmp/pensando-n4sagent.log 2>&1"
+        command = "sudo " + self.gopath + "/bin/n4sagent -hostif " + hostif + " -uplink " + uplink + " > /tmp/pensando-n4sagent.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)
         self.npThread.start()
@@ -109,6 +109,18 @@ class Node:
         # npThread.setDaemon(True)
         self.npThread.start()
 
+    # Start hostsim process on vagrant node
+    def startHostsim(self, simif):
+        ssh_object = self.sshConnect(self.username, self.password)
+        command = "sudo -E " + self.gopath + "/bin/hostsim -uplink " + simif + " > /tmp/pensando-hostsim.log 2>&1"
+        self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
+        # npThread.setDaemon(True)
+        self.npThread.start()
+
+    # Start etcd
+    def startEtcd(self):
+        self.runCmd("docker run -d -v /usr/share/ca-certificates/:/etc/ssl/certs --net=host --name etcd quay.io/coreos/etcd:v3.2.5")
+
 # Parse command line args
 # Create the parser and sub parser
 parser = argparse.ArgumentParser()
@@ -119,6 +131,9 @@ parser.add_argument("-password", default='vagrant', help="password for ssh")
 parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
 parser.add_argument("-k8s", dest='k8s', action='store_true')
 parser.add_argument("-stop", dest='stop', action='store_true')
+parser.add_argument("-hostif", default='ntrunk0', help="Host facing interface")
+parser.add_argument("-uplink", default='eth2', help="Naples uplink")
+parser.add_argument("-simif", default='strunk0', help="Hostsim uplink")
 
 # Parse the args
 args = parser.parse_args()
@@ -148,7 +163,11 @@ for addr in addrList:
     node.runCmd("sudo pkill npm")
     node.runCmd("sudo pkill apigw")
     node.runCmd("sudo pkill apiserver")
+    node.runCmd("sudo pkill hostsim")
     node.runCmd("/usr/sbin/ifconfig -a | grep -e vport | awk '{print $1}' | xargs -r -n1 -I{} sudo ip link delete {} type veth")
+    node.runCmd("docker rm -f `docker ps -aq`")
+    node.runCmd("sudo ip link delete strunk0 type veth peer name ntrunk0")
+    node.runCmd("sudo ovs-vsctl del-br SimBridge")
 
     # Copy conf and binary files for CNI plugin
     node.runCmd("sudo cp " + node.gopath + "/src/github.com/pensando/sw/agent/plugins/k8s/cni/pensandonet/01-pensando.conf /etc/cni/net.d/")
@@ -157,12 +176,15 @@ for addr in addrList:
     # create directory for .sock files and remove any stale .sock files
     node.runCmd("sudo mkdir -p /run/pensando/")
     node.runCmd("sudo rm /run/pensando/pensando-cni.sock")
+    node.runCmd("sudo ifconfig eth2 promisc up")
 
 # When -stop was passed, we are done
 if args.stop:
     os._exit(0)
 
 # start apiserver and api gw on master node
+nodes[0].startEtcd()
+time.sleep(2)
 nodes[0].startApiserver()
 time.sleep(2)
 nodes[0].startApigw()
@@ -175,10 +197,19 @@ time.sleep(5)
 
 # Start pensando agent
 for node in nodes:
+    # creat the veth pair for ovs
+    node.runCmd("sudo ip link add strunk0 type veth peer name ntrunk0")
+    node.runCmd("sudo ifconfig ntrunk0 promisc up")
+    node.runCmd("sudo ifconfig strunk0 promisc up")
+
+    # start the agent
     if args.k8s:
         node.startK8sAgent()
     else:
-        node.startN4sAgent()
+        node.startN4sAgent(args.hostif, args.uplink)
+
+    # start hostsim
+    node.startHostsim(args.simif)
 
 
 print "################### Waiting for agent to come up ###################"

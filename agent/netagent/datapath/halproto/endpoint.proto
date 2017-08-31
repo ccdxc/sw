@@ -9,9 +9,10 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
 
-package halproto;
+package endpoint;
+option go_package="halproto";
 
 // The Endpoint service definition
 service Endpoint {
@@ -26,12 +27,12 @@ service Endpoint {
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
     types.ObjectMeta            meta                 = 1;    // common object meta
-    fixed64                     l2_segment_handle    = 2;    // L2 segment endpoint is in
-    uint64                      mac_address          = 3;    // MAC address of endpoint
-    fixed64                     interface_handle     = 4;    // interface endpoint is reachable on
-    uint32                      useg_vlan            = 5;    // microseg vlan assigned to this EP
-    repeated types.IPAddress    ip_address           = 6;    // IP address(es) of endpoint
-    repeated uint32             security_group       = 7;    // security group list(s) endpoint is in
+    fixed64                     l2_segment_handle    = 3;    // L2 segment endpoint is in
+    uint64                      mac_address          = 4;    // MAC address of endpoint
+    fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
+    uint32                      useg_vlan            = 6;    // microseg vlan assigned to this EP
+    repeated types.IPAddress    ip_address           = 7;    // IP address(es) of endpoint
+    repeated uint32             security_group       = 8;    // security group list(s) endpoint is in
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request

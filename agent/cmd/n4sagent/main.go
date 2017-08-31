@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
-	"github.com/pensando/sw/ctrler/npm/rpcserver"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/netutils"
 )
@@ -16,8 +16,10 @@ import (
 func main() {
 	// command line flags
 	var (
-		hostIf    = flag.String("hostif", "trunk0", "Host facing interface")
+		hostIf    = flag.String("hostif", "ntrunk0", "Host facing interface")
 		uplinkIf  = flag.String("uplink", "eth2", "Uplink interface")
+		dbPath    = flag.String("db", "/tmp/n4sagent.db", "Database file")
+		npmURL    = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		debugflag = flag.Bool("debug", false, "Enable debug mode")
 		logToFile = flag.String("logtofile", "/var/log/pensando/n4sagent.log", "Redirect logs to file")
 	)
@@ -27,7 +29,7 @@ func main() {
 	logConfig := &log.Config{
 		Module:      "N4sAgent",
 		Format:      log.LogFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,
@@ -59,7 +61,7 @@ func main() {
 	}
 
 	// create the new agent
-	ag, err := agent.NewAgent(dp, macAddr.String(), rpcserver.NetctrlerURL)
+	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

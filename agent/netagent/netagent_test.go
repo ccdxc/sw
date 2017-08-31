@@ -3,6 +3,8 @@
 package netagent
 
 import (
+	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -12,6 +14,7 @@ import (
 )
 
 type mockDatapath struct {
+	sync.Mutex
 	netdb map[string]*netproto.Network
 	epdb  map[string]*netproto.Endpoint
 	sgdb  map[string]*netproto.SecurityGroup
@@ -23,36 +26,54 @@ func (dp *mockDatapath) SetAgent(ag DatapathIntf) error {
 }
 
 func (dp *mockDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	dp.epdb[key] = ep
 	return nil, nil
 }
 
 func (dp *mockDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	dp.epdb[key] = ep
 	return nil
 }
 
 func (dp *mockDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	dp.epdb[key] = ep
 	return nil
 }
 
 func (dp *mockDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	dp.epdb[key] = ep
 	return nil
 }
 
 func (dp *mockDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	delete(dp.epdb, key)
 	return nil
 }
 
 func (dp *mockDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(ep.ObjectMeta)
 	delete(dp.epdb, key)
 	return nil
@@ -75,6 +96,9 @@ func (dp *mockDatapath) DeleteNetwork(nw *netproto.Network) error {
 
 // CreateSecurityGroup creates a security group
 func (dp *mockDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(sg.ObjectMeta)
 	dp.sgdb[key] = sg
 	return nil
@@ -87,6 +111,9 @@ func (dp *mockDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // DeleteSecurityGroup deletes a security group
 func (dp *mockDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+	dp.Lock()
+	defer dp.Unlock()
+
 	key := objectKey(sg.ObjectMeta)
 	delete(dp.epdb, key)
 	return nil
@@ -134,7 +161,7 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp, "some-unique-id")
+	nagent, err := NewNetAgent(dp, "", "some-unique-id")
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)
 		return nil, nil, nil
@@ -150,6 +177,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 	// create netagent
 	agent, _, _ := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -205,6 +233,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	// create netagent
 	agent, dp, ct := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -310,6 +339,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	// create netagent
 	agent, dp, _ := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -394,6 +424,7 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 	// create netagent
 	agent, dp, _ := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// security group
 	sg := netproto.SecurityGroup{
@@ -489,6 +520,7 @@ func TestEndpointUpdate(t *testing.T) {
 	// create netagent
 	agent, dp, _ := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -585,6 +617,7 @@ func TestSecurituGroupUpdate(t *testing.T) {
 	// create netagent
 	agent, dp, _ := createNetAgent(t)
 	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
 
 	// security group
 	sg := netproto.SecurityGroup{
@@ -656,4 +689,78 @@ func TestSecurituGroupUpdate(t *testing.T) {
 	// delete sg
 	err = agent.DeleteSecurityGroup(&sg2)
 	AssertOk(t, err, "Error deleting security group")
+}
+
+func TestEndpointConcurrency(t *testing.T) {
+	var concurrency = 100
+
+	// create netagent
+	agent, _, _ := createNetAgent(t)
+	Assert(t, (agent != nil), "Failed to create agent", agent)
+	defer agent.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := agent.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	waitCh := make(chan error, concurrency*2)
+
+	// create endpoint
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			// endpoint message
+			epinfo := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "default",
+					Name:   fmt.Sprintf("testEndpoint-%d", idx),
+				},
+				Spec: netproto.EndpointSpec{
+					EndpointUUID: "testEndpointUUID",
+					WorkloadUUID: "testWorkloadUUID",
+					NetworkName:  "default",
+				},
+			}
+
+			// create the endpoint
+			_, eperr := agent.CreateEndpoint(&epinfo)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error creating endpoint")
+	}
+
+	for i := 0; i < concurrency; i++ {
+		go func(idx int) {
+			epinfo := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "default",
+					Name:   fmt.Sprintf("testEndpoint-%d", idx),
+				},
+			}
+			eperr := agent.DeleteEndpoint(&epinfo)
+			waitCh <- eperr
+		}(i)
+	}
+
+	for i := 0; i < concurrency; i++ {
+		AssertOk(t, <-waitCh, "Error deleting endpoint")
+	}
+
 }

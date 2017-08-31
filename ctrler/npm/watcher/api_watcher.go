@@ -47,6 +47,54 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		return
 	}
 
+	// get all current networks
+	netList, err := apicl.NetworkV1().Network().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list networks (%s)\n", err)
+		return
+	}
+
+	// add all networks
+	for _, nw := range netList {
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Object: nw,
+		}
+		w.netWatcher <- evt
+	}
+
+	// get all current sgs
+	sgList, err := apicl.SecurityGroupV1().SecurityGroup().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list sgs (%s)\n", err)
+		return
+	}
+
+	// add all sgs
+	for _, sg := range sgList {
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Object: sg,
+		}
+		w.sgWatcher <- evt
+	}
+
+	// get all current sg policies
+	sgpList, err := apicl.SgpolicyV1().Sgpolicy().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list sg policies (%s)\n", err)
+		return
+	}
+
+	// add all sg policies
+	for _, sgp := range sgpList {
+		evt := kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Object: sgp,
+		}
+		w.sgPolicyWatcher <- evt
+	}
+
 	// wait for events
 	for {
 		select {
@@ -143,27 +191,32 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 
 		// loop thru each nw if
 		for _, nif := range evt.Nwifs {
+			log.Infof("VMM watcher: Got VMM NWIf event %v, Nwif: %+v", evtType, nif)
+
 			// convert attribute map to slice
 			var attrs []string
 			for k, v := range nif.Attributes {
 				attrs = append(attrs, fmt.Sprintf("%s:%s", k, v))
 			}
+
 			// convert attributes
 			// convert Nw IF to an endpoint
 			ep := network.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
-					Name:   nif.ObjectMeta.Name,
+					Name:   nif.ObjectMeta.UUID,
 					Tenant: nif.ObjectMeta.Tenant,
 				},
 				Spec: network.EndpointSpec{},
 				Status: network.EndpointStatus{
-					Network:            nif.Status.PortGroup,
-					EndpointUUID:       nif.ObjectMeta.Name,
-					WorkloadName:       nif.ObjectMeta.Name,
-					WorkloadUUID:       nif.ObjectMeta.Name,
+					Network:            nif.Status.Network,
+					EndpointUUID:       nif.ObjectMeta.UUID,
+					WorkloadName:       nif.Status.WlName,
+					WorkloadUUID:       nif.Status.WlUUID,
 					WorkloadAttributes: attrs,
 					MacAddress:         nif.Status.MacAddress,
+					IPv4Address:        nif.Status.IpAddress,
+					NodeUUID:           nif.Status.SmartNIC_ID,
 					HomingHostAddr:     nif.Status.SmartNIC_ID,
 					HomingHostName:     nif.Status.SmartNIC_ID,
 					MicroSegmentVlan:   uint32(nif.Config.LocalVLAN),

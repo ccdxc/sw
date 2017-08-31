@@ -14,7 +14,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/agent/netagent/datapath/halproto/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/utils/log"
@@ -32,8 +31,7 @@ type MockHalDatapath struct {
 	Tnclient      *halproto.MockTenantClient
 	EndpointDB    map[string]*halproto.EndpointRequestMsg
 	EndpointDelDB map[string]*halproto.EndpointDeleteRequestMsg
-	SgDB          map[string]*halproto.SecurityGroupMsg
-	SgRule        map[string]*halproto.SecurityPolicyRuleMsg
+	SgDB          map[string]*halproto.SecurityGroupRequestMsg
 }
 
 // NewMockHalDatapath returns a mock hal datapath
@@ -55,8 +53,7 @@ func NewMockHalDatapath() (*MockHalDatapath, error) {
 	// init message databases
 	haldp.EndpointDB = make(map[string]*halproto.EndpointRequestMsg)
 	haldp.EndpointDelDB = make(map[string]*halproto.EndpointDeleteRequestMsg)
-	haldp.SgDB = make(map[string]*halproto.SecurityGroupMsg)
-	haldp.SgRule = make(map[string]*halproto.SecurityPolicyRuleMsg)
+	haldp.SgDB = make(map[string]*halproto.SecurityGroupRequestMsg)
 
 	return &haldp, nil
 }
@@ -99,17 +96,17 @@ func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// convert v6 address
-	v6Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &types.IPAddress_V6Addr{
+	v6Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
+		V4OrV6: &halproto.IPAddress_V6Addr{
 			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
 		},
 	}
@@ -122,12 +119,12 @@ func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &types.ObjectMeta{},
+		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
 		InterfaceHandle: 0, // FIXME
 		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*types.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -157,17 +154,17 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// convert v6 address
-	v6Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &types.IPAddress_V6Addr{
+	v6Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
+		V4OrV6: &halproto.IPAddress_V6Addr{
 			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
 		},
 	}
@@ -180,12 +177,12 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &types.ObjectMeta{},
+		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
 		InterfaceHandle: 0, // FIXME
 		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*types.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -215,17 +212,17 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// convert v6 address
-	v6Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &types.IPAddress_V6Addr{
+	v6Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
+		V4OrV6: &halproto.IPAddress_V6Addr{
 			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
 		},
 	}
@@ -238,12 +235,12 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &types.ObjectMeta{},
+		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
 		InterfaceHandle: 0, // FIXME
 		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*types.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -273,17 +270,17 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
 	// convert v4 address
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// convert v6 address
-	v6Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &types.IPAddress_V6Addr{
+	v6Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
+		V4OrV6: &halproto.IPAddress_V6Addr{
 			V6Addr: []byte(net.ParseIP(ep.Status.IPv6Address)),
 		},
 	}
@@ -296,12 +293,12 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:            &types.ObjectMeta{},
+		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
 		InterfaceHandle: 0, // FIXME
 		UsegVlan:        ep.Status.UsegVlan,
-		IpAddress:       []*types.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
 	epReq := halproto.EndpointRequestMsg{
@@ -327,16 +324,16 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// build endpoint del request
 	epdel := halproto.EndpointDeleteRequest{
-		Meta: &types.ObjectMeta{},
+		Meta: &halproto.ObjectMeta{},
 		DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
 			KeyOrHandle: &halproto.EndpointKeyHandle{
 				KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
@@ -373,16 +370,16 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
-	v4Addr := types.IPAddress{
-		IpAf: types.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &types.IPAddress_V4Addr{
+	v4Addr := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
 			V4Addr: ipv42int(ipaddr),
 		},
 	}
 
 	// build endpoint del request
 	epdel := halproto.EndpointDeleteRequest{
-		Meta: &types.ObjectMeta{},
+		Meta: &halproto.ObjectMeta{},
 		DeleteBy: &halproto.EndpointDeleteRequest_KeyOrHandle{
 			KeyOrHandle: &halproto.EndpointKeyHandle{
 				KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
@@ -418,24 +415,23 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
-		Meta: &types.ObjectMeta{},
+		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		SegmentType:    types.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
+		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
-		AccessEncap: &types.EncapInfo{
-			EncapType:  types.EncapType_ENCAP_TYPE_DOT1Q,
+		AccessEncap: &halproto.EncapInfo{
+			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		FabricEncap: &types.EncapInfo{
-			EncapType:  types.EncapType_ENCAP_TYPE_DOT1Q,
+		FabricEncap: &halproto.EncapInfo{
+			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		L4ProfileHandle: 0, //FIXME: what should go here?
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},
@@ -455,24 +451,23 @@ func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
 func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
-		Meta: &types.ObjectMeta{},
+		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		SegmentType:    types.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
+		SegmentType:    halproto.L2SegmentType_L2_SEGMENT_TYPE_TENANT,
 		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_FLOOD,
 		BcastFwdPolicy: halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD,
-		AccessEncap: &types.EncapInfo{
-			EncapType:  types.EncapType_ENCAP_TYPE_DOT1Q,
+		AccessEncap: &halproto.EncapInfo{
+			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		FabricEncap: &types.EncapInfo{
-			EncapType:  types.EncapType_ENCAP_TYPE_DOT1Q,
+		FabricEncap: &halproto.EncapInfo{
+			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
 			EncapValue: nw.Spec.VlanID,
 		},
-		L4ProfileHandle: 0, //FIXME: what should go here?
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},
@@ -492,7 +487,7 @@ func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
 func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
-		Meta: &types.ObjectMeta{},
+		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,
@@ -515,12 +510,40 @@ func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 
 // CreateSecurityGroup creates a security group
 func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+	var inrules []*halproto.FirewallRuleSpec
+	var outrules []*halproto.FirewallRuleSpec
+
+	// convert the rules
+	for _, rl := range sg.Spec.Rules {
+		hrule, err := hd.convertRule(sg, &rl)
+		if err != nil {
+			return err
+		}
+
+		// append it to the list
+		if rl.Direction == "outgoing" {
+			outrules = append(outrules, hrule)
+		} else {
+			inrules = append(inrules, hrule)
+		}
+	}
+
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
-		Meta: &types.ObjectMeta{},
-		SgId: sg.Status.SecurityGroupID,
+		Meta: &halproto.ObjectMeta{},
+		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
+			},
+		},
+		IngressPolicy: &halproto.IngressSGPolicy{
+			FwRules: inrules,
+		},
+		EgressPolicy: &halproto.EgressSGPolicy{
+			FwRules: outrules,
+		},
 	}
-	sgmsg := halproto.SecurityGroupMsg{
+	sgmsg := halproto.SecurityGroupRequestMsg{
 		Request: []*halproto.SecurityGroupSpec{&sgs},
 	}
 
@@ -539,12 +562,40 @@ func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error
 
 // UpdateSecurityGroup updates a security group
 func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+	var inrules []*halproto.FirewallRuleSpec
+	var outrules []*halproto.FirewallRuleSpec
+
+	// convert the rules
+	for _, rl := range sg.Spec.Rules {
+		hrule, err := hd.convertRule(sg, &rl)
+		if err != nil {
+			return err
+		}
+
+		// append it to the list
+		if rl.Direction == "outgoing" {
+			outrules = append(outrules, hrule)
+		} else {
+			inrules = append(inrules, hrule)
+		}
+	}
+
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
-		Meta: &types.ObjectMeta{},
-		SgId: sg.Status.SecurityGroupID,
+		Meta: &halproto.ObjectMeta{},
+		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
+			},
+		},
+		IngressPolicy: &halproto.IngressSGPolicy{
+			FwRules: inrules,
+		},
+		EgressPolicy: &halproto.EgressSGPolicy{
+			FwRules: outrules,
+		},
 	}
-	sgmsg := halproto.SecurityGroupMsg{
+	sgmsg := halproto.SecurityGroupRequestMsg{
 		Request: []*halproto.SecurityGroupSpec{&sgs},
 	}
 
@@ -564,12 +615,16 @@ func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error
 // DeleteSecurityGroup deletes a security group
 func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
-	sgs := halproto.SecurityGroupSpec{
-		Meta: &types.ObjectMeta{},
-		SgId: sg.Status.SecurityGroupID,
+	sgdel := halproto.SecurityGroupDeleteRequest{
+		Meta: &halproto.ObjectMeta{},
+		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
+			},
+		},
 	}
-	sgmsg := halproto.SecurityGroupMsg{
-		Request: []*halproto.SecurityGroupSpec{&sgs},
+	sgmsg := halproto.SecurityGroupDeleteRequestMsg{
+		Request: []*halproto.SecurityGroupDeleteRequest{&sgdel},
 	}
 
 	// delete security group
@@ -585,166 +640,54 @@ func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error
 	return nil
 }
 
-// AddSecurityRule adds a security rule
-func (hd *MockHalDatapath) AddSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
+func (hd *MockHalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.FirewallRuleSpec, error) {
 	// convert the action
-	act := halproto.Action_SECURITY_POLICY_ACTION_NONE
+	act := halproto.FirewallAction_FIREWALL_ACTION_NONE
 	switch rule.Action {
 	case "Allow":
-		act = halproto.Action_SECURITY_POLICY_ACTION_ALLOW
+		act = halproto.FirewallAction_FIREWALL_ACTION_ALLOW
 	case "Deny":
-		act = halproto.Action_SECURITY_POLICY_ACTION_DENY
+		act = halproto.FirewallAction_FIREWALL_ACTION_DENY
 	case "Reject":
-		act = halproto.Action_SECURITY_POLICY_ACTION_REJECT
+		act = halproto.FirewallAction_FIREWALL_ACTION_REJECT
 	default:
 		log.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
-		return errors.New("Unknown action")
+		return nil, errors.New("Unknown action")
 	}
 
 	// build service list
 	srvs := []*halproto.Service{}
 	for _, svc := range rule.Services {
-		proto := types.IPProtocol_IP_PROTO_NONE
+		proto := halproto.IPProtocol_IP_PROTO_NONE
 		switch svc.Protocol {
 		case "tcp":
-			proto = types.IPProtocol_IP_PROTO_TCP
+			proto = halproto.IPProtocol_IP_PROTO_TCP
 		case "udp":
-			proto = types.IPProtocol_IP_PROTO_UDP
+			proto = halproto.IPProtocol_IP_PROTO_UDP
 		case "icmp":
-			proto = types.IPProtocol_IP_PROTO_ICMP
+			proto = halproto.IPProtocol_IP_PROTO_ICMP
 		default:
 			log.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
-			return errors.New("Unknown protocol")
+			return nil, errors.New("Unknown protocol")
 		}
 
 		sr := halproto.Service{
 			IpProtocol: proto,
-			Port:       svc.Port,
+			L4Info: &halproto.Service_DstPort{
+				DstPort: svc.Port,
+			},
 		}
 
 		srvs = append(srvs, &sr)
 	}
 
-	// check direction
-	var srcSgID, dstSgID uint32
-	switch rule.Direction {
-	case "incoming":
-		srcSgID = peersg.Status.SecurityGroupID
-		dstSgID = sg.Status.SecurityGroupID
-	case "outgoing":
-		dstSgID = peersg.Status.SecurityGroupID
-		srcSgID = sg.Status.SecurityGroupID
-	default:
-		log.Errorf("Unknown direction %s", rule.Direction)
-		return errors.New("Unknown direction")
-	}
-
 	// build security rule
-	rl := halproto.SecurityPolicyRuleSpec{
-		Meta:      &types.ObjectMeta{},
-		SrcSgId:   srcSgID,
-		DstSgId:   dstSgID,
-		Svc:       srvs,
-		Action:    act,
-		RuleLogEn: rule.Log,
-	}
-	rulemsg := halproto.SecurityPolicyRuleMsg{
-		Request: []*halproto.SecurityPolicyRuleSpec{&rl},
-	}
-	_, err := hd.Sgclient.SecurityPolicyRuleCreate(context.Background(), &rulemsg)
-	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
-		return err
+	rl := halproto.FirewallRuleSpec{
+		PeerSecurityGroup: []uint32{rule.PeerGroupID},
+		Svc:               srvs,
+		Action:            act,
+		Log:               rule.Log,
 	}
 
-	// save the rule in db
-	hd.SgRule[rl.String()] = &rulemsg
-
-	return nil
-}
-
-// DeleteSecurityRule deletes a security rule
-func (hd *MockHalDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error {
-	// convert the action
-	act := halproto.Action_SECURITY_POLICY_ACTION_NONE
-	switch rule.Action {
-	case "Allow":
-		act = halproto.Action_SECURITY_POLICY_ACTION_ALLOW
-	case "Deny":
-		act = halproto.Action_SECURITY_POLICY_ACTION_DENY
-	case "Reject":
-		act = halproto.Action_SECURITY_POLICY_ACTION_REJECT
-	default:
-		log.Errorf("Unknown action %s in rule {%+v}", rule.Action, rule)
-		return errors.New("Unknown action")
-	}
-
-	// build service list
-	srvs := []*halproto.Service{}
-	for _, svc := range rule.Services {
-		proto := types.IPProtocol_IP_PROTO_NONE
-		switch svc.Protocol {
-		case "tcp":
-			proto = types.IPProtocol_IP_PROTO_TCP
-		case "udp":
-			proto = types.IPProtocol_IP_PROTO_UDP
-		case "icmp":
-			proto = types.IPProtocol_IP_PROTO_ICMP
-		default:
-			log.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
-			return errors.New("Unknown protocol")
-		}
-
-		sr := halproto.Service{
-			IpProtocol: proto,
-			Port:       svc.Port,
-		}
-
-		srvs = append(srvs, &sr)
-	}
-
-	// check direction
-	var srcSgID, dstSgID uint32
-	switch rule.Direction {
-	case "incoming":
-		srcSgID = peersg.Status.SecurityGroupID
-		dstSgID = sg.Status.SecurityGroupID
-	case "outgoing":
-		dstSgID = peersg.Status.SecurityGroupID
-		srcSgID = sg.Status.SecurityGroupID
-	default:
-		log.Errorf("Unknown direction %s", rule.Direction)
-		return errors.New("Unknown direction")
-	}
-
-	// build security rule
-	rl := halproto.SecurityPolicyRuleSpec{
-		Meta:      &types.ObjectMeta{},
-		SrcSgId:   srcSgID,
-		DstSgId:   dstSgID,
-		Svc:       srvs,
-		Action:    act,
-		RuleLogEn: rule.Log,
-	}
-	rulemsg := halproto.SecurityPolicyRuleMsg{
-		Request: []*halproto.SecurityPolicyRuleSpec{&rl},
-	}
-
-	// delete the security rule
-	_, err := hd.Sgclient.SecurityPolicyRuleDelete(context.Background(), &rulemsg)
-	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
-		return err
-	}
-
-	// verify we had the rule
-	_, ok := hd.SgRule[rl.String()]
-	if !ok {
-		log.Errorf("Rule %s was not present in db", rl.String())
-	}
-
-	// delete from rule db
-	delete(hd.SgRule, rl.String())
-
-	return nil
+	return &rl, nil
 }

@@ -127,7 +127,7 @@ func AddNwIF(mac, portGroup string) (string, error) {
 	if len(vms) < 1 {
 		return "", fmt.Errorf("No vms found")
 	}
-	return vms[0].AddVeth(mac, portGroup)
+	return vms[0].AddVeth(mac, portGroup, "")
 }
 
 // DeleteNwIF deletes a nwif from the inventory
@@ -306,7 +306,7 @@ func (s *Inventory) CreateNwIF(hostURL string, r *simapi.NwIFSetReq) (*simapi.Nw
 			vmRef := srv.hSystem.Vm[0].Reference()
 			vv := simulator.Map.Get(vmRef)
 			vm := vv.(*simulator.VirtualMachine)
-			name, err := vm.AddVeth(r.MacAddr, r.PortGroup)
+			name, err := vm.AddVeth(r.MacAddr, r.PortGroup, r.Vlan)
 			if err != nil {
 				return nil, err
 			}

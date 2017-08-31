@@ -21,8 +21,6 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		ag.datapath.Sgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		ag.datapath.Sgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityPolicyRuleCreate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityPolicyRuleDelete(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
 		ag.datapath.Sgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
@@ -59,7 +57,12 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify datapath has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
-			return (len(ag.datapath.SgRule) == 2)
+			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			if !ok {
+				return false
+			}
+
+			return ((len(sg.Request[0].IngressPolicy.FwRules) == 1) && (len(sg.Request[0].EgressPolicy.FwRules) == 1))
 		}, "Sg rules not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
 	}
 
@@ -70,9 +73,13 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify rules are gone from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
-			return (len(ag.datapath.SgRule) == 0)
+			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			if !ok {
+				return false
+			}
+
+			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0))
 		}, "Sg rules still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
-		c.Assert(len(ag.datapath.SgRule), Equals, 0)
 	}
 
 	// delete the security group

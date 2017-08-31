@@ -112,6 +112,8 @@ class Node:
 
         self.runCmd("sudo rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ")
         self.runCmd("sudo ip addr flush dev eth1 label *pens")
+        self.runCmd("docker rm -f `docker ps -aq`")
+
 
 # Inits cluster by posting a message to CMD
 def initCluster(nodeAddr):
@@ -139,7 +141,7 @@ def initCluster(nodeAddr):
 # Create the parser and sub parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
-parser.add_argument("-nodes", required=True, help="list of nodes(comma separated)")
+parser.add_argument("-nodes", default="", help="list of nodes(comma separated)")
 parser.add_argument("-quorum", default="", help="list of quorum nodenames(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")
@@ -150,6 +152,13 @@ parser.add_argument("-stop", dest='stop', action='store_true')
 args = parser.parse_args()
 addrList = args.nodes.split(",")
 quorum = args.quorum.split(",")
+
+# Pick up nodes list from environment
+if args.nodes == '':
+    addrList = os.environ["PENS_NODES"].split(",")
+
+if args.quorum == '':
+    quorum = os.environ["PENS_QUORUM_NODENAMES"].split(",")
 
 # Basic error checking
 if len(addrList) < 1:

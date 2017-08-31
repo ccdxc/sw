@@ -32,7 +32,7 @@ function createBinContainerTarBall() {
         srv1.pensando.io:5000/beats/filebeat:5.4.1 srv1.pensando.io:5000/pens-ntp:v0.2"
     for i in $staticimages
     do
-        if [ "$(docker images -q $i)"  == "" ] 
+        if [ "$(docker images -q $i)"  == "" ]
         then
             docker pull $i
         fi
@@ -48,14 +48,14 @@ function createBinContainerTarBall() {
     done
 }
 
-function startCluster() {    
+function startCluster() {
     vagrant ssh -c  '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}'  node1
 }
 function stopCluster() {
     vagrant ssh -c  '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop'  node1
 }
 
-case $1 in 
+case $1 in
     createBaseContainer) createBaseContainer ;;
     apigw) createApiGwContainer ;;
     apiserver) createApiSrvContainer;;

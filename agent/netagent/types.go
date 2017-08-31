@@ -71,11 +71,9 @@ type NetworkAPI interface {
 
 // SecurityGroupAPI is part of NetDatapathAPI
 type SecurityGroupAPI interface {
-	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                             // creates a security group
-	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                             // updates a security group
-	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                             // deletes a security group
-	AddSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error    // adds a security rule
-	DeleteSecurityRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule, peersg *netproto.SecurityGroup) error // deletes a security rule
+	CreateSecurityGroup(sg *netproto.SecurityGroup) error // creates a security group
+	UpdateSecurityGroup(sg *netproto.SecurityGroup) error // updates a security group
+	DeleteSecurityGroup(sg *netproto.SecurityGroup) error // deletes a security group
 }
 
 // NetDatapathAPI is the API provided by datapath modules

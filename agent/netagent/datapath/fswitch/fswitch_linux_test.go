@@ -93,17 +93,39 @@ type fsetup struct {
 }
 
 // createEndpoint creates an endpoint
-func createEndpoint(ipaddr, macAddr string, usegVlan uint32) *netproto.Endpoint {
+func createEndpoint(ipaddr, macAddr, netname string, usegVlan uint32) *netproto.Endpoint {
 	return &netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   ipaddr,
 		},
+		Spec: netproto.EndpointSpec{
+			NetworkName: netname,
+		},
 		Status: netproto.EndpointStatus{
 			IPv4Address: ipaddr,
 			MacAddress:  macAddr,
 			UsegVlan:    usegVlan,
+		},
+	}
+}
+
+// createNetwork returns a network object
+func createNetwork(netname, subnet, gw string, vlanID uint32) *netproto.Network {
+	return &netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   netname,
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  subnet,
+			IPv4Gateway: gw,
+			VlanID:      vlanID,
+		},
+		Status: netproto.NetworkStatus{
+			AllocatedVlanID: vlanID,
 		},
 	}
 }
@@ -190,20 +212,27 @@ func createSetup(t *testing.T) *fsetup {
 	err = fs2.AddPort("svport22")
 	AssertOk(t, err, "Error adding port to switch")
 
+	// create network
+	nw := createNetwork("test", "10.1.1.1/24", "10.1.1.254", 2)
+	err = fs1.CreateNetwork(nw)
+	AssertOk(t, err, "Error creating network")
+	err = fs2.CreateNetwork(nw)
+	AssertOk(t, err, "Error creating network")
+
 	// endpoints
-	ep11 := createEndpoint("11.11.11.11/24", "11:11:11:11:11:11", 0)
-	ep12 := createEndpoint("12.12.12.12/24", "12:12:12:12:12:12", 0)
-	ep21 := createEndpoint("21.21.21.21/24", "21:21:21:21:21:21", 0)
-	ep22 := createEndpoint("22.22.22.22/24", "22:22:22:22:22:22", 0)
+	ep11 := createEndpoint("11.11.11.11/24", "11:11:11:11:11:11", "test", 101)
+	ep12 := createEndpoint("12.12.12.12/24", "12:12:12:12:12:12", "test", 102)
+	ep21 := createEndpoint("21.21.21.21/24", "21:21:21:21:21:21", "test", 201)
+	ep22 := createEndpoint("22.22.22.22/24", "22:22:22:22:22:22", "test", 202)
 
 	// add endpoints to first switch
 	err = fs1.AddLocalEndpoint("svport11", ep11)
 	AssertOk(t, err, "Error adding endpoint to switch")
 	err = fs1.AddLocalEndpoint("svport12", ep12)
 	AssertOk(t, err, "Error adding endpoint to switch")
-	err = fs1.AddRemoteEndpoint(ep21)
+	err = fs1.AddRemoteEndpoint(ep21, nw)
 	AssertOk(t, err, "Error adding endpoint to switch")
-	err = fs1.AddRemoteEndpoint(ep22)
+	err = fs1.AddRemoteEndpoint(ep22, nw)
 	AssertOk(t, err, "Error adding endpoint to switch")
 
 	// add endpoints to second switch
@@ -211,9 +240,9 @@ func createSetup(t *testing.T) *fsetup {
 	AssertOk(t, err, "Error adding endpoint to switch")
 	err = fs2.AddLocalEndpoint("svport22", ep22)
 	AssertOk(t, err, "Error adding endpoint to switch")
-	err = fs2.AddRemoteEndpoint(ep11)
+	err = fs2.AddRemoteEndpoint(ep11, nw)
 	AssertOk(t, err, "Error adding endpoint to switch")
-	err = fs2.AddRemoteEndpoint(ep12)
+	err = fs2.AddRemoteEndpoint(ep12, nw)
 	AssertOk(t, err, "Error adding endpoint to switch")
 
 	// open sockets
@@ -285,7 +314,7 @@ func (st *fsetup) recvArpFrame(port string) (*ethernet.Frame, *ArpPacket, error)
 	}
 
 	// Display source of message and message itself.
-	log.Debugf("Received Ethernet frame on %s [%s->%s] 0x%x: %v", port, addr.String(), f.Destination.String(), uint(f.EtherType), f.Payload)
+	log.Debugf("Host Received Ethernet frame on %s [%s->%s] 0x%x: %v", port, addr.String(), f.Destination.String(), uint(f.EtherType), f.Payload)
 
 	// process ARP message
 	err = (&arp).UnmarshalBinary(f.Payload)
@@ -322,7 +351,7 @@ func (st *fsetup) recvIPFrame(port string) (*ethernet.Frame, error) {
 	}
 
 	// Display source of message and message itself.
-	log.Debugf("Received Ethernet frame on %s [%s->%s] 0x%x: %v", port, addr.String(), f.Destination.String(), uint(f.EtherType), f.Payload)
+	log.Debugf("Host Received Ethernet frame on %s [%s->%s] 0x%x: %v", port, addr.String(), f.Destination.String(), uint(f.EtherType), f.Payload)
 
 	return &f, nil
 }
@@ -331,12 +360,12 @@ func (st *fsetup) delete(t *testing.T) {
 	//  init variables
 	fs1 := st.switches[0]
 	fs2 := st.switches[1]
-	ep11 := createEndpoint("11.11.11.11/24", "11:11:11:11:11:11", 0)
-	ep12 := createEndpoint("12.12.12.12/24", "12:12:12:12:12:12", 0)
-	ep21 := createEndpoint("21.21.21.21/24", "21:21:21:21:21:21", 0)
-	ep22 := createEndpoint("22.22.22.22/24", "22:22:22:22:22:22", 0)
+	ep11 := createEndpoint("11.11.11.11/24", "11:11:11:11:11:11", "test", 101)
+	ep12 := createEndpoint("12.12.12.12/24", "12:12:12:12:12:12", "test", 102)
+	ep21 := createEndpoint("21.21.21.21/24", "21:21:21:21:21:21", "test", 201)
+	ep22 := createEndpoint("22.22.22.22/24", "22:22:22:22:22:22", "test", 202)
 
-	// add endpoints to first switch
+	// remove endpoints from first switch
 	err := fs1.DelLocalEndpoint("svport11", ep11)
 	AssertOk(t, err, "Error adding endpoint to switch")
 	err = fs1.DelLocalEndpoint("svport12", ep12)
@@ -346,7 +375,7 @@ func (st *fsetup) delete(t *testing.T) {
 	err = fs1.DelRemoteEndpoint(ep22)
 	AssertOk(t, err, "Error adding endpoint to switch")
 
-	// add endpoints to second switch
+	// delete endpoints from second switch
 	err = fs2.DelLocalEndpoint("svport21", ep21)
 	AssertOk(t, err, "Error adding endpoint to switch")
 	err = fs2.DelLocalEndpoint("svport22", ep22)
@@ -355,6 +384,13 @@ func (st *fsetup) delete(t *testing.T) {
 	AssertOk(t, err, "Error adding endpoint to switch")
 	err = fs2.DelRemoteEndpoint(ep12)
 	AssertOk(t, err, "Error adding endpoint to switch")
+
+	// delete network
+	nw := createNetwork("test", "10.1.1.1/24", "10.1.1.254", 2)
+	err = fs1.DeleteNetwork(nw)
+	AssertOk(t, err, "Error creating network")
+	err = fs2.DeleteNetwork(nw)
+	AssertOk(t, err, "Error creating network")
 
 	// delete port from the switch
 	err = fs1.DelPort("svport11")
@@ -382,7 +418,7 @@ func (st *fsetup) cleanup(t *testing.T) {
 	AssertOk(t, err, "Error deleting veth pairs")
 }
 
-func sendArpReq(t *testing.T, st *fsetup, srcMac, srcIP, destIP, port string) {
+func sendArpReq(t *testing.T, st *fsetup, srcMac, srcIP, destIP, port string, vlanID uint16) {
 	// build the ethernet frame
 	sm, _ := net.ParseMAC(srcMac)
 	arpReq, err := NewArpPacket(OperationRequest, sm, net.ParseIP(srcIP), ethernet.Broadcast, net.ParseIP(destIP))
@@ -392,6 +428,7 @@ func sendArpReq(t *testing.T, st *fsetup, srcMac, srcIP, destIP, port string) {
 	frame := ethernet.Frame{
 		Destination: ethernet.Broadcast,
 		Source:      sm,
+		VLAN:        &ethernet.VLAN{ID: vlanID},
 		EtherType:   ethernet.EtherTypeARP,
 		Payload:     payload,
 	}
@@ -401,7 +438,7 @@ func sendArpReq(t *testing.T, st *fsetup, srcMac, srcIP, destIP, port string) {
 	AssertOk(t, err, "Error sending the message")
 }
 
-func sendEthFrame(t *testing.T, st *fsetup, srcMac, dstMac, port string, ethertype ethernet.EtherType, len int) {
+func sendEthFrame(t *testing.T, st *fsetup, srcMac, dstMac, port string, ethertype ethernet.EtherType, vlanID uint16, len int) {
 	// build the ethernet frame
 	sm, _ := net.ParseMAC(srcMac)
 	dm, _ := net.ParseMAC(dstMac)
@@ -409,6 +446,7 @@ func sendEthFrame(t *testing.T, st *fsetup, srcMac, dstMac, port string, etherty
 	frame := ethernet.Frame{
 		Destination: dm,
 		Source:      sm,
+		VLAN:        &ethernet.VLAN{ID: vlanID},
 		EtherType:   ethertype,
 		Payload:     payload,
 	}
@@ -425,13 +463,11 @@ func TestFswitchFwd(t *testing.T) {
 
 	// create the setup
 	st := createSetup(t)
-	// fs1 := st.switches[0]
-	// fs2 := st.switches[1]
 	defer st.cleanup(t)
 	time.Sleep(time.Millisecond * 10)
 
 	// send an ARP request from cvport11
-	sendArpReq(t, st, "11:11:11:11:11:11", "11.11.11.11", "12.12.12.12", "cvport11")
+	sendArpReq(t, st, "11:11:11:11:11:11", "11.11.11.11", "12.12.12.12", "cvport11", 101)
 	time.Sleep(time.Millisecond)
 	respFrame, arpResp, err := st.recvArpFrame("cvport11")
 	AssertOk(t, err, "Error receiving the message")
@@ -439,30 +475,32 @@ func TestFswitchFwd(t *testing.T) {
 	Assert(t, (arpResp.SenderHardwareAddr.String() == "12:12:12:12:12:12"), "Invalid arp resp", arpResp)
 
 	// send arp request for remote endpoint
-	sendArpReq(t, st, "12:12:12:12:12:12", "12.12.12.12", "21.21.21.21", "cvport12")
+	sendArpReq(t, st, "12:12:12:12:12:12", "12.12.12.12", "21.21.21.21", "cvport12", 102)
 	time.Sleep(time.Millisecond)
 	respFrame, _, err = st.recvArpFrame("cvport12")
 	AssertOk(t, err, "Error receiving the message")
 	Assert(t, (respFrame.EtherType == ethernet.EtherTypeARP), "Invalid message type", respFrame)
 
 	// send an ip packet from one port and receive it on other
-	sendEthFrame(t, st, "11:11:11:11:11:11", "12:12:12:12:12:12", "cvport11", ethernet.EtherTypeIPv4, 100)
+	sendEthFrame(t, st, "11:11:11:11:11:11", "12:12:12:12:12:12", "cvport11", ethernet.EtherTypeIPv4, 101, 100)
 	time.Sleep(time.Millisecond * 10)
 	respFrame, err = st.recvIPFrame("cvport12")
 	AssertOk(t, err, "Error receiving the message")
 	Assert(t, (respFrame.EtherType == ethernet.EtherTypeIPv4), "Invalid message type", respFrame)
 
 	// send ip frame on one switch and receive it on another
-	sendEthFrame(t, st, "11:11:11:11:11:11", "21:21:21:21:21:21", "cvport11", ethernet.EtherTypeIPv4, 100)
+	sendEthFrame(t, st, "11:11:11:11:11:11", "21:21:21:21:21:21", "cvport11", ethernet.EtherTypeIPv4, 101, 100)
 	time.Sleep(time.Millisecond * 10)
 	respFrame, err = st.recvIPFrame("cvport21")
 	AssertOk(t, err, "Error receiving the message")
 	Assert(t, (respFrame.EtherType == ethernet.EtherTypeIPv4), "Invalid message type", respFrame)
 
 	// tets error conditions
-	sendArpReq(t, st, "11:11:11:11:11:11", "11.11.11.11", "15.15.15.15", "cvport11")
+	sendArpReq(t, st, "11:11:11:11:11:11", "11.11.11.11", "15.15.15.15", "cvport11", 101)
+	sendArpReq(t, st, "11:11:11:11:11:11", "11.11.11.11", "15.15.15.15", "cvport11", 99)
 	time.Sleep(time.Millisecond * 10)
-	sendEthFrame(t, st, "11:11:11:11:11:11", "15:15:15:15:15:15", "cvport11", ethernet.EtherTypeIPv4, 100)
+	sendEthFrame(t, st, "11:11:11:11:11:11", "15:15:15:15:15:15", "cvport11", ethernet.EtherTypeIPv4, 101, 100)
+	sendEthFrame(t, st, "11:11:11:11:11:11", "15:15:15:15:15:15", "cvport11", ethernet.EtherTypeIPv4, 99, 100)
 	time.Sleep(time.Millisecond * 10)
 
 	// done

@@ -66,6 +66,9 @@ func (wr *APISrvWriter) WriteNetwork(nw *network.Network) error {
 		return err
 	}
 
+	// FIXME: clear the resource version till we figure out CAS semantics
+	nw.ObjectMeta.ResourceVersion = ""
+
 	// write it
 	_, err = apicl.NetworkV1().Network().Update(context.Background(), nw)
 	return err
@@ -84,11 +87,18 @@ func (wr *APISrvWriter) WriteEndpoint(ep *network.Endpoint, update bool) error {
 		return err
 	}
 
+	// FIXME: clear the resource version till we figure out CAS semantics
+	ep.ObjectMeta.ResourceVersion = ""
+
 	// write it
 	if update {
 		_, err = apicl.EndpointV1().Endpoint().Update(context.Background(), ep)
 	} else {
 		_, err = apicl.EndpointV1().Endpoint().Create(context.Background(), ep)
+		// if create fails, try update instead
+		if err != nil {
+			_, err = apicl.EndpointV1().Endpoint().Update(context.Background(), ep)
+		}
 	}
 	return err
 }
@@ -105,6 +115,9 @@ func (wr *APISrvWriter) WriteSecurityGroup(sg *network.SecurityGroup) error {
 	if err != nil {
 		return err
 	}
+
+	// FIXME: clear the resource version till we figure out CAS semantics
+	sg.ObjectMeta.ResourceVersion = ""
 
 	// write it
 	_, err = apicl.SecurityGroupV1().SecurityGroup().Update(context.Background(), sg)
@@ -123,6 +136,9 @@ func (wr *APISrvWriter) WriteSgPolicy(sgp *network.Sgpolicy) error {
 	if err != nil {
 		return err
 	}
+
+	// FIXME: clear the resource version till we figure out CAS semantics
+	sgp.ObjectMeta.ResourceVersion = ""
 
 	// write it
 	_, err = apicl.SgpolicyV1().Sgpolicy().Update(context.Background(), sgp)

@@ -15,7 +15,7 @@ import (
 	. "github.com/pensando/sw/utils/testutils"
 )
 
-const testServerURL = "localhost:9090"
+const testServerURL = "localhost:9099"
 
 // dummy writer
 type dummyWriter struct {

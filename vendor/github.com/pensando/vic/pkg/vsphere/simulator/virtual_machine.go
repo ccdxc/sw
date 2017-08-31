@@ -518,7 +518,7 @@ func (vm *VirtualMachine) UnregisterVM(c *types.UnregisterVM) soap.HasFault {
 	return r
 }
 
-func (vm *VirtualMachine) AddVeth(mac, pgKey string) (string, error) {
+func (vm *VirtualMachine) AddVeth(mac, pgKey, portKey string) (string, error) {
 	unitNum := int32(16 + rand.Intn(255))
 	// EthernetCard template for types.VirtualEthernetCard
 	veth := types.VirtualE1000{
@@ -531,6 +531,7 @@ func (vm *VirtualMachine) AddVeth(mac, pgKey string) (string, error) {
 					Port: types.DistributedVirtualSwitchPortConnection{
 						SwitchUuid: esx.DvsUuid,
 						PortgroupKey: pgKey,
+						PortKey: portKey,
 					},
 				},
 				Connectable: &types.VirtualDeviceConnectInfo{

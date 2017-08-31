@@ -45,10 +45,10 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp netagent.NetDatapathAPI, nodeUUID, ctrlerURL string) (*Agent, error) {
+func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL string) (*Agent, error) {
 
 	// create new network agent
-	nagent, err := netagent.NewNetAgent(dp, nodeUUID)
+	nagent, err := netagent.NewNetAgent(dp, dbPath, nodeUUID)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
@@ -85,4 +85,5 @@ func NewAgent(dp netagent.NetDatapathAPI, nodeUUID, ctrlerURL string) (*Agent, e
 // Stop stops the agent
 func (ag *Agent) Stop() {
 	ag.npmClient.Stop()
+	ag.Netagent.Stop()
 }

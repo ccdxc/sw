@@ -8,7 +8,7 @@ import (
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
 	"github.com/pensando/sw/agent/plugins/k8s/cni"
-	"github.com/pensando/sw/ctrler/npm/rpcserver"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/netutils"
 )
@@ -17,6 +17,8 @@ import (
 func main() {
 	var (
 		uplinkIf  = flag.String("uplink", "eth2", "Uplink interface")
+		dbPath    = flag.String("db", "/tmp/n4sagent.db", "Database file")
+		npmURL    = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		debugflag = flag.Bool("debug", false, "Enable debug mode")
 		logToFile = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
 	)
@@ -26,7 +28,7 @@ func main() {
 	logConfig := &log.Config{
 		Module:      "K8sAgent",
 		Format:      log.LogFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,
@@ -58,7 +60,7 @@ func main() {
 	}
 
 	// create the new agent
-	ag, err := agent.NewAgent(dp, macAddr.String(), rpcserver.NetctrlerURL)
+	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

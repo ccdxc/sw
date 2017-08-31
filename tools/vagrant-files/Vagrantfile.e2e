@@ -4,7 +4,7 @@
 require 'fileutils'
 
 def get_user_specific_nw(net)
-	return ENV['USER'] + net
+    return ENV['USER'] + net
 end
 # VM parameters
 def provider_cfg(node, cpus, memory, numNics)
@@ -38,6 +38,9 @@ def configure_vm(node, node_name)
             ## setup basic environment for the VM
             echo -n "#{node_name}" > /etc/hostname
             hostname -F /etc/hostname
+            chown -R vagrant /import
+            # Install pcap headers
+            yum install libpcap-devel -y
             # Increase mmap count to support elasticsearch
             sysctl -w vm.max_map_count=262144
             # stop firewall service and disable selinux
@@ -71,6 +74,10 @@ def configure_alpine_vm(node, node_name, share)
             ## setup basic environment for the VM
             echo -n "#{node_name}" > /etc/hostname
             hostname -F /etc/hostname
+	    addgroup vagrant docker || echo "ignoring failure"
+            # Install required packages
+            apk update
+            apk add libpcap-dev
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
             # ssh params
@@ -79,6 +86,8 @@ def configure_alpine_vm(node, node_name, share)
             # bring up interfaces
             sudo ifconfig eth2 promisc up
             sudo ifconfig eth3 promisc up || echo "ignoring failure"
+            echo 'export PATH=$PATH:/import/bin' >> /etc/profile.d/env.sh
+            source /etc/profile.d/env.sh
           EOF
       end
 
@@ -126,6 +135,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_addr = ip_prefix + "#{n+11}"
     venice_ips = num_venice_nodes.times.collect { |n| ip_prefix + "#{n+11}" }
     naples_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+21}" }
+    hostsim_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+121}" }
+    venice_node_names = num_venice_nodes.times.collect { |n| "node#{n+1}" }
 
     config.vm.define node_name do |node|
       node.vm.box = "nasuku/centos73"
@@ -142,8 +153,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.provision "shell" do |s|
           s.inline = <<-EOF
             echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+            echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
             echo "export PENS_NODES=#{venice_ips.join(",")}" >> /etc/profile.d/env.sh
+            echo "export PENS_QUORUM_NODENAMES=#{venice_node_names.join(",")}" >> /etc/profile.d/env.sh
             echo "export NAPLES_NODES=#{naples_ips.join(",")}" >> /etc/profile.d/env.sh
+            echo "export HOSTSIM_NODES=#{hostsim_ips.join(",")}" >> /etc/profile.d/env.sh
             source /etc/profile.d/env.sh
           EOF
       end
@@ -167,13 +181,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.box = "Dalee/alpine"
       # Control Interface
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
-      # Uplink Interface
-      node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(dc_net), auto_config: false
       # Hots Interface
-      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
+      node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
+      # Uplink Interface
+      node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: get_user_specific_nw(dc_net), auto_config: false
 
       # configure VM
-      provider_cfg(node, 4, 4096, 4)
+      provider_cfg(node, 2, 2048, 4)
 
       # provision base os
       configure_alpine_vm(node, node_name, true)
@@ -191,13 +205,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.define node_name do |node|
       node.vm.box = "jojimt/alpine_host"
       node.vm.synced_folder ".", "/vagrant", :disabled => true
+
       # Control Interface
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet: get_user_specific_nw("control")
       # Hots Interface
       node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
 
       # configure VM
-      provider_cfg(node, 4, 4096, 3)
+      provider_cfg(node, 2, 2048, 3)
 
       # provision base os
       configure_alpine_vm(node, node_name, false)

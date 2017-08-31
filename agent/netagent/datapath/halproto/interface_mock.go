@@ -42,39 +42,6 @@ func (_mr *MockisLifKeyHandle_KeyOrHandleMockRecorder) isLifKeyHandle_KeyOrHandl
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "isLifKeyHandle_KeyOrHandle")
 }
 
-// MockisIfEnicInfo_EnicInfo is a mock of isIfEnicInfo_EnicInfo interface
-type MockisIfEnicInfo_EnicInfo struct {
-	ctrl     *gomock.Controller
-	recorder *MockisIfEnicInfo_EnicInfoMockRecorder
-}
-
-// MockisIfEnicInfo_EnicInfoMockRecorder is the mock recorder for MockisIfEnicInfo_EnicInfo
-type MockisIfEnicInfo_EnicInfoMockRecorder struct {
-	mock *MockisIfEnicInfo_EnicInfo
-}
-
-// NewMockisIfEnicInfo_EnicInfo creates a new mock instance
-func NewMockisIfEnicInfo_EnicInfo(ctrl *gomock.Controller) *MockisIfEnicInfo_EnicInfo {
-	mock := &MockisIfEnicInfo_EnicInfo{ctrl: ctrl}
-	mock.recorder = &MockisIfEnicInfo_EnicInfoMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockisIfEnicInfo_EnicInfo) EXPECT() *MockisIfEnicInfo_EnicInfoMockRecorder {
-	return _m.recorder
-}
-
-// isIfEnicInfo_EnicInfo mocks base method
-func (_m *MockisIfEnicInfo_EnicInfo) isIfEnicInfo_EnicInfo() {
-	_m.ctrl.Call(_m, "isIfEnicInfo_EnicInfo")
-}
-
-// isIfEnicInfo_EnicInfo indicates an expected call of isIfEnicInfo_EnicInfo
-func (_mr *MockisIfEnicInfo_EnicInfoMockRecorder) isIfEnicInfo_EnicInfo() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "isIfEnicInfo_EnicInfo")
-}
-
 // MockisInterfaceKeyHandle_KeyOrHandle is a mock of isInterfaceKeyHandle_KeyOrHandle interface
 type MockisInterfaceKeyHandle_KeyOrHandle struct {
 	ctrl     *gomock.Controller
@@ -106,6 +73,39 @@ func (_m *MockisInterfaceKeyHandle_KeyOrHandle) isInterfaceKeyHandle_KeyOrHandle
 // isInterfaceKeyHandle_KeyOrHandle indicates an expected call of isInterfaceKeyHandle_KeyOrHandle
 func (_mr *MockisInterfaceKeyHandle_KeyOrHandleMockRecorder) isInterfaceKeyHandle_KeyOrHandle() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "isInterfaceKeyHandle_KeyOrHandle")
+}
+
+// MockisIfTunnelInfo_EncapInfo is a mock of isIfTunnelInfo_EncapInfo interface
+type MockisIfTunnelInfo_EncapInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisIfTunnelInfo_EncapInfoMockRecorder
+}
+
+// MockisIfTunnelInfo_EncapInfoMockRecorder is the mock recorder for MockisIfTunnelInfo_EncapInfo
+type MockisIfTunnelInfo_EncapInfoMockRecorder struct {
+	mock *MockisIfTunnelInfo_EncapInfo
+}
+
+// NewMockisIfTunnelInfo_EncapInfo creates a new mock instance
+func NewMockisIfTunnelInfo_EncapInfo(ctrl *gomock.Controller) *MockisIfTunnelInfo_EncapInfo {
+	mock := &MockisIfTunnelInfo_EncapInfo{ctrl: ctrl}
+	mock.recorder = &MockisIfTunnelInfo_EncapInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisIfTunnelInfo_EncapInfo) EXPECT() *MockisIfTunnelInfo_EncapInfoMockRecorder {
+	return _m.recorder
+}
+
+// isIfTunnelInfo_EncapInfo mocks base method
+func (_m *MockisIfTunnelInfo_EncapInfo) isIfTunnelInfo_EncapInfo() {
+	_m.ctrl.Call(_m, "isIfTunnelInfo_EncapInfo")
+}
+
+// isIfTunnelInfo_EncapInfo indicates an expected call of isIfTunnelInfo_EncapInfo
+func (_mr *MockisIfTunnelInfo_EncapInfoMockRecorder) isIfTunnelInfo_EncapInfo() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "isIfTunnelInfo_EncapInfo")
 }
 
 // MockisInterfaceSpec_IfInfo is a mock of isInterfaceSpec_IfInfo interface
@@ -308,6 +308,42 @@ func (_mr *MockInterfaceClientMockRecorder) InterfaceGet(arg0, arg1 interface{},
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "InterfaceGet", _s...)
 }
 
+// AddL2SegmentOnUplink mocks base method
+func (_m *MockInterfaceClient) AddL2SegmentOnUplink(ctx context.Context, in *InterfaceL2SegmentRequestMsg, opts ...grpc.CallOption) (*InterfaceL2SegmentResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "AddL2SegmentOnUplink", _s...)
+	ret0, _ := ret[0].(*InterfaceL2SegmentResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddL2SegmentOnUplink indicates an expected call of AddL2SegmentOnUplink
+func (_mr *MockInterfaceClientMockRecorder) AddL2SegmentOnUplink(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddL2SegmentOnUplink", _s...)
+}
+
+// DelL2SegmentOnUplink mocks base method
+func (_m *MockInterfaceClient) DelL2SegmentOnUplink(ctx context.Context, in *InterfaceL2SegmentRequestMsg, opts ...grpc.CallOption) (*InterfaceL2SegmentResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "DelL2SegmentOnUplink", _s...)
+	ret0, _ := ret[0].(*InterfaceL2SegmentResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelL2SegmentOnUplink indicates an expected call of DelL2SegmentOnUplink
+func (_mr *MockInterfaceClientMockRecorder) DelL2SegmentOnUplink(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DelL2SegmentOnUplink", _s...)
+}
+
 // MockInterfaceServer is a mock of InterfaceServer interface
 type MockInterfaceServer struct {
 	ctrl     *gomock.Controller
@@ -433,4 +469,30 @@ func (_m *MockInterfaceServer) InterfaceGet(_param0 context.Context, _param1 *In
 // InterfaceGet indicates an expected call of InterfaceGet
 func (_mr *MockInterfaceServerMockRecorder) InterfaceGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "InterfaceGet", arg0, arg1)
+}
+
+// AddL2SegmentOnUplink mocks base method
+func (_m *MockInterfaceServer) AddL2SegmentOnUplink(_param0 context.Context, _param1 *InterfaceL2SegmentRequestMsg) (*InterfaceL2SegmentResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "AddL2SegmentOnUplink", _param0, _param1)
+	ret0, _ := ret[0].(*InterfaceL2SegmentResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddL2SegmentOnUplink indicates an expected call of AddL2SegmentOnUplink
+func (_mr *MockInterfaceServerMockRecorder) AddL2SegmentOnUplink(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddL2SegmentOnUplink", arg0, arg1)
+}
+
+// DelL2SegmentOnUplink mocks base method
+func (_m *MockInterfaceServer) DelL2SegmentOnUplink(_param0 context.Context, _param1 *InterfaceL2SegmentRequestMsg) (*InterfaceL2SegmentResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "DelL2SegmentOnUplink", _param0, _param1)
+	ret0, _ := ret[0].(*InterfaceL2SegmentResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DelL2SegmentOnUplink indicates an expected call of DelL2SegmentOnUplink
+func (_mr *MockInterfaceServerMockRecorder) DelL2SegmentOnUplink(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DelL2SegmentOnUplink", arg0, arg1)
 }

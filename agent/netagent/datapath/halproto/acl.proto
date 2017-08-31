@@ -1,0 +1,176 @@
+//------------------------------------------------------------------------------
+// protobuf specification for ACLs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+import "interface.proto";
+import "l2segment.proto";
+
+package acl;
+option go_package="halproto";
+
+// ACL service definition
+service Acl {
+  // Acl related APIs
+  rpc AclCreate(AclRequestMsg) returns (AclResponseMsg) {}
+  rpc AclUpdate(AclRequestMsg) returns (AclResponseMsg) {}
+  rpc AclDelete(AclDeleteRequestMsg) returns (AclDeleteResponseMsg) {}
+  rpc AclGet(AclGetRequestMsg) returns (AclGetResponseMsg) {}
+}
+
+// Handle of the acl
+message AclHandle {
+  fixed64 handle = 1;    // Handle of the acl
+}
+
+// AclKeyHandle uniquely identifies a Acl
+message AclKeyHandle {
+  oneof key_or_handle {
+    fixed32   acl_id     = 1;    // app allocated unique Acl id
+    AclHandle acl_handle = 2;    // id of acl returned by HAL
+  }
+}
+
+// EthSelector has match criteria for non-IP packets
+message EthSelector {
+  uint32 eth_type     = 1;
+  uint64 src_mac      = 2;
+  uint64 src_mac_mask = 3;
+  uint64 dst_mac      = 4;
+  uint64 dst_mac_mask = 5;
+}
+
+// UDPSelector is used to specify match criteria for UDP traffic
+message UDPSelector {
+  types.L4PortRange port_range = 1;    // UDP port range
+}
+
+// TCPSelector is used to specify match criteria for TCP traffic
+message TCPSelector {
+  bool              tcp_syn    = 1;    // TCP SYN flag
+  bool              tcp_ack    = 2;    // TCP ACK flag
+  bool              tcp_fin    = 3;    // TCP FIN flag
+  bool              tcp_rst    = 4;    // TCP RST flag
+  bool              tcp_urg    = 5;    // TCP URG flag
+  types.L4PortRange port_range = 6;    // TCP port range
+}
+
+// ICMPSelector has match criteria for ICMP packets
+message ICMPSelector {
+  uint32 icmp_code = 1;    // ICMP code
+  uint32 icmp_type = 2;    // ICMP type
+}
+
+// IPSelector has match criteria for selecting IP packets
+message IPSelector {
+  types.IPPrefix   src_prefix    = 1;    // source IP prefix
+  types.IPPrefix   dst_prefix    = 2;    // destination IP prefix
+  types.IPProtocol protocol      = 3;    // IP protocol
+  oneof l4_selectors {
+    ICMPSelector   icmp_selector = 4;    // ICMP selector
+    UDPSelector    udp_selector  = 5;    // UDP selector
+    TCPSelector    tcp_selector  = 6;    // TCP selector
+  }
+}
+
+// AclSelector has all the match criteria for an ACL entry
+message AclSelector {
+  intf.LifKeyHandle            src_lif_key_handle    = 1;    // source lif
+  intf.LifKeyHandle            dst_lif_key_handle    = 2;    // destination lif
+  l2segment.L2SegmentKeyHandle l2_segment_key_handle = 3;    // L2 segment
+  oneof pkt_selector {
+    EthSelector                eth_selector          = 4;    // non-IP packet selector
+    IPSelector                 ip_selector           = 5;    // IP packet selector
+  }
+}
+
+// AclAction specifies all possible actions for ACL entries
+enum AclAction {
+  ACL_ACTION_NONE   = 0;
+  ACL_ACTION_PERMIT = 1;    // permit all the matched the packets
+  ACL_ACTION_LOG    = 2;    // log all the matched packets
+  ACL_ACTION_DENY   = 3;    // deny all the matched packets
+}
+
+message AclActionInfo {
+  AclAction action                    = 1;    // forwarding action
+  bool      ing_mirror_en             = 2;    // enable ingress mirror
+  fixed64   ing_mirror_session_handle = 3;    // ingress mirror session
+  bool      egr_mirror_en             = 4;    // enable egress mirror
+  fixed64   egr_mirror_session_handle = 5;    // egress mirror session
+  fixed64   copp_policer_handle       = 6;    // egress copp policer
+}
+
+// ACL entry configuration
+message AclSpec {
+  types.ObjectMeta meta          = 1;    // common object meta
+  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+  uint32           priority      = 3;    // priority of the rule (0 being lowest)
+                                         // TBD: is this per-tenant priority ? or global ?
+  AclSelector      match         = 4;    // match conditions
+  AclActionInfo    action        = 5;    // action(s)
+}
+
+// Batched requests to create/update acls
+message AclRequestMsg {
+  repeated AclSpec request = 1;    // batched acls
+}
+
+// AclStatus represents the operational status of an ACL entry
+message AclStatus {
+  AclHandle acl_handle = 1;    // id of the acl returned by HAL
+}
+
+// AclResponse is response to one Acl
+message AclResponse {
+  types.ApiStatus api_status = 1;    // API status code
+  AclStatus       status     = 2;    // Acl operational state
+}
+
+// Batched responses to create/update acls
+message AclResponseMsg {
+  repeated AclResponse response = 1;    // batched responses
+}
+
+message AclDeleteRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+}
+
+// Batched requests to delete acls
+message AclDeleteRequestMsg {
+  repeated AclDeleteRequest request = 1;    // batched request
+}
+
+// AclDeleteResponseMsg is batched response to AclDeleteRequestMsg
+message AclDeleteResponseMsg {
+  repeated types.ApiStatus api_status = 1;    // API status code
+}
+
+// AclGetRequest is used to get information about a acl
+message AclGetRequest {
+  types.ObjectMeta meta          = 1;    // object meta
+  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+}
+
+message AclGetRequestMsg {
+  repeated AclGetRequest request = 1;    // batched get request
+}
+
+// AclStats captures all the statistics of a acl
+message AclStats {
+}
+
+// AclGetResponse captures all the information about a acl
+message AclGetResponse {
+  AclSpec   spec   = 1;    // Acl configuration
+  AclStatus status = 2;    // Acl operational status
+  AclStats  stats  = 3;    // Acl statistics
+}
+
+// AclGetResponseMsg is response to AclGetRequestMsg
+message AclGetResponseMsg {
+  repeated AclGetResponse response = 1;    // batched get response
+}

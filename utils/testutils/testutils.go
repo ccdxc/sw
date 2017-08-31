@@ -14,8 +14,8 @@ import (
 // Evaluator prototype for eveluator function
 type Evaluator func() bool
 
-// TB is common T,B interface
-type TB interface {
+// TBApi is common T,B interface
+type TBApi interface {
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fail()
@@ -28,7 +28,7 @@ type TB interface {
 }
 
 // Assert fails the test if the condition is false.
-func Assert(tb TB, condition bool, msg string, v ...interface{}) {
+func Assert(tb TBApi, condition bool, msg string, v ...interface{}) {
 	if !condition {
 		_, file, line, _ := runtime.Caller(1)
 		tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line}, v...)...)
@@ -36,7 +36,7 @@ func Assert(tb TB, condition bool, msg string, v ...interface{}) {
 }
 
 // AssertOk fails the test if an err is not nil.
-func AssertOk(tb TB, err error, msg string) {
+func AssertOk(tb TBApi, err error, msg string) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
 		tb.Fatalf("\033[31m%s:%d: %s. unexpected error: %s\033[39m\n\n", filepath.Base(file), line, msg, err.Error())
@@ -45,7 +45,7 @@ func AssertOk(tb TB, err error, msg string) {
 }
 
 // AssertEquals fails the test if exp is not equal to act.
-func AssertEquals(tb TB, exp, act interface{}, msg string) {
+func AssertEquals(tb TBApi, exp, act interface{}, msg string) {
 	if !reflect.DeepEqual(exp, act) {
 		_, file, line, _ := runtime.Caller(1)
 		tb.Fatalf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\033[39m\n\n", filepath.Base(file), line, exp, act)
@@ -53,7 +53,7 @@ func AssertEquals(tb TB, exp, act interface{}, msg string) {
 }
 
 // AssertOneOf fails the test if actual is not one of expected.
-func AssertOneOf(tb TB, act string, exp []string) {
+func AssertOneOf(tb TBApi, act string, exp []string) {
 	for ii := range exp {
 		if act == exp[ii] {
 			return
@@ -65,7 +65,7 @@ func AssertOneOf(tb TB, act string, exp []string) {
 
 // AssertEventually polls evaluator periodically and checks if it reached desired condition
 // intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
-func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
+func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
 	pollInterval := time.Millisecond
 	timeoutInterval := time.Second
@@ -111,7 +111,7 @@ func AssertEventually(tb TB, eval Evaluator, msg string, intervals ...string) {
 // AssertConsistently polls evaluator periodically and checks that the condition
 // specified continuously matches until the timeout. intervals are pollInterval
 // followed by timeoutInterval in time.ParseDuration() format.
-func AssertConsistently(tb TB, eval Evaluator, msg string, intervals ...string) {
+func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
 	pollInterval := time.Millisecond
 	timeoutInterval := time.Second

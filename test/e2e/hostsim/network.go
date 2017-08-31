@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	nwInfoFile = "/root/.simNwInfo"
+	nwInfoFile = "/tmp/.simNwInfo"
 	simBridge  = "SimBridge"
-	uplinkPort = "eth2"
 )
 
 // NwInfo keeps track of nw info
@@ -107,7 +106,7 @@ func CleanUp() string {
 		RemoveContainer(c)
 	}
 	for p := range pMap {
-		if p != uplinkPort {
+		if p != *uplinkIf {
 			removePorts(p)
 		}
 	}
@@ -143,14 +142,14 @@ func createBridge() {
 	if err == nil {
 		lines := strings.Split(string(out), "\n")
 		for _, l := range lines {
-			if strings.Contains(l, uplinkPort) {
-				log.Infof("eth2 already added")
+			if strings.Contains(l, *uplinkIf) {
+				log.Infof("%s already added", *uplinkIf)
 				return
 			}
 		}
 	}
 
-	out, err = exec.Command(vsctlPath, "add-port", simBridge, uplinkPort).CombinedOutput()
+	out, err = exec.Command(vsctlPath, "add-port", simBridge, *uplinkIf).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Error %v creating bridge %s", err, string(out))
 	}
@@ -238,6 +237,7 @@ func createPorts(pid string, ep *EpInfo) error {
 		log.Errorf("Failed to mark link up - %v, %s", err, string(out))
 		return err
 	}
+
 	out, err = exec.Command(vsctlPath, "add-port", simBridge, ovsport).CombinedOutput()
 	if err != nil {
 		log.Errorf("Failed to port to ovs - %v, %s", err, string(out))
@@ -266,6 +266,7 @@ func deleteEP(name string) {
 
 	RemoveContainer(v.ContainerID)
 	removePorts(v.OvsPort)
+	delete(nwInfo.Eps, name)
 }
 
 func createEP(ep *EpInfo) error {

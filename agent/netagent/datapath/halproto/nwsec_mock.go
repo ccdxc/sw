@@ -42,6 +42,72 @@ func (_mr *MockisSecurityProfileKeyHandle_KeyOrHandleMockRecorder) isSecurityPro
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "isSecurityProfileKeyHandle_KeyOrHandle")
 }
 
+// MockisService_L4Info is a mock of isService_L4Info interface
+type MockisService_L4Info struct {
+	ctrl     *gomock.Controller
+	recorder *MockisService_L4InfoMockRecorder
+}
+
+// MockisService_L4InfoMockRecorder is the mock recorder for MockisService_L4Info
+type MockisService_L4InfoMockRecorder struct {
+	mock *MockisService_L4Info
+}
+
+// NewMockisService_L4Info creates a new mock instance
+func NewMockisService_L4Info(ctrl *gomock.Controller) *MockisService_L4Info {
+	mock := &MockisService_L4Info{ctrl: ctrl}
+	mock.recorder = &MockisService_L4InfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisService_L4Info) EXPECT() *MockisService_L4InfoMockRecorder {
+	return _m.recorder
+}
+
+// isService_L4Info mocks base method
+func (_m *MockisService_L4Info) isService_L4Info() {
+	_m.ctrl.Call(_m, "isService_L4Info")
+}
+
+// isService_L4Info indicates an expected call of isService_L4Info
+func (_mr *MockisService_L4InfoMockRecorder) isService_L4Info() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "isService_L4Info")
+}
+
+// MockisSecurityGroupKeyHandle_KeyOrHandle is a mock of isSecurityGroupKeyHandle_KeyOrHandle interface
+type MockisSecurityGroupKeyHandle_KeyOrHandle struct {
+	ctrl     *gomock.Controller
+	recorder *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder
+}
+
+// MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisSecurityGroupKeyHandle_KeyOrHandle
+type MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder struct {
+	mock *MockisSecurityGroupKeyHandle_KeyOrHandle
+}
+
+// NewMockisSecurityGroupKeyHandle_KeyOrHandle creates a new mock instance
+func NewMockisSecurityGroupKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisSecurityGroupKeyHandle_KeyOrHandle {
+	mock := &MockisSecurityGroupKeyHandle_KeyOrHandle{ctrl: ctrl}
+	mock.recorder = &MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) EXPECT() *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder {
+	return _m.recorder
+}
+
+// isSecurityGroupKeyHandle_KeyOrHandle mocks base method
+func (_m *MockisSecurityGroupKeyHandle_KeyOrHandle) isSecurityGroupKeyHandle_KeyOrHandle() {
+	_m.ctrl.Call(_m, "isSecurityGroupKeyHandle_KeyOrHandle")
+}
+
+// isSecurityGroupKeyHandle_KeyOrHandle indicates an expected call of isSecurityGroupKeyHandle_KeyOrHandle
+func (_mr *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder) isSecurityGroupKeyHandle_KeyOrHandle() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "isSecurityGroupKeyHandle_KeyOrHandle")
+}
+
 // MockNwSecurityClient is a mock of NwSecurityClient interface
 type MockNwSecurityClient struct {
 	ctrl     *gomock.Controller
@@ -138,7 +204,7 @@ func (_mr *MockNwSecurityClientMockRecorder) SecurityProfileGet(arg0, arg1 inter
 }
 
 // SecurityGroupCreate mocks base method
-func (_m *MockNwSecurityClient) SecurityGroupCreate(ctx context.Context, in *SecurityGroupMsg, opts ...grpc.CallOption) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityClient) SecurityGroupCreate(ctx context.Context, in *SecurityGroupRequestMsg, opts ...grpc.CallOption) (*SecurityGroupResponseMsg, error) {
 	_s := []interface{}{ctx, in}
 	for _, _x := range opts {
 		_s = append(_s, _x)
@@ -156,7 +222,7 @@ func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupCreate(arg0, arg1 inte
 }
 
 // SecurityGroupUpdate mocks base method
-func (_m *MockNwSecurityClient) SecurityGroupUpdate(ctx context.Context, in *SecurityGroupMsg, opts ...grpc.CallOption) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityClient) SecurityGroupUpdate(ctx context.Context, in *SecurityGroupRequestMsg, opts ...grpc.CallOption) (*SecurityGroupResponseMsg, error) {
 	_s := []interface{}{ctx, in}
 	for _, _x := range opts {
 		_s = append(_s, _x)
@@ -174,13 +240,13 @@ func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupUpdate(arg0, arg1 inte
 }
 
 // SecurityGroupDelete mocks base method
-func (_m *MockNwSecurityClient) SecurityGroupDelete(ctx context.Context, in *SecurityGroupMsg, opts ...grpc.CallOption) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityClient) SecurityGroupDelete(ctx context.Context, in *SecurityGroupDeleteRequestMsg, opts ...grpc.CallOption) (*SecurityGroupDeleteResponseMsg, error) {
 	_s := []interface{}{ctx, in}
 	for _, _x := range opts {
 		_s = append(_s, _x)
 	}
 	ret := _m.ctrl.Call(_m, "SecurityGroupDelete", _s...)
-	ret0, _ := ret[0].(*SecurityGroupResponseMsg)
+	ret0, _ := ret[0].(*SecurityGroupDeleteResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -191,58 +257,22 @@ func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupDelete(arg0, arg1 inte
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityGroupDelete", _s...)
 }
 
-// SecurityPolicyRuleCreate mocks base method
-func (_m *MockNwSecurityClient) SecurityPolicyRuleCreate(ctx context.Context, in *SecurityPolicyRuleMsg, opts ...grpc.CallOption) (*SecurityPolicyRuleResponseMsg, error) {
+// SecurityGroupGet mocks base method
+func (_m *MockNwSecurityClient) SecurityGroupGet(ctx context.Context, in *SecurityGroupGetRequestMsg, opts ...grpc.CallOption) (*SecurityGroupGetResponseMsg, error) {
 	_s := []interface{}{ctx, in}
 	for _, _x := range opts {
 		_s = append(_s, _x)
 	}
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleCreate", _s...)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
+	ret := _m.ctrl.Call(_m, "SecurityGroupGet", _s...)
+	ret0, _ := ret[0].(*SecurityGroupGetResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SecurityPolicyRuleCreate indicates an expected call of SecurityPolicyRuleCreate
-func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyRuleCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+// SecurityGroupGet indicates an expected call of SecurityGroupGet
+func (_mr *MockNwSecurityClientMockRecorder) SecurityGroupGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleCreate", _s...)
-}
-
-// SecurityPolicyRuleUpdate mocks base method
-func (_m *MockNwSecurityClient) SecurityPolicyRuleUpdate(ctx context.Context, in *SecurityPolicyRuleMsg, opts ...grpc.CallOption) (*SecurityPolicyRuleResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleUpdate", _s...)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SecurityPolicyRuleUpdate indicates an expected call of SecurityPolicyRuleUpdate
-func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyRuleUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleUpdate", _s...)
-}
-
-// SecurityPolicyRuleDelete mocks base method
-func (_m *MockNwSecurityClient) SecurityPolicyRuleDelete(ctx context.Context, in *SecurityPolicyRuleMsg, opts ...grpc.CallOption) (*SecurityPolicyRuleResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleDelete", _s...)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SecurityPolicyRuleDelete indicates an expected call of SecurityPolicyRuleDelete
-func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyRuleDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleDelete", _s...)
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityGroupGet", _s...)
 }
 
 // MockNwSecurityServer is a mock of NwSecurityServer interface
@@ -321,7 +351,7 @@ func (_mr *MockNwSecurityServerMockRecorder) SecurityProfileGet(arg0, arg1 inter
 }
 
 // SecurityGroupCreate mocks base method
-func (_m *MockNwSecurityServer) SecurityGroupCreate(_param0 context.Context, _param1 *SecurityGroupMsg) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityServer) SecurityGroupCreate(_param0 context.Context, _param1 *SecurityGroupRequestMsg) (*SecurityGroupResponseMsg, error) {
 	ret := _m.ctrl.Call(_m, "SecurityGroupCreate", _param0, _param1)
 	ret0, _ := ret[0].(*SecurityGroupResponseMsg)
 	ret1, _ := ret[1].(error)
@@ -334,7 +364,7 @@ func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupCreate(arg0, arg1 inte
 }
 
 // SecurityGroupUpdate mocks base method
-func (_m *MockNwSecurityServer) SecurityGroupUpdate(_param0 context.Context, _param1 *SecurityGroupMsg) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityServer) SecurityGroupUpdate(_param0 context.Context, _param1 *SecurityGroupRequestMsg) (*SecurityGroupResponseMsg, error) {
 	ret := _m.ctrl.Call(_m, "SecurityGroupUpdate", _param0, _param1)
 	ret0, _ := ret[0].(*SecurityGroupResponseMsg)
 	ret1, _ := ret[1].(error)
@@ -347,9 +377,9 @@ func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupUpdate(arg0, arg1 inte
 }
 
 // SecurityGroupDelete mocks base method
-func (_m *MockNwSecurityServer) SecurityGroupDelete(_param0 context.Context, _param1 *SecurityGroupMsg) (*SecurityGroupResponseMsg, error) {
+func (_m *MockNwSecurityServer) SecurityGroupDelete(_param0 context.Context, _param1 *SecurityGroupDeleteRequestMsg) (*SecurityGroupDeleteResponseMsg, error) {
 	ret := _m.ctrl.Call(_m, "SecurityGroupDelete", _param0, _param1)
-	ret0, _ := ret[0].(*SecurityGroupResponseMsg)
+	ret0, _ := ret[0].(*SecurityGroupDeleteResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -359,41 +389,15 @@ func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupDelete(arg0, arg1 inte
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityGroupDelete", arg0, arg1)
 }
 
-// SecurityPolicyRuleCreate mocks base method
-func (_m *MockNwSecurityServer) SecurityPolicyRuleCreate(_param0 context.Context, _param1 *SecurityPolicyRuleMsg) (*SecurityPolicyRuleResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleCreate", _param0, _param1)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
+// SecurityGroupGet mocks base method
+func (_m *MockNwSecurityServer) SecurityGroupGet(_param0 context.Context, _param1 *SecurityGroupGetRequestMsg) (*SecurityGroupGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityGroupGet", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityGroupGetResponseMsg)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SecurityPolicyRuleCreate indicates an expected call of SecurityPolicyRuleCreate
-func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyRuleCreate(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleCreate", arg0, arg1)
-}
-
-// SecurityPolicyRuleUpdate mocks base method
-func (_m *MockNwSecurityServer) SecurityPolicyRuleUpdate(_param0 context.Context, _param1 *SecurityPolicyRuleMsg) (*SecurityPolicyRuleResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleUpdate", _param0, _param1)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SecurityPolicyRuleUpdate indicates an expected call of SecurityPolicyRuleUpdate
-func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyRuleUpdate(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleUpdate", arg0, arg1)
-}
-
-// SecurityPolicyRuleDelete mocks base method
-func (_m *MockNwSecurityServer) SecurityPolicyRuleDelete(_param0 context.Context, _param1 *SecurityPolicyRuleMsg) (*SecurityPolicyRuleResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "SecurityPolicyRuleDelete", _param0, _param1)
-	ret0, _ := ret[0].(*SecurityPolicyRuleResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SecurityPolicyRuleDelete indicates an expected call of SecurityPolicyRuleDelete
-func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyRuleDelete(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityPolicyRuleDelete", arg0, arg1)
+// SecurityGroupGet indicates an expected call of SecurityGroupGet
+func (_mr *MockNwSecurityServerMockRecorder) SecurityGroupGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SecurityGroupGet", arg0, arg1)
 }

@@ -4,9 +4,10 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
 
-package halproto;
+package tenant;
+option go_package="halproto";
 
 // The tenant service definition
 service Tenant {
@@ -26,8 +27,9 @@ message TenantKeyHandle {
 
 // TenantSpec captures all the tenant level configuration
 message TenantSpec {
-  types.ObjectMeta    meta             = 1;    // common object meta
-  TenantKeyHandle     key_or_handle    = 2;    // tenant being created/updated
+  types.ObjectMeta    meta                       = 1;    // common object meta
+  TenantKeyHandle     key_or_handle              = 2;    // tenant being created/updated
+  fixed64             security_profile_handle    = 3;    // security profile, if any
 }
 
 // TenantRequestMsg is batched add or modify tenant request

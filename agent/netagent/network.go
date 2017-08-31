@@ -14,9 +14,8 @@ import (
 // CreateNetwork creates a network
 func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	// check if network already exists
-	key := objectKey(nt.ObjectMeta)
-	oldNt, ok := ag.networkDB[key]
-	if ok {
+	oldNt, err := ag.FindNetwork(nt.ObjectMeta)
+	if err == nil {
 		// check if network contents are same
 		if !proto.Equal(oldNt, nt) {
 			log.Errorf("Network %+v already exists", oldNt)
@@ -32,20 +31,28 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	ag.currentNetworkID++
 
 	// create it in datapath
-	err := ag.datapath.CreateNetwork(nt)
+	err = ag.datapath.CreateNetwork(nt)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
 	}
 
 	// save it in db
+	key := objectKey(nt.ObjectMeta)
+	ag.Lock()
 	ag.networkDB[key] = nt
+	ag.Unlock()
+	err = ag.store.Write(nt)
 
-	return nil
+	return err
 }
 
 // FindNetwork dins a network in local db
 func (ag *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
+	// lock the db
+	ag.Lock()
+	defer ag.Unlock()
+
 	// lookup the database
 	key := objectKey(meta)
 	nt, ok := ag.networkDB[key]
@@ -65,21 +72,24 @@ func (ag *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 // DeleteNetwork deletes a network
 func (ag *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	// check if network already exists
-	key := objectKey(nt.ObjectMeta)
-	nw, ok := ag.networkDB[key]
-	if !ok {
+	nw, err := ag.FindNetwork(nt.ObjectMeta)
+	if err != nil {
 		log.Errorf("Network %+v not found", nt.ObjectMeta)
 		return errors.New("Network not found")
 	}
 
 	// delete the network in datapath
-	err := ag.datapath.DeleteNetwork(nw)
+	err = ag.datapath.DeleteNetwork(nw)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
 	}
 
 	// delete from db
+	key := objectKey(nt.ObjectMeta)
+	ag.Lock()
 	delete(ag.networkDB, key)
+	ag.Unlock()
+	err = ag.store.Delete(nt)
 
-	return nil
+	return err
 }

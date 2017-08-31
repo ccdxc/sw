@@ -4,9 +4,12 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
+import "qos.proto";
+import "interface.proto";
 
-package halproto;
+package session;
+option go_package="halproto";
 
 // The session service definition
 service Session {
@@ -17,9 +20,10 @@ service Session {
 
 // Key for L2 flows (i.e, non-IP flows)
 message FlowKeyL2 {
-  fixed64    smac  = 1;            // source MAC address
-  fixed64    dmac  = 2;            // destination MAC address
-  uint32     l2_segment_id = 3;    // L2 segment id
+  fixed64    smac           = 1;   // source MAC address
+  fixed64    dmac           = 2;   // destination MAC address
+  uint32     ether_type     = 4;   // ether type 
+  uint32     l2_segment_id  = 3;   // L2 segment id
 }
 
 message FlowKeyTcpUdpInfo {
@@ -30,7 +34,7 @@ message FlowKeyTcpUdpInfo {
 message FlowKeyICMPInfo {
   uint32    type = 1;          // ICMP type
   uint32    code = 2;          // ICMP code
-  uint32    id = 3;            // ICMP id, if any
+  uint32    id   = 3;          // ICMP id, if any
 }
 
 // Key for IPv4 flows
@@ -94,16 +98,32 @@ enum FlowTCPState {
     FLOW_TCP_STATE_CLOSED          = 7;
 }
 
+// App Types ... In sync with p4/nw/include/defines.h
+// TODO: Revisit once we decide if flow drives app_id or service_lif
+enum FlowType {
+    FLOW_TYPE_NONE         = 0;
+    FLOW_TYPE_CLASSIC_NIC  = 1;
+    FLOW_TYPE_RDMA         = 2;
+    FLOW_TYPE_TCPTLS       = 3;
+    FLOW_TYPE_IPSEC        = 4;
+    FLOW_TYPE_NDE          = 5;
+    FLOW_TYPE_STORAGE      = 6;
+    FLOW_TYPE_TELEMETRY    = 7;
+}
+
 // FlowInfo contains flow information like counters, forwarding information,
 // NAT rewrite information etc.
 message FlowInfo {
-  FlowAction          flow_action = 1;    // flow action(s)
-  NatType             nat_type    = 2;    // NAT mode
-  types.IPAddress     nat_sip     = 3;    // source IP to NAT to
-  uint32              nat_sport   = 4;    // source port to NAT to
-  types.IPAddress     nat_dip     = 5;    // destination IP to NAT to
-  uint32              nat_dport   = 6;    // dstination port to NAT to
-  FlowTCPState        tcp_state   = 7;    // TCP state, if any
+  FlowAction      flow_action    = 1;    // flow action(s)
+  NatType         nat_type       = 2;    // NAT mode
+  types.IPAddress nat_sip        = 3;    // source IP to NAT to
+  uint32          nat_sport      = 4;    // source port to NAT to
+  types.IPAddress nat_dip        = 5;    // destination IP to NAT to
+  uint32          nat_dport      = 6;    // dstination port to NAT to
+  FlowTCPState    tcp_state      = 7;    // TCP state, if any
+  qos.QOSActions  in_qos_actions = 8;    // QOS actions for the flow coming in (ingress P4 pipeline)
+  qos.QOSActions  eg_qos_actions = 9;    // QOS actions for the flow while going out (egress P4 pipeline)
+  intf.LifQType   queue_type     = 10;   // Qtype
 }
 
 // ConnTrackInfo contains dynamic information that was recorded due to connection tracking
@@ -113,13 +133,10 @@ message ConnTrackInfo {
   fixed32              flow_packets   = 3;    // number of packets seen
   fixed32              exception_bits = 4;    // exceptions seen in the flow
   fixed32              tcp_seq_num    = 5;    // TCP sequence number
-  sfixed32             tcp_seq_delta  = 6;    // TCP sequence delta
-  fixed32              tcp_ack_num    = 7;    // TCP ack number
-  sfixed32             tcp_ack_delta  = 8;    // TCP ack delta
-  uint32               tcp_win_sz     = 9;    // TCP window size
-  uint32               tcp_win_scale  = 10;   // TCP window scale
-  uint32               tcp_mss        = 11;   // TCP MSS
-  bool                 tcp_ts_option  = 12;   // TCP timestamp option seen or not
+  fixed32              tcp_ack_num    = 6;    // TCP ack number
+  uint32               tcp_win_sz     = 7;    // TCP window size
+  uint32               tcp_win_scale  = 8;    // TCP window scale
+  uint32               tcp_mss        = 9;    // TCP MSS
 }
 
 // FlowData captures all the flow information
@@ -143,11 +160,13 @@ message FlowSpec {
 // SessionSpec represents a full session with forward and reverse flow
 // It is possible to have a session with just one flow (for L2 mcast/bcast)
 message SessionSpec {
-  types.ObjectMeta     meta           = 1;    // object meta
-  fixed32              session_id     = 2;    // unique session identifier
-  bool                 conn_track_en  = 3;    // TRUE if connection tracking is ON
-  FlowSpec             initiator_flow = 4;    // initiator flow
-  FlowSpec             responder_flow = 5;    // responder flow
+  types.ObjectMeta     meta                   = 1;    // object meta
+  fixed32              session_id             = 2;    // unique session identifier
+  bool                 conn_track_en          = 3;    // TRUE if connection tracking is ON
+  bool                 tcp_ts_option          = 4;   // TCP timestamp option seen or not
+  sint32               iflow_syn_ack_delta    = 5;    // syn cookie delta of iflow
+  FlowSpec             initiator_flow         = 6;    // initiator flow
+  FlowSpec             responder_flow         = 7;    // responder flow
 }
 
 // SessionRequestMsg is batched session request message

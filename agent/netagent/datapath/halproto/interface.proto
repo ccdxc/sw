@@ -4,9 +4,12 @@
 
 syntax = "proto3";
 
-import "types/types.proto";
+import "types.proto";
+import "l2segment.proto";
+import "qos.proto";
 
-package halproto;
+package intf;
+option go_package="halproto";
 
 // Interface service definition
 service Interface {
@@ -16,11 +19,15 @@ service Interface {
   rpc LifDelete(LifDeleteRequestMsg) returns (LifDeleteResponseMsg) {}
   rpc LifGet(LifGetRequestMsg) returns (LifGetResponseMsg) {}
 
-  // APIs for all other interfaces
+  // common APIs for all interfaces
   rpc InterfaceCreate (InterfaceRequestMsg) returns (InterfaceResponseMsg) {}
   rpc InterfaceUpdate (InterfaceRequestMsg) returns (InterfaceResponseMsg) {}
   rpc InterfaceDelete (InterfaceDeleteRequestMsg) returns (InterfaceDeleteResponseMsg) {}
   rpc InterfaceGet (InterfaceGetRequestMsg) returns (InterfaceGetResponseMsg) {}
+
+  // APIs specific to Uplinks
+  rpc AddL2SegmentOnUplink (InterfaceL2SegmentRequestMsg) returns (InterfaceL2SegmentResponseMsg) {}
+  rpc DelL2SegmentOnUplink (InterfaceL2SegmentRequestMsg) returns (InterfaceL2SegmentResponseMsg) {}
 }
 
 // IfStatus status reflects the current status of Interface
@@ -55,11 +62,10 @@ enum LifQType {
 // Types of LIF ports
 enum LifPortType {
   LIF_PORT_TYPE_NONE       = 0;
-  LIF_PORT_TYPE_UPLINK     = 1;    // LIF for uplink port
-  LIF_PORT_TYPE_DMA        = 2;    // LIF towards workloads
-  LIF_PORT_TYPE_P4_INGRESS = 3;    // LIF for P4 ingress
-  LIF_PORT_TYPE_P4_EGRESS  = 4;    // LIF for P4 egress
-  LIF_PORT_TYPE_NCSI       = 5;    // LIF for mgmt port
+  LIF_PORT_TYPE_DMA        = 1;    // LIF towards workloads
+  LIF_PORT_TYPE_P4_INGRESS = 2;    // LIF for P4 ingress
+  LIF_PORT_TYPE_P4_EGRESS  = 3;    // LIF for P4 egress
+  LIF_PORT_TYPE_NCSI       = 4;    // LIF for mgmt port
 }
 
 // LIF can have many queues of different types
@@ -86,6 +92,8 @@ message LifSpec {
   LifKeyHandle             peer_lif      = 6;    // peer LIF in case this LIF is pinned to another LIF
   IfStatus                 admin_status  = 7;    // admin status of the interface
   repeated LifQueueInfo    queues        = 8;    // LIF queue information
+  bool                     vlan_strip_en = 9;    // LIF vlan strip enable
+  bool                     allmulti      = 10;   // LIF set all multicast group
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -126,14 +134,53 @@ message LifDeleteResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
+// check which stats will be done by p4 and which will be done by p4+
+message LifTxStats {
+  uint64  Tx_Frames_Ok           = 1;
+  uint64  Tx_Unicast_Frames_Ok   = 2;
+  uint64  Tx_Multicast_Frames_Ok = 3;
+  uint64  Tx_Broadcast_Frames_Ok = 4;
+  uint64  Tx_Bytes_Ok            = 5;
+  uint64  Tx_Unicast_Bytes_Ok    = 6;
+  uint64  Tx_Multicast_Bytes_Ok  = 7;
+  uint64  Tx_Broadcast_Bytes_Ok  = 8;
+  uint64  Tx_Tso                 = 9;
+}
+
+message LifRxStats {
+  uint64    Rx_frames_total        = 1;
+  uint64    Rx_frames_ok           = 2;
+  uint64    Rx_unicast_frames_ok   = 3;
+  uint64    Rx_multicast_frames_ok = 4;
+  uint64    Rx_broadcast_frames_ok = 5;
+  uint64    Rx_bytes_ok            = 6;
+  uint64    Rx_unicast_bytes_ok    = 7;
+  uint64    Rx_multicast_bytes_ok  = 8;
+  uint64    Rx_broadcast_bytes_ok  = 9;
+  uint64    Rx_drops               = 10;
+  uint64    Rx_no_bufs             = 11;
+  uint64    Rx_errors              = 12;
+  uint64    Rx_rss                 = 13;
+  uint64    Rx_crc_errors          = 14;
+  uint64    Rx_frames_64           = 15;
+  uint64    Rx_frames_127          = 16;
+  uint64    Rx_frames_255          = 17;
+  uint64    Rx_frames_511          = 18;
+  uint64    Rx_frames_1024         = 19;
+  uint64    Rx_frames_1518         = 20;
+  uint64    Rx_frames_to_max       = 21;
+}
 // LifStats captures all the statistics of given LIF
 message LifStats {
+  LifTxStats TxStats  = 1;
+  LifRxStats RxStats  = 2;
 }
 
 // LifGetRequest is used to get information about a LIF
 message LifGetRequest {
   types.ObjectMeta    meta          = 1;    // object meta
   LifKeyHandle        key_or_handle = 2;    // key or handle
+  LifStats            stats         = 3;    // LIF statistics
 }
 
 message LifGetRequestMsg {
@@ -173,52 +220,39 @@ enum IfEnicType {
                                 // VSS/DVS connectivity etc.
 }
 
-//------------------------------------------------------------------------------
-// mandatory attributes expected if enic type is IF_ENIC_TYPE_USEG or
-// IF_ENIC_TYPE_SRIOV
-//------------------------------------------------------------------------------
-message IfEnicUsegInfo {
-  uint32    useg_vlan_id  = 1;    // useg VLAN id/encap
-  uint32    l2segment_id  = 2;    // user (external) vlan
-}
-
-// mandatory attributes expected if enic type is IF_ENIC_TYPE_PVLAN
-message IfEnicPVLANInfo {
-  fixed64    mac_address      = 1;    // MAC address of the endpoint
-  uint32     isolated_vlan_id = 2;    // isolated VLAN
-  uint32     l2segment_id     = 3;    // user (external) vlan
-}
-
-// mandatory attributes expected if enic type is IF_ENIC_TYPE_DIRECT
-// multiple user vlans on this implies that this is trunk interface
-message IfEnicDirectInfo {
-  uint32             native_l2segment_id = 1;    // L2 segment to map the packets to, if they are untagged
-  bool               sriov               = 2;    // TRUE if SR-IOV is enabled
-  repeated uint32    l2segment_id        = 3;    // user (external) vlans
-}
-
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
 message IfEnicInfo {
-  IfEnicType            enic_type    = 1;    // type of enic interface
-  oneof enic_info {
-    IfEnicUsegInfo      useg_info    = 2;    // useg enic specific info
-    IfEnicPVLANInfo     pvlan_info   = 3;    // pvlan enic specific info
-    IfEnicDirectInfo    direct_info  = 4;    // direct enic specific info
-  }
+  IfEnicType            enic_type           = 1;    // type of enic interface
+  LifKeyHandle          lif_key_or_handle   = 2;    // LIF identifier for this interface
+  uint32                l2segment_id        = 3;    // user (external) vlan
+  fixed64               mac_address         = 4;    // MAC address of the endpoint
+  uint32                encap_vlan_id       = 5;    // Encap Vlan
+}
+
+// Interface attributes to specify the derivation of traffic class
+message TrafficClassInfo {
+ bool                              dot1q_pcp_en               = 1;    // Use the PCP value in the 802.1Q header
+ bool                              ip_dscp_en                 = 2;    // Use the DSCP value from IP header
+ qos.TrafficClass                  default_traffic_class      = 3;    // Default value to use for traffic class
+ repeated qos.TrafficClassQueueMap traffic_class_to_queue_map = 4;    // Mapping from the traffic class to the queues at P4 IG port
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK
 message IfUplinkInfo {
-  uint32             port_num            = 1;    // uplink port number
-  uint32             native_l2segment_id = 2;    // L2 segment to map the packets to, if they are untagged
-  repeated uint32    l2segment_id        = 3;    // user (external) vlans
+  uint32           port_num              = 1;    // uplink port number
+  uint32           native_l2segment_id   = 2;    // L2 segment to map the packets to, if they are untagged
+  repeated uint32  l2segment_id          = 3;    // user (external) vlans
+
+  TrafficClassInfo rx_traffic_class_info = 4;    // Info about how to derive traffic class on this interface
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_UPLINK_PC
 message IfUplinkPCInfo {
-  uint32             uplink_pc_num       = 1;    // uplink port channel number
-  uint32             native_l2segment_id = 2;    // L2 segment to map the packets to, if they are untagged
-  repeated uint32    l2segment_id        = 3;    // user (external) vlans
+  uint32            uplink_pc_num               = 1;    // uplink port channel number
+  uint32            native_l2segment_id         = 2;    // L2 segment to map the packets to, if they are untagged
+  repeated uint32   l2segment_id                = 3;    // user (external) vlans
+  TrafficClassInfo  rx_traffic_class_info       = 4;    // Info about how to derive traffic class on this interface
+  repeated uint64   member_if_handle            = 5;    // uplink member ports
 }
 
 // InterfaceKeyHandle uniquely identifies a Interface
@@ -229,19 +263,41 @@ message InterfaceKeyHandle {
   }
 }
 
-// InterfaceSpec is used to add or update of an interface
-// TODO: Add QoS, Policer etc. config as well
-message InterfaceSpec {
-  types.ObjectMeta      meta                = 1;    // object meta
-  InterfaceKeyHandle    key_or_handle       = 2;    // interface being created/updated
-  IfType                type                = 3;    // type of interface
-  IfStatus              admin_status        = 4;    // admin status of the interface
-  LifKeyHandle          lif_key_or_handle   = 5;    // LIF identifier for this interface
-  oneof if_info {
-    IfEnicInfo          if_enic_info        = 6;    // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo        if_uplink_info      = 7;    // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo      if_uplink_pc_info   = 8;    // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+//------------------------------------------------------------------------------
+// if interface type is IF_TYPE_TUNNEL, one of the following encap types must be
+// set.
+//------------------------------------------------------------------------------
+enum IfTunnelEncapType {
+  IF_TUNNEL_ENCAP_TYPE_NONE     = 0;
+  IF_TUNNEL_ENCAP_TYPE_VXLAN    = 1;
+}
+
+message IfTunnelVxlanInfo {
+  types.IPAddress   local_tep           = 1;
+  types.IPAddress   remote_tep          = 2;
+}
+
+message IfTunnelInfo {
+  IfTunnelEncapType     encap_type      = 1;
+  oneof encap_info {
+    IfTunnelVxlanInfo   vxlan_info      = 2;
   }
+}
+
+// InterfaceSpec is used to add or update of an interface
+message InterfaceSpec {
+  types.ObjectMeta   meta              = 1;     // object meta
+  InterfaceKeyHandle key_or_handle     = 2;     // interface being created/updated
+  IfType             type              = 3;     // type of interface
+  IfStatus           admin_status      = 4;     // admin status of the interface
+  oneof if_info {
+    IfEnicInfo       if_enic_info      = 6;     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 7;     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 8;     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 9;
+  }
+  qos.QOSActions     tx_qos_actions    = 10;    // QOS actions for packets transmitted from this interface
+  qos.QOSActions     rx_qos_actions    = 11;    // QOS actions for packets received on this interface
 }
 
 // InterfaceRequestMsg is batched request message that is used to do
@@ -252,7 +308,7 @@ message InterfaceRequestMsg {
 
 // InterfaceStatus represents the current status of the interface
 message InterfaceStatus {
-  IfStatus    if_status    = 1;    // current status of the interface
+  IfStatus    if_status    = 1;    // currrent status of the interface
   fixed64     if_handle    = 2;    // id of the interface returned by HAL
 }
 
@@ -314,4 +370,28 @@ message InterfaceGetResponse {
 // InterfaceGetResponseMsg is response to InterfaceGetRequestMsg
 message InterfaceGetResponseMsg {
   repeated InterfaceGetResponse    response = 1;    // batched get response
+}
+
+// InterfaceL2SegmentSpec carries the user vlan that is being added or deleted
+// on an uplink interface or uplink PC
+message InterfaceL2SegmentSpec {
+  types.ObjectMeta                meta                       = 1;    // object meta
+  l2segment.L2SegmentKeyHandle    l2segment_key_or_handle    = 2;    // L2 segment Id corresponding to the vlan
+  InterfaceKeyHandle              if_key_handle              = 3;    // Uplink/Uplink PC key or handle
+}
+
+// InterfaceL2SegmentRequestMsg is batched request message to bring vlans
+// on interfaces
+message InterfaceL2SegmentRequestMsg {
+  repeated InterfaceL2SegmentSpec    request = 1;    // batched request
+}
+
+// InterfaceL2SegmentResponse is response to InterfaceL2SegmentSpec
+message InterfaceL2SegmentResponse {
+  types.ApiStatus       api_status        = 1;    // API status code
+}
+
+// InterfaceL2SegmentResponseMsg is batched response to InterfaceL2SegmentResponse
+message InterfaceL2SegmentResponseMsg {
+  repeated InterfaceL2SegmentResponse    response = 1;    // batched response
 }

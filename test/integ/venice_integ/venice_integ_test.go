@@ -111,7 +111,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL)
+		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL)
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -124,7 +124,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.restClient = restcl
 
 	// create api server client
-	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
+	l := log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest"))
 	apicl, err := apiclient.NewGrpcAPIClient(integTestApisrvURL, l)
 	if err != nil {
 		c.Fatalf("cannot create grpc client")

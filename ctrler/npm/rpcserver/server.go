@@ -9,9 +9,6 @@ import (
 	"github.com/pensando/sw/utils/rpckit"
 )
 
-// NetctrlerURL URL where netctrler is running
-const NetctrlerURL = "master.local:9000"
-
 // RPCServer is the RPC server object
 type RPCServer struct {
 	stateMgr        *statemgr.Statemgr  // reference to network state manager
