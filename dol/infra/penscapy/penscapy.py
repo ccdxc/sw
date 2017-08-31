@@ -230,4 +230,7 @@ def Parse(message):
         return pkt
 
     pkt = pkt / pyld / pen / crc
+
+    if VXLAN in pkt:
+        pkt[VXLAN].underlayer.sport = 0
     return pkt

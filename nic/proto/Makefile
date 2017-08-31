@@ -24,7 +24,7 @@ COMMON_PROTO_DIR = ${CURDIR}
 AGENTS_PROTO_DIR = ./agents
 HAL_PROTO_DIR = ./hal
 OBJ_DIR = ../obj
-CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -g
+CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -O3
 
 #$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto $(GEN_DIR)/cp_mfile_proto cxx_build
 $(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto
@@ -73,7 +73,7 @@ $(GEN_DIR)/cp_mfile_proto:
 
 
 cxx_build:
-	$(MAKE) -C $(GEN_DIR)
+	$(MAKE) -O3 -C $(GEN_DIR)
 
 # clean:
 # 	rm -f $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.* $(GEN_DIR)/*.py $((GEN_DIR)/*.pb.go $(GEN_DIR)/*proto 

@@ -123,13 +123,13 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
     if (ret != HAL_RET_OK)
         goto fail_flag;
     ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     
-    return ret;
+    return HAL_RET_OK;
 
 fail_flag:
     HAL_TRACE_DEBUG("ERROR: pd_tunnelif_program_hw");
@@ -219,13 +219,14 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
                          int tunnel_type, bool inner_v4_vld,
                          bool inner_v6_vld, bool v4_tep,
                          int actionid,
-                         p4pd_table_id tbl_id, uint32_t *idx)
+                         p4pd_table_id tbl_id, int *idx)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     input_mapping_native_swkey_t        key;
     input_mapping_native_swkey_mask_t   mask;
     input_mapping_native_actiondata     data;
     Tcam                                *tcam;
+    uint32_t                            ret_idx;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -247,21 +248,27 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
         memrev(key.input_mapping_native_u1.ipv6_dstAddr, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
-    ret = tcam->insert(&key, &mask, &data, idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Input mapping native tcam write failure, "
-                      "idx : {}, err : {}", *idx, ret);
-        return ret;
+    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (ret == HAL_RET_DUP_INS_FAIL) {
+        /* Entry already exists. Can be skipped */
+        *idx = -1;
+    } else {
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Input mapping table tcam write failure, "
+                          "idx : {}, err : {}", ret_idx, ret);
+            return ret;
+        }
     }
-    HAL_TRACE_DEBUG("Input mapping native tcam write, "
-                    "idx : {}, ret: {}", *idx, ret);
+    HAL_TRACE_DEBUG("Input mapping table tcam write, "
+                    "idx : {}, ret: {}", ret_idx, ret);
+    *idx = (int) ret_idx;
     return ret;
 }
 
 hal_ret_t
 pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif)
 {
-    uint32_t                             idx;
+    int                                  idx;
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
@@ -279,25 +286,25 @@ pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif)
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                true, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imn_idx[0] = idx;
     /* Entry 2 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, true, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imn_idx[1] = idx;
     /* Entry 3 */
     ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
                                false, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imn_idx[2] = idx;
 
-    return ret;
+    return HAL_RET_OK;
 
 fail_flag:
     ret = pd_tunnelif_del_inp_mapp_entries(pd_tunnelif,
@@ -308,7 +315,7 @@ fail_flag:
 hal_ret_t
 pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
 {
-    uint32_t                             idx;
+    int                                  idx;
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
@@ -327,7 +334,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
                                true, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imt_idx[0] = idx;
     /* Entry 2 */
@@ -335,7 +342,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
                                false, true, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imt_idx[1] = idx;
     /* Entry 3 */
@@ -343,11 +350,11 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif)
                                false, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED, &idx);
-    if (ret != HAL_RET_OK)
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
     pd_tunnelif->imt_idx[2] = idx;
 
-    return ret;
+    return HAL_RET_OK;
 
 fail_flag:
     ret = pd_tunnelif_del_inp_mapp_entries(pd_tunnelif,

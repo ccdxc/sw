@@ -95,7 +95,7 @@ action copy_inner_eth_non_ip() {
     remove_header(vlan_tag);
 }
 
-@pragma stage 0
+@pragma stage 1
 table tunnel_decap_copy_inner {
     reads {
         inner_ethernet : valid;
@@ -131,7 +131,7 @@ action remove_tunnel_hdrs() {
     remove_header(mpls[2]);
 }
 
-@pragma stage 0
+@pragma stage 1
 table tunnel_decap {
     actions {
         remove_tunnel_hdrs;

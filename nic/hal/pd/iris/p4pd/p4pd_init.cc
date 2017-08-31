@@ -665,6 +665,41 @@ p4pd_p4plus_app_init (void)
 }
 #endif
 
+typedef struct tunnel_decap_copy_inner_key_t_ {
+    union {
+        struct {
+            uint8_t inner_ethernet_valid : 1;
+            uint8_t inner_ipv6_valid : 1;
+            uint8_t inner_ipv4_valid : 1;
+            uint8_t inner_udp_valid : 1;
+            uint8_t pad : 4;
+        } __PACK__;
+        uint8_t val;
+    } __PACK__;
+} tunnel_decap_copy_inner_key_t;
+
+/*
+ * TODO: Temporary function to return the index given the key bits
+ * for the direct index table. This will be replaced by the
+ * generated P4PD function once it is available
+ */
+static uint32_t
+p4pd_get_tunnel_decap_copy_inner_tbl_idx (bool inner_udp_valid,
+                                          bool inner_ipv4_valid,
+                                          bool inner_ipv6_valid,
+                                          bool inner_ethernet_valid)
+{
+    tunnel_decap_copy_inner_key_t key = {0};
+    
+    key.inner_udp_valid = inner_udp_valid;
+    key.inner_ipv4_valid = inner_ipv4_valid;
+    key.inner_ipv6_valid = inner_ipv6_valid;
+    key.inner_ethernet_valid = inner_ethernet_valid;
+    
+    uint32_t ret_val = key.val;
+    return (ret_val);
+}
+
 static hal_ret_t
 p4pd_tunnel_decap_copy_inner_init (void)
 {
@@ -673,37 +708,10 @@ p4pd_tunnel_decap_copy_inner_init (void)
     DirectMap                             *dm;
     tunnel_decap_copy_inner_actiondata    data = { 0 };
 
-    return HAL_RET_OK;
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
     HAL_ASSERT(dm != NULL);
-
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
-                      "idx {}, err : {}", idx, ret);
-        return ret;
-    }
-
-    ++idx;
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
-    ret = dm->insert_withid(&data, idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
-                      "idx {}, err : {}", idx, ret);
-        return ret;
-    }
-
-    ++idx;
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
-    ret = dm->insert_withid(&data, idx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
-                      "idx {}, err : {}", idx, ret);
-        return ret;
-    }
-
-    ++idx;
+    
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
@@ -712,7 +720,16 @@ p4pd_tunnel_decap_copy_inner_init (void)
         return ret;
     }
 
-    ++idx;
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, false);
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_UDP_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
@@ -721,8 +738,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
         return ret;
     }
 
-    ++idx;
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, false);
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
@@ -730,7 +747,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
         return ret;
     }
 
-    ++idx;
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_UDP_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
@@ -739,7 +756,25 @@ p4pd_tunnel_decap_copy_inner_init (void)
         return ret;
     }
 
-    ++idx;
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, true);
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, true);
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, true);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_OTHER_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
@@ -748,8 +783,8 @@ p4pd_tunnel_decap_copy_inner_init (void)
         return ret;
     }
 
-    ++idx;
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
+    idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, false, true);
+    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
     ret = dm->insert_withid(&data, idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tunnel decap copy inner table write failure, "
@@ -817,10 +852,128 @@ p4pd_rewrite_init (void)
     return HAL_RET_OK;
 }
 
+typedef struct tunnel_encap_update_inner_key_t_ {
+    union {
+        struct {
+            uint8_t ipv6_valid : 1;
+            uint8_t ipv4_valid : 1;
+            uint8_t udp_valid : 1;
+            uint8_t tcp_valid : 1;
+            uint8_t icmp_valid : 1;
+            uint8_t pad : 3;
+        } __PACK__;
+        uint8_t val;
+    } __PACK__;
+} tunnel_encap_update_inner_key_t;
+
+/*
+ * TODO: Temporary function to return the index given the key bits
+ * for the direct index table. This will be replaced by the
+ * generated P4PD function once it is available
+ */
+static uint32_t
+p4pd_get_tunnel_encap_update_inner_tbl_idx (bool ipv6_valid,
+                                          bool ipv4_valid,
+                                          bool udp_valid,
+                                          bool tcp_valid,
+                                          bool icmp_valid)
+{
+    tunnel_encap_update_inner_key_t key = {0};
+    
+    key.ipv6_valid = ipv6_valid;
+    key.ipv4_valid = ipv4_valid;
+    key.udp_valid = udp_valid;
+    key.tcp_valid = tcp_valid;
+    key.icmp_valid = icmp_valid;
+    
+    uint32_t ret_val = key.val;
+    return (ret_val);
+}
+
 static hal_ret_t
 p4pd_tunnel_encap_update_inner (void)
 {
-    return HAL_RET_OK;
+    uint32_t                              idx = 0;
+    hal_ret_t                             ret;
+    DirectMap                             *dm;
+    tunnel_encap_update_inner_actiondata  data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_ENCAP_UPDATE_INNER);
+    HAL_ASSERT(dm != NULL);
+    
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, true, false, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, true, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_TCP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, true);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_ICMP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UNKNOWN_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, true, false, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UDP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, true, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_TCP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, true);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_ICMP_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+
+    idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, false);
+    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UNKNOWN_REWRITE_ID;
+    ret = dm->insert_withid(&data, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel encap update inner table write failure, "
+                      "idx {}, err : {}", idx, ret);
+        return ret;
+    }
+    
+    return ret;
 }
 
 // ----------------------------------------------------------------------------

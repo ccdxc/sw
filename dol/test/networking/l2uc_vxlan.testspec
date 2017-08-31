@@ -62,6 +62,8 @@ packets:
             outeripv4   :
                 src     : ref://testcase/config/src/endpoint/intf/rtep
                 dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
             vxlan       :
                 vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
@@ -75,14 +77,19 @@ packets:
             # based on the Flow.
             outereth    :
                 src     : ref://testcase/config/dst/endpoint/intf/macaddr
-                dst     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
             outeripv4   :
                 src     : ref://testcase/config/dst/endpoint/intf/ltep
                 dst     : ref://testcase/config/dst/endpoint/intf/rtep
+                tos     : 0
+                id      : 0
             vxlan       :
                 vni     : ref://testcase/config/dst/segment/vxlan_id
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : ref://testcase/config/flow/eg_qos/cos
+            outerudp:
+                chksum  : 0
 
 trigger:
     packets:

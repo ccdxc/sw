@@ -62,7 +62,7 @@ Tcam::~Tcam()
 // Return Codes:
 //
 //      - HAL_RET_OK            : Insert Successfully
-//      - HAL_RET_NO_RESOURCE	: No more space 
+//      - HAL_RET_NO_RESOURCE    : No more space 
 //      - HAL_RET_DUP_INS_FAIL  : Duplicate Insert
 //
 // ---------------------------------------------------------------------------
@@ -72,12 +72,12 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
     hal_ret_t rs        = HAL_RET_OK;
     TcamEntry *te       = NULL;
     
-	// check if entry already exists
+    // check if entry already exists
     if (!allow_dup_insert_ && tcam_entry_exists_(key, key_mask, swkey_len_)) {
         return HAL_RET_DUP_INS_FAIL;
     }
 
-	// alloc index
+    // alloc index
     rs = alloc_index_(index, lowest);
     if (rs != HAL_RET_OK) {
         goto end;
@@ -86,15 +86,15 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
     HAL_TRACE_DEBUG("TCAM: Table: {} Insert at {}", table_name_.c_str(), *index);
     te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, *index); 
 
-	// program hw
+    // program hw
     rs = program_table_(te);
 
     if (rs == HAL_RET_OK) {
-		// insert in sw DS
+        // insert in sw DS
         tcam_entry_map_[*index] = te;
     } else {
         delete te;
-		free_index_(*index);
+        free_index_(*index);
     }
 
 end:
@@ -108,7 +108,7 @@ end:
 // Return Codes:
 //
 //      - HAL_RET_OK            : Insert Successfully
-//      - HAL_RET_NO_RESOURCE	: No more space 
+//      - HAL_RET_NO_RESOURCE    : No more space 
 //      - HAL_RET_DUP_INS_FAIL  : Duplicate Insert
 //
 // ---------------------------------------------------------------------------
@@ -118,13 +118,13 @@ Tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
     hal_ret_t rs        = HAL_RET_OK;
     TcamEntry *te       = NULL;
     
-	// check if entry already exists
+    // check if entry already exists
     if (!allow_dup_insert_ && tcam_entry_exists_(key, key_mask, swkey_len_)) {
         HAL_TRACE_DEBUG("Tcam::{}: Keys Match!!", table_name_.c_str());
         return HAL_RET_DUP_INS_FAIL;
     }
 
-	// alloc index
+    // alloc index
     rs = alloc_index_withid_(index);
     if (rs != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Tcam::{}: Index already alloced!!", table_name_.c_str());
@@ -133,15 +133,15 @@ Tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
 
     te = new TcamEntry(key, key_mask, swkey_len_, data, swdata_len_, index); 
 
-	// program hw
+    // program hw
     rs = program_table_(te);
 
     if (rs == HAL_RET_OK) {
-		// insert in sw DS
+        // insert in sw DS
         tcam_entry_map_[index] = te;
     } else {
         delete te;
-		free_index_(index);
+        free_index_(index);
     }
 
 end:
@@ -153,9 +153,9 @@ end:
 //
 // Return Codes:
 //
-//		- HAL_RET_OK 				: Updated Succesfully
-//		- HAL_RET_OOB				: Out of bound index
-//		- HAL_RET_ENTRY_NOT_FOUND 	: Entry not found
+//        - HAL_RET_OK                 : Updated Succesfully
+//        - HAL_RET_OOB                : Out of bound index
+//        - HAL_RET_ENTRY_NOT_FOUND     : Entry not found
 // ---------------------------------------------------------------------------
 hal_ret_t 
 Tcam::update(uint32_t tcam_idx, void *data)
@@ -163,23 +163,23 @@ Tcam::update(uint32_t tcam_idx, void *data)
     hal_ret_t rs = HAL_RET_OK;
     TcamEntryMap::iterator itr;
 
-	// check if idx is OOB
+    // check if idx is OOB
     if (tcam_idx >= tcam_capacity_) {
         rs = HAL_RET_OOB;
-		goto end;
+        goto end;
     }
 
-	// check if entry exists
+    // check if entry exists
     itr = tcam_entry_map_.find(tcam_idx);
     if (itr == tcam_entry_map_.end()) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
-		goto end;
+        goto end;
     }
 
-	// update sw DS
+    // update sw DS
     itr->second->update_data(data);
 
-	// program hw
+    // program hw
     rs = program_table_(itr->second);
 
 end:
@@ -191,10 +191,10 @@ end:
 // Tcam Remove
 //
 // Return Codes:
-//	
-//		- HAL_RET_OK				: Removed Successfully
-//		- HAL_RET_OOB				: Out of Bound Index
-//		- HAL_RET_ENTRY_NOT_FOUND	: Entry not found
+//    
+//        - HAL_RET_OK                : Removed Successfully
+//        - HAL_RET_OOB                : Out of Bound Index
+//        - HAL_RET_ENTRY_NOT_FOUND    : Entry not found
 // ---------------------------------------------------------------------------
 hal_ret_t 
 Tcam::remove(uint32_t tcam_idx)
@@ -202,32 +202,32 @@ Tcam::remove(uint32_t tcam_idx)
     hal_ret_t rs = HAL_RET_OK;
     TcamEntryMap::iterator itr;
 
-	// check if idx is OOB
+    // check if idx is OOB
     if (tcam_idx >= tcam_capacity_) {
         rs = HAL_RET_OOB;
-		goto end;
+        goto end;
     }
 
-	// check if entry exists
+    // check if entry exists
     itr = tcam_entry_map_.find(tcam_idx);
     if (itr == tcam_entry_map_.end()) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
-		goto end;
+        goto end;
     }
     
-	// de-program hw
+    // de-program hw
     rs = deprogram_table_(itr->second);
 
     if (rs == HAL_RET_OK) {
-		// free & remove from sw DS
+        // free & remove from sw DS
         delete itr->second;
         tcam_entry_map_.erase(itr);
 
-		// free index
-		rs = free_index_(tcam_idx);
-		if (rs != HAL_RET_OK) {
-			goto end;
-		}
+        // free index
+        rs = free_index_(tcam_idx);
+        if (rs != HAL_RET_OK) {
+            goto end;
+        }
     }
 
 end:
@@ -245,30 +245,30 @@ Tcam::retrieve(uint32_t tcam_idx, void *key, void *key_mask, void *data)
     TcamEntryMap::iterator itr;
     TcamEntry *te = NULL;
 
-	// check if idx is OOB
+    // check if idx is OOB
     if (tcam_idx >= tcam_capacity_) {
         rs = HAL_RET_OOB;
-		goto end;
+        goto end;
     }
 
-	// check if entry exists
+    // check if entry exists
     itr = tcam_entry_map_.find(tcam_idx);
     if (itr == tcam_entry_map_.end()) {
         rs = HAL_RET_ENTRY_NOT_FOUND;
-		goto end;
+        goto end;
     }
 
     te = itr->second;
 
-	if (key) {
-		memcpy(key, te->get_key(), te->get_key_len());
-	}
-	if (key_mask) {
-		memcpy(key_mask, te->get_key_mask(), te->get_key_len());
-	}
-	if (data) {
-		memcpy(data, te->get_data(), te->get_data_len());
-	}
+    if (key) {
+        memcpy(key, te->get_key(), te->get_key_len());
+    }
+    if (key_mask) {
+        memcpy(key_mask, te->get_key_mask(), te->get_key_len());
+    }
+    if (data) {
+        memcpy(data, te->get_data(), te->get_data_len());
+    }
 
 
 #if 0
@@ -371,8 +371,8 @@ Tcam::program_table_(TcamEntry *te)
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
 end:
-    if (hwkey) 		::operator delete(hwkey);
-    if (hwkeymask) 	::operator delete(hwkeymask);
+    if (hwkey)         ::operator delete(hwkey);
+    if (hwkeymask)     ::operator delete(hwkeymask);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : HAL_RET_OK;
 }
@@ -405,8 +405,8 @@ Tcam::deprogram_table_(TcamEntry *te)
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
 end:
-    if (hwkey) 		::operator delete(hwkey);
-    if (hwkeymask) 	::operator delete(hwkeymask);
+    if (hwkey)         ::operator delete(hwkey);
+    if (hwkeymask)     ::operator delete(hwkeymask);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : HAL_RET_OK;
 }
@@ -418,11 +418,11 @@ end:
 hal_ret_t
 Tcam::fetch_stats(const uint64_t **stats)
 {
-	hal_ret_t   rs = HAL_RET_OK;
+    hal_ret_t   rs = HAL_RET_OK;
 
     *stats = stats_;
 
-	return rs;
+    return rs;
 }
 
 // ----------------------------------------------------------------------------
@@ -433,7 +433,7 @@ Tcam::alloc_index_(uint32_t *idx, bool lowest)
 {
     hal_ret_t   rs = HAL_RET_OK;
     
-	// Allocate an index in repl. table
+    // Allocate an index in repl. table
     indexer::status irs = tcam_indexer_->alloc(idx, lowest, 1);
     if (irs != indexer::SUCCESS) {
         return HAL_RET_NO_RESOURCE;
@@ -450,7 +450,7 @@ Tcam::alloc_index_withid_(uint32_t idx)
 {
     hal_ret_t   rs = HAL_RET_OK;
     
-	// Allocate an index in repl. table
+    // Allocate an index in repl. table
     indexer::status irs = tcam_indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
         rs = (irs == indexer::DUPLICATE_ALLOC) ? HAL_RET_DUP_INS_FAIL : HAL_RET_OOB;

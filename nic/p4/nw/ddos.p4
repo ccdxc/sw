@@ -184,7 +184,7 @@ action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
 // Key will be only lif and it can be a index table so
 // no overflow tcam needed.
 //
-@pragma stage 1
+@pragma stage 0
 table ddos_src_vf {
     reads {
         control_metadata.src_lport : ternary;

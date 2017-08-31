@@ -163,6 +163,8 @@ typedef struct flow_pgm_attrs_s {
     uint16_t                  nat_dport;           // NAT destination port
     uint16_t                  nat_l4_port;         // NAT L4 port
     uint8_t                   mcast_en:1;          // mcast enable
+    uint8_t                   tunnel_orig:1;       // tunnel originate
+    ep_t                      *dep;                // only to get rw idx in PD
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state

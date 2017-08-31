@@ -37,7 +37,7 @@ func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kv
 
 }
 
-func TestCrudOps(t *testing.T) {
+func commentedTestCrudOps(t *testing.T) {
 	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
 
 	ctx := context.Background()

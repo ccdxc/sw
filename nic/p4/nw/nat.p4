@@ -138,7 +138,7 @@ action twice_nat_rewrite_info(ip, l4_port) {
     modify_field(nat_metadata.twice_nat_l4_port, l4_port);
 }
 
-@pragma stage 1
+@pragma stage 0
 table twice_nat {
     reads {
         nat_metadata.twice_nat_idx : exact;

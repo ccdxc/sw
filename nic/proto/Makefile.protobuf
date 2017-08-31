@@ -5,7 +5,7 @@ SHAREDLIBRARY = libhalproto.so
 LCXXFLAGS = \
 			-I/usr/local/include \
 			-pthread \
-			-g \
+			-O3 \
 			$(NULL)
 
 SOURCES = $(wildcard *.cc)

@@ -490,7 +490,7 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
 // TODO: Have to still handle priority tag. When do we send a priority
 //       tagged pkt?
 static inline hal_ret_t
-update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg, 
+update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg,
                      flow_pgm_attrs_t *flow_attrs)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -533,12 +533,14 @@ update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg,
                 flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
             }
         } 
+        flow_attrs->tunnel_orig = FALSE;
     } else if (dif->if_type == intf::IF_TYPE_TUNNEL) {
         // Vnid: flow's tnnl_vnid
         // OVlan, Omacsa, Omacda, OSIP, ODIP: from tunnl_rewr table
         HAL_ASSERT(dl2seg->fabric_encap.type == types::encapType::ENCAP_TYPE_VXLAN);
         flow_attrs->tnnl_vnid = dl2seg->fabric_encap.val;
         flow_attrs->tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+        flow_attrs->tunnel_orig = TRUE;
     }
     return ret;
 }

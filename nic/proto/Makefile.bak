@@ -1,5 +1,5 @@
 CXX = g++
-CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -g
+CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -O3
 PROTOC = protoc
 C_PROTOC = protoc-c
 GRPC_CPP_PLUGIN = grpc_cpp_plugin

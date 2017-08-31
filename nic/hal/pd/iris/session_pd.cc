@@ -279,7 +279,9 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     d.flow_info_action_u.flow_info_flow_info.egress_policer_index = 0;
     d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id = flow_cfg->ing_mirror_session;
     d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id = flow_cfg->eg_mirror_session;
-
+    // Set the tunnel originate flag
+    d.flow_info_action_u.flow_info_flow_info.tunnel_originate = 
+                                                    flow_attrs->tunnel_orig;
 #if 0
     // TODO: Do this in PI
     // there is no transit case for us, so this is always FALSE

@@ -15,7 +15,13 @@ nop:
 .align
 encap_vxlan:
   phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
-  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
+  // TODO: Start
+  // Ellipses not working. Needs to be fixed
+  // phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
+  phvwr       p.inner_ethernet_dstAddr[31:0], k.ethernet_dstAddr_sbit16_ebit47
+  phvwr       p.inner_ethernet_srcAddr, k.ethernet_srcAddr
+  phvwr       p.inner_ethernet_etherType, k.ethernet_etherType
+  // TODO: End
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -25,7 +31,7 @@ encap_vxlan:
   add         r7, k.l3_metadata_payload_length, 30
   phvwr       p.udp_len, r7
 
-  phvwri      p.{vxlan_flags,vxlan_reserved}, 0x80000000
+  phvwri      p.{vxlan_flags,vxlan_reserved}, 0x08000000
   phvwr       p.vxlan_vni, k.rewrite_metadata_tunnel_vnid
   phvwr       p.vxlan_reserved2, 0
 
@@ -270,7 +276,8 @@ f_insert_ipv4_header:
   phvwr       p.{ipv4_version,ipv4_ihl,ipv4_diffserv}, 0x4500
   phvwr       p.{ipv4_identification...ipv4_fragOffset}, 0
   phvwr       p.{ipv4_ttl...ipv4_protocol}, r6
-  phvwr       p.{ipv4_srcAddr,ipv4_dstAddr}, d.{u.encap_vxlan_d.ip_sa,u.encap_vxlan_d.ip_da}
+  phvwr       p.ipv4_srcAddr, d.u.encap_vxlan_d.ip_sa
+  phvwr       p.ipv4_dstAddr, d.u.encap_vxlan_d.ip_da
   add         r7, r7, 20
   phvwr.e     p.ipv4_totalLen, r7
   phvwr       p.ipv4_valid, 1
