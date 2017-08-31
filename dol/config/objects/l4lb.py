@@ -27,7 +27,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
         self.service    = service
         self.port       = spec.port
         self.remote     = spec.remote
-        self.ep         = service.tenant.AllocL4LbBackend()
+        self.ep         = service.tenant.AllocL4LbBackend(self.remote)
         self.ep.AttachL4LbBackend(self)
         return
 
@@ -74,7 +74,7 @@ class L4LbServiceObject(base.ConfigObjectBase):
         
         self.vip        = resmgr.L4LbServiceIpAllocator.get()
         self.vip6       = resmgr.L4LbServiceIpv6Allocator.get()
-        self.vmac       = resmgr.L4LbVMacAllocator.get()
+        self.macaddr    = resmgr.L4LbVMacAllocator.get()
         
         self.port       = spec.port
         self.mode       = spec.mode.upper()
@@ -101,16 +101,14 @@ class L4LbServiceObject(base.ConfigObjectBase):
         return self.mode == 'TWICE_NAT'
 
     def SelectBackend(self):
-        if self.bend_idx >= len(self.obj_helper_bend.bends):
-            return None
         bend = self.obj_helper_bend.bends[self.bend_idx]
-        self.bend_idx += 1
+        self.bend_idx = (self.bend_idx + 1) % len(self.obj_helper_bend.bends)
         return bend
 
     def __create_ep(self):
         # Create a dummy endpoint for the service
         self.ep = endpoint.EndpointObject()
-        self.ep.macaddr = self.vmac
+        self.ep.macaddr = self.macaddr
         self.ep.SetIpAddress(self.vip)
         self.ep.SetIpv6Address(self.vip6)
         self.ep.SetL4LbService()
@@ -125,7 +123,7 @@ class L4LbServiceObject(base.ConfigObjectBase):
         cfglogger.info("- Tenant  = %s" % self.tenant.GID())
         cfglogger.info("- Proto   = %s" % self.proto)
         cfglogger.info("- VIP     = %s" % self.vip.get())
-        cfglogger.info("- VMac    = %s" % self.vmac.get())
+        cfglogger.info("- VMac    = %s" % self.macaddr.get())
         cfglogger.info("- Port    = %s" % self.port.get())
         for s in range(len(self.snat_ips)):
             cfglogger.info("- SNAT Ipaddr:Port = %s:%d" %\

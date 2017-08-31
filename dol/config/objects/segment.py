@@ -183,6 +183,8 @@ class SegmentObjectHelper:
         self.segs = []
         self.backend_eps = None
         self.backend_ep_alloc_idx = 0
+        self.backend_remote_eps = None
+        self.backend_remote_ep_alloc_idx = 0
         return
 
     def Configure(self):
@@ -228,9 +230,15 @@ class SegmentObjectHelper:
             eps += seg.GetRemoteEps(backend)
         return eps
 
-    def AllocL4LbBackend(self):
-        if not self.backend_eps:
-            self.backend_eps = self.GetEps(backend = True)
-        if self.backend_ep_alloc_idx < len(self.backend_eps):
-            return self.backend_eps[self.backend_ep_alloc_idx]
+    def AllocL4LbBackend(self, remote):
+        if remote:
+            if not self.backend_remote_eps:
+                self.backend_remote_eps = self.GetRemoteEps(backend = True)
+            if self.backend_remote_ep_alloc_idx < len(self.backend_remote_eps):
+                return self.backend_remote_eps[self.backend_remote_ep_alloc_idx]
+        else:
+            if not self.backend_eps:
+                self.backend_eps = self.GetLocalEps(backend = True)
+            if self.backend_ep_alloc_idx < len(self.backend_eps):
+                return self.backend_eps[self.backend_ep_alloc_idx]
         return None

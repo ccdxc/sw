@@ -82,8 +82,8 @@ class TenantObject(base.ConfigObjectBase):
 
     def IsL4LbEnabled(self):
         return self.l4lb_enable == True
-    def AllocL4LbBackend(self):
-        return self.obj_helper_segment.AllocL4LbBackend()
+    def AllocL4LbBackend(self, remote):
+        return self.obj_helper_segment.AllocL4LbBackend(remote)
    
     def __create_l4lb_services(self):
         if 'l4lb' not in self.spec.__dict__:

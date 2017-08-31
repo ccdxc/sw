@@ -160,6 +160,8 @@ class TestCase(objects.FrameworkObject):
             # Resolve the ports
             if objects.IsReference(spec_pkt.packet.port):
                 tc_pkt.ports = spec_pkt.packet.port.Get(self)
+            elif objects.IsCallback(spec_pkt.packet.port):
+                tc_pkt.ports = spec_pkt.packet.port.call(self)
             else:
                 tc_pkt.ports = [ spec_pkt.packet.port ]
             self.info("- Adding Packet: %s, Ports :" %\

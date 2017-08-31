@@ -170,6 +170,9 @@ class FlowObject(base.ConfigObjectBase):
     def IsNat(self):
         return self.nat_type != 'NONE'
 
+    def IsIflow(self):
+        return self.direction == 'IFLOW'
+
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():
             l4_info.tcp_udp.sport = self.sport
@@ -275,23 +278,24 @@ class FlowObject(base.ConfigObjectBase):
         if self.IsTCP():
             string += "/%s" % self.state
 
+        cfglogger.info("  - label  : %s" % self.label)
         if self.IsSnat():
             string += '/%s/%s/%d' % (self.nat_type, self.nat_sip.get(), self.nat_sport)
         if self.IsDnat():
             string += '/%s/%s/%d' % (self.nat_type, self.nat_dip.get(), self.nat_dport)
         cfglogger.info("  - info   : %s" % string)
 
-        string = ''
-        for ssn in self.ing_mirror_sessions:
-            string += ssn.GID() + ' '
-        cfglogger.info("  - IngSpan: %s" % string)
+        if len(self.ing_mirror_sessions):
+            string = ''
+            for ssn in self.ing_mirror_sessions:
+                string += ssn.GID() + ' '
+            cfglogger.info("  - IngSpan: %s" % string)
 
-        string = ''
-        for ssn in self.egr_mirror_sessions:
-            string += ssn.GID() + ' '
-        cfglogger.info("  - EgrSpan: %s" % string)
-        return string
-
+        if len(self.egr_mirror_sessions):
+            string = ''
+            for ssn in self.egr_mirror_sessions:
+                string += ssn.GID() + ' '
+            cfglogger.info("  - EgrSpan: %s" % string)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -354,7 +358,11 @@ class FlowObject(base.ConfigObjectBase):
         obj.src.segment = self.__sseg
         obj.dst.segment = self.__dseg
         obj.src.endpoint = self.__sep
+        obj.src.l4lb_backend = self.__sfep.l4lb_backend
+        obj.src.l4lb_service = self.__sfep.l4lb_service
         obj.dst.endpoint = self.__dep
+        obj.dst.l4lb_service = self.__dfep.l4lb_service
+        obj.dst.l4lb_backend = self.__dfep.l4lb_backend
         obj.ingress_mirror.session1 = self.GetIngressMirrorSession(idx = 1)
         obj.ingress_mirror.session2 = self.GetIngressMirrorSession(idx = 2)
         obj.ingress_mirror.session3 = self.GetIngressMirrorSession(idx = 3)
@@ -372,5 +380,9 @@ class FlowObject(base.ConfigObjectBase):
         if obj.dst.endpoint:
             logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
             logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
+        if obj.src.l4lb_backend:
+            logger.info("- Src Backend: %s" % obj.src.l4lb_backend.GID())
+        if obj.dst.l4lb_service:
+            logger.info("- Dst Service: %s" % obj.dst.l4lb_service.GID())
         logger.info("- Flow  : %s" % obj.flow.GID())
 

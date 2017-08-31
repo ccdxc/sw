@@ -361,6 +361,7 @@ modules:
         module  : eth
         spec    : tx.testspec
         ignore  : True
+
     - module:
         name    : TELEMETRY_FP
         enable  : True
@@ -368,3 +369,12 @@ modules:
         module  : telemetry
         spec    : firstpacket.testspec
         ignore  : True
+
+    - module:
+        name    : L4LB
+        enable  : True
+        package : test.l4lb
+        module  : l4lb
+        spec    : l4lb.testspec
+        ignore  : True
+
