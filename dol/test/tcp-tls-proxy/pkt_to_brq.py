@@ -49,33 +49,47 @@ def TestCaseVerify(tc):
     global brq
     global tlscb
 
-    # 1. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
-    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ"]
-    brq_cur.Configure()
 
-    # 2. Verify descriptor 
-    if rnmdr.ringentries[0].handle != brq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[0].handle, brq_cur.ringentries[0].handle)) 
-        return False
-
-    # 3. Verify page
-    if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in brq_cur.swdre_list")
-        #return False
-
-    # 4. Verify pi/ci got update got updated
+    # 1. Verify pi/ci got update got updated for SERQ
     tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
     print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     tlscb_cur.GetObjValPd()
     print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     if (tlscb_cur.serq_pi != (tlscb.serq_pi+1) or tlscb_cur.serq_ci != (tlscb.serq_ci+1)):
         print("serq pi/ci not as expected")
+        #VijayV to enable this test after ci is fixed in p4+
         #return False
-    print("serq pi/ci not expected")
+
+    # 2. Verify pi/ci got update got updated for BRQ
+    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ"]
+    print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
+    brq_cur.Configure()
+    print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
+    if (brq_cur.pi != (brq.pi+1) or brq_cur.ci != (brq.ci+1)):
+        print("brq pi/ci not as expected")
+        #needs fix in HAL and support in model/p4+ for this check to work/pass
+        #return False
+
+    # 2. Fetch current values from Platform
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr_cur.Configure()
+    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
+    rnmpr_cur.Configure()
+
+    # 3. Verify PI for RNMDR got incremented by 1
+    if (rnmdr_cur.pi != rnmdr.pi+1):
+        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+        return false
+
+    # 2. Verify descriptor 
+    if rnmdr.ringentries[rnmdr.pi].handle != brq_cur.ringentries[0].handle:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ringentries[0].handle)) 
+        return False
+
+    # 3. Verify page
+    if rnmpr.ringentries[rnmdr.pi].handle != brq_cur.swdre_list[0].Addr1:
+        print("Page handle not as expected in brq_cur.swdre_list")
+        #return False
 
     return True
 

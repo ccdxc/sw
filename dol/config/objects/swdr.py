@@ -169,6 +169,19 @@ class SwDscrRingObject(base.ConfigObjectBase):
             Store.objects.Add(swdre)
         return
 
+    def PrepareHALRequestSpec(self, reqspec):
+        if (self.ringidx != None):
+            reqspec.key_or_handle.wring_id = self.ringidx
+        reqspec.type = self.haltype
+        return
+
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
+        self.pi = resp_spec.pi
+        self.ci = resp_spec.ci
+        cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
+        return
+
     def Show(self):
         cfglogger.info("SWDSCR List for %s" % self.ID())
         for swdre in self.swdre_list:
@@ -182,6 +195,9 @@ class SwDscrRingObject(base.ConfigObjectBase):
 
     def Configure(self):
         # Configure generic ring entries
+        lst = []
+        lst.append(self) 
+        halapi.GetRingMeta(lst)
         halapi.GetRingEntries(self.ringentries)
 
         # Setup handles

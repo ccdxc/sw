@@ -256,8 +256,15 @@ def GetDscrAolObjectState(objlist):
 def GetRingEntries(objlist):
     if IsHalDisabled(): return
     stub = wring_pb2_grpc.WRingStub(HalChannel)
-    __config(objlist, wring_pb2.WRingGetRequestMsg,
-             stub.WRingGet)
+    __config(objlist, wring_pb2.WRingGetEntriesRequestMsg,
+             stub.WRingGetEntries)
+    return
+
+def GetRingMeta(objlist):
+    if IsHalDisabled(): return
+    stub = wring_pb2_grpc.WRingStub(HalChannel)
+    __config(objlist, wring_pb2.WRingRequestMsg,
+             stub.WRingGetMeta)
     return
 
 def ConfigureAcls(objlist):

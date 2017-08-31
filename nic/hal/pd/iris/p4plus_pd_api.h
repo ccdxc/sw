@@ -31,4 +31,10 @@ p4plus_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
     return read_mem(addr, data, size_in_bytes);
 }
 
+static inline bool
+p4plus_reg_read(uint64_t addr, uint32_t& data)
+{
+    return read_reg(addr, data);
+}
+
 #endif
