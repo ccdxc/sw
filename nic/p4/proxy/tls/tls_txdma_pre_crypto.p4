@@ -1,7 +1,5 @@
 /* TLS P4 definitions */
 
-#define HBM_ADDRESS_WIDTH           32
-
 #include "../../common-p4+/common_txdma_dummy.p4"
 
 #define tx_table_s0_t0_action       read_tls_stg0
@@ -26,42 +24,10 @@
 #define tx_table_s7_t0_action       tls_queue_brq7
 
 #include "../../common-p4+/common_txdma.p4"
-
-#define CAPRI_QSTATE_HEADER_COMMON \
-        rsvd		        : 8;\
-        cosA                : 4;\
-        cosB                : 4;\
-        cos_sel             : 8;\
-        eval_last           : 8;\
-        host                : 4;\
-        total               : 4;\
-        pid                 : 16;\
-
-
-
-#define CAPRI_QSTATE_HEADER_RING(_x)		\
-        pi_##_x                           : 16;\
-        ci_##_x                           : 16;\
+#include "tls_txdma_common.p4"
 
 /* Per stage D-vector Definitions */
 
-header_type tls_stg0_d_t {
-    fields {
-        // 8 Bytes intrinsic header
-        CAPRI_QSTATE_HEADER_COMMON
-        // 4 Bytes SERQ ring
-        CAPRI_QSTATE_HEADER_RING(0)
-        // 4 Bytes BSQ ring
-        CAPRI_QSTATE_HEADER_RING(1)
-
-        serq_base                       : HBM_ADDRESS_WIDTH;
-        fid                             : 16;
-        dec_flow                        : 1;
-
-        // TBD: Total used   : 209 bits, pending: 303
-        pad                             : 303;
-    }
-}
 // d for stage 2 table 1
 header_type read_tnmdr_d_t {
     fields {
@@ -151,50 +117,6 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
     modify_field(tls_queue_brq_d.ci_0, ci_0);
 
 
-header_type tls_stg1_7_d_t {
-    fields {
-        cipher_type                     : 8;
-        ver_major                       : 4;
-        key_addr                        : ADDRESS_WIDTH;
-        iv_addr                         : ADDRESS_WIDTH;
-        qhead                           : ADDRESS_WIDTH;
-        qtail                           : ADDRESS_WIDTH;
-        una_desc                        : ADDRESS_WIDTH;
-        una_desc_idx                    : 2;
-        una_data_offset                 : 16;
-        una_data_len                    : 16;
-        nxt_desc                        : ADDRESS_WIDTH;
-        nxt_desc_idx                    : 2;
-        nxt_data_offset                 : 16;
-        nxt_data_len                    : 16;
-        next_tls_hdr_offset             : 16;
-        cur_tls_data_len                : 16;
-        ofid                            : 16;
-
-        // Total used   : 512 bits, pending: 0
-    }
-}
-
-#define STG1_7_D_ACTION_PARAMS                                                                          \
-cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, ofid
-#
-
-#define GENERATE_STG1_7_D                                                                               \
-    modify_field(tls_stg1_7_d.cipher_type, cipher_type);                                                \
-    modify_field(tls_stg1_7_d.ver_major, ver_major);                                                    \
-    modify_field(tls_stg1_7_d.qhead, qhead);                                                            \
-    modify_field(tls_stg1_7_d.qtail, qtail);                                                            \
-    modify_field(tls_stg1_7_d.una_desc, una_desc);                                                      \
-    modify_field(tls_stg1_7_d.una_desc_idx, una_desc_idx);                                              \
-    modify_field(tls_stg1_7_d.una_data_offset, una_data_offset);                                        \
-    modify_field(tls_stg1_7_d.una_data_len, una_data_len);                                              \
-    modify_field(tls_stg1_7_d.nxt_desc, nxt_desc);                                                      \
-    modify_field(tls_stg1_7_d.nxt_desc_idx, nxt_desc_idx);                                              \
-    modify_field(tls_stg1_7_d.nxt_data_offset, nxt_data_offset);                                        \
-    modify_field(tls_stg1_7_d.nxt_data_len, nxt_data_len);                                              \
-    modify_field(tls_stg1_7_d.next_tls_hdr_offset, next_tls_hdr_offset);                                \
-    modify_field(tls_stg1_7_d.cur_tls_data_len, cur_tls_data_len);                                      \
-    modify_field(tls_stg1_7_d.ofid, ofid);
 
 #define GENERATE_GLOBAL_K                                                                               \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
@@ -215,12 +137,12 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
 header_type tls_global_phv_t {
     fields {
         fid                             : 16;
-        dec_flow                        : 1;
+        dec_flow                        : 8;
         split                           : 1;
         pending_rx_serq                 : 1;
         pending_rx_brq                  : 1;
         pending_queue_brq               : 1;
-        tls_global_pad0                 : 3;
+        tls_global_pad0                 : 4;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         tls_hdr_type                    : 8;
         tls_hdr_version_major           : 8;
@@ -258,6 +180,7 @@ header_type to_stage_5_phv_t {
         odesc                           : HBM_ADDRESS_WIDTH;
         opage                           : HBM_ADDRESS_WIDTH;
         cur_tls_data_len                : 16;
+        debug_dol                       : 8;
     }
 }
 
@@ -274,7 +197,7 @@ header_type to_stage_7_phv_t {
         odesc                           : HBM_ADDRESS_WIDTH;
         opage                           : HBM_ADDRESS_WIDTH;
         cur_tls_data_len                : 16;
-        next_tls_hdr_offset              :16;
+        next_tls_hdr_offset             : 16;
     }
 }
 
@@ -303,32 +226,6 @@ header_type s4_s6_t0_phv_t {
     }
 }
 
-/* BARCO Descriptor definition */
-header_type barco_desc_t {
-    fields {
-        rsvd                                : 374;
-        gcm_new_key_flag                    : 1;
-        gcm_key_buf_index                   : 8;
-        application_tag                     : 16;
-        sector_num                          : 32;
-        sector_size                         : 16;
-        opaque_tage_write_en                : 1;
-        opaque_tag_value                    : 32;
-        header_size                         : 32;
-        status_address                      : 64;
-        doorbell_data                       : 64;
-        doorbell_address                    : 64;
-        auth_tag_addr                       : 64;
-        iv_address                          : 64;
-        key_desc_index                      : 32;
-        command_param                       : 20;/* Command[19:0] */
-        command_op                          : 4; /* Command[23:20] */
-        command_mode                        : 4; /* Command[27:24] */
-        command_core                        : 4; /* Command[31:28] */
-        output_list_address                 : 64;
-        input_list_address                  : 64;
-    }
-}
 
 header_type s3_t1_s2s_phv_t {
     fields {
@@ -342,11 +239,12 @@ header_type s3_t2_s2s_phv_t {
     }
 }
 
-@pragma scratch_metadata
-metadata tls_stg0_d_t tls_stg0_d;
 
 @pragma scratch_metadata
-metadata tls_stg1_7_d_t tls_stg1_7_d;
+metadata tlscb_0_t tlscb_0_d;
+
+@pragma scratch_metadata
+metadata tlscb_1_t tlscb_1_d;
 
 @pragma scratch_metadata
 metadata tls_stage_bld_barco_req_d_t tls_bld_barco_req_d;
@@ -409,6 +307,7 @@ metadata dma_cmd_phv2mem_t dma_cmd6;
 metadata dma_cmd_phv2mem_t dma_cmd7;
 
 
+
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 @pragma scratch_metadata
@@ -444,41 +343,18 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 metadata tpage_alloc_d_t tpage_alloc_d;
 
 
-action read_tls_stg0(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
 
-    modify_field(tls_stg0_d.rsvd, rsvd);
-    modify_field(tls_stg0_d.cosA, cosA);
-    modify_field(tls_stg0_d.cosB, cosB);
-    modify_field(tls_stg0_d.cos_sel, cos_sel);
-    modify_field(tls_stg0_d.eval_last, eval_last);
-    modify_field(tls_stg0_d.host, host);
-    modify_field(tls_stg0_d.total, total);
-    modify_field(tls_stg0_d.pid, pid);
-
-    modify_field(tls_stg0_d.pi_0, pi_0);
-    modify_field(tls_stg0_d.ci_0, ci_0);
-
-    modify_field(tls_stg0_d.pi_1, pi_1);
-    modify_field(tls_stg0_d.ci_1, ci_1);
-
-    modify_field(tls_stg0_d.serq_base, serq_base);
-    modify_field(tls_stg0_d.fid, fid);
-    modify_field(tls_stg0_d.dec_flow, dec_flow);
-    modify_field(tls_stg0_d.pad, pad);
-}
-
-
-action read_tls_stg1_7(STG1_7_D_ACTION_PARAMS) {
+action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_STG1_7_D
+    GENERATE_TLSCB_1_D
 }
 
 
 
 /* Stage 2 table 0 action */
-action tls_rx_serq(STG1_7_D_ACTION_PARAMS) {
+action tls_rx_serq(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -486,7 +362,7 @@ action tls_rx_serq(STG1_7_D_ACTION_PARAMS) {
     modify_field(to_s2_scratch.serq_ci, to_s2.serq_ci);
     modify_field(to_s2_scratch.idesc, to_s2.idesc);
 
-    GENERATE_STG1_7_D
+    GENERATE_TLSCB_1_D
 }
 
 /*
@@ -506,7 +382,7 @@ action read_tnmpr(tnmpr_pidx) {
 }
 
 /* Stage 3 table 0 action */
-action tls_serq_consume(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, serq_base, fid, dec_flow, pad) {
+action tls_serq_consume(TLSCB_0_PARAMS) {
 
 
     GENERATE_GLOBAL_K
@@ -515,25 +391,7 @@ action tls_serq_consume(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, 
     modify_field(to_s3_scratch.serq_ci, to_s3.serq_ci);
 
     /* D vector */
-    modify_field(tls_stg0_d.rsvd, rsvd);
-    modify_field(tls_stg0_d.cosA, cosA);
-    modify_field(tls_stg0_d.cosB, cosB);
-    modify_field(tls_stg0_d.cos_sel, cos_sel);
-    modify_field(tls_stg0_d.eval_last, eval_last);
-    modify_field(tls_stg0_d.host, host);
-    modify_field(tls_stg0_d.total, total);
-    modify_field(tls_stg0_d.pid, pid);
-
-    modify_field(tls_stg0_d.pi_0, pi_0);
-    modify_field(tls_stg0_d.ci_0, ci_0);
-
-    modify_field(tls_stg0_d.pi_1, pi_1);
-    modify_field(tls_stg0_d.ci_1, ci_1);
-
-    modify_field(tls_stg0_d.serq_base, serq_base);
-    modify_field(tls_stg0_d.fid, fid);
-    modify_field(tls_stg0_d.dec_flow, dec_flow);
-    modify_field(tls_stg0_d.pad, pad);
+    GENERATE_TLSCB_0_D
 
 }
 
@@ -577,7 +435,7 @@ action tpage_alloc(page, pad) {
 
 
 /* Stage 3 table 3 action */
-action tls_stage3(STG1_7_D_ACTION_PARAMS) {
+action tls_stage3(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -585,7 +443,7 @@ action tls_stage3(STG1_7_D_ACTION_PARAMS) {
     modify_field(to_s2_scratch.serq_ci, to_s2.serq_ci);
     modify_field(to_s2_scratch.idesc, to_s2.idesc);
 
-    GENERATE_STG1_7_D
+    GENERATE_TLSCB_1_D
 }
 
 /* Stage 4 action */
@@ -616,6 +474,7 @@ action tls_queue_brq5(STG_QUEUE_BRQ_ACTION_PARAMS) {
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
     modify_field(to_s5_scratch.opage, to_s5.opage);
     modify_field(to_s5_scratch.cur_tls_data_len, to_s5.cur_tls_data_len);
+    modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
 
     GENERATE_STG_QUEUE_BRQ_D

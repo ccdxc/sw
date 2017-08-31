@@ -8,6 +8,7 @@
 #define RAW_TABLE_SIZE_WIDTH 3 
 
 #define ADDRESS_WIDTH 64
+#define HBM_ADDRESS_WIDTH 32
 
 #define RAW_TABLE_SIZE_1    0
 #define RAW_TABLE_SIZE_2    1
@@ -366,6 +367,12 @@ header_type doorbell_data_t {
     }
 }
 
+header_type doorbell_data_raw_t {
+    fields {
+        data : 64;
+    }
+}
+
 header_type dma_cmd_start_pad_t {
     fields {
         dma_cmd_start_pad : 64;
@@ -381,7 +388,7 @@ header_type dma_cmd_start_pad_t {
 
 header_type pkt_descr_t {
     fields {
-        reserved : 64;
+        next_pkt : 64;
         next_addr : 64;
         L2 : 32;
         O2 : 32;
@@ -404,7 +411,7 @@ header_type pkt_descr_scratch_t {
 
 header_type pkt_descr_aol_t {
     fields {
-        reserved : 64;
+        next_pkt : 64;
         next_addr : 64;
         L2 : 32;
         O2 : 32;
@@ -424,3 +431,21 @@ header_type ring_entry_t {
         descr_addr : 64;
     }
 }
+
+#define CAPRI_QSTATE_HEADER_COMMON \
+        rsvd		        : 8;\
+        cosA                : 4;\
+        cosB                : 4;\
+        cos_sel             : 8;\
+        eval_last           : 8;\
+        host                : 4;\
+        total               : 4;\
+        pid                 : 16;\
+
+
+
+#define CAPRI_QSTATE_HEADER_RING(_x)		\
+        pi_##_x                           : 16;\
+        ci_##_x                           : 16;\
+
+

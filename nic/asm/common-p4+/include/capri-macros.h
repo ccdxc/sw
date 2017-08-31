@@ -281,6 +281,9 @@
 #define CAPRI_QSTATE_HEADER_RING(_x)		\
         pi_##_x                           : 16;\
         ci_##_x                           : 16;\
+
+/* Instruction to see the value of _x during execution */
+#define CAPRI_OPERAND_DEBUG(_x)         add r1, r0, _x
         
 #define RNMDR_TABLE_BASE                hbm_rnmdr_table_base
 #define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */

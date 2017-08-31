@@ -23,7 +23,7 @@
 #define TCP_PHV_AOL_END             640
 #define TCP_PHV_AOL_SIZE            64
 
-#define TCP_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_reserved)
+#define TCP_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_next_pkt)
 #define TCP_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_A0)
 
 #define TCP_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
