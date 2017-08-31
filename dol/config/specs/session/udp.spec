@@ -9,7 +9,7 @@ entries:
     - entry:
         label: networking
         responder:
-            port : const/128
+            port : const/28750
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1
@@ -17,7 +17,7 @@ entries:
                     dscp_rw : const/1
                     dscp    : const/3
         initiator: 
-            port : const/47273
+            port : const/2
             flow_info:
                 eg_qos:    
                     dscp_rw : const/1
@@ -36,4 +36,15 @@ entries:
                 ingress:
                     - ref://store/objects/id=SpanSession0002
 
+
+    - entry:
+        label: recirc
+        responder:
+            port : const/1
+            flow_info:
+                eg_qos:    
+                    cos_rw  : const/1
+                    cos     : const/5
+        initiator: 
+            port : const/4
 
