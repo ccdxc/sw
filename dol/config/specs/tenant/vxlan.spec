@@ -6,10 +6,10 @@ type    : tenant
 overlay : vxlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_MDST_FWD
-      count : 2
-    #- spec  : ref://store/specs/id=SEGMENT_MDST_DROP
-    #  count : 2
+    - spec  : ref://store/specs/id=SEGMENT_DEFAULT
+      count : 1
+    - spec  : ref://store/specs/id=SEGMENT_MULTIDEST_DROP
+      count : 1
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.

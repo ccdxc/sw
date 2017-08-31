@@ -1,11 +1,11 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_MDST_DROP
+    id: SEGMENT_DEFAULT
 
 type        : tenant
 native      : False
-broadcast   : drop
-multicast   : drop
+broadcast   : flood
+multicast   : replicate
 l4lb        : True
 endpoints   :
     useg    : 2

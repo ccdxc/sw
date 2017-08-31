@@ -9,7 +9,7 @@ config_filter:
         segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L3
-    maxflows    : None
+    maxflows    : 32
 
 packets:
     - packet:

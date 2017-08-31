@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_NATIVE
+    id  : SEGMENT_NATIVE
 
 type        : tenant
 native      : True

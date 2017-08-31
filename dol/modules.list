@@ -96,10 +96,25 @@ modules:
         ignore  : False
         iterate :
             - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
             - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
             - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=True
 
     - module:
         name    : RECIRC_L2UC
