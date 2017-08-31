@@ -803,7 +803,8 @@ p4pd_rewrite_init (void)
         return ret;
     }
 
-    // "decap vlan" entry
+    // "decap vlan" entry - 
+    // - For L2 Mcast packets
     data.actionid = REWRITE_REWRITE_ID;
     ret = dm->insert_withid(&data, decap_vlan_idx);
     if (ret != HAL_RET_OK) {

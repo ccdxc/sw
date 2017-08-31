@@ -997,6 +997,7 @@ TEST_F(session_test, test6)
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
     
+#if 0
     // VIP
     ep_spec1.mutable_meta()->set_tenant_id(6);
     ep_spec1.set_l2_segment_handle(l2seg_hdl2);
@@ -1007,6 +1008,7 @@ TEST_F(session_test, test6)
     ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
 
     // PIP
     ep_spec1.mutable_meta()->set_tenant_id(6);

@@ -6,6 +6,7 @@
 -I ../../../src
 -I ../../../../include
 -I ../../../../gen
+-I ../../../../gen/common_rxdma_actions/include
 -I ../../../../utils/bitmap
 -I ../../../../gen/iris/include/
 -I ../../../../p4/nw/include

@@ -1048,8 +1048,9 @@ process_iflow_for_lb(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("PI-Session:{} iflow: DNAT/TNAT dep: {} -> {}, "
             "dif: {} -> {}, dl2seg: {} -> {}", __FUNCTION__,
             ep_l2_key_to_str(iflow->dep), ep_l2_key_to_str(dep_nat),
-            iflow->dif->if_id, dif_nat->if_id,
-            iflow->dl2seg->seg_id, dl2seg_nat->seg_id);
+            iflow->dif ? iflow->dif->if_id : (uint32_t)-1, dif_nat->if_id,
+            iflow->dl2seg ? iflow->dl2seg->seg_id : (uint32_t)-1, 
+            dl2seg_nat->seg_id);
 
     iflow->dep = dep_nat;
     iflow->dif = dif_nat;
@@ -1112,8 +1113,9 @@ process_rflow_for_lb(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("PI-Session:{} rflow: DNAT/TNAT dep: {} -> {}, "
             "dif: {} -> {}, dl2seg: {} -> {}",
             ep_l2_key_to_str(rflow->dep), ep_l2_key_to_str(dep_nat),
-            rflow->dif->if_id, dif_nat->if_id,
-            rflow->dl2seg->seg_id, dl2seg_nat->seg_id);
+            rflow->dif ? rflow->dif->if_id : (uint32_t)-1, dif_nat->if_id,
+            rflow->dl2seg ? rflow->dl2seg->seg_id : (uint32_t)-1, 
+            dl2seg_nat->seg_id);
 
     rflow->dep = dep_nat;
     rflow->dif = dif_nat;
@@ -1159,8 +1161,12 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     hal_ret_t               ret = HAL_RET_OK;
     flow_t                  *iflow = NULL;
     ep_t                    *sep = NULL, *dep = NULL;
+    bool                    dnat_v = false;
 
     iflow = session->iflow;
+
+    dnat_v = (iflow->config.nat_type == NAT_TYPE_DNAT ||
+                iflow->config.nat_type == NAT_TYPE_TWICE_NAT);
 
     // get the src and dst EPs from the flow key
     if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
@@ -1168,12 +1174,14 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
                                   &sep, &dep) != HAL_RET_OK) {
         if (sep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
+            args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+            return HAL_RET_EP_NOT_FOUND;
         }
-        if (dep == NULL) {
+        if (dep == NULL && !dnat_v) {
             HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
+            args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+            return HAL_RET_EP_NOT_FOUND;
         }
-        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return HAL_RET_EP_NOT_FOUND;
     }
 
     iflow->sep = sep;
@@ -1185,8 +1193,10 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
 
     // lookup ingress & egress interfaces
     iflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
-    iflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
-    if ((iflow->sif == NULL) || (iflow->dif == NULL)) {
+    if (dep) {
+        iflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+    }
+    if ((iflow->sif == NULL) || (dep && iflow->dif == NULL)) {
         HAL_TRACE_ERR("Src/Dst interface not found");
         args->rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
         return  HAL_RET_IF_NOT_FOUND;
@@ -1195,9 +1205,11 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     // lookup ingress & egress L2 segments
     iflow->sl2seg =
         (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
-    iflow->dl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
-    if ((iflow->sl2seg == NULL) || (iflow->dl2seg == NULL)) {
+    if (dep) {
+        iflow->dl2seg =
+            (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+    }
+    if ((iflow->sl2seg == NULL) || (dep && iflow->dl2seg == NULL)) {
         args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
@@ -1205,8 +1217,8 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("PI-Session:{} iflow: sep:{}, dep:{}, sif_id:{}, "
             "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
             ep_l2_key_to_str(iflow->sep), ep_l2_key_to_str(iflow->dep),
-            iflow->sif->if_id, iflow->dif->if_id, 
-            iflow->sl2seg->seg_id, iflow->dl2seg->seg_id);
+            iflow->sif->if_id, iflow->dif ? iflow->dif->if_id : -1, 
+            iflow->sl2seg->seg_id, iflow->dl2seg ? iflow->dl2seg->seg_id : -1);
     return ret;
 }
 
@@ -1219,6 +1231,7 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
     hal_ret_t               ret = HAL_RET_OK;
     flow_t                  *rflow = NULL;
     ep_t                    *sep = NULL, *dep = NULL;
+    bool                    dnat_v = false;
 
     rflow = session->rflow;
     if (!rflow) {
@@ -1226,18 +1239,23 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
         return ret;
     }
 
+    dnat_v = (rflow->config.nat_type == NAT_TYPE_DNAT ||
+                rflow->config.nat_type == NAT_TYPE_TWICE_NAT);
+
     // get the src and dst EPs from the flow key
     if (ep_get_from_flow_key_spec(args->tenant->tenant_id, 
                                   args->spec->responder_flow().flow_key(),
                                   &sep, &dep) != HAL_RET_OK) {
         if (sep == NULL) {
             HAL_TRACE_ERR("PI-Session:{} Source EP not found", __FUNCTION__);
+            args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+            return HAL_RET_EP_NOT_FOUND;
         }
-        if (dep == NULL) {
+        if (dep == NULL && !dnat_v) {
             HAL_TRACE_ERR("PI-Session:{} Destination EP not found", __FUNCTION__);
+            args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+            return HAL_RET_EP_NOT_FOUND;
         }
-        args->rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
-        return HAL_RET_EP_NOT_FOUND;
     }
 
     rflow->sep = sep;
@@ -1249,8 +1267,10 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
 
     // lookup ingress & egress interfaces
     rflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
-    rflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
-    if ((rflow->sif == NULL) || (rflow->dif == NULL)) {
+    if (dep) { 
+        rflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+    }
+    if ((rflow->sif == NULL) || (dep && rflow->dif == NULL)) {
         HAL_TRACE_ERR("Src/Dst interface not found");
         args->rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
         return  HAL_RET_IF_NOT_FOUND;
@@ -1259,9 +1279,11 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
     // lookup ingress & egress L2 segments
     rflow->sl2seg =
         (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
-    rflow->dl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
-    if ((rflow->sl2seg == NULL) || (rflow->dl2seg == NULL)) {
+    if (dep) {
+        rflow->dl2seg =
+            (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+    }
+    if ((rflow->sl2seg == NULL) || (dep && rflow->dl2seg == NULL)) {
         args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
@@ -1269,8 +1291,8 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("PI-Session:{} rflow: sep:{}, dep:{}, sif_id:{}, "
             "dif_id:{}, sl2seg_id:{}, dl2seg_id:{}", __FUNCTION__,
             ep_l2_key_to_str(rflow->sep), ep_l2_key_to_str(rflow->dep),
-            rflow->sif->if_id, rflow->dif->if_id, 
-            rflow->sl2seg->seg_id, rflow->dl2seg->seg_id);
+            rflow->sif->if_id, rflow->dif ? rflow->dif->if_id : -1, 
+            rflow->sl2seg->seg_id, rflow->dl2seg ? rflow->dl2seg->seg_id : -1);
 
     return ret;
 }

@@ -66,7 +66,7 @@ class FlowObject(base.ConfigObjectBase):
         self.action     = self.__sfep.flow_info.action.upper()
         self.in_qos     = self.__sfep.flow_info.in_qos
         self.eg_qos     = self.__dfep.flow_info.eg_qos
-       
+
         self.__init_key()
         self.__init_info()
         self.__init_nat()
@@ -85,8 +85,8 @@ class FlowObject(base.ConfigObjectBase):
         self.nat_dip = self.__dfep.GetNatDip()
         self.nat_dport = self.__dfep.GetNatDport()
         return
-       
-   
+
+
     def __init_ip_flow_key(self):
         self.sip = self.__sfep.GetFlowSip()
         self.dip = self.__dfep.GetFlowDip()
@@ -157,7 +157,7 @@ class FlowObject(base.ConfigObjectBase):
         if idx > len(self.egr_mirror_sessions):
             return None
         return self.egr_mirror_sessions[idx - 1]
-    
+
     def IsSnat(self):
         return self.nat_type == 'SNAT'
 
@@ -266,7 +266,7 @@ class FlowObject(base.ConfigObjectBase):
             string += "%04x" % (self.ethertype)
         else:
             assert(0)
-        
+
         cfglogger.info("- %s    : %s" % (self.direction, string))
         string = "%s" % self.action
         if self.IsTCP():
@@ -319,21 +319,25 @@ class FlowObject(base.ConfigObjectBase):
         cfglogger.debug("- Destination Segment Filter Match =", match)
         if match == False: return match
         # Match Source Endpoint
-        match = self.__sep.IsFilterMatch(config_filter.src.endpoint)
-        cfglogger.debug("- Source Endpoint Filter Match =", match)
-        if match == False: return match
+        if self.__sep:
+            match = self.__sep.IsFilterMatch(config_filter.src.endpoint)
+            cfglogger.debug("- Source Endpoint Filter Match =", match)
+            if match == False: return match
         # Match Destination Endpoint
-        match = self.__dep.IsFilterMatch(config_filter.dst.endpoint)
-        cfglogger.debug("- Destination Endpoint Filter Match =", match)
-        if match == False: return match
+        if self.__dep:
+            match = self.__dep.IsFilterMatch(config_filter.dst.endpoint)
+            cfglogger.debug("- Destination Endpoint Filter Match =", match)
+            if match == False: return match
         # Match Source Interface
-        match = self.__sep.intf.IsFilterMatch(config_filter.src.interface)
-        cfglogger.debug("- Source Interface Filter Match =", match)
-        if match == False: return match
+        if self.__sep:
+            match = self.__sep.intf.IsFilterMatch(config_filter.src.interface)
+            cfglogger.debug("- Source Interface Filter Match =", match)
+            if match == False: return match
         # Match Destination Interface
-        match = self.__dep.intf.IsFilterMatch(config_filter.dst.interface)
-        cfglogger.debug("- Destination Interface Filter Match =", match)
-        if match == False: return match
+        if self.__dep:
+            match = self.__dep.intf.IsFilterMatch(config_filter.dst.interface)
+            cfglogger.debug("- Destination Interface Filter Match =", match)
+            if match == False: return match
         # Match Flow
         match = super().IsFilterMatch(config_filter.flow.filters)
         cfglogger.debug("- Flow Filter Match =", match)
@@ -342,7 +346,7 @@ class FlowObject(base.ConfigObjectBase):
 
     def SetupTestcaseConfig(self, obj):
         obj.flow = self
-        obj.src.tenant = self.__sten 
+        obj.src.tenant = self.__sten
         obj.dst.tenant = self.__dten
         obj.src.segment = self.__sseg
         obj.dst.segment = self.__dseg
@@ -359,9 +363,11 @@ class FlowObject(base.ConfigObjectBase):
     def ShowTestcaseConfig(self, obj, logger):
         logger.info("Config Objects for %s %s" %\
                   (self.direction, self.GID()))
-        logger.info("- Src EP: %s" % obj.src.endpoint.GID())
-        logger.info("- Src IF: %s" % obj.src.endpoint.intf.GID())
-        logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
-        logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
+        if obj.src.endpoint:
+            logger.info("- Src EP: %s" % obj.src.endpoint.GID())
+            logger.info("- Src IF: %s" % obj.src.endpoint.intf.GID())
+        if obj.dst.endpoint:
+            logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
+            logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
         logger.info("- Flow  : %s" % obj.flow.GID())
 

@@ -8,7 +8,7 @@ config_filter:
         tenant  : filter://any
         segment : filter://any
         endpoint: filter://any
-    flow        : filter://proto=TCP,dport=80
+    flow        : filter://proto=TCP,dport=80,label=NETWORKING
     maxflows    : 1
 
 packets:

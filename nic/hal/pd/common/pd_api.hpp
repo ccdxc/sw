@@ -133,6 +133,8 @@ static inline void
 pd_lif_args_init (pd_lif_args_t *args)
 {
     args->lif = NULL;
+    args->with_hw_lif_id = false;
+    args->hw_lif_id = 0;
     return;
 }
 
