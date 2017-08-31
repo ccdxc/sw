@@ -123,6 +123,10 @@
         {
             "name":"ipsec_ip_header",
             "size_kb": 64
+        },
+        {
+            "name": "sesq",
+            "size_kb": 16384
         }
     ]
 }

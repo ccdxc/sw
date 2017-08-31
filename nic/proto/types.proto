@@ -156,6 +156,7 @@ enum WRingType {
   WRING_TYPE_NMPR_BIG_RX    = 7;    
   WRING_TYPE_BSQ            = 8;
   WRING_TYPE_BRQ            = 9;
+  WRING_TYPE_SESQ           = 10;    
 }
 
 // Types of Proxy Service

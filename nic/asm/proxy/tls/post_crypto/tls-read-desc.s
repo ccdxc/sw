@@ -25,6 +25,7 @@ tls_read_desc_process:
     phvwr       p.read_desc_status, d.status
     phvwr       p.read_desc_output_list_address, d.output_list_address
     phvwr       p.to_s4_odesc, d.output_list_address
+    CAPRI_OPERAND_DEBUG(d.output_list_address)
 table_read_bsq_consume:
 	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_bsq_consume_process,
                           k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,

@@ -21,43 +21,46 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] = 
-        (pd_wring_meta_t) {false, "serq", 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
-                                        CAPRI_SEM_TNMDR_RAW_ADDR};
+                           CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR};
  
     g_meta[types::WRING_TYPE_NMDR_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
-                                        CAPRI_SEM_RNMDR_RAW_ADDR};
+                           CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR};
     
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
-                                        CAPRI_SEM_TNMPR_SMALL_RAW_ADDR};
+                           CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
-                                        CAPRI_SEM_RNMPR_SMALL_RAW_ADDR};
+                           CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
-                                        CAPRI_SEM_TNMPR_RAW_ADDR};
+                           CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
-                                        CAPRI_SEM_RNMPR_RAW_ADDR};
+                           CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR};
 
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, "bsq", 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
 
     g_meta[types::WRING_TYPE_BRQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0};
+
+    g_meta[types::WRING_TYPE_SESQ] = 
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
 
     return HAL_RET_OK;
 }
@@ -139,16 +142,28 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         get_default_slot_value(type, index, value);
         p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes);
     }
-    if (meta->semaphore_addr) {
+    if (meta->alloc_semaphore_addr) {
         // Initialize CI to ring size
         uint32_t val32;
         // HW full condition is PI + 1 == CI, so for a ring size of N,
         // need to set CI to N + 1
         val32 = htonl(meta->num_slots + 1);
         HAL_TRACE_DEBUG("writing {0} {1} to 0x{2:x}\n", meta->num_slots,
-                                val32, meta->semaphore_addr +
+                                val32, meta->alloc_semaphore_addr +
                                 CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
-        p4plus_hbm_write(meta->semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
+        p4plus_hbm_write(meta->alloc_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
+                                        (uint8_t *)&val32, sizeof (uint32_t));
+    }
+    if (meta->free_semaphore_addr) {
+        // Initialize CI to ring size
+        uint32_t val32;
+        // HW full condition is PI + 1 == CI, so for a ring size of N,
+        // need to set CI to N + 1
+        val32 = htonl(meta->num_slots + 1);
+        HAL_TRACE_DEBUG("writing {0} {1} to 0x{2:x}\n", meta->num_slots,
+                                val32, meta->free_semaphore_addr +
+                                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
+        p4plus_hbm_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         (uint8_t *)&val32, sizeof (uint32_t));
     }
     return HAL_RET_OK;

@@ -54,6 +54,10 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_BARCO_KEY_MEM              "key-mem"
 #define CAPRI_HBM_REG_IPSEC_PAD_TABLE    "ipsec_pad_table"
 #define CAPRI_HBM_REG_IPSEC_IP_HDR       "ipsec_ip_header"
+#define CAPRI_HBM_REG_BSQ                "bsq"
+#define CAPRI_HBM_REG_SERQ               "serq"
+#define CAPRI_HBM_REG_SESQ               "sesq"
+
 
 #define CAPRI_NUM_SEMAPHORES            512
 

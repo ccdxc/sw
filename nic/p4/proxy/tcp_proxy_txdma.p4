@@ -161,11 +161,46 @@ metadata common_global_phv_t common_global_scratch;
  * and do not implement any pseudo code
  *****************************************************************************/
 
+#define RX2TX_PARAMS                                                                                  \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5,ci_5,snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, write_seq, tso_seq, snd_cwnd
+#
+
+#define GENERATE_RX2TX_D                                                                               \
+    modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
+    modify_field(rx2tx_d.cosA, cosA);                                                                  \
+    modify_field(rx2tx_d.cosB, cosB);                                                                  \
+    modify_field(rx2tx_d.cos_sel, cos_sel);                                                            \
+    modify_field(rx2tx_d.eval_last, eval_last);                                                        \
+    modify_field(rx2tx_d.host, host);                                                                  \
+    modify_field(rx2tx_d.total, total);                                                                \
+    modify_field(rx2tx_d.pid, pid);                                                                    \
+    modify_field(rx2tx_d.pi_0, pi_0);                                                                  \
+    modify_field(rx2tx_d.ci_0, ci_0);                                                                  \
+    modify_field(rx2tx_d.pi_1, pi_1);                                                                  \
+    modify_field(rx2tx_d.ci_1, ci_1);                                                                  \
+    modify_field(rx2tx_d.pi_2, pi_2);                                                                  \
+    modify_field(rx2tx_d.ci_2, ci_2);                                                                  \
+    modify_field(rx2tx_d.pi_3, pi_3);                                                                  \
+    modify_field(rx2tx_d.ci_3, ci_3);                                                                  \
+    modify_field(rx2tx_d.pi_4, pi_4);                                                                  \
+    modify_field(rx2tx_d.ci_4, ci_4);                                                                  \
+    modify_field(rx2tx_d.pi_5, pi_5);                                                                  \
+    modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
+    modify_field(rx2tx_d.snd_una, snd_una);                                                            \
+    modify_field(rx2tx_d.rcv_nxt, rcv_nxt);                                                            \
+    modify_field(rx2tx_d.snd_wnd, snd_wnd);                                                            \
+    modify_field(rx2tx_d.snd_wl1, snd_wl1);                                                            \
+    modify_field(rx2tx_d.snd_up, snd_up);                                                              \
+    modify_field(rx2tx_d.write_seq, write_seq);                                                        \
+    modify_field(rx2tx_d.tso_seq, tso_seq);                                                            \
+    modify_field(rx2tx_d.snd_cwnd, snd_cwnd);
+
+
+
 /*
  * Stage 0 table 0 action
  */
-action read_rx2tx(pc, snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, write_seq,
-                    tso_seq, snd_cwnd) {
+action read_rx2tx(RX2TX_PARAMS) {
 
     // k + i for stage 0
 
@@ -173,15 +208,7 @@ action read_rx2tx(pc, snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, write_seq,
     GENERATE_GLOBAL_K
 
     // d for stage 0
-    modify_field(rx2tx_d.pc, pc);
-    modify_field(rx2tx_d.snd_una, snd_una);
-    modify_field(rx2tx_d.rcv_nxt, rcv_nxt);
-    modify_field(rx2tx_d.snd_wnd, snd_wnd);
-    modify_field(rx2tx_d.snd_wl1, snd_wl1);
-    modify_field(rx2tx_d.snd_up, snd_up);
-    modify_field(rx2tx_d.write_seq, write_seq);
-    modify_field(rx2tx_d.tso_seq, tso_seq);
-    modify_field(rx2tx_d.snd_cwnd, snd_cwnd);
+    GENERATE_RX2TX_D
 }
 
 /*

@@ -318,17 +318,17 @@
 #define SESQ_PRODUCER_IDX              0xba00ba10
 #define SESQ_CONSUMER_IDX              0xba00ba18
 
-#define RNMPR_ALLOC_IDX                CAPRI_SEM_RNMPR_INF_ADDR
-#define RNMPR_FREE_IDX                 0xba00ba28
+#define RNMPR_ALLOC_IDX                CAPRI_SEM_RNMPR_ALLOC_INF_ADDR
+#define RNMPR_FREE_IDX                 CAPRI_SEM_RNMPR_FREE_INF_ADDR
 
-#define RNMDR_ALLOC_IDX                CAPRI_SEM_RNMDR_INF_ADDR
-#define RNMDR_FREE_IDX                 0xba00ba38
+#define RNMDR_ALLOC_IDX                CAPRI_SEM_RNMDR_ALLOC_INF_ADDR
+#define RNMDR_FREE_IDX                 CAPRI_SEM_RNMDR_FREE_INF_ADDR
 
-#define TNMPR_ALLOC_IDX                0xba00ba40
-#define TNMPR_FREE_IDX                 0xba00ba48
+#define TNMPR_ALLOC_IDX                CAPRI_SEM_TNMPR_ALLOC_INF_ADDR
+#define TNMPR_FREE_IDX                 CAPRI_SEM_TNMPR_FREE_INF_ADDR
 
-#define TNMDR_ALLOC_IDX                0xba00ba50
-#define TNMDR_FREE_IDX                 0xba00ba58
+#define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDR_ALLOC_INF_ADDR
+#define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDR_FREE_INF_ADDR
 
 #define ARQ_PRODUCER_IDX               0xba00ba60
 #define ARQ_CONSUMER_IDX               0xba00ba68

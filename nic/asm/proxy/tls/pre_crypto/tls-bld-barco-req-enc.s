@@ -25,10 +25,10 @@ table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_status_address, k.{to_s4_idesc}.dx
     phvwr       p.barco_desc_input_list_address, k.{to_s4_idesc}.dx
-    CAPRI_OPERAND_DEBUG(d.idesc)
+    CAPRI_OPERAND_DEBUG(k.to_s4_idesc)
 
     phvwr       p.barco_desc_output_list_address, k.{to_s4_odesc}.dx
-    CAPRI_OPERAND_DEBUG(d.odesc)
+    CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
 
     phvwr       p.barco_desc_key_desc_index, d.{key_addr}.dx
     CAPRI_OPERAND_DEBUG(d.key_addr)
@@ -56,7 +56,7 @@ table_read_QUEUE_BRQ:
     
 	/* data will be in r3 */
 	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
-    phvwr       p.barco_desc_doorbell_data, r3
+    phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3)
         
     addi        r3, r0, BRQ_QPCB_BASE        
