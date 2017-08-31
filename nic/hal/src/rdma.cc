@@ -76,7 +76,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 {
     hal_ret_t                    ret;
 
-    ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_lif_table1_entry_add(lif,
+    ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(lif,
                entry_p->pt_base_addr_page_id,
                entry_p->log_num_pt_entries,
                entry_p->cqcb_base_addr_page_id,
@@ -91,7 +91,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     }
 #if 0
     // TODO: Check for txdma routine
-    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_lif_table1_entry_add(lif,
+    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rx_stage0_rdma_params_table_actiondataentry_add(lif,
                entry_p->pt_base_addr_page_id,
                entry_p->log_num_pt_entries,
                entry_p->cqcb_base_addr_page_id,
@@ -113,45 +113,25 @@ hal_ret_t
 rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
 {
     hal_ret_t                    ret;
-    common_p4plus_stage0_lif_table1_actiondata data = {0};
+    rx_stage0_rdma_params_table_actiondata data = {0};
 
-    ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_lif_table1_entry_get(lif, &data);
+    ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(lif, &data);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table entry get failure for rxdma, idx : {}, err : {}",
                       lif, ret);
         return ret;
     }
-    entry_p->pt_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.pt_base_addr_page_id;
-    entry_p->log_num_pt_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_pt_entries;
-    entry_p->cqcb_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.cqcb_base_addr_page_id;
-    entry_p->log_num_cq_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_cq_entries;
-    entry_p->prefetch_pool_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.prefetch_pool_base_addr_page_id;
-    entry_p->log_num_prefetch_pool_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_prefetch_pool_entries;
+    entry_p->pt_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.pt_base_addr_page_id;
+    entry_p->log_num_pt_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_pt_entries;
+    entry_p->cqcb_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.cqcb_base_addr_page_id;
+    entry_p->log_num_cq_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_cq_entries;
+    entry_p->prefetch_pool_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
+    entry_p->log_num_prefetch_pool_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
 
     return HAL_RET_OK;
 }
 
-hal_ret_t
-rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
-{
-    hal_ret_t                    ret;
-    common_p4plus_stage0_lif_table1_actiondata data = {0};
 
-    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_lif_table1_entry_get(lif, &data);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("stage0 rdma LIF table entry get failure for txdma, idx : {}, err : {}",
-                      lif, ret);
-        return ret;
-    }
-    entry_p->pt_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.pt_base_addr_page_id;
-    entry_p->log_num_pt_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_pt_entries;
-    entry_p->cqcb_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.cqcb_base_addr_page_id;
-    entry_p->log_num_cq_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_cq_entries;
-    entry_p->prefetch_pool_base_addr_page_id = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.prefetch_pool_base_addr_page_id;
-    entry_p->log_num_prefetch_pool_entries = data.common_p4plus_stage0_lif_table1_action_u.common_p4plus_stage0_lif_table1_common_p4plus_stage0_lif_table1.log_num_prefetch_pool_entries;
-
-    return HAL_RET_OK;
-}
 
 uint32_t
 rdma_lif_init (uint16_t lif, lif_init_attr_t *attr_p)

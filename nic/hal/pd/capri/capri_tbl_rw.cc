@@ -290,6 +290,19 @@ static void capri_program_p4plus_table_mpu_pc_for_stage0(cap_te_csr_t *te_csr,
 #define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 
+static void capri_program_p4plus_sram_table_mpu_pc_for_stage0(cap_te_csr_t *te_csr, 
+                                                              uint32_t pc)
+{
+    te_csr->cfg_table_property[3].read();
+    te_csr->cfg_table_property[3].mpu_pc(pc >> 6);
+    te_csr->cfg_table_property[3].mpu_pc_dyn(0);
+    te_csr->cfg_table_property[3].addr_base(0);
+    te_csr->cfg_table_property[3].write();
+}
+
+#define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG    "rx_stage0_load_rdma_params.bin"
+#define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG    "tx_stage0_load_rdma_params.bin"
+
 static int capri_table_p4plus_init()
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -315,6 +328,28 @@ static int capri_table_p4plus_init()
     capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
                        (uint32_t) capri_action_p4plus_asm_base);
   
+    
+    // Resolve the p4plus rxdma stage 0 RDMA params SRAM table 
+    // program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config 3 with the PC
+    te_csr = &cap0.pcr.te[0 /*stage-id*/];
+    capri_program_p4plus_sram_table_mpu_pc_for_stage0(te_csr, 
+                       (uint32_t) capri_action_p4plus_asm_base);
+ 
+
     // Resolve the p4plus txdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,

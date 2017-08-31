@@ -1019,13 +1019,13 @@ parser start {
     return ingress;
 }
 
-action common_p4plus_stage0_lif_table1(pt_base_addr_page_id, 
-                                       log_num_pt_entries, 
-                                       cqcb_base_addr_page_id, 
-                                       log_num_cq_entries,
-                                       prefetch_pool_base_addr_page_id,
-                                       log_num_prefetch_pool_entries, 
-                                       reserved) {
+action rx_stage0_load_rdma_params(pt_base_addr_page_id, 
+                                  log_num_pt_entries, 
+                                  cqcb_base_addr_page_id, 
+                                  log_num_cq_entries,
+                                  prefetch_pool_base_addr_page_id,
+                                  log_num_prefetch_pool_entries, 
+                                  reserved) {
     modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
     modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
     modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
@@ -1038,12 +1038,12 @@ action common_p4plus_stage0_lif_table1(pt_base_addr_page_id,
 }
 
 @pragma stage 0
-table common_p4plus_stage0_lif_table1 {
+table rx_stage0_rdma_params_table {
     reads {
         p4_intr_global.lif : exact;
     }
     actions {
-        common_p4plus_stage0_lif_table1;
+        rx_stage0_load_rdma_params;
     }
     size : LIF_TABLE_SIZE;
 }
@@ -1120,7 +1120,7 @@ control common_p4plus_stage0 {
     }
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         if (p4_intr.recirc == 0) {
-            apply(common_p4plus_stage0_lif_table1);
+            apply(rx_stage0_rdma_params_table);
         } else {
             // apply(rx_table_s0_t0);
             // apply(rx_table_s0_t1); 

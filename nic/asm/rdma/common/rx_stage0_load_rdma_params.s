@@ -7,7 +7,7 @@ struct phv_ p;
 
 %%
 
-common_p4plus_stage0_lif_table1:
+rx_stage0_load_rdma_params:
     add r1, r0, offsetof(struct phv_, common_global_global_data)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.pt_base_addr_page_id)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.log_num_pt_entries)
