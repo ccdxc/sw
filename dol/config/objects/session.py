@@ -54,7 +54,10 @@ class SessionObject(base.ConfigObjectBase):
         self.rflow = flow.FlowObject(self, self.responder, self.initiator,
                                      'RFLOW', self.label,
                                      self.spec.responder.span)
+        self.Show()
+        return defs.status.SUCCESS
 
+    def Show(self):
         cfglogger.info("Created Session with GID:%s" % self.GID())
         cfglogger.info("- Label    : %s" % self.label)
         string = None
@@ -64,11 +67,28 @@ class SessionObject(base.ConfigObjectBase):
         
         if string:
            cfglogger.info("- Info     : %s" % string)
+
         self.initiator.Show('Initiator')
-        self.responder.Show('Responder')
         self.iflow.Show()
+        if self.iflow.in_qos:
+            cfglogger.info("  -   Ingress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
+                           (self.iflow.in_qos.cos_rw.get(), self.iflow.in_qos.cos.get(),
+                            self.iflow.in_qos.dscp_rw.get(), self.iflow.in_qos.dscp.get()))
+        if self.iflow.eg_qos:
+            cfglogger.info("  -   Eggress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
+                           (self.iflow.eg_qos.cos_rw.get(), self.iflow.eg_qos.cos.get(),
+                            self.iflow.eg_qos.dscp_rw.get(), self.iflow.eg_qos.dscp.get()))
+        self.responder.Show('Responder')
         self.rflow.Show()
-        return defs.status.SUCCESS
+        if self.rflow.in_qos:
+            cfglogger.info("  -   Ingress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
+                           (self.rflow.in_qos.cos_rw.get(), self.rflow.in_qos.cos.get(),
+                            self.rflow.in_qos.dscp_rw.get(), self.rflow.in_qos.dscp.get()))
+        if self.rflow.eg_qos:
+            cfglogger.info("  -   Eggress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
+                           (self.rflow.eg_qos.cos_rw.get(), self.rflow.eg_qos.cos.get(),
+                            self.rflow.eg_qos.dscp_rw.get(), self.rflow.eg_qos.dscp.get()))
+        return
 
     def IsTCP(self):
         return self.initiator.IsTCP()

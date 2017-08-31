@@ -25,6 +25,12 @@ def Setup(infra, module):
             module.testspec.config_filter.src.segment.Extend(iterelem.segment)
             module.testspec.config_filter.dst.segment.Extend(iterelem.segment)
 
+        if 'srcseg' in iterelem.__dict__:
+            module.testspec.config_filter.src.segment.Extend(iterelem.srcseg)
+
+        if 'dstseg' in iterelem.__dict__:
+            module.testspec.config_filter.dst.segment.Extend(iterelem.dstseg)
+
     if module.args == None:
         return
 

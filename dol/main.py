@@ -29,20 +29,27 @@ import infra.common.glopts as glopts
 
 from infra.common.logging import logger
 
-logger.info("Initializing Factory.")
-factory.init()
+import sys
 
-logger.info("Initializing Config Infra")
-config.init()
+def Main():
+    logger.info("Initializing Config Infra")
+    config.init()
 
-generator.main(glopts.GlobalOptions.topology)
+    logger.info("Initializing Factory.")
+    factory.init()
 
-if glopts.GlobalOptions.cfgonly:
-    logger.info("CONFIG Only Run......Stopping.")
-    sys.exit(0)
+    generator.main(glopts.GlobalOptions.topology)
 
-logger.info("Initializing Engine.")
-engine.init()
-engine.main()
+    if glopts.GlobalOptions.cfgonly:
+        logger.info("CONFIG Only Run......Stopping.")
+        return 0
 
+    logger.info("Initializing Engine.")
+    engine.init()
+    return engine.main()
+
+
+if __name__ == '__main__':
+    status = Main()
+    sys.exit(status)
 

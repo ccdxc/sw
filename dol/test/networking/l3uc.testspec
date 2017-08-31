@@ -2,11 +2,11 @@
 config_filter:
     src:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        segment : filter://any
         endpoint: filter://remote=True
     dst:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L3
     maxflows    : None
@@ -16,8 +16,6 @@ packets:
         id          : BASE     # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : 
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -47,6 +45,7 @@ packets:
     - packet:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
@@ -61,12 +60,13 @@ packets:
     - packet:
         id          : EXP_PKT     # Expected packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/dst/segment/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : callback://networking/packets/GetExpectedPacketCos
                 vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
                 tos     : ref://testcase/config/flow/eg_qos/dscp

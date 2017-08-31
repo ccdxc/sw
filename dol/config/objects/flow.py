@@ -142,6 +142,9 @@ class FlowObject(base.ConfigObjectBase):
     def IsUDP(self):
         return self.proto == 'UDP'
 
+    def IsL2(self):
+        return self.fwtype == 'L2'
+
     def HasL4Ports(self):
         return self.IsTCP() or self.IsUDP()
 

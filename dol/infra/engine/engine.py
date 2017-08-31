@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 
 import pdb
-import sys
 
 import infra.engine.modmgr as modmgr
 import infra.factory.factory as factory
@@ -17,6 +16,11 @@ from config.store           import Store
 global modDB
 
 TestCaseDB = objects.ObjectDatabase(None)
+
+gl_num_pass = 0
+gl_num_fail = 0
+gl_num_total = 0
+gl_junk_recvd = False
 
 def init():
     global modDB
@@ -38,6 +42,23 @@ def CreateInfraData():
     obj.LockAttributes()
     return obj
 
+def ProcessReport():
+    report = TrigExpEngine.get_run_report()
+    report.show()
+    for tcid,tcreport in report.details.items():
+        tc = TestCaseDB.Get(tcid)
+        tc.status = tcreport.status
+        tc.module.UpdateResult(tc)
+
+    global gl_num_pass
+    gl_num_pass += report.passed_count
+    global gl_num_fail
+    gl_num_fail += report.failed_count
+    global gl_junk_recvd
+    gl_junk_recvd = report.junk_recvd
+    TrigExpEngine.reset()
+    return
+
 def ExecuteAllModules():
     module = modDB.getfirst()
     while module != None:
@@ -45,9 +66,10 @@ def ExecuteAllModules():
         status = module.main(infra_data)
         if len(module.CompletedTestCases):
             TestCaseDB.SetAll(module.CompletedTestCases)
+        ProcessReport()
         module = modDB.getnext()
  
-def PrintSummaryAndExit(report):
+def GetSummaryAndResult():
     print("\nResult Summary:")
     print("=" * 78)
     print("%-16s %-32s %-6s %-6s %-6s %-6s" %\
@@ -65,36 +87,23 @@ def PrintSummaryAndExit(report):
     
     print("-" * 78)
     print("%-16s %-32s %-6s %6d %6d %6d" %\
-          ('Total', '', '', report.passed_count, report.failed_count, 
-           report.passed_count + report.failed_count))
+          ('Total', '', '',
+           gl_num_pass, gl_num_fail, gl_num_pass + gl_num_fail))
     print("-" * 78)
+
     if final_result != 0:
         print("Final Status = FAIL")
-        sys.exit(1)
+        return 1
     
-    if report.junk_recvd:
+    global gl_junk_recvd
+    if gl_junk_recvd:
         print("Some junk packets where received")
         print("Final Status = FAIL")
-        sys.exit(1)
+        return 1
     
     print("Final Status = PASS")
-    sys.exit(0)   
-
-    return
-        
-def ProcessReport():
-    report = TrigExpEngine.get_run_report()
-    report.show()
-    for tcid,tcreport in report.details.items():
-        tc = TestCaseDB.Get(tcid)
-        tc.status = tcreport.status
-        tc.module.UpdateResult(tc)
-    PrintSummaryAndExit(report)
-    return
+    return 0
 
 def main():
     ExecuteAllModules()
-    #if GlobalOptions.dryrun == True:
-    #    sys.exit(0)
-    ProcessReport()
-    return
+    return GetSummaryAndResult()
