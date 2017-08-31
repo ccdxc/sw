@@ -45,7 +45,7 @@ func verifyK8sServices(t *testing.T, client *k8sclient.Clientset) {
 
 	for {
 		select {
-		case <-time.After(interval + time.Second):
+		case <-time.After(time.Second * 5):
 			close(stopCh)
 			t.Fatalf("Timed out waiting for k8s services to be deployed")
 		case <-doneCh:
