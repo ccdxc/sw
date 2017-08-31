@@ -14,8 +14,6 @@ import (
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
-
-	"google.golang.org/grpc"
 )
 
 // handleApisrvWatch handles api server watch events
@@ -101,7 +99,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string) {
 
 	// loop forever
 	for {
-		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
 		} else {

@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
+	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/listerwatcher"
 )
 
 // dummy vars to suppress unused errors
@@ -49,7 +49,7 @@ type eTrafficEncryptionPolicyV1Endpoints struct {
 }
 
 func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
 		"networkencryption.AutoMsgTrafficEncryptionPolicyListHelper": apisrvpkg.NewMessage("networkencryption.AutoMsgTrafficEncryptionPolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -157,7 +157,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 		apisrv.RegisterService("networkencryption.TrafficEncryptionPolicyV1", srv)
 		endpoints := networkencryption.MakeTrafficEncryptionPolicyV1ServerEndpoints(s.endpointsTrafficEncryptionPolicyV1, logger)
 		server := networkencryption.MakeGRPCServerTrafficEncryptionPolicyV1(ctx, endpoints, logger)
-		networkencryption.RegisterTrafficEncryptionPolicyV1Server(grpcserver, server)
+		networkencryption.RegisterTrafficEncryptionPolicyV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{

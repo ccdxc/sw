@@ -8,11 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	apisrv "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
 )
 
@@ -21,7 +20,7 @@ type testAPISrvBackend struct {
 }
 
 func (t *testAPISrvBackend) CompleteRegistration(ctx context.Context,
-	logger log.Logger, grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	t.regevents = t.regevents + 1
 	return nil
 }

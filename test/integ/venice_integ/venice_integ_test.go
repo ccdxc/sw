@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
@@ -127,7 +125,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	// create api server client
 	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
-	apicl, err := apiclient.NewGrpcAPIClient(integTestApisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(integTestApisrvURL, l)
 	if err != nil {
 		c.Fatalf("cannot create grpc client")
 	}

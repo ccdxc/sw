@@ -18,8 +18,8 @@ import (
 	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/listerwatcher"
 )
@@ -46,7 +46,7 @@ type e{{.Name}}Endpoints struct {
 }{{end}}
 
 func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 		{{range .Messages}}{{if isNestedMessage .}}{{else}}
 		"{{$pkgname}}.{{.Name}}":     apisrvpkg.NewMessage("{{$pkgname}}.{{.Name}}"){{if ne (len (getDbKey .)) 0}}.WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -139,7 +139,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		apisrv.RegisterService("{{$pkgname}}.{{.Name}}", srv)
 		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints{{$svcname}}, logger)
 		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
-		{{$pkgname}}.Register{{.Name}}Server(grpcserver, server)
+		{{$pkgname}}.Register{{.Name}}Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{

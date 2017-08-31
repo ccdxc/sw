@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -62,7 +60,7 @@ func TestNetworkWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -109,7 +107,7 @@ func TestEndpointWriter(t *testing.T) {
 
 	// app server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -159,7 +157,7 @@ func TestSgWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -205,7 +203,7 @@ func TestSgPolicyWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object

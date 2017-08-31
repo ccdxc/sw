@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/listerwatcher"
 )
 
 // dummy vars to suppress unused errors
@@ -121,7 +121,7 @@ type eTenantV1Endpoints struct {
 }
 
 func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
 		"network.AutoMsgEndpointListHelper": apisrvpkg.NewMessage("network.AutoMsgEndpointListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -644,7 +644,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.EndpointV1", srv)
 		endpoints := network.MakeEndpointV1ServerEndpoints(s.endpointsEndpointV1, logger)
 		server := network.MakeGRPCServerEndpointV1(ctx, endpoints, logger)
-		network.RegisterEndpointV1Server(grpcserver, server)
+		network.RegisterEndpointV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -728,7 +728,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.LbPolicyV1", srv)
 		endpoints := network.MakeLbPolicyV1ServerEndpoints(s.endpointsLbPolicyV1, logger)
 		server := network.MakeGRPCServerLbPolicyV1(ctx, endpoints, logger)
-		network.RegisterLbPolicyV1Server(grpcserver, server)
+		network.RegisterLbPolicyV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -812,7 +812,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.NetworkV1", srv)
 		endpoints := network.MakeNetworkV1ServerEndpoints(s.endpointsNetworkV1, logger)
 		server := network.MakeGRPCServerNetworkV1(ctx, endpoints, logger)
-		network.RegisterNetworkV1Server(grpcserver, server)
+		network.RegisterNetworkV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -896,7 +896,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.SecurityGroupV1", srv)
 		endpoints := network.MakeSecurityGroupV1ServerEndpoints(s.endpointsSecurityGroupV1, logger)
 		server := network.MakeGRPCServerSecurityGroupV1(ctx, endpoints, logger)
-		network.RegisterSecurityGroupV1Server(grpcserver, server)
+		network.RegisterSecurityGroupV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -980,7 +980,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.ServiceV1", srv)
 		endpoints := network.MakeServiceV1ServerEndpoints(s.endpointsServiceV1, logger)
 		server := network.MakeGRPCServerServiceV1(ctx, endpoints, logger)
-		network.RegisterServiceV1Server(grpcserver, server)
+		network.RegisterServiceV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -1064,7 +1064,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.SgpolicyV1", srv)
 		endpoints := network.MakeSgpolicyV1ServerEndpoints(s.endpointsSgpolicyV1, logger)
 		server := network.MakeGRPCServerSgpolicyV1(ctx, endpoints, logger)
-		network.RegisterSgpolicyV1Server(grpcserver, server)
+		network.RegisterSgpolicyV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
@@ -1148,7 +1148,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 		apisrv.RegisterService("network.TenantV1", srv)
 		endpoints := network.MakeTenantV1ServerEndpoints(s.endpointsTenantV1, logger)
 		server := network.MakeGRPCServerTenantV1(ctx, endpoints, logger)
-		network.RegisterTenantV1Server(grpcserver, server)
+		network.RegisterTenantV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{

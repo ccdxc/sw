@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package rpckit
+package rpckit_test
 
 import (
 	"errors"
@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/resolver"
+	. "github.com/pensando/sw/utils/rpckit"
 	. "github.com/pensando/sw/utils/testutils"
 )
 
@@ -60,7 +61,7 @@ func newRPCServerClient(t *testing.T) (*RPCServer, *RPCClient) {
 	}
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("grpc.local", rpcServer.listenURL, WithTracerEnabled(true))
+	rpcClient, err := NewRPCClient("grpc.local", rpcServer.GetListenURL(), WithTracerEnabled(true))
 	if err != nil {
 		t.Fatalf("Failed to create client with error: %v", err)
 	}
@@ -102,13 +103,13 @@ func TestRPCBasic(t *testing.T) {
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
 
 	// make an RPC call
-	resp, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
 	Assert(t, (testHandler.reqMsg == "test request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test response"), "Unexpected resp msg", resp)
 
 	// make test err rpc and confirm we get an error
-	_, err = testClient.TestRPCErr(context.Background(), &TestReq{"test request"})
+	_, err = testClient.TestRPCErr(context.Background(), &TestReq{ReqMsg: "test request"})
 	Assert(t, (err != nil), "TestRPCErr succeded while expecting it to fail")
 
 	// verify RPC stats got incremented
@@ -142,7 +143,7 @@ func TestRPCClientReconnect(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make an RPC call
-	_, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
 
 	// close the client connection
@@ -150,7 +151,7 @@ func TestRPCClientReconnect(t *testing.T) {
 	rpcClient.Close()
 
 	// make an RPC call on closed connection
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	Assert(t, (err != nil), "RPC succeded while expecting it to fail")
 
 	// reconnect the client
@@ -160,7 +161,7 @@ func TestRPCClientReconnect(t *testing.T) {
 
 	// make sure an RPC call succeeds after reconnecting
 	testClient = NewTestClient(rpcClient.ClientConn)
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"}, grpc.FailFast(false))
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"}, grpc.FailFast(false))
 	AssertOk(t, err, "RPC error")
 
 	// verify RPC stats got incremented
@@ -194,7 +195,7 @@ func TestRPCServerRestart(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make an RPC call
-	_, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
 
 	// stop the old server and wait for a while to make sure connectin closes
@@ -203,12 +204,12 @@ func TestRPCServerRestart(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	// make an RPC call on closed connection make sure it fails
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	Assert(t, (err != nil), "RPC succeded while expecting it to fail")
 
 	// start a new server
 	t.Logf("Restarting RPC server")
-	rpcServer, err = NewRPCServer("grpc.local", rpcServer.listenURL)
+	rpcServer, err = NewRPCServer("grpc.local", rpcServer.GetListenURL())
 	AssertOk(t, err, "RPC server restart error")
 	RegisterTestServer(rpcServer.GrpcServer, testHandler)
 	defer func() {
@@ -217,7 +218,7 @@ func TestRPCServerRestart(t *testing.T) {
 	}()
 
 	// make an RPC call succeeds with new server
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"}, grpc.FailFast(false))
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"}, grpc.FailFast(false))
 	AssertOk(t, err, "RPC error")
 
 	// verify RPC stats got incremented
@@ -259,13 +260,13 @@ func TestRPCMultipleHandlers(t *testing.T) {
 	test2Client := NewTest2Client(rpcClient.ClientConn)
 
 	// make an RPC call
-	resp, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
 	Assert(t, (testHandler.reqMsg == "test request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test response"), "Unexpected resp msg", resp)
 
 	// make RPC call to second handler
-	resp, err = test2Client.TestRPC(context.Background(), &TestReq{"test2 request"})
+	resp, err = test2Client.TestRPC(context.Background(), &TestReq{ReqMsg: "test2 request"})
 	AssertOk(t, err, "RPC error")
 	Assert(t, (test2Handler.reqMsg == "test2 request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test2 response"), "Unexpected resp msg", resp)
@@ -318,7 +319,7 @@ func TestRPCMiddlewares(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make an RPC call
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
 
 	// verify test middleware got called by checking the stats
@@ -372,7 +373,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	nontlsRPCClient, err := NewRPCClient("grpc.local", tlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
 	nontlsTestClient := NewTestClient(nontlsRPCClient.ClientConn)
-	_, err = nontlsTestClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err = nontlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	Assert(t, (err != nil), "non-tls client was able to connect to tls-server")
 
 	// make sure a client with empty credentials can not connect to tls server
@@ -415,9 +416,9 @@ func TestRPCTlsConnections(t *testing.T) {
 	tlsTestClient := NewTestClient(tlsRPCClient.ClientConn)
 
 	// make an RPC call
-	_, err = testClient.TestRPC(context.Background(), &TestReq{"test request"})
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
-	resp, err := tlsTestClient.TestRPC(context.Background(), &TestReq{"test TLS request"})
+	resp, err := tlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test TLS request"})
 	AssertOk(t, err, "RPC error")
 	Assert(t, (tlsTestHandler.reqMsg == "test TLS request"), "Unexpected req msg", tlsTestHandler)
 	Assert(t, (resp.RespMsg == "test TLS response"), "Unexpected resp msg", resp)
@@ -427,7 +428,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	err = tlsRPCClient.Reconnect()
 	AssertOk(t, err, "RPC reconnect error")
 	tlsTestClient = NewTestClient(tlsRPCClient.ClientConn)
-	_, err = tlsTestClient.TestRPC(context.Background(), &TestReq{"test TLS request"})
+	_, err = tlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test TLS request"})
 	AssertOk(t, err, "RPC error")
 }
 
@@ -448,7 +449,7 @@ func TestRPCBalancing(t *testing.T) {
 		rpcServer1.Stop()
 		time.Sleep(time.Millisecond)
 	}()
-	_, portStr1, err := net.SplitHostPort(rpcServer1.listenURL)
+	_, portStr1, err := net.SplitHostPort(rpcServer1.GetListenURL())
 	AssertOk(t, err, "Failed to parse port")
 	port1, err := strconv.Atoi(portStr1)
 	AssertOk(t, err, "Failed to convert port")
@@ -459,7 +460,7 @@ func TestRPCBalancing(t *testing.T) {
 		rpcServer2.Stop()
 		time.Sleep(time.Millisecond)
 	}()
-	_, portStr2, err := net.SplitHostPort(rpcServer2.listenURL)
+	_, portStr2, err := net.SplitHostPort(rpcServer2.GetListenURL())
 	AssertOk(t, err, "Failed to parse port")
 	port2, err := strconv.Atoi(portStr2)
 	AssertOk(t, err, "Failed to convert port")
@@ -494,7 +495,7 @@ func TestRPCBalancing(t *testing.T) {
 	m.AddServiceInstance(&si2)
 
 	// Now create a rpc client with a balancer
-	r, err := resolver.New(&resolver.Config{Servers: []string{resolverServer.listenURL}})
+	r, err := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
 	AssertOk(t, err, "Failed to create resolver client")
 	b := balancer.New(r)
 	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b))
@@ -504,7 +505,7 @@ func TestRPCBalancing(t *testing.T) {
 	// Send a bunch of RPCs
 	respMap := make(map[string]int)
 	for ii := 0; ii < 100; ii++ {
-		resp, err := testClient.TestRPC(context.Background(), &TestReq{"test request"})
+		resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 		AssertOk(t, err, "Failed to send RPC")
 		respMap[resp.RespMsg]++
 	}

@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"sync"
 
-	"google.golang.org/grpc"
+	gogocodec "github.com/gogo/protobuf/codec"
 
 	apiserver "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 )
 
 // apiSrv is the container type for the Api Server.
@@ -39,7 +39,7 @@ type apiSrv struct {
 	runstate struct {
 		cond    *sync.Cond
 		running bool
-		addr    net.Addr
+		addr    string
 	}
 }
 
@@ -47,6 +47,7 @@ type apiSrv struct {
 //  initialized exactly once and is guarded by the once.
 var singletonAPISrv apiSrv
 var once sync.Once
+var codecSize = 1024 * 1024
 
 // initAPIServer performs all needed initializations.
 func initAPIServer() {
@@ -107,6 +108,7 @@ func (a *apiSrv) GetService(name string) apiserver.Service {
 //  are completed and a grpc listerner is started to serve the registered services.
 func (a *apiSrv) Run(config apiserver.Config) {
 	var ctx context.Context
+	var err error
 	var cancel context.CancelFunc
 	{
 		ctx = context.Background()
@@ -116,21 +118,23 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	a.Logger = config.Logger
 	a.version = config.Version
 
+	a.doneCh = make(chan error)
 	if config.DebugMode {
 		log.SetTraceDebug()
 	}
 
-	ln, err := net.Listen("tcp", config.GrpcServerPort)
-	if err != nil {
-		panic(fmt.Sprintf("could not start a listener on port %v", config.GrpcServerPort))
-	}
-	a.runstate.addr = ln.Addr()
-	a.Logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
-
 	// Create the GRPC connection for the server.
-	var s *grpc.Server
+	var s *rpckit.RPCServer
 	{
-		s = grpc.NewServer()
+		opts := []rpckit.Option{
+			rpckit.WithDeferredStart(true),
+			rpckit.WithCodec(gogocodec.New(codecSize)),
+		}
+		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, opts...)
+		if err != nil {
+			panic(fmt.Sprintf("Could not start Server on port %v err(%s)", config.GrpcServerPort, err))
+		}
+		a.runstate.addr = s.GetListenURL()
 	}
 
 	// Let all the services complete registration.
@@ -158,23 +162,25 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		panic(fmt.Sprintf("Could not connect to KV Store (%s)", err))
 	}
 
-	a.doneCh = make(chan error)
-	go func() {
-		a.runstate.cond.L.Lock()
-		a.Logger.Log("Grpc Listen Start", a.runstate.addr)
-		a.runstate.running = true
-		a.runstate.cond.L.Unlock()
-		a.runstate.cond.Broadcast()
+	a.runstate.cond.L.Lock()
+	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
+	s.Start()
+	a.runstate.running = true
+	a.runstate.cond.L.Unlock()
+	a.runstate.cond.Broadcast()
 
-		a.doneCh <- s.Serve(ln)
+	select {
+	case donemsg := <-a.doneCh:
+		config.Logger.Log("exit", "Done", "msg", donemsg)
+		s.Stop()
 		close(a.doneCh)
-	}()
-	donemsg := <-a.doneCh
-	s.Stop()
-	config.Logger.Log("exit", donemsg)
+	case donemsg := <-s.DoneCh:
+		config.Logger.Log("exit", "gRPC Server", "msg", donemsg)
+	}
 }
 
 func (a *apiSrv) Stop() {
+	a.Logger.Log("msg", "STOP Called")
 	a.doneCh <- errors.New("Stop called by user")
 	for {
 		if _, ok := <-a.doneCh; !ok {
@@ -192,11 +198,11 @@ func (a *apiSrv) WaitRunning() {
 	a.runstate.cond.L.Unlock()
 }
 
-func (a *apiSrv) GetAddr() (net.Addr, error) {
+func (a *apiSrv) GetAddr() (string, error) {
 	a.runstate.cond.L.Lock()
 	defer a.runstate.cond.L.Unlock()
 	if a.runstate.running {
 		return a.runstate.addr, nil
 	}
-	return nil, fmt.Errorf("not running")
+	return "", fmt.Errorf("not running")
 }

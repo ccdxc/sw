@@ -6,9 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"reflect"
-	"time"
-
-	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	cache "github.com/pensando/sw/api/cache"
@@ -29,7 +26,7 @@ func main() {
 	l := log.GetNewLogger(config)
 	url := *grpcaddr
 
-	apicl, err := cache.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := cache.NewGrpcUpstream(url, l)
 	if err != nil {
 		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 	}

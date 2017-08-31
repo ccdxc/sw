@@ -5,9 +5,6 @@ import (
 	"reflect"
 	"sync"
 	"testing"
-	"time"
-
-	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
@@ -45,7 +42,7 @@ func TestCrudOps(t *testing.T) {
 
 	ctx := context.Background()
 	// gRPC client
-	apicl, err := cache.NewGrpcUpstream(apiserverAddr, tinfo.l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := cache.NewGrpcUpstream(apiserverAddr, tinfo.l)
 	if err != nil {
 		t.Fatalf("cannot create grpc client")
 	}
@@ -343,7 +340,7 @@ func TestCrudOps(t *testing.T) {
 		func() bool { return len(expectWatchEvents) == len(rcvWatchEvents) },
 		"failed to receive all watch events",
 		"10ms",
-		"3s")
+		"9s")
 	cancel()
 	wg.Wait()
 

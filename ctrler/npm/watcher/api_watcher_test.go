@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -86,7 +84,7 @@ func TestApiWatcher(t *testing.T) {
 
 	// create an api server client
 	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
 	AssertOk(t, err, "Error creating api server client")
 
 	// create a network in api server

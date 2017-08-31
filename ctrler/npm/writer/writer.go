@@ -4,12 +4,10 @@ package writer
 
 import (
 	"context"
-	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/utils/log"
-	"google.golang.org/grpc"
 )
 
 // Writer is the api provided by writer object
@@ -45,7 +43,7 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 
 	// create the api client
 	l := log.WithContext("Pkg", "NpmApiWriter")
-	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l)
 	if err != nil {
 		log.Errorf("Failed to connect to gRPC server [%s]\n", wr.apisrvURL)
 		return nil, err

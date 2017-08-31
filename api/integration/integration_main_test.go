@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"bytes"
 	"net"
 	"os"
 	"testing"
@@ -33,9 +32,7 @@ var tinfo tInfo
 func TestMain(m *testing.M) {
 	// Start the API server
 	apiserverAddress := ":0"
-	buf := &bytes.Buffer{}
-	config := log.GetDefaultConfig("GrpcClientExample")
-	l := log.GetNewLogger(config).SetOutput(buf)
+	l := log.WithContext("module", "CrudOpsTest")
 	tinfo.l = l
 	scheme := runtime.NewScheme()
 	srvconfig := apiserver.Config{
@@ -58,7 +55,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		os.Exit(-1)
 	}
-	_, port, err := net.SplitHostPort(addr.String())
+	_, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		os.Exit(-1)
 	}
@@ -74,11 +71,11 @@ func TestMain(m *testing.M) {
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)
 	gw.WaitRunning()
-	addr, err = gw.GetAddr()
+	gwaddr, err := gw.GetAddr()
 	if err != nil {
 		os.Exit(-1)
 	}
-	_, port, err = net.SplitHostPort(addr.String())
+	_, port, err = net.SplitHostPort(gwaddr.String())
 	if err != nil {
 		os.Exit(-1)
 	}

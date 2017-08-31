@@ -9,7 +9,6 @@ package bookstoreGwService
 import (
 	"context"
 	"net/http"
-	"time"
 
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
@@ -22,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 )
 
 // Dummy vars to suppress import errors
@@ -150,8 +150,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -176,26 +175,24 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (bookstore.BookstoreV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string) (bookstore.BookstoreV1Client, error) {
+	client, err := rpckit.NewRPCClient("BookstoreV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterBookstoreV1{grpcclient.NewBookstoreV1Backend(conn, e.logger)}
+	cl := adapterBookstoreV1{grpcclient.NewBookstoreV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

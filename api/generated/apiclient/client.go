@@ -3,6 +3,7 @@
 package apiclient
 
 import (
+	gogocodec "github.com/gogo/protobuf/codec"
 	"google.golang.org/grpc"
 
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
@@ -14,7 +15,10 @@ import (
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	networkencryptionClient "github.com/pensando/sw/api/generated/networkencryption/grpc/client"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 )
+
+const codecSize = 1024 * 1024
 
 // Services is list of all services exposed by the client ---
 type Services interface {
@@ -100,26 +104,26 @@ func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 
 // NewGrpcAPIClient returns a gRPC client
 func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (Services, error) {
-	conn, err := grpc.Dial(url, opts...)
+	client, err := rpckit.NewRPCClient("ApiClient", url, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
 		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
 		return nil, err
 	}
 	return &apiGrpcServerClient{
 		url:    url,
-		conn:   conn,
+		conn:   client.ClientConn,
 		logger: logger,
 
-		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(conn, logger),
-		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(conn, logger),
-		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(conn, logger),
-		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(conn, logger),
-		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(conn, logger),
-		aSecurityGroupV1:           networkClient.NewGrpcCrudClientSecurityGroupV1(conn, logger),
-		aServiceV1:                 networkClient.NewGrpcCrudClientServiceV1(conn, logger),
-		aSgpolicyV1:                networkClient.NewGrpcCrudClientSgpolicyV1(conn, logger),
-		aTenantV1:                  networkClient.NewGrpcCrudClientTenantV1(conn, logger),
-		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(conn, logger),
+		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
+		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(client.ClientConn, logger),
+		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(client.ClientConn, logger),
+		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(client.ClientConn, logger),
+		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
+		aSecurityGroupV1:           networkClient.NewGrpcCrudClientSecurityGroupV1(client.ClientConn, logger),
+		aServiceV1:                 networkClient.NewGrpcCrudClientServiceV1(client.ClientConn, logger),
+		aSgpolicyV1:                networkClient.NewGrpcCrudClientSgpolicyV1(client.ClientConn, logger),
+		aTenantV1:                  networkClient.NewGrpcCrudClientTenantV1(client.ClientConn, logger),
+		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(client.ClientConn, logger),
 	}, nil
 }
 

@@ -9,7 +9,6 @@ package networkGwService
 import (
 	"context"
 	"net/http"
-	"time"
 
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
@@ -22,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/generated/network/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 )
 
 // Dummy vars to suppress import errors
@@ -80,8 +80,7 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -106,26 +105,24 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.EndpointV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string) (network.EndpointV1Client, error) {
+	client, err := rpckit.NewRPCClient("EndpointV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterEndpointV1{grpcclient.NewEndpointV1Backend(conn, e.logger)}
+	cl := adapterEndpointV1{grpcclient.NewEndpointV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -182,8 +179,7 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -208,26 +204,24 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.LbPolicyV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string) (network.LbPolicyV1Client, error) {
+	client, err := rpckit.NewRPCClient("LbPolicyV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterLbPolicyV1{grpcclient.NewLbPolicyV1Backend(conn, e.logger)}
+	cl := adapterLbPolicyV1{grpcclient.NewLbPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -284,8 +278,7 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -310,26 +303,24 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.NetworkV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string) (network.NetworkV1Client, error) {
+	client, err := rpckit.NewRPCClient("NetworkV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterNetworkV1{grpcclient.NewNetworkV1Backend(conn, e.logger)}
+	cl := adapterNetworkV1{grpcclient.NewNetworkV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -386,8 +377,7 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -412,26 +402,24 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.SecurityGroupV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr string) (network.SecurityGroupV1Client, error) {
+	client, err := rpckit.NewRPCClient("SecurityGroupV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterSecurityGroupV1{grpcclient.NewSecurityGroupV1Backend(conn, e.logger)}
+	cl := adapterSecurityGroupV1{grpcclient.NewSecurityGroupV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -488,8 +476,7 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -514,26 +501,24 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.ServiceV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string) (network.ServiceV1Client, error) {
+	client, err := rpckit.NewRPCClient("ServiceV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterServiceV1{grpcclient.NewServiceV1Backend(conn, e.logger)}
+	cl := adapterServiceV1{grpcclient.NewServiceV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -590,8 +575,7 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -616,26 +600,24 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.SgpolicyV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string) (network.SgpolicyV1Client, error) {
+	client, err := rpckit.NewRPCClient("SgpolicyV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterSgpolicyV1{grpcclient.NewSgpolicyV1Backend(conn, e.logger)}
+	cl := adapterSgpolicyV1{grpcclient.NewSgpolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -692,8 +674,7 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -718,26 +699,24 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (network.TenantV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string) (network.TenantV1Client, error) {
+	client, err := rpckit.NewRPCClient("TenantV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterTenantV1{grpcclient.NewTenantV1Backend(conn, e.logger)}
+	cl := adapterTenantV1{grpcclient.NewTenantV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

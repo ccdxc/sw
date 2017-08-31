@@ -9,7 +9,6 @@ package cmdGwService
 import (
 	"context"
 	"net/http"
-	"time"
 
 	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
@@ -22,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 )
 
 // Dummy vars to suppress import errors
@@ -115,8 +115,7 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "localhost:8082"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	codec := gogocodec.New(codecSize)
-	cl, err := e.newClient(ctx, grpcaddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second), grpc.WithCodec(codec))
+	cl, err := e.newClient(ctx, grpcaddr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -141,26 +140,24 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, opts ...grpc.DialOption) (cmd.CmdV1Client, error) {
-	conn, err := grpc.Dial(grpcAddr, opts...)
+func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string) (cmd.CmdV1Client, error) {
+	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
 	if err != nil {
-		err = errors.Wrap(err, "dial failed")
-		if cerr := conn.Close(); cerr != nil {
-			e.logger.ErrorLog("msg", "Failed to close conn", "addr", grpcAddr, "error", cerr)
-		}
+		err = errors.Wrap(err, "create rpc client")
 		return nil, err
 	}
+
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)
 	defer func() {
 		go func() {
 			<-ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
+			if cerr := client.Close(); cerr != nil {
 				e.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", grpcAddr, "error", cerr)
 			}
 		}()
 	}()
 
-	cl := adapterCmdV1{grpcclient.NewCmdV1Backend(conn, e.logger)}
+	cl := adapterCmdV1{grpcclient.NewCmdV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

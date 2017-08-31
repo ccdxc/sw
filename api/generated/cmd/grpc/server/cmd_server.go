@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/listerwatcher"
 )
 
 // dummy vars to suppress unused errors
@@ -55,7 +55,7 @@ type eCmdV1Endpoints struct {
 }
 
 func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
 		"cmd.AutoMsgClusterListHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -246,7 +246,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		apisrv.RegisterService("cmd.CmdV1", srv)
 		endpoints := cmd.MakeCmdV1ServerEndpoints(s.endpointsCmdV1, logger)
 		server := cmd.MakeGRPCServerCmdV1(ctx, endpoints, logger)
-		cmd.RegisterCmdV1Server(grpcserver, server)
+		cmd.RegisterCmdV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{

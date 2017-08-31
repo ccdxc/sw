@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/utils/log"
@@ -24,6 +25,8 @@ type options struct {
 	enableLogger bool              // option to enable logging middleware
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
+	deferStart   bool              // Defers starting the listen on the gRPC server if set
+	codec        grpc.Codec        // Codec to use over the connection
 }
 
 // RPCServer contains RPC server state
@@ -31,6 +34,8 @@ type RPCServer struct {
 	GrpcServer *grpc.Server // gRPC server.
 	listenURL  string       // URL where this server is listening
 	listener   net.Listener // listener
+	DoneCh     chan error   // Error Channel
+	once       sync.Once
 	options
 }
 
@@ -80,12 +85,28 @@ func WithBalancer(b grpc.Balancer) Option {
 	}
 }
 
+// WithCodec specifies a custom  codec to use for the connection
+func WithCodec(codec grpc.Codec) Option {
+	return func(o *options) {
+		o.codec = codec
+	}
+}
+
+// WithDeferredStart when set will defer the listen on the gRPC server
+//  till Start() is called.
+func WithDeferredStart(enabled bool) Option {
+	return func(o *options) {
+		o.deferStart = enabled
+	}
+}
+
 func defaultOptions(srvName string) *options {
 	return &options{
 		stats:        newStatsMiddleware(),
 		tracer:       newTracerMiddleware(srvName),
 		enableTracer: false,
 		enableLogger: true,
+		deferStart:   false,
 	}
 }
 
@@ -134,6 +155,10 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
 	}
 
+	if rpcServer.options.codec != nil {
+		grpcOpts = append(grpcOpts, grpc.CustomCodec(rpcServer.options.codec))
+	}
+
 	// get TLS options
 	if rpcServer.tlsProvider != nil {
 		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(srvName)
@@ -144,15 +169,16 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		grpcOpts = append(grpcOpts, tlsOptions)
 	}
 
-	// start the server
+	// save the grpc server instance
 	server = grpc.NewServer(grpcOpts...)
-	// start service requests
-	go server.Serve(lis)
+	rpcServer.GrpcServer = server
+
+	// start new grpc server
+	if !rpcServer.deferStart {
+		rpcServer.Start()
+	}
 
 	log.Infof("gRpc server Listening on %s", listenURL)
-
-	// save the grpc server instance
-	rpcServer.GrpcServer = server
 
 	return rpcServer, nil
 }
@@ -174,6 +200,18 @@ func (srv *RPCServer) Stop() error {
 
 	// close the socket listener
 	return srv.listener.Close()
+}
+
+func (srv *RPCServer) run() {
+	// start service requests
+	go func() {
+		srv.DoneCh <- srv.GrpcServer.Serve(srv.listener)
+	}()
+}
+
+// Start serving on the RPC server.
+func (srv *RPCServer) Start() {
+	srv.once.Do(srv.run)
 }
 
 // NewRPCClient returns an RPC client to a remote server
@@ -234,6 +272,9 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 		grpcOpts = append(grpcOpts, tlsOpt)
 	} else {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	}
+	if rpcClient.options.codec != nil {
+		grpcOpts = append(grpcOpts, grpc.WithCodec(rpcClient.options.codec))
 	}
 
 	// For service targets, use the balancer.

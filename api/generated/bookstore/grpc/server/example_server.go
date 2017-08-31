@@ -13,15 +13,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/apiserver/pkg"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/listerwatcher"
 )
 
 // dummy vars to suppress unused errors
@@ -61,7 +61,7 @@ type eBookstoreV1Endpoints struct {
 }
 
 func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, logger log.Logger,
-	grpcserver *grpc.Server, scheme *runtime.Scheme) error {
+	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
 		"bookstore.AutoMsgBookListHelper": apisrvpkg.NewMessage("bookstore.AutoMsgBookListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -337,7 +337,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 		apisrv.RegisterService("bookstore.BookstoreV1", srv)
 		endpoints := bookstore.MakeBookstoreV1ServerEndpoints(s.endpointsBookstoreV1, logger)
 		server := bookstore.MakeGRPCServerBookstoreV1(ctx, endpoints, logger)
-		bookstore.RegisterBookstoreV1Server(grpcserver, server)
+		bookstore.RegisterBookstoreV1Server(grpcserver.GrpcServer, server)
 	}
 	// Add Watchers
 	{
