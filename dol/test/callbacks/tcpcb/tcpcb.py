@@ -11,3 +11,9 @@ def GetSeqNum (tc, pkt):
 
 def GetAckNum (tc, pkt):
     return 0xefefefef
+
+def GetNxtPktSeqNum (tc, pkt):
+    return 0xbababb0e
+
+def GetNxtPktAckNum (tc, pkt):
+    return 0xefeff043
