@@ -12,9 +12,10 @@ header_type tunnel_metadata_t {
 
 header_type ipsec_metadata_t {
     fields {
-        spi     : 32;
-        seqNo   : 32;
-        ipsec_type    : 2;
+        spi_hi     : 16;
+        spi_lo     : 16;
+        seq_no     : 32;
+        ipsec_type : 2;
     }
 }
 

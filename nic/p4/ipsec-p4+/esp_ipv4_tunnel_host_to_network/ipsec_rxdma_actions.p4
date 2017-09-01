@@ -445,7 +445,7 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
 //    modify_field(ipsec_global.frame_size, p4_intr.frame_size);
 
   
-    modify_field(p42p4plus_scratch_hdr.app_type, p42p4plus_hdr.app_type);
+    modify_field(p42p4plus_scratch_hdr.p4plus_app_id, p42p4plus_hdr.p4plus_app_id);
     modify_field(p42p4plus_scratch_hdr.table0_valid, p42p4plus_hdr.table0_valid);
     modify_field(p42p4plus_scratch_hdr.table1_valid, p42p4plus_hdr.table1_valid);
     modify_field(p42p4plus_scratch_hdr.table2_valid, p42p4plus_hdr.table2_valid);

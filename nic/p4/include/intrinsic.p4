@@ -56,7 +56,7 @@ header_type cap_phv_intr_rxdma_t {
 
 header_type p4_to_p4plus_ipsec_header_t {
     fields {
-        app_type            : 4;
+        p4plus_app_id       : 4;
         table0_valid        : 1;
         table1_valid        : 1;
         table2_valid        : 1;
@@ -66,14 +66,17 @@ header_type p4_to_p4plus_ipsec_header_t {
         ipsec_payload_end   : 16;
         l4_protocol         : 8;
         ip_hdr_size         : 8;
-        seqNo               : 32;
+        seq_no              : 32;
     }
 }
 
 header_type p4_to_p4plus_roce_header_t {
     fields {
         p4plus_app_id       : 4;
-        flags               : 4;  // ecn : 2, cnp : 1, v6 : 0
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
         rdma_hdr_len        : 8;  // copied directly from p4 rdma table
         raw_flags           : 16; // copied directly from p4 rdma table
         payload_len         : 16;

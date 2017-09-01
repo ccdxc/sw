@@ -41,9 +41,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     //phvwr p.ipsec_global_frame_size, k.{p4_intr_frame_size_sbit0_ebit5...p4_intr_frame_size_sbit6_ebit13}
 
     // seq-no logic
-    slt c1, k.p42p4plus_hdr_seqNo, d.expected_seq_no
+    slt c1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno
-    sub r1, d.expected_seq_no, k.p42p4plus_hdr_seqNo
+    sub r1, d.expected_seq_no, k.p42p4plus_hdr_seq_no
     addi r2, r0, IPSEC_WIN_REPLAY_MAX_DIFF
     slt c2, r1, r2 
     bcf [c2], ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed
@@ -95,7 +95,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     // diff = phv_rx->p42p4plus_hdr.seq_no - phv_rx->ipsec_int.expected_seq_no;
-    sub r1, k.p42p4plus_hdr_seqNo, d.expected_seq_no
+    sub r1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
     slt c1, r1, IPSEC_WIN_REPLAY_MAX_DIFF 
     //if (diff >= ipsec_cb->replay_win_sz) { //can't handle
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz
@@ -105,7 +105,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     ori r3, r3, 1
     tblwr d.replay_seq_no_bmp, r3
     nop
-    tblwr d.expected_seq_no, k.p42p4plus_hdr_seqNo
+    tblwr d.expected_seq_no, k.p42p4plus_hdr_seq_no
     nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
@@ -116,6 +116,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
     //phvwr p.ipsec_int_drop_mask, r4
     nop
-    tblwr d.expected_seq_no, k.p42p4plus_hdr_seqNo
+    tblwr d.expected_seq_no, k.p42p4plus_hdr_seq_no
     nop
  

@@ -93,7 +93,7 @@ header gre_t gre;
 header nvgre_t nvgre;
 header erspan_header_t3_t erspan_t3_header;
 
-@pragma pa_header_union ingress inner_udp icmp
+@pragma pa_header_union ingress inner_udp icmp ah esp v6_ah_esp
 header tcp_t tcp;
 // TCP options
 header tcp_option_eol_t tcp_option_eol;
@@ -490,12 +490,14 @@ parser parse_v6_generic_ext_hdr {
 }
 
 
-// if AH or ESP are hit - done - no more parsing as these are supposed to be last in v6 ext-header sequence.
+// if AH or ESP are hit - done - no more parsing as these are supposed to
+// be last in v6 ext-header sequence.
 parser parse_v6_ipsec_hdr {
     extract(v6_ah_esp);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
-    set_metadata(ipsec_metadata.spi, latest.spi);
-    set_metadata(ipsec_metadata.seqNo, latest.seqNo);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
+    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_AH);
     return ingress;
 }
@@ -544,17 +546,19 @@ parser parse_ipv6 {
 
 parser parse_ipsec_ah {
     extract(ah);
-    set_metadata(ipsec_metadata.spi, latest.spi);
-    set_metadata(ipsec_metadata.seqNo, latest.seqNo);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
+    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_AH);
     return ingress;
 }
 
 parser parse_ipsec_esp {
     extract(esp);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
+    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_ESP);
-    set_metadata(ipsec_metadata.spi, latest.spi);
-    set_metadata(ipsec_metadata.seqNo, latest.seqNo);
     return ingress;
 }
 

@@ -380,6 +380,7 @@
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      44
 #define P4PLUS_CPU_HDR_SZ              44
+#define P4PLUS_IPSEC_HDR_SZ            14
 
 /*****************************************************************************/
 /* Classic NIC flags                                                         */
@@ -417,6 +418,9 @@
 #define ROCE_FLAGS_CNP                 0x2
 #define ROCE_FLAGS_ECN                 0x4
 
+/*****************************************************************************/
+/* IPSEC flags                                                               */
+/*****************************************************************************/
 #define IPSEC_MODE_TUNNEL              1
 #define IPSEC_MODE_TRANSPORT           2
 

@@ -156,9 +156,9 @@ header_type ipv6_t {
 
 header_type ipv6_extn_generic_t {
     fields {
-        nextHdr    : 8;
+        nextHdr : 8;
         len  : 8;
-        data   : *;
+        data : *;
     }
     length : (len << 3) + 8;
     max_length : 72;
@@ -166,23 +166,23 @@ header_type ipv6_extn_generic_t {
 
 header_type ipv6_extn_frag_t {
     fields {
-        nextHdr    : 8;
-        //rsvd should be zeros - no length
-        rsvd       : 8;
+        nextHdr : 8;
+        rsvd  : 8;
         fragOffset : 12;
-        res2       : 3;
-        mf         : 1;
+        res2 : 3;
+        mf : 1;
         identification : 32;
     }
 }
 
 header_type ipv6_extn_ah_esp_t {
     fields {
-        nextHdr     : 8;
-        len         : 8;
-        rsvd        : 16;
-        spi         : 32;
-        seqNo       : 32;
+        nextHdr : 8;
+        len : 8;
+        rsvd : 16;
+        spi_hi : 16;
+        spi_lo : 16;
+        seqNo : 32;
     }
 }
  
@@ -198,16 +198,18 @@ header_type ah_t {
     fields {
         next_header : 8;
         payload_length : 8;
-        reserved :16;
-        spi : 32;
+        reserved : 16;
+        spi_hi : 16;
+        spi_lo : 16;
         seqNo : 32;
     }
 }
 
 header_type esp_t {
     fields {
-        spi : 32;
-        seqNo : 32;
+        spi_hi : 16;
+        spi_lo : 16;
+        seqNo  : 32;
     }
 }
 

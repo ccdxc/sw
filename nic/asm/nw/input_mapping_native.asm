@@ -13,8 +13,8 @@ nop:
 
 .align
 native_ipv4_packet:
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
-  or          r5, k.ipv4_ihl_sbit1_ebit3, k.ipv4_ihl_sbit0_ebit0, 3
+  or          r1, r0, k.ethernet_srcAddr
+  or          r5, r0, k.ipv4_ihl
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -64,7 +64,7 @@ native_ipv4_packet:
 
 .align
 native_ipv6_packet:
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  or          r1, r0, k.ethernet_srcAddr
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -123,7 +123,7 @@ native_ipv6_packet:
 
 .align
 native_non_ip_packet:
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  or          r1, r0, k.ethernet_srcAddr
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1

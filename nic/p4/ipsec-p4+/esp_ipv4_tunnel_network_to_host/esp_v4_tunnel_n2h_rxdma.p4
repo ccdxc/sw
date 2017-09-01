@@ -438,7 +438,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_int_header.headroom_offset, (p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size - 8));
     modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end-icv_size-2) - (p42p4plus_hdr.ipsec_payload_start+iv_size));
    
-    modify_field(p42p4plus_hdr_scratch.seqNo,  p42p4plus_hdr.seqNo);
+    modify_field(p42p4plus_hdr_scratch.seq_no,  p42p4plus_hdr.seq_no);
 
     //Sequence number checking logic
 
@@ -448,7 +448,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_global.qid, p4_rxdma_intr.qid);
 
     modify_field(ipsec_global.packet_length, p4_intr.packet_len);  
-    modify_field(p42p4plus_scratch_hdr.app_type, p42p4plus_hdr.app_type);
+    modify_field(p42p4plus_scratch_hdr.p4plus_app_id, p42p4plus_hdr.p4plus_app_id);
     modify_field(p42p4plus_scratch_hdr.table0_valid, p42p4plus_hdr.table0_valid);
     modify_field(p42p4plus_scratch_hdr.table1_valid, p42p4plus_hdr.table1_valid);
     modify_field(p42p4plus_scratch_hdr.table2_valid, p42p4plus_hdr.table2_valid);

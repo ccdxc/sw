@@ -105,6 +105,18 @@ action p4plus_app_classic_nic() {
 }
 
 action p4plus_app_ipsec() {
+    add_header(p4_to_p4plus_ipsec);
+    modify_field(p4_to_p4plus_ipsec.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+    modify_field(p4_to_p4plus_ipsec.seq_no, ipsec_metadata.seq_no);
+
+    add_header(capri_rxdma_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_IPSEC_HDR_SZ));
+    modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
+    modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
 }
 
 action p4plus_app_rdma() {
