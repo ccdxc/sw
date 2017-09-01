@@ -1,6 +1,6 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 
 struct tx_table_s3_t2_k k;
 struct tx_table_s3_t2_esp_v4_tunnel_n2h_txdma2_load_ipsec_int_d d;

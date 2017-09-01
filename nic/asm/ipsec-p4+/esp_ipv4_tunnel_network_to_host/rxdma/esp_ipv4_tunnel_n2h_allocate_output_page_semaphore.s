@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 
 struct rx_table_s1_t3_k k;
 struct rx_table_s1_t3_esp_v4_tunnel_n2h_allocate_output_page_semaphore_d d;

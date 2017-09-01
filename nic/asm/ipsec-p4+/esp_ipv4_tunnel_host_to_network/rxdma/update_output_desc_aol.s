@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 
 struct rx_table_s2_t1_k k;
 struct rx_table_s2_t1_rx_table_s2_t1_cfg_action_d d;
@@ -16,15 +16,4 @@ update_output_desc_aol:
     // get the correct way of giving it as a single 14 bit field
     phvwri p.barco_desc_out_L0, 0 
     phvwri p.barco_desc_out_O0, 0
-
-    phvwri p.barco_desc_out_A1_addr, 0
-    phvwri p.barco_desc_out_L1, 0
-    phvwri p.barco_desc_out_O1, 0
-
-    phvwri p.barco_desc_out_A2_addr, 0
-    phvwri p.barco_desc_out_L2, 0
-    phvwri p.barco_desc_out_O2, 0
-
-    phvwri p.barco_desc_out_NextAddr, 0
-    phvwri p.barco_desc_out_Reserved, 0
-
+    nop.e

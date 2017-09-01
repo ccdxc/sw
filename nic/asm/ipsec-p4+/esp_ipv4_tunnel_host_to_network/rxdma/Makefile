@@ -9,7 +9,7 @@ PROJ = ipsec_rxdma_actions
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../include -I../../../common-p4+/include -I$(TOPDIR)/p4/ipsec-p4+ -I$(TOPDIR)/include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../../include -I../../../common-p4+/include -I$(TOPDIR)/p4/ipsec-p4+ -I$(TOPDIR)/include -I../..
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 

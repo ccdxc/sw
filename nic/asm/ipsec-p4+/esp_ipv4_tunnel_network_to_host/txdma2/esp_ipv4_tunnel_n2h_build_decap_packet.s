@@ -1,6 +1,6 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
 struct tx_table_s4_t0_k k;

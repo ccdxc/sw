@@ -181,7 +181,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 //stage 3 table 0
-action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
+action ipsec_write_barco_req(rsvd, cosA, cosB, cos_sel,
                              eval_last, host, total, pid,
                              rxdma_ring_pindex, rxdma_ring_cindex,
                              barco_ring_pindex, barco_ring_cindex,
@@ -259,7 +259,7 @@ action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
 }
 
 //stage 0
-action ipsec_encap_txdma_initial_table(pc, rsvd, cosA, cosB, cos_sel,
+action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,

@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
 

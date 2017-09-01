@@ -245,7 +245,7 @@ action ipsec_encap_txdma2_load_barco_req_ptr(barco_req_address)
 
 
 //stage 0
-action ipsec_encap_txdma2_initial_table(pc, rsvd, cosA, cosB, cos_sel,
+action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,
