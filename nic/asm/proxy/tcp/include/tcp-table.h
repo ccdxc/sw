@@ -1,19 +1,31 @@
 #define TCP_TCB_TABLE_BASE              0xbeef0000
 
-#define TCP_TCB_TABLE_ENTRY_SIZE        512 /* 512B */
-#define TCP_TCB_TABLE_ENTRY_SIZE_SHFT   9  /* 512B */
-#define TCP_TCB_TX2RX_SHARED_OFFSET     0
-#define TCP_TCB_RX2TX_SHARED_OFFSET     64
-#define TCP_TCB_RX_OFFSET               128
-#define TCP_TCB_RTT_OFFSET              192
-#define TCP_TCB_FRA_OFFSET              256
-#define TCP_TCB_CC_OFFSET               320
-#define TCP_TCB_FC_OFFSET               384
-#define TCP_TCB_WRITE_SERQ_OFFSET       448
+// NOTE : **Change to this size needs to reflect in
+// P4PD_HBM_TCP_CB_ENTRY_SIZE in p4pd_tcp_proxy_api.h
+#define TCP_TCB_TABLE_ENTRY_SIZE        1024 /* 1024B */
+#define TCP_TCB_TABLE_ENTRY_SIZE_SHFT   10  /* 1024B */
 
-#define TCP_TCB_TX_OFFSET               32
+// NOTE : ** These offsets need to match the offsets in 
+// tcp_proxy_api.h **
+#define TCP_TCB_RX2TX_SHARED_OFFSET     64 // TODO: needs to be 0
+#define TCP_TCB_RX2TX_SHARED_WRITE_OFFSET \
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 36)  // skip intrinsic part etc
+#define TCP_TCB_TX2RX_SHARED_OFFSET     0 // TODO : needs to be 64
+#define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
+                    (TCP_TCB_TX2RX_SHARED_OFFSET + 24)  // skip intrinsic part etc
+#define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128
+#define TCP_TCB_RX_OFFSET               192
+#define TCP_TCB_RTT_OFFSET              256
+#define TCP_TCB_FRA_OFFSET              320
+#define TCP_TCB_CC_OFFSET               384
+#define TCP_TCB_FC_OFFSET               448
+#define TCP_TCB_WRITE_SERQ_OFFSET       512
+
+#define TCP_TCB_TX_OFFSET               576
+#define TCP_TCB_HEADER_TEMPLATE_OFFSET  640
+#define TCP_TCB_RX_STATS_OFFSET         768
+#define TCP_TCB_TX_STATS_OFFSET         896
 #define TCP_TCB_SACK_OFFSET             96
-#define TCP_TCB_TSO_OFFSET              352
 
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400
@@ -50,10 +62,5 @@
 #define tcp_mtu_probe                  0x00040198
 #define tcp_send_probe0                0x00023000
 #define tcp_retxq_consume              0x000403c8
-#define tcp_retx_enqueue               0x000402b8
-#define tcp_clean_retx_queue           0x00025000
-#define tcp_cwnd_test                  0x000401d8
-#define tcp_snd_wnd_test               0x00040260
-#define tcp_write_xmit                 0x00040038
 
 

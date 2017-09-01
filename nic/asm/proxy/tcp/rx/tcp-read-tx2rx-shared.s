@@ -39,10 +39,6 @@ tcp_rx_read_shared_stage0_start:
 	 */
 
 	phvwr		p.to_s1_seq, k.tcp_app_header_seqNo
-        //add             r1, r0, k.tcp_app_header_ackNo_sbit24_ebit31
-        //sll             r1, r1, 24
-        //or              r1, r1, k.tcp_app_header_ackNo_sbit0_ebit23
-	//phvwr		p.to_s1_ack_seq, r1
 	phvwr		p.to_s1_ack_seq, k.tcp_app_header_ackNo
 	add		r1, k.tcp_app_header_seqNo, k.tcp_app_header_payload_len
 	phvwr		p.s1_s2s_end_seq, r1
@@ -57,6 +53,10 @@ tcp_rx_read_shared_stage0_start:
 
 
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
+
+        // TODO : Check for q full
+        phvwr           p.to_s6_serq_pidx, d.serq_pidx
+        tbladd          d.serq_pidx, 1
 	
 table_read_RX:	
 	CAPRI_NEXT_TABLE0_READ(k.p4_rxdma_intr_qid, TABLE_LOCK_EN,

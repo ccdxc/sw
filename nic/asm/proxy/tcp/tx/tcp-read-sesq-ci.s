@@ -1,28 +1,33 @@
 /*
- *      This stage will be used to get
- *	      - SESQ consumer index
- *      Cannot auto increment it here till we have read the
- *	SESQ entry contents at this index which is in the next stage
+ * 	Implements the reading of SESQ entry to queue the desc to TCP tx q
  */
 
+#include "tcp-constants.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-
+	
 struct phv_ p;
 struct tcp_tx_read_sesq_ci_k k;
 struct tcp_tx_read_sesq_ci_read_sesq_ci_d d;
 	
-%%
 	
-flow_read_sesq_ci:
-	//TODO: phvwr		p.SESQ_cidx, d.SESQ_cidx_value
+%%
+        .align
+        .param          tcp_tx_sesq_read_descr_stage2_start
+        .param          tcp_tx_sesq_consume_stage2_start
+tcp_tx_sesq_read_ci_stage1_start:
 
-table_read_SESQ_ENTRY:
-	CAPRI_NEXT_TABLE0_READ(d.sesq_cidx, TABLE_LOCK_EN, flow_sesq_read_process,
-	                    SESQ_BASE, SESQ_ENTRY_SIZE_SHFT,
-	                    0, TABLE_SIZE_16_BITS)
-	nop.e
-	nop
+        CAPRI_OPERAND_DEBUG(d.desc_addr)
+        phvwr           p.to_s3_sesq_desc_addr, d.{desc_addr}.dx
+
+        CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
+
+        add             r3, d.{desc_addr}.dx, NIC_DESC_ENTRY_0_OFFSET
+        CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tcp_tx_sesq_read_descr_stage2_start,
+	                r3, TABLE_SIZE_512_BITS)
+
+        nop.e
+        nop

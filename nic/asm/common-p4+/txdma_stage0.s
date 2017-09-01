@@ -17,7 +17,9 @@
 %%
 
     .param      storage_tx_q_state_pop_start
-    .param	    tls_stage0
+    .param      tcp_tx_read_shared_stage0_start
+    .param      tls_stage0
+    .param      tcp_tx_read_rx2tx_shared_process
 
 .align
 eth_tx_stage0:
@@ -26,12 +28,12 @@ eth_tx_stage0:
 
 .align
 tcp_tx_stage0:
-    nop
+    j   tcp_tx_read_rx2tx_shared_process
     nop
 
 .align
 tls_tx_stage0:
-    j  tls_stage0
+    j   tls_stage0
     nop
 
 .align

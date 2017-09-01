@@ -11,7 +11,8 @@ GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I../../../../include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I$(TOPDIR)/include \
+		   -I../../include
 SRC_DIR = .
 CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
@@ -24,22 +25,17 @@ deps: $(ASM_HDR_DIR)/ingress.h
 
 
 SRC_FILES := \
-    $(SRC_DIR)/tcp-aol-page-alloc.s \
     $(SRC_DIR)/tcp-cc.s \
     $(SRC_DIR)/tcp-fastretx-alert.s \
-    $(SRC_DIR)/tcp-get-obj.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
-    $(SRC_DIR)/tcp-read-serq-pidx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
     $(SRC_DIR)/tcp-rx.s \
-    $(SRC_DIR)/tcp-sack1.s \
     $(SRC_DIR)/tcp-sack2.s \
-    $(SRC_DIR)/tcp-sack3.s \
     $(SRC_DIR)/tcp-sack4.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \

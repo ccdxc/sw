@@ -19,7 +19,6 @@ struct tcp_rx_tcp_rx_d d;
         .param          tcp_rx_rtt_stage2_start
         .param          tcp_rx_read_rnmdr_stage2_start
         .param          tcp_rx_read_rnmpr_stage2_start
-        .param          tcp_rx_read_serq_pidx_stage2_start
         .param          tcp_rx_sack_stage2_start
 	.align
 tcp_rx_process_stage1_start:
@@ -530,7 +529,7 @@ tcp_rearm_rto:
 	bcf		[c1 & c4], tcp_rearm_rto_done
 	nop
 	seq		c1, k.s1_s2s_packets_out, r0
-	phvwr.c1	p.rx2tx_extra_pending_ft_clear,1
+	phvwr.c1	p.rx2tx_pending_ft_clear,1
 	phvwr.c1	p.common_phv_pending_txdma, 1
 	bcf		[c1], tcp_rearm_rto_done
 	tbladd.c1	d.u.tcp_rx_d.rto,  -1
@@ -556,7 +555,7 @@ early_retx_or_tlp:
 	tblwr.c1	d.u.tcp_rx_d.rto_deadline, r5
 	add.!c1         r5, r4, r6
 	tblwr.!c1	d.u.tcp_rx_d.rto_deadline, r5
-	phvwr		p.rx2tx_extra_pending_ft_reset,1
+	phvwr		p.rx2tx_pending_ft_reset,1
 	phvwr.c1	p.common_phv_pending_txdma, 1
 tcp_rearm_rto_done:	
 	jr.c4		r7
@@ -606,17 +605,13 @@ table_read_RNMPR_ALLOC_IDX:
 table_read_SERQ_PRODUCER_IDX:
 	phvwri		p.common_phv_write_serq, 1
 	phvwr		p.to_s6_serq_base, d.u.tcp_rx_d.serq_base
-	phvwri		p.to_s6_serq_pidx, 0
-	
-#if 0
-	CAPRI_NEXT_IDX3_READ(TABLE_LOCK_DIS, tcp_rx_read_serq_stage2_start,
-	                    d.u.tcp_rx_d.serq_base, TABLE_SIZE_16_BITS)
-#endif
 	nop.e
 	nop
 table_read_SACK:	
+#if 0
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_sack_stage2_start,
 	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_SACK_OFFSET, TABLE_SIZE_512_BITS)
+#endif
 	nop.e
 	nop

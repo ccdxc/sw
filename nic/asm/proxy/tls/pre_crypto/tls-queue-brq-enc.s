@@ -59,8 +59,8 @@ dma_cmd_enc_desc_entry0:
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
 	phvwr		p.aol_L0, r1
 
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_L0)
-	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_A0)
+    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_A0)
+	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_L0)
         
     phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd1_dma_cmd_eop, 0
@@ -113,19 +113,22 @@ dma_cmd_enc_brq_slot:
 
 dma_cmd_output_list_addr:
 	add		    r5, r0, k.to_s5_idesc
-	addi		r5, r5, 8
+	addi		r5, r5, 4
 	phvwr		p.dma_cmd4_dma_cmd_addr, r5
 
-
-    phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_output_list_address)
-	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_output_list_address)
+    
+    // TODO: for Barco bypass - use input descriptor
+    //phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_output_list_address)
+	//phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_output_list_address)
+    phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_input_list_address)
+	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_input_list_address)
 
     phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd4_dma_cmd_eop, 0
 
     addi        r1, r0, TLS_DDOL_BYPASS_BARCO
     seq         c1, r1, k.to_s5_debug_dol
-#    seq         c1, r0, r0
+    seq         c1, r0, r0
     bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
     nop
 

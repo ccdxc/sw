@@ -8,70 +8,45 @@
 #include "tcp-macros.h"
 #include "tcp-table.h"
 #include "tcp-sched.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
- /* d is the data returned by lookup result */
-struct d_struct {
-	TCB_TX_SHARED_STATE
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	flags				: 8  ;
-	addr				: ADDRESS_WIDTH ;
-	offset				: OFFSET_WIDTH ;
-	len				: LEN_WIDTH ;
-	snd_una				: SEQ_NUMBER_WIDTH	;\
-	rcv_nxt				: SEQ_NUMBER_WIDTH	;\
-	rcv_mss_shft			: 4	                ;\
-	pingpong			: 1                     ;\
-	quick				: 4	                ;\
-	ooo_datalen			: COUNTER16 	        ;\
-
-        write_seq                       : SEQ_NUMBER_WIDTH      ;\
-	snd_nxt				: SEQ_NUMBER_WIDTH	;\
-	snd_wnd				: SEQ_NUMBER_WIDTH	;\
-	snd_up				: SEQ_NUMBER_WIDTH	;\
-        snd_cwnd                        : WINDOW_WIDTH          ;\
-	packets_out			: COUNTER16	        ;\
-	sacked_out			: COUNTER16	        ;\
-	lost_out			: COUNTER8	        ;\
-	retrans_out			: COUNTER8	        ;\
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
+struct phv_ p;
+struct tcp_tx_tcp_tx_k k;
+struct tcp_tx_tcp_tx_tcp_tx_d d;
 	
 %%
+        .align
+        .param          tcp_tso_process_start
 
-flow_tx_process_start:
+tcp_tx_process_stage3_start:
 	/* check SESQ for pending data to be transmitted */
-	smeqb		c1,d.sched_flag, TCP_SCHED_FLAG_PENDING_TX, TCP_SCHED_FLAG_PENDING_TX
+	// TODO: smeqb		c1,d.sched_flag, TCP_SCHED_FLAG_PENDING_TX, TCP_SCHED_FLAG_PENDING_TX
+        seq             c1, r0, r0              // TODO : set pending flag
 
-	jal.c1		r7, tcp_retxq_consume
-	nop
-	jal.c1		r7, tcp_retx_enqueue
+	//bal.c1		r7, tcp_retxq_consume
+	//nop
+	bal.c1		r7, tcp_retx_enqueue
 	nop
 
 
 	/* Check if there is retx q cleanup needed at head due
 	 * to ack
 	 */
-	slt		c1, d.retx_snd_una, k.snd_una
-	jal.c1		r7, tcp_clean_retx_queue
+	slt		c1, d.retx_snd_una, k.common_phv_snd_una
+	//bal.c1		r7, tcp_clean_retx_queue
 	nop
 
 	/* Check if cwnd allows transmit of data */
 	/* Return value in r6 */
-	jal		r7, tcp_cwnd_test
+	bal		r7, tcp_cwnd_test
 	nop
 	/* cwnd permits transmit of data if r6 != 0*/
 	sne		c1, r6, r0
 	/* Check if peer rcv wnd allows transmit of data 
 	 * Return value in r6
 	 */
-	jal.c1		r7, tcp_snd_wnd_test
+	bal.c1		r7, tcp_snd_wnd_test
 	nop
 	/* Peer rcv wnd allows transmit of data if r6 != 0 */
 	sne		c2, r6, r0
@@ -81,6 +56,7 @@ flow_tx_process_start:
 	 * send from retx queue
 	 */
 	tblwr		d.pending_tso_data, 1
+        phvwri          p.to_s4_pending_tso_data, 1
 
 flow_read_xmit_cursor_start:
 	/* Get the point where we are supposed to read from */
@@ -108,28 +84,33 @@ flow_read_xmit_cursor_start:
 	bcf		[c1], table_read_xmit_cursor
 	nop
 table_read_TSO:	
-	TCP_NEXT_TABLE_READ(k.fid, TABLE_TYPE_RAW, flow_tx_process,
-	                    TCP_TCB_TABLE_BASE, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_TX_OFFSET, TCP_TCB_TABLE_ENTRY_SIZE)
+        CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+                            tcp_tso_process_start,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
+        nop.e
+        nop
 
 table_read_xmit_cursor:
 	/* Read the xmit cursor if we have zero xmit cursor addr */
 	add.c1		r1, d.retx_xmit_cursor, r0	
 
+#if 0
 	phvwr		p.table_sel, TABLE_TYPE_RAW
 	phvwr.c1	p.table_mpu_entry_raw, flow_read_xmit_cursor
 	phvwr.!c1	p.table_mpu_entry_raw, flow_tso_process
 	phvwr		p.table_addr, r1
+#endif
 
 flow_read_xmit_cursor_done:
 
 	
 tcp_ack_snd_check:
 	/* r1 = rcv_nxt - rcv_wup */
-	sub		r1, k.rcv_nxt , d.rcv_wup
+	sub		r1, k.common_phv_rcv_nxt , d.rcv_wup
 	
 	addi		r2, r0, 1
-	add		r3, k.rcv_mss_shft, r0
+	add		r3, k.to_s3_rcv_mss_shft, r0
 	sllv		r2, r2, r3
 	/* r2 = rcv_mss */
 	/* c1 = ((rcv_nxt - rcv_wup) > rcv_mss) */
@@ -137,16 +118,16 @@ tcp_ack_snd_check:
 	slt		c1, r2, r1
 
 	addi		r1, r0, 1
-	sub		r1, r1, k.pingpong
+	sub		r1, r1, k.to_s3_pingpong
 	/* r1 = 1 - pingpong = !pingpong */
 	sne		c2, r0, r0
 	/* xxx: c2 = (new rcv window >= rcv_wnd) */
 	/* r2 = quick && !pingpong */
-	and		r2, k.quick, r1
+	and		r2, k.to_s3_quick, r1
 	sne		c3, r2, r0
 	/* c3 = in quick ack mode */
 	/* c4 = we have out of order data */
-	sne		c4, k.ooo_datalen, r0
+	sne		c4, k.to_s3_ooo_datalen, r0
 	addi 		r1, r0, 1
 	bcf		[c1 | c2 | c3 | c4], pending_ack_tx
 	nop
@@ -159,22 +140,22 @@ pending_ack_tx:
 	
 
 
-tcp_cwnd_test_start:
+tcp_cwnd_test:
 	/* in_flight = packets_out - (sacked_out + lost_out) + retrans_out
 	*/
 	/* r1 = packets_out + retrans_out */
-	add		r1, k.packets_out, k.retrans_out
+	add		r1, k.t0_s2s_packets_out, k.t0_s2s_retrans_out
 	/* r2 = left_out = sacked_out + lost_out */
-	add 		r2, k.sacked_out, k.lost_out
+	add 		r2, k.t0_s2s_sacked_out, k.t0_s2s_lost_out
 	/* r1 = in_flight = (packets_out + retrans_out) - (sacked_out + lost_out)*/
 	sub 		r1, r1, r2
 	/* c1 = (in_flight >= cwnd) */
-	sle		c1, k.snd_cwnd, r1
+	sle		c1, k.t0_s2s_snd_cwnd, r1
 	bcf		[c1], tcp_cwnd_test_done
 	/* no cwnd remaining */
 	addi.c1		r6, r0, 0
 	/* r6 = snd_cwnd >> 1 */
-	add		r6, k.snd_cwnd, r0
+	add		r6, k.t0_s2s_snd_cwnd, r0
 	srl		r6, r6, 1
 	
 	addi		r4, r0, 1
@@ -182,7 +163,7 @@ tcp_cwnd_test_start:
 	add.c2		r6, r4, r0
 	/* at this point r6 = max(cwnd >> 1, 1) */
 	/* r5 = cwnd - in_flight */
-	sub		r5, k.snd_cwnd, r1
+	sub		r5, k.t0_s2s_snd_cwnd, r1
 	slt		c2, r5, r6
 	add.c2		r6, r5, r0
 	/* At this point r6 = min((max(cwnd >>1, 1) , (cwnd - in_flight)) */
@@ -191,13 +172,13 @@ tcp_cwnd_test_done:
 	jr.c4		r7
 	add		r7, r0, r0
 
-tcp_snd_wnd_test_start:
+tcp_snd_wnd_test:
 	/* r1 = bytes_sent = snd_nxt - snd_una */
-	sub		r1, k.snd_nxt, k.snd_una
+	sub		r1, k.t0_s2s_snd_nxt, k.common_phv_snd_una
 	/* r1 = snd_wnd - bytes_sent */
-	sub		r1, k.snd_wnd, r1
+	sub		r1, k.t0_s2s_snd_wnd, r1
 	/* r1 = (snd_wnd - bytes_sent) / mss_cache */
-	add		r5, k.rcv_mss_shft, r0
+	add		r5, k.to_s3_rcv_mss_shft, r0
 	srlv		r6, r1, r5
 	sne		c4, r7, r0
 	jr.c4		r7
@@ -205,15 +186,30 @@ tcp_snd_wnd_test_start:
 
 	
 	
-tcp_retx_enqueue_start:
+tcp_retx_enqueue:
 	/* All the previous packets were acked or first packet
          *   retxq tail descriptor is NULL
 	 * Wait for a new descriptor to be allocated from TNMDR 
 	 */
 	seq		c1, d.retx_tail_desc, r0
+        sne             c2, k.to_s3_sesq_desc_addr, r0
+	bcf		[c1 & c2], queue_to_empty_retx // TODO: what if queue is not empty
+        nop
 	bcf		[c1], table_read_TNMDR
 	nop
 
+queue_to_empty_retx:
+        tblwr.c2        d.retx_head_desc, k.to_s3_sesq_desc_addr
+        tblwr.c2        d.retx_tail_desc, k.to_s3_sesq_desc_addr
+        add             r2, k.to_s3_addr, k.to_s3_offset
+        tblwr.c2        d.retx_xmit_cursor, r2
+        tblwr.c2        d.xmit_cursor_addr, r2
+        phvwr           p.to_s4_xmit_cursor_addr, k.to_s3_addr
+        phvwr           p.to_s4_xmit_cursor_offset, k.to_s3_offset
+        phvwr           p.to_s4_xmit_cursor_len, k.to_s3_len
+	sne		c4, r7, r0
+	jr.c4		r7
+        
 	/* retxq tail descriptor is not NULL
 	 * check if the retxq tail descriptor entries are all filled
 	 * up.
@@ -237,26 +233,32 @@ nic_desc_entry_write:
 	/* Write A */
 	addi		r2, r0, NIC_DESC_ENTRY_ADDR_OFFSET
 	add		r1, d.retx_snd_nxt_cursor, r2
-	memwr.w		r1, k.addr
-	phvwr		p.xmit_cursor_addr, k.addr
+	memwr.w		r1, k.to_s3_addr
+	phvwr		p.to_s4_xmit_cursor_addr, k.to_s3_addr
 	/* Write O */
 	addi		r2, r0,  NIC_DESC_ENTRY_OFF_OFFSET	
 	add		r1, d.retx_snd_nxt_cursor, r2
-	memwr.h		r1, k.offset
-	phvwr		p.xmit_cursor_offset, k.offset
+	memwr.h		r1, k.to_s3_offset
+	phvwr		p.to_s4_xmit_cursor_offset, k.to_s3_offset
 	/* Write L */
 	addi 		r2, r0, NIC_DESC_ENTRY_LEN_OFFSET
 	add		r1, d.retx_snd_nxt_cursor, r2
-	memwr.h		r1, k.len
-	phvwr		p.xmit_cursor_len, k.len
+	memwr.h		r1, k.to_s3_len
+	phvwr		p.to_s4_xmit_cursor_len, k.to_s3_len
 	/* Update retx_snd_nxt_cursor */
 	tbladd		d.retx_snd_nxt_cursor, NIC_DESC_ENTRY_SIZE
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
 
+        CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+                            tcp_tso_process_start,
+	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
+
 
 table_read_TNMDR:
+#if 0
 	addi		r1,r0,TNMDR_TABLE_BASE
 	addi		r2,r0,TNMDR_ALLOC_IDX
 	mincr 		r2,1,TNMDR_TABLE_SIZE_SHFT
@@ -267,15 +269,8 @@ table_read_TNMDR:
 	phvwri		p.table_mpu_entry_raw, flow_tdesc_alloc_process
 	phvwr.e		p.table_addr, r1
 	nop.e
+#endif
+        nop.e
+        nop
 
-tcp_retxq_consume_start:
-	tbladd		d.retx_ci, 1
-	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.fid, TCP_SCHED_RING_SESQ, d.retx_ci)
-	memwr.d		r4, r3
-	sne		c4, r7, r0
-	jr.c4		r7
-	add		r7, r0, r0
 	

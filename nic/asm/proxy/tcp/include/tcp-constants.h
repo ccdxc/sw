@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "proxy-constants.h"
+
 #define TCPCB_SACKED_ACKED	0x01	/* SKB ACK'd by a SACK block	*/
 #define TCPCB_SACKED_RETRANS	0x02	/* SKB retransmitted		*/
 #define TCPCB_LOST		0x04	/* SKB is lost			*/
@@ -19,10 +21,6 @@
 #define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
 #define NIC_DESC_ENTRY_L_OFFSET              96         /* &((nic_desc_t *)0)->entry[1]*/
 
-#define NIC_DESC_ENTRY_SIZE                  16         /* sizeof(nic_desc_entry_t) */
-#define NIC_DESC_ENTRY_SIZE_SHIFT            3          /* sizeof(nic_desc_entry_t) = 8B */
-#define NIC_SERQ_ENTRY_SIZE                  8
-#define NIC_SERQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 #define NIC_DESC_ENTRY_ADDR_OFFSET           8          /* &((nic_desc_entry_t *)0)->addr */
 #define NIC_DESC_ENTRY_OFF_OFFSET            0xc        /* &((nic_desc_entry_t *)0)->offset */
 #define NIC_DESC_ENTRY_LEN_OFFSET            0xe        /* &((nic_desc_entry_t *)0)->len */

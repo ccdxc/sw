@@ -363,6 +363,19 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = 1;
 
+        // get sesq address
+        wring_hw_id_t   sesq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &sesq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive sesq base for tcp cb: {}", 
+                        tcpcb_pd->tcpcb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("Sesq base: 0x{0:x}", sesq_base);
+            data.u.read_rx2tx_d.sesq_base = sesq_base;
+        }
+
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
@@ -392,14 +405,14 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
 
 hal_ret_t 
-p4pd_add_or_del_tcp_tx_read_sesq_ci_entry(pd_tcpcb_t* tcpcb_pd, bool del)
+p4pd_add_or_del_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    tcp_tx_read_sesq_ci_d      data = {0};
+    tcp_tx_tcp_tx_d                     data = {0};
     hal_ret_t                           ret = HAL_RET_OK;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_SESQ_CI);
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TX);
     
     if(!del) {
     }
@@ -410,18 +423,44 @@ p4pd_add_or_del_tcp_tx_read_sesq_ci_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     return ret;
 }
 
+#define __MAX(a, b) ((a) > (b) ? (a) : (b))
 
 hal_ret_t 
-p4pd_add_or_del_tcp_tx_read_sesq_entry(pd_tcpcb_t* tcpcb_pd, bool del)
+p4pd_add_or_del_tcp_tx_header_template_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
-    tcp_tx_read_sesq_d    data = {0};
-    hal_ret_t               ret = HAL_RET_OK;
+    uint8_t                             data[64];
+    hal_ret_t                           ret = HAL_RET_OK;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_SESQ);
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_HEADER_TEMPLATE);
     
     if(!del) {
+#if 1
+		// TODO UNHACK this
+//INFO:     16:     eeff00000300
+//INFO:     24: eeff0000028100e0
+//INFO:     32: 0208004507007c00
+//INFO:     40: 0100004006fa7140
+//INFO:     48: 00000140000002b8
+//INFO:     56: a90050babababaef
+//INFO:     64: efefef50002000d3
+//INFO:     72: a00000da1a004001
+		uint8_t hdr[] = {
+			0x00, 0xee, 0xff, 0x00, 0x00, 0x03,  // dmac
+			0x00, 0xee, 0xff, 0x00, 0x00, 0x02, // smac
+			0x08, 0x00,
+			// ip header
+			0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00,
+			0x40, 0x06, 0xfa, 0x71, 0x40, 0x00, 0x00, 0x01,
+			0x40, 0x00, 0x00, 0x02,
+			// tcp header
+			0xb8, 0xa9, 0x00, 0x50, 0xba, 0xba, 0xba, 0xba,
+			0xef, 0xef, 0xef, 0xef, 0x50, 0x00, 0x20, 0x00,
+			0xd3, 0xa0, 0x00, 0x00,
+		};
+		memcpy(data, hdr, MAX(sizeof(data), sizeof(hdr)));
+#endif
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
@@ -429,28 +468,6 @@ p4pd_add_or_del_tcp_tx_read_sesq_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     }
     return ret;
 }
-
-
-hal_ret_t 
-p4pd_add_or_del_tcp_tx_sesq_consume_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    tcp_tx_sesq_consume_d     data = {0};
-    hal_ret_t                          ret = HAL_RET_OK;
-
-    // hardware index for this entry
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_SESQ_CONSUME);
-    
-    if(!del) {
-    }
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    return ret;
-}
-
-
 hal_ret_t 
 p4pd_add_or_del_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
@@ -465,16 +482,11 @@ p4pd_add_or_del_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-    ret = p4pd_add_or_del_tcp_tx_read_sesq_ci_entry(tcpcb_pd, del);
+    ret = p4pd_add_or_del_tcp_tx_tcp_tx_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-    ret = p4pd_add_or_del_tcp_tx_read_sesq_entry(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
- 
-    ret = p4pd_add_or_del_tcp_tx_sesq_consume_entry(tcpcb_pd, del);
+    ret = p4pd_add_or_del_tcp_tx_header_template_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
