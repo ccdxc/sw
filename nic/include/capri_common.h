@@ -120,4 +120,10 @@
 #define CAPRI_SEM_TNMPR_SMALL_FREE_INF_ADDR \
                             (CAPRI_SEM_TNMPR_SMALL_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
 
+#define CAPRI_SEM_IPSECCB_ADDR                (CAPRI_MEM_SEMA_START + 8 * 6)
+#define CAPRI_IPSECCB_RING_SIZE               16384
+#define CAPRI_SEM_IPSECCB_RAW_ADDR \
+                            (CAPRI_SEM_IPSECCB_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_IPSECCB_INF_ADDR \
+                            (CAPRI_SEM_IPSECCB_ADDR + CAPRI_SEM_INF_OFFSET)
 #endif

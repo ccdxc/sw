@@ -116,6 +116,9 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
+    ipseccb_pd->ipseccb->pi = 99;
+    ipseccb_pd->ipseccb->ci = 88;
+     
     return HAL_RET_OK;
 }
 

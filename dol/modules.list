@@ -293,6 +293,16 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PKT_TO_IPSECCBQ
+        enable  : False
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : pkt_to_ipseccbq.testspec
+        ignore  : True
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : RDMA_BTH_BASIC
         enable  : True
         package : test.rdma

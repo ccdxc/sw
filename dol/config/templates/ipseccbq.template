@@ -1,0 +1,8 @@
+# IPSECCB CB Object Template File.
+meta:
+    id: IPSECCBQ
+
+id                    : None
+pi                    : 0
+ci                    : 0
+count                 : 0

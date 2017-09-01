@@ -9,3 +9,6 @@ entries:
     - entry:
         name        : SERVICE_LIF
         type        : TLS_PROXY
+    - entry:
+        name        : SERVICE_LIF
+        type        : IPSEC_PROXY
