@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
 struct rx_table_s3_t0_k k;
@@ -27,17 +27,6 @@ update_input_desc_aol:
     // get the correct way of giving it as a single 14 bit field
     //phvwr p.barco_desc_in_L0, k.ipsec_global_frame_size
     phvwri p.barco_desc_in_O0, 0
-
-    phvwri p.barco_desc_in_A1_addr, 0
-    phvwri p.barco_desc_in_L1, 0
-    phvwri p.barco_desc_in_O1, 0
-
-    phvwri p.barco_desc_in_A2_addr, 0
-    phvwri p.barco_desc_in_L2, 0
-    phvwri p.barco_desc_in_O2, 0
-
-    phvwri p.barco_desc_in_NextAddr, 0
-    phvwri p.barco_desc_in_Reserved, 0
 
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT 

@@ -1,6 +1,6 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
 struct rx_table_s4_t0_k k;
@@ -52,10 +52,10 @@ dma_cmd_ring_doorbell:
         phvwr           p.db_data_index, d.cb_pindex 
         phvwr           p.db_data_qid, d.ipsec_cb_index
 
-        phvwri          p.doorbell_cmd_dma_cmd_phv_start_addr,IPSEC_PHV_DB_DATA_START
-        phvwri          p.doorbell_cmd_dma_cmd_phv_end_addr, IPSEC_PHV_DB_DATA_END
+        phvwri          p.doorbell_cmd_dma_cmd_phv_start_addr,IPSEC_PHV_RXDMA_DB_DATA_START
+        phvwri          p.doorbell_cmd_dma_cmd_phv_end_addr, IPSEC_PHV_RXDMA_DB_DATA_END
         phvwri          p.doorbell_cmd_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
         phvwri          p.doorbell_cmd_dma_cmd_eop, 1
         phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
-
+        nop.e

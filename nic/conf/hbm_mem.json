@@ -115,6 +115,14 @@
         {
             "name": "key-mem",
             "size_kb": 2048
+        }, 
+        {
+            "name": "ipsec_pad_table",
+            "size_kb": 64
+        },
+        {
+            "name":"ipsec_ip_header",
+            "size_kb": 64
         }
     ]
 }

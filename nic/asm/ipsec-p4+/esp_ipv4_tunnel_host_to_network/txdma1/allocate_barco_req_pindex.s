@@ -1,6 +1,6 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "ipsec_defines.h"
+#include "ipsec_asm_defines.h"
 
 struct tx_table_s1_t1_k k;
 struct tx_table_s1_t1_allocate_barco_req_pindex_d d;

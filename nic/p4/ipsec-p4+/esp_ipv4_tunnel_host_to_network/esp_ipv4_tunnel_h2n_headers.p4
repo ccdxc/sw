@@ -9,18 +9,17 @@ header_type ipsec_int_header_t {
         tailroom          : 8;
         headroom_offset   : 16;
         tailroom_offset   : 16;
-        pad_size          : 8;
         payload_start     : 16;
         buf_size          : 16;
         payload_size      : 16;
+        pad_size          : 8;
         l4_protocol       : 8;
-        ipsec_int_pad0    : 256;
+        //ipsec_int_pad0    : 256;
     }
 }
 
 header_type ipsec_cb_metadata_t {
     fields {
-        pc                      : 8;
         rsvd                    : 8;
         cosA                    : 4;
         cosB                    : 4;
@@ -59,6 +58,7 @@ header_type barco_descriptor_t {
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
+#if 0
         A1_addr : ADDRESS_WIDTH;
         O1      : AOL_OFFSET_WIDTH;
         L1      : AOL_LENGTH_WIDTH;
@@ -69,6 +69,7 @@ header_type barco_descriptor_t {
         NextAddr : ADDRESS_WIDTH;
         // Below will be renamed as CB-descriptor-linked-list-next - different from barco-next-addr
         Reserved : 64;
+#endif
     }
 }
 
@@ -100,12 +101,11 @@ header_type p4plus_to_p4_ipsec_header_t {
         table2_valid : 1;
         table3_valid : 1;
         ipsec_pad1 : 256;
-        ipsec_pad : 248;
+        ipsec_pad2 : 248;
     }
 }
 
 #define IPSEC_CB_SCRATCH \
-    modify_field(ipsec_cb_scratch.pc, pc); \
     modify_field(ipsec_cb_scratch.rsvd, rsvd); \
     modify_field(ipsec_cb_scratch.cosA, cosA); \
     modify_field(ipsec_cb_scratch.cosB, cosB); \

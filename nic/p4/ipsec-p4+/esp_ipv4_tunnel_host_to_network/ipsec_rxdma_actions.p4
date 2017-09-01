@@ -84,7 +84,7 @@ header_type ipsec_rxdma_global_t {
     }
 }
 
-header_type doorbell_data_pad_t {                                                                                                                                                                                
+header_type doorbell_data_pad_t {                                                                                                                                                                              
     fields {
         db_data_pad : 64;
     }
@@ -207,7 +207,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 // 3. Now table write the rsvd with newly allocated input-descriptor
 // 4. Update the input-descriptor rsvd to zero (it would be anyway be zero - but just to make sure)
 //stage 4 - table 0
-action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
+action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,
@@ -253,13 +253,6 @@ action update_output_desc_aol(addr0, offset0, length0,
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
 
-    modify_field(barco_desc_out.A1_addr, 0);
-    modify_field(barco_desc_out.O1, 0);
-    modify_field(barco_desc_out.L1, 0);
-
-    modify_field(barco_desc_out.A2_addr, 0);
-    modify_field(barco_desc_out.O2, 0);
-    modify_field(barco_desc_out.L2, 0);
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
 
@@ -276,13 +269,6 @@ action update_input_desc_aol (addr0, offset0, length0,
     modify_field(barco_desc_in.O0, 0);
     //modify_field(barco_desc_in.L0, ipsec_global.frame_size - IPSEC_RXDMA_HW_SW_INTRINSIC_SIZE); 
 
-    modify_field(barco_desc_in.A1_addr, 0);
-    modify_field(barco_desc_in.O1, 0);
-    modify_field(barco_desc_in.L1, 0);
-
-    modify_field(barco_desc_in.A2_addr, 0);
-    modify_field(barco_desc_in.O2, 0);
-    modify_field(barco_desc_in.L2, 0);
 
     // Load ipsec-cb-again
     modify_field(p42p4plus_hdr.table0_valid, 1);
@@ -407,7 +393,7 @@ action allocate_input_desc_semaphore(in_desc_ring_index)
 
 
 //stage 0
-action ipsec_encap_rxdma_initial_table(pc, rsvd, cosA, cosB, cos_sel, 
+action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel, 
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex, 
                                        barco_ring_pindex, barco_ring_cindex,
