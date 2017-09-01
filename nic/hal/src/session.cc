@@ -709,6 +709,13 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
     dl2seg = flow->dl2seg;
 
     flow->pgm_attrs.role = flow->role;
+
+    if (flow->config.action == session::FLOW_ACTION_DROP) {
+        // TODO: Please visit if assoc_flow will even be valid in this case
+        flow->pgm_attrs.drop = 1;
+        goto end;
+    }
+
     if (assoc_flow) {
         assoc_flow->pgm_attrs.role = flow->role;
     }
@@ -743,11 +750,12 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
         }
     }
 
-    HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+end:
+    HAL_TRACE_DEBUG("PI-Session:{} iflow: role:{}, drop:{}, mac_sa_rw:{}, mac_da_rw:{},"
             "rw_act:{}, rw_idx:{} tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
             "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
             "nat_dport:{}, nat_l4_port:{}, mcast_en:{}",
-            __FUNCTION__, flow->pgm_attrs.role, 
+            __FUNCTION__, flow->pgm_attrs.role, flow->pgm_attrs.drop,
             flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
             flow->pgm_attrs.rw_act, flow->pgm_attrs.rw_idx, flow->pgm_attrs.tnnl_rw_act, 
             flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
@@ -759,11 +767,11 @@ update_iflow_forwarding_info(const session_args_t *args, session_t *session)
             flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en);
 
     if (flow->assoc_flow) {
-        HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+        HAL_TRACE_DEBUG("PI-Session:{} iflow_assoc: role:{}, drop:{}, mac_sa_rw:{}, mac_da_rw:{},"
                 "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
                 "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
                 "nat_dport:{}, nat_l4_port:{}, mcast_en:{}",
-                __FUNCTION__, assoc_flow->pgm_attrs.role, 
+                __FUNCTION__, assoc_flow->pgm_attrs.role, assoc_flow->pgm_attrs.drop,
                 assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
                 assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.rw_idx, 
                 assoc_flow->pgm_attrs.tnnl_rw_act, 
@@ -797,6 +805,12 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
     dl2seg = flow->dl2seg;
 
     flow->pgm_attrs.role = flow->role;
+    if (flow->config.action == session::FLOW_ACTION_DROP) {
+        // TODO: Please visit if assoc_flow will even be valid in this case
+        flow->pgm_attrs.drop = 1;
+        goto end;
+    }
+
     if (assoc_flow) {
         assoc_flow->pgm_attrs.role = flow->role;
     }
@@ -831,11 +845,12 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
         }
     }
 
-    HAL_TRACE_DEBUG("PI-Session:{} rflow: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+end:
+    HAL_TRACE_DEBUG("PI-Session:{} rflow: role:{}, drop:{}, mac_sa_rw:{}, mac_da_rw:{},"
             "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
             "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
             "nat_dport:{}, nat_l4_port:{}, mcast_en:{}",
-            __FUNCTION__, flow->pgm_attrs.role, 
+            __FUNCTION__, flow->pgm_attrs.role, flow->pgm_attrs.drop,
             flow->pgm_attrs.mac_sa_rewrite, flow->pgm_attrs.mac_da_rewrite,
             flow->pgm_attrs.rw_act, flow->pgm_attrs.rw_idx, flow->pgm_attrs.tnnl_rw_act, 
             flow->pgm_attrs.tnnl_vnid, flow->pgm_attrs.ttl_dec, 
@@ -847,11 +862,11 @@ update_rflow_forwarding_info(const session_args_t *args, session_t *session)
             flow->pgm_attrs.nat_l4_port, flow->pgm_attrs.mcast_en);
 
     if (flow->assoc_flow) {
-        HAL_TRACE_DEBUG("PI-Session:{} rflow_assoc: role:{}, mac_sa_rw:{}, mac_da_rw:{},"
+        HAL_TRACE_DEBUG("PI-Session:{} rflow_assoc: role:{}, drop:{}, mac_sa_rw:{}, mac_da_rw:{},"
                 "rw_act:{}, rw_idx:{}, tnnl_rw_act:{}, tnnl_vnid:{}, ttl_dec:{}, lport:{}, "
                 "qid_en:{}, qtype:{}, qid:{}, nat_sip:{}, nat_dip:{}, nat_sport:{},"
                 "nat_dport:{}, nat_l4_port:{}, mcast_en:{}",
-                __FUNCTION__, assoc_flow->pgm_attrs.role, 
+                __FUNCTION__, assoc_flow->pgm_attrs.role, assoc_flow->pgm_attrs.drop,
                 assoc_flow->pgm_attrs.mac_sa_rewrite, assoc_flow->pgm_attrs.mac_da_rewrite,
                 assoc_flow->pgm_attrs.rw_act, assoc_flow->pgm_attrs.rw_idx, assoc_flow->pgm_attrs.tnnl_rw_act, 
                 assoc_flow->pgm_attrs.tnnl_vnid, assoc_flow->pgm_attrs.ttl_dec, 

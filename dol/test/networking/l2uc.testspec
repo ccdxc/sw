@@ -76,5 +76,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
+            object  : callback://networking/packets/GetL2UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports

@@ -145,6 +145,7 @@ typedef struct flow_cfg_s {
 
 typedef struct flow_pgm_attrs_s {
     uint16_t                  role:1;              // flow role (initiator or responder)
+    uint16_t                  drop:1;              // drop for this flow
     uint16_t                  mac_sa_rewrite:1;    // rewrite src mac
     uint16_t                  mac_da_rewrite:1;    // rewrite dst mac
     rewrite_actions_en        rw_act;              // rewrite action

@@ -27,7 +27,38 @@ modules:
               segment : filter://native=False
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment : filter://native=True
-    
+
+    - module:
+        name    : L2UC_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        ignore  : True
+        args    :
+            maxflows: 1
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+
     - module:
         name    : L2UC_NONIP
         enable  : True
@@ -40,6 +71,19 @@ modules:
               flow   : filter://label=NETWORKING
             - segment: filter://native=True
               flow   : filter://label=NETWORKING
+
+    - module:
+        name    : L2UC_NONIP_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : True
+        iterate :
+            - segment: filter://native=False
+              flow   : filter://label=GFT_DROP
+            - segment: filter://native=True
+              flow   : filter://label=GFT_DROP
 
     - module:
         name    : L2UC_QTAG_ARP_RARP
@@ -59,6 +103,29 @@ modules:
               segment   : filter://native=False
             - type      : RARP_RESP
               segment   : filter://native=False
+
+    - module:
+        name    : L2UC_QTAG_ARP_RARP_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : True
+        args    :
+            segment: filter://native=False
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://label=GFT_DROP
+            - type      : ARP_RESP
+              segment   : filter://native=False
+              flow      : filter://label=GFT_DROP
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://label=GFT_DROP
+            - type      : RARP_RESP
+              segment   : filter://native=False
+              flow      : filter://label=GFT_DROP
 
     - module:
         name    : L2UC_UNTAG_ARP_RARP

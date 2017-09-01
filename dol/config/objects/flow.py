@@ -145,6 +145,9 @@ class FlowObject(base.ConfigObjectBase):
     def IsL2(self):
         return self.fwtype == 'L2'
 
+    def IsDrop(self):
+        return self.action == 'DROP'
+
     def HasL4Ports(self):
         return self.IsTCP() or self.IsUDP()
 

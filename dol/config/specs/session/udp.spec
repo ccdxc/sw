@@ -36,7 +36,6 @@ entries:
                 ingress:
                     - ref://store/objects/id=SpanSession0002
 
-
     - entry:
         label: recirc
         responder:
@@ -48,3 +47,15 @@ entries:
         initiator: 
             port : const/4
 
+    - entry:
+        label: gft_drop
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/12345
+            flow_info:
+                action  : drop
+        initiator: 
+            port : const/54321
+            flow_info:
+                action  : drop

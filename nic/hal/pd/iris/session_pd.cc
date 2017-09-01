@@ -262,7 +262,12 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     }
 
     // populate the action information
-    d.actionid = FLOW_INFO_FLOW_INFO_ID;
+    if (flow_attrs->drop) {
+        d.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
+        HAL_TRACE_DEBUG("PD-Session:{}: Action being set to drop", __FUNCTION__);
+    } else {
+        d.actionid = FLOW_INFO_FLOW_INFO_ID;
+    }
     if (((flow_cfg->key.sport == 80) && (flow_cfg->key.dport == 47273)) ||
          ((flow_cfg->key.sport == 47273) && (flow_cfg->key.dport == 80))) {
         is_tcp_proxy_flow = true;
@@ -443,17 +448,6 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
 
-#if 0
-    // program flow_info table entry for iflow
-    ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
-                                         args->l2seg_s, args->l2seg_d,
-                                         args->nwsec_prof,
-                                         &args->session->iflow->config,
-                                         &session_pd->iflow,
-                                         args->sif, args->dif,
-                                         args->sep, args->dep,
-                                         false);
-#endif
     ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
     if (ret != HAL_RET_OK) {
         return ret;
@@ -468,16 +462,6 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 
     // program flow_info table entry for rflow
     if (session_pd->rflow_valid) {
-#if 0
-        ret = p4pd_add_flow_info_table_entry(args->tenant, args->session,
-                args->l2seg_d, args->l2seg_s,
-                args->nwsec_prof,
-                &args->session->rflow->config,
-                &session_pd->rflow,
-                args->dif, args->sif,
-                args->dep, args->sep,
-                false);
-#endif
         ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->rflow, FLOW_ROLE_RESPONDER, false);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_info_table_entry(session_pd->iflow.flow_stats_hw_id);

@@ -98,3 +98,10 @@ def GetExpectedPacketCos(testcase, packet):
         # L3 Packet: Untag to Tag: Cos will always be zero.
         return 0
     return testcase.config.flow.eg_qos.cos.get() 
+
+
+def GetL2UcExpectedPacket(testcase):
+    if testcase.config.flow.IsDrop():
+        return None
+    return testcase.packets.Get('EXP_PKT')
+

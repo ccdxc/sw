@@ -1,10 +1,9 @@
 # Segment Configuration Spec
 meta:
-    id  : SEGMENT_NATIVE
+    id: SEGMENT_VXLAN
 
 type        : tenant
-fabencap    : vlan
-native      : True
+native      : False
 broadcast   : flood
 multicast   : replicate
 l4lb        : True
