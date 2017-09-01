@@ -289,8 +289,8 @@ def PacketCompare(expected, actual, partial_match=None):
             match_fields = set(
                 expected_fields) - set(partial_match.ignore_hdrs[header].ignore_fields)
             for field in partial_match.ignore_hdrs[header].ignore_fields:
-                setattr(header_expected, field, 0)
-                setattr(header_actual, field, 0)
+                # Equalize for now untill we remove byte compare.
+                setattr(header_expected, field, getattr(header_actual, field))
         for field in match_fields:
             try:
                 expected_val = getattr(header_expected, field)

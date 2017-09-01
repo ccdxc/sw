@@ -241,6 +241,33 @@ class DolPacketTest(DolInfraTest):
         self.assertTrue(set(result.mismatch_hdrs[0].mismatch_result.mismatch_fields) ==
                         set(["src", "dst"]))
 
+    def test_packet_compare_tagged_untagged_mismatch(self):
+        packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                            "dst": MacAddressBase("0000.9999.0002").get(),
+                            "type": 0x8100
+                            },
+                  "Dot1Q": {"vlan": 12, "type": 0x800},
+                  "IP": {"src": "10.0.0.64",
+                         "dst": "10.0.0.65",
+                         "proto": 6},
+                  "TCP": {"sport": 100, "dport": 200}}
+        expected = self._construct_spkt(packet)
+
+        packet = {"Ether": {"src": MacAddressBase("0000.9999.0005").get(),
+                            "dst": MacAddressBase("0000.9999.0006").get(),
+                            "type": 0x800
+                            },
+                  "IP": {"src": "10.0.0.64",
+                         "dst": "10.0.0.65",
+                         "proto": 6},
+                  "TCP": {"sport": 100, "dport": 200}}
+        actual = self._construct_spkt(packet)
+        result = PacketCompare(expected, actual)
+        #self.assertFalse(all(result[x] for x in ["missing_hdrs", "extra_hdrs"]))
+        self.assertTrue(set(result.mismatch_hdrs[0].mismatch_result.mismatch_fields) ==
+                        set(["src", "dst", "type"]))
+        self.assertTrue(len(result.mismatch_hdrs) == 1)
+
     def test_packet_compare_eth_sport_dport_mismatch(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
                             "dst": MacAddressBase("0000.9999.0002").get(),
