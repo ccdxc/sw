@@ -214,8 +214,8 @@ class HeaderCompareResult(objects.FrameworkObject):
 class TriggerObjectCompareResult(objects.FrameworkObject):
     def __init__(self):
         super().__init__()
-        self.extra_fields = []
-        self.missing_fields = []
+        self.extra_fields = {}
+        self.missing_fields = {}
         self.mismatch_fields = {}
 
     def not_empty(self):
@@ -252,13 +252,10 @@ def PacketCompare(expected, actual, partial_match=None):
         exp_layers = set(exp_layers) - \
             set([hdr for hdr, value in partial_match.ignore_hdrs.items() if not value])
     result.missing_hdrs = set(exp_layers) - set(act_layers)
-    match_hdrs = set(exp_layers) & set(act_layers)
-    # Matched headers.
-    match_hdrs = [x for x in exp_layers if x in match_hdrs]
     header_actual = actual
     header_expected = expected
     while header_actual and header_expected:
-        if header_actual.__class__.__name__ != header_actual.__class__.__name__:
+        if header_actual.__class__.__name__ != header_expected.__class__.__name__:
             break
         header = header_actual.__class__.__name__
         hdr_result = TriggerObjectCompareResult()
@@ -268,7 +265,11 @@ def PacketCompare(expected, actual, partial_match=None):
         except:
             # Compare headers only defined in our factory.
             logger.critical("Header %s not found in factory" % header)
-            assert(0)
+            result.extra_hdrs.append(header)
+            # move forward
+            header_actual = header_actual.payload
+            header_expected = header_expected.payload
+            continue
 
         scapy_ref = getattr(penscapy, header)
         if not scapy_ref:
@@ -281,8 +282,9 @@ def PacketCompare(expected, actual, partial_match=None):
         if not partial_match or not partial_match.ignore_hdrs.get(header):
             match_fields = scapy_fields
             extra_field_present = set(actual_fields) - set(expected_fields)
-            if extra_field_present:
-                hdr_result.extra_fields.extend(extra_field_present)
+            for extra_field in extra_field_present:
+                hdr_result.extra_fields[extra_field] = str(getattr(
+                    header_actual, extra_field))
         else:
             match_fields = set(
                 expected_fields) - set(partial_match.ignore_hdrs[header].ignore_fields)
@@ -298,12 +300,12 @@ def PacketCompare(expected, actual, partial_match=None):
                 except AttributeError:
                     # Even the actual does not have the field, skip it.
                     continue
-                hdr_result.extra_fields.append(field)
+                hdr_result.extra_fields[field] = str(actual_val)
                 continue
             try:
                 actual_val = getattr(header_actual, field)
             except AttributeError:
-                hdr_result.missing_fields.append(field)
+                hdr_result.missing_fields[field] = 0
                 continue
             if actual_val != expected_val:
                 field_compare = TriggerFieldCompareResult()
