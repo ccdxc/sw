@@ -20,12 +20,12 @@ fields:
     ip_invalid_len_action: ALLOW
     ip_normalize_ttl: 64
     icmp_invalid_code_action: ALLOW
-    icmp_deprecated_msgs_drop: 1
-    icmp_redirect_msg_drop: 1
-    tcp_non_syn_first_pkt_drop: 1
+    icmp_deprecated_msgs_drop: 0
+    icmp_redirect_msg_drop: 0
+    tcp_non_syn_first_pkt_drop: 0
     tcp_syncookie_en: 1
     tcp_split_handshake_detect_en: 1
-    tcp_split_handshake_drop: 1
+    tcp_split_handshake_drop: 0
     tcp_rsvd_flags_action: ALLOW
     tcp_unexpected_mss_action: ALLOW
     tcp_unexpected_win_scale_action: ALLOW
@@ -37,6 +37,6 @@ fields:
     tcp_data_len_gt_win_size_action: ALLOW
     tcp_unexpected_ts_option_action: ALLOW
     tcp_unexpected_echo_ts_action: ALLOW
-    tcp_ts_not_present_drop: 1
-    tcp_invalid_flags_drop: 1
-    tcp_flags_nonsyn_noack_drop: 1
+    tcp_ts_not_present_drop: 0
+    tcp_invalid_flags_drop: 0
+    tcp_flags_nonsyn_noack_drop: 0

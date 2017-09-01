@@ -22,4 +22,28 @@ k = {
     flow_lkp_metadata_lkp_type      = 0x1;
     flow_lkp_metadata_lkp_vrf       = 0x1;
     flow_lkp_metadata_lkp_src       = 0x1;
+    tcp_valid = 0x1;
+    l4_metadata_tcp_normalization_en = 0x1;
+    l4_metadata_tcp_data_len = 0x100;
+    l4_metadata_tcp_rsvd_flags_action = 0x1;
+    l4_metadata_tcp_unexpected_mss_action = 0x1;
+    l4_metadata_tcp_unexpected_win_scale_action = 0x1;
+    l4_metadata_tcp_urg_ptr_not_set_action = 0x1;
+    l4_metadata_tcp_urg_payload_missing_action = 0x1;
+    l4_metadata_tcp_urg_flag_not_set_action = 0x1;
+    l4_metadata_tcp_rst_with_data_action = 0x2;
+    l4_metadata_tcp_invalid_flags_drop = 0x0;
+    l4_metadata_tcp_flags_nonsyn_noack_drop = 0x0;
+    l4_metadata_tcp_unexpected_echo_ts_action = 0x1;
+    tcp_flags = 0x18;
+    tcp_res = 0x0;
+    tcp_urgentPtr = 0x0;
+    tcp_option_mss_valid = 0;
+    tcp_option_ws_valid = 0;
+    tcp_option_timestamp_valid = 1;
+    tcp_option_timestamp_prev_echo_ts = 0x12345678;
+};
+
+p = {
+    tcp_flags = 0x4;
 };

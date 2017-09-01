@@ -1197,12 +1197,12 @@ action tcp_stateless_normalization_checks() {
 
    // RST set but there is a non-zero payload
     // This has to be handled by P4+
-    if ((tcp.flags & TCP_FLAG_RST != 0) and
+    if ((tcp.flags & TCP_FLAG_RST == TCP_FLAG_RST) and
         (l4_metadata.tcp_data_len != 0) and
         (l4_metadata.tcp_rst_with_data_action == NORMALIZATION_ACTION_DROP)) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
     }
-    if ((tcp.flags & TCP_FLAG_RST != 0) and
+    if ((tcp.flags & TCP_FLAG_RST == TCP_FLAG_RST) and
         (l4_metadata.tcp_data_len != 0) and
         (l4_metadata.tcp_rst_with_data_action == NORMALIZATION_ACTION_EDIT)) {
         // Handle it in p4+
@@ -1211,7 +1211,7 @@ action tcp_stateless_normalization_checks() {
 
 
     // Bad flags combination
-    if ((l4_metadata.tcp_invalid_flags_drop == NORMALIZATION_ACTION_DROP) and
+    if ((l4_metadata.tcp_invalid_flags_drop == ACT_DROP) and
         (((tcp.flags & TCP_FLAG_SYN != 0) and
           (tcp.flags & TCP_FLAG_RST != 0)) or
          ((tcp.flags & TCP_FLAG_SYN != 0) and
@@ -1222,9 +1222,9 @@ action tcp_stateless_normalization_checks() {
     }
     //No EDIT option
 
-   if ((l4_metadata.tcp_flags_nonsyn_noack_drop == NORMALIZATION_ACTION_DROP) and
+   if ((l4_metadata.tcp_flags_nonsyn_noack_drop == ACT_DROP) and
        ((tcp.flags & TCP_FLAG_SYN == 0) and
-        (tcp.flags & TCP_FLAG_ACK != 0))) {
+        (tcp.flags & TCP_FLAG_ACK == 0))) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
    }
 
@@ -1310,7 +1310,6 @@ action tcp_session_normalization() {
 
 action stateless_normalization() {
     icmp_normalization_checks();
-    tcp_stateless_normalization_checks();
 }
 
 @pragma stage 3

@@ -18,6 +18,16 @@
 // never being enable.
 
 action ipsg_miss() {
+
+    if (tcp.valid == TRUE and
+        l4_metadata.tcp_normalization_en == TRUE) {
+        // no action needed, exit the routine.
+        tcp_stateless_normalization_checks ();
+    }
+
+    if (control_metadata.ipsg_enable == FALSE) {
+        // Return.
+    }
     if ((flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) or
         (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)) {
         modify_field(control_metadata.drop_reason, DROP_IPSG);
@@ -25,6 +35,17 @@ action ipsg_miss() {
 }
 
 action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
+
+    if (tcp.valid == TRUE and
+        l4_metadata.tcp_normalization_en == TRUE) {
+        // no action needed, exit the routine.
+        tcp_stateless_normalization_checks ();
+    }
+
+    if (control_metadata.ipsg_enable == FALSE) {
+        // Return.
+    }
+
     if ((control_metadata.src_lport != src_lport) or
         (ethernet.srcAddr != mac) or
         (vlan_tag.valid != vlan_valid) or
@@ -58,7 +79,5 @@ table ipsg {
 }
 
 control process_ipsg {
-    if (control_metadata.ipsg_enable == TRUE) {
-        apply(ipsg);
-    }
+    apply(ipsg);
 }
