@@ -57,6 +57,7 @@ class RDMAManager {
 #define HBM_PAGE_SIZE_SHIFT 12
 
 typedef struct sram_lif_entry_s {
+    uint32_t rdma_en_qtype_mask:8;
     uint32_t pt_base_addr_page_id:20;
     uint32_t log_num_pt_entries:7;
 

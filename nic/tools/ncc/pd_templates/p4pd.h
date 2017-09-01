@@ -3,9 +3,16 @@
 //:: pddict = _context['pddict']
 //:: #pdb.set_trace()
 //:: if pddict['p4plus']:
+//::    p4prog = pddict['p4program'] + '_'
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
-//::	start_table_base = 101
+//::    if pddict['p4program'] == 'common_rxdma_actions':
+//::        start_table_base = 101
+//::    elif pddict['p4program'] == 'common_txdma_actions':
+//::        start_table_base = 201
+//::    else:
+//::        start_table_base = 301
+//::    #endif
 //:: else:
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'

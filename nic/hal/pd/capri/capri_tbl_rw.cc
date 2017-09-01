@@ -369,8 +369,29 @@ static int capri_table_p4plus_init()
     capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
                                                  (uint32_t) capri_action_p4plus_asm_base, 0);
 
+    // Resolve the p4plus txdma stage 0 RDMA params SRAM table 
+    // program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config 3 with the PC
+    te_csr = &cap0.pct.te[0 /*stage-id*/];
+    capri_program_p4plus_sram_table_mpu_pc_for_stage0(te_csr, 
+                       (uint32_t) capri_action_p4plus_asm_base);
+
     return CAPRI_OK;
 }
+
 int capri_table_rw_init()
 {
 

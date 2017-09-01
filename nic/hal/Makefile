@@ -32,6 +32,7 @@ LDFLAGS +=	-lhal \
 			-lp4pdtcprx \
 			-lp4pdtcptx \
 			-lp4pluspd_rxdma \
+			-lp4pluspd_txdma \
 			-lcapricsr \
 			-lcapri \
 			-lslab \

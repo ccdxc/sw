@@ -6,6 +6,7 @@
 #include <string>
 #include <errno.h>
 #include <common_rxdma_actions_p4pd.h>
+#include <common_txdma_actions_p4pd.h>
 #include <stdlib.h>
 
 #include "base.h"
@@ -29,6 +30,10 @@ void p4pd_global_hwentry_query(uint32_t tableid,
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         p4pd_common_rxdma_actions_hwentry_query(tableid, hwkey_len,
+            hwkeymask_len, hwactiondata_len);
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        p4pd_common_txdma_actions_hwentry_query(tableid, hwkey_len,
             hwkeymask_len, hwactiondata_len);
     } else {
         HAL_ASSERT(0);
@@ -56,6 +61,10 @@ p4pd_global_entry_write(uint32_t tableid,
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_rxdma_actions_entry_write(tableid,
                 index, hwkey, hwkey_mask, actiondata));
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pd_common_txdma_actions_entry_write(tableid,
+                index, hwkey, hwkey_mask, actiondata));
     } else {
         HAL_ASSERT(0);
     }
@@ -81,13 +90,15 @@ p4pd_global_entry_read(uint32_t tableid,
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_rxdma_actions_entry_read(tableid,
                 index, swkey, swkey_mask, actiondata));
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pd_common_txdma_actions_entry_read(tableid,
+                index, swkey, swkey_mask, actiondata));
     } else {
         HAL_ASSERT(0);
     }
     return HAL_RET_OK;
 }
-
-
 
 p4pd_error_t
 p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
@@ -107,6 +118,10 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_rxdma_actions_table_ds_decoded_string_get(tableid,
+                sw_key, sw_key_mask, action_data, buffer, buf_len));
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pd_common_txdma_actions_table_ds_decoded_string_get(tableid,
                 sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else {
         HAL_ASSERT(0);
@@ -142,6 +157,10 @@ p4pd_global_table_properties_get(uint32_t tableid,
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pluspd_rxdma_table_properties_get(tableid,
+               (p4pd_table_properties_t*) tbl_ctx));
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pluspd_txdma_table_properties_get(tableid,
                (p4pd_table_properties_t*) tbl_ctx));
     } else {
         HAL_ASSERT(0);

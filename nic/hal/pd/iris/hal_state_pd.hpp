@@ -12,6 +12,7 @@
 #include <acl_tcam.hpp>
 #include <p4pd.h>
 #include <common_rxdma_actions_p4pd.h>
+#include <common_txdma_actions_p4pd.h>
 
 
 using hal::utils::indexer;
@@ -149,6 +150,7 @@ public:
 
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
+    hal_ret_t p4plus_txdma_init_tables(void);
     DirectMap *dm_table(p4pd_table_id tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;
@@ -189,6 +191,14 @@ public:
             return NULL;
         }
         return p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
+    }
+
+    DirectMap *p4plus_txdma_dm_table(p4pd_common_txdma_actions_table_id tid) const {
+        if ((tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
+            (tid > P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
+            return NULL;
+        }
+        return p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
     }
 
 private:
@@ -329,6 +339,7 @@ private:
     Met          *met_table_;
     acl_tcam     *acl_table_;
     DirectMap    **p4plus_rxdma_dm_tables_;
+    DirectMap    **p4plus_txdma_dm_tables_;
 };
 
 extern class hal_state_pd    *g_hal_state_pd;

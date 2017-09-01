@@ -91,34 +91,6 @@ header_type classic_scratch_metadata_t {
     }
 }
 
-header_type rdma_scratch_metadata_t {
-    fields {
-        //Per LIF PageTranslationTable and MemoryRegionWindowTable
-        //are allocated adjacent to each other in HBM in that order.
-        //This is the base page_id of that allocation.
-        //Assumption is that it is 4K Byte(page) aligned and
-        //number of PT entries are in power of 2s.
-        pt_base_addr_page_id: 20;
-        log_num_pt_entries: 7;
-
-        //Per LIF CQCB and EQCB tables
-        //are allocated adjacent to each other in HBM in that order.
-        //This is the base page_id of that allocation.
-        //Assumption is that it is 4K Byte(page) aligned and
-        //number of PT entries are in power of 2s.
-        cqcb_base_addr_page_id: 20;
-        log_num_cq_entries: 5;
-
-        //RQCB prefetch uses per LIF global ring
-        //This is the base address of that ring
-        prefetch_pool_base_addr_page_id: 20;
-        log_num_prefetch_pool_entries:5;
-
-        reserved: 115;
-
-    }
-}
-
 @pragma dont_trim
 @pragma scratch_metadata
 metadata classic_scratch_metadata_t scratch_classic;
@@ -1019,22 +991,27 @@ parser start {
     return ingress;
 }
 
-action rx_stage0_load_rdma_params(pt_base_addr_page_id, 
+action rx_stage0_load_rdma_params(rdma_en_qtype_mask, 
+                                  pt_base_addr_page_id, 
                                   log_num_pt_entries, 
                                   cqcb_base_addr_page_id, 
                                   log_num_cq_entries,
                                   prefetch_pool_base_addr_page_id,
                                   log_num_prefetch_pool_entries, 
                                   reserved) {
-    modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
-    modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
-    modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
-    modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
-    modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
-                 prefetch_pool_base_addr_page_id);
-    modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
-                 log_num_prefetch_pool_entries);
-    modify_field(scratch_rdma.reserved, reserved);
+    if (((1 << p4_rxdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
+
+        modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
+        modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
+        modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
+        modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
+                     prefetch_pool_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
+                     log_num_prefetch_pool_entries);
+        modify_field(scratch_rdma.reserved, reserved);
+    }
 }
 
 @pragma stage 0

@@ -448,4 +448,37 @@ header_type ring_entry_t {
         pi_##_x                           : 16;\
         ci_##_x                           : 16;\
 
+header_type rdma_scratch_metadata_t {
+    fields {
+        //QTYPEs on LIF can be allocated differently on different LIFs
+        //This mask will have the respective bit set for all qtype values
+        //where RDMA is enabled (if enabled)
+        //For case where RDMA is not enabled, it should be set to 0
+        rdma_en_qtype_mask : 8;
+
+        //Per LIF PageTranslationTable and MemoryRegionWindowTable
+        //are allocated adjacent to each other in HBM in that order.
+        //This is the base page_id of that allocation.
+        //Assumption is that it is 4K Byte(page) aligned and
+        //number of PT entries are in power of 2s.
+        pt_base_addr_page_id: 20;
+        log_num_pt_entries: 7;
+
+        //Per LIF CQCB and EQCB tables
+        //are allocated adjacent to each other in HBM in that order.
+        //This is the base page_id of that allocation.
+        //Assumption is that it is 4K Byte(page) aligned and
+        //number of PT entries are in power of 2s.
+        cqcb_base_addr_page_id: 20;
+        log_num_cq_entries: 5;
+
+        //RQCB prefetch uses per LIF global ring
+        //This is the base address of that ring
+        prefetch_pool_base_addr_page_id: 20;
+        log_num_prefetch_pool_entries:5;
+
+        reserved: 115;
+
+    }
+}
 
