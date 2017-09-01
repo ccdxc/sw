@@ -226,6 +226,29 @@ p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
                                  uint8_t    *hw_key, 
                                  uint8_t    *hw_key_mask);
 
+/* 
+ * Build index value that pipeline uses to lookup 
+ * p4-table (index based lookup tables). The returned index
+ * is where the table entry should be installed into hardware
+ * table using p4pd_entry_write() API
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid      : Table Id that identifies
+ *                                P4 table. This id is obtained
+ *                                from p4pd_table_id_enum.
+ * 
+ *  IN  : void *swkey           : Software key structure containing all p4-fields
+ *                                that form table index.
+ * 
+ * Return Value 
+ *  uint64_t                   : hw_index
+ */
+uint64_t
+p4pd_index_to_hwindex_map(uint32_t   tableid,
+                          void       *swkey);
+
+
 /* Install entry into P4-table.
  *
  * Arguments: 
@@ -309,39 +332,6 @@ p4pd_error_t p4pd_entry_read(uint32_t   tableid,
                              void       *swkey_mask,
                              void       *actiondata);
 
-
-/* Create P4 table encoded hardware entry.
- *
- * Arguments: 
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : void *swkey            : Software key to be converted to  hardware key
- *                                 Can be NULL if tableid identifies 
- *                                 table type as Index table.
- *                                 A software key structure is generated for every
- *                                 p4-table. Refer to p4pd.h for structure details.
- *                                 Such Per p4 table key data structure should
- *                                 provided as void* swkey.
- *  IN  : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure is generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *  OUT : uint8_t *hwentry       : HW entry that would get installed .
- * 
- * Return Value: 
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t p4pd_entry_create(uint32_t   tableid,
-                               void       *swkey, 
-                               void       *swkey_mask,
-                               void       *actiondata,
-                               uint8_t    *hwentry);
 
 
 /* Return Log string of decoded P4 table hardware entry.
@@ -537,38 +527,6 @@ p4pd_common_rxdma_actions_entry_read(uint32_t   tableid,
                          void       *swkey_mask,
                          void       *actiondata);
 
-/* Create P4 table encoded hardware entry.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : void    *swkey         : Hardware key data read from hardware table is
- *                                 converted to software key. A software key
- *                                 structure is generated for every p4-table.
- *                                 Refer to p4pd.h for structure details.
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  IN  : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *  OUT : uint8_t *hwentry       : HW entry that would get installed .
- *
- * Return Value:
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_rxdma_actions_entry_create(uint32_t   tableid,
-                           void       *swkey,
-                           void       *swkey_mask,
-                           void       *actiondata,
-                           uint8_t    *hwentry);
 
 /* Return Log string of decoded P4 table structure (key, actiondata structures).
  *
@@ -716,38 +674,6 @@ p4pd_error_t p4pd_global_entry_read(uint32_t   tableid,
                              void       *actiondata);
 
 
-/* Create P4 table encoded hardware entry.
- *
- * Arguments: 
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : void *swkey            : Software key to be converted to  hardware key
- *                                 Can be NULL if tableid identifies 
- *                                 table type as Index table.
- *                                 A software key structure is generated for every
- *                                 p4-table. Refer to p4pd.h for structure details.
- *                                 Such Per p4 table key data structure should
- *                                 provided as void* swkey.
- *  IN  : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure is generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *  OUT : uint8_t *hwentry       : HW entry that would get installed .
- * 
- * Return Value: 
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t p4pd_global_entry_create(uint32_t   tableid,
-                               void       *swkey, 
-                               void       *swkey_mask,
-                               void       *actiondata,
-                               uint8_t    *hwentry);
 
 /* Return Log string of decoded P4 table structure (key, actiondata structures).
  *

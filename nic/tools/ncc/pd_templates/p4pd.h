@@ -13,7 +13,7 @@
 //:: #endif
 /*
  * p4pd.h
- * Mahesh Shirshyad (Pensando Systems)
+ * Pensando Systems
  */
 /* This file contains data structures and APIs needed to operate on each 
  * P4 Table. 
@@ -125,7 +125,7 @@
 /* P4-table '${table}' Mpu/Keyless table.*/
 //::        #endif
 
-//::        if pddict['tables'][table]['type'] != 'Index':
+//::        if True or pddict['tables'][table]['type'] != 'Index':
 //::            i = 1
 //::            for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::                (container_field, un_fields) = fldunion

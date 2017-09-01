@@ -331,22 +331,16 @@ class capri_p4pd:
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
-                                # km byte 'km_byte' is sourced from 'km_phv_byte'
-                                # which is assinged to capri field 'cf'.
-                                # km_format dict schema is 
-                                # Key: is byte position in key maker.
-                                # Value: is capri field byte and 
-                                #        upto 8 key bits from capri-field
                                 # When key comes from field union and more than
                                 # one field from the same union is used as keys 
                                 # to table, then we need to collect for all keys
                                 # that are field unionized.
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K")]
+                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K", containerstart)]
                                 else:
                                     # Incase of field union, 2 different k bytes can map
                                     # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K"))
+                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K", containerstart))
                                 break
 
                         # Traverse input list of the table and check for presence
@@ -362,11 +356,11 @@ class capri_p4pd:
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I")]
+                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I", containerstart)]
                                 else:
                                     # Incase of field union, 2 different k bytes can map
                                     # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I"))
+                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I", containerstart))
                                 break
 
                 if km_phv_byte in km_cprofile.k_byte_sel:
@@ -400,22 +394,16 @@ class capri_p4pd:
                                 containerstart, cf_startbit, width = \
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
-                                # km byte 'km_byte' is sourced from 'km_phv_byte'
-                                # which is assinged to capri field 'cf'.
-                                # km_format dict schema is 
-                                # Key: is byte position in key maker.
-                                # Value: is capri field byte and 
-                                #        upto 8 key bits from capri-field
                                 # When key comes from field union and more than
                                 # one field from the same union is used as keys 
                                 # to table, then we need to collect for all keys
                                 # that are field unionized.
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K")]
+                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K", containerstart)]
                                 else:
                                     # Incase of field union, 2 different k bytes can map
                                     # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K"))
+                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K", containerstart))
                                 break
 
                         # Traverse input list of the table and check for presence
@@ -431,11 +419,11 @@ class capri_p4pd:
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I")]
+                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I", containerstart)]
                                 else:
                                     # Incase of field union, 2 different k bytes can map
                                     # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I"))
+                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I", containerstart))
                                 break
 
 
@@ -479,11 +467,11 @@ class capri_p4pd:
                                    # [(KM-byte-location, table-key-field-byte#)]
         for km_byte, cf_value_list in km_byte_to_cf_map.items():
             for cf_value in cf_value_list:
-                cf, cf_startbit, _, _  = cf_value
+                cf, cf_startbit, width, _, containerstart  = cf_value
                 if cf not in tbl_cf_to_km_byte_map.keys():
-                    tbl_cf_to_km_byte_map[cf] = [(km_byte, cf_startbit)]
+                    tbl_cf_to_km_byte_map[cf] = [(km_byte, cf_startbit, width, containerstart)]
                 else:
-                    tbl_cf_to_km_byte_map[cf].append((km_byte, cf_startbit))
+                    tbl_cf_to_km_byte_map[cf].append((km_byte, cf_startbit, width, containerstart))
 
         tbl_cf_to_km_bit_map = {} # Maps Table-Key capri-field-object to list of
                                   # [(KM-bit-location, table-key-field-bit#)]
@@ -509,20 +497,10 @@ class capri_p4pd:
         return kdict
 
 
-    def build_table_k_fields(self, ctable, asm_ki=0, asm_kd=0):
+    def build_table_k_fields(self, ctable):
         '''
         '''
-        include_key = False
-        if asm_ki:
-            include_key = True
-        elif asm_kd:
-            if ctable.match_type == match_type.EXACT_HASH:
-                include_key = True
-        else:
-            if ctable.match_type != match_type.EXACT_IDX:
-                include_key = True
-
-        if  include_key:
+        if ctable.match_type != match_type.MPU_ONLY:
             #All capri fields that are keys of the table.
             cf_keylist = {}
             for k in ctable.keys:
@@ -591,23 +569,20 @@ class capri_p4pd:
             kdict['fld_u_keys'] = fld_u_keys
             kdict['hdr_u_keys'] = hdr_u_keys
             kdict['keys']       = tblkeys
+            kdict['keysize'] = ctable.final_key_size
         else:
             kdict = {}
             kdict['not_my_key_bytes']       = []
             kdict['not_my_key_bits']        = []
             kdict['match_key_start_byte']   = 0
-            kdict['match_key_start_bit']   = 0
+            kdict['match_key_start_bit']    = 0
             kdict['match_key_len']          = 0
             kdict['km_byte_to_cf']          = []
             kdict['km_bit_to_cf']           = []
             kdict['fld_u_keys']             = [] 
             kdict['hdr_u_keys']             = [] 
             kdict['keys']                   = []
-
-        if ctable.match_type == match_type.MPU_ONLY:
             kdict['keysize'] = 0
-        else:
-            kdict['keysize'] = ctable.final_key_size
         
         # Build all table action data fields
         tblactions = []

@@ -801,7 +801,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, _, _ in key_byte_format:
 //::                            tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte} ]
 //::                        #endfor
@@ -812,7 +812,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte}. Sourced from fld union key]
 //::                            #endfor
@@ -824,7 +824,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte}. Sourced from hdr union key]
 //::                            #endfor
@@ -917,7 +917,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, _kbit in key_byte_format:
+//::                        for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                            tablebyte = kmbyte
 //::                            kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                            kbit = (p4fldwidth - 1 - _kbit) % 8
@@ -951,17 +951,17 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     trit_y = ~k & m;
 
     p4pd_copy_into_hwentry(hwkey_x,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
-                   8 /* 8 bits */);
+                   ${width});
 
     p4pd_copy_into_hwentry(hwkey_y,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                        #endfor
 //::                    #endif
 //::                    if len(key_bit_format):
@@ -1008,7 +1008,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, _kbit in key_byte_format:
+//::                            for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
 //::                                tablebyte = kmbyte
@@ -1040,16 +1040,16 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     trit_x = k & m;
     trit_y = ~k & m;
     p4pd_copy_into_hwentry(hwkey_x,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
-                   8 /* 8 bits */);
+                   ${width});
     p4pd_copy_into_hwentry(hwkey_y,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -1099,7 +1099,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, _kbit in key_byte_format:
+//::                            for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                                tablebyte = kmbyte
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
@@ -1132,16 +1132,16 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     trit_x = k & m;
     trit_y = ~k & m;
     p4pd_copy_into_hwentry(hwkey_x,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
-                   8 /* 8 bits */);
+                   ${width});
     p4pd_copy_into_hwentry(hwkey_y,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -1240,7 +1240,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, _, _ in key_byte_format:
 //::                            tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte} ]
 //::                        #endfor
@@ -1249,9 +1249,9 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    for fields in fldukeys:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields[1]
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},     ${tablebyte}, ${kmbyte} ; Sourced from fld union key]
 //::                            #endfor
@@ -1263,9 +1263,9 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_bit_format):
-//::                            for kmbit, kbit in key_bit_format:
-//::                                tablebit = kmbit
-     * [ ${p4fldname}, ${kbit},  ${tablebit}, ${kmbit}. Sourced from hdr union key]
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
+//::                                tablebyte = kmbyte
+     * [ ${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte}. Sourced from hdr union key]
 //::                            #endfor
 //::                        #endif
 //::                    #endfor
@@ -1292,7 +1292,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    for fields in fldukeys:
-//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields[1]
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
 //::                                tablebit = kmbit
@@ -1325,20 +1325,20 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                            kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                            tablebyte = kmbyte
     /* Key byte */
     p4pd_copy_into_hwentry(hwkey,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte}),
 //::                            else:
                    &(swkey->${p4fldname}[${kbyte}]),
 //::                            #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                        #endfor
 //::                    #endif
 //::                    if len(key_bit_format):
@@ -1352,7 +1352,7 @@ ${table}_hwkey_build(uint32_t tableid,
                    &(swkey->${p4fldname}[${kbit}/8]),
 //::                            #endif
                    (${p4fldwidth} - 1 - ${kbit}) % 8 /* source bit; KM bit 0 is MSB */,
-                   1 /* copy single bis */);
+                   1 /* copy single bits */);
     key_len += 1;
 //::                        #endfor
 //::                    #endif
@@ -1369,20 +1369,20 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Field Union Key byte */
     p4pd_copy_into_hwentry(hwkey,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbyte}]),
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -1396,7 +1396,7 @@ ${table}_hwkey_build(uint32_t tableid,
                    &(swkey->${ustr}${p4fldname}[${kbit}/8]),
 //::                                #endif
                    (${p4fldwidth} - 1 - ${kbit}) % 8 /* source bit; KM bit 0 is MSB */,
-                   1 /* copy single bis */);
+                   1 /* copy single bits */);
 //::                            #endfor
 //::                        #endif
 //::                    #endfor
@@ -1415,27 +1415,27 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Header Union Key byte */
     p4pd_copy_into_hwentry(hwkey,
-                    ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbyte}]),
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
-                   8 /* 8 bits */);
-    key_len += 8;
+                   ${width});
+    key_len += ${width};
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Header Union Key bit */
     p4pd_copy_into_hwentry(hwkey,
-                   ${kmbit} - ${mat_key_start_bit}, /* Dest bit position */
+                   ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                                else:
@@ -1452,6 +1452,215 @@ ${table}_hwkey_build(uint32_t tableid,
     return (key_len);
 }
 //::            #endif
+//::        #endif
+
+//::        if pddict['tables'][table]['type'] == 'Index':
+static uint64_t
+${table}_index_mapper(uint32_t tableid,
+                      ${table}_swkey_t *swkey)
+{
+    uint64_t _hwkey = 0;
+    uint8_t *hwkey = (uint8_t*)&_hwkey;
+//::                # Do not include Action-PC in hwkey. action-pc will be
+//::                # prepended when combining key, action-data
+    /*
+     * [ P4Table   Match      Byte Location      ByteLocation ]
+     * [ MatchKey  Key        in HW table(HBM    in KeyMaker  ]
+     * [ Name,     start      or P4pipe memory),              ]
+     * [           bit        before actionpc                 ]
+     * [                      is prepended or                 ]
+     * [                      before byte                     ]
+     * [                      swizzling is done               ]
+     * ________________________________________________________
+     *
+//::                for fields in pddict['tables'][table]['keys']:
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                    if len(key_byte_format):
+//::                        for kmbyte, kbit, _, _  in key_byte_format:
+//::                            tablebyte = kmbyte
+     * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte} ]
+//::                        #endfor
+//::                    #endif
+//::                #endfor
+//::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
+//::                    fldcontainer, fldukeys = fld_un_containers
+//::                    for fields in fldukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_byte_format):
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
+//::                                tablebyte = kmbyte
+     * [${p4fldname}, ${kbit},     ${tablebyte}, ${kmbyte} ; Sourced from fld union key]
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                #endfor
+//::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
+//::                    hdrcontainer, hdrukeys = hdr_un_containers
+//::                    for fields in hdrukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_bit_format):
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
+//::                                tablebyte = kmbyte
+     * [${p4fldname}, ${kbit},    ${tablebyte}, ${kmbyte} ; Sourced from fld union key]
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                #endfor
+     *
+     * [ P4Table    Match       Bit Location       BitLocation ]
+     * [ MatchKey   KeyBit,     in HW table(HBM    in KeyMaker ]
+     * [ Name,                  or P4pipe memory),             ]
+     * [                        before actionpc                ]
+     * [                        is prepended or                ]
+     * [                        before byte                    ]
+     * [                        swizzling is done              ]
+     * _________________________________________________________
+     *
+//::                for fields in pddict['tables'][table]['keys']:
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                    if len(key_bit_format):
+//::                        for kmbit, kbit in key_bit_format:
+//::                            tablebit = kmbit
+     * [ ${p4fldname}, ${kbit},  ${tablebit}, ${kmbit} ]
+//::                        #endfor
+//::                    #endif
+//::                #endfor
+//::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
+//::                    fldcontainer, fldukeys = fld_un_containers
+//::                    for fields in fldukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_bit_format):
+//::                            for kmbit, kbit in key_bit_format:
+//::                                tablebit = kmbit
+     * [ ${p4fldname}, ${kbit},  ${tablebit}, ${kmbit} ; Sourced from fld union key]
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                #endfor
+//::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
+//::                    hdrcontainer, hdrukeys = hdr_un_containers
+//::                    for fields in hdrukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_bit_format):
+//::                            for kmbit, kbit in key_bit_format:
+//::                                tablebit = kmbit
+     * [ ${p4fldname}, ${kbit},  ${tablebit}, ${kmbit}. Sourced from hdr union key]
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                #endfor
+     */
+//::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
+//::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
+//::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::                if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
+//::                    # In case of HASH table, entire 512b are used for hash computation.
+//::                    # Hence place key bits at same position where they appear in KM and rest zero.
+//::                    mat_key_start_byte = 0
+//::                    mat_key_start_bit = 0
+//::                #endif
+//::                for fields in pddict['tables'][table]['keys']:
+//::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                    if len(key_byte_format):
+//::                        for kmbyte, kbit, width, containerstart in key_byte_format:
+//::                            kbyte = (p4fldwidth - 1 - kbit) / 8
+//::                            tablebyte = kmbyte
+    /* Key byte */
+   *(hwkey + ((${mat_key_bit_length} - ${width} - ((${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit})/* Dest bit position */) >> 3)) 
+        = (*(uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
+//::                        #endfor
+//::                    #endif
+//::                    if len(key_bit_format):
+//::                        for kmbit, kbit in key_bit_format:
+    /* Key bit */
+    p4pd_copy_into_hwentry(hwkey,
+                    (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
+//::                            if p4fldwidth <= 32:
+                   (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
+//::                            else:
+                   &(swkey->${p4fldname}[${kbit}/8]),
+//::                            #endif
+                   (${p4fldwidth} - 1 - ${kbit}) % 8 /* source bit; KM bit 0 is MSB */,
+                   1 /* copy single bits */);
+//::                        #endfor
+//::                    #endif
+//::                #endfor
+
+//::                i = 1
+//::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
+//::                    fldcontainer, fldukeys = fld_un_containers
+//::                    if len(fldukeys) > 1:
+//::                        ustr = table + '_u' + str(i) + '.'
+//::                    else:
+//::                        ustr=''
+//::                    #endif
+//::                    for fields in fldukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_byte_format):
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
+//::                                kbyte = (p4fldwidth - 1 - kbit) / 8
+//::                                tablebyte = kmbyte
+    /* Field Union Key byte */
+   *(hwkey + ((${mat_key_bit_length} - ${width} - ((${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit})/* Dest bit position */) >> 3)) 
+        = (*(uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
+//::                            #endfor
+//::                        #endif
+//::                        if len(key_bit_format):
+//::                            for kmbit, kbit in key_bit_format:
+    /* Field Union Key bit */
+    p4pd_copy_into_hwentry(hwkey,
+                    (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
+//::                                if p4fldwidth <= 32:
+                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
+//::                                else:
+                   &(swkey->${ustr}${p4fldname}[${kbit}/8]),
+//::                                #endif
+                   (${p4fldwidth} - 1 - ${kbit}) % 8 /* source bit; KM bit 0 is MSB */,
+                   1 /* copy single bits */);
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                    i += 1
+//::                #endfor
+
+//::                i = 1
+//::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
+//::                    hdrcontainer, hdrukeys = hdr_un_containers
+//::                    if len(fldukeys) > 1:
+//::                        ustr = table + '_hdr_u' + str(i) + '.'
+//::                    else:
+//::                        ustr=''
+//::                    #endif
+//::                    for fields in hdrukeys:
+//::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        if len(key_byte_format):
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
+//::                                kbyte = (p4fldwidth - 1 - kbit) / 8
+//::                                tablebyte = kmbyte
+    /* Header Union Key byte */
+   *(hwkey + ((${mat_key_bit_length} - ${width} - ((${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit})/* Dest bit position */) >> 3)) 
+        = (*(uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte})) << (8 - ${width} - ${containerstart});
+//::                            #endfor
+//::                        #endif
+//::                        if len(key_bit_format):
+//::                            for kmbit, kbit in key_bit_format:
+    /* Header Union Key bit */
+    p4pd_copy_into_hwentry(hwkey,
+                   (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
+//::                                if p4fldwidth <= 32:
+                   (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
+//::                                else:
+                   &(swkey->${ustr}${p4fldname}[${kbit}/8]),
+//::                                #endif
+                   (${p4fldwidth} - 1 - ${kbit}) % 8 /* source bit; KM bit 0 is MSB */,
+                   1 /* copy single bit */);
+//::                            #endfor
+//::                        #endif
+//::                    #endfor
+//::                    i += 1
+//::                #endfor
+    return (*hwkey);
+}
 //::        #endif
 
 /* Install entry into P4-table '${table}'
@@ -1846,7 +2055,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, _, _ in key_byte_format:
 //::                            tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte} ]
 //::                        #endfor
@@ -1857,7 +2066,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit,_, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte}. Sourced from fld union key]
 //::                            #endfor
@@ -1869,7 +2078,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte}. Sourced from hdr union key]
 //::                            #endfor
@@ -1964,7 +2173,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, _kbit in key_byte_format:
+//::                        for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                            tablebyte = kmbyte
 //::                            kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                            kbit = (p4fldwidth - 1 - _kbit) % 8
@@ -1974,14 +2183,14 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     p4pd_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
-                           (${tablebyte} * 8)  - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     p4pd_copy_be_src_to_le_dest(&trit_y,
                            0, 
                            hw_key_mask,
-                           (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     m = trit_x ^ trit_y;
     k = trit_x & m;
@@ -2049,7 +2258,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, _kbit in key_byte_format:
+//::                            for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                                tablebyte = kmbyte
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
@@ -2059,14 +2268,14 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     p4pd_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
-                           (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     p4pd_copy_be_src_to_le_dest(&trit_y,
                            0, 
                            hw_key_mask,
-                           (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     m = trit_x ^ trit_y;
     k = trit_x & m;
@@ -2136,7 +2345,7 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, _kbit in key_byte_format:
+//::                            for kmbyte, _kbit, width, containerstart in key_byte_format:
 //::                                tablebyte = kmbyte
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
@@ -2146,14 +2355,14 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     p4pd_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
-                           (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     p4pd_copy_be_src_to_le_dest(&trit_y,
                            0, 
                            hw_key_mask,
-                           (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                           8 /* 8 bits */);
+                           (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                           ${width});
 
     m = trit_x ^ trit_y;
     k = trit_x & m;
@@ -2231,7 +2440,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, _, _ in key_byte_format:
 //::                            tablebyte = kmbyte
      * [${p4fldname}, ${kbit},  ${tablebyte}, ${kmbyte} ]
 //::                        #endfor
@@ -2242,7 +2451,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields[1]
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
 //::                                tablebyte = kmbyte
      * [${p4fldname}, ${kbit},     ${tablebyte}, ${kmbyte} ; Sourced from fld union key]
 //::                            #endfor
@@ -2254,9 +2463,9 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_bit_format):
-//::                            for kmbit, kbit in key_bit_format:
-//::                                tablebit = kmbit
-     * [ ${p4fldname}, ${kbit},  ${tablebit}, ${kmbit}. Sourced from hdr union key]
+//::                            for kmbyte, kbit, _, _ in key_byte_format:
+//::                                tablebyte = kmbyte
+     * [${p4fldname}, ${kbit},     ${tablebyte}, ${kmbyte} ; Sourced from hdr union key]
 //::                            #endfor
 //::                        #endif
 //::                    #endfor
@@ -2317,7 +2526,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if len(key_byte_format):
-//::                        for kmbyte, kbit in key_byte_format:
+//::                        for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                            kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                            tablebyte = kmbyte
     /* Copying one byte from table-key into correct p4fld place */
@@ -2329,8 +2538,8 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                            #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                   8 /* 8 bits */);
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   ${width});
 //::                        #endfor
 //::                    #endif
 //::                    if len(key_bit_format):
@@ -2361,7 +2570,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Copying one byte from table-key into correct place */
@@ -2373,8 +2582,8 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                   8 /* 8 bits */);
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   ${width});
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -2407,7 +2616,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Copying one byte from table-key into correct place */
@@ -2419,8 +2628,8 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                #endif
                    (${p4fldwidth} - ${kbit}) % 8, /* Start bit in destination */
                    hwkey,
-                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* source bit position */
-                   8 /* 8 bits */);
+                   (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
+                   ${width});
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -2635,57 +2844,6 @@ ${table}_entry_read(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        #endif
-
-/* Create hardware entry from P4-table '${table}'. 
- * Created entry data encodes both Key and Action data.
- *
- * Arguments: 
- *  IN  : uint32_t tableid                 : Table Id that identifies
- *                                           P4 table. This id is obtained
- *                                           from p4pd_table_id_enum.
- *
-//::        if pddict['tables'][table]['type'] != 'Index':
- *  IN  : ${table}_swkey_t *swkey          : Software key used in P4-table
-//::        #endif
-//::        if pddict['tables'][table]['type'] == 'Ternary':
- *  IN  : ${table}_swkey_mask_t *swkey_mask: Software key used in P4-table
-//::        #endif
- *  IN  : ${table}_actions_un  *actiondata : Action data associated with the key.
- *
- *  OUT : uint8_t *hwentry                 : Action data associated with the key.
- * 
- * Return Value: 
- *  pd_error_t                             : P4PD_SUCCESS / P4PD_FAIL
- */
-//::        if pddict['tables'][table]['type'] == 'Ternary':
-static p4pd_error_t
-${table}_hwentry_create(uint32_t tableid,
-                        ${table}_swkey_t *swkey, 
-                        ${table}_swkey_mask_t *swkey_mask,
-                        ${table}_actiondata *actiondata,
-                        uint8_t *hwentry)
-{
-    return (P4PD_SUCCESS);
-}
-//::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-static p4pd_error_t
-${table}_hwentry_create(uint32_t tableid,
-                        ${table}_actiondata* actiondata,
-                        uint8_t *hwentry)
-{
-    return (P4PD_SUCCESS);
-}
-//::        else:
-static p4pd_error_t
-${table}_hwentry_create(uint32_t tableid,
-                        ${table}_swkey_t *swkey, 
-                        ${table}_actiondata *actiondata,
-                        uint8_t *hwentry)
-{
-    return (P4PD_SUCCESS);
-}
-//::        #endif
-
 
 /* Decode hardware entry from P4-table '${table}'.
  *
@@ -2940,6 +3098,48 @@ ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
     return (P4PD_FAIL);
 }
 
+/* 
+ * Build index value that pipeline uses to lookup 
+ * p4-table (index based lookup tables). The returned index
+ * is where the table entry should be installed into hardware
+ * table using p4pd_entry_write() API
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid      : Table Id that identifies
+ *                                P4 table. This id is obtained
+ *                                from p4pd_table_id_enum.
+ * 
+ *  IN  : void *swkey           : Software key structure containing all p4-fields
+ *                                that form table index.
+ * 
+ * Return Value 
+ *  uint64_t                   : hw_index
+ */
+uint64_t
+${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
+                                   void       *swkey)
+{
+
+    switch (tableid) {
+//::        for table, tid in tabledict.items():
+//::            caps_tablename = table.upper()
+//::            if pddict['tables'][table]['type'] != 'Index':
+//::                continue
+//::            #endif
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            return (${table}_index_mapper(tableid, (${table}_swkey_t *)swkey));
+        break;
+
+//::        #endfor
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_FAIL);
+}
+
 /* Install entry into P4-table.
  *
  * Arguments: 
@@ -3166,77 +3366,6 @@ ${api_prefix}_entry_read(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
-
-/* Create P4 table encoded hardware entry.
- *
- * Arguments: 
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : void    *swkey         : Hardware key data read from hardware table is 
- *                                 converted to software key. A software key
- *                                 structure is generated for every p4-table.
- *                                 Refer to p4pd.h for structure details.
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  IN  : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *  OUT : uint8_t *hwentry       : HW entry that would get installed .
- * 
- * Return Value: 
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-${api_prefix}_entry_create(uint32_t   tableid,
-                           void       *swkey, 
-                           void       *swkey_mask,
-                           void       *actiondata,
-                           uint8_t    *hwentry)
-{
-    switch (tableid) {
-//::        for table, tid in tabledict.items():
-//::            caps_tablename = table.upper()
-//::            if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
-//::                continue
-//::            #endif
-        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
-//::            if len(pddict['tables'][table]['hash_overflow_tbl']):
-//::                tbl_ = pddict['tables'][table]['hash_overflow_tbl']
-//::                caps_tbl_ = tbl_.upper()
-        case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
-//::            #endif
-//::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            return (${table}_hwentry_create(tableid,
-                    (${table}_actiondata*)actiondata, hwentry));
-//::            #endif
-//::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            return (${table}_hwentry_create(tableid, 
-                            (${table}_swkey_t *)swkey, 
-                            (${table}_actiondata*)actiondata, hwentry));
-//::            #endif
-//::            if pddict['tables'][table]['type'] == 'Ternary':
-            return (${table}_hwentry_create(tableid,
-                            (${table}_swkey_t*)swkey, 
-                            (${table}_swkey_mask_t*)swkey_mask,
-                            (${table}_actiondata*) actiondata, hwentry));
-//::            #endif
-        break;
-
-//::        #endfor
-        default:
-            // Invalid tableid
-            return (P4PD_FAIL);
-        break;
-    }
-    return (P4PD_SUCCESS);
-}
 
 /* Return Log string of decoded P4 table hardware entry.
  *

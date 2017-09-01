@@ -87,30 +87,6 @@ p4pd_global_entry_read(uint32_t tableid,
     return HAL_RET_OK;
 }
 
-/*
- * Based on table id call appropriate table routine.
- * For now this API is only called for p4pd and rxdma
- * routines. TODO: Add other APIs as well here.
- */
-p4pd_error_t
-p4pd_global_entry_create(uint32_t tableid,
-                       void       *swkey,
-                       void       *swkey_mask,
-                       void       *actiondata,
-                       uint8_t    *hwentry)
-{
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
-        return (p4pd_entry_create(tableid, swkey, swkey_mask, actiondata, hwentry));
-    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        return (p4pd_common_rxdma_actions_entry_create(tableid,
-                swkey, swkey_mask, actiondata, hwentry));
-    } else {
-        HAL_ASSERT(0);
-    }
-    return HAL_RET_OK;
-}
 
 
 p4pd_error_t
