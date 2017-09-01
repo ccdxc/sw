@@ -15,20 +15,24 @@
         
 struct tx_table_s4_t0_k k                  ;
 struct phv_ p	;
-struct tx_table_s4_t0_tls_queue_sesq_d d;
+//struct tx_table_s4_t0_tls_queue_sesq_d d;
+struct tx_table_s0_t0_d d;
 
 	
 %%
 
 tls_queue_sesq_process:
     CAPRI_CLEAR_TABLE0_VALID
+	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
+	add		    r4, r5, r0
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
 
 
 dma_cmd_sesq_slot:
-	add		    r5, r0, d.sw_sesq_pi
+	add		    r5, r0, d.u.read_tls_stg0_d.sw_sesq_pi
 	sll		    r5, r5, NIC_SESQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for SESQ slot */
-	add		    r1, r5, d.sesq_base
+	add		    r1, r5, d.u.read_tls_stg0_d.sesq_base
 
 	phvwr		p.dma_cmd0_dma_cmd_addr, r1
     phvwr       p.ring_entry_descr_addr, k.to_s4_odesc
@@ -47,7 +51,7 @@ tls_sesq_produce:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TCP)
 	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TCP_SCHED_RING_SESQ, d.sw_sesq_pi)
+	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TCP_SCHED_RING_SESQ, d.u.read_tls_stg0_d.sw_sesq_pi)
 
 	phvwr		p.dma_cmd1_dma_cmd_addr, r4
 	phvwr		p.db_data_data, r3

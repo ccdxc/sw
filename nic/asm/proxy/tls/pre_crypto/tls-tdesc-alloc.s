@@ -28,9 +28,10 @@ struct d_struct d;
 	    .align
 tls_tdesc_alloc_start:
 
-        CAPRI_CLEAR_TABLE2_VALID
+        CAPRI_CLEAR_TABLE1_VALID
 
 	    phvwr		p.to_s5_odesc, d.odesc
+   	    phvwr		p.to_s4_odesc, d.odesc
         
 	    nop.e
 	    nop

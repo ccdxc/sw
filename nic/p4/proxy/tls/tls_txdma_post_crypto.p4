@@ -63,7 +63,7 @@ header_type to_stage_3_phv_t {
 
 header_type to_stage_4_phv_t {
     fields {
-        odesc                           : HBM_ADDRESS_WIDTH;
+        odesc                           : ADDRESS_WIDTH;
         debug_dol                       : 8;
     }
 }
@@ -158,6 +158,7 @@ action tls_read_desc(status, output_list_address, pad) {
     // d for stage 2 table 0 read_desc
     modify_field(read_desc_d.status, status);
     modify_field(read_desc_d.output_list_address, output_list_address);
+    modify_field(read_desc_d.pad, pad);
 
 }
 

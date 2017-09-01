@@ -31,6 +31,7 @@ struct tx_table_s1_t0_k k	    ;
 tls_read_serq_entry_process_start:
     phvwr   p.to_s2_idesc, d.idesc
     phvwr   p.to_s4_idesc, d.idesc
+    phvwr   p.to_s5_idesc, d.idesc
     phvwr   p.to_s6_idesc, d.idesc
     add     r1, r0, d.idesc
 

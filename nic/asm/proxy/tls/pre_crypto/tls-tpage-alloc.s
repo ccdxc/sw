@@ -25,7 +25,7 @@ struct d_struct d;
 	    .align
 tls_tpage_alloc_start:
 
-        CAPRI_CLEAR_TABLE3_VALID
+        CAPRI_CLEAR_TABLE2_VALID
 
 	    phvwr		p.to_s5_opage, d.opage
 

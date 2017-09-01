@@ -361,6 +361,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
         data.action_id = pc_offset;
+        data.u.read_rx2tx_d.total = 1;
+
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");

@@ -151,6 +151,18 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
             HAL_TRACE_DEBUG("Serq base: 0x{0:x}", serq_base);
             data.u.read_tls_stg0_d.serq_base = htonl(serq_base);    
         }
+        // Get Sesq address
+        wring_hw_id_t  sesq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
+                                     tlscb_pd->tlscb->cb_id,
+                                     &sesq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive sesq base for tlscbcb: {}", 
+                        tlscb_pd->tlscb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("Sesq base: 0x{0:x}", sesq_base);
+            data.u.read_tls_stg0_d.sesq_base = htonl(sesq_base);    
+        }
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);

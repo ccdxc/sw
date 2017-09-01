@@ -277,12 +277,12 @@ static int capri_stats_region_init()
 }
 
 static void capri_program_p4plus_table_mpu_pc_for_stage0(cap_te_csr_t *te_csr, 
-                                                         uint32_t pc)
+                                                         uint32_t pc, uint32_t offset)
 {
     te_csr->cfg_table_property[1].read();
     te_csr->cfg_table_property[1].mpu_pc(pc >> 6);
     te_csr->cfg_table_property[1].mpu_pc_dyn(1);
-    te_csr->cfg_table_property[1].addr_base(0);
+    te_csr->cfg_table_property[1].addr_base(offset);
     te_csr->cfg_table_property[1].write();
 }
 
@@ -326,7 +326,7 @@ static int capri_table_p4plus_init()
     // Program table config 0 with the PC
     te_csr = &cap0.pcr.te[0];
     capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
-                       (uint32_t) capri_action_p4plus_asm_base);
+                                                 (uint32_t) capri_action_p4plus_asm_base, 0);
   
     
     // Resolve the p4plus rxdma stage 0 RDMA params SRAM table 
@@ -367,7 +367,7 @@ static int capri_table_p4plus_init()
     // Program table config 0 with the PC
     te_csr = &cap0.pct.te[0];
     capri_program_p4plus_table_mpu_pc_for_stage0(te_csr, 
-                               (uint32_t) capri_action_p4plus_asm_base);
+                                                 (uint32_t) capri_action_p4plus_asm_base, 0);
 
     return CAPRI_OK;
 }

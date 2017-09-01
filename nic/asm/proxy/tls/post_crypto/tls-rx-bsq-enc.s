@@ -30,7 +30,7 @@ tls_rx_bsq_enc_process:
 	nop
 table_read_desc:	
 	add		r3, r0, d.qhead
-    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_desc_process, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_desc_process, r3, TABLE_SIZE_512_BITS)
 
 
 tls_rx_bsq_enc_process_done:
