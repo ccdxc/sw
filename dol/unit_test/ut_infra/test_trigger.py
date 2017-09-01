@@ -327,7 +327,6 @@ ring        : None  #  Ring Object
 
     @staticmethod
     def info(*args, **kwargs):
-        # return
         logger.info(args, kwargs)
 
     def _add_trigger_expect_packet(self, step, input_output, add_pen_header=True):
@@ -346,9 +345,14 @@ ring        : None  #  Ring Object
         for data in (input_output["input"]):
             if "packet" in data:
                 input_pkt = self.newinst(self._packet_spec)
+                inner_spkt = None
+                if "inner_packet" in data:
+                    inner_spkt = self._construct_spkt(
+                        data["inner_packet"], 64, add_pen_hdr=False)
+
                 input_pkt.spkt = self._construct_spkt(
                     data["packet"], 64, add_pen_hdr=add_pen_header,
-                    port=data.get("encode_port"), opcode=data.get("encode_opcode"))
+                    port=data.get("encode_port"), opcode=data.get("encode_opcode"), payload=inner_spkt)
                 if add_pen_header:
                     input_pkt.spkt[PEN_REF].id = self._test_case_spec.GID()
                 input_pkt.count = data["count"]
@@ -371,8 +375,12 @@ ring        : None  #  Ring Object
         for data in (input_output["output"]):
             if "packet" in data:
                 input_pkt = self.newinst(self._packet_spec)
+                inner_spkt = None
+                if "inner_packet" in data:
+                    inner_spkt = self._construct_spkt(
+                        data["inner_packet"], 64, add_pen_hdr=False)
                 input_pkt.spkt = self._construct_spkt(
-                    data["packet"], 64, add_pen_hdr=add_pen_header, port=data.get("encode_port"))
+                    data["packet"], 64, add_pen_hdr=add_pen_header, port=data.get("encode_port"), payload=inner_spkt)
                 if add_pen_header:
                     input_pkt.spkt[PEN_REF].id = self._test_case_spec.GID()
 
@@ -419,6 +427,7 @@ class TestModel(InfraThreadHandler):
             return
         if port:
             pkt = msg
+            pkt = penscapy.Parse(msg)
             tc_id = pkt[penscapy.PENDOL].id
             if not self._infra._tc_input_out_map[tc_id]:
                 # Not step input output for this test case.
@@ -558,8 +567,12 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
         first_descr_ref = None
         for _, data in enumerate(input_output["input"], 0):
             if "packet" in data:
+                inner_spkt = None
+                if "inner_packet" in data:
+                    inner_spkt = self._construct_spkt(
+                        data["inner_packet"], 64, add_pen_hdr=False)
                 spkt = self._construct_spkt(
-                    data["packet"], 64, add_pen_hdr=add_pen_header)
+                    data["packet"], 64, add_pen_hdr=add_pen_header, payload=inner_spkt)
                 spkt[PEN_REF].id = self._test_case_spec.GID()
                 model_ip_op["input"].append(spkt)
             elif "descriptor" in data:
@@ -569,8 +582,12 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
 
         for _, data in enumerate(input_output["output"], 0):
             if "packet" in data:
+                inner_spkt = None
+                if "inner_packet" in data:
+                    inner_spkt = self._construct_spkt(
+                        data["inner_packet"], 64, add_pen_hdr=False)
                 spkt = self._construct_spkt(
-                    data["packet"], 64, add_pen_hdr=add_pen_header)
+                    data["packet"], 64, add_pen_hdr=add_pen_header, payload=inner_spkt)
                 for port in data["ports"]:
                     model_ip_op["output"].append(
                         PacketContext(None, spkt, port))
@@ -594,6 +611,7 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
 
     @init_trigger_test(steps=1)
     def test_single_packet_flow(self):
+        logger.set_level(6)
         input_output = {"input": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
                                                         "dst": MacAddressBase("0000.9999.0002").get(),
                                                         "type": 0x8100
@@ -811,6 +829,87 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
                         .step.result.packets.mismatch[0].packet.expected.ports == [1])
 
     @init_trigger_test(steps=1)
+    def test_single_packet_flow_mismatch_inner(self):
+        logger.set_level(6)
+        input_output = {"input": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                        "dst": MacAddressBase("0000.9999.0002").get(),
+                                                        "type": 0x8100
+                                                        },
+                                              "Dot1Q": {"vlan": 12},
+                                              "IP": {"src": "10.0.0.64",
+                                                     "dst": "10.0.0.65",
+                                                     "proto": 17},
+                                              "UDP": {"sport": 100, "dport":  4789},
+                                              "VXLAN": {"vni": 1, "flags": 0x800}},
+                                   "inner_packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                              "dst": MacAddressBase("0000.9999.0002").get(),
+                                                              "type": 0x8100
+                                                              },
+                                                    "Dot1Q": {"vlan": 12},
+                                                    "IP": {"src": "10.0.0.64",
+                                                           "dst": "10.0.0.65",
+                                                           "proto": 6},
+                                                    "TCP": {"sport": 100, "dport": 200}},
+                                   "ports": [1],
+                                   "count": 1,
+                                   "id": 1
+                                   }],
+                        "output": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                         "dst": MacAddressBase("0000.9999.0002").get(),
+                                                         "type": 0x8100
+                                                         },
+                                               "Dot1Q": {"vlan": 12},
+                                               "IP": {"src": "10.0.0.64",
+                                                      "dst": "10.0.0.65",
+                                                      "proto": 17},
+                                               "UDP": {"sport": 100, "dport": 4789},
+                                               "VXLAN": {"vni": 1, "flags": 0x800}},
+                                    "inner_packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                                               "dst": MacAddressBase("0000.9999.0002").get(),
+                                                               "type": 0x8100
+                                                               },
+                                                     "Dot1Q": {"vlan": 12},
+                                                     "IP": {"src": "10.0.0.64",
+                                                            "dst": "10.0.0.65",
+                                                            "proto": 6},
+                                                     "TCP": {"sport": 100, "dport": 200}},
+                                    "ports": [1],
+                                    "count": 1,
+                                    "id": 1}
+                                   ]
+                        }
+        self._add_trigger_expect_packet(
+            self._test_case_spec.session[0].step, input_output)
+        input_output["output"][0]["inner_packet"]["Dot1Q"]["vlan"] = 13
+        self.__add_model_input_output(input_output)
+        self._trigger.run_test_case(self._test_case_spec)
+        self._wait_for_test_case_completion()
+        result, details = self._trigger.get_result(
+            self._test_case_spec.GID())
+        self.assertTrue(result == Trigger.TEST_CASE_FAILED)
+        details = details[0].packets
+        self.assertTrue(len(details.mismatch) == 1)
+        self.assertTrue(len(details.missing) == 0)
+        self.assertTrue(
+            details.mismatch[0].mismatch.mismatch_hdrs[1].Dot1Q.mismatch_fields.vlan)
+        report = self._trigger.get_run_report()
+        self.assertTrue(report and report.failed_count == 1 and
+                        report.details[self._test_case_spec.GID()].id == self._test_case_spec.GID() and
+                        report.details[self._test_case_spec.GID()].steps_passed == 0)
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.matched == [])
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.extra == [])
+        self.assertTrue(
+            report.details[self._test_case_spec.GID()].session[0].step.result.packets.missing == [])
+        self.assertTrue(
+            len(report.details[self._test_case_spec.GID()].session[0].step.result.packets.mismatch) == 1)
+        self.assertTrue(report.details[self._test_case_spec.GID()].session[0]
+                        .step.result.packets.mismatch[0].packet.actual.port == 1)
+        self.assertTrue(report.details[self._test_case_spec.GID()].session[0]
+                        .step.result.packets.mismatch[0].packet.expected.ports == [1])
+
+    @init_trigger_test(steps=1)
     def test_single_packet_flow_extra_packet(self):
         input_output = {"input": [{"packet": {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
                                                         "dst": MacAddressBase("0000.9999.0002").get(),
@@ -912,7 +1011,7 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
         self.assertTrue(len(details.mismatch) == 1)
         self.assertTrue(details.extra[0].spkt[Dot1Q].vlan == 13)
         self.assertTrue(
-            details.mismatch[0].mismatch.headers.Dot1Q.mismatch_fields.vlan)
+            details.mismatch[0].mismatch_hdrs[0].Dot1Q.mismatch_fields.vlan)
 
     @init_trigger_test(steps=1)
     def test_single_packet_flow_extra_mismatch_and_missing_packets(self):
@@ -991,7 +1090,7 @@ class DolTriggerTestWithUTModel(DolTriggerTest):
         self.assertTrue(
             details.extra[0].port == 1)
         self.assertTrue(
-            details.mismatch[0].mismatch.headers.Dot1Q.mismatch_fields.vlan)
+            details.mismatch[0].mismatch_hdrs[0].Dot1Q.mismatch_fields.vlan)
 
     @init_trigger_test(steps=1)
     def test_single_packet_flow_timed_out(self):
@@ -2528,5 +2627,5 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     # logger.add_stdout()
     suite.addTest(DolTriggerTestWithUTModel(
-        'test_single_packet_flow_with_custom_callback'))
+        'test_single_packet_2_outputs_with_missing'))
     unittest.TextTestRunner(verbosity=2).run(suite)

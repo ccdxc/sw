@@ -133,10 +133,11 @@ class DolInfraTest(unittest.TestCase):
     def tearDown(self):
         self.module_patcher.stop()
 
-    def _construct_spkt(self, pkt_data, data_len=64, add_pen_hdr=True, port=None, opcode=None, tc_id=None):
+    def _construct_spkt(self, pkt_data, data_len=64, add_pen_hdr=True, port=None, opcode=None, tc_id=None, payload=None):
         from infra.penscapy import penscapy
         spkt = None
-        order = {"Ether": 0, "Dot1Q": 1, "IP": 2, "TCP": 3, "UDP": 3}
+        order = {"Ether": 0, "Dot1Q": 1, "IP": 2,
+                 "TCP": 3, "UDP": 3, "VXLAN": 4}
         pkt_data = OrderedDict(
             sorted(pkt_data.items(),  key=lambda t: order[t[0]]))
         for header, hdr_data in pkt_data.items():
@@ -149,10 +150,14 @@ class DolInfraTest(unittest.TestCase):
             else:
                 spkt = shdr
 
-        scapyhdl = getattr(penscapy, "PAYLOAD")
-        shdr = scapyhdl()
-        shdr.data = [0] * data_len
-        spkt = spkt / shdr
+        if not payload:
+            scapyhdl = getattr(penscapy, "PAYLOAD")
+            shdr = scapyhdl()
+            shdr.data = [0] * data_len
+            spkt = spkt / shdr
+        else:
+            print("ADded payload")
+            spkt = spkt / payload
         if add_pen_hdr:
             scapyhdl = getattr(penscapy, "PENDOL")
             shdr = scapyhdl()

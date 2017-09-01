@@ -173,6 +173,7 @@ class DolMainTest(unittest.TestCase):
         sys.argv[0] = ws_top + "/dol/main.py"
         # This run default main.
         import main
+        main.Main()
         report = TrigExpEngine.get_run_report()
         self.assertTrue(report)
 

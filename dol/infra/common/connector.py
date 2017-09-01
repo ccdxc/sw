@@ -109,7 +109,7 @@ class SocketDgram(Connector):
             except:
                 # It might be door bell
                 return addr, data["data"], None
-            return PacketContext(addr, spkt, data["port"])
+            return PacketContext(addr, data["data"], data["port"])
         except socket.timeout:
             try:
                 ring, descrs = self._eventQueue.dequeueEv()

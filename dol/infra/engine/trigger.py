@@ -139,6 +139,7 @@ class ObjectMismatchResult(objects.FrameworkObject):
 class PacketMismatchResult(ObjectMismatchResult):
     def __init__(self):
         ObjectMismatchResult.__init__(self, "packet")
+        self.inner_packet = None
 
 
 class DescriptorMismatchResult(ObjectMismatchResult):
@@ -192,10 +193,22 @@ class PacketCompareResult(objects.FrameworkObject):
         super().__init__()
         self.extra_hdrs = []
         self.missing_hdrs = []
-        self.headers = OrderedDict()
+        self.mismatch_hdrs = []
+        self.mismatch_raw = None
 
     def matched(self):
-        return not self.extra_hdrs and not self.missing_hdrs and not self.headers
+        return not self.extra_hdrs and not self.missing_hdrs and not self.mismatch_hdrs and not self.mismatch_raw
+
+    def remove_matched_headers(self):
+        self.mismatch_hdrs = [
+            hdr_cmp_result for hdr_cmp_result in self.mismatch_hdrs if hdr_cmp_result.mismatch_result.not_empty()]
+
+
+class HeaderCompareResult(objects.FrameworkObject):
+    def __init__(self, header, result):
+        super().__init__()
+        self.header = header
+        self.mismatch_result = result
 
 
 class TriggerObjectCompareResult(objects.FrameworkObject):
@@ -209,7 +222,7 @@ class TriggerObjectCompareResult(objects.FrameworkObject):
         return self.extra_fields or self.mismatch_fields or self.mismatch_fields
 
 
-class TriggerFieldCompareResult(objects.FrameworkObject):
+class TriggerFieldCompareResult():
     def __init__(self):
         super().__init__()
         self.expected = None
@@ -228,8 +241,6 @@ def PacketCompare(expected, actual, partial_match=None):
             hdrs.append(p.__class__.__name__)
             p = p.payload
         return hdrs
-        # return [header.strip().split(" ")[0] for header in
-        # spkt.summary().split("/")]
 
     result = PacketCompareResult()
 
@@ -244,8 +255,12 @@ def PacketCompare(expected, actual, partial_match=None):
     match_hdrs = set(exp_layers) & set(act_layers)
     # Matched headers.
     match_hdrs = [x for x in exp_layers if x in match_hdrs]
-    result.headers = defaultdict(lambda: {})
-    for header in match_hdrs:
+    header_actual = actual
+    header_expected = expected
+    while header_actual and header_expected:
+        if header_actual.__class__.__name__ != header_actual.__class__.__name__:
+            break
+        header = header_actual.__class__.__name__
         hdr_result = TriggerObjectCompareResult()
         try:
             header_info = FactoryStore.headers.Get(
@@ -255,17 +270,14 @@ def PacketCompare(expected, actual, partial_match=None):
             logger.critical("Header %s not found in factory" % header)
             assert(0)
 
-        if not header_info:
-            assert 0
         scapy_ref = getattr(penscapy, header)
         if not scapy_ref:
             assert 0
         scapy_fields = [
             field for field in header_info.fields.__dict__.keys()]
-        actual_fields = [field.name for field in actual[scapy_ref].fields_desc]
-        #actual_fields = [field.name for field in fields]
+        actual_fields = [field.name for field in header_actual.fields_desc]
         expected_fields = [
-            field.name for field in expected[scapy_ref].fields_desc]
+            field.name for field in header_expected.fields_desc]
         if not partial_match or not partial_match.ignore_hdrs.get(header):
             match_fields = scapy_fields
             extra_field_present = set(actual_fields) - set(expected_fields)
@@ -274,19 +286,22 @@ def PacketCompare(expected, actual, partial_match=None):
         else:
             match_fields = set(
                 expected_fields) - set(partial_match.ignore_hdrs[header].ignore_fields)
+            for field in partial_match.ignore_hdrs[header].ignore_fields:
+                setattr(header_expected, field, 0)
+                setattr(header_actual, field, 0)
         for field in match_fields:
             try:
-                expected_val = getattr(expected[scapy_ref], field)
+                expected_val = getattr(header_expected, field)
             except AttributeError:
                 try:
-                    actual_val = getattr(actual[scapy_ref], field)
+                    actual_val = getattr(header_actual, field)
                 except AttributeError:
                     # Even the actual does not have the field, skip it.
                     continue
                 hdr_result.extra_fields.append(field)
                 continue
             try:
-                actual_val = getattr(actual[scapy_ref], field)
+                actual_val = getattr(header_actual, field)
             except AttributeError:
                 hdr_result.missing_fields.append(field)
                 continue
@@ -294,12 +309,22 @@ def PacketCompare(expected, actual, partial_match=None):
                 field_compare = TriggerFieldCompareResult()
                 field_compare.actual, field_compare.expected = actual_val, expected_val
                 hdr_result.mismatch_fields[field] = field_compare
-
-        result.headers[header] = hdr_result
+        # move forward
+        header_actual = header_actual.payload
+        header_expected = header_expected.payload
+        result.mismatch_hdrs.append(HeaderCompareResult(header, hdr_result))
 
     # If all the headers matched, just set the result to empty.
-    if all(not result.not_empty() for result in result.headers.values()):
-        result.headers = {}
+    if all(not hdr_compare_res.mismatch_result.not_empty() for hdr_compare_res in result.mismatch_hdrs):
+        result.mismatch_hdrs = []
+
+    # Do a raw byte comparision as well.
+    b_actual = bytes(actual)
+    b_expected = bytes(expected)
+    if (b_actual != b_expected):
+        raw_field_compare = TriggerFieldCompareResult()
+        raw_field_compare.actual, raw_field_compare.expected = b_actual, b_expected
+        result.mismatch_raw = raw_field_compare
 
     return result
 
@@ -471,7 +496,11 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def __min_mismatch_result(mismatch_res1, mismatch_res2):
 
         # All headers are orderred.
-        for (h1, r1), (h2, r2) in zip(mismatch_res1.headers.items(), mismatch_res2.headers.items()):
+        for h1_cmp, h2_cmp in zip(mismatch_res1.mismatch_hdrs, mismatch_res2.mismatch_hdrs):
+            h1 = h1_cmp.header
+            h2 = h2_cmp.header
+            r1 = h1_cmp.mismatch_result
+            r2 = h2_cmp.mismatch_result
             assert h1 == h2
             if not r1.not_empty():
                 if not r2.not_empty():
@@ -496,17 +525,44 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def _convert_mismatch_result(mismatch_result):
         class Struct:
             def __init__(self, entries):
-                self.__dict__.update(entries)
-                for k in list(self.__dict__.keys()):
-                    v = self.__dict__[k]
-                    if isinstance(v, dict):
-                        setattr(self, k, Struct(v))
-                    elif "Framework" in k:
-                        delattr(self, k)
-                    if isinstance(v, FrameworkObject):
-                        setattr(self, k, Struct(v.__dict__))
+                if isinstance(entries, HeaderCompareResult):
+                    setattr(self, entries.header, Struct(
+                        entries.mismatch_result.__dict__))
+                else:
+                    self.__dict__.update(entries)
+                    for k in list(self.__dict__.keys()):
+                        v = self.__dict__[k]
+                        if isinstance(v, dict):
+                            setattr(self, k, Struct(v))
+                        elif "Framework" in k:
+                            delattr(self, k)
+                        if isinstance(v, FrameworkObject):
+                            setattr(self, k, Struct(v.__dict__))
+                        if isinstance(v, list):
+                            element = []
+                            for item in v:
+                                if isinstance(item, HeaderCompareResult):
+                                    element.append(Struct(item))
+                                else:
+                                    element.append(Struct(item.__dict__))
+                            setattr(self, k, element)
 
         return Struct(mismatch_result)
+
+    def print_packet_mismatch(self, result):
+        for hdr_cmp_result in result.mismatch_hdrs:
+            header = hdr_cmp_result.header
+            hdr_result = hdr_cmp_result.mismatch_result
+            print_string = "Header mismatch : %s" % header
+            self._logger.info(print_string)
+            for field, mis_result in hdr_result.mismatch_fields.items():
+                print_string = "\tMismatch field : %s,  expected : %s, actual : %s" % \
+                    (field, mis_result.expected, mis_result.actual)
+                self._logger.error(print_string)
+
+    def remove_empty_header_mismatches(self, result):
+        # Remove header mismatches which are empty.
+        result.remove_matched_headers()
 
     def __packets_process_result(self):
         # Hack for now, ignore the IPV4 checksum!
@@ -626,24 +682,19 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             ), expected_packet, actual_packet
 
             # Remove header mismatches which are empty.
-            for hdr in list(res[1].headers.keys()):
-                hdr_result = res[1].headers[hdr]
-                if not hdr_result.not_empty():
-                    del res[1].headers[hdr]
+            res[1].remove_matched_headers()
             mismatch_result.mismatch = self._convert_mismatch_result(
                 res[1].__dict__)
-            result.mismatch.append(mismatch_result)
+            # Ignoring extra and missing in the mismatch result as we anyway
+            # ignore packets matching with extra or missing headers.
+            result.mismatch.append(mismatch_result.mismatch)
             self._logger.error("Mismatch packet id = %s, expected ports:%s len:%s, actual port:%s len: %s" % (key.packet.GID(),
-                                                                                                             expected_packet.ports,
-                                                                                                             len(
-                                                                                                                 expected_packet.spkt),
-                                                                                                             actual_packet.port,
-                                                                                                             len(actual_packet.spkt)))
-            for header in res[1].headers:
-                self._logger.info("Header mismatch : %s" % header)
-                for field, mis_result in res[1].headers[header].mismatch_fields.items():
-                    self._logger.error("\tMismatch field : %s,  expected : %s, actual : %s" %
-                                      (field, mis_result.expected, mis_result.actual))
+                                                                                                              expected_packet.ports,
+                                                                                                              len(
+                expected_packet.spkt),
+                actual_packet.port,
+                len(actual_packet.spkt)))
+            self.print_packet_mismatch(res[1])
 
         tmp_missing_ref = defaultdict(lambda: [])
         for port in self._exp_rcv_data.keys():
@@ -658,7 +709,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             missing_pkt.ports = tmp_missing_ref[packet_ctx]
             result.missing.append(missing_pkt)
             self._logger.error("Missing packet id = %s, expected on ports = %s of len:%s" % (packet_ctx.packet.GID(),
-                                                                                            missing_pkt.ports, len(packet_ctx.packet.spkt)))
+                                                                                             missing_pkt.ports, len(packet_ctx.packet.spkt)))
 
         result._set_status()
         return result
@@ -1051,7 +1102,8 @@ class Trigger(InfraThreadHandler):
                 if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
                     self._current_descriptor_test_case = self._descriptor_test_case_queue.pop(
                         0)
-                    self._tc_db[self._current_descriptor_test_case._test_spec.GID()] = self._current_descriptor_test_case
+                    self._tc_db[self._current_descriptor_test_case._test_spec.GID(
+                    )] = self._current_descriptor_test_case
                     self._current_descriptor_test_case.run_test_case()
                 else:
                     # All test cases completed, stop the connector.

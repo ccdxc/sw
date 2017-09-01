@@ -56,7 +56,7 @@ class DolPacketTest(DolInfraTest):
         actual = self._construct_spkt(packet)
         result = PacketCompare(expected, actual)
         self.assertFalse(
-            result.extra_hdrs or result.headers or result.missing_hdrs)
+            result.extra_hdrs or result.mismatch_hdrs or result.missing_hdrs)
 
     def test_packet_compare_header_missing(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
@@ -154,7 +154,65 @@ class DolPacketTest(DolInfraTest):
         result = PacketCompare(expected, actual)
         #self.assertFalse(all(result[x] for x in ["missing_hdrs", "extra_hdrs"]))
         self.assertTrue(
-            set(result.headers["Ether"].mismatch_fields) == set(["src"]))
+            set(result.mismatch_hdrs[0].mismatch_result.mismatch_fields) == set(["src"]))
+
+    def test_packet_compare_inner_eth_smac_mismatch(self):
+        inner_packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
+                                  "dst": MacAddressBase("0000.9999.0002").get(),
+                                  "type": 0x800
+                                  },
+                        "IP": {"src": "10.0.0.64",
+                               "dst": "10.0.0.65",
+                               "proto": 6},
+                        "TCP": {"sport": 100, "dport": 200}}
+        inner_packet = self._construct_spkt(inner_packet, add_pen_hdr=False)
+
+        packet = {"Ether": {"src": MacAddressBase("1000.9999.0001").get(),
+                            "dst": MacAddressBase("1000.9999.0002").get(),
+                            "type": 0x800
+                            },
+                  "IP": {"src": "10.0.0.64",
+                         "dst": "10.0.0.65",
+                         "proto": 17},
+                  "UDP": {"sport": 10000, "dport": 4789},
+                  "VXLAN": {"vni": 1, "flags": 0x800}}
+        expected = self._construct_spkt(
+            packet, payload=inner_packet)
+
+        inner_packet = {"Ether": {"src": MacAddressBase("0000.9999.0002").get(),
+                                  "dst": MacAddressBase("0000.9999.0002").get(),
+                                  "type": 0x800
+                                  },
+                        "IP": {"src": "10.0.0.64",
+                               "dst": "10.0.0.65",
+                               "proto": 6},
+                        "TCP": {"sport": 100, "dport": 200}}
+        inner_packet = self._construct_spkt(inner_packet, add_pen_hdr=False)
+
+        packet = {"Ether": {"src": MacAddressBase("1000.9999.0001").get(),
+                            "dst": MacAddressBase("1000.9999.0002").get(),
+                            "type": 0x800
+                            },
+                  "IP": {"src": "10.0.0.64",
+                         "dst": "10.0.0.65",
+                         "proto": 17},
+                  "UDP": {"sport": 10000, "dport": 4789},
+                  "VXLAN": {"vni": 1, "flags": 0x800}}
+        actual = self._construct_spkt(packet, payload=inner_packet)
+        from infra.penscapy import penscapy
+        actual = penscapy.Parse((bytes(actual)))
+        expected = penscapy.Parse((bytes(expected)))
+
+        ignore_pkt_cmp = objects.PacketComparePartial()
+        hdr_ignore_result = objects.HeaderComparePartial()
+        hdr_ignore_result.ignore_fields = ["chksum"]
+        ignore_pkt_cmp.ignore_hdrs["UDP"] = hdr_ignore_result
+        result = PacketCompare(expected, actual, partial_match=ignore_pkt_cmp)
+        result.remove_matched_headers()
+        #self.assertFalse(all(result[x] for x in ["missing_hdrs", "extra_hdrs"]))
+        self.assertTrue(
+            set(result.mismatch_hdrs[0].mismatch_result.mismatch_fields) == set(["src"]))
+        self.assertTrue(result.mismatch_raw != None)
 
     def test_packet_compare_eth_smac_dmac_mismatch(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
@@ -180,7 +238,7 @@ class DolPacketTest(DolInfraTest):
         actual = self._construct_spkt(packet)
         result = PacketCompare(expected, actual)
         #self.assertFalse(all(result[x] for x in ["missing_hdrs", "extra_hdrs"]))
-        self.assertTrue(set(result.headers["Ether"].mismatch_fields) ==
+        self.assertTrue(set(result.mismatch_hdrs[0].mismatch_result.mismatch_fields) ==
                         set(["src", "dst"]))
 
     def test_packet_compare_eth_sport_dport_mismatch(self):
@@ -207,7 +265,7 @@ class DolPacketTest(DolInfraTest):
                   "TCP": {"sport": 200, "dport": 100}}
         actual = self._construct_spkt(packet)
         result = PacketCompare(expected, actual)
-        self.assertTrue(set(result.headers["TCP"].mismatch_fields) ==
+        self.assertTrue(set(result.mismatch_hdrs[3].mismatch_result.mismatch_fields) ==
                         set(["sport", "dport"]))
 
     def test_packet_compare_only_ignore_ip_fields(self):
@@ -239,7 +297,7 @@ class DolPacketTest(DolInfraTest):
         ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
         result = PacketCompare(expected, actual, ignore_pkt_cmp)
         self.assertFalse(
-            result.extra_hdrs or result.headers or result.missing_hdrs)
+            result.extra_hdrs or result.mismatch_hdrs or result.missing_hdrs)
 
     def test_packet_compare_mult_ignore_ip_fields(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
@@ -269,7 +327,7 @@ class DolPacketTest(DolInfraTest):
         ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
         result = PacketCompare(expected, actual, ignore_pkt_cmp)
         self.assertFalse(
-            result.extra_hdrs or result.headers or result.missing_hdrs)
+            result.extra_hdrs or result.mismatch_hdrs or result.missing_hdrs)
 
     def test_packet_compare_mult_header_mult_fields(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
@@ -303,19 +361,19 @@ class DolPacketTest(DolInfraTest):
 
         result = PacketCompare(expected, actual, ignore_pkt_cmp)
         self.assertFalse(
-            result.extra_hdrs or result.headers or result.missing_hdrs)
+            result.extra_hdrs or result.mismatch_hdrs or result.missing_hdrs)
 
         actual[TCP].dport = 9999
 
         result = PacketCompare(expected, actual, ignore_pkt_cmp)
         self.assertTrue(
-            set(result.headers["TCP"].mismatch_fields) == set(["dport"]))
+            set(result.mismatch_hdrs[3].mismatch_result.mismatch_fields) == set(["dport"]))
 
         # Make sure other fields have no influence.
         actual[TCP].dport = 9999
         result = PacketCompare(expected, actual, ignore_pkt_cmp)
         self.assertTrue(
-            set(result.headers["TCP"].mismatch_fields) == set(["dport"]))
+            set(result.mismatch_hdrs[3].mismatch_result.mismatch_fields) == set(["dport"]))
 
     def test_packet_compare_mult_ignore_header_missing(self):
         packet = {"Ether": {"src": MacAddressBase("0000.9999.0001").get(),
@@ -452,5 +510,5 @@ if __name__ == '__main__':
     import unittest
     suite = unittest.TestSuite()
     suite.addTest(DolPacketTest(
-        'test_packet_compare_eth_smac_mismatch'))
+        'test_packet_compare_inner_eth_smac_mismatch'))
     unittest.TextTestRunner(verbosity=2).run(suite)
