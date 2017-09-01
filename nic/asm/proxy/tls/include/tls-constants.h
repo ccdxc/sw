@@ -364,5 +364,7 @@
                                               */
 #define TLS_DDOL_SESQ_STOP              2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
 
+#define BARCO_REGISTER_BASE             (0x1C00000)
+#define BARCO_REGISTER_PI               (BARCO_REGISTER_BASE + 0x120c)
 
 #endif /* #ifndef _TLS_CONSTANTS_H_ */

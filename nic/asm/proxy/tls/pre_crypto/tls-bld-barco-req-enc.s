@@ -30,11 +30,8 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_output_list_address, k.{to_s4_odesc}.dx
     CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
 
-    phvwr       p.barco_desc_key_desc_index, d.{key_addr}.dx
-    CAPRI_OPERAND_DEBUG(d.key_addr)
-
-    phvwr       p.barco_desc_iv_address, d.{iv_addr}.dx
-    CAPRI_OPERAND_DEBUG(d.iv_addr)
+    phvwr       p.barco_desc_key_desc_index, d.{key_desc_index}.dx
+    CAPRI_OPERAND_DEBUG(d.key_desc_index)
 
     phvwr       p.barco_desc_command_core,  d.command_core
     CAPRI_OPERAND_DEBUG(d.command_core)

@@ -25,8 +25,7 @@ table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_input_list_address, k.to_s6_idesc
     phvwr       p.barco_desc_output_list_address, k.to_s6_odesc
-    phvwr       p.barco_desc_key_desc_index, d.key_addr
-    phvwr       p.barco_desc_iv_address, d.iv_addr
+    phvwr       p.barco_desc_key_desc_index, d.key_desc_index
     phvwr       p.barco_desc_command_core,  d.command_core
     phvwr       p.barco_desc_command_mode, d.command_mode
     phvwr       p.barco_desc_command_op, d.command_op

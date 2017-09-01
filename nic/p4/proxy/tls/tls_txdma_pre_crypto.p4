@@ -60,31 +60,25 @@ header_type tpage_alloc_d_t {
 
 header_type tls_stage_bld_barco_req_d_t {
     fields {
-        key_addr                        : HBM_ADDRESS_WIDTH;
-        iv_addr                         : HBM_ADDRESS_WIDTH;
+        key_desc_index                  : HBM_ADDRESS_WIDTH;
         command_core                    : 4;
         command_mode                    : 4;
         command_op                      : 4;
         command_param                   : 20;
-        idesc                           : ADDRESS_WIDTH;
-        odesc                           : ADDRESS_WIDTH;
-        // TBD: Total used   : 224 bits, pending: 288
-        pad                             : 288;
+        // TBD: Total used   : 64 bits, pending: 448
+        pad                             : 448;
     }
 }
 #define STG_BLD_BARCO_REQ_ACTION_PARAMS                                                                 \
-key_addr, iv_addr, command_core, command_mode, command_op, command_param,idesc, odesc
+key_desc_index, command_core, command_mode, command_op, command_param,idesc, odesc
 #
 
 #define GENERATE_STG_BLD_BARCO_REQ_D                                                                    \
-    modify_field(tls_bld_barco_req_d.key_addr, key_addr);                                               \
-    modify_field(tls_bld_barco_req_d.iv_addr, iv_addr);                                                 \
+    modify_field(tls_bld_barco_req_d.key_desc_index, key_desc_index);                                   \
     modify_field(tls_bld_barco_req_d.command_core, command_core);                                       \
     modify_field(tls_bld_barco_req_d.command_mode, command_mode);                                       \
     modify_field(tls_bld_barco_req_d.command_op, command_op);                                           \
-    modify_field(tls_bld_barco_req_d.command_param, command_param);                                     \
-    modify_field(tls_bld_barco_req_d.idesc, idesc);                                                     \
-    modify_field(tls_bld_barco_req_d.odesc, odesc);
+    modify_field(tls_bld_barco_req_d.command_param, command_param);
 
 header_type tls_stage_queue_brq_d_t {
     fields {
@@ -227,6 +221,21 @@ header_type s4_s6_t0_phv_t {
 }
 
 
+/* PHV PI storage */
+header_type barco_dbell_t {
+    fields {
+        pi                                  : 32;
+    } 
+}
+
+header_type crypto_iv_t {
+    fields {
+        explicit_iv                         : 64;
+        salt                                : 32;
+    }
+}
+
+
 header_type s3_t1_s2s_phv_t {
     fields {
         tnmdr_pidx              : 16;
@@ -288,8 +297,13 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
 @pragma dont_trim
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
-metadata pkt_descr_t aol; 
+metadata pkt_descr_aol_t aol; 
 @pragma dont_trim
+metadata barco_dbell_t barco_dbell;
+@pragma dont_trim
+metadata crypto_iv_t crypto_iv;
+@pragma dont_trim
+
 metadata dma_cmd_phv2mem_t dma_cmd0;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd1;
@@ -463,7 +477,7 @@ action tls_bld_brq4(STG_BLD_BARCO_REQ_ACTION_PARAMS) {
 
 
 /* Stage 5 action */
-action tls_queue_brq5(STG_QUEUE_BRQ_ACTION_PARAMS) {
+action tls_queue_brq5(TLSCB_0_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -477,7 +491,7 @@ action tls_queue_brq5(STG_QUEUE_BRQ_ACTION_PARAMS) {
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
 
-    GENERATE_STG_QUEUE_BRQ_D
+    GENERATE_TLSCB_0_D 
 }
 
 /* Stage 6 action */
