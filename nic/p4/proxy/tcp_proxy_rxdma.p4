@@ -122,6 +122,7 @@ header_type tcp_rx_d_t {
         bytes_rcvd              : 16;
         bytes_acked             : 16;
         snd_wnd                 : 16;
+        debug_dol               : 8;
         rto                     : 8;
         pred_flags              : 8;
         ecn_flags               : 8;
@@ -134,8 +135,7 @@ header_type tcp_rx_d_t {
         pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        debug_dol               : 1;
-        pad                     : 82;
+        pad                     : 75;
     }
 }
 
@@ -586,9 +586,9 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pr
  */
 action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, snd_una,
         snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
-        bytes_acked, snd_wnd, rto, pred_flags, ecn_flags, ato, quick,
+        bytes_acked, snd_wnd, debug_dol, rto, pred_flags, ecn_flags, ato, quick,
         snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
-        pingpong, debug_dol, pad) {
+        pingpong, pad) {
     // k + i for stage 1
 
     // from to_stage 1

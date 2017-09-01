@@ -196,6 +196,16 @@ modules:
             - flow: filter://type=IPV6
 
     - module:
+        name    : MULTIPLE_PKTS_TO_SERQ
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : multiple_pkts_to_serq
+        spec    : multiple_pkts_to_serq.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_BRQ
         enable  : True
         package : test.tcp-tls-proxy

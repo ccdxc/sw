@@ -30,6 +30,8 @@ typedef struct wring_s {
 
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+    uint32_t              pi;
+    uint32_t              ci;
 } __PACK__ wring_t;
 
 // max. number of WRING supported  (TODO: we can take this from cfg file)
@@ -108,8 +110,11 @@ hal_ret_t wring_create(wring::WRingSpec& spec,
 hal_ret_t wring_update(wring::WRingSpec& spec,
                        wring::WRingResponse *rsp);
 
-hal_ret_t wring_get(wring::WRingGetRequest& req,
-                    wring::WRingGetResponse *rsp);
+hal_ret_t wring_get_entries(wring::WRingGetEntriesRequest& req,
+                    wring::WRingGetEntriesResponse *rsp);
+
+hal_ret_t wring_get_meta(wring::WRingSpec& req,
+                    wring::WRingGetMetaResponse *rsp);
 }    // namespace hal
 
 #endif    // __WRING_HPP__

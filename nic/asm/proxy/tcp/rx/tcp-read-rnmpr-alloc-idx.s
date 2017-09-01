@@ -24,7 +24,7 @@ tcp_rx_read_rnmpr_stage2_start:
 
         // TODO : check for semaphore full
         add             r4, r0, d.{rnmpr_pidx}.wx
-        andi            r4, r4, (1 << CAPRI_RNMPR_RING_SHIFT - 1)
+        andi            r4, r4, ((1 << CAPRI_RNMPR_RING_SHIFT) - 1)
 	phvwr		p.s3_t1_s2s_rnmdr_pidx, r4
 
 table_read_RNMPR_PAGE:

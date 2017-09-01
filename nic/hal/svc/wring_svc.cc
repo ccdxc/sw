@@ -60,12 +60,12 @@ WRingServiceImpl::WRingDelete(ServerContext *context,
 }
 
 Status
-WRingServiceImpl::WRingGet(ServerContext *context,
-                           const WRingGetRequestMsg *req,
-                           WRingGetResponseMsg *rsp)
+WRingServiceImpl::WRingGetEntries(ServerContext *context,
+                           const WRingGetEntriesRequestMsg *req,
+                           WRingGetEntriesResponseMsg *rsp)
 {
     uint32_t            i, nreqs = req->request_size();
-    WRingGetResponse    *response;
+    WRingGetEntriesResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd WRing Get Request");
     if (nreqs == 0) {
@@ -75,7 +75,28 @@ WRingServiceImpl::WRingGet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto request = req->request(i);
-        hal::wring_get(request, response);
+        hal::wring_get_entries(request, response);
+    }
+    return Status::OK;
+}
+
+Status
+WRingServiceImpl::WRingGetMeta(ServerContext *context,
+                           const WRingRequestMsg *req,
+                           WRingGetMetaResponseMsg *rsp)
+{
+    uint32_t            i, nreqs = req->request_size();
+    WRingGetMetaResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd WRing Get Meta Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::wring_get_meta(request, response);
     }
     return Status::OK;
 }

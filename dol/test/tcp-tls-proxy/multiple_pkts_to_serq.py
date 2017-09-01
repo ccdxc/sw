@@ -57,46 +57,22 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb.rcv_nxt)
     tcb.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb.rcv_nxt)
-    if tcb.rcv_nxt != 0xebbbaba:
+    if tcb.rcv_nxt != 0x62bbbaba:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
 
-    # 2. Verify pi/ci got update got updated
-    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
-    print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
-    tlscb_cur.GetObjValPd()
-    print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
-    if (tlscb_cur.serq_pi != tlscb.serq_pi or tlscb_cur.serq_ci != tlscb.serq_ci):
-        print("serq pi/ci not as expected")
-        return False
 
     # 3. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
-    serq_cur = tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"]
-    serq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
+    if (rnmdr_cur.pi != rnmdr.pi+2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return false
-
-    # 5. Verify descriptor 
-    if rnmdr.ringentries[rnmdr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, serq_cur.ringentries[tlscb.serq_pi].handle)) 
-        return False
-
-    if rnmdr.swdre_list[rnmdr.pi].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr:
-        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, serq_cur.swdre_list[tlscb.serq_pi].DescAddr))
-        return False
-
-    # 6. Verify page
-    if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in serq_cur.swdre_list")
-        #return False
 
     return True
 

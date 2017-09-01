@@ -18,10 +18,12 @@ using wring::WRingRequestMsg;
 using wring::WRingResponseMsg;
 using wring::WRingDeleteRequestMsg;
 using wring::WRingDeleteResponseMsg;
-using wring::WRingGetRequest;
-using wring::WRingGetRequestMsg;
-using wring::WRingGetResponse;
-using wring::WRingGetResponseMsg;
+using wring::WRingGetEntriesRequest;
+using wring::WRingGetEntriesRequestMsg;
+using wring::WRingGetEntriesResponse;
+using wring::WRingGetEntriesResponseMsg;
+using wring::WRingGetMetaResponseMsg;
+using wring::WRingGetMetaResponse;
 
 class WRingServiceImpl final : public WRing::Service {
 public:
@@ -38,9 +40,13 @@ public:
                        const WRingDeleteRequestMsg *req,
                        WRingDeleteResponseMsg *rsp) override;
 
-    Status WRingGet(ServerContext *context,
-                    const WRingGetRequestMsg *req,
-                    WRingGetResponseMsg *rsp) override;
+    Status WRingGetEntries(ServerContext *context,
+                    const WRingGetEntriesRequestMsg *req,
+                    WRingGetEntriesResponseMsg *rsp) override;
+
+    Status WRingGetMeta(ServerContext *context,
+                    const WRingRequestMsg *req,
+                    WRingGetMetaResponseMsg *rsp) override;
 };
 
 #endif    // __WRING_SVC_HPP__
