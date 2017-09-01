@@ -94,6 +94,7 @@ func TestNetworkWriter(t *testing.T) {
 
 	// stop api server
 	apiSrv.Stop()
+	time.Sleep(time.Millisecond * 10)
 }
 
 func TestEndpointWriter(t *testing.T) {
@@ -144,6 +145,7 @@ func TestEndpointWriter(t *testing.T) {
 
 	// stop api server
 	apiSrv.Stop()
+	time.Sleep(time.Millisecond * 10)
 }
 
 func TestSgWriter(t *testing.T) {
@@ -190,6 +192,7 @@ func TestSgWriter(t *testing.T) {
 
 	// stop api server
 	apiSrv.Stop()
+	time.Sleep(time.Millisecond * 10)
 }
 
 func TestSgPolicyWriter(t *testing.T) {
@@ -242,4 +245,5 @@ func TestSgPolicyWriter(t *testing.T) {
 
 	// stop api server
 	apiSrv.Stop()
+	time.Sleep(time.Millisecond * 10)
 }
