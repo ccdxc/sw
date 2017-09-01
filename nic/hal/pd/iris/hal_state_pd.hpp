@@ -142,6 +142,10 @@ public:
 
     // get APIs for Crypto state
     indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
+    
+    // get APIs for IPSEC CB related state
+    slab *ipseccb_slab(void) const { return ipseccb_slab_; }
+    ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
 
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
@@ -310,6 +314,12 @@ private:
     // Crypto related state
     struct {
         indexer    *session_keys_idxr_;
+    } __PACK__;
+    
+    // ipseccb related state
+    struct {
+        slab       *ipseccb_slab_;
+        ht         *ipseccb_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

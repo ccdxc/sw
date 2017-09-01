@@ -13,6 +13,7 @@
 #include <acl.hpp>
 #include <wring.hpp>
 #include <proxy.hpp>
+#include <ipseccb.hpp>
  
 namespace hal {
 
@@ -367,6 +368,24 @@ hal_state::init(void)
                                        hal::proxy_compare_handle_key_func);
     HAL_ASSERT_RETURN((proxy_hal_handle_ht_ != NULL), false);
 
+    // initialize IPSEC CB related data structures
+    ipseccb_slab_ = slab::factory("ipseccb", HAL_SLAB_IPSECCB,
+                                  sizeof(hal::ipseccb_t), 16,
+                                  false, true, true, true);
+    HAL_ASSERT_RETURN((ipseccb_slab_ != NULL), false);
+
+    ipseccb_id_ht_ = ht::factory(HAL_MAX_IPSECCB,
+                                 hal::ipseccb_get_key_func,
+                                 hal::ipseccb_compute_hash_func,
+                                 hal::ipseccb_compare_key_func);
+    HAL_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
+
+    ipseccb_hal_handle_ht_ = ht::factory(HAL_MAX_IPSECCB,
+                                       hal::ipseccb_get_handle_key_func,
+                                       hal::ipseccb_compute_handle_hash_func,
+                                       hal::ipseccb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((ipseccb_hal_handle_ht_ != NULL), false);
+
     return true;
 }
 
@@ -448,6 +467,10 @@ hal_state::hal_state()
     proxy_hal_handle_ht_ = NULL;
 
     infra_l2seg_ = NULL;
+    
+    ipseccb_slab_ = NULL;
+    ipseccb_id_ht_ = NULL;
+    ipseccb_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -526,6 +549,10 @@ hal_state::~hal_state()
     proxy_slab_ ? delete proxy_slab_ : HAL_NOP;
     proxy_type_ht_ ? delete proxy_type_ht_ : HAL_NOP;
     proxy_hal_handle_ht_ ? delete proxy_hal_handle_ht_ : HAL_NOP;
+    
+    ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
+    ipseccb_id_ht_ ? delete ipseccb_id_ht_ : HAL_NOP;
+    ipseccb_hal_handle_ht_ ? delete ipseccb_hal_handle_ht_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -633,6 +660,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PROXY:
         g_hal_state->proxy_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_IPSECCB:
+        g_hal_state->ipseccb_slab()->free_(elem);
         break;
 
     default:

@@ -1,0 +1,115 @@
+#ifndef __IPSECCB_HPP__
+#define __IPSECCB_HPP__
+
+#include <base.h>
+#include <encap.hpp>
+#include <list.hpp>
+#include <ht.hpp>
+#include <ipseccb.pb.h>
+#include <pd.hpp>
+#include <hal_state.hpp>
+
+using hal::utils::ht_ctxt_t;
+using hal::utils::dllist_ctxt_t;
+
+namespace hal {
+
+typedef uint32_t ipseccb_id_t;
+
+typedef struct ipseccb_s {
+    hal_spinlock_t        slock;                   // lock to protect this structure
+    ipseccb_id_t            cb_id;                   // CB id
+    hal_handle_t          hal_handle;              // HAL allocated handle
+
+    // PD state
+    void                  *pd;                     // all PD specific state
+
+    ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
+    ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+} __PACK__ ipseccb_t;
+
+// max. number of CBs supported  (TODO: we can take this from cfg file)
+#define HAL_MAX_IPSECCB                           4
+
+// allocate a ipseccbment instance
+static inline ipseccb_t *
+ipseccb_alloc (void)
+{
+    ipseccb_t    *ipseccb;
+
+    ipseccb = (ipseccb_t *)g_hal_state->ipseccb_slab()->alloc();
+    if (ipseccb == NULL) {
+        return NULL;
+    }
+    return ipseccb;
+}
+
+// initialize a ipseccbment instance
+static inline ipseccb_t *
+ipseccb_init (ipseccb_t *ipseccb)
+{
+    if (!ipseccb) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&ipseccb->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    ipseccb->pd = NULL;
+
+    // initialize meta information
+    ipseccb->ht_ctxt.reset();
+    ipseccb->hal_handle_ht_ctxt.reset();
+
+    return ipseccb;
+}
+
+// allocate and initialize a IPSECCB instance
+static inline ipseccb_t *
+ipseccb_alloc_init (void)
+{
+    return ipseccb_init(ipseccb_alloc());
+}
+
+static inline hal_ret_t
+ipseccb_free (ipseccb_t *ipseccb)
+{
+    HAL_SPINLOCK_DESTROY(&ipseccb->slock);
+    g_hal_state->ipseccb_slab()->free(ipseccb);
+    return HAL_RET_OK;
+}
+
+static inline ipseccb_t *
+find_ipseccb_by_id (ipseccb_id_t ipseccb_id)
+{
+    return (ipseccb_t *)g_hal_state->ipseccb_id_ht()->lookup(&ipseccb_id);
+}
+
+static inline ipseccb_t *
+find_ipseccb_by_handle (hal_handle_t handle)
+{
+    return (ipseccb_t *)g_hal_state->ipseccb_hal_handle_ht()->lookup(&handle);
+}
+
+extern void *ipseccb_get_key_func(void *entry);
+extern uint32_t ipseccb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool ipseccb_compare_key_func(void *key1, void *key2);
+
+extern void *ipseccb_get_handle_key_func(void *entry);
+extern uint32_t ipseccb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool ipseccb_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t ipseccb_create(ipseccb::IpsecCbSpec& spec,
+                       ipseccb::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_update(ipseccb::IpsecCbSpec& spec,
+                       ipseccb::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_delete(ipseccb::IpsecCbDeleteRequest& req,
+                       ipseccb::IpsecCbDeleteResponseMsg *rsp);
+
+hal_ret_t ipseccb_get(ipseccb::IpsecCbGetRequest& req,
+                    ipseccb::IpsecCbGetResponse *rsp);
+}    // namespace hal
+
+#endif    // __IPSECCB_HPP__
+

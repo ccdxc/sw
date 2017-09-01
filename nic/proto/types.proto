@@ -80,6 +80,8 @@ enum ApiStatus {
   API_STATUS_WRING_NOT_FOUND          = 48;    // invalid WRING
   API_STATUS_WRING_TYPE_INVALID       = 49;    // invalid WRING type
   API_STATUS_PROXY_TYPE_INVALID       = 50;    // invalid Proxy Service type 
+  API_STATUS_IPSEC_CB_ID_INVALID      = 51;    // invalid IPSEC CB id
+  API_STATUS_IPSEC_CB_NOT_FOUND       = 52;    // invalid IPSEC CB
 }
 
 // common meta object that is part of all other top level objects
@@ -161,6 +163,7 @@ enum ProxyType {
   PROXY_TYPE_NONE          = 0;    
   PROXY_TYPE_TCP           = 1;    
   PROXY_TYPE_TLS           = 2;    
+  PROXY_TYPE_IPSEC         = 3;    
 }
 
 

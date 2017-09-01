@@ -15,6 +15,7 @@
 #include <wring.hpp>
 #include <telemetry.hpp>
 #include <crypto_keys.hpp>
+#include <ipseccb.hpp>
 
 namespace hal {
 namespace pd {
@@ -36,6 +37,7 @@ using hal::policer_t;
 using hal::acl_t;
 using hal::wring_t;
 using hal::mirror_session_t;
+using hal::ipseccb_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -107,6 +109,10 @@ typedef struct pd_wring_args_s {
 typedef struct pd_mirror_session_args_s {
     mirror_session_t *session;
 } __PACK__ pd_mirror_session_args_t;
+
+typedef struct pd_ipseccb_args_s {
+    ipseccb_t            *ipseccb;
+} __PACK__ pd_ipseccb_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -202,6 +208,13 @@ pd_mirror_session_args_init(pd_mirror_session_args_t *args)
     args->session = NULL;
 }
 
+static inline void
+pd_ipseccb_args_init (pd_ipseccb_args_t *args)
+{
+    args->ipseccb = NULL;
+    return;
+}
+
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
@@ -248,6 +261,11 @@ hal_ret_t pd_tcpcb_create(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_update(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_delete(pd_tcpcb_args_t *tcpcb);
 hal_ret_t pd_tcpcb_get(pd_tcpcb_args_t *tcpcb);
+
+hal_ret_t pd_ipseccb_create(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_update(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_delete(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_get(pd_ipseccb_args_t *ipseccb);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;

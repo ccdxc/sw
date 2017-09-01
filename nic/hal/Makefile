@@ -106,6 +106,8 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/telemetry.o \
 				$(OBJ_DIR)/crypto_keys.o \
 				$(OBJ_DIR)/crypto_keys.pb.o \
+				$(OBJ_DIR)/ipseccb.pb.o \
+				$(OBJ_DIR)/ipseccb.o \
 
 
 HAL_OBJS := $(OBJ_DIR)/main.o 

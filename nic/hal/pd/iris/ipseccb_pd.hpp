@@ -1,0 +1,109 @@
+#ifndef __HAL_PD_IPSECCB_HPP__
+#define __HAL_PD_IPSECCB_HPP__
+
+#include <base.h>
+#include <ht.hpp>
+#include <hal_state_pd.hpp>
+
+using hal::utils::ht_ctxt_t;
+
+namespace hal {
+namespace pd {
+
+#define HAL_MAX_HW_IPSECCBS                        4
+
+#define P4PD_IPSECCB_STAGE_ENTRY_OFFSET            64
+#define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               128
+
+typedef enum ipseccb_hwid_order_ {
+    P4PD_HWID_IPSEC_RX_STAGE0 = 0,
+} ipseccb_hwid_order_t;
+
+typedef uint64_t    ipseccb_hw_id_t;
+
+// ipseccb pd state
+struct pd_ipseccb_s {
+    ipseccb_t           *ipseccb;              // PI IPSEC CB
+
+    // operational state of ipseccb pd
+    ipseccb_hw_id_t      hw_id;               // hw id for this ipseccb
+
+    // meta data maintained for IPSEC CB pd
+    ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
+} __PACK__;
+
+// allocate a ipseccb pd instance
+static inline pd_ipseccb_t *
+ipseccb_pd_alloc (void)
+{
+    pd_ipseccb_t    *ipseccb_pd;
+
+    ipseccb_pd = (pd_ipseccb_t *)g_hal_state_pd->ipseccb_slab()->alloc();
+    if (ipseccb_pd == NULL) {
+        return NULL;
+    }
+
+    return ipseccb_pd;
+}
+
+// initialize a ipseccb pd instance
+static inline pd_ipseccb_t *
+ipseccb_pd_init (pd_ipseccb_t *ipseccb_pd)
+{
+    if (!ipseccb_pd) {
+        return NULL;
+    }
+    ipseccb_pd->ipseccb = NULL;
+
+    // initialize meta information
+    ipseccb_pd->hw_ht_ctxt.reset();
+
+    return ipseccb_pd;
+}
+
+// allocate and initialize a ipseccb pd instance
+static inline pd_ipseccb_t *
+ipseccb_pd_alloc_init (void)
+{
+    return ipseccb_pd_init(ipseccb_pd_alloc());
+}
+
+// free ipseccb pd instance
+static inline hal_ret_t
+ipseccb_pd_free (pd_ipseccb_t *ipseccb_pd)
+{
+    g_hal_state_pd->ipseccb_slab()->free(ipseccb_pd);
+    return HAL_RET_OK;
+}
+
+// insert ipseccb pd state in all meta data structures
+static inline hal_ret_t
+add_ipseccb_pd_to_db (pd_ipseccb_t *ipseccb_pd)
+{
+    g_hal_state_pd->ipseccb_hwid_ht()->insert(ipseccb_pd, &ipseccb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+del_ipseccb_pd_from_db(pd_ipseccb_t *ipseccb_pd)
+{
+    g_hal_state_pd->ipseccb_hwid_ht()->remove(&ipseccb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a ipseccb pd instance given its hw id
+static inline pd_ipseccb_t *
+find_ipseccb_by_hwid (ipseccb_hw_id_t hwid)
+{
+    return (pd_ipseccb_t *)g_hal_state_pd->ipseccb_hwid_ht()->lookup(&hwid);
+}
+
+extern void *ipseccb_pd_get_hw_key_func(void *entry);
+extern uint32_t ipseccb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool ipseccb_pd_compare_hw_key_func(void *key1, void *key2);
+
+}   // namespace pd
+}   // namespace hal
+
+#endif    // __HAL_PD_IPSECCB_HPP__
+

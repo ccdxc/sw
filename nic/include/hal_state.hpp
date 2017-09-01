@@ -125,6 +125,11 @@ public:
     void *infra_l2seg(void) { return infra_l2seg_; } 
     void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
 
+    // get APIs for IPSEC CB state
+    slab *ipseccb_slab(void) const { return ipseccb_slab_; }
+    ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
+    ht *ipseccb_hal_handle_ht(void) const { return ipseccb_hal_handle_ht_; }
+
 
 private:
     bool init(void);
@@ -259,7 +264,13 @@ private:
     struct {
         void        *infra_l2seg_;  // l2seg_t *
     } __PACK__;
-
+    
+    // IPSec CB related state
+    struct {
+        slab       *ipseccb_slab_;
+        ht         *ipseccb_id_ht_;
+        ht         *ipseccb_hal_handle_ht_;
+    } __PACK__;
 };
 
 extern class hal_state    *g_hal_state;

@@ -173,11 +173,11 @@ do {                                                       \
     ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found") \
     ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found") \
     ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found") \
-                                                                        \
     ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found") \
     ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found") \
     ENTRY(HAL_RET_POLICER_NOT_FOUND,          35, "Policer not found") \
     ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           36, "Output queue not found") \
+    ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         37, "IPSEC CB not found") \
                                                                             \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
