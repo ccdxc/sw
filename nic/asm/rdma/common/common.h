@@ -1,5 +1,4 @@
 
-
 struct tx_stage0_load_rdma_params_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     dummy : S2S_DATA_WIDTH;
