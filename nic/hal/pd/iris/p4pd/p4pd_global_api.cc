@@ -41,7 +41,6 @@ void p4pd_global_hwentry_query(uint32_t tableid,
     return;
 }
 
-
 /*
  * Based on table id call appropriate table routine.
  * For now this API is only called for p4pd and rxdma
