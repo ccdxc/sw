@@ -14,6 +14,7 @@ ipsec_encap_txdma_load_head_desc_int_header:
     add r1, r0, d.pad_size
     add r1, r1, d.tailroom_offset
     addi r1, r1, 2
+    add r1, r1, d.out_page
     phvwr p.barco_req_brq_auth_tag_addr, r1
     phvwr p.barco_req_brq_hdr_size, d.payload_start
 

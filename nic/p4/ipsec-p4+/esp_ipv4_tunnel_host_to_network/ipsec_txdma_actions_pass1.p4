@@ -227,7 +227,7 @@ action ipsec_get_barco_req_index_ptr(barco_req_index_address)
 
 
 //stage 2 - table0
-action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc,
+action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, out_page,
                                                    ipsec_cb_index, headroom, 
                                                    tailroom, headroom_offset,
                                                    tailroom_offset, pad_size,
@@ -236,7 +236,7 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc,
 {
     modify_field(barco_req.brq_in_addr, in_desc);
     modify_field(barco_req.brq_out_addr, out_desc);
-    modify_field(barco_req.brq_auth_tag_addr, out_desc+tailroom_offset+pad_size+2);
+    modify_field(barco_req.brq_auth_tag_addr, out_page+tailroom_offset+pad_size+2);
     modify_field(barco_req.brq_hdr_size, payload_start);
 
     //modify_field(txdma1_global.out_desc_addr, out_desc);

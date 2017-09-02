@@ -20,6 +20,7 @@ allocate_output_desc_index:
     sll r1, d.out_desc_index, DESC_SHIFT_WIDTH 
     addi r1, r1, OUT_DESC_ADDR_BASE
     phvwr p.common_te1_phv_table_addr, r1
+    phvwr p.ipsec_int_header_out_desc, r1
     phvwr p.t1_s2s_out_desc_addr, r1
     nop.e 
 
