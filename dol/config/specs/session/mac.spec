@@ -17,6 +17,19 @@ entries:
             ethertype: 0xCCC0
 
     - entry:
+        label: gft_drop
+        tracking: False
+        timestamp: False
+        responder: 
+            ethertype: 0xDDDD
+            flow_info:
+                action  : drop
+        initiator: 
+            ethertype: 0xDDDD
+            flow_info:
+                action  : drop
+
+    - entry:
         label: arp
         initiator:
             ethertype: 0x806

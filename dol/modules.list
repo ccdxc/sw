@@ -34,7 +34,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc.testspec
-        ignore  : True
+        ignore  : False
         args    :
             maxflows: 1
         iterate :
@@ -78,7 +78,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - segment: filter://native=False
               flow   : filter://label=GFT_DROP
