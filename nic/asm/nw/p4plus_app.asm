@@ -180,6 +180,7 @@ p4plus_app_ipsec:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_rdma:
+  phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ipv4_valid, FALSE

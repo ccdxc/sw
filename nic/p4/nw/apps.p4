@@ -120,6 +120,8 @@ action p4plus_app_ipsec() {
 }
 
 action p4plus_app_rdma() {
+    modify_field(p4_to_p4plus_roce.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
     remove_header(ethernet);
     remove_header(vlan_tag);
     remove_header(ipv4);
