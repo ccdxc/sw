@@ -12,7 +12,7 @@ struct phv_ p;
 
 ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
-
+    phvwri p.p4_rxdma_intr_dma_cmd_ptr, H2N_RXDMA_IPSEC_DMA_COMMANDS_OFFSET 
 
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -34,15 +34,6 @@ dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
  
-dma_cmd_to_update_tail_desc:
-    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    add r1, r0, k.ipsec_global_ipsec_cb_index
-    sll r1, r1, IPSEC_CB_SHIFT_SIZE
-    addi r1, r1, IPSEC_CB_BASE
-    phvwr p.dma_cmd_tail_desc_addr_dma_cmd_type, r1 
-    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
-    phvwri p.dma_cmd_tail_desc_addr_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
-
 dma_cmd_ring_doorbell:
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)

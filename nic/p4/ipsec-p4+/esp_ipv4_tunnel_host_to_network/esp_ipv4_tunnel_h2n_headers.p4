@@ -4,6 +4,8 @@ header_type ipsec_int_header_t {
     fields {
         in_desc           : ADDRESS_WIDTH;
         out_desc          : ADDRESS_WIDTH;
+        in_page           : ADDRESS_WIDTH;
+        out_page          : ADDRESS_WIDTH;
         ipsec_cb_index    : 16;
         headroom          : 8;
         tailroom          : 8;

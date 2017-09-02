@@ -20,6 +20,7 @@ allocate_input_desc_index:
     sll r1, d.in_desc_index, DESC_SHIFT_WIDTH
     addi r1, r1, IN_DESC_ADDR_BASE
     phvwr p.common_te0_phv_table_addr, r1
+    phvwr p.ipsec_int_header_in_desc, r1
     phvwr.e p.t0_s2s_in_desc_addr, r1
      
 

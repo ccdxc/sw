@@ -158,7 +158,8 @@ action ipsec_build_encap_packet()
  
 
 //stage 3 table 2 
-action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, ipsec_cb_index,
+action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, in_page, out_page, 
+                                         ipsec_cb_index,
                                          headroom_offset, tailroom_offset,
                                          pad_size, payload_start, buf_size,
                                          payload_size, l4_protocol, pad_1)
