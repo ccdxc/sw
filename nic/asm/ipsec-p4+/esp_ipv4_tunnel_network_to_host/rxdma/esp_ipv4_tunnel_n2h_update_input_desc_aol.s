@@ -29,17 +29,6 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
     //phvwr p.barco_desc_in_L0, k.ipsec_global_frame_size
     phvwri p.barco_desc_in_O0, 0
 
-    phvwri p.barco_desc_in_A1_addr, 0
-    phvwri p.barco_desc_in_L1, 0
-    phvwri p.barco_desc_in_O1, 0
-
-    phvwri p.barco_desc_in_A2_addr, 0
-    phvwri p.barco_desc_in_L2, 0
-    phvwri p.barco_desc_in_O2, 0
-
-    phvwri p.barco_desc_in_NextAddr, 0
-    phvwri p.barco_desc_in_Reserved, 0
-
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, k.t0_s2s_in_page_addr

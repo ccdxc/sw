@@ -29,7 +29,8 @@ header_type ipsec_cb_metadata_t {
         cb_pindex      : 16;
         cb_cindex      : 16;
         cb_ring_base_addr : ADDRESS_WIDTH;
-        ipsec_cb_pad   : 56;
+        iv_salt        : 32;
+        ipsec_cb_pad   : 24;
     }
 }
 
@@ -47,27 +48,14 @@ header_type ipsec_int_header_t {
         payload_size      : 16;
         l4_protocol       : 8;
         pad_size          : 8;
-        ipsec_int_pad0    : 256;
     }
 }
 
 header_type barco_descriptor_t {
     fields {
-        //scratch : 512
-
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
-        A1_addr : ADDRESS_WIDTH;
-        O1      : AOL_OFFSET_WIDTH;
-        L1      : AOL_LENGTH_WIDTH;
-        A2_addr : ADDRESS_WIDTH;
-        O2      : AOL_OFFSET_WIDTH;
-        L2      : AOL_LENGTH_WIDTH;
-        // Barco linked list next descriptor entry addr
-        NextAddr : ADDRESS_WIDTH;
-        // Below will be renamed as CB-descriptor-linked-list-next - different from barco-next-addr
-        Reserved : 64;
     }
 }
 
@@ -88,6 +76,8 @@ header_type barco_request_t {
         brq_sec_sz                          : 16;
         brq_sec_num                         : 32;
         brq_app_tag                         : 16;
+        brq_pad1                            : 128;
+        brq_pad2                            : 384;
     }
 }
 
@@ -117,6 +107,7 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
+    modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
     modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad);               
 
 
@@ -124,11 +115,3 @@ header_type barco_request_t {
     modify_field(barco_desc_scratch.A0_addr,A0_addr); \
     modify_field(barco_desc_scratch.O0,O0); \
     modify_field(barco_desc_scratch.L0,L0); \
-    modify_field(barco_desc_scratch.A1_addr,A1_addr); \
-    modify_field(barco_desc_scratch.O1,O1); \
-    modify_field(barco_desc_scratch.L1,L1); \
-    modify_field(barco_desc_scratch.A2_addr,A2_addr); \
-    modify_field(barco_desc_scratch.O2,O2); \
-    modify_field(barco_desc_scratch.L2,L2); \
-    modify_field(barco_desc_scratch.NextAddr,NextAddr); \
-    modify_field(barco_desc_scratch.Reserved,Reserved); \

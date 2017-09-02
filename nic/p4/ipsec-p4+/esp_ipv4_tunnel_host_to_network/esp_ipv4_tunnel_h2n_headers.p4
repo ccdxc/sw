@@ -47,7 +47,8 @@ header_type ipsec_cb_metadata_t {
         cb_pindex : 8;
         cb_cindex : 8;
         cb_ring_base_addr : ADDRESS_WIDTH;
-        ipsec_cb_pad : 40;
+        iv_salt   : 32;
+        ipsec_cb_pad : 8;
     }
 }
 
@@ -58,18 +59,6 @@ header_type barco_descriptor_t {
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
-#if 0
-        A1_addr : ADDRESS_WIDTH;
-        O1      : AOL_OFFSET_WIDTH;
-        L1      : AOL_LENGTH_WIDTH;
-        A2_addr : ADDRESS_WIDTH;
-        O2      : AOL_OFFSET_WIDTH;
-        L2      : AOL_LENGTH_WIDTH;
-        // Barco linked list next descriptor entry addr
-        NextAddr : ADDRESS_WIDTH;
-        // Below will be renamed as CB-descriptor-linked-list-next - different from barco-next-addr
-        Reserved : 64;
-#endif
     }
 }
 
@@ -90,6 +79,10 @@ header_type barco_request_t {
         brq_sec_sz                          : 16;
         brq_sec_num                         : 32;
         brq_app_tag                         : 16;
+        brq_pad1                            : 128;
+        brq_pad2                            : 128;
+        brq_pad3                            : 128;
+        brq_pad4                            : 128;
     }
 }
 
@@ -130,4 +123,5 @@ header_type p4plus_to_p4_ipsec_header_t {
     modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
+    modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
     modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad); \           
