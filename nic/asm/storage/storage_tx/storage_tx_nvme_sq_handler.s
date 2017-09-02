@@ -18,14 +18,8 @@ struct phv_ p;
 
 storage_tx_nvme_sq_handler_start:
 
-   // DMA write w_ndx to c_ndx via to pop the entry. Doorbell update is needed to
-   // reset the scheduler bit.
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX, r0,
-                       STORAGE_KIVEC1_SRC_QID, r0)
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,
-                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_C_NDX)
-   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data, r7,
-                     dma_p2m_0)
+   // Update the queue doorbell to clear the scheduler bit
+   QUEUE_POP_DOORBELL_UPDATE
 
    // Initialize the remaining fields of the PVM command in the PHV
    phvwr	p.{pvm_cmd_opc...pvm_cmd_dw15}, d.{opc...dw15}                                           

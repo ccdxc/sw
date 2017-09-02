@@ -21,11 +21,11 @@ storage_tx_q_state_pop_start:
    QUEUE_EMPTY(d.p_ndx, d.c_ndx, exit)
 
    // Pop the entry from the queue. Note: The working consumer index is updated
-   // in the pop operation to ensure that two consumers don't pop the same entry.
+   // in the pop operation to ensure that 2 consumers don't pop the same entry.
    // The update of the consumer index happens via DMA write to c_ndx only after 
    // the popped entry has been fully consumed in subsequent stages. Also, the
-   // w_ndx to be used is saved in GPR r6 for use as the tblmincr alters the
-   // d-vector.
+   // w_ndx to be used is saved in GPR r6 for use later as the tblmincr alters 
+   // the d-vector.
    add		r6, r0, d.w_ndx
    QUEUE_POP(d.w_ndx, d.num_entries)
 
@@ -35,6 +35,7 @@ storage_tx_q_state_pop_start:
    phvwr	p.storage_kivec0_dst_lif, d.dst_lif
    phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
    phvwr	p.storage_kivec0_dst_qid, d.dst_qid
+   phvwr	p.storage_kivec0_ssd_bm_addr, d.ssd_bm_addr
    phvwr	p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
    phvwr	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF
    phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE

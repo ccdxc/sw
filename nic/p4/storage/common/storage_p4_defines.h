@@ -15,7 +15,7 @@
 // Size * index is used to determine offset beyond table base
 #define CAPRI_LOAD_TABLE_IDX(i, _table_base, _idx, _entry_size, 	\
                              _load_size, _pc)				\
-  modify_field(i.table_pc, _pc);						\
+  modify_field(i.table_pc, _pc);					\
   modify_field(i.table_addr, _table_base + (_idx * _entry_size));	\
   modify_field(i.table_raw_table_size, _load_size);			\
 
@@ -26,8 +26,42 @@
   modify_field(i.table_addr, _table_addr); 				\
   modify_field(i.table_raw_table_size, _load_size);			\
 
+// Load a table based on fixed base, index, priority, number of entries
+// and fixed size.  Each priority queue starts at offset 
+// (size * pri * num_entries) beyond table base.  Size * index is used 
+// to determine offset beyond the start of each priority queue.
+#define CAPRI_LOAD_TABLE_PRI_IDX(i, _table_base, _idx, _num_entries,	\
+                                 _pri, _entry_size, _load_size, _pc)	\
+  modify_field(i.table_pc, _pc);					\
+  modify_field(i.table_addr, _table_base + 				\
+                         _entry_size * ((_num_entries * _pri) + _idx));	\
+  modify_field(i.table_raw_table_size, _load_size);			\
+
+
+// Doorbell update macros
+#define STORAGE_DOORBELL_ADDRESS(qtype, lif, sched_wr, upd)	\
+	(DOORBELL_ADDR_WA_LOCAL_BASE | 				\
+	 qtype << DOORBELL_ADDR_QTYPE_SHIFT |			\
+	 lif << DOORBELL_ADDR_LIF_SHIFT |			\
+	 sched_wr << DOORBELL_ADDR_SCHED_WR_SHIFT |		\
+	 upd << DOORBELL_ADDR_UPD_SHIFT)			\
+
+#define STORAGE_DOORBELL_DATA(index, ring, qid, pid)		\
+	(index | 						\
+	 ring << DOORBELL_DATA_RING_SHIFT |			\
+	 qid << DOORBELL_DATA_QID_SHIFT |			\
+	 pid << DOORBELL_DATA_PID_SHIFT)			\
+
 // Macros for ASM param addresses (hardcoded in P4)
 #define q_state_push_start		0x80000000
+#define pri_q_state_push_start		0x80001000
+#define pri_q_state_incr_start		0x80002000
+#define pri_q_state_decr_start		0x80003000
+#define nvme_be_wqe_prep_start		0x80004000
+#define nvme_be_wqe_save_start		0x80005000
+#define nvme_be_wqe_release_start	0x80006000
+#define nvme_be_wqe_handler_start	0x80007000
+#define nvme_be_cmd_handler_start	0x80008000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -54,7 +88,50 @@ header_type q_state_t {
     dst_qid	: 24;	// Destination queue number (within the LIF)
     vf_id	: 16;   // VF id (valid only for NVME LIF)
     sq_id	: 16;   // Submission queue id (valid only for NVME LIF)
-    pad		: 172;	// Align to 64 bytes
+    ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
+    pad		: 138;	// Align to 64 bytes
+  }
+}
+
+// Generic Queue State. Total size can be 64 bytes at most.
+header_type pri_q_state_t {
+  fields {
+    pc_offset	: 8;	// Program counter (relative offset)
+    rsvd	: 8;	// Hardware reserved field
+    cosA	: 4;	// Cos value A
+    cosB	: 4;	// Cos value B
+    cos_sel	: 8;	// Cos selector
+    eval_last	: 8;	// Evaluator of "work ready" for ring
+    total_rings	: 4;	// Total number of rings used by this qstate
+    host_rings	: 4;	// Number of host facing rings used by this qstate
+    pid		: 16;	// PID value to be compared with that from host
+    p_ndx_lo	: 16;	// Producer Index (low priority)
+    c_ndx_lo	: 16;	// Consumer Index (low priority)
+    p_ndx_med	: 16;	// Producer Index (medium priority)
+    c_ndx_med	: 16;	// Consumer Index (medium priority)
+    p_ndx_hi	: 16;	// Producer Index (high priority)
+    c_ndx_hi	: 16;	// Consumer Index (high priority)
+    w_ndx_lo	: 16;	// Working consumer index (low priority)
+    w_ndx_med	: 16;	// Working consumer index (medium priority)
+    w_ndx_hi	: 16;	// Working consumer index (high priority)
+    num_entries	: 16;	// Number of queue entries (power of 2 of this value)
+    base_addr	: 64;	// Base address of queue entries
+    entry_size	: 16;	// Size of each queue entry
+    lo_weight	: 8;	// Weight of low pri queue
+    med_weight	: 8;	// Weight of medium pri queue
+    hi_weight	: 8;	// Weight of high pri queue
+    lo_running	: 8;	// Number of commands running from low pri queue
+    med_running	: 8;	// Number of commands running from medium pri queue
+    hi_running	: 8;	// Number of commands running from high pri queue
+    num_running	: 8;	// Total number of commands running
+    max_cmds	: 8;	// Maximum number of commands than can be running
+    next_pc	: 28;	// Next program's PC
+    dst_qaddr	: 34;	// Destination queue state address
+    dst_lif	: 11;	// Destination LIF number
+    dst_qtype	: 3;	// Destination LIF type (within the LIF)
+    dst_qid	: 24;	// Destination queue number (within the LIF)
+    ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
+    pad		: 10;	// Align to 64 bytes
   }
 }
 
@@ -81,9 +158,51 @@ header_type q_state_t {
   modify_field(q_state.dst_qid, dst_qid);		\
   modify_field(q_state.vf_id, vf_id);			\
   modify_field(q_state.sq_id, sq_id);			\
+  modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
 
 #define Q_STATE_COPY(q_state)				\
   Q_STATE_COPY_STAGE0(q_state)				\
+  modify_field(q_state.pad, pad);			\
+
+#define PRI_Q_STATE_COPY_STAGE0(q_state)		\
+  modify_field(q_state.pc_offset, pc_offset);		\
+  modify_field(q_state.rsvd, rsvd);			\
+  modify_field(q_state.cosA, cosA);			\
+  modify_field(q_state.cosB, cosB);			\
+  modify_field(q_state.cos_sel, cos_sel);		\
+  modify_field(q_state.eval_last, eval_last);		\
+  modify_field(q_state.total_rings, total_rings);	\
+  modify_field(q_state.host_rings, host_rings);		\
+  modify_field(q_state.pid, pid);			\
+  modify_field(q_state.p_ndx_lo, p_ndx_lo);		\
+  modify_field(q_state.c_ndx_lo, c_ndx_lo);		\
+  modify_field(q_state.p_ndx_med, p_ndx_med);		\
+  modify_field(q_state.c_ndx_med, c_ndx_med);		\
+  modify_field(q_state.p_ndx_hi, p_ndx_hi);		\
+  modify_field(q_state.c_ndx_hi, c_ndx_hi);		\
+  modify_field(q_state.w_ndx_lo, w_ndx_lo);		\
+  modify_field(q_state.w_ndx_med, w_ndx_med);		\
+  modify_field(q_state.w_ndx_hi, w_ndx_hi);		\
+  modify_field(q_state.num_entries, num_entries);	\
+  modify_field(q_state.base_addr, base_addr);		\
+  modify_field(q_state.entry_size, entry_size);		\
+  modify_field(q_state.lo_weight, lo_weight);		\
+  modify_field(q_state.med_weight, med_weight);		\
+  modify_field(q_state.hi_weight, hi_weight);		\
+  modify_field(q_state.lo_running, lo_running);		\
+  modify_field(q_state.med_running, med_running);	\
+  modify_field(q_state.hi_running, hi_running);		\
+  modify_field(q_state.num_running, num_running);	\
+  modify_field(q_state.max_cmds, max_cmds);		\
+  modify_field(q_state.next_pc, next_pc);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
+  modify_field(q_state.dst_lif, dst_lif);		\
+  modify_field(q_state.dst_qtype, dst_qtype);		\
+  modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
+
+#define PRI_Q_STATE_COPY(q_state)			\
+  PRI_Q_STATE_COPY_STAGE0(q_state)			\
   modify_field(q_state.pad, pad);			\
 
 // Queue empty macros
@@ -99,13 +218,88 @@ header_type q_state_t {
 // Queue pop macros
 #define _QUEUE_POP(_w_ndx, _num_entries)			\
 	modify_field(_w_ndx, (_w_ndx + 1) % _num_entries);
-#define QUEUE_POP(q)	_QUEUE_POP(q.w_ndx, q.num_entries)
+#define QUEUE_POP(q)		_QUEUE_POP(q.w_ndx, q.num_entries)
 
 // Queue push macros
 #define _QUEUE_PUSH(_p_ndx, _num_entries)			\
   modify_field(_p_ndx, (_p_ndx + 1) % _num_entries);
 #define QUEUE_PUSH(q)	_QUEUE_PUSH(q.p_ndx, q.num_entries)
 
+// Priority queue check macros
+#define PRI_QUEUE_CAN_POP_HI(q)					\
+  ((not(_QUEUE_EMPTY(q.p_ndx_hi, q.c_ndx_hi))) and		\
+   (q.hi_running < q.hi_weight))
+#define PRI_QUEUE_CAN_POP_MED(q)				\
+  ((not(_QUEUE_EMPTY(q.p_ndx_med, q.c_ndx_med))) and		\
+   (q.med_running < q.med_weight))
+#define PRI_QUEUE_CAN_POP_LO(q)					\
+  ((not(_QUEUE_EMPTY(q.p_ndx_lo, q.c_ndx_lo))) and		\
+   (q.lo_running < q.lo_weight))
+
+// Service priority queue
+#define SERVICE_PRI_QUEUE(_kivec, _q, _i, _w_ndx_pri, _pri_val)	\
+    _QUEUE_POP(_w_ndx_pri, _q.num_entries)			\
+    modify_field(_kivec.w_ndx, _w_ndx_pri);			\
+    modify_field(_kivec.io_priority, _pri_val);			\
+    CAPRI_LOAD_TABLE_PRI_IDX(_i, _q.base_addr, _q.w_ndx_hi,	\
+                             _q.num_entries, _pri_val,		\
+                             _q.entry_size, _q.entry_size,	\
+                             _q.next_pc)			\
+
+// Check if the correct priority queue is full
+#define PRI_QUEUE_FULL(q, _pri)					\
+   (((_pri == NVME_BE_PRIORITY_HI) and				\
+     _QUEUE_FULL(q.c_ndx_hi, q.p_ndx_hi, q.num_entries, 1)) or	\
+    ((_pri == NVME_BE_PRIORITY_MED) and				\
+     _QUEUE_FULL(q.c_ndx_med, q.p_ndx_med, q.num_entries, 1)) or\
+    ((_pri == NVME_BE_PRIORITY_LO) and				\
+     _QUEUE_FULL(q.c_ndx_lo, q.p_ndx_lo, q.num_entries, 1)))
+
+// Push to the  priority queue
+#define PRI_QUEUE_PUSH(_q, _p_ndx_pri, _pri_val)		\
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1,				\
+                             _q.base_addr +			\
+                             (_pri_val * _q.entry_size * 	\
+                              _q.num_entries) +			\
+                             (_p_ndx_pri * _q.entry_size),	\
+                             0, 0, 0, 0, 0, 0)			\
+    _QUEUE_PUSH(_p_ndx_pri, _q.num_entries)
+
+// Queue pop doorbell update
+// Form the doorbell and setup the DMA command to push the entry by
+// incrementing p_ndx. In ASM use the correct index, ring, queue
+// when constructing the data.
+#define QUEUE_POP_DOORBELL_UPDATE				\
+  modify_field(doorbell_addr.addr,				\
+        STORAGE_DOORBELL_ADDRESS(storage_kivec1.src_qtype,	\
+                                 storage_kivec1.src_lif,	\
+                                 DOORBELL_SCHED_WR_RESET, 	\
+                                 DOORBELL_UPDATE_C_NDX));	\
+  modify_field(qpop_doorbell_data.data,				\
+        STORAGE_DOORBELL_DATA(storage_kivec0.w_ndx, 0, 0, 0));	\
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_0, 0,			\
+        PHV_FIELD_OFFSET(qpop_doorbell_data.data),		\
+        PHV_FIELD_OFFSET(qpop_doorbell_data.data),		\
+        0, 0, 0, 0)
+
+// Queue push doorbell update
+// Form the doorbell and setup the DMA command to push the entry by
+// incrementing p_ndx. In ASM use the correct index, ring, queue
+// when constructing the data.
+#define QUEUE_PUSH_DOORBELL_UPDATE				\
+  modify_field(doorbell_addr.addr,				\
+        STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype,	\
+                                 storage_kivec0.dst_lif,	\
+                                 DOORBELL_SCHED_WR_RESET,	\
+                                 DOORBELL_UPDATE_P_NDX_INCR));	\
+  modify_field(qpop_doorbell_data.data,				\
+        STORAGE_DOORBELL_DATA(storage_kivec0.w_ndx, 0, 0, 0));	\
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2, 0,			\
+        PHV_FIELD_OFFSET(qpush_doorbell_data.data),		\
+        PHV_FIELD_OFFSET(qpush_doorbell_data.data),		\
+        0, 0, 0, 0)
+
+// Priority queue full macros
 header_type storage_kivec0_t {
    fields {
     w_ndx	: 16;	// Working consumer index
@@ -115,6 +309,9 @@ header_type storage_kivec0_t {
     dst_qaddr	: 34;	// Destination queue state address
     prp_assist	: 1;	// Download additional PRP entries (upto 16)
     is_q0	: 1;	// Is queue id 0 ? Used to distinguish admin queue
+    io_priority	: 8;	// I/O priority to select ring with the queue
+    ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
+    cmd_index	: 8;	// Index into the bitmap of saved commands
    }
 }
 
@@ -132,9 +329,12 @@ header_type storage_kivec1_t {
   modify_field(scratch.dst_lif, kivec.dst_lif);				\
   modify_field(scratch.dst_qtype, kivec.dst_qtype);			\
   modify_field(scratch.dst_qid, kivec.dst_qid);				\
+  modify_field(scratch.dst_qaddr, kivec.dst_qaddr);			\
   modify_field(scratch.prp_assist, kivec.prp_assist);			\
   modify_field(scratch.is_q0, kivec.is_q0);				\
-  modify_field(scratch.dst_qaddr, kivec.dst_qaddr);			\
+  modify_field(scratch.io_priority, kivec.io_priority);			\
+  modify_field(scratch.ssd_bm_addr, kivec.ssd_bm_addr);			\
+  modify_field(scratch.cmd_index, kivec.cmd_index);			\
 
 #define STORAGE_KIVEC1_USE(scratch, kivec)				\
   modify_field(scratch.src_lif, kivec.src_lif);				\
@@ -225,11 +425,111 @@ header_type pvm_status_t {
   }
 }
 
+// NVME backend command header carried over ROCE
+header_type nvme_be_cmd_hdr_t {
+  fields {
+    src_queue_id	: 32;	// ROCE source queue id
+    ssd_handle		: 16;	// SSD handle to select NVME backend
+    io_priority		: 8;	// I/O priority to select ring with the queue
+    is_read		: 8;	// If NVME command is a read
+    r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
+    is_local		: 8;	// Is the command from local or remove PVM	
+  }
+}
+
+// NVME command processed by NVME backend and carried over ROCE
+header_type nvme_be_cmd_t {
+  fields {
+    nvme_cmd_w0		: 16;	// First 16 bits of actual NVME command
+    nvme_cmd_cid	: 16;	// Command id in the NVME command
+    nvme_cmd_hi		: 480;	// Final 60 bytes of actual NVME command
+  }
+}
+
+
+// NVME backend status header carried over ROCE
+header_type nvme_be_sta_hdr_t {
+  fields {
+    time_us		: 32;	// Timestamp in usec
+    be_status		: 8;	// Backend status
+    is_q0		: 8;	// Is queue 0 (admin queue)
+    rsvd		: 16;	// Padding for 64 bit alignment
+    r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
+  }
+}
+
+// NVME status processed by NVME backend and carried over ROCE
+header_type nvme_be_sta_t {
+  fields {
+    nvme_sta_lo		: 96;	// First 12 bytes of NVME status
+    nvme_sta_cid	: 16;	// Command id in the NVME status 
+    nvme_sta_w7		: 16;	// Final 16 bits of NVME status
+  }
+}
+
+// NVME backend PRP list. TODO: Split into fields once finalized
+header_type nvme_be_prp_list_t {
+  fields {
+    prp_list		: 1024;
+  }
+}
+
+// WQE format of ROCE SQ. TODO: Split into fields once finalized
+header_type roce_sq_wqe_t {
+  fields {
+    data		: 512;	// Timestamp in usec
+  }
+}
+
+// WQE format of ROCE RQ. TODO: Split into fields once finalized
+header_type roce_rq_wqe_t {
+  fields {
+    data		: 512;	// Timestamp in usec
+  }
+}
+
+// WQE format of R2N layer. Used by:
+// 1. R2N's SQ/CQ with local PVM for local target.
+// 2. NVME backend's priority SQ/CQ with R2N.
+// 3. R2N's HQ with local PVM for ROCE buf posting
+header_type r2n_wqe_t {
+  fields {
+    // Note: These fields are provided in the WQE from PVM
+    handle		: 64;	// Pointer to R2N buffer (or) NVME BE command 
+    data_size		: 32;	// Size pointed to by handle
+    opcode		: 16;	// Each use case has a distinct opcode
+    status		: 16;	// Success/failure status
+
+    // Note: These fields are not part of the WQE from PVM
+    src_queue_id	: 32;	// ROCE source queue id
+    ssd_handle		: 16;	// SSD handle to select NVME backend
+    io_priority		: 8;	// I/O priority to select ring with the queue
+    is_read		: 8;	// If NVME command is a read
+    r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
+    is_local		: 8;	// Is the command from local or remove PVM	
+    nvme_cmd_cid	: 16;	// Command identifier
+    pri_qaddr		: 34;	// Priority queue state address for status
+
+    // Note: The total size of this cannot exceed 64 bytes
+  }
+}
+
+
+// Bitmap of the list of outstanding commands sent to the SSD.
+// Assumes a max of 64 outstanding per SSD.
+header_type ssd_cmds_t {
+  fields {
+    bitmap	: 64;	// Max 64 outstanding commands per SSD
+  }
+}
+
+
+
 // Pad for storage, vary this based on PHV allocation to align DMA commands
 // to 16 byte boundary
 header_type storage_pad_t {
   fields {
-    pad		: 112;	// Align DMA commands to 16 byte to boundary
+    pad		: 48;	// Align DMA commands to 16 byte to boundary
   }
 }
 
@@ -246,17 +546,48 @@ header_type storage_doorbell_data_t {
   }
 }
 
-#define STORAGE_DOORBELL_ADDRESS(qtype, lif, sched_wr, upd)	\
-	(DOORBELL_ADDR_WA_LOCAL_BASE | 				\
-	 qtype << DOORBELL_ADDR_QTYPE_SHIFT |			\
-	 lif << DOORBELL_ADDR_LIF_SHIFT |			\
-	 sched_wr << DOORBELL_ADDR_SCHED_WR_SHIFT |		\
-	 upd << DOORBELL_ADDR_UPD_SHIFT)			\
+// Copy the basic part of R2N WQE - the one sent by PVM
+#define R2N_WQE_BASE_COPY(wqe)					\
+  modify_field(wqe.handle, handle);				\
+  modify_field(wqe.data_size, data_size);			\
+  modify_field(wqe.opcode, opcode);				\
+  modify_field(wqe.status, status);
 
-#define STORAGE_DOORBELL_DATA(index, ring, qid, pid)		\
-	(index | 						\
-	 ring << DOORBELL_DATA_RING_SHIFT |			\
-	 qid << DOORBELL_DATA_QID_SHIFT |			\
-	 pid << DOORBELL_DATA_PID_SHIFT)			\
+// Copy the NVME backend command header - also present in R2N WQE
+#define NVME_BE_CMD_HDR_COPY(hdr)				\
+  modify_field(hdr.src_queue_id, src_queue_id);			\
+  modify_field(hdr.ssd_handle, ssd_handle);			\
+  modify_field(hdr.io_priority, io_priority);			\
+  modify_field(hdr.is_read, is_read);				\
+  modify_field(hdr.r2n_buf_handle, r2n_buf_handle);		\
+  modify_field(hdr.is_local, is_local);				\
+
+// Copy the full R2N WQE - base from PVM + NVME backend header +
+// additional fields saved before sending the NVME command to SSD
+#define R2N_WQE_FULL_COPY(wqe)					\
+  R2N_WQE_BASE_COPY(wqe)					\
+  NVME_BE_CMD_HDR_COPY(wqe)					\
+  modify_field(wqe.nvme_cmd_cid, nvme_cmd_cid);			\
+  modify_field(wqe.pri_qaddr, pri_qaddr);
+
+/********************************************************************
+ *
+ * R2N Buffer format (size of each entry in bytes indicated []):
+ *
+ * 1. roce_rq_wqe_t					[64]
+ * 2. nvme_be_prp_list_t				[64]
+ * 3. nvme_be_cmd_hdr_t + 376 bits pad + nvme_be_cmd_t	[128]
+ * 4. nvme_be_sta_hdr_t + nvme_be_sta_t + 256 bits pad	[64]
+ * 5. roce_sq_wqe_t (for sending write data over ROCE)	[64]
+ * 6. roce_sq_wqe_t (for sending status over ROCE)	[64]
+ *
+ * Notes:
+ *  a. nvme_be_cmd_t contains a ptr to the R2N buffer start.
+ *  b. On the wire data from #3 to #6 is sent.
+ *  c. ROCE gives ptr to #3 in its CQ WQE. R2N buffer ptr is derived.
+ *  d. PVM gives ptr to #3 in its SQ WQE. R2N buffer ptr is derived.
+ *  e. #1, #2, #5, #6 are not used by PVM for local commands.
+ *
+********************************************************************/
 
 #endif     // STORAGE_P4_DEFINES_H

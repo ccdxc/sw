@@ -5,6 +5,26 @@
 #ifndef STORAGE_COMMON_DEFINES_H
 #define STORAGE_COMMON_DEFINES_H
 
+// Default table load size (used in cases where table entry size > 64 bytes)
+// The sizes are expressed as a power of 2, hence using 6 here
+#define STORAGE_DEFAULT_TBL_LOAD_SIZE	6
+
+// Offset in bytes of the start of actual NVME command in the NVME backend command
+#define NVME_BE_NVME_CMD_OFFSET		64
+
+// Maximum number of commands outstanding to an SSD
+#define SSD_MAX_CMDS			64
+
+// Keep the header and entry size of the SSD's list of saved commands to be 
+// aligned at 64 bytes for easy table read access
+// Header: 64-bit bitmap 
+// Entry:  Full R2N WQE (r2n_wqe_t) is stored here
+#define SSD_CMDS_HEADER_SIZE		64
+#define SSD_CMDS_ENTRY_SIZE		64
+
+// Offset in memory to store the command handle in the SSD's list of saved commands
+#define SSD_CMDS_ENTRY_OFFSET(bm_pos)	(SSD_CMDS_HEADER_SIZE + (bm_pos * SSD_CMDS_ENTRY_SIZE))
+
 // Capri doorbell address/data formation values
 #define DOORBELL_UPDATE_NONE		0
 #define DOORBELL_UPDATE_C_NDX		1
@@ -47,5 +67,9 @@
 #define NVME_WRITE_CMD_OPCODE			1
 #define NVME_READ_CMD_OPCODE			2
 
+#define NVME_BE_PRIORITY_HI			0
+#define NVME_BE_PRIORITY_MED			1
+#define NVME_BE_PRIORITY_LO			2
+#define NVME_BE_MAX_PRIORITIES			3
 
 #endif     // STORAGE_COMMON_DEFINES_H

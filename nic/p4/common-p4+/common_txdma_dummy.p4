@@ -34,7 +34,17 @@
 #define tx_table_s0_t0_action	tx_table_dummy_action
 
 
+#define tx_table_s4_t0_action1	tx_table_dummy_action
+#define tx_table_s3_t0_action1	tx_table_dummy_action
 #define tx_table_s2_t0_action1	tx_table_dummy_action
 #define tx_table_s1_t0_action1	tx_table_dummy_action
 #define tx_table_s0_t0_action1	tx_table_dummy_action
 
+#define tx_table_s3_t0_action2	tx_table_dummy_action
+#define tx_table_s2_t0_action2	tx_table_dummy_action
+#define tx_table_s1_t0_action2	tx_table_dummy_action
+
+#define tx_table_s1_t0_action3	tx_table_dummy_action
+#define tx_table_s2_t0_action3	tx_table_dummy_action
+
+#define tx_table_s1_t0_action4	tx_table_dummy_action

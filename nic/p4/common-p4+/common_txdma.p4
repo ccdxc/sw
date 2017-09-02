@@ -743,6 +743,7 @@ table tx_table_s4_t0 {
     actions {
         tx_table_s4_t0_action;
         tx_table_s4_t0_cfg_action;
+        tx_table_s4_t0_action1;
     }
 }
 
@@ -792,6 +793,8 @@ table tx_table_s3_t0 {
     actions {
         tx_table_s3_t0_action;
         tx_table_s3_t0_cfg_action;
+        tx_table_s3_t0_action1;
+        tx_table_s3_t0_action2;
     }
 }
 
@@ -841,6 +844,8 @@ table tx_table_s2_t0 {
         tx_table_s2_t0_action;
         tx_table_s2_t0_cfg_action;
         tx_table_s2_t0_action1;
+        tx_table_s2_t0_action2;
+        tx_table_s2_t0_action3;
     }
 }
 
@@ -891,6 +896,9 @@ table tx_table_s1_t0 {
         tx_table_s1_t0_action;
         tx_table_s1_t0_cfg_action;
         tx_table_s1_t0_action1;
+        tx_table_s1_t0_action2;
+        tx_table_s1_t0_action3;
+        tx_table_s1_t0_action4;
     }
 }
 

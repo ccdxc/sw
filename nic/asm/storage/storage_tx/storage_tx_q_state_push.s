@@ -26,17 +26,9 @@ storage_tx_q_state_push_start:
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_p2m_1)
    
-   // Setup the lif, type, qid, pindex for the doorbell push, Output will
-   // be stored in GPR r7.
-   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,
-                       STORAGE_KIVEC0_DST_QID, r0)
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE, 
-                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_P_NDX_INCR)
- 
-   // DMA the doorbell addr/data to increment the p_ndx and ring the doorbell
-   DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data, r7,
-                     dma_p2m_2)
-
+   // Ring the doorbell for the recipient of the push.
+   // TODO: there should be another version which writes the MSI-X interrupt.
+   QUEUE_PUSH_DOORBELL_UPDATE
    
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_2_dma_cmd_eop,
