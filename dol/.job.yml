@@ -1,7 +1,7 @@
 ---
 targets:
-  - [ "bash", "-c", "./ut_run.sh; err=$?; cat ut_run.log; exit $err" ]
-  - [ "bash", "-c", "cd /sw/nic && make -j8 && ./run.py" ]
+  ut: [ "bash", "-c", "./ut_run.sh; err=$?; cat ut_run.log; exit $err" ]
+  nic: [ "bash", "-c", "cd /sw/nic && make -j8 && ./run.py" ]
 image:
   name: "pensando/dol"
   bind_dir: "/sw/dol"
