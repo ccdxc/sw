@@ -721,15 +721,6 @@
     }
   },
   "definitions": {
-    "NodeSpecNodeRole": {
-      "type": "string",
-      "enum": [
-        "CONTROLLER_NODE",
-        "WORKLOAD_NODE",
-        "QUORUM_NODE"
-      ],
-      "default": "CONTROLLER_NODE"
-    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -1035,13 +1026,23 @@
       "default": "NODE_UNKNOWN",
       "title": "Various phases in lifecycle of a Node"
     },
+    "cmdNodeRole": {
+      "type": "string",
+      "enum": [
+        "CONTROLLER_NODE",
+        "WORKLOAD_NODE",
+        "QUORUM_NODE"
+      ],
+      "default": "CONTROLLER_NODE",
+      "title": "NodeRole Type"
+    },
     "cmdNodeSpec": {
       "type": "object",
       "properties": {
         "Roles": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/NodeSpecNodeRole"
+            "$ref": "#/definitions/cmdNodeRole"
           },
           "title": "Mac address of the Port, which is key identifier of the port"
         }

@@ -119,13 +119,6 @@ message Node {
 // NodeSpec contains the configuration of the node.
 message NodeSpec {
 
-    // NodeRole Type
-    enum NodeRole {
-        CONTROLLER_NODE = 0x0;  // Node which is part of Venice cluster
-        WORKLOAD_NODE   = 0x1;  // Node which runs workloads
-        QUORUM_NODE     = 0x2;  // Node which is part of quorum in Venice cluster
-    }
-
     // Roles is of list of roles a node can be configured with.
     repeated NodeRole Roles = 1 [(gogoproto.jsontag) = "roles,omitempty"];
 }
@@ -145,6 +138,13 @@ message NodeStatus {
     // a SmartNIC subsystem that is part of the Node
     repeated string Nics                = 3 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "nics,omitempty"];
+}
+
+// NodeRole Type
+enum NodeRole {
+    CONTROLLER_NODE = 0x0;  // Node which is part of Venice cluster
+    WORKLOAD_NODE   = 0x1;  // Node which runs workloads
+    QUORUM_NODE     = 0x2;  // Node which is part of quorum in Venice cluster
 }
 
 // Various phases in lifecycle of a Node
