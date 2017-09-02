@@ -10,7 +10,6 @@ import (
 	"context"
 	"net/http"
 
-	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -106,7 +105,7 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string) (network.EndpointV1Client, error) {
-	client, err := rpckit.NewRPCClient("EndpointV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("EndpointV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -205,7 +204,7 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string) (network.LbPolicyV1Client, error) {
-	client, err := rpckit.NewRPCClient("LbPolicyV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("LbPolicyV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -304,7 +303,7 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string) (network.NetworkV1Client, error) {
-	client, err := rpckit.NewRPCClient("NetworkV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("NetworkV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -403,7 +402,7 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr string) (network.SecurityGroupV1Client, error) {
-	client, err := rpckit.NewRPCClient("SecurityGroupV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("SecurityGroupV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -502,7 +501,7 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string) (network.ServiceV1Client, error) {
-	client, err := rpckit.NewRPCClient("ServiceV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("ServiceV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -601,7 +600,7 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string) (network.SgpolicyV1Client, error) {
-	client, err := rpckit.NewRPCClient("SgpolicyV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("SgpolicyV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err
@@ -700,7 +699,7 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string) (network.TenantV1Client, error) {
-	client, err := rpckit.NewRPCClient("TenantV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("TenantV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err

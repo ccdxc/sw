@@ -10,7 +10,6 @@ import (
 	"context"
 	"net/http"
 
-	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -176,7 +175,7 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string) (cmd.CmdV1Client, error) {
-	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err

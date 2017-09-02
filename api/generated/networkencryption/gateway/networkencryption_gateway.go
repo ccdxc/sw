@@ -10,7 +10,6 @@ import (
 	"context"
 	"net/http"
 
-	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -106,7 +105,7 @@ func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.C
 }
 
 func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grpcAddr string) (networkencryption.TrafficEncryptionPolicyV1Client, error) {
-	client, err := rpckit.NewRPCClient("TrafficEncryptionPolicyV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("TrafficEncryptionPolicyV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err

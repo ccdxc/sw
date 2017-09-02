@@ -3,7 +3,6 @@
 package apiclient
 
 import (
-	gogocodec "github.com/gogo/protobuf/codec"
 	"google.golang.org/grpc"
 
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
@@ -17,8 +16,6 @@ import (
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/rpckit"
 )
-
-const codecSize = 1024 * 1024
 
 // Services is list of all services exposed by the client ---
 type Services interface {
@@ -110,7 +107,7 @@ func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 
 // NewGrpcAPIClient returns a gRPC client
 func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (Services, error) {
-	client, err := rpckit.NewRPCClient("ApiClient", url, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("ApiClient", url)
 	if err != nil {
 		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
 		return nil, err

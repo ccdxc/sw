@@ -10,7 +10,6 @@ import (
 	"context"
 	"net/http"
 
-	gogocodec "github.com/gogo/protobuf/codec"
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -176,7 +175,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 }
 
 func (e *sBookstoreV1GwService) newClient(ctx context.Context, grpcAddr string) (bookstore.BookstoreV1Client, error) {
-	client, err := rpckit.NewRPCClient("BookstoreV1GwService", grpcAddr, rpckit.WithCodec(gogocodec.New(codecSize)))
+	client, err := rpckit.NewRPCClient("BookstoreV1GwService", grpcAddr)
 	if err != nil {
 		err = errors.Wrap(err, "create rpc client")
 		return nil, err

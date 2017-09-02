@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	gogocodec "github.com/gogo/protobuf/codec"
-
 	apiserver "github.com/pensando/sw/apiserver"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/kvstore/store"
@@ -47,7 +45,6 @@ type apiSrv struct {
 //  initialized exactly once and is guarded by the once.
 var singletonAPISrv apiSrv
 var once sync.Once
-var codecSize = 1024 * 1024
 
 // initAPIServer performs all needed initializations.
 func initAPIServer() {
@@ -126,11 +123,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	// Create the GRPC connection for the server.
 	var s *rpckit.RPCServer
 	{
-		opts := []rpckit.Option{
-			rpckit.WithDeferredStart(true),
-			rpckit.WithCodec(gogocodec.New(codecSize)),
-		}
-		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, opts...)
+		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, rpckit.WithDeferredStart(true))
 		if err != nil {
 			panic(fmt.Sprintf("Could not start Server on port %v err(%s)", config.GrpcServerPort, err))
 		}
