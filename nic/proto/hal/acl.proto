@@ -34,11 +34,12 @@ message AclKeyHandle {
 
 // EthSelector has match criteria for non-IP packets
 message EthSelector {
-  uint32 eth_type     = 1;
-  uint64 src_mac      = 2;
-  uint64 src_mac_mask = 3;
-  uint64 dst_mac      = 4;
-  uint64 dst_mac_mask = 5;
+  uint32 eth_type       = 1;
+  uint32 eth_type_mask  = 2;
+  uint64 src_mac        = 3;
+  uint64 src_mac_mask   = 4;
+  uint64 dst_mac        = 5;
+  uint64 dst_mac_mask   = 6;
 }
 
 // UDPSelector is used to specify match criteria for UDP traffic
@@ -49,30 +50,48 @@ message UDPSelector {
 
 // TCPSelector is used to specify match criteria for TCP traffic
 message TCPSelector {
-  bool              tcp_syn        = 1;    // TCP SYN flag
-  bool              tcp_ack        = 2;    // TCP ACK flag
-  bool              tcp_fin        = 3;    // TCP FIN flag
-  bool              tcp_rst        = 4;    // TCP RST flag
-  bool              tcp_urg        = 5;    // TCP URG flag
-  types.L4PortRange src_port_range = 6;    // TCP src port range
-  types.L4PortRange dst_port_range = 7;    // TCP dest port range
+  oneof tcp_syn {
+    bool            tcp_syn_set     = 1;    // TCP SYN flag set
+    bool            tcp_syn_clear   = 2;    // TCP SYN flag cleared
+  }
+  oneof tcp_ack {
+    bool            tcp_ack_set     = 3;    // TCP ACK flag set
+    bool            tcp_ack_clear   = 4;    // TCP ACK flag cleared
+  }
+  oneof tcp_fin {
+    bool            tcp_fin_set     = 5;    // TCP FIN flag set
+    bool            tcp_fin_clear   = 6;    // TCP FIN flag set
+  }
+  oneof tcp_rst {
+    bool            tcp_rst_set     = 7;    // TCP RST flag set
+    bool            tcp_rst_clear   = 8;    // TCP RST flag set
+  }
+  oneof tcp_urg {
+    bool            tcp_urg_set     = 9;    // TCP URG flag set
+    bool            tcp_urg_clear   = 10;   // TCP URG flag set
+  }
+  types.L4PortRange src_port_range  = 11;   // TCP src port range
+  types.L4PortRange dst_port_range  = 12;   // TCP dest port range
 }
 
 // ICMPSelector has match criteria for ICMP packets
 message ICMPSelector {
-  uint32 icmp_code = 1;    // ICMP code
-  uint32 icmp_type = 2;    // ICMP type
+  uint32 icmp_code      = 1;    // ICMP code
+  uint32 icmp_code_mask = 2;    // Mask for ICMP code
+  uint32 icmp_type      = 3;    // ICMP type
+  uint32 icmp_type_mask = 4;    // Mask for ICMP type
 }
 
 // IPSelector has match criteria for selecting IP packets
 message IPSelector {
-  types.IPPrefix   src_prefix    = 1;    // source IP prefix
-  types.IPPrefix   dst_prefix    = 2;    // destination IP prefix
-  types.IPProtocol protocol      = 3;    // IP protocol
+  types.IPAddressFamily ip_af           = 1;    // IP address family
+  types.IPPrefix        src_prefix      = 2;    // source IP prefix
+  types.IPPrefix        dst_prefix      = 3;    // destination IP prefix
   oneof l4_selectors {
-    ICMPSelector   icmp_selector = 4;    // ICMP selector
-    UDPSelector    udp_selector  = 5;    // UDP selector
-    TCPSelector    tcp_selector  = 6;    // TCP selector
+    types.IPProtocol    ip_protocol     = 4;    // IP protocol
+    ICMPSelector        icmp_selector   = 5;    // ICMP selector
+    UDPSelector         udp_selector    = 6;    // UDP selector
+    TCPSelector         tcp_selector    = 7;    // TCP selector
   }
 }
 

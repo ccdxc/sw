@@ -114,14 +114,14 @@ flowkey2str (const flow_key_t& key)
         }
 
         switch (key.proto) {
-        case types::IP_PROTO_ICMP:
+        case types::IPPROTO_ICMP:
             out.write("proto=icmp, type={}, code={}, id={}",
                       key.icmp_type, key.icmp_code, key.icmp_id);
             break;
-        case types::IP_PROTO_TCP:
+        case types::IPPROTO_TCP:
             out.write("proto=tcp, sport={}, dport={}", key.sport, key.dport);
             break;
-        case types::IP_PROTO_UDP:
+        case types::IPPROTO_UDP:
             out.write("proto=udp, sport={}, dport={}", key.sport, key.dport);
             break;
         default:
@@ -230,11 +230,11 @@ extract_flow_key_from_spec (tenant_id_t tid,
         flow_key->sip.v4_addr = flow_spec_key.v4_key().sip();
         flow_key->dip.v4_addr = flow_spec_key.v4_key().dip();
         flow_key->proto = flow_spec_key.v4_key().ip_proto();
-        if ((flow_key->proto == types::IP_PROTO_TCP) ||
-            (flow_key->proto == types::IP_PROTO_UDP)) {
+        if ((flow_key->proto == types::IPPROTO_TCP) ||
+            (flow_key->proto == types::IPPROTO_UDP)) {
             flow_key->sport = flow_spec_key.v4_key().tcp_udp().sport();
             flow_key->dport = flow_spec_key.v4_key().tcp_udp().dport();;
-        } else if (flow_key->proto == types::IP_PROTO_ICMP) {
+        } else if (flow_key->proto == types::IPPROTO_ICMP) {
             flow_key->icmp_type = flow_spec_key.v4_key().icmp().type();
             flow_key->icmp_code = flow_spec_key.v4_key().icmp().code();
             flow_key->icmp_id = flow_spec_key.v4_key().icmp().id();
@@ -266,11 +266,11 @@ extract_flow_key_from_spec (tenant_id_t tid,
                flow_spec_key.v6_key().dip().v6_addr().c_str(),
                IP6_ADDR8_LEN);
         flow_key->proto = flow_spec_key.v6_key().ip_proto();
-        if ((flow_key->proto == types::IP_PROTO_TCP) ||
-            (flow_key->proto == types::IP_PROTO_UDP)) {
+        if ((flow_key->proto == types::IPPROTO_TCP) ||
+            (flow_key->proto == types::IPPROTO_UDP)) {
             flow_key->sport = flow_spec_key.v6_key().tcp_udp().sport();
             flow_key->dport = flow_spec_key.v6_key().tcp_udp().dport();;
-        } else if (flow_key->proto == types::IP_PROTO_ICMPV6) {
+        } else if (flow_key->proto == types::IPPROTO_ICMPV6) {
             flow_key->icmp_type = flow_spec_key.v6_key().icmp().type();
             flow_key->icmp_code = flow_spec_key.v6_key().icmp().code();
             flow_key->icmp_id = flow_spec_key.v6_key().icmp().id();
@@ -571,14 +571,14 @@ flow_update_rewrite_info(flow_t *flow)
     if (res_flow->config.key.flow_type == FLOW_TYPE_V4) {
         if (res_flow->config.nat_type == NAT_TYPE_SNAT &&
                 res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMP) {
                 *rw_act = REWRITE_IPV4_NAT_SRC_REWRITE_ID;
             } else {
                 if (res_flow->config.nat_sport == 0) {
                     *rw_act = REWRITE_IPV4_NAT_SRC_REWRITE_ID;
                 } else {
                     flow_attrs->nat_l4_port = flow->config.nat_sport;
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID :
                         REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID;
                 }
@@ -586,27 +586,27 @@ flow_update_rewrite_info(flow_t *flow)
         }
         if (res_flow->config.nat_type == NAT_TYPE_DNAT &&
                 res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMP) {
                 *rw_act = REWRITE_IPV4_NAT_DST_REWRITE_ID;
             } else {
                 if (res_flow->config.nat_dport == 0) {
                     *rw_act = REWRITE_IPV4_NAT_DST_REWRITE_ID;
                 } else {
                     flow_attrs->nat_l4_port = flow->config.nat_dport;
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID :
                         REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID;
                 }
             }
         }
         if (res_flow->config.nat_type == NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMP) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMP) {
                 *rw_act = REWRITE_IPV4_TWICE_NAT_REWRITE_ID;
             } else {
                 // only if both ports have to be rewritten
                 // there is no option to write only one
                 if (res_flow->config.nat_sport != 0 && res_flow->config.nat_dport != 0) {
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID:
                         REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID;
                     if (res_flow->role == FLOW_ROLE_INITIATOR) {
@@ -625,14 +625,14 @@ flow_update_rewrite_info(flow_t *flow)
     if (res_flow->config.key.flow_type == FLOW_TYPE_V6) {
         if (res_flow->config.nat_type == NAT_TYPE_SNAT &&
                 res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMPV6) {
                 *rw_act = REWRITE_IPV6_NAT_SRC_REWRITE_ID;
             } else {
                 if (res_flow->config.nat_sport == 0) {
                     *rw_act = REWRITE_IPV6_NAT_SRC_REWRITE_ID;
                 } else {
                     flow_attrs->nat_l4_port = flow->config.nat_sport;
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID :
                         REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID;
                 }
@@ -640,27 +640,27 @@ flow_update_rewrite_info(flow_t *flow)
         }
         if (res_flow->config.nat_type == NAT_TYPE_DNAT &&
                 res_flow->config.nat_type != NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMPV6) {
                 *rw_act = REWRITE_IPV6_NAT_DST_REWRITE_ID;
             } else {
                 if (res_flow->config.nat_dport == 0) {
                     *rw_act = REWRITE_IPV6_NAT_DST_REWRITE_ID;
                 } else {
                     flow_attrs->nat_l4_port = flow->config.nat_dport;
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID :
                         REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID;
                 }
             }
         }
         if (res_flow->config.nat_type == NAT_TYPE_TWICE_NAT) {
-            if (res_flow->config.key.proto == types::IP_PROTO_ICMPV6) {
+            if (res_flow->config.key.proto == types::IPPROTO_ICMPV6) {
                 *rw_act = REWRITE_IPV6_TWICE_NAT_REWRITE_ID;
             } else {
                 // only if both ports have to be rewritten
                 // there is no option to write only one
                 if (res_flow->config.nat_sport != 0 && res_flow->config.nat_dport != 0) {
-                    *rw_act = (res_flow->config.key.proto == types::IP_PROTO_TCP) ?
+                    *rw_act = (res_flow->config.key.proto == types::IPPROTO_TCP) ?
                         REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
                         REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID;
                     if (res_flow->role == FLOW_ROLE_INITIATOR) {

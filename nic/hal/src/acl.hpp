@@ -42,17 +42,18 @@ typedef struct acl_ip_match_spec_s {
     ip_addr_t dip;         // Dest IP address
     uint8_t   ip_proto;    // IP Protocol
     union {
-        acl_icmp_match_spec_t icmp;
-        acl_udp_match_spec_t udp;
-        acl_tcp_match_spec_t tcp;
-    } ;
+        acl_icmp_match_spec_t   icmp;
+        acl_udp_match_spec_t    udp;
+        acl_tcp_match_spec_t    tcp;
+    } u;
 } __PACK__ acl_ip_match_spec_t;
 
 typedef enum {
     ACL_TYPE_NONE = 0,
-    ACL_TYPE_ETH,
-    ACL_TYPE_IPv4,
-    ACL_TYPE_IPv6,
+    ACL_TYPE_ETH,       // Eth type
+    ACL_TYPE_IP,        // IP type - match on both v4/v6
+    ACL_TYPE_IPv4,      // IPv4 type - match on v4 only
+    ACL_TYPE_IPv6,      // IPv6 type - match on v6 only
     ACL_TYPE_INVALID
 } acl_type_e;
 

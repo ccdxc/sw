@@ -1,0 +1,37 @@
+# Test Spec
+config_filter:
+    src:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://type=MAC,label=NETWORKING
+
+packets:
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : callback://acl/packets/GetMacSA
+                dst     : callback://acl/packets/GetMacDA
+                type    : callback://acl/packets/GetEtherType
+            qtag:
+                vlan    : callback://acl/packets/GetVlan
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:

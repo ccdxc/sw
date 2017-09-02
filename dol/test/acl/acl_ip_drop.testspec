@@ -1,0 +1,59 @@
+# Test Spec
+config_filter:
+    src:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://label=NETWORKING
+
+packets:
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : callback://acl/packets/GetVlan
+            ipv4:
+                src     : callback://acl/packets/GetIPv4SIP
+                dst     : callback://acl/packets/GetIPv4DIP
+                ttl     : 64
+            ipv6:
+                src     : callback://acl/packets/GetIPv6SIP
+                dst     : callback://acl/packets/GetIPv6DIP
+                hlim    : 64
+            udp:
+                sport   : callback://acl/packets/GetUDPSport
+                dport   : callback://acl/packets/GetUDPDport
+            tcp:
+                sport   : callback://acl/packets/GetTCPSport
+                dport   : callback://acl/packets/GetTCPDport
+            icmp:
+                code    : callback://acl/packets/GetICMPCode
+                type    : callback://acl/packets/GetICMPType
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:

@@ -58,6 +58,10 @@ class TestCaseSessionStepObject:
         self.received = TestCaseSessionStepTriggerExpectReceivedObject()
         return
 
+class TestCasePrivateData:
+    def __init__(self):
+        return
+
 class TestCase(objects.FrameworkObject):
     def __init__(self, tcid, config_root_obj, infra_data, module):
         super().__init__()
@@ -80,6 +84,7 @@ class TestCase(objects.FrameworkObject):
         self.logger         = infra_data.Logger
         self.session        = []
         self.step_id        = 0
+        self.pvtdata        = TestCasePrivateData()
 
         self.logpfx         = "TC%06d:" % self.ID()
         self.__generate()

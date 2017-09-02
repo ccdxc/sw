@@ -4,96 +4,229 @@ meta:
 
 entries:
     - entry:
-        priority:   0
+        id: ACL_SMAC_DMAC_ETYPE_ACTION_DROP 
         match:
-            interface:
-                src: None
-                dst: None
-            segment: filter://any
+            type: eth
             eth:
-                ethertype   : ethertype/0x1234
-                src         : macaddr/0000.1111.2222
-                src_mask    : macaddr/FFFF.FFFF.FFFF
-                dst         : macaddr/0000.3333.4444
-                dst_mask    : macaddr/FFFF.FFFF.FFFF
-            ip: None
-            l4: None
+                ethertype      : ethertype/0x1234
+                ethertype_mask : const/0xffff
+                src            : macaddr/0000.1111.2222
+                src_mask       : macaddr/FFFF.FFFF.FFFF
+                dst            : macaddr/0000.3333.4444
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
         action:
             action: deny 
-            ingress_mirror:
-                enable  : False
-                session : ref://store/objects/id=SpanSession0001
-            egress_mirror:
-                enable  : False 
-                session : ref://store/objects/id=SpanSession0001
+
     - entry:
-        priority:   0
+        id: ACL_IPV4_SIP_DIP_ACTION_DROP
         match:
-            interface:
-                src: None
-                dst: None
-            segment: filter://any
-            eth: None
+            type: ip
             ip:
-                src         : ipaddr/150.0.0.1
-                dst         : ipaddr/150.0.0.2
-                proto       : const/6
-            l4:
-                tcp:
-                    syn         : const/1
-                    ack         : const/0
-                    fin         : const/0
-                    rst         : const/0
-                    urg         : const/0
-                    port_range  : range/500/1000
-                udp: None
-                icmp: None
+                type           : v4
+                alloc_src_ip   : True
+                alloc_dst_ip   : True
         action:
             action: deny
-            ingress_mirror: None
-            egress_mirror: None
 
     - entry:
-        priority:   0 
+        id: ACL_IPV4_DIP_TCP_DPORT_ACTION_DROP
         match:
-            interface:
-                src: None
-                dst: None
-            segment: filter://any
-            eth: None
+            type: ip
             ip:
-                src         : ipaddr/150.0.0.1
-                dst         : ipaddr/150.0.0.2
-                proto       : const/17
+                type            : v4
+                alloc_dst_ip    : True
             l4:
-                tcp: None
-                udp:
-                    port_range  : range/500/1000
-                icmp: None
+                type            : tcp
+                tcp: 
+                    dst_port_range: range/1024/2047
         action:
             action: deny 
-            ingress_mirror: None
-            egress_mirror: None
 
     - entry:
-        priority:   0
+        id: ACL_IPV4_DIP_UDP_DPORT_ACTION_DROP
         match:
-            interface:
-                src: None
-                dst: None
-            segment: filter://any
-            eth: None
+            type: ip
             ip:
-                src         : ipaddr/150.0.0.1
-                dst         : ipaddr/150.0.0.2
-                proto       : const/1
+                type            : v4
+                alloc_dst_ip    : True
             l4:
-                tcp: None
-                udp: None
-                icmp:
-                    code        : const/1
-                    type        : const/0
+                type            : udp
+                udp: 
+                    dst_port_range: range/2048/2559
         action:
             action: deny 
-            ingress_mirror: None
-            egress_mirror: None
+
+    - entry:
+        id: ACL_IPV4_DIP_PREFIX_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type                : v4
+                alloc_dst_prefix    : True
+                dst_prefix_len      : const/16
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_IPV4_PROTO_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type    : v4
+            l4:
+                type    : proto
+                proto   : const/200
+        action:
+            action: deny 
+
+#    - entry:
+#        id: ACL_IPV4_OPTIONS_ACTION_DROP
+#        match:
+#            type: ip
+#            ip:
+#                type    : v4
+#                options : True    
+#        action:
+#            action: deny 
+
+    - entry:
+        id: ACL_IPV6_SIP_DIP_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type           : v6
+                alloc_src_ip   : True
+                alloc_dst_ip   : True
+        action:
+            action: deny
+
+    - entry:
+        id: ACL_IPV6_DIP_TCP_DPORT_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type            : v6
+                alloc_dst_ip    : True
+            l4:
+                type            : tcp
+                tcp: 
+                    dst_port_range: range/3072/4095
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_IPV6_DIP_UDP_DPORT_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type            : v6
+                alloc_dst_ip    : True
+            l4:
+                type            : udp
+                udp: 
+                    dst_port_range: range/4096/4352
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_IPV6_DIP_PREFIX_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type             : v6
+                alloc_dst_prefix : True
+                dst_prefix_len   : const/64
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_IPV6_PROTO_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type    : v6
+            l4:
+                type    : proto
+                proto   : const/300
+        action:
+            action: deny 
+
+#    - entry:
+#        id: ACL_IPV6_OPTIONS_ACTION_DROP
+#        match:
+#            type : ip
+#            ip:
+#                type            : v6
+#                options         : True    
+#        action:
+#            action: deny 
+
+    - entry:
+        id: ACL_TCP_SPORT_ACTION_DROP
+        match:
+            type : ip
+            l4:
+                type : tcp
+                tcp: 
+                    src_port_range: range/5000/5007
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_TCP_DPORT_ACTION_DROP
+        match:
+            type : ip
+            l4:
+                type : tcp
+                tcp: 
+                    dst_port_range : range/6000/6015
+        action:
+            action: deny 
+
+#
+#    - entry:
+#        id: ACL_TCP_OPTIONS_ACTION_DROP
+#
+    - entry:
+        id: ACL_UDP_SPORT_ACTION_DROP
+        match:
+            type : ip
+            l4:
+                type : udp
+                udp: 
+                    src_port_range : range/7000/7007
+        action:
+            action: deny 
+        
+    - entry:
+        id: ACL_UDP_DPORT_ACTION_DROP
+        match:
+            type : ip
+            l4:
+                type : udp
+                udp: 
+                    dst_port_range : range/8000/8063
+        action:
+            action: deny 
+
+
+#    - entry:
+#        id: ACL_ICMP_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_ICMPV6_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_VLAN_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_VNID_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_VRF_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_DIF_ACTION_DROP
+#
+#    - entry:
+#        id: ACL_SIF_ACTION_DROP

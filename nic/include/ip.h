@@ -17,6 +17,24 @@
 #define IP6_ADDR32_LEN                               4
 #define IP6_ADDR64_LEN                               2
 
+/*****************************************************************************/
+/* IP protocol types                                                         */
+/*****************************************************************************/
+#define IP_PROTO_ICMP                  1
+#define IP_PROTO_IGMP                  2
+#define IP_PROTO_IPV4                  4
+#define IP_PROTO_TCP                   6
+#define IP_PROTO_UDP                   17
+#define IP_PROTO_IPV6                  41
+#define IP_PROTO_GRE                   47
+#define IP_PROTO_IPSEC_ESP             50
+#define IP_PROTO_IPSEC_AH              51
+#define IP_PROTO_ICMPV6                58
+#define IP_PROTO_EIGRP                 88
+#define IP_PROTO_OSPF                  89
+#define IP_PROTO_PIM                   103
+#define IP_PROTO_VRRP                  112
+
 //------------------------------------------------------------------------------
 // TCP Flags 
 //------------------------------------------------------------------------------

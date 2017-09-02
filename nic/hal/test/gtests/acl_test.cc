@@ -88,6 +88,7 @@ TEST_F(acl_test, test1)
     AclActionInfo *action;
 
     match = spec.mutable_match();
+    match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v4_addr(1);
     match->mutable_ip_selector()->mutable_src_prefix()->set_prefix_len(32);
@@ -115,6 +116,7 @@ TEST_F(acl_test, test2)
 
     for (int i = 0; i < 10; i++) {
         match = spec.mutable_match();
+        match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v4_addr(1);
         match->mutable_ip_selector()->mutable_src_prefix()->set_prefix_len(32);

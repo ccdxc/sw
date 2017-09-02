@@ -145,9 +145,15 @@
 /* flow key types                                                            */
 /*****************************************************************************/
 #define FLOW_KEY_LOOKUP_TYPE_NONE              0
-#define FLOW_KEY_LOOKUP_TYPE_IPV4              1
-#define FLOW_KEY_LOOKUP_TYPE_IPV6              2
-#define FLOW_KEY_LOOKUP_TYPE_MAC               3
+#define FLOW_KEY_LOOKUP_TYPE_MAC               1 
+#define FLOW_KEY_LOOKUP_TYPE_IPV4              2 /* IPv4 and IPv6 are kept as 
+                                                  * 0010b and 0011b so that
+                                                  * if an ACL is needed to match
+                                                  * either kind of traffic,
+                                                  * entry can be installed as
+                                                  * 001Xb (X denotes don't care
+                                                  */
+#define FLOW_KEY_LOOKUP_TYPE_IPV6              3
 #define FLOW_KEY_LOOKUP_TYPE_FROM_VM_BOUNCE    4
 #define FLOW_KEY_LOOKUP_TYPE_TO_VM_BOUNCE      5
 

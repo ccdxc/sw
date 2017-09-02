@@ -213,7 +213,7 @@ TEST_F(session_test, test1)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1000);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -224,7 +224,7 @@ TEST_F(session_test, test1)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2000);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -400,7 +400,7 @@ TEST_F(session_test, test2)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1000);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -411,7 +411,7 @@ TEST_F(session_test, test2)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2000);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -427,7 +427,7 @@ TEST_F(session_test, test2)
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip3);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip4);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
@@ -438,7 +438,7 @@ TEST_F(session_test, test2)
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip3);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip4);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(28750);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
@@ -587,7 +587,7 @@ TEST_F(session_test, test3)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_v6_addr(ipv6_ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v6_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v6_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v6_key()->mutable_tcp_udp()->set_sport(1000);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -600,7 +600,7 @@ TEST_F(session_test, test3)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_v6_addr(ipv6_ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v6_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v6_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v6_key()->mutable_tcp_udp()->set_sport(2000);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -722,7 +722,7 @@ TEST_F(session_test, test4)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -733,7 +733,7 @@ TEST_F(session_test, test4)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2001);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -748,7 +748,7 @@ TEST_F(session_test, test4)
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(28750);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->
@@ -759,7 +759,7 @@ TEST_F(session_test, test4)
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1001);
     sess_spec2.mutable_responder_flow()->mutable_flow_key()->
@@ -879,7 +879,7 @@ TEST_F(session_test, test5)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1001);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -890,7 +890,7 @@ TEST_F(session_test, test5)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2001);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -1028,7 +1028,7 @@ TEST_F(session_test, test6)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1001);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -1046,7 +1046,7 @@ TEST_F(session_test, test6)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip3);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2001);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
@@ -1174,7 +1174,7 @@ TEST_F(session_test, test7)
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(1000);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->
@@ -1185,7 +1185,7 @@ TEST_F(session_test, test7)
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
-        mutable_v4_key()->set_ip_proto(types::IP_PROTO_TCP);
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->
         mutable_v4_key()->mutable_tcp_udp()->set_sport(2000);
     sess_spec.mutable_responder_flow()->mutable_flow_key()->

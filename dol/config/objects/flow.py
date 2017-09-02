@@ -189,7 +189,7 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def __get_hal_ipproto(self):
-        hal_ipproto_str = 'IP_PROTO_' + self.proto
+        hal_ipproto_str = 'IPPROTO_' + self.proto
         hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
         return hal_ipproto
 

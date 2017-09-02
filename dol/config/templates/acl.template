@@ -1,0 +1,46 @@
+meta:
+    id: ACL
+
+fields: 
+    id: None 
+    priority: const/0
+    match:
+        type: None
+        eth: 
+            ethertype      : const/0
+            ethertype_mask : const/0
+            src            : const/0
+            src_mask       : const/0
+            dst            : const/0
+            dst_mask       : const/0
+        ip: 
+            type             : None
+            src_ip           : ipaddr/0.0.0.0
+            alloc_src_ip     : None
+            alloc_src_prefix : None
+            src_prefix_len   : const/0
+            dst_ip           : ipaddr/0.0.0.0
+            alloc_dst_ip     : None
+            alloc_dst_prefix : None
+            dst_prefix_len   : const/0
+            options          : None
+
+        l4:
+            type    : None
+            proto   : const/0
+            tcp:
+                src_port_range: range/0/65535
+                dst_port_range: range/0/65535
+            udp:
+                src_port_range: range/0/65535
+                dst_port_range: range/0/65535
+            icmp:
+                code      : None
+                code_mask : const/0
+                type      : None
+                type_mask : const/0
+                    
+    action:
+        action: None
+        ingress_mirror: None
+        egress_mirror: None

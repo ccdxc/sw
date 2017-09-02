@@ -32,7 +32,7 @@ dfw_exec(fte::ctx_t& ctx)
     ctx.update_iflow(flowupd);
     ctx.update_rflow(flowupd);
 
-    if (ctx.key().proto == types::IP_PROTO_TCP &&
+    if (ctx.key().proto == types::IPPROTO_TCP &&
         conn_tracking_configured(ctx)) {
 
         // iflow

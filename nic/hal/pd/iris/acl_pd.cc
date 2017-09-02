@@ -130,26 +130,26 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
         case IP_PROTO_ICMP:
         case IP_PROTO_ICMPV6:
             key->flow_lkp_metadata_lkp_sport = 
-                (ip_key->icmp.icmp_type << 8) | ip_key->icmp.icmp_code;
+                (ip_key->u.icmp.icmp_type << 8) | ip_key->u.icmp.icmp_code;
             mask->flow_lkp_metadata_lkp_sport_mask = 
-                (ip_mask->icmp.icmp_type << 8) | ip_mask->icmp.icmp_code;
+                (ip_mask->u.icmp.icmp_type << 8) | ip_mask->u.icmp.icmp_code;
             break;
         case IP_PROTO_TCP:
-            key->flow_lkp_metadata_lkp_sport = ip_key->tcp.sport;
-            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->tcp.sport;
+            key->flow_lkp_metadata_lkp_sport = ip_key->u.tcp.sport;
+            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.tcp.sport;
 
-            key->flow_lkp_metadata_lkp_dport = ip_key->tcp.dport;
-            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->tcp.dport;
+            key->flow_lkp_metadata_lkp_dport = ip_key->u.tcp.dport;
+            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.tcp.dport;
 
-            key->tcp_flags = ip_key->tcp.tcp_flags;
-            mask->tcp_flags_mask = ip_mask->tcp.tcp_flags;
+            key->tcp_flags = ip_key->u.tcp.tcp_flags;
+            mask->tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
             break;
         case IP_PROTO_UDP:
-            key->flow_lkp_metadata_lkp_sport = ip_key->udp.sport;
-            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->udp.sport;
+            key->flow_lkp_metadata_lkp_sport = ip_key->u.udp.sport;
+            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.udp.sport;
 
-            key->flow_lkp_metadata_lkp_dport = ip_key->udp.dport;
-            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->udp.dport;
+            key->flow_lkp_metadata_lkp_dport = ip_key->u.udp.dport;
+            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.udp.dport;
             break;
         default:
             break;
@@ -257,6 +257,13 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
 
             key.flow_lkp_metadata_lkp_sport = eth_key->ether_type;
             mask.flow_lkp_metadata_lkp_sport_mask = eth_mask->ether_type;
+            break;
+        case ACL_TYPE_IP:
+            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4 &
+                                                FLOW_KEY_LOOKUP_TYPE_IPV6;
+            mask.flow_lkp_metadata_lkp_type_mask = ~(FLOW_KEY_LOOKUP_TYPE_IPV4 ^ 
+                                                    FLOW_KEY_LOOKUP_TYPE_IPV6);
+            populate_ip_common(&key, &mask, ip_key, ip_mask);
             break;
         case ACL_TYPE_IPv4:
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;

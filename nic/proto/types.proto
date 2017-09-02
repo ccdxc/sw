@@ -9,15 +9,15 @@ package types;
 
 // IP protocol numbers
 enum IPProtocol {
-  IP_PROTO_NONE          = 0;
-  IP_PROTO_ICMP          = 1;
-  IP_PROTO_IPV4          = 4;
-  IP_PROTO_TCP           = 6;
-  IP_PROTO_UDP           = 17;
-  IP_PROTO_GRE           = 47;
-  IP_PROTO_ESP           = 50;
-  IP_PROTO_AH            = 51;
-  IP_PROTO_ICMPV6        = 58;
+  IPPROTO_NONE          = 0;
+  IPPROTO_ICMP          = 1;
+  IPPROTO_IPV4          = 4;
+  IPPROTO_TCP           = 6;
+  IPPROTO_UDP           = 17;
+  IPPROTO_GRE           = 47;
+  IPPROTO_ESP           = 50;
+  IPPROTO_AH            = 51;
+  IPPROTO_ICMPV6        = 58;
 }
 
 // ICMP message types
