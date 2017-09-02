@@ -76,6 +76,12 @@ header_type ipsec_to_stage3_t {
     }
 }
 
+header_type doorbell_data_pad_t {
+    fields {
+        db_data_pad : 64;
+    }
+}
+
 
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_ipsec_header_t p4plus2p4_hdr;
@@ -110,11 +116,18 @@ metadata ipsec_int_header_t ipsec_int_header;
 metadata barco_descriptor_t barco_desc;
 @pragma dont_trim
 metadata barco_request_t barco_req;
+@pragma dont_trim
+metadata doorbell_data_t db_data;
+@pragma dont_trim
+metadata doorbell_data_pad_t db_data_pad;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_req_write;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t head_desc_addr_update;
+metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t doorbell_cmd;
+
 
 @pragma scratch_metadata
 metadata ipsec_txdma1_global_t txdma1_global_scratch;
@@ -188,7 +201,8 @@ action ipsec_write_barco_req(rsvd, cosA, cosB, cos_sel,
                              key_index, iv_size, icv_size, spi,
                              esn_lo, iv, esn_hi, barco_enc_cmd,
                              ipsec_cb_index, block_size,
-                             cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                             cb_pindex, cb_cindex, cb_ring_base_addr, 
+                             iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH
     //table write cb_cindex++
@@ -266,7 +280,8 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, esn_hi, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
 
     //IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT

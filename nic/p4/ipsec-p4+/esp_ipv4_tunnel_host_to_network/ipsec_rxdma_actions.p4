@@ -29,7 +29,9 @@ header_type ipsec_to_stage3_t {
     fields {
         pad_addr : ADDRESS_WIDTH;
         pad_size : 8;
-        stage3_pad     : 56;
+        iv_salt  : 32;
+        iv_size  : 8; 
+        stage3_pad     : 16;
     }
 }
 
@@ -162,6 +164,14 @@ metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_src;
 metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_dst;
 
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
+ 
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t dma_cmd_iv_src;
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t dma_cmd_iv_dst;
+
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
 
 @pragma dont_trim
@@ -214,7 +224,7 @@ action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, esn_hi, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH
 
@@ -231,9 +241,6 @@ action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
 
     // Need to change to out_desc_addr
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
-
-    // 5. DMA Command to write tail_desc_addr in ipsec_cb
-    // DMA_COMMAND_PHV2MEM_FILL(dma_cmd_tail_desc_addr,  (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE + IPSEC_CB_TAIL_DESC_ADDR_OFFSET,  IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_START, IPSEC_TAIL_DESC_ADDR_PHV_OFFSET_END, 0, 0, 0, 0)   
 
 
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
@@ -281,9 +288,14 @@ action update_input_desc_aol (addr0, offset0, length0,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
     // Original pkt to input descriptor pkt2mem 
-    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, length0, 0, 0)
+    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0+4+ipsec_to_stage3.iv_size, length0, 0, 0)
     // Pad bytes from HBM - mem2mem 
     DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage3.pad_addr, 0, addr0+length0, 0, ipsec_to_stage3.pad_size, 0, 0, 0)
+    // DMA_COMMAND SALT
+    DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 
+    // DMA IV to beginning of INPUT DESC 
+    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_iv_src, dma_cmd_iv_dst, ((ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE)+IPSEC_CB_BASE+IPSEC_CB_IV_OFFSET), 0, addr0+IPSEC_SALT_HEADROOM, 0, ipsec_to_stage3.iv_size, 0, 0, 0)
+  
 }
 
 //stage 2 
@@ -400,7 +412,7 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, esn_hi, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH
 
@@ -451,6 +463,8 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(p42p4plus_scratch_hdr.table2_valid, p42p4plus_hdr.table2_valid);
     modify_field(p42p4plus_scratch_hdr.table3_valid, p42p4plus_hdr.table3_valid);
 
+    modify_field(ipsec_to_stage3.iv_size, iv_size);
+    modify_field(ipsec_to_stage3.iv_salt, iv_salt);
     // prepare tables for next stages
 
     modify_field(p42p4plus_hdr.table0_valid, 1);

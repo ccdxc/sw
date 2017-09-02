@@ -27,8 +27,10 @@
 header_type ipsec_to_stage3_t {
     fields {
         packet_length : 16; 
-        stage3_pad0     : 48;
-        stage3_pad1     : ADDRESS_WIDTH;
+        iv_salt       : 32;
+        iv_size       : 8;
+        iv_salt_off   : 8;
+        stage3_pad1   : ADDRESS_WIDTH;
     }
 }
 
@@ -157,7 +159,9 @@ metadata dma_cmd_phv2mem_t dma_cmd_phv2mem_ipsec_int;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_in_desc_aol; 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol; 
+metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
 @pragma dont_trim
@@ -214,7 +218,7 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH
     //table write in_desc into rsvd value of tail_desc - write this part in assembly.
@@ -253,13 +257,6 @@ action esp_v4_tunnel_n2h_update_output_desc_aol(addr0, offset0, length0,
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
 
-    modify_field(barco_desc_out.A1_addr, 0);
-    modify_field(barco_desc_out.O1, 0);
-    modify_field(barco_desc_out.L1, 0);
-
-    modify_field(barco_desc_out.A2_addr, 0);
-    modify_field(barco_desc_out.O2, 0);
-    modify_field(barco_desc_out.L2, 0);
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
 
@@ -276,14 +273,6 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
     modify_field(barco_desc_in.O0, 0);
     modify_field(barco_desc_in.L0, ipsec_global.packet_length); 
 
-    modify_field(barco_desc_in.A1_addr, 0);
-    modify_field(barco_desc_in.O1, 0);
-    modify_field(barco_desc_in.L1, 0);
-
-    modify_field(barco_desc_in.A2_addr, 0);
-    modify_field(barco_desc_in.O2, 0);
-    modify_field(barco_desc_in.L2, 0);
-
     // Load tail-descriptor
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
@@ -293,7 +282,8 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
     // 1. Original pkt to input descriptor pkt2mem 
-    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, length0, 0, 0)
+    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, ipsec_global.packet_length, 0, 0)
+    DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0+ipsec_to_stage3.iv_salt_off, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0)
 }
 
 //stage 2 
@@ -411,7 +401,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
 
     //Set all variables to scratch so that they are not removed
@@ -454,6 +444,11 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(p42p4plus_scratch_hdr.table2_valid, p42p4plus_hdr.table2_valid);
     modify_field(p42p4plus_scratch_hdr.table3_valid, p42p4plus_hdr.table3_valid);
 
+    modify_field(ipsec_to_stage3.iv_salt, iv_salt);
+    modify_field(ipsec_to_stage3.iv_size, iv_size);
+    //overwrite the seqno in the packet with IV Salt - anyway seqNo in packet is coming in p42p4plus_hdr
+    // This is done to give a single DMA command to Barco for both salt and iv in packet.
+    modify_field(ipsec_to_stage3.iv_salt_off,  p42p4plus_hdr.ipsec_payload_start - iv_size - IPSEC_SALT_HEADROOM);
     // prepare tables for next stages
 
     modify_field(p42p4plus_hdr.table0_valid, 1);

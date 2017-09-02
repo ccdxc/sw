@@ -146,7 +146,8 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
@@ -253,7 +254,7 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req_ptr(barco_req_address)
 
 
 //stage 0
-action esp_v4_tunnel_n2h_txdma2_initial_table(pc, rsvd, cosA, cosB,
+action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
                                        cos_sel, eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,
@@ -261,7 +262,8 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
     modify_field(ipsec_cb_scratch.pid, pid);
     modify_field(ipsec_cb_scratch.total, total);
@@ -271,7 +273,6 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_cb_scratch.cosB, cosB);
     modify_field(ipsec_cb_scratch.cosA, cosA);
     modify_field(ipsec_cb_scratch.rsvd, rsvd);
-    modify_field(ipsec_cb_scratch.pc, pc);
 
     modify_field(ipsec_cb_scratch.rxdma_ring_pindex, rxdma_ring_pindex);
     modify_field(ipsec_cb_scratch.rxdma_ring_cindex, rxdma_ring_cindex);
