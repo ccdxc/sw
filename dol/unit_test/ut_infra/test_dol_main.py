@@ -27,6 +27,7 @@ mocked_modules = [
     "descriptor_aol_pb2",
     "wring_pb2",
     "tcp_proxy_cb_pb2_grpc",
+    "proxy_pb2_grpc",
     "ipseccb_pb2_grpc",
     "tls_proxy_cb_pb2_grpc",
     "descriptor_aol_pb2_grpc",
