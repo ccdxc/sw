@@ -32,7 +32,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.SgDB) == 1)
-		}, "Sg not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "Sg not found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 		c.Assert(len(ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
 	}
 
@@ -63,7 +63,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 			}
 
 			return ((len(sg.Request[0].IngressPolicy.FwRules) == 1) && (len(sg.Request[0].EgressPolicy.FwRules) == 1))
-		}, "Sg rules not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "Sg rules not found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 	}
 
 	// delete the sg policy
@@ -79,7 +79,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 			}
 
 			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0))
-		}, "Sg rules still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "Sg rules still found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 	}
 
 	// delete the security group
@@ -90,7 +90,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.SgDB) == 0)
-		}, "Sg still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "Sg still found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 	}
 }
 
@@ -132,7 +132,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.EndpointDB) == 1)
-		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 1000+300*it.numAgents))
+		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 3000+300*it.numAgents))
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
@@ -148,7 +148,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.EndpointDB) == 2)
-		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
+		}, "endpoint not found on agent", "10ms", fmt.Sprintf("%dms", 3000+300*it.numAgents))
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
@@ -162,7 +162,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.EndpointDB) == 1)
-		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 3000+300*it.numAgents))
 	}
 
 	// delete the security group
@@ -176,7 +176,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 			c.Assert(ok, Equals, true)
 			c.Assert(len(ep.Request), Equals, 1)
 			return (len(ep.Request[0].SecurityGroup) == 0)
-		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 300*it.numAgents))
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 3000+300*it.numAgents))
 	}
 
 	// delete endpoint
@@ -185,7 +185,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() bool {
 			return (len(ag.datapath.EndpointDB) == 0)
-		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 	}
 
 	// delete the network
@@ -194,5 +194,5 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	AssertEventually(c, func() bool {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil)
-	}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+	}, "endpoint still found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 }

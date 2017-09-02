@@ -17,6 +17,7 @@ const codecSize = 1024 * 1024
 
 // Services is list of all services exposed by the client ---
 type Services interface {
+    Close() error
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
     // Package is {{$key}} and len of messages is {{len $v.Messages}}{{if (ne 0 (len $v.Messages))}}
     {{$k}}() {{$pkgname}}.{{$k}}Interface{{end}}{{end}}{{end}}
@@ -25,9 +26,14 @@ type Services interface {
 type apiGrpcServerClient struct {
     url string
     logger log.Logger
-    conn *grpc.ClientConn
+    client *rpckit.RPCClient
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
     a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
+}
+
+// Close closes the client
+func (a *apiGrpcServerClient) Close() error {
+    return a.client.Close()
 }
 {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
 func (a *apiGrpcServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
@@ -43,7 +49,7 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (S
 	}
     return &apiGrpcServerClient{
         url: url,
-        conn: client.ClientConn,
+        client: client,
         logger: logger,
         {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
         a{{$k}}: {{$pkgname}}Client.NewGrpcCrudClient{{$k}}(client.ClientConn, logger), {{end}}{{end}}
@@ -54,6 +60,11 @@ type apiRestServerClient struct {
     url string
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
     a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
+}
+
+// Close sloses the client
+func (a *apiRestServerClient) Close() error {
+    return nil
 }
 {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
 func (a *apiRestServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {

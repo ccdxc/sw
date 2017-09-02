@@ -306,9 +306,15 @@ func (client *NpmClient) Stop() {
 	client.stopped = true
 	client.Unlock()
 	client.watchCancel()
-	client.netGrpcClient.Close()
-	client.sgGrpcClient.Close()
-	client.epGrpcClient.Close()
+	if client.netGrpcClient != nil {
+		client.netGrpcClient.Close()
+	}
+	if client.sgGrpcClient != nil {
+		client.sgGrpcClient.Close()
+	}
+	if client.epGrpcClient != nil {
+		client.epGrpcClient.Close()
+	}
 	client.waitGrp.Wait()
 }
 

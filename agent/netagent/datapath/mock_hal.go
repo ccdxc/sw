@@ -10,6 +10,7 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/agent/netagent"
@@ -21,7 +22,8 @@ import (
 
 // MockHalDatapath contains mock hal clients
 type MockHalDatapath struct {
-	MockCtrl      *gomock.Controller //
+	sync.Mutex
+	MockCtrl      *gomock.Controller
 	Epclient      *halproto.MockEndpointClient
 	Ifclient      *halproto.MockInterfaceClient
 	Netclient     *halproto.MockL2SegmentClient
@@ -140,7 +142,9 @@ func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	}
 
 	// save the endpoint message
+	hd.Lock()
 	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.Unlock()
 
 	return nil, nil
 }
@@ -198,7 +202,9 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	}
 
 	// save the endpoint message
+	hd.Lock()
 	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.Unlock()
 
 	return nil
 }
@@ -256,7 +262,9 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	}
 
 	// save the endpoint message
+	hd.Lock()
 	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.Unlock()
 
 	return nil
 }
@@ -314,7 +322,9 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	}
 
 	// save the endpoint message
+	hd.Lock()
 	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.Unlock()
 
 	return nil
 }
@@ -359,8 +369,10 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// save the endpoint delete message
+	hd.Lock()
 	hd.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
 	delete(hd.EndpointDB, objectKey(&ep.ObjectMeta))
+	hd.Unlock()
 
 	return nil
 }
@@ -405,8 +417,10 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// save the endpoint delete message
+	hd.Lock()
 	hd.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
 	delete(hd.EndpointDB, objectKey(&ep.ObjectMeta))
+	hd.Unlock()
 
 	return nil
 }
@@ -555,7 +569,9 @@ func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// save the sg message
+	hd.Lock()
 	hd.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
+	hd.Unlock()
 
 	return nil
 }
@@ -607,7 +623,9 @@ func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// save the sg message
+	hd.Lock()
 	hd.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
+	hd.Unlock()
 
 	return nil
 }
@@ -635,7 +653,9 @@ func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// delete the sg message
+	hd.Lock()
 	delete(hd.SgDB, objectKey(&sg.ObjectMeta))
+	hd.Unlock()
 
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/runtime"
-	"github.com/pensando/sw/utils/testutils"
+	. "github.com/pensando/sw/utils/testutils"
 )
 
 // validateObjectSpec Expects non-pointers in expected and result.
@@ -336,7 +336,7 @@ func commentedTestCrudOps(t *testing.T) {
 	}
 
 	// ===== Validate Watch Events received === //
-	testutils.AssertEventually(t,
+	AssertEventually(t,
 		func() bool { return len(expectWatchEvents) == len(rcvWatchEvents) },
 		"failed to receive all watch events",
 		"10ms",

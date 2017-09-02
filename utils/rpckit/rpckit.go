@@ -132,7 +132,7 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{
 		listenURL: listenURL,
-		listener:  lis,
+		listener:  ListenWrapper(lis),
 		options:   *defaultOptions(srvName),
 	}
 
@@ -196,7 +196,9 @@ func (srv *RPCServer) GetListenURL() string {
 // Stop stops grpc server and closes the listener
 func (srv *RPCServer) Stop() error {
 	// stop the server
-	srv.GrpcServer.Stop()
+	if srv.GrpcServer != nil {
+		srv.GrpcServer.Stop()
+	}
 
 	// close the socket listener
 	return srv.listener.Close()
@@ -347,5 +349,8 @@ func (c *RPCClient) GetRPCStats() map[string]int64 {
 
 // Close closes client connection
 func (c *RPCClient) Close() error {
-	return c.ClientConn.Close()
+	if c.ClientConn != nil {
+		return c.ClientConn.Close()
+	}
+	return nil
 }

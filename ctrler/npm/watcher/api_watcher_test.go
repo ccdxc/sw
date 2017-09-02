@@ -164,10 +164,36 @@ func TestApiWatcher(t *testing.T) {
 	}, "Endpoint still found in statemgr")
 
 	// stop the api server
+	apicl.Close()
+	watcher.Stop()
 	apiSrv.Stop()
 	vcs.StopServer()
-	watcher.Stop()
-	time.Sleep(time.Millisecond * 10)
+}
+
+func TestApiServerClient(t *testing.T) {
+	testCount := 5
+	for i := 0; i < testCount; i++ {
+		// create api server
+		apiSrv, _ := createAPIServer(apisrvURL)
+		Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+
+		// create an api server client
+		l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
+		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
+		AssertOk(t, err, "Error creating api server client")
+
+		// network watcher
+		opts := api.ListWatchOptions{}
+		watchCtx, watchCancel := context.WithCancel(context.Background())
+		netWatcher, err := apicl.NetworkV1().Network().Watch(watchCtx, &opts)
+		AssertOk(t, err, "Error creating api server watcher")
+		Assert(t, netWatcher != nil, "Netwatcher is nil")
+
+		// stop api client & server
+		watchCancel()
+		apicl.Close()
+		apiSrv.Stop()
+	}
 }
 
 func TestApiWatcherConnectDisconnect(t *testing.T) {
@@ -203,5 +229,4 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	// stop the vchub
 	vcs.StopServer()
 	watcher.Stop()
-	time.Sleep(time.Millisecond * 10)
 }

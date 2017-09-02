@@ -67,8 +67,8 @@ func AssertOneOf(tb TBApi, act string, exp []string) {
 // intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
 func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
-	pollInterval := time.Millisecond
-	timeoutInterval := time.Second
+	pollInterval := time.Millisecond * 10
+	timeoutInterval := time.Second * 3
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -113,8 +113,8 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 // followed by timeoutInterval in time.ParseDuration() format.
 func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
-	pollInterval := time.Millisecond
-	timeoutInterval := time.Second
+	pollInterval := time.Millisecond * 10
+	timeoutInterval := time.Second * 3
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -161,8 +161,8 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 // returns true if desired state is reached
 func CheckEventually(eval Evaluator, intervals ...string) bool {
 	var err error
-	pollInterval := time.Millisecond
-	timeoutInterval := time.Second
+	pollInterval := time.Millisecond * 10
+	timeoutInterval := time.Second * 3
 
 	// parse intervals
 	if len(intervals) > 0 {

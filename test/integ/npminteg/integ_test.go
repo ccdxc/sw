@@ -102,7 +102,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 		AssertEventually(c, func() bool {
 			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr == nil)
-		}, "Network not found on agent", "10ms", fmt.Sprintf("%dms", 100*it.numAgents))
+		}, "Network not found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 		nt, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
 		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
@@ -117,7 +117,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 		AssertEventually(c, func() bool {
 			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr != nil)
-		}, "Network still found on agent", "100ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
+		}, "Network still found on agent", "100ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 	}
 }
 
@@ -192,7 +192,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() bool {
 				return (len(ag.datapath.EndpointDB) == it.numAgents)
-			}, "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents))
+			}, "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint cound incorrect in datapath")
 				return
@@ -248,7 +248,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() bool {
 				return (len(ag.datapath.EndpointDB) == 0)
-			}, "10ms", fmt.Sprintf("%dms", 1000+100*it.numAgents)) {
+			}, "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents)) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}

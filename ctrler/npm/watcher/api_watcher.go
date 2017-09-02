@@ -159,6 +159,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string) {
 
 		// if stop flag is set, we are done
 		if w.stopFlag {
+			apicl.Close()
 			log.Infof("Exiting API server watcher")
 			return
 		}
@@ -269,6 +270,9 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string) {
 
 		// if stop flag is set, we are done
 		if w.stopFlag {
+			if rpcClient != nil {
+				rpcClient.Close()
+			}
 			log.Infof("Exiting VMM watcher")
 			return
 		}

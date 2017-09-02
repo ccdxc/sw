@@ -4,7 +4,6 @@ package ctrlerif
 
 import (
 	"testing"
-	"time"
 
 	context "golang.org/x/net/context"
 
@@ -378,7 +377,6 @@ func TestNpmClientWatch(t *testing.T) {
 	// stop the server and client
 	cl.Stop()
 	srv.grpcServer.Stop()
-	time.Sleep(time.Millisecond * 100)
 }
 
 func TestSecurityGroupWatch(t *testing.T) {
@@ -425,5 +423,4 @@ func TestSecurityGroupWatch(t *testing.T) {
 	// stop the server and client
 	cl.Stop()
 	srv.grpcServer.Stop()
-	time.Sleep(time.Millisecond * 100)
 }

@@ -22,6 +22,7 @@ const codecSize = 1024 * 1024
 
 // Services is list of all services exposed by the client ---
 type Services interface {
+	Close() error
 
 	// Package is bookstore and len of messages is 3
 	BookstoreV1() bookstore.BookstoreV1Interface
@@ -48,7 +49,7 @@ type Services interface {
 type apiGrpcServerClient struct {
 	url    string
 	logger log.Logger
-	conn   *grpc.ClientConn
+	client *rpckit.RPCClient
 
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
@@ -60,6 +61,11 @@ type apiGrpcServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
+}
+
+// Close closes the client
+func (a *apiGrpcServerClient) Close() error {
+	return a.client.Close()
 }
 
 func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
@@ -111,7 +117,7 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (S
 	}
 	return &apiGrpcServerClient{
 		url:    url,
-		conn:   client.ClientConn,
+		client: client,
 		logger: logger,
 
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
@@ -140,6 +146,11 @@ type apiRestServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
+}
+
+// Close sloses the client
+func (a *apiRestServerClient) Close() error {
+	return nil
 }
 
 func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
