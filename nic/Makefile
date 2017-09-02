@@ -59,7 +59,8 @@ include $(TOPDIR)/make/Makefile.inc
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
-	docker run -it --privileged -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash
+	mkdir -p ${PWD}/../bazel-cache;
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache pensando/nic bash
 
 # run `make gtest` with the dependencies image.
 test: build-runtime-image

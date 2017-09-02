@@ -3,7 +3,7 @@ targets:
   main: [ "sh", "-c", "make -j$(grep -c processor /proc/cpuinfo) && make gtest && ./run.py" ]
 image:
   name: "pensando/nic"
-  bind_dir: "/hack/saratk/nic"
+  bind_dir: "/sw/nic"
   extra_binds:
-    /dol: /hack/saratk/dol
+    /dol: /sw/dol
 rebase: true
