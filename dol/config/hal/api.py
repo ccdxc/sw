@@ -25,6 +25,7 @@ import descriptor_aol_pb2   as descriptor_aol_pb2
 import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
 import proxy_pb2            as proxy_pb2
+import ipseccb_pb2          as ipseccb_pb2
 
 import endpoint_pb2_grpc        as endpoint_pb2_grpc
 import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -40,6 +41,7 @@ import descriptor_aol_pb2_grpc  as descriptor_aol_pb2_grpc
 import wring_pb2_grpc           as wring_pb2_grpc
 import acl_pb2_grpc             as acl_pb2_grpc
 import proxy_pb2_grpc           as proxy_pb2_grpc
+import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -160,6 +162,13 @@ def ConfigureTcpCbs(objlist):
              stub.TcpCbCreate)
     return
 
+def ConfigureIpsecCbs(objlist):
+    if IsHalDisabled(): return
+    stub = ipseccb_pb2_grpc.IpsecCbStub(HalChannel)
+    __config(objlist, ipseccb_pb2.IpsecCbRequestMsg,
+             stub.IpsecCbCreate)
+    return
+
 def UpdateTcpCbs(objlist):
     if IsHalDisabled(): return
     stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
@@ -167,11 +176,25 @@ def UpdateTcpCbs(objlist):
              stub.TcpCbUpdate)
     return
 
+def UpdateIpsecCbs(objlist):
+    if IsHalDisabled(): return
+    stub = ipseccb_pb2_grpc.IpsecCbStub(HalChannel)
+    __config(objlist, ipseccb_pb2.IpsecCbRequestMsg,
+             stub.IpsecCbUpdate)
+    return
+
 def GetTcpCbs(objlist):
     if IsHalDisabled(): return
     stub = tcpcb_pb2_grpc.TcpCbStub(HalChannel)
     __config(objlist, tcpcb_pb2.TcpCbGetRequestMsg,
              stub.TcpCbGet)
+    return
+
+def GetIpsecCbs(objlist):
+    if IsHalDisabled(): return
+    stub = ipseccb_pb2_grpc.IpsecCbStub(HalChannel)
+    __config(objlist, ipseccb_pb2.IpsecCbGetRequestMsg,
+             stub.IpsecCbGet)
     return
 
 def GetTlsCbs(objlist):

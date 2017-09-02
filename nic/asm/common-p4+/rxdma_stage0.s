@@ -38,3 +38,8 @@ rdma_resp_rx_stage0:
 rdma_req_rx_stage0:
     nop.e
     nop
+
+.align
+ipsec_rx_stage0:
+    nop.e
+    nop

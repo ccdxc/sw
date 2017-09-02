@@ -32,6 +32,10 @@ class ProxyServiceObject(base.ConfigObjectBase):
         if self.type == "TLS_PROXY":
             reqspec.key_or_handle.proxy_id = 1
             reqspec.proxy_type = 2
+
+        if self.type == "IPSEC_PROXY":
+            reqspec.key_or_handle.proxy_id = 2
+            reqspec.proxy_type = 3
  
         return
 

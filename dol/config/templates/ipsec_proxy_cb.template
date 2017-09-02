@@ -1,0 +1,9 @@
+# IPSEC Proxy CB Object Template File.
+meta:
+    id: IPSECCB
+
+id               : None # IPSEC Proxy CB Local ID
+spec             : None # (REF) IPSEC Proxy CB Spec from Base Config.
+ipseccbq_base    : 0
+pi               : 0
+ci               : 0

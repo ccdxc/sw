@@ -205,6 +205,9 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     // fill config spec of this IPSEC CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_ipseccb_id(ripseccb.cb_id);
 
+    rsp->mutable_spec()->set_pi(ripseccb.pi);
+    rsp->mutable_spec()->set_ci(ripseccb.ci);
+
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);
 

@@ -243,6 +243,7 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     flow_pgm_attrs_t         *flow_attrs = NULL;
     flow_cfg_t               *flow_cfg = NULL;
     bool                     is_tcp_proxy_flow = false;
+    bool                     is_ipsec_proxy_flow = false;
     pd_session_t             *sess_pd = NULL;
 
     sess_pd = session->pd;
@@ -272,6 +273,12 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
          ((flow_cfg->key.sport == 47273) && (flow_cfg->key.dport == 80))) {
         is_tcp_proxy_flow = true;
         HAL_TRACE_DEBUG("TCP Proxy flow_cfg {}", flow_cfg->key);
+    }
+
+    if (((flow_cfg->key.sport == 44445) && (flow_cfg->key.dport == 44444)) ||
+         ((flow_cfg->key.sport == 44444) && (flow_cfg->key.dport == 44445))) {
+        is_ipsec_proxy_flow = true;
+        HAL_TRACE_DEBUG("IPSEC Proxy flow_cfg {}", flow_cfg->key);
     }
 
     d.flow_info_action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
@@ -384,6 +391,11 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
          d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
      }
 
+     if (is_ipsec_proxy_flow) {
+         d.flow_info_action_u.flow_info_flow_info.dst_lport = 1004;
+         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
+         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
+     }
     // insert the entry
     ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
     if (ret != HAL_RET_OK) {

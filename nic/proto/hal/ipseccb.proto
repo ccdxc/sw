@@ -26,7 +26,9 @@ message IpsecCbKeyHandle {
 
 // IpsecCbSpec captures all the ipsec_cb level configuration
 message IpsecCbSpec {
-  IpsecCbKeyHandle        key_or_handle              = 1;    // ipsec_cb being created/updated
+  IpsecCbKeyHandle      key_or_handle              = 1;    // ipsec_cb being created/updated
+  uint32                pi                    = 2;
+  uint32                ci                    = 3;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

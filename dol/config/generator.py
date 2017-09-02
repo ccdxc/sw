@@ -13,6 +13,7 @@ from config.objects.security_profile    import SecurityProfileHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.acl                 import AclHelper
 from config.objects.proxy_service       import ProxyServiceHelper
+from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 
 from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
@@ -46,7 +47,7 @@ def process(topospec):
     SwDscrRingHelper.main("BRQ")
 
     TcpCbHelper.main()    
-    #TcpCbHelper.Configure(TcpCbHelper.objlist)
+    IpsecCbHelper.main()    
     return
 
 def main(topofile):

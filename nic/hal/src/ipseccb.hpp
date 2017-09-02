@@ -18,7 +18,9 @@ typedef uint32_t ipseccb_id_t;
 
 typedef struct ipseccb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
-    ipseccb_id_t            cb_id;                   // CB id
+    ipseccb_id_t          cb_id;                   // CB id
+    uint16_t              pi;
+    uint16_t              ci;
     hal_handle_t          hal_handle;              // HAL allocated handle
 
     // PD state
