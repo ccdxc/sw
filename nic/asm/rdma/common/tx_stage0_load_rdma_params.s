@@ -3,13 +3,13 @@
 #include "INGRESS_p.h"
 #include "common.h"
 
-struct rx_stage0_load_rdma_params_k_t k;
+struct tx_stage0_load_rdma_params_k_t k;
 struct sram_lif_entry_t d;
 struct phv_ p;
 
 %%
 
-rx_stage0_load_rdma_params:
+tx_stage0_load_rdma_params:
 
     add r4, r0, k.global.qtype
     sllv r5, 1, r4

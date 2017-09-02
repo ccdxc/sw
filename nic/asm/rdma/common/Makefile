@@ -33,7 +33,8 @@ clean:
 	$(CAPAS_BIN) $(INC_DIR) $< -o $(OBJ_DIR)/$@
 
 TEST_FILES := \
-    $(SRC_DIR)/ctl/rx_stage0_load_rdma_params.ctl
+    $(SRC_DIR)/ctl/rx_stage0_load_rdma_params.ctl \
+    $(SRC_DIR)/ctl/tx_stage0_load_rdma_params.ctl
 
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 

@@ -2046,11 +2046,17 @@ def capri_te_cfg_output(stage):
 
         prof_idx += 1
 
-    if len(stage.active_predicates) > 0:
+    if len(stage.active_predicates) > 0 and \
+        prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']:
+
         # create a catch-all entry to execute NO tables
         # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
+        # If all entries al already programmed.. we can skip this... but need to make sure if there
+        # can be a tcam miss - XXX
+        '''
         assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
             pdb.set_trace()
+        '''
         sidx = (prof_idx * num_cycles)
         te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
         _fill_te_tcam_catch_all(te)

@@ -239,8 +239,8 @@ modules:
         args    :
             maxflows : 1
         iterate:
-            - flow     : filter://fwtype=L3,type=IPV4,proto=UDP,label=FLOW-COLLISION
-            - flow     : filter://fwtype=L3,type=IPV6,proto=UDP,label=FLOW-COLLISION
+            - flow     : filter://fwtype=L3,type=IPV4,proto=UDP,label=FLOW-COLLISION,action=ALLOW
+            - flow     : filter://fwtype=L3,type=IPV6,proto=UDP,label=FLOW-COLLISION,action=ALLOW
 
     - module:
         name    : PKT_TO_SERQ_V4

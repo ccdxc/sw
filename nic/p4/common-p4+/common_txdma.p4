@@ -57,6 +57,10 @@ header_type txdma_common_pad_t {
 }
 
 @pragma dont_trim
+@pragma scratch_metadata
+metadata rdma_scratch_metadata_t scratch_rdma;
+
+@pragma dont_trim
 metadata txdma_common_pad_t txdma_common_pad;
 
 @pragma scratch_metadata
@@ -944,8 +948,58 @@ parser start {
     return ingress;
 }
 
-control ingress {
+action tx_stage0_load_rdma_params(rdma_en_qtype_mask, 
+                                  pt_base_addr_page_id, 
+                                  log_num_pt_entries, 
+                                  cqcb_base_addr_page_id, 
+                                  log_num_cq_entries,
+                                  prefetch_pool_base_addr_page_id,
+                                  log_num_prefetch_pool_entries, 
+                                  reserved) {
+
+
+#if 0
+    sllv r5, 1, k.global.qtype
+    and r5, r5, d.rdma_en_qtype_mask
+    sne c1, r5, r0
+#endif
+
+    if (((1 << p4_txdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
+
+        modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
+        modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
+        modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
+        modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
+                     prefetch_pool_base_addr_page_id);
+        modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
+                     log_num_prefetch_pool_entries);
+        modify_field(scratch_rdma.reserved, reserved);
+    }
+}
+
+@pragma stage 0
+table tx_stage0_rdma_params_table {
+    reads {
+        p4_intr_global.lif : exact;
+    }
+    actions {
+        tx_stage0_load_rdma_params;
+    }
+    size : LIF_TABLE_SIZE;
+}
+
+
+control common_tx_p4plus_stage0 {
     apply(tx_table_s0_t0);
+    if (p4_intr.recirc == 0) {
+        apply(tx_stage0_rdma_params_table);
+    }
+}   
+
+control ingress {
+    common_tx_p4plus_stage0();
     if (app_header.table0_valid == 1) {
         apply(tx_table_s1_t0);
         apply(tx_table_s2_t0);

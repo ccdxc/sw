@@ -13,6 +13,7 @@
 #include <pd/iris/if_pd_utils.hpp>
 #include <hal_state_pd.hpp>
 #include <capri_loader.h>
+#include <common_defines.h>
 
 namespace hal {
 
@@ -74,9 +75,10 @@ roundup_to_pow_2(uint32_t x)
 hal_ret_t
 rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 {
-    hal_ret_t                    ret;
+    hal_ret_t   ret;
 
     ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(lif,
+               entry_p->rdma_en_qtype_mask,
                entry_p->pt_base_addr_page_id,
                entry_p->log_num_pt_entries,
                entry_p->cqcb_base_addr_page_id,
@@ -89,9 +91,9 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         HAL_ASSERT(0);
         return ret;
     }
-#if 0
-    // TODO: Check for txdma routine
-    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rx_stage0_rdma_params_table_actiondataentry_add(lif,
+
+    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(lif,
+               entry_p->rdma_en_qtype_mask,
                entry_p->pt_base_addr_page_id,
                entry_p->log_num_pt_entries,
                entry_p->cqcb_base_addr_page_id,
@@ -104,7 +106,6 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         HAL_ASSERT(0);
         return ret;
     }
-#endif
 
     return HAL_RET_OK;
 }
@@ -121,12 +122,37 @@ rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
                       lif, ret);
         return ret;
     }
+    entry_p->rdma_en_qtype_mask = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.rdma_en_qtype_mask;
     entry_p->pt_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.pt_base_addr_page_id;
     entry_p->log_num_pt_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_pt_entries;
     entry_p->cqcb_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.cqcb_base_addr_page_id;
     entry_p->log_num_cq_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_cq_entries;
     entry_p->prefetch_pool_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
     entry_p->log_num_prefetch_pool_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
+
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
+{
+    hal_ret_t                    ret;
+    tx_stage0_rdma_params_table_actiondata data = {0};
+
+    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(lif, &data);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("stage0 rdma LIF table entry get failure for txdma, idx : {}, err : {}",
+                      lif, ret);
+        return ret;
+    }
+    entry_p->rdma_en_qtype_mask = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.rdma_en_qtype_mask;
+    entry_p->pt_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.pt_base_addr_page_id;
+    entry_p->log_num_pt_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_pt_entries;
+    entry_p->cqcb_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.cqcb_base_addr_page_id;
+    entry_p->log_num_cq_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_cq_entries;
+    entry_p->prefetch_pool_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
+    entry_p->log_num_prefetch_pool_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
 
     return HAL_RET_OK;
 }
@@ -236,10 +262,14 @@ rdma_lif_init (uint16_t lif, lif_init_attr_t *attr_p)
 
     // TODO: Fill prefetch data and add corresponding code
 
-    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}\n",
+    sram_lif_entry.rdma_en_qtype_mask = 
+        ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ));
+
+    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, rdma_en_qtype_mask: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
-           sram_lif_entry.log_num_pt_entries);
+           sram_lif_entry.log_num_pt_entries,
+           sram_lif_entry.rdma_en_qtype_mask);
            
     rc = rdma_sram_lif_init(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
@@ -254,12 +284,32 @@ void
 rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
+    sram_lif_entry_t    tx_sram_lif_entry = {0};
     uint64_t            pt_table_base_addr;
     uint64_t            key_table_base_addr;
     hal_ret_t           rc;  
 
+    rc = rdma_tx_sram_lif_entry_get(lif, &tx_sram_lif_entry);
+    HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Tx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    __FUNCTION__, __LINE__, lif,
+                    tx_sram_lif_entry.pt_base_addr_page_id, 
+                    tx_sram_lif_entry.log_num_pt_entries,
+                    tx_sram_lif_entry.rdma_en_qtype_mask);
+
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.log_num_pt_entries,
+                    sram_lif_entry.rdma_en_qtype_mask);
+
+    //Make sure Tx and Rx are always programmed the same
+    HAL_ASSERT(memcmp(&tx_sram_lif_entry, &sram_lif_entry, sizeof(sram_lif_entry_t)) == 0);
+
     pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);

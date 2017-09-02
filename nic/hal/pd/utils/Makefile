@@ -23,6 +23,7 @@ SLOBJECTS = \
 		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \
 		  $(OBJDIR)/p4pluspd_rxdma_api.o \
+		  $(OBJDIR)/p4pluspd_txdma_api.o \
 		  $(OBJDIR)/p4pd_global_api.o \
 		  $(NULL)
 
@@ -47,6 +48,7 @@ SLOBJECTS_STUB = \
 		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \
 		  $(OBJDIR)/p4pluspd_rxdma_api.o \
+		  $(OBJDIR)/p4pluspd_txdma_api.o \
 		  $(OBJDIR)/p4pd_global_api.o \
 		  $(NULL)
 

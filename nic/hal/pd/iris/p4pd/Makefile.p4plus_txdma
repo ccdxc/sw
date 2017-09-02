@@ -1,0 +1,20 @@
+
+TOPDIR = ../../..
+SHAREDLIBRARY = libp4pluspd_txdma.so
+
+LCFLAGS = \
+		  -fpic \
+		  -I../include \
+		  -I../../../hal/pd \
+		  -I/usr/local/include \
+		  -Wno-maybe-uninitialized \
+		  -Wno-uninitialized \
+		  -g \
+		  $(NULL)
+
+SOURCES = \
+		  common_txdma_actions_p4pd.c \
+		  $(NULL)
+
+include $(TOPDIR)/make/Makefile.inc
+CC = g++
