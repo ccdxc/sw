@@ -316,7 +316,7 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_status_inactive_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -348,10 +348,10 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
-    mask.mpls_0_valid_mask = 0xFF;
-    mask.ipv6_valid_mask = 0xFF;
+    mask.entry_status_inactive_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
+    mask.ipv6_valid_mask = 0xFF;
+    mask.mpls_0_valid_mask = 0xFF;
     mask.tunnel_metadata_tunnel_type_mask = 0xFF;
 
     // set the action
@@ -374,13 +374,18 @@ p4pd_input_mapping_tunneled_init (void)
 
     // set the key bits that we care
     key.entry_status_inactive = 0;
+    // TODO: Temp fix. Remove inner_ipv4_valid key
+    key.inner_ipv4_valid = 1;
+    key.inner_ipv6_valid = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_status_inactive_mask = 0xFF;
+    mask.inner_ipv4_valid_mask = 0xFF;
+    mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -406,13 +411,17 @@ p4pd_input_mapping_tunneled_init (void)
 
     // set the key bits that we care
     key.entry_status_inactive = 0;
-    key.ipv4_valid = 0;
-    key.ipv6_valid = 1;
+    key.inner_ipv4_valid = 0;
+    key.inner_ipv6_valid = 1;
+    key.ipv4_valid = 1;
+    key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_status_inactive_mask = 0xFF;
+    mask.inner_ipv4_valid_mask = 0xFF;
+    mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -438,13 +447,17 @@ p4pd_input_mapping_tunneled_init (void)
 
     // set the key bits that we care
     key.entry_status_inactive = 0;
-    key.ipv4_valid = 0;
+    key.inner_ipv4_valid = 0;
+    key.inner_ipv6_valid = 0;
+    key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_status_inactive_mask = 0xFF;
+    mask.inner_ipv4_valid_mask = 0xFF;
+    mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;

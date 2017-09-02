@@ -36,6 +36,12 @@ encap_inner_ipv4_icmp_rewrite:
 encap_inner_ipv4_unknown_rewrite:
   phvwr       p.{inner_ipv4_version...inner_ipv4_diffserv}, k.{ipv4_version...ipv4_diffserv}
   phvwr       p.{inner_ipv4_totalLen...inner_ipv4_srcAddr}, k.{ipv4_totalLen...ipv4_srcAddr}
+  // TODO: Start
+  // TTL and protocol had to be copied over individually since it is not being copied over
+  // using the ellipses above even though they are contiguous in the K vector
+  phvwr       p.inner_ipv4_ttl, k.ipv4_ttl
+  phvwr       p.inner_ipv4_protocol, k.ipv4_protocol
+  // TODO: End
   phvwr       p.inner_ipv4_dstAddr, k.ipv4_dstAddr
   phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4

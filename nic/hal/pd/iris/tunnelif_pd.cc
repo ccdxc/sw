@@ -233,19 +233,26 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     /* Input mapping native and tunneled tables have the same key, mask and data
      * So, we can populate the structs and typecast accordingly */
     memset(&key, 0, sizeof(input_mapping_native_swkey_t));
-    memset(&mask, 0xFF, sizeof(input_mapping_native_swkey_mask_t));
+    memset(&mask, 0, sizeof(input_mapping_native_swkey_mask_t));
     key.inner_ipv4_valid = inner_v4_vld;
     key.inner_ipv6_valid = inner_v6_vld;
     key.tunnel_metadata_tunnel_type = tunnel_type;
+    mask.inner_ipv4_valid_mask = 0xFF;
+    mask.inner_ipv6_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
 
     if (v4_tep) {
         key.ipv4_valid = 1;
         key.input_mapping_native_u1.ipv4_dstAddr = ip_addr->addr.v4_addr;
+        mask.ipv4_valid_mask = 0xFF;
+        mask.input_mapping_native_mask_u1.ipv4_dstAddr_mask = 0xFFFFFFFF;
     } else {
         key.ipv6_valid = 1;
         memcpy(key.input_mapping_native_u1.ipv6_dstAddr,
                ip_addr->addr.v6_addr.addr8, IP6_ADDR8_LEN);
         memrev(key.input_mapping_native_u1.ipv6_dstAddr, IP6_ADDR8_LEN);
+        mask.ipv6_valid_mask = 0xFF;
+        memset(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, 0xFF, IP6_ADDR8_LEN);
     }
     data.actionid = actionid;
     ret = tcam->insert(&key, &mask, &data, &ret_idx);

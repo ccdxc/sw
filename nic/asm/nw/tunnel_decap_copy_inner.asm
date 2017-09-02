@@ -78,6 +78,12 @@ copy_inner_eth_ipv4_other:
   phvwr       p.{ethernet_srcAddr, ethernet_etherType}, k.{inner_ethernet_srcAddr, inner_ethernet_etherType}
   phvwr       p.{ipv4_version...ipv4_diffserv}, k.{inner_ipv4_version...inner_ipv4_diffserv}
   phvwr       p.{ipv4_totalLen...ipv4_srcAddr}, k.{inner_ipv4_totalLen...inner_ipv4_srcAddr}
+  // TODO: Start
+  // TTL and protocol had to be copied over individually since it is not being copied over
+  // using the ellipses above even though they are contiguous in the K vector
+  phvwr       p.ipv4_ttl, k.inner_ipv4_ttl
+  phvwr       p.ipv4_protocol, k.inner_ipv4_protocol
+  // TODO: End
   phvwr       p.ipv4_dstAddr, k.inner_ipv4_dstAddr
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv4_valid, TRUE
@@ -121,5 +127,7 @@ copy_inner_eth_non_ip:
   phvwr       p.{ethernet_srcAddr, ethernet_etherType}, k.{inner_ethernet_srcAddr, inner_ethernet_etherType}
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.inner_ethernet_valid, FALSE
+  phvwr       p.ipv4_valid, FALSE
+  phvwr       p.ipv6_valid, FALSE
   phvwr.e     p.vlan_tag_valid, FALSE
   phvwr       p.udp_valid, FALSE

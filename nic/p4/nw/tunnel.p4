@@ -90,10 +90,13 @@ action copy_inner_eth_ipv6_other() {
 }
 
 action copy_inner_eth_non_ip() {
+
     copy_header(ethernet, inner_ethernet);
     remove_header(inner_ethernet);
     remove_header(udp);
     remove_header(vlan_tag);
+    remove_header(ipv4);
+    remove_header(ipv6);
 }
 
 @pragma stage 1
@@ -123,6 +126,20 @@ table tunnel_decap_copy_inner {
 /* Tunnel decap - remove tunnel headers                                      */
 /*****************************************************************************/
 action remove_tunnel_hdrs() {
+    if (ipv4.valid == TRUE) {
+        subtract(l3_metadata.payload_length, ipv4.totalLen, 20 + 14);
+    } else {
+        subtract(l3_metadata.payload_length, ipv6.payloadLen, 14);
+    }
+    if ((vxlan.valid == TRUE) or (genv.valid == TRUE)) {
+        add_to_field(l3_metadata.payload_length, -16);
+    }
+    if (gre.valid == TRUE) {
+        add_to_field(l3_metadata.payload_length, -4);
+    }
+    if (nvgre.valid == TRUE) {
+        add_to_field(l3_metadata.payload_length, -4);
+    }
     remove_header(vxlan);
     remove_header(genv);
     remove_header(nvgre);

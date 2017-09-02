@@ -145,7 +145,33 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : L2UC_VXLAN_IPV4_UDP
+        name    : L2UC_VXLAN_ARP_RARP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp_vxlan.testspec
+        ignore  : False
+        args    :
+            segment: filter://native=False
+        iterate :
+            - type      : ARP_REQ_UC
+            - type      : ARP_RESP
+            - type      : RARP_REQ_UC
+            - type      : RARP_RESP
+
+    - module:
+        name    : L2UC_VXLAN_V6
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_vxlan.testspec
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+
+    - module:
+        name    : L2UC_VXLAN_V4
         enable  : True
         package : test.networking
         module  : networking
@@ -153,6 +179,31 @@ modules:
         ignore  : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+
+    - module:
+        name    : L3UC_VXLAN_V4
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc_vxlan.testspec
+        ignore  : True
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+
+    - module:
+        name    : L3UC_VXLAN_V6
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc_vxlan.testspec
+        ignore  : True
+        iterate :
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
 
     - module:
         name    : L3UC

@@ -1,38 +1,30 @@
 # Test Spec
 config_filter:
     src:
-        tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=True
-        interface   : filter://any
+        tenant  : filter://overlay=VXLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
     dst:
-        tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=True
-        interface   : filter://any
-    flow        : filter://fwtype=L2
+        tenant  : filter://overlay=VXLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L3
     maxflows    : 1
 
 packets:
     - packet:
-        id          : BASE     # Input packet 1
+        id          : BASE     # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -53,12 +45,13 @@ packets:
     - packet:
         id          : INPUT     # Input packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             outereth    :
                 src     : ref://testcase/config/src/endpoint/intf/rmacaddr
                 dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
             outeripv4   :
                 src     : ref://testcase/config/src/endpoint/intf/rtep
                 dst     : ref://testcase/config/src/endpoint/intf/ltep
@@ -66,30 +59,43 @@ packets:
                 id      : 0
             vxlan       :
                 vni     : ref://testcase/config/src/segment/vxlan_id
-            qtag:
-                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
-        
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/src/segment/macaddr
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
+
     - packet:
-        id          : EXPECTED   # Expected packet
+        id          : EXPECTED # Expected packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             outereth    :
                 src     : ref://testcase/config/dst/endpoint/intf/macaddr
                 dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            qtag:
+                vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : callback://networking/packets/GetExpectedPacketCos
             outeripv4   :
                 src     : ref://testcase/config/dst/endpoint/intf/ltep
                 dst     : ref://testcase/config/dst/endpoint/intf/rtep
                 tos     : 0
                 id      : 0
-            vxlan       :
-                vni     : ref://testcase/config/dst/segment/vxlan_id
-            qtag:
-                vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
             outerudp:
                 chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
+            eth:
+                src     : ref://testcase/config/dst/segment/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+                ttl     : callback://networking/packets/GetRoutedTtl
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
+                hlim    : callback://networking/packets/GetRoutedTtl
 
 trigger:
     packets:

@@ -47,7 +47,7 @@ encap_vxlan:
 
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x4011
-	b.!c1       f_insert_ipv6_header
+  b.!c1       f_insert_ipv6_header
   add         r6, r0, 0x1140
 
 .align
@@ -111,7 +111,7 @@ encap_genv:
 
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x4011
-	b.!c1       f_insert_ipv6_header
+  b.!c1       f_insert_ipv6_header
   add         r6, r0, 0x1140
 
 .align
@@ -138,7 +138,7 @@ encap_nvgre:
   add         r7, k.l3_metadata_payload_length, 22
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
-	b.!c1       f_insert_ipv6_header
+  b.!c1       f_insert_ipv6_header
   add         r6, r0, 0x2f40
 
 .align
@@ -159,7 +159,7 @@ encap_gre:
   add         r7, k.l3_metadata_payload_length, 4
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
-	b.!c1       f_insert_ipv6_header
+    b.!c1       f_insert_ipv6_header
   add         r6, r0, 0x2f40
 
 .align
@@ -189,7 +189,7 @@ encap_erspan:
   add         r7, k.l3_metadata_payload_length, 30
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
-	b.!c1       f_insert_ipv6_header
+  b.!c1       f_insert_ipv6_header
   add         r6, r0, 0x2f40
 
 .align
@@ -203,7 +203,7 @@ encap_ip:
   add         r7, r0, k.l3_metadata_payload_length
   bcf         [c1],  f_insert_ipv4_header
   add         r6, 0x4000, k.tunnel_metadata_inner_ip_proto, 8
-	b.!c1       f_insert_ipv6_header
+  b.!c1       f_insert_ipv6_header
   add         r6, 0x0040, k.tunnel_metadata_inner_ip_proto, 8
 
 .align
