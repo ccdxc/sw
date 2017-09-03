@@ -9,7 +9,7 @@ struct phv_ p;
 %%
         .align
 
-update_output_desc_aol:
+esp_ipv4_tunnel_h2n_update_output_desc_aol:
     phvwri p.p42p4plus_hdr_table1_valid, 0
 
     phvwr p.barco_desc_out_A0_addr, k.t1_s2s_out_page_addr 

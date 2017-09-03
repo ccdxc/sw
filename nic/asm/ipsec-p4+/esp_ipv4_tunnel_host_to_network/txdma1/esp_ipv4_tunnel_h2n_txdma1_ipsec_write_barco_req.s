@@ -9,7 +9,7 @@ struct phv_ p;
 
 %%
         .align
-ipsec_write_barco_req:
+esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     add r1, r0, k.ipsec_to_stage3_barco_req_addr
     phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.brq_req_write_dma_cmd_addr, r1
