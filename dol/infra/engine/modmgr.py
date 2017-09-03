@@ -224,7 +224,17 @@ class ModuleDatabase:
         self.db = []
         self.parser = ModuleListParser(module_list_file)
         self.__add_all()
+        if GlobalOptions.test != None:
+            GlobalOptions.test = GlobalOptions.test.split(',')
         return
+    def __is_test_match(self, name):
+        if GlobalOptions.test == None:
+            return True
+
+        if name in GlobalOptions.test:
+            return True
+
+        return False
 
     def __add(self, pmod):
         if GlobalOptions.test == pmod.name:
@@ -239,8 +249,7 @@ class ModuleDatabase:
         if 'iterate' not in pmod.__dict__:
             pmod.iterate = [ None ]
 
-        if GlobalOptions.test == None or\
-           GlobalOptions.test == pmod.name:
+        if self.__is_test_match(pmod.name):
             module = Module(pmod)
             self.db.append(module)
         return

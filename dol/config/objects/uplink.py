@@ -30,9 +30,18 @@ class UplinkObject(base.ConfigObjectBase):
         self.ports  = [ spec.port ]
         self.native_segment = None
 
+        return
+    def Show(self):
         cfglogger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))
         return
+
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/ID:%d' % self.id
+        summary += '/Ports:' + str(self.ports)
+        return summary
 
     def IsTrunkPort(self):
         return self.mode == 'TRUNK'

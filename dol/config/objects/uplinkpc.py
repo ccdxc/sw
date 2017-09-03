@@ -39,7 +39,24 @@ class UplinkPcObject(base.ConfigObjectBase):
             mbrobj = mbr.Get(Store)
             self.members.append(mbrobj)
             self.ports.append(mbrobj.port)
+        self.Show()
         return
+
+    def Show(self):
+        cfglogger.info("Creating UplinkPC = %s Port=%d" %\
+                       (self.GID(), self.port))
+        for mbr in self.members:
+            cfglogger.info("- Member: %s" % mbr.GID())
+        return
+
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/ID:%d' % self.id
+        summary += '/Port:%d' % self.port
+        summary += '/NativeSeg:%s' % self.native_segment.GID()
+        summary += '/Ports:' + str(self.ports)
+        return summary
 
     def SetNativeSegment(self, seg):
         assert(self.native_segment == None)

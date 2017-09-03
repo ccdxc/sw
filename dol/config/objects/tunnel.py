@@ -46,6 +46,17 @@ class TunnelObject(base.ConfigObjectBase):
         cfglogger.info("- Ports       =", self.ports)
         return
 
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/ID:%d' % self.id
+        summary += '/LocTEP:%s' % self.ltep.get()
+        summary += '/RemTEP:%s' % self.rtep.get()
+        summary += '/Intf:%s' % self.remote_ep.GetInterface().GID()
+        summary += '/Ports:' + str(self.ports)
+        return summary
+
+
     def IsVxlan(self):
         return self.encap_type == 'VXLAN'
 

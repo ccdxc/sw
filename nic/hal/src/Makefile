@@ -53,6 +53,7 @@ SOURCES = \
 		  telemetry.cc \
 		  crypto_keys.cc \
 		  ipseccb.cc \
+		  l4lb.cc \
 		  $(NULL)
 
 

@@ -568,12 +568,15 @@ class TriggerTestCaseStep(objects.FrameworkObject):
 
     def __packets_process_result(self):
         # Hack for now, ignore the IPV4 checksum!
-        ignore_pkt_cmp = None
+        ignore_pkt_cmp = objects.PacketComparePartial()
         if True or hasattr(self._tc._test_spec, "ignore_ipv4_checksum") and self._tc._test_spec.ignore_ipv4_checksum:
-            ignore_pkt_cmp = objects.PacketComparePartial()
             hdr_ignore_result = objects.HeaderComparePartial()
             hdr_ignore_result.ignore_fields = ["chksum"]
             ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
+        if True or hasattr(self._tc._test_spec, "ignore_tcp_checksum") and self._tc._test_spec.ignore_tcp_checksum:
+            hdr_ignore_result = objects.HeaderComparePartial()
+            hdr_ignore_result.ignore_fields = ["chksum"]
+            ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
 
         self._logger.verbose("Processing test step packets result")
         result = PacketsTestStepResult()

@@ -20,7 +20,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         self.id = resmgr.L4LbBackendIdAllocator.get()
-        self.GID("L4LbBackend%04d" % self.id)
+        self.GID("L4LbBknd%04d" % self.id)
         return
 
     def Init(self, service, spec):
@@ -41,12 +41,34 @@ class L4LbBackendObject(base.ConfigObjectBase):
                        (self.GID(), self.ep.GID(), self.port.get()))
         return
 
+    def PrepareHALRequestSpec(self, req_spec):
+        req_spec.meta.tenant_id = self.service.tenant.id
+        req_spec.backend_key_or_handle.backend_key.backend_ip_address.ip_af = haldefs.common.IP_AF_INET
+        req_spec.backend_key_or_handle.backend_key.backend_ip_address.v4_addr = self.GetIpAddress.getnum() 
+        req_spec.backend_key_or_handle.backend_key.backend_port = self.port.get()
+        return
+
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        cfglogger.info("- Backend %s = %s" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        self.hal_handle = resp_spec.status.service_handle
+        return
+
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/Port:%d' % self.port.get()
+        summary += '/EP:' + self.ep.Summary()
+        return summary
+
 class L4LbBackendObjectHelper:
     def __init__(self):
         self.bends  = []
         return
 
     def Configure(self):
+        cfgloggers("Configuring %d L4LbBackends" % len(self.bends))
+        halapi.ConfigureL4LbBackends(self.bends)
         return
 
     def Generate(self, service, bspec_list):
@@ -57,7 +79,6 @@ class L4LbBackendObjectHelper:
                 bend.Init(service, bspec)
                 self.bends.append(bend)
         return
-        
 
 class L4LbServiceObject(base.ConfigObjectBase):
     def __init__(self):
@@ -133,10 +154,50 @@ class L4LbServiceObject(base.ConfigObjectBase):
 
         return
 
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/Label:%s' % self.label
+        summary += '/Mode:%s' % self.mode
+        summary += '/VIP:%s' % self.vip.get()
+        summary += '/VIP6:%s' % self.vip6.get()
+        summary += '/VMac:%s' % self.macaddr.get()
+        summary += '/Proto:%s' % self.proto
+        return summary
+
     def PrepareHALRequestSpec(self, req_spec):
+        if gl_l4lb_config_ipv4:
+            cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
+        else:
+            cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
+
+        req_spec.meta.tenant_id = self.tenant.id
+        
+        hal_ipproto_str = 'IPPROTO_' + self.proto
+        hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
+        req_spec.key_or_handle.service_key.ip_protocol = hal_ipproto
+        req_spec.key_or_handle.service_key.service_port = self.port.get()
+        req_spec.service_mac = self.macaddr.getnum()
+        
+        if gl_l4lb_config_ipv4:
+            req_spec.key_or_handle.service_key.service_ip_address.ip_af = haldefs.common.IP_AF_INET
+            req_spec.key_or_handle.service_key.service_ip_address.v4_addr = self.vip.getnum()
+        else:
+            req_spec.key_or_handle.service_key.service_ip_address.ip_af = haldefs.common.IP_AF_INET6
+            req_spec.key_or_handle.service_key.service_ip_address.v6_addr = self.vip6.getnum().to_bytes(16, 'big')
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+        if gl_l4lb_config_ipv4:
+            self.ipv4_hal_handle = resp_spec.status.service_handle
+            handle = self.ipv4_hal_handle
+        else:
+            self.ipv6_hal_handle = resp_spec.status.service_handle
+            handle = self.ipv4_hal_handle
+
+        status = haldefs.common.ApiStatus.Name(resp_spec.api_status)
+        cfglogger.info("- L4LbService %s = %s (HDL = 0x%x)" % (self.GID(), status, handle))
         return
 
     def IsFilterMatch(self, spec):
@@ -144,7 +205,7 @@ class L4LbServiceObject(base.ConfigObjectBase):
 
 class L4LbServiceObjectHelper:
     def __init__(self):
-        self.svcs   = []
+        self.svcs = []
         return
     
     def Generate(self, tenant, spec):
@@ -156,6 +217,15 @@ class L4LbServiceObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d L4LbServices." % len(self.svcs))
-        #halapi.ConfigureInterfaces(self.svcs)
+        global gl_l4lb_config_ipv4
+
+        cfglogger.info("Configuring %d IPv4 L4LbServices." % len(self.svcs))
+        gl_l4lb_config_ipv4 = True
+        halapi.ConfigureL4LbServices(self.svcs)
+
+        cfglogger.info("Configuring %d IPv6 L4LbServices." % len(self.svcs))
+        gl_l4lb_config_ipv4 = False
+        halapi.ConfigureL4LbServices(self.svcs)
+
+        gl_l4lb_config_ipv4 = None
         return

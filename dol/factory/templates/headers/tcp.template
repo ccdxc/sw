@@ -10,7 +10,7 @@ fields:
     ack     : 0x5678
     dataofs : None
     reserved: 0
-    flags   : None
+    flags   : ack
     window  : 8192
     chksum  : None  # Scapy will fill this
     urgptr  : 0

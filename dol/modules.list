@@ -601,10 +601,18 @@ modules:
         ignore  : True
 
     - module:
-        name    : L4LB
+        name    : L4LB_BRIDGED_FLOWS
         enable  : True
         package : test.l4lb
         module  : l4lb
-        spec    : l4lb.testspec
-        ignore  : True
+        spec    : l4lb_l2.testspec
+        ignore  : False
+
+    - module:
+        name    : L4LB_ROUTED_FLOWS
+        enable  : True
+        package : test.l4lb
+        module  : l4lb
+        spec    : l4lb_l3.testspec
+        ignore  : False
 

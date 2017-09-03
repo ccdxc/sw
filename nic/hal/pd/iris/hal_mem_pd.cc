@@ -26,6 +26,7 @@
 #include <proxy.hpp>
 #include <crypto_keys_pd.hpp>
 #include <ipseccb_pd.hpp>
+#include <l4lb_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -241,6 +242,14 @@ hal_state_pd::init(void)
                                  hal::pd::ipseccb_pd_compute_hw_hash_func,
                                  hal::pd::ipseccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((ipseccb_hwid_ht_ != NULL), false);
+
+
+    // initialize L4LB PD related data structures
+    l4lb_pd_slab_ = slab::factory("L4LB_PD", HAL_SLAB_L4LB_PD,
+                                 sizeof(hal::pd::pd_l4lb_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((l4lb_pd_slab_ != NULL), false);
+
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;

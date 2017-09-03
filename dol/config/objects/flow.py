@@ -257,7 +257,7 @@ class FlowObject(base.ConfigObjectBase):
             ssn_spec.session_id = ssn.id
         return
 
-    def Show(self):
+    def Summary(self):
         string = "%s:%s:" % (self.__session.GID(), self.direction)
         string += self.type + '/'
         if self.IsIP():
@@ -275,7 +275,10 @@ class FlowObject(base.ConfigObjectBase):
             string += "%04x" % (self.ethertype)
         else:
             assert(0)
+        return string
 
+    def Show(self):
+        string = self.Summary()
         cfglogger.info("- %s    : %s" % (self.direction, string))
         string = "%s" % self.action
         if self.IsTCP():
@@ -375,18 +378,23 @@ class FlowObject(base.ConfigObjectBase):
         obj.egress_mirror.session3 = self.GetEgressMirrorSession(idx = 3)
         return
 
-    def ShowTestcaseConfig(self, obj, logger):
-        logger.info("Config Objects for %s %s" %\
-                  (self.direction, self.GID()))
-        if obj.src.endpoint:
-            logger.info("- Src EP: %s" % obj.src.endpoint.GID())
-            logger.info("- Src IF: %s" % obj.src.endpoint.intf.GID())
-        if obj.dst.endpoint:
-            logger.info("- Dst EP: %s" % obj.dst.endpoint.GID())
-            logger.info("- Dst IF: %s" % obj.dst.endpoint.intf.GID())
-        if obj.src.l4lb_backend:
-            logger.info("- Src Backend: %s" % obj.src.l4lb_backend.GID())
-        if obj.dst.l4lb_service:
-            logger.info("- Dst Service: %s" % obj.dst.l4lb_service.GID())
-        logger.info("- Flow  : %s" % obj.flow.GID())
+    def __show_testcase_config(self, obj, lg):
+        lg.info("  - Ten : %s" % obj.tenant.Summary())
+        lg.info("  - Seg : %s" % obj.segment.Summary())
+        if obj.endpoint:
+            lg.info("  - EP  : %s" % obj.endpoint.Summary())
+            lg.info("  - Intf: %s" % obj.endpoint.intf.Summary())
+        if obj.l4lb_service:
+            lg.info("  - Srvc: %s" % obj.l4lb_service.Summary())
+        if obj.l4lb_backend:
+            lg.info("  - Bknd: %s" % obj.l4lb_backend.Summary())
+        return
 
+    def ShowTestcaseConfig(self, obj, lg):
+        lg.info("Testcase Config Objects:")
+        lg.info("- Flow  : %s" % obj.flow.Summary())
+        lg.info("- Source:")
+        self.__show_testcase_config(obj.src, lg)
+        lg.info("- Destination:")
+        self.__show_testcase_config(obj.dst, lg)
+        return

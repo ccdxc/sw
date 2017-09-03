@@ -26,6 +26,7 @@ import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
 import proxy_pb2            as proxy_pb2
 import ipseccb_pb2          as ipseccb_pb2
+import l4lb_pb2             as l4lb_pb2
 
 import endpoint_pb2_grpc        as endpoint_pb2_grpc
 import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -42,6 +43,7 @@ import wring_pb2_grpc           as wring_pb2_grpc
 import acl_pb2_grpc             as acl_pb2_grpc
 import proxy_pb2_grpc           as proxy_pb2_grpc
 import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
+import l4lb_pb2_grpc            as l4lb_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -296,3 +298,18 @@ def ConfigureAcls(objlist):
     __config(objlist, acl_pb2.AclRequestMsg,
              stub.AclCreate)
     return
+
+def ConfigureL4LbBackends(objlist):
+    if IsHalDisabled(): return
+    stub = l4lb_pb2_grpc.L4LbStub(HalChannel)
+    __config(objlist, l4lb_pb2.L4LbBackendRequestMsg,
+             stub.L4LbBackendCreate)
+    return
+
+def ConfigureL4LbServices(objlist):
+    if IsHalDisabled(): return
+    stub = l4lb_pb2_grpc.L4LbStub(HalChannel)
+    __config(objlist, l4lb_pb2.L4LbServiceRequestMsg,
+             stub.L4LbServiceCreate)
+    return
+

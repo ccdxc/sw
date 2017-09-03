@@ -5,12 +5,27 @@
 #include <base.h>
 #include <trace.hpp>
 #include <l4lb_svc.hpp>
+#include <l4lb.pb.h>
+#include <l4lb.hpp>
 
 Status
 L4LbServiceImpl::L4LbServiceCreate(ServerContext *context,
                                    const L4LbServiceRequestMsg *req,
                                    L4LbServiceResponseMsg *rsp)
 {
+    uint32_t             i, nreqs = req->request_size();
+    l4lb::L4LbServiceResponse  *response;
+
+    HAL_TRACE_DEBUG("Rcvd L2Segment Create Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::l4lbservice_create(spec, response);
+    }
     return Status::OK;
 }
 

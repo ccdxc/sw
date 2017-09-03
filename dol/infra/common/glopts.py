@@ -1,6 +1,6 @@
 #! /usr/bin/python3
-
 import argparse
+import pdb
 
 parser = argparse.ArgumentParser(description='DOL Framework')
 parser.add_argument('--nohal', dest='no_hal',
@@ -27,4 +27,3 @@ parser.add_argument('--testcase', dest='tcid',
                     help='Run single Testcase by ID(E.g. For TC000001 use 1')
 
 GlobalOptions = parser.parse_args()
-

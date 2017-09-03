@@ -72,6 +72,11 @@ public:
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
 
+    // get APIs for l4lb state
+    slab *l4lb_slab(void) const { return l4lb_slab_; }
+    ht *l4lb_ht(void) const { return l4lb_ht_; }
+    ht *l4lb_hal_handle_ht(void) const { return l4lb_hal_handle_ht_; }
+
     // get APIs for flow/session state
     slab *flow_slab(void) const { return flow_slab_; }
     slab *session_slab(void) const { return session_slab_; }
@@ -188,6 +193,13 @@ private:
         ht         *ep_l2_ht_;
         ht         *ep_l3_entry_ht_;
         ht         *ep_hal_handle_ht_;
+    } __PACK__;
+
+    // l4lb related state
+    struct {
+        slab       *l4lb_slab_;
+        ht         *l4lb_ht_;
+        ht         *l4lb_hal_handle_ht_;
     } __PACK__;
 
     // flow/session related state

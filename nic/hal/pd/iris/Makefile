@@ -62,6 +62,7 @@ SOURCES = \
 		  telemetry_pd.cc \
 		  crypto_keys_pd.cc \
 		  ipseccb_pd.cc \
+		  l4lb_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

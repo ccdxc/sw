@@ -10,21 +10,20 @@ config_filter:
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://label=L4LB
-    maxflows    : 4
+    flow        : filter://label=L4LB,fwtype=L2
+    maxflows    : None
 
 packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             eth:
-                src     : callback://l4lb/callbacks/GetL4LbFlowSmac
-                dst     : callback://l4lb/callbacks/GetL4LbFlowDmac
+                src     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatSmac
+                dst     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatDmac
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
@@ -47,11 +46,16 @@ packets:
     - packet:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
 
     - packet:
         id          : EXP_PKT     # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
+            eth:
+                src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
+                dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
             qtag:
                 prio    : ref://testcase/config/flow/eg_qos/cos
             ipv4:

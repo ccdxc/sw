@@ -38,6 +38,8 @@ mocked_modules = [
     "nw_pb2_grpc",
     "acl_pb2", 
     "acl_pb2_grpc",
+    "l4lb_pb2",
+    "l4lb_pb2_grpc",
     "third_party.scapy.arch.windows"
 ]
 

@@ -294,6 +294,34 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     // Set the tunnel originate flag
     d.flow_info_action_u.flow_info_flow_info.tunnel_originate = 
                                                     flow_attrs->tunnel_orig;
+    // L4 LB (NAT) Info
+    // TODO: Replace these with nat_l4_port and nat_ip 
+    d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
+    switch (flow_attrs->nat_type) {
+        case NAT_TYPE_SNAT:
+            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_sip.addr,
+                    sizeof(ipvx_addr_t));
+            if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
+                memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip, 
+                        sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
+            }
+            // d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_sport;
+            break;
+        case NAT_TYPE_DNAT:
+            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_dip.addr,
+                    sizeof(ipvx_addr_t));
+            if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
+                memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip, 
+                        sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
+            }
+            // d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_dport;
+            break;
+        case NAT_TYPE_TWICE_NAT:
+            break;
+        default:
+            break;
+    }
+
 #if 0
     // TODO: Do this in PI
     // there is no transit case for us, so this is always FALSE

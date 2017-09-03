@@ -82,6 +82,7 @@ enum ApiStatus {
   API_STATUS_PROXY_TYPE_INVALID       = 50;    // invalid Proxy Service type 
   API_STATUS_IPSEC_CB_ID_INVALID      = 51;    // invalid IPSEC CB id
   API_STATUS_IPSEC_CB_NOT_FOUND       = 52;    // invalid IPSEC CB
+  API_STATUS_L4LB_KEY_INVALID         = 53;    // invalid L4LB key
 }
 
 // common meta object that is part of all other top level objects

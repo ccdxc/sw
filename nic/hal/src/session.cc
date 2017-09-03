@@ -545,6 +545,35 @@ update_encap_rw_info(if_t *dif, l2seg_t *sl2seg, l2seg_t *dl2seg,
     return ret;
 }
 
+
+//------------------------------------------------------------------------------
+// Get rw idx from l4lb 
+//------------------------------------------------------------------------------
+static inline uint32_t
+flow_get_l4lb_rw_idx(flow_t *flow, rewrite_actions_en rw_act)
+{
+    l4lb_key_t              l4lb_key = {0};
+    l4lb_service_entry_t    *l4lb = NULL;
+
+    l4lb_key.tenant_id = flow->config.key.tenant_id;
+    l4lb_key.proto = flow->config.key.proto;
+    // Get the l4lb from vip and then (vip, port)
+    memcpy(&l4lb_key.service_ip, &flow->pgm_attrs.nat_sip, sizeof(ip_addr_t));
+    l4lb = find_l4lb_by_key(&l4lb_key);
+    if (l4lb != NULL) {
+        return pd::l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb, rw_act);
+    }
+    l4lb_key.service_port = flow->pgm_attrs.nat_sport;
+    l4lb = find_l4lb_by_key(&l4lb_key);
+    if (l4lb != NULL) {
+        return pd::l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb, rw_act);
+    } else {
+        HAL_ASSERT_RETURN(0, 0);
+    }
+    return 0;
+}
+
+
 //------------------------------------------------------------------------------
 // Get rewrite action given a flow - assumption is flow will have a rewrite
 //------------------------------------------------------------------------------
@@ -675,16 +704,34 @@ flow_update_rewrite_info(flow_t *flow)
         }
     }
 
-    flow->pgm_attrs.nat_sip = flow->config.nat_sip;
-    flow->pgm_attrs.nat_dip = flow->config.nat_dip;
-    flow->pgm_attrs.nat_sport = flow->config.nat_sport;
-    flow->pgm_attrs.nat_dport = flow->config.nat_dport;
+    flow->pgm_attrs.nat_type = res_flow->config.nat_type;
+    if (res_flow->config.nat_type == NAT_TYPE_SNAT) {
+        memcpy(&flow->pgm_attrs.nat_sip, 
+                &flow->config.nat_sip, sizeof(ip_addr_t));
+        flow->pgm_attrs.nat_sport = flow->config.nat_sport;
+    } else if (res_flow->config.nat_type == NAT_TYPE_DNAT) {
+        memcpy(&flow->pgm_attrs.nat_dip, 
+                &flow->config.nat_dip, sizeof(ip_addr_t));
+        flow->pgm_attrs.nat_dport = flow->config.nat_dport;
+        flow->pgm_attrs.mac_da_rewrite = true;
+    } else {
+        // Twice NAT 
+    }
 
 end:
     // TODO: populate rw_idx instead of dep.
     // flow->pgm_attrs.dep = res_flow->dep;
-    flow->pgm_attrs.rw_idx = hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(res_flow->dep, 
-            flow->pgm_attrs.rw_act);
+    if (res_flow->config.nat_type == NAT_TYPE_SNAT && 
+            (res_flow->sl2seg == res_flow->dl2seg)) { 
+        // if SNAT and bridging, we have to get rw_idx from 
+        //   l4lb. TODO: Cleanup to not get from l4lb but
+        //   from mac_sa, mac_da: 0, rw_act
+            flow->pgm_attrs.rw_idx = flow_get_l4lb_rw_idx(flow, *rw_act);
+            flow->pgm_attrs.mac_sa_rewrite = true;
+    } else {
+        flow->pgm_attrs.rw_idx = hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(res_flow->dep, 
+                flow->pgm_attrs.rw_act);
+    }
     flow->pgm_attrs.tnnl_rw_idx = hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(res_flow->dep,
             flow->pgm_attrs.tnnl_rw_act);
 

@@ -96,7 +96,10 @@ class EndpointObject(base.ConfigObjectBase):
             self.SetMacAddress(resmgr.RemoteEpMacAllocator.get())
         else:
             self.SetMacAddress(intf.macaddr)
-
+        self.Show()
+        return
+    
+    def Show(self):
         cfglogger.info("- Endpoint = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("  - IsBackend = %s" % self.IsL4LbBackend())
         cfglogger.info("  - Tenant    = %s" % self.tenant)
@@ -107,6 +110,14 @@ class EndpointObject(base.ConfigObjectBase):
         for ipv6addr in self.ipv6addrs:
             cfglogger.info("  - Ipv6addr  = %s" % ipv6addr.get())
         return
+
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/Mac:%s' % self.macaddr.get()
+        summary += '/Remote:%s' % self.remote
+        summary += '/Bkend:%s' % self.IsL4LbBackend()
+        return summary
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id     = self.tenant.id

@@ -16,6 +16,7 @@
 #include <telemetry.hpp>
 #include <crypto_keys.hpp>
 #include <ipseccb.hpp>
+#include <l4lb.hpp>
 
 namespace hal {
 namespace pd {
@@ -38,6 +39,7 @@ using hal::acl_t;
 using hal::wring_t;
 using hal::mirror_session_t;
 using hal::ipseccb_t;
+using hal::l4lb_service_entry_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -113,6 +115,10 @@ typedef struct pd_mirror_session_args_s {
 typedef struct pd_ipseccb_args_s {
     ipseccb_t            *ipseccb;
 } __PACK__ pd_ipseccb_args_t;
+
+typedef struct pd_l4lb_args_s {
+    l4lb_service_entry_t    *l4lb;
+} __PACK__ pd_l4lb_args_t;
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -215,6 +221,13 @@ pd_ipseccb_args_init (pd_ipseccb_args_t *args)
     return;
 }
 
+static inline void
+pd_l4lb_args_init (pd_l4lb_args_t *args)
+{
+    args->l4lb = NULL;
+    return;
+}
+
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
@@ -241,6 +254,8 @@ uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
         rewrite_actions_en rw_act);
 uint32_t ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
         tunnel_rewrite_actions_en tnnl_rw_act);
+uint32_t l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb_service_entry_t *pi_l4lb, 
+                                             rewrite_actions_en rw_act);
 
 hal_ret_t pd_ep_create(pd_ep_args_t *hal_if);
 hal_ret_t pd_ep_update(pd_ep_args_t *hal_if);
@@ -266,6 +281,8 @@ hal_ret_t pd_ipseccb_create(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_update(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_delete(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_get(pd_ipseccb_args_t *ipseccb);
+
+hal_ret_t pd_l4lb_create(pd_l4lb_args_t *pd_l4lb_args);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;

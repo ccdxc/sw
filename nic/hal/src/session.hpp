@@ -158,6 +158,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
+    uint16_t                  nat_type:3;          // type of NAT
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port

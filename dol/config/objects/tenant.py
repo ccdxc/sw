@@ -68,6 +68,14 @@ class TenantObject(base.ConfigObjectBase):
             cfglogger.info("- LocalTep  : %s" % self.local_tep.get())
         return
 
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/Type:%s' % self.type
+        if self.IsInfra():
+            summary += '/LocTep:%s' % self.local_tep.get()
+        return summary
+
     def IsInfra(self):
         return self.type == 'INFRA'
     def IsSpan(self):
@@ -133,20 +141,27 @@ class TenantObject(base.ConfigObjectBase):
             self.obj_helper_tunnel.Configure()
         return
     
+    def ConfigureL4LbServices(self):
+        return self.obj_helper_l4lb.Configure()
+
     def GetSegments(self):
         return self.obj_helper_segment.segs
+
     def GetSpanSegment(self):
         for seg in self.obj_helper_segment.segs:
             if seg.IsSpanSegment():
                 return seg
         return None
+
     def GetL4LbServices(self):
         return self.obj_helper_l4lb.svcs
 
     def GetEps(self, backend = False):
         return self.obj_helper_segment.GetEps(backend)
+
     def GetRemoteEps(self, backend = False):
         return self.obj_helper_segment.GetRemoteEps(backend)
+
     def GetLocalEps(self, backend = False):
         return self.obj_helper_segment.GetLocalEps(backend)
 
@@ -176,6 +191,7 @@ class TenantObjectHelper:
         halapi.ConfigureTenants(self.tens)
         for ten in self.tens:
             ten.ConfigureSegments()
+            ten.ConfigureL4LbServices()
         return
         
     def ConfigurePhase2(self):

@@ -5,6 +5,7 @@
 #include <l2segment.hpp>
 #include <interface.hpp>
 #include <endpoint.hpp>
+#include <l4lb.hpp>
 #include <session.hpp>
 #include <nwsec.hpp>
 #include <tlscb.hpp>
@@ -386,6 +387,22 @@ hal_state::init(void)
                                        hal::ipseccb_compare_handle_key_func);
     HAL_ASSERT_RETURN((ipseccb_hal_handle_ht_ != NULL), false);
 
+    // initialize l4lb related data structures
+    l4lb_slab_ = slab::factory("L4LB", HAL_SLAB_L4LB, sizeof(hal::l4lb_service_entry_t), 16,
+                             true, true, true, true);
+    HAL_ASSERT_RETURN((l4lb_slab_ != NULL), false);
+
+    l4lb_ht_ = ht::factory(HAL_MAX_L4LB_SERVICES,
+                                 hal::l4lb_get_key_func,
+                                 hal::l4lb_compute_key_hash_func,
+                                 hal::l4lb_compare_key_func);
+    HAL_ASSERT_RETURN((l4lb_ht_ != NULL), false);
+
+    l4lb_hal_handle_ht_ = ht::factory(HAL_MAX_IPSECCB,
+                                       hal::l4lb_get_handle_key_func,
+                                       hal::l4lb_compute_handle_hash_func,
+                                       hal::l4lb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((l4lb_hal_handle_ht_ != NULL), false);
     return true;
 }
 
@@ -553,6 +570,10 @@ hal_state::~hal_state()
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     ipseccb_id_ht_ ? delete ipseccb_id_ht_ : HAL_NOP;
     ipseccb_hal_handle_ht_ ? delete ipseccb_hal_handle_ht_ : HAL_NOP;
+
+    l4lb_slab_ ? delete l4lb_slab_ : HAL_NOP;
+    l4lb_ht_ ? delete l4lb_ht_ : HAL_NOP;
+    l4lb_hal_handle_ht_ ? delete l4lb_hal_handle_ht_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------

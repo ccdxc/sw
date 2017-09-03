@@ -104,6 +104,19 @@ class SegmentObject(base.ConfigObjectBase):
         self.obj_helper_enic.Show()
         return
 
+    def Summary(self):
+        summary = ''
+        summary += 'GID:%s' % self.GID()
+        summary += '/ID:%s' % self.id
+        summary += '/Native:%s' % (self.native)
+        summary += '/Rmac:%s' % (self.macaddr.get())
+        summary += '/AccEnc:%d' % (self.vlan_id)
+        if self.tenant.IsOverlayVxlan():
+            summary += '/FabEnc:0x%x' % self.vxlan_id
+        else:
+            summary += '/FabEnc:%d' % self.vlan_id
+        return summary
+
     def GetDirectEnics(self, backend = False):
         if backend:
             return self.obj_helper_enic.backend_direct
@@ -122,11 +135,11 @@ class SegmentObject(base.ConfigObjectBase):
         return self.obj_helper_ep.eps
     def GetLocalEps(self, backend = False):
         if backend:
-            self.obj_helper_ep.backend_local
+            return self.obj_helper_ep.backend_local
         return self.obj_helper_ep.local
     def GetRemoteEps(self, backend = False):
         if backend:
-            self.obj_helper_ep.backend_remote
+            return self.obj_helper_ep.backend_remote
         return self.obj_helper_ep.remote
 
     def ConfigureEndpoints(self):
@@ -182,9 +195,7 @@ class SegmentObjectHelper:
     def __init__(self):
         self.segs = []
         self.backend_eps = None
-        self.backend_ep_alloc_idx = 0
         self.backend_remote_eps = None
-        self.backend_remote_ep_alloc_idx = 0
         return
 
     def Configure(self):
@@ -230,15 +241,27 @@ class SegmentObjectHelper:
             eps += seg.GetRemoteEps(backend)
         return eps
 
+    def __get_backend_eps(self, remote):
+        if self.backend_remote_eps: return
+        self.backend_remote_eps = self.GetRemoteEps(backend = True)
+        cfglogger.info("Remote L4LB Backend Pool:")
+        for bend in self.backend_remote_eps:
+            cfglogger.info("- Backend: %s" % bend.GID())
+
+        self.backend_eps = self.GetLocalEps(backend = True)
+        cfglogger.info("L4LB Backend Pool:")
+        for bend in self.backend_eps:
+            cfglogger.info("- Backend: %s" % bend.GID())
+        return
+
     def AllocL4LbBackend(self, remote):
+        self.__get_backend_eps(remote)
         if remote:
-            if not self.backend_remote_eps:
-                self.backend_remote_eps = self.GetRemoteEps(backend = True)
-            if self.backend_remote_ep_alloc_idx < len(self.backend_remote_eps):
-                return self.backend_remote_eps[self.backend_remote_ep_alloc_idx]
+            eplist = self.backend_remote_eps
         else:
-            if not self.backend_eps:
-                self.backend_eps = self.GetLocalEps(backend = True)
-            if self.backend_ep_alloc_idx < len(self.backend_eps):
-                return self.backend_eps[self.backend_ep_alloc_idx]
-        return None
+            eplist = self.backend_eps
+
+        obj = eplist[0]
+        del eplist[0]
+
+        return obj
