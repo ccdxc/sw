@@ -99,9 +99,14 @@ def GetExpectedPacketCos(testcase, packet):
         return 0
     return testcase.config.flow.eg_qos.cos.get() 
 
-
-def GetL2UcExpectedPacket(testcase):
+def __get_expected_packet(testcase):
     if testcase.config.flow.IsDrop():
         return None
     return testcase.packets.Get('EXP_PKT')
+   
 
+def GetL2UcExpectedPacket(testcase):
+    return __get_expected_packet(testcase)
+
+def GetL3UcExpectedPacket(testcase):
+    return __get_expected_packet(testcase)

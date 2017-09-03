@@ -9,7 +9,7 @@ config_filter:
         segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L3
-    maxflows    : 32
+    maxflows    : 16
 
 packets:
     - packet:
@@ -84,5 +84,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
+            object  : callback://networking/packets/GetL3UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports

@@ -775,11 +775,11 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 result.descriptors.status == Trigger.TEST_CASE_FAILED or \
                 result.verify_callback.status == Trigger.TEST_CASE_FAILED:
             result.result = Trigger.TEST_CASE_FAILED
-            self._logger.error("Test case failed.")
+            self._logger.error("Testcase FINAL RESULT = FAIL.")
             return result
         else:
             result.result = Trigger.TEST_CASE_PASSED
-            self._logger.info("Test case passed.")
+            self._logger.info("Testcase FINAL RESULT = PASS.")
             return result
 
     def timed_out(self):
