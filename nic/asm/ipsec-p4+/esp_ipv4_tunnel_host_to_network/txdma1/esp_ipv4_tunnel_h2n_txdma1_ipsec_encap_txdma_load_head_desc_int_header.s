@@ -8,7 +8,7 @@ struct phv_ p;
 
 %%
         .align
-ipsec_encap_txdma_load_head_desc_int_header:
+esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwr p.barco_req_brq_in_addr, d.in_desc
     phvwr p.barco_req_brq_out_addr, d.out_desc
     add r1, r0, d.pad_size

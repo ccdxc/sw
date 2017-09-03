@@ -7,9 +7,9 @@ struct tx_table_s3_t1_ipsec_encap_txdma2_load_out_desc_d d;
 struct phv_ p;
 
 %%
-        .param ipsec_build_encap_packet 
+        .param esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet 
         .align
-ipsec_encap_txdma2_load_out_desc:
+esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_out_desc:
     phvwr p.t0_s2s_out_page_addr, d.addr0
     phvwri p.app_header_table0_valid, 0
     nop.e

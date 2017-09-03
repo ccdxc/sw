@@ -18,18 +18,18 @@ all: deps asm
 deps:
 
 SRC_FILES := \
-    ipsec_encap_rxdma_initial_table.s \
-    allocate_input_desc_semaphore.s \
-    allocate_output_desc_semaphore.s \
-    allocate_input_page_semaphore.s \
-    allocate_output_page_semaphore.s \
-    allocate_input_desc_index.s \
-    allocate_output_desc_index.s \
-    allocate_input_page_index.s \
-    allocate_output_page_index.s \
-    update_input_desc_aol.s \
-    update_output_desc_aol.s \
-    ipsec_cb_tail_enqueue_input_desc.s 
+    esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table.s \
+    esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore.s \
+    esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore.s \
+    esp_ipv4_tunnel_h2n_allocate_input_page_semaphore.s \
+    esp_ipv4_tunnel_h2n_allocate_output_page_semaphore.s \
+    esp_ipv4_tunnel_h2n_allocate_input_desc_index.s \
+    esp_ipv4_tunnel_h2n_allocate_output_desc_index.s \
+    esp_ipv4_tunnel_h2n_allocate_input_page_index.s \
+    esp_ipv4_tunnel_h2n_allocate_output_page_index.s \
+    esp_ipv4_tunnel_h2n_update_input_desc_aol.s \
+    esp_ipv4_tunnel_h2n_update_output_desc_aol.s \
+    esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

@@ -7,12 +7,12 @@ struct rx_table_s2_t0_allocate_input_desc_index_d d;
 struct phv_ p;
 
 %%
-        .param          update_input_desc_aol
+        .param          esp_ipv4_tunnel_h2n_update_input_desc_aol
         .align
 
-allocate_input_desc_index:
+esp_ipv4_tunnel_h2n_allocate_input_desc_index:
     phvwri p.p42p4plus_hdr_table0_valid, 1
-    addi r1, r0, update_input_desc_aol
+    addi r1, r0, esp_ipv4_tunnel_h2n_update_input_desc_aol 
     srl r1, r1, 6
     phvwr p.common_te0_phv_table_pc, r1 
     phvwri p.common_te0_phv_table_raw_table_size, 6

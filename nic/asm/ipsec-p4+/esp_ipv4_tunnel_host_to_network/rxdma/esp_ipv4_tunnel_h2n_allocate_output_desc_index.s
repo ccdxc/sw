@@ -7,12 +7,12 @@ struct rx_table_s2_t1_allocate_output_desc_index_d d;
 struct phv_ p;
 
 %%
-        .param update_output_desc_aol
+        .param esp_ipv4_tunnel_h2n_update_output_desc_aol
         .align
 
-allocate_output_desc_index:
+esp_ipv4_tunnel_h2n_allocate_output_desc_index:
     phvwri p.p42p4plus_hdr_table1_valid, 1
-    addi r2, r0, update_output_desc_aol
+    addi r2, r0, esp_ipv4_tunnel_h2n_update_output_desc_aol 
     srl r2, r2, 6 
     phvwr p.common_te1_phv_table_pc, r2 
     phvwri p.common_te1_phv_table_raw_table_size, 4

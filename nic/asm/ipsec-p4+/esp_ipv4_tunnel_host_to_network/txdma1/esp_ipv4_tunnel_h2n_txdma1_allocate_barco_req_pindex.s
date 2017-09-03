@@ -7,11 +7,11 @@ struct tx_table_s1_t1_allocate_barco_req_pindex_d d;
 struct phv_ p;
 
 %%
-       .param ipsec_get_barco_req_index_ptr
+       .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr
         .align
-ipsec_encap_txdma_load_head_desc_int_header:
+esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwri p.app_header_table0_valid, 1
-    addi r2, r0, ipsec_get_barco_req_index_ptr
+    addi r2, r0, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 
     phvwri p.common_te0_phv_table_lock_en, 1

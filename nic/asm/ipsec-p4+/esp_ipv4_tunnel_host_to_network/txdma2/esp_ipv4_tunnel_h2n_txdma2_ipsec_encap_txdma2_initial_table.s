@@ -7,9 +7,9 @@ struct tx_table_s0_t0_ipsec_encap_txdma2_initial_table_d d;
 struct phv_ p;
 
 %%
-        .param ipsec_encap_txdma2_load_barco_req_ptr
+        .param esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req_ptr
         .align
-ipsec_encap_txdma2_initial_table:
+esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
     phvwr p.txdma2_global_icv_size, d.icv_size
@@ -17,7 +17,7 @@ ipsec_encap_txdma2_initial_table:
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 3
-    addi r2, r0, ipsec_encap_txdma2_load_barco_req_ptr
+    addi r2, r0, esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req_ptr
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 
     add r1, r0, d.barco_ring_cindex

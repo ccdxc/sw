@@ -18,13 +18,13 @@ all: deps asm
 deps:
 
 SRC_FILES := \
-    ipsec_encap_txdma2_load_barco_req.s \
-    ipsec_encap_txdma2_load_barco_req_ptr.s \
-    ipsec_encap_txdma2_load_in_desc.s \
-    ipsec_encap_txdma2_load_out_desc.s \
-    ipsec_encap_txdma2_load_ipsec_int.s \
-    ipsec_build_encap_packet.s \
-    ipsec_encap_txdma2_initial_table.s
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req_ptr.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_out_desc.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

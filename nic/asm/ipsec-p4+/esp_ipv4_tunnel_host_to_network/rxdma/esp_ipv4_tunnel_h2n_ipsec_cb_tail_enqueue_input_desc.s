@@ -10,7 +10,7 @@ struct phv_ p;
 %%
         .align
 
-ipsec_cb_tail_enqueue_input_desc:
+esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, H2N_RXDMA_IPSEC_DMA_COMMANDS_OFFSET 
 
