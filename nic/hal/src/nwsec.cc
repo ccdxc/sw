@@ -56,53 +56,51 @@ nwsec_profile_compare_handle_key_func (void *key1, void *key2)
 }
 
 static inline nwsec_profile_t *
-fetch_nwsec_profile (nwsec::SecurityProfileSpec& spec)
+nwsec_profile_lookup (const nwsec::SecurityProfileKeyHandle& key_or_handle)
 {
-    if (spec.key_or_handle().key_or_handle_case() == 
+    if (key_or_handle.key_or_handle_case() ==
             SecurityProfileKeyHandle::kProfileId) {
-        return find_nwsec_profile_by_id(spec.key_or_handle().profile_id());
+        return find_nwsec_profile_by_id(key_or_handle.profile_id());
     } else {
-        return find_nwsec_profile_by_handle(spec.key_or_handle().profile_handle());
+        return find_nwsec_profile_by_handle(key_or_handle.profile_handle());
     }
     return NULL;
 }
 
-static inline hal_ret_t
-add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
-{
-    g_hal_state->nwsec_profile_id_ht()->insert(sec_prof, &sec_prof->ht_ctxt);
-    g_hal_state->nwsec_profile_hal_handle_ht()->insert(sec_prof,
-                                                       &sec_prof->hal_handle_ht_ctxt);
-    return HAL_RET_OK;
-}
-
-static inline void populate_pi_params (nwsec_profile_t *sec_prof,
-                                       nwsec::SecurityProfileSpec& spec)
+// initialize security profile object from the config spec
+static inline void
+nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
+                              nwsec::SecurityProfileSpec& spec)
 {
     sec_prof->profile_id = spec.key_or_handle().profile_id();
+    sec_prof->cnxn_tracking_en = spec.cnxn_tracking_en();
+    sec_prof->ipsg_en = spec.ipsg_en();
+    sec_prof->tcp_rtt_estimate_en = spec.tcp_rtt_estimate_en();
     sec_prof->session_idle_timeout = spec.session_idle_timeout();
     sec_prof->tcp_cnxn_setup_timeout = spec.tcp_cnxn_setup_timeout();
     sec_prof->tcp_close_timeout = spec.tcp_close_timeout();
     sec_prof->tcp_close_wait_timeout = spec.tcp_close_wait_timeout();
-    sec_prof->ipsg_en = spec.ipsg_en();
-    sec_prof->cnxn_tracking_en = spec.cnxn_tracking_en();
-    sec_prof->tcp_rtt_estimate_en = spec.tcp_rtt_estimate_en();
+
     sec_prof->ip_normalization_en = spec.ip_normalization_en();
     sec_prof->tcp_normalization_en = spec.tcp_normalization_en();
     sec_prof->icmp_normalization_en = spec.icmp_normalization_en();
+
     sec_prof->ip_ttl_change_detect_en = spec.ip_ttl_change_detect_en();
+    sec_prof->ip_rsvd_flags_action = spec.ip_rsvd_flags_action();
+    sec_prof->ip_df_action = spec.ip_df_action();
+    sec_prof->ip_options_action = spec.ip_options_action();
+    sec_prof->ip_invalid_len_action = spec.ip_invalid_len_action();
+    sec_prof->ip_normalize_ttl = spec.ip_normalize_ttl();
+
+    sec_prof->icmp_invalid_code_action = spec.icmp_invalid_code_action();
+    sec_prof->icmp_deprecated_msgs_drop = spec.icmp_deprecated_msgs_drop();
+    sec_prof->icmp_redirect_msg_drop = spec.icmp_redirect_msg_drop();
+
     sec_prof->tcp_non_syn_first_pkt_drop = spec.tcp_non_syn_first_pkt_drop();
     sec_prof->tcp_syncookie_en = spec.tcp_syncookie_en();
     sec_prof->tcp_split_handshake_detect_en =
         spec.tcp_split_handshake_detect_en();
     sec_prof->tcp_split_handshake_drop = spec.tcp_split_handshake_drop();
-    sec_prof->ip_rsvd_flags_action = spec.ip_rsvd_flags_action();
-    sec_prof->ip_df_action = spec.ip_df_action();
-    sec_prof->ip_options_action = spec.ip_options_action();
-    sec_prof->ip_invalid_len_action = spec.ip_invalid_len_action();
-    sec_prof->icmp_redirect_msg_drop = spec.icmp_redirect_msg_drop();
-    sec_prof->icmp_deprecated_msgs_drop = spec.icmp_deprecated_msgs_drop();
-    sec_prof->icmp_invalid_code_action = spec.icmp_invalid_code_action();
     sec_prof->tcp_rsvd_flags_action = spec.tcp_rsvd_flags_action();
     sec_prof->tcp_unexpected_mss_action = spec.tcp_unexpected_mss_action();
     sec_prof->tcp_unexpected_win_scale_action = spec.tcp_unexpected_win_scale_action();
@@ -116,10 +114,12 @@ static inline void populate_pi_params (nwsec_profile_t *sec_prof,
     sec_prof->tcp_unexpected_echo_ts_action = spec.tcp_unexpected_echo_ts_action();
     sec_prof->tcp_ts_not_present_drop = spec.tcp_ts_not_present_drop();
     sec_prof->tcp_invalid_flags_drop = spec.tcp_invalid_flags_drop();
-    sec_prof->tcp_flags_nonsyn_noack_drop = spec.tcp_flags_nonsyn_noack_drop();
+    sec_prof->tcp_nonsyn_noack_drop = spec.tcp_nonsyn_noack_drop();
+
     return;
 }
 
+// create an instance of security profile
 hal_ret_t
 security_profile_create (nwsec::SecurityProfileSpec& spec,
                          nwsec::SecurityProfileResponse *rsp)
@@ -147,6 +147,7 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
         goto end;
     }
 
+    // allocate a profile object from slab
     sec_prof = nwsec_profile_alloc_init();
     if (sec_prof == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
@@ -155,7 +156,7 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
     }
 
     // consume the config
-    populate_pi_params(sec_prof, spec);
+    nwsec_profile_init_from_spec(sec_prof, spec);
     sec_prof->hal_handle = hal_alloc_handle();
 
     // allocate PD resources and finish programming, if any
@@ -187,6 +188,7 @@ end:
     return ret;
 }
 
+// update a security profile instance
 hal_ret_t
 security_profile_update (nwsec::SecurityProfileSpec& spec,
                          nwsec::SecurityProfileResponse *rsp)
@@ -197,8 +199,10 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     pd::pd_nwsec_profile_args_t    pd_nwsec_profile_args;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Update for id {} handle{}", __FUNCTION__,
-                    spec.key_or_handle().profile_id(), spec.key_or_handle().profile_handle());
+    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Update for id {} handle{}",
+                    __FUNCTION__,
+                    spec.key_or_handle().profile_id(),
+                    spec.key_or_handle().profile_handle());
 
     // key or handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -206,8 +210,9 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    
-    sec_prof = fetch_nwsec_profile(spec);
+
+    // lookup this security profile
+    sec_prof = nwsec_profile_lookup(spec.key_or_handle());
     if (!sec_prof) {
         rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
         ret = HAL_RET_INVALID_ARG;
@@ -219,7 +224,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     // then update the store PI object, else just return
     // error to higher layer. This is to ensure that the
     // PI/PD state doesnt get out of sync upon any PD failures
-    populate_pi_params(&local_sec_prof, spec);
+    nwsec_profile_init_from_spec(&local_sec_prof, spec);
     local_sec_prof.pd = sec_prof->pd;
     
     // Calling PD update
@@ -232,10 +237,11 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
         goto end;
     } else {
         // Success: Update the store PI object 
-        populate_pi_params(sec_prof, spec);
+        nwsec_profile_init_from_spec(sec_prof, spec);
     }
 
 end:
+
     HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Update for id {} handle {} ret{}", __FUNCTION__, 
                     spec.key_or_handle().profile_id(), spec.key_or_handle().profile_handle(), ret);
     HAL_TRACE_DEBUG("--------------------- API End ------------------------");
@@ -246,6 +252,88 @@ hal_ret_t
 security_profile_get (nwsec::SecurityProfileGetRequest& req,
                       nwsec::SecurityProfileGetResponse *rsp)
 {
+    nwsec::SecurityProfileSpec    *spec;
+    nwsec_profile_t               *sec_prof;
+
+    // key or handle field must be set
+    if (!req.has_key_or_handle()) {
+        rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // lookup this security profile
+    sec_prof = nwsec_profile_lookup(req.key_or_handle());
+    if (!sec_prof) {
+        rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // fill in the config spec of this profile
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_profile_id(sec_prof->profile_id);
+    spec->set_cnxn_tracking_en(sec_prof->cnxn_tracking_en);
+    spec->set_ipsg_en(sec_prof->ipsg_en);
+    spec->set_tcp_rtt_estimate_en(sec_prof->tcp_rtt_estimate_en);
+    spec->set_session_idle_timeout(sec_prof->session_idle_timeout);
+    spec->set_tcp_cnxn_setup_timeout(sec_prof->tcp_cnxn_setup_timeout);
+    spec->set_tcp_close_timeout(sec_prof->tcp_close_timeout);
+    spec->set_tcp_close_wait_timeout(sec_prof->tcp_close_wait_timeout);
+
+    spec->set_ip_normalization_en(sec_prof->ip_normalization_en);
+    spec->set_tcp_normalization_en(sec_prof->tcp_normalization_en);
+    spec->set_icmp_normalization_en(sec_prof->icmp_normalization_en);
+
+    spec->set_ip_ttl_change_detect_en(sec_prof->ip_ttl_change_detect_en);
+    spec->set_ip_rsvd_flags_action(
+             static_cast<nwsec::NormalizationAction>(sec_prof->ip_rsvd_flags_action));
+    spec->set_ip_df_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_df_action));
+    spec->set_ip_options_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_options_action));
+    spec->set_ip_invalid_len_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->ip_invalid_len_action));
+    spec->set_ip_normalize_ttl(sec_prof->ip_normalize_ttl);
+
+    spec->set_icmp_invalid_code_action(
+          static_cast<nwsec::NormalizationAction>(sec_prof->icmp_invalid_code_action));
+    spec->set_icmp_deprecated_msgs_drop(sec_prof->icmp_deprecated_msgs_drop);
+    spec->set_icmp_redirect_msg_drop(sec_prof->icmp_redirect_msg_drop);
+
+    spec->set_tcp_non_syn_first_pkt_drop(sec_prof->tcp_non_syn_first_pkt_drop);
+    spec->set_tcp_syncookie_en(sec_prof->tcp_syncookie_en);
+    spec->set_tcp_split_handshake_detect_en(sec_prof->tcp_split_handshake_detect_en);
+    spec->set_tcp_split_handshake_drop(sec_prof->tcp_split_handshake_drop);
+    spec->set_tcp_rsvd_flags_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_rsvd_flags_action));
+    spec->set_tcp_unexpected_mss_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_mss_action));
+    spec->set_tcp_unexpected_win_scale_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_win_scale_action));
+    spec->set_tcp_urg_ptr_not_set_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_ptr_not_set_action));
+    spec->set_tcp_urg_flag_not_set_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_flag_not_set_action));
+    spec->set_tcp_urg_payload_missing_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_urg_payload_missing_action));
+    spec->set_tcp_rst_with_data_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_rst_with_data_action));
+    spec->set_tcp_data_len_gt_mss_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_data_len_gt_mss_action));
+    spec->set_tcp_data_len_gt_win_size_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_data_len_gt_win_size_action));
+    spec->set_tcp_unexpected_ts_option_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_ts_option_action));
+    spec->set_tcp_unexpected_echo_ts_action(
+              static_cast<nwsec::NormalizationAction>(sec_prof->tcp_unexpected_echo_ts_action));
+    spec->set_tcp_ts_not_present_drop(sec_prof->tcp_ts_not_present_drop);
+    spec->set_tcp_invalid_flags_drop(sec_prof->tcp_invalid_flags_drop);
+    spec->set_tcp_nonsyn_noack_drop(sec_prof->tcp_nonsyn_noack_drop);
+
+    // fill operational state of this profile
+    rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);
+
+    // fill stats, if any, of this profile
+
     return HAL_RET_OK;
 }
 

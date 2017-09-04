@@ -90,7 +90,7 @@ message SecurityProfileSpec {
   NormalizationAction          tcp_unexpected_echo_ts_action   = 54;
   bool                         tcp_ts_not_present_drop         = 55;
   bool                         tcp_invalid_flags_drop          = 56;
-  bool                         tcp_flags_nonsyn_noack_drop     = 57;
+  bool                         tcp_nonsyn_noack_drop           = 57;
 }
 
 // SecurityProfileRequestMsg is batched add or modify profile request
@@ -147,9 +147,10 @@ message SecurityProfileStats {
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
 message SecurityProfileGetResponse {
-  SecurityProfileSpec      spec   = 1;
-  SecurityProfileStatus    status = 2;
-  SecurityProfileStats     stats  = 3;
+  types.ApiStatus          api_status = 1;    // API status code
+  SecurityProfileSpec      spec       = 2;    // config spec
+  SecurityProfileStatus    status     = 3;    // operational status
+  SecurityProfileStats     stats      = 4;    // stats, if any
 }
 
 // SecurityProfileGetResponseMsg is the batched response to SecurityProfileGetRequestMsg
@@ -341,9 +342,10 @@ message SecurityGroupStats {
 
 // SecurityGroupGetResponse captures all the information about a security group
 message SecurityGroupGetResponse {
-  SecurityGroupSpec      spec   = 1;    // configuration of security group
-  SecurityGroupStatus    status = 2;    // operational state of security group
-  SecurityGroupStats     stats  = 3;    // debug status of security group
+  types.ApiStatus        api_status = 1;    // API status code
+  SecurityGroupSpec      spec       = 2;    // configuration of security group
+  SecurityGroupStatus    status     = 3;    // operational state of security group
+  SecurityGroupStats     stats      = 4;    // debug status of security group
 }
 
 // SecurityGroupGetResponseMsg is batched response to SecurityGroupGetRequestMsg

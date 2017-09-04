@@ -16,28 +16,33 @@ typedef uint32_t nwsec_profile_id_t;
 typedef struct nwsec_profile_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     nwsec_profile_id_t    profile_id;             // profile id
+    uint32_t              cnxn_tracking_en:1;
+    uint32_t              ipsg_en:1;
+    uint32_t              tcp_rtt_estimate_en:1;
     uint32_t              session_idle_timeout;
     uint32_t              tcp_cnxn_setup_timeout;
     uint32_t              tcp_close_timeout;
     uint32_t              tcp_close_wait_timeout;
-    uint32_t              ipsg_en:1;
-    uint32_t              cnxn_tracking_en:1;
-    uint32_t              tcp_rtt_estimate_en:1;
+
     uint32_t              ip_normalization_en:1;
     uint32_t              tcp_normalization_en:1;
     uint32_t              icmp_normalization_en:1;
+
     uint32_t              ip_ttl_change_detect_en:1;
-    uint32_t              tcp_non_syn_first_pkt_drop:1;
-    uint32_t              tcp_syncookie_en:1;
-    uint32_t              tcp_split_handshake_detect_en:1;
-    uint32_t              tcp_split_handshake_drop:1;
     uint32_t              ip_rsvd_flags_action:2;
     uint32_t              ip_df_action:2;
     uint32_t              ip_options_action:2;
     uint32_t              ip_invalid_len_action:2;
+    uint32_t              ip_normalize_ttl:8;
+
     uint32_t              icmp_redirect_msg_drop:1;
     uint32_t              icmp_deprecated_msgs_drop:1;
     uint32_t              icmp_invalid_code_action:2;
+
+    uint32_t              tcp_non_syn_first_pkt_drop:1;
+    uint32_t              tcp_syncookie_en:1;
+    uint32_t              tcp_split_handshake_detect_en:1;
+    uint32_t              tcp_split_handshake_drop:1;
     uint32_t              tcp_rsvd_flags_action:2;
     uint32_t              tcp_unexpected_mss_action:2;
     uint32_t              tcp_unexpected_win_scale_action:2;
@@ -51,7 +56,7 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_unexpected_echo_ts_action:2;
     uint32_t              tcp_ts_not_present_drop:1;
     uint32_t              tcp_invalid_flags_drop:1;
-    uint32_t              tcp_flags_nonsyn_noack_drop:1;
+    uint32_t              tcp_nonsyn_noack_drop:1;
 
     // operational state of L2 segment
     hal_handle_t          hal_handle;             // HAL allocated handle
@@ -67,6 +72,7 @@ typedef struct nwsec_profile_s {
 // max. number of security profiles supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NWSEC_PROFILES                       256
 
+// allocate a security profile instance
 static inline nwsec_profile_t *
 nwsec_profile_alloc (void)
 {
@@ -79,6 +85,7 @@ nwsec_profile_alloc (void)
     return sec_prof;
 }
 
+// initialize a security profile instance
 static inline nwsec_profile_t *
 nwsec_profile_init (nwsec_profile_t *sec_prof)
 {
@@ -96,12 +103,14 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     return sec_prof;
 }
 
+// allocate and initialize a security profile instance
 static inline nwsec_profile_t *
 nwsec_profile_alloc_init (void)
 {
     return nwsec_profile_init(nwsec_profile_alloc());
 }
 
+// free security profile instance
 static inline hal_ret_t
 nwsec_profile_free (nwsec_profile_t *sec_prof)
 {
@@ -110,12 +119,24 @@ nwsec_profile_free (nwsec_profile_t *sec_prof)
     return HAL_RET_OK;
 }
 
+// insert a security profile in all meta data structures
+static inline hal_ret_t
+add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
+{
+    g_hal_state->nwsec_profile_id_ht()->insert(sec_prof, &sec_prof->ht_ctxt);
+    g_hal_state->nwsec_profile_hal_handle_ht()->insert(sec_prof,
+                                                       &sec_prof->hal_handle_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a security profile instance by its id
 static inline nwsec_profile_t *
 find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
 {
     return (nwsec_profile_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
 }
 
+// find a security profile instance by its handle
 static inline nwsec_profile_t *
 find_nwsec_profile_by_handle (hal_handle_t handle)
 {

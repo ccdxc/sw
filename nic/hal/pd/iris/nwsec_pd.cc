@@ -79,7 +79,7 @@ p4pd_program_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_invalid_flags_drop =
         profile->tcp_invalid_flags_drop;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_flags_nonsyn_noack_drop =
-        profile->tcp_flags_nonsyn_noack_drop;
+        profile->tcp_nonsyn_noack_drop;
     
     if (create) {
         ret = dm->insert(&data, (uint32_t *)&pd_nw->nwsec_hw_id);

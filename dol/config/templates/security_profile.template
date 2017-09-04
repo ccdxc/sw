@@ -39,4 +39,4 @@ fields:
     tcp_unexpected_echo_ts_action: ALLOW
     tcp_ts_not_present_drop: 0
     tcp_invalid_flags_drop: 0
-    tcp_flags_nonsyn_noack_drop: 0
+    tcp_nonsyn_noack_drop: 0

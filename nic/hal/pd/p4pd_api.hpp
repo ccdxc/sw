@@ -124,7 +124,7 @@ typedef struct p4pd_table_properties_ {
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pd_init ();
+p4pd_error_t p4pd_init(void);
 
 
 /*

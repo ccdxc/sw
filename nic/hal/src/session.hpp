@@ -40,14 +40,6 @@ enum flow_direction_t {
     FLOW_DIR_FROM_UPLINK = 1,
 };
 
-#if 0
-// flow role
-enum flow_role_t {
-    FLOW_ROLE_INITIATOR = 0,
-    FLOW_ROLE_RESPONDER = 1,
-};
-#endif
-
 #define FLOW_ROLES(ENTRY)                                           \
     ENTRY(FLOW_ROLE_INITIATOR,      0, "IFLOW")                     \
     ENTRY(FLOW_ROLE_RESPONDER,      1, "RFLOW")                     
@@ -55,17 +47,17 @@ enum flow_role_t {
 DEFINE_ENUM(flow_role_t, FLOW_ROLES)
 #undef FLOW_ROLES
     
-#define FLOW_END_TYPES(ENTRY)                                               \
-    ENTRY(FLOW_END_TYPE_HOST,        0, "FLOW_END_TYPE_HOST")               \
-    ENTRY(FLOW_END_TYPE_NETWORK,     1, "FLOW_END_TYPE_NETWORK")            \
+#define FLOW_END_TYPES(ENTRY)                                       \
+    ENTRY(FLOW_END_TYPE_HOST,        0, "FLOW_END_TYPE_HOST")       \
+    ENTRY(FLOW_END_TYPE_NETWORK,     1, "FLOW_END_TYPE_NETWORK")    \
     ENTRY(FLOW_END_TYPE_P4PLUS,      2, "FLOW_END_TYPE_P4PLUS")
 
 DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
 #undef FLOW_END_TYPES
 
-#define SESSION_DIRECTIONS(ENTRY)                           \
-    ENTRY(SESSION_DIR_H,     0, "SESSION_DIR_H")            \
-    ENTRY(SESSION_DIR_N,     1, "SESSION_DIR_N")            \
+#define SESSION_DIRECTIONS(ENTRY)                                   \
+    ENTRY(SESSION_DIR_H,     0, "SESSION_DIR_H")                    \
+    ENTRY(SESSION_DIR_N,     1, "SESSION_DIR_N")                    \
 
 DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 #undef SESSION_DIRECTIONS

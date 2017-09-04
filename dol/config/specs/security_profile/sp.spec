@@ -266,9 +266,9 @@ profiles:
 
     - id: SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE
       fields:
-         tcp_flags_nonsyn_noack_drop: 1
+         tcp_nonsyn_noack_drop: 1
 
     - id: SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
       fields:
-         tcp_flags_nonsyn_noack_drop: 0
+         tcp_nonsyn_noack_drop: 0
 

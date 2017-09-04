@@ -84,7 +84,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.tcp_unexpected_echo_ts_action = self.__getEnumValue(self.fields.tcp_unexpected_echo_ts_action)
         req_spec.tcp_ts_not_present_drop = self.fields.tcp_ts_not_present_drop
         req_spec.tcp_invalid_flags_drop = self.fields.tcp_invalid_flags_drop
-        req_spec.tcp_flags_nonsyn_noack_drop = self.fields.tcp_flags_nonsyn_noack_drop
+        req_spec.tcp_nonsyn_noack_drop = self.fields.tcp_nonsyn_noack_drop
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
