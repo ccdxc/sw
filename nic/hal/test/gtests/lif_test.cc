@@ -86,7 +86,7 @@ TEST_F(lif_test, test1)
 
     spec.set_port_num(10);
     spec.set_vlan_strip_en(1);
-    spec.set_allmulti(1);
+    //spec.set_allmulti(1);
     spec.set_enable_rdma(1);
     spec.mutable_key_or_handle()->set_lif_id(1);
 
@@ -109,7 +109,7 @@ TEST_F(lif_test, test2)
     for (int i = 0; i < 10; i++) {
         spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
-        spec.set_allmulti(i & 1);
+        //spec.set_allmulti(i & 1);
         spec.set_enable_rdma(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(i);
 
@@ -133,7 +133,7 @@ TEST_F(lif_test, test3)
     for (int i = 0; i < 10; i++) {
         spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
-        spec.set_allmulti(i & 1);
+        //spec.set_allmulti(i & 1);
         spec.set_enable_rdma(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(i);
 

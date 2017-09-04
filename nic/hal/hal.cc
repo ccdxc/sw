@@ -17,11 +17,15 @@
 
 namespace hal {
 
+// process globals
 thread    *g_hal_threads[HAL_THREAD_ID_MAX];
-uint64_t  hal_handle = 1;
+uint64_t  g_hal_handle = 1;
 bool      gl_super_user = false;
+
+// TODO_CLEANUP: THIS DOESN'T BELONG HERE !!
 LIFManager *g_lif_manager = nullptr;
 
+// thread local variables
 thread_local thread *t_curr_thread;
 
 using boost::property_tree::ptree;
@@ -46,7 +50,7 @@ fte_pkt_loop (void *ctxt)
 hal_handle_t
 hal_alloc_handle (void)
 {
-    return hal_handle++;
+    return g_hal_handle++;
 }
 
 //------------------------------------------------------------------------------
@@ -56,6 +60,55 @@ void
 hal_free_handle (uint64_t handle)
 {
     return;
+}
+
+//------------------------------------------------------------------------------
+// initialize all the signal handlers
+//------------------------------------------------------------------------------
+static void
+hal_sig_handler (int sig, siginfo_t *info, void *ptr)
+{
+    HAL_TRACE_ERR("HAL received signal {}", sig);
+
+    switch (sig) {
+    case SIGHUP:
+    case SIGQUIT:
+    case SIGINT:
+    case SIGUSR1:
+    case SIGSEGV:
+    case SIGCHLD:
+    case SIGURG:
+    case SIGUSR2:
+    case SIGTERM:
+    default:
+        utils::hal_logger().flush();
+        break;
+    }
+}
+
+//------------------------------------------------------------------------------
+// initialize all the signal handlers
+// TODO: save old handlers and restore when signal happened
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_sig_init (void)
+{
+    struct sigaction    act;
+
+    memset(&act, 0, sizeof(act));
+    act.sa_sigaction = hal_sig_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGHUP, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGSEGV, &act, NULL);
+    sigaction(SIGCHLD, &act, NULL);
+    sigaction(SIGURG, &act, NULL);
+    sigaction(SIGUSR2, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
+
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -114,7 +167,7 @@ hal_thread_init (void)
     }
 
     if (gl_super_user) {
-        HAL_TRACE_DEBUG("Started by root, switching to RealTime scheduling");
+        HAL_TRACE_DEBUG("Started by root, switching to real-time scheduling");
         sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
         rv = sched_setscheduler(0, SCHED_RR, &sched_param);
         if (rv != 0) {
@@ -206,12 +259,18 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
+    char    *user;
+
     HAL_TRACE_DEBUG("Initializing HAL ...");
 
-    char *user = getenv("USER");
+    // check to see if HAL is running with root permissions
+    user = getenv("USER");
     if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
+
+    // install signal handlers
+    hal_sig_init();
 
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
@@ -224,6 +283,8 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
+    // TODO_CLEANUP: this doesn't belong here, why is this outside
+    // hal_state ??? how it this special compared to other global state ??
     g_lif_manager = new LIFManager();
    
 #if 0

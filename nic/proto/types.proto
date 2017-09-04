@@ -169,7 +169,6 @@ enum ProxyType {
   PROXY_TYPE_IPSEC         = 3;    
 }
 
-
 // Types of Cryptographic keys
 enum CryptoKeyType {
     CRYPTO_KEY_TYPE_AES128      = 0;

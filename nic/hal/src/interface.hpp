@@ -30,7 +30,7 @@ typedef struct lif_s {
     uint32_t            port_num;                    // LIF's port number
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
-    bool                allmulti;                    // All multicast enable
+    //bool                allmulti;                    // All multicast enable
     bool                enable_rdma;                 // enable rdma on this LIF
 
     // operational state of interface

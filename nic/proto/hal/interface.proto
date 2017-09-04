@@ -84,6 +84,8 @@ message LifQStateMapEntry {
   // type_num is the type as defined by Capri hardware in the
   // LIF -> Qstate array entry. There are 8 types numbered 0-7.
   // There can be at most one entry per type_num.
+  // TODO: How does a user know what number to use here unless
+  //       it is enumerated or purpose is clear ???
   uint32 type_num           = 1;
 
   // This entry represents the size of the Q state
@@ -113,18 +115,18 @@ message LifKeyHandle {
 
 // LIF object
 message LifSpec {
-  types.ObjectMeta         meta          = 1;    // object meta
-  LifKeyHandle             key_or_handle = 2;    // LIF's key or handle
-  uint64                   mac_addr      = 3;    // link MAC address, if any
-  LifPortType              port_type     = 4;    // LIF port type
-  uint32                   port_num      = 5;    // LIF port number (TM oport#)
-  LifKeyHandle             peer_lif      = 6;    // peer LIF in case this LIF is pinned to another LIF
-  IfStatus                 admin_status  = 7;    // admin status of the interface
+  types.ObjectMeta         meta              = 1;    // object meta
+  LifKeyHandle             key_or_handle     = 2;    // LIF's key or handle
+  uint64                   mac_addr          = 3;    // link MAC address, if any
+  LifPortType              port_type         = 4;    // LIF port type
+  uint32                   port_num          = 5;    // LIF port number (TM oport#)
+  LifKeyHandle             peer_lif          = 6;    // peer LIF in case this LIF is pinned to another LIF
+  IfStatus                 admin_status      = 7;    // admin status of the interface
   repeated LifQStateMapEntry
-                           lif_qstate_map = 8;   // LIF -> Qstate map.
-  bool                     vlan_strip_en = 9;    // LIF vlan strip enable
-  bool                     allmulti      = 10;   // LIF set all multicast group
-  bool                     enable_rdma   = 11;   // enable RDMA on LIF
+                           lif_qstate_map    = 8;   // LIF -> Qstate map.
+  bool                     vlan_strip_en     = 9;    // LIF vlan strip enable
+  //bool                     allmulti          = 10;   // LIF set all multicast group
+  bool                     enable_rdma       = 11;   // enable RDMA on LIF
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -229,44 +231,44 @@ message LifDeleteResponseMsg {
 
 // check which stats will be done by p4 and which will be done by p4+
 message LifTxStats {
-  uint64  Tx_Frames_Ok           = 1;
-  uint64  Tx_Unicast_Frames_Ok   = 2;
-  uint64  Tx_Multicast_Frames_Ok = 3;
-  uint64  Tx_Broadcast_Frames_Ok = 4;
-  uint64  Tx_Bytes_Ok            = 5;
-  uint64  Tx_Unicast_Bytes_Ok    = 6;
-  uint64  Tx_Multicast_Bytes_Ok  = 7;
-  uint64  Tx_Broadcast_Bytes_Ok  = 8;
-  uint64  Tx_Tso                 = 9;
+  uint64    frames_ok           = 1;
+  uint64    unicast_frames_ok   = 2;
+  uint64    multicast_brames_ok = 3;
+  uint64    broadcast_brames_ok = 4;
+  uint64    bytes_ok            = 5;
+  uint64    unicast_bytes_ok    = 6;
+  uint64    multicast_bytes_ok  = 7;
+  uint64    broadcast_bytes_ok  = 8;
+  uint64    tso                 = 9;
 }
 
 message LifRxStats {
-  uint64    Rx_frames_total        = 1;
-  uint64    Rx_frames_ok           = 2;
-  uint64    Rx_unicast_frames_ok   = 3;
-  uint64    Rx_multicast_frames_ok = 4;
-  uint64    Rx_broadcast_frames_ok = 5;
-  uint64    Rx_bytes_ok            = 6;
-  uint64    Rx_unicast_bytes_ok    = 7;
-  uint64    Rx_multicast_bytes_ok  = 8;
-  uint64    Rx_broadcast_bytes_ok  = 9;
-  uint64    Rx_drops               = 10;
-  uint64    Rx_no_bufs             = 11;
-  uint64    Rx_errors              = 12;
-  uint64    Rx_rss                 = 13;
-  uint64    Rx_crc_errors          = 14;
-  uint64    Rx_frames_64           = 15;
-  uint64    Rx_frames_127          = 16;
-  uint64    Rx_frames_255          = 17;
-  uint64    Rx_frames_511          = 18;
-  uint64    Rx_frames_1024         = 19;
-  uint64    Rx_frames_1518         = 20;
-  uint64    Rx_frames_to_max       = 21;
+  uint64    frames_total        = 1;
+  uint64    frames_ok           = 2;
+  uint64    unicast_frames_ok   = 3;
+  uint64    multicast_frames_ok = 4;
+  uint64    broadcast_frames_ok = 5;
+  uint64    bytes_ok            = 6;
+  uint64    unicast_bytes_ok    = 7;
+  uint64    multicast_bytes_ok  = 8;
+  uint64    broadcast_bytes_ok  = 9;
+  uint64    drops               = 10;
+  uint64    no_bufs             = 11;
+  uint64    errors              = 12;
+  uint64    rss                 = 13;
+  uint64    crc_errors          = 14;
+  uint64    frames_64           = 15;
+  uint64    frames_127          = 16;
+  uint64    frames_255          = 17;
+  uint64    frames_511          = 18;
+  uint64    frames_1024         = 19;
+  uint64    frames_1518         = 20;
+  uint64    frames_to_max       = 21;
 }
 // LifStats captures all the statistics of given LIF
 message LifStats {
-  LifTxStats TxStats  = 1;
-  LifRxStats RxStats  = 2;
+  LifTxStats    tx_stats = 1;
+  LifRxStats    rx_stats = 2;
 }
 
 // LifGetRequest is used to get information about a LIF
@@ -444,8 +446,6 @@ message InterfaceStats {
   fixed32    num_tx_bytes              = 2;    // Tx Bytes from this interface
   fixed32    num_rx_packets            = 3;    // Rx Packets to this interface
   fixed32    num_rx_bytes              = 4;    // Rx Bytes to this interface
-  fixed32    num_sessions_initated     = 5;    // Sessions initated
-  fixed32    num_sessions_responded    = 6;    // Sessions responded
 }
 
 // InterfaceGetRequest is used to get information about a interface
