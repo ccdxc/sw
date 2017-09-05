@@ -63,6 +63,10 @@ packets:
                 code    : callback://normalization/callbacks/GetInputIcmpCode
                 type    : callback://normalization/callbacks/GetInputIcmpType
                 id      : ref://testcase/config/flow/icmpid
+            tcp:
+                reserved : callback://normalization/callbacks/GetInputTcpReserved
+                flags    : callback://normalization/callbacks/GetInputTcpFlags
+                urgptr   : callback://normalization/callbacks/GetInputTcpUrgPtr
 
     - packet:
         id          : PKT2     # Expected packet 2
@@ -78,6 +82,11 @@ packets:
                 code    : callback://normalization/callbacks/GetExpectedIcmpCode
                 type    : callback://normalization/callbacks/GetExpectedIcmpType
                 id      : ref://testcase/config/flow/icmpid
+            tcp:
+                reserved : callback://normalization/callbacks/GetExpectedTcpReserved
+                flags    : callback://normalization/callbacks/GetExpectedTcpFlags
+                urgptr   : callback://normalization/callbacks/GetExpectedTcpUrgPtr
+
 
 session:
     - step:
