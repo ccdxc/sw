@@ -12,15 +12,20 @@ import (
 	"github.com/prometheus/common/log"
 )
 
+// Dpagent is an agent instance
+type Dpagent struct {
+	datapath *datapath.MockHalDatapath
+	nagent   *agent.Agent
+}
+
 // objKey returns endpoint key
 func objKey(meta api.ObjectMeta) string {
 	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
 }
 
-// Dpagent is an agent instance
-type Dpagent struct {
-	datapath *datapath.MockHalDatapath
-	nagent   *agent.Agent
+// pollTimeout returns the poll timeout value based on number of agents
+func (it *integTestSuite) pollTimeout() string {
+	return fmt.Sprintf("%dms", 10000+(300*it.numAgents))
 }
 
 // CreateAgent creates an instance of agent

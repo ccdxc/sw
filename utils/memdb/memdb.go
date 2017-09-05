@@ -107,6 +107,10 @@ func (md *Memdb) WatchObjects(kind string, watchChan chan Event) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
+	// lock object db
+	od.Lock()
+	defer od.Unlock()
+
 	// add the channel to watch list and return
 	od.watchers = append(od.watchers, watchChan)
 	return nil

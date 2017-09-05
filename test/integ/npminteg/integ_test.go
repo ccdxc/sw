@@ -19,7 +19,7 @@ import (
 
 // integ test suite parameters
 const (
-	numIntegTestAgents = 3
+	numIntegTestAgents = 16
 	integTestRPCURL    = "localhost:9595"
 )
 
@@ -102,7 +102,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 		AssertEventually(c, func() bool {
 			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr == nil)
-		}, "Network not found on agent", "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
+		}, "Network not found on agent", "10ms", it.pollTimeout())
 		nt, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
 		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
@@ -117,7 +117,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 		AssertEventually(c, func() bool {
 			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr != nil)
-		}, "Network still found on agent", "100ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
+		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
 }
 
@@ -173,8 +173,8 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			}
 
 			// verify endpoint was added to datapath
-			eps, ok := ag.datapath.EndpointDB[objKey(ep.ObjectMeta)]
-			if !ok || len(eps.Request) != 1 {
+			eps, cerr := ag.datapath.FindEndpoint(objKey(ep.ObjectMeta))
+			if cerr != nil || len(eps.Request) != 1 {
 				waitCh <- fmt.Errorf("Endpoint not found in datapath")
 				return
 			}
@@ -191,16 +191,16 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() bool {
-				return (len(ag.datapath.EndpointDB) == it.numAgents)
-			}, "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents))
+				return (ag.datapath.GetEndpointCount() == it.numAgents)
+			}, "10ms", it.pollTimeout())
 			if !found {
-				waitCh <- fmt.Errorf("Endpoint cound incorrect in datapath")
+				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
 			for i := range it.agents {
 				epname := fmt.Sprintf("testEndpoint-%d", i)
-				eps, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", epname)]
-				if !ok || len(eps.Request) != 1 {
+				eps, perr := ag.datapath.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
+				if perr != nil || len(eps.Request) != 1 {
 					waitCh <- fmt.Errorf("Endpoint not found in datapath")
 					return
 				}
@@ -229,8 +229,8 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			}
 
 			// verify endpoint was deleted from datapath
-			eps, ok := ag.datapath.EndpointDelDB[objKey(ep.ObjectMeta)]
-			if !ok || len(eps.Request) != 1 {
+			eps, cerr := ag.datapath.FindEndpointDel(objKey(ep.ObjectMeta))
+			if cerr != nil || len(eps.Request) != 1 {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}
@@ -247,8 +247,8 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() bool {
-				return (len(ag.datapath.EndpointDB) == 0)
-			}, "10ms", fmt.Sprintf("%dms", 3000+100*it.numAgents)) {
+				return (ag.datapath.GetEndpointCount() == 0)
+			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}

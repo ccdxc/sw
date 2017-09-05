@@ -145,7 +145,7 @@ type apiRestServerClient struct {
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
 }
 
-// Close sloses the client
+// Close closes the client
 func (a *apiRestServerClient) Close() error {
 	return nil
 }

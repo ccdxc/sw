@@ -59,7 +59,7 @@ type apiRestServerClient struct {
     a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
 }
 
-// Close sloses the client
+// Close closes the client
 func (a *apiRestServerClient) Close() error {
     return nil
 }

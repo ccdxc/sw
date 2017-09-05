@@ -46,6 +46,9 @@ func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif netagent.CtrlerAPI) error {
 	return nil
 }
 
+func (ag *fakeAgent) GetAgentID() string {
+	return "fakeAgent"
+}
 func (ag *fakeAgent) CreateNetwork(nt *netproto.Network) error {
 	ag.netAdded[objectKey(nt.ObjectMeta)] = nt
 	return nil

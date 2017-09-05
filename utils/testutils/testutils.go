@@ -68,7 +68,7 @@ func AssertOneOf(tb TBApi, act string, exp []string) {
 func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
 	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 3
+	timeoutInterval := time.Second * 10
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -93,7 +93,6 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 		case <-timeout:
 			// evaluate one last time
 			if eval() {
-				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
 				return
 			}
 			logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
@@ -101,7 +100,6 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
 		case <-time.After(pollInterval):
 			if eval() {
-				tb.Logf("Evaluator suceeded after %v", time.Since(timer))
 				return
 			}
 		}
@@ -114,7 +112,7 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
 	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 3
+	timeoutInterval := time.Second * 10
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -140,7 +138,6 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 		case <-timeout:
 			// evaluate one last time
 			if eval() {
-				tb.Logf("Evaluator passed after %v", time.Since(timer))
 				return
 			}
 			logrus.Errorf("Evaluator failed after %v", time.Since(timer))
@@ -162,7 +159,7 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 func CheckEventually(eval Evaluator, intervals ...string) bool {
 	var err error
 	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 3
+	timeoutInterval := time.Second * 10
 
 	// parse intervals
 	if len(intervals) > 0 {

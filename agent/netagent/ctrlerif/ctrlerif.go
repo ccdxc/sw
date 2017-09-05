@@ -66,6 +66,11 @@ func NewNpmClient(agent netagent.CtrlerIntf, srvURL string) (*NpmClient, error) 
 	return &client, nil
 }
 
+// getAgentName returns a unique name for each agent instance
+func (client *NpmClient) getAgentName() string {
+	return "netagent-" + client.agent.GetAgentID()
+}
+
 // runNetworkWatcher runs network watcher loop
 func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 	// setup wait group
@@ -74,7 +79,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("netagent", client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -113,7 +118,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("Ctrlerif: Got Network watch event: {%+v}", evt)
+			log.Infof("Ctrlerif: agent %s got Network watch event: {%+v}", client.getAgentName(), evt)
 
 			switch evt.EventType {
 			case api.EventType_CreateEvent:
@@ -147,7 +152,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("netagent", client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -186,7 +191,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("Ctrlerif: Got Endpoint watch event: {%+v}", evt)
+			log.Infof("Ctrlerif: agent %s got Endpoint watch event: {%+v}", client.getAgentName(), evt)
 
 			switch evt.EventType {
 			case api.EventType_CreateEvent:
@@ -233,7 +238,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("netagent", client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -274,7 +279,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("Ctrlerif: Got Security group watch event: {%+v}", evt)
+			log.Infof("Ctrlerif: agent %s got Security group watch event: {%+v}", client.getAgentName(), evt)
 
 			switch evt.EventType {
 			case api.EventType_CreateEvent:
@@ -333,7 +338,7 @@ func (client *NpmClient) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient("netagent", client.srvURL)
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err
@@ -369,7 +374,7 @@ func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient("netagent", client.srvURL)
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err

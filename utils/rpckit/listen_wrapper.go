@@ -43,7 +43,7 @@ func (s *rpcListener) Accept() (net.Conn, error) {
 	return s.Listener.Accept()
 }
 
-// Close closes the contivListener.
+// Close closes the rpcListener.
 func (s *rpcListener) Close() error {
 	if err := s.Listener.Close(); err != nil {
 		return err

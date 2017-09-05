@@ -84,6 +84,39 @@ func ipv42int(ip net.IP) uint32 {
 	return binary.BigEndian.Uint32(ip)
 }
 
+// FindEndpoint finds an endpoint in datapath
+// used for testing mostly..
+func (hd *MockHalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg, error) {
+	hd.Lock()
+	epr, ok := hd.EndpointDB[epKey]
+	hd.Unlock()
+	if !ok {
+		return nil, errors.New("Endpoint not found")
+	}
+
+	return epr, nil
+}
+
+// FindEndpointDel finds an endpoint delete record
+// used for testing mostly
+func (hd *MockHalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRequestMsg, error) {
+	hd.Lock()
+	epdr, ok := hd.EndpointDelDB[epKey]
+	hd.Unlock()
+	if !ok {
+		return nil, errors.New("Endpoint delete record not found")
+	}
+
+	return epdr, nil
+}
+
+// GetEndpointCount returns number of endpoints in db
+func (hd *MockHalDatapath) GetEndpointCount() int {
+	hd.Lock()
+	defer hd.Unlock()
+	return len(hd.EndpointDB)
+}
+
 // SetAgent sets the agent for this datapath
 func (hd *MockHalDatapath) SetAgent(ag netagent.DatapathIntf) error {
 	return nil

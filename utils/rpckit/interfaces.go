@@ -11,8 +11,8 @@ import (
 
 // Middleware is RPC middleware interface
 type Middleware interface {
-	ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context
-	RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context
+	ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context
+	RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context
 }
 
 // TLSProvider is the interface for components that provide TLS credentials for

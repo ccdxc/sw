@@ -87,3 +87,8 @@ func (ag *NetAgent) Stop() error {
 func objectKey(meta api.ObjectMeta) string {
 	return fmt.Sprintf("%s|%s", meta.Tenant, meta.Name)
 }
+
+// GetAgentID returns UUID of the agent
+func (ag *NetAgent) GetAgentID() string {
+	return ag.NodeUUID
+}

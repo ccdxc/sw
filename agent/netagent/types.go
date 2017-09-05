@@ -41,6 +41,7 @@ type SecurityGroupInterface interface {
 // CtrlerIntf is the API provided by netagent for the controllers
 type CtrlerIntf interface {
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
+	GetAgentID() string
 	NetworkInterface
 	EndpointInterface
 	SecurityGroupInterface

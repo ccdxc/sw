@@ -26,12 +26,12 @@ type options struct {
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
 	deferStart   bool              // Defers starting the listen on the gRPC server if set
-	codec        grpc.Codec        // Codec to use over the connection
 }
 
 // RPCServer contains RPC server state
 type RPCServer struct {
 	GrpcServer *grpc.Server // gRPC server.
+	mysvcName  string       // my service name
 	listenURL  string       // URL where this server is listening
 	listener   net.Listener // listener
 	DoneCh     chan error   // Error Channel
@@ -42,7 +42,7 @@ type RPCServer struct {
 // RPCClient contains RPC client definitions
 type RPCClient struct {
 	ClientConn *grpc.ClientConn // gRPC connection
-	srvName    string           // the server we are connecting to
+	mysvcName  string           // my service name
 	remoteURL  string           // URL we are connecting to
 	options
 }
@@ -85,13 +85,6 @@ func WithBalancer(b grpc.Balancer) Option {
 	}
 }
 
-// WithCodec specifies a custom  codec to use for the connection
-func WithCodec(codec grpc.Codec) Option {
-	return func(o *options) {
-		o.codec = codec
-	}
-}
-
 // WithDeferredStart when set will defer the listen on the gRPC server
 //  till Start() is called.
 func WithDeferredStart(enabled bool) Option {
@@ -100,10 +93,10 @@ func WithDeferredStart(enabled bool) Option {
 	}
 }
 
-func defaultOptions(srvName string) *options {
+func defaultOptions(mysvcName string) *options {
 	return &options{
 		stats:        newStatsMiddleware(),
-		tracer:       newTracerMiddleware(srvName),
+		tracer:       newTracerMiddleware(mysvcName),
 		enableTracer: false,
 		enableLogger: true,
 		deferStart:   false,
@@ -111,7 +104,7 @@ func defaultOptions(srvName string) *options {
 }
 
 // NewRPCServer returns a gRPC server listening on a local port
-func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error) {
+func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, error) {
 	var server *grpc.Server
 
 	// some error checking
@@ -131,9 +124,11 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 
 	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{
+		mysvcName: mysvcName,
 		listenURL: listenURL,
 		listener:  ListenWrapper(lis),
-		options:   *defaultOptions(srvName),
+		DoneCh:    make(chan error),
+		options:   *defaultOptions(mysvcName),
 	}
 
 	// add custom options
@@ -155,15 +150,11 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
 	}
 
-	if rpcServer.options.codec != nil {
-		grpcOpts = append(grpcOpts, grpc.CustomCodec(rpcServer.options.codec))
-	}
-
 	// get TLS options
 	if rpcServer.tlsProvider != nil {
-		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(srvName)
+		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(mysvcName)
 		if err != nil {
-			log.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", srvName, err)
+			log.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", mysvcName, err)
 			return nil, err
 		}
 		grpcOpts = append(grpcOpts, tlsOptions)
@@ -171,6 +162,9 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 
 	// save the grpc server instance
 	server = grpc.NewServer(grpcOpts...)
+	if server == nil {
+		log.Fatalf("Error creating grpc server")
+	}
 	rpcServer.GrpcServer = server
 
 	// start new grpc server
@@ -178,7 +172,7 @@ func NewRPCServer(srvName, listenURL string, opts ...Option) (*RPCServer, error)
 		rpcServer.Start()
 	}
 
-	log.Infof("gRpc server Listening on %s", listenURL)
+	log.Infof("gRpc server %s Listening on %s", mysvcName, listenURL)
 
 	return rpcServer, nil
 }
@@ -197,7 +191,9 @@ func (srv *RPCServer) GetListenURL() string {
 func (srv *RPCServer) Stop() error {
 	// stop the server
 	if srv.GrpcServer != nil {
+		log.Infof("Stopping grpc server %s listening on %s", srv.mysvcName, srv.listenURL)
 		srv.GrpcServer.Stop()
+		srv.GrpcServer = nil
 	}
 
 	// close the socket listener
@@ -207,7 +203,9 @@ func (srv *RPCServer) Stop() error {
 func (srv *RPCServer) run() {
 	// start service requests
 	go func() {
-		srv.DoneCh <- srv.GrpcServer.Serve(srv.listener)
+		if srv.GrpcServer != nil && srv.listener != nil {
+			srv.DoneCh <- srv.GrpcServer.Serve(srv.listener)
+		}
 	}()
 }
 
@@ -218,12 +216,12 @@ func (srv *RPCServer) Start() {
 
 // NewRPCClient returns an RPC client to a remote server
 //
-// srvName   - identifier of the client, used in logging
+// mysvcName   - identifier of the client, used in logging
 // remoteURL - either <host:port> or <service-name>. If <service-name> is
 //             specified, a balancer should be involved to resolve the name.
 //             At this time, the balancer is explicitly passed. At a later
 //             time, there will be an implicit balancer created.
-func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error) {
+func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
 	grpcOpts := make([]grpc.DialOption, 0)
 
 	// some error checking
@@ -234,9 +232,9 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 
 	// create RPC client instance
 	rpcClient := &RPCClient{
-		srvName:   srvName,
+		mysvcName: mysvcName,
 		remoteURL: remoteURL,
-		options:   *defaultOptions(srvName),
+		options:   *defaultOptions(mysvcName),
 	}
 
 	// add custom options
@@ -266,17 +264,14 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 
 	// Get credentials
 	if rpcClient.tlsProvider != nil {
-		tlsOpt, err := rpcClient.tlsProvider.GetDialOptions(srvName)
-		if err != nil {
-			log.Errorf("Failed to get dial options for server %v. Err: %v", srvName, err)
+		tlsOpt, terr := rpcClient.tlsProvider.GetDialOptions(mysvcName)
+		if terr != nil {
+			log.Errorf("Failed to get dial options for server %v. Err: %v", mysvcName, terr)
 			return nil, err
 		}
 		grpcOpts = append(grpcOpts, tlsOpt)
 	} else {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
-	}
-	if rpcClient.options.codec != nil {
-		grpcOpts = append(grpcOpts, grpc.WithCodec(rpcClient.options.codec))
 	}
 
 	// For service targets, use the balancer.
@@ -297,7 +292,7 @@ func NewRPCClient(srvName, remoteURL string, opts ...Option) (*RPCClient, error)
 
 	rpcClient.ClientConn = conn
 
-	log.Infof("Connected to %s", remoteURL)
+	log.Infof("Client %s Connected to %s", mysvcName, remoteURL)
 
 	return rpcClient, nil
 }
@@ -318,9 +313,9 @@ func (c *RPCClient) Reconnect() error {
 	var err error
 	// Get credentials
 	if c.tlsProvider != nil {
-		opts, err = c.tlsProvider.GetDialOptions(c.srvName)
+		opts, err = c.tlsProvider.GetDialOptions(c.mysvcName)
 		if err != nil {
-			log.Errorf("Failed to get dial options for server %v. Err: %v", c.srvName, err)
+			log.Errorf("Failed to get dial options for server %v. Err: %v", c.mysvcName, err)
 			return err
 		}
 	} else {
@@ -350,7 +345,8 @@ func (c *RPCClient) GetRPCStats() map[string]int64 {
 // Close closes client connection
 func (c *RPCClient) Close() error {
 	if c.ClientConn != nil {
-		return c.ClientConn.Close()
+		c.ClientConn.Close()
+		c.ClientConn = nil
 	}
 	return nil
 }

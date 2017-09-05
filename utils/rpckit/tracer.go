@@ -67,7 +67,7 @@ type tracerCtx struct {
 }
 
 // ReqInterceptor implements request interception
-func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
+func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
 	switch role {
 	case RoleClient:
 		var parentCtx opentracing.SpanContext
@@ -135,7 +135,7 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role string, meth
 }
 
 // RespInterceptor implements response interception
-func (t *tracerMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
+func (t *tracerMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context {
 	var msg string
 
 	switch role {
@@ -166,7 +166,7 @@ func (t *tracerMiddleware) RespInterceptor(ctx context.Context, role string, met
 }
 
 // create a new tracer middleware
-func newTracerMiddleware(srvName string) *tracerMiddleware {
+func newTracerMiddleware(svcName string) *tracerMiddleware {
 	// create collector.
 	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
 	if err != nil {
@@ -175,7 +175,7 @@ func newTracerMiddleware(srvName string) *tracerMiddleware {
 	}
 
 	// create recorder.
-	recorder := zipkin.NewRecorder(collector, true, "", srvName, zipkin.WithJSONMaterializer())
+	recorder := zipkin.NewRecorder(collector, true, "", svcName, zipkin.WithJSONMaterializer())
 
 	// create tracer.
 	tracer, err := zipkin.NewTracer(recorder, zipkin.ClientServerSameSpan(false), zipkin.TraceID128Bit(true))

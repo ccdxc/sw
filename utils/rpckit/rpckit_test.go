@@ -278,14 +278,14 @@ type testMiddleware struct {
 }
 
 // ReqInterceptor implements request interception
-func (s *testMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
+func (s *testMiddleware) ReqInterceptor(ctx context.Context, role, srvName, method string, req interface{}) context.Context {
 	s.rpcStats[fmt.Sprintf("%s-%s:Req", role, method)]++
 
 	return ctx
 }
 
 // RespInterceptor handles responses
-func (s *testMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
+func (s *testMiddleware) RespInterceptor(ctx context.Context, role, srvName, method string, req, reply interface{}, err error) context.Context {
 	s.rpcStats[fmt.Sprintf("%s-%s:Resp", role, method)]++
 
 	return ctx

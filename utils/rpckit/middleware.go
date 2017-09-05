@@ -24,7 +24,7 @@ func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor
 
 		// call all the request middlewares
 		for _, m := range rpcServer.middlewares {
-			ctx = m.ReqInterceptor(ctx, RoleServer, info.FullMethod, req)
+			ctx = m.ReqInterceptor(ctx, RoleServer, rpcServer.mysvcName, info.FullMethod, req)
 		}
 
 		// finally call the handler
@@ -32,7 +32,7 @@ func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor
 
 		// call all response middlewares
 		for _, m := range rpcServer.middlewares {
-			ctx = m.RespInterceptor(ctx, RoleServer, info.FullMethod, req, resp, err)
+			ctx = m.RespInterceptor(ctx, RoleServer, rpcServer.mysvcName, info.FullMethod, req, resp, err)
 		}
 
 		return resp, err
@@ -52,7 +52,7 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// call all the request middlewares
 		for _, m := range rpcClient.middlewares {
-			ctx = m.ReqInterceptor(ctx, RoleClient, method, req)
+			ctx = m.ReqInterceptor(ctx, RoleClient, rpcClient.mysvcName, method, req)
 		}
 
 		// finally, call the invoker
@@ -60,7 +60,7 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 
 		// call all the response middlewares
 		for _, m := range rpcClient.middlewares {
-			ctx = m.RespInterceptor(ctx, RoleClient, method, req, reply, err)
+			ctx = m.RespInterceptor(ctx, RoleClient, rpcClient.mysvcName, method, req, reply, err)
 		}
 
 		return err
@@ -86,24 +86,24 @@ func newLogMiddleware() *logMiddleware {
 }
 
 // ReqInterceptor implements request interception
-func (l *logMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
+func (l *logMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
 	switch role {
 	case RoleClient:
-		log.Infof("Client Making RPC request: %s() Req: {%+v}", method, req)
+		log.Infof("Client %s Making RPC request: %s() Req: {%+v}", mysvcName, method, req)
 	case RoleServer:
-		log.Infof("Server received RPC: %s() Req: {%+v}", method, req)
+		log.Infof("Server %s received RPC: %s() Req: {%+v}", mysvcName, method, req)
 	}
 
 	return ctx
 }
 
 // RespInterceptor implements response interception
-func (l *logMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
+func (l *logMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context {
 	switch role {
 	case RoleClient:
-		log.Infof("Client received RPC response: %s() Resp: {%+v}, error: %v", method, reply, err)
+		log.Infof("Client %s received RPC response: %s() Resp: {%+v}, error: %v", mysvcName, method, reply, err)
 	case RoleServer:
-		log.Infof("Server returning RPC response: %s() Resp: {%+v}, error: %v", method, reply, err)
+		log.Infof("Server %s returning RPC response: %s() Resp: {%+v}, error: %v", mysvcName, method, reply, err)
 	}
 
 	return ctx
@@ -123,7 +123,7 @@ func newStatsMiddleware() *statsMiddleware {
 }
 
 // ReqInterceptor implements request interception
-func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role string, method string, req interface{}) context.Context {
+func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
 	// lock the object
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -135,7 +135,7 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role string, metho
 }
 
 // RespInterceptor handles responses
-func (s *statsMiddleware) RespInterceptor(ctx context.Context, role string, method string, req, reply interface{}, err error) context.Context {
+func (s *statsMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context {
 	// lock the object
 	s.lock.Lock()
 	defer s.lock.Unlock()

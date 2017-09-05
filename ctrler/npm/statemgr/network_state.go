@@ -66,6 +66,10 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	var allocatedAddr string
 
+	// lock the network for bit allocation
+	ns.Lock()
+	defer ns.Unlock()
+
 	// parse the subnet
 	baseAddr, ipnet, err := net.ParseCIDR(ns.Spec.IPv4Subnet)
 	if err != nil {
@@ -130,6 +134,9 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 // freeIPv4Addr free the address
 func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
+	ns.Lock()
+	defer ns.Unlock()
+
 	log.Infof("Freeing IPv4 address: %v", reqAddr)
 
 	reqIP, _, err := net.ParseCIDR(reqAddr)
