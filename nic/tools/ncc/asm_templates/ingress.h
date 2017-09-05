@@ -122,6 +122,7 @@ struct ${table}_k {
 //::            pad_to_512 = 0
 //::            (actionname, actionfldlist) = action
 //::            kd_size = 0
+//::            pad_data_bits = 0
 //::            if len(actionfldlist):
 struct ${table}_${actionname}_d {
 //::                # Action Data before Key bits in case of Hash table.
@@ -137,6 +138,7 @@ struct ${table}_${actionname}_d {
 //::                    adata_bits_before_key = mat_key_start_bit - actionpc_bits
 //::                    last_actionfld_bits = 0
 //::                    if adata_bits_before_key:
+//::                        totaladatabits = 0
 //::                        fill_adata = adata_bits_before_key
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
@@ -144,9 +146,11 @@ struct ${table}_${actionname}_d {
     ${actionfldname} : ${actionfldwidth};
 //::                                fill_adata -= actionfldwidth
 //::                                last_actionfld_bits = actionfldwidth
+//::                                totaladatabits += actionfldwidth
 //::                            else:
     ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata};
 //::                                last_actionfld_bits = fill_adata
+//::                                totaladatabits += fill_adata
 //::                                fill_adata = 0
 //::                            #endif
 //::                            if not fill_adata:
@@ -154,14 +158,18 @@ struct ${table}_${actionname}_d {
 //::                                break
 //::                            #endif
 //::                        #endfor
+//::                        # Pad when adata size/bits < match-key-start-bit
+//::                        if (totaladatabits + actionpc_bits) < mat_key_start_bit:
+//::                            pad_data_bits = mat_key_start_bit - (totaladatabits + actionpc_bits)
+    __pad_adata_key_gap_bits : ${pad_data_bits};
+//::                        #endif
 //::                    #endif
 //::                    # Table Key bits -- Pad it here
     __pad_key_bits : ${pddict['tables'][table]['match_key_bit_length']}; /* Entire Contiguous Keybits */
-//::                    pad_to_512 += pddict['tables'][table]['match_key_bit_length']
+//::                    kd_size = mat_key_start_bit + pddict['tables'][table]['match_key_bit_length']
 //::                #endif
 //::                if adata_bits_before_key:
 //::                    # Pack remaining Action Data bits after Key
-//::                    kd_size = pad_to_512 + adata_bits_before_key
 //::                    skip_adatafld  = True
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
@@ -179,7 +187,6 @@ struct ${table}_${actionname}_d {
 //::                        kd_size += actionfldwidth 
 //::                    #endfor
 //::                else:
-//::                    kd_size = pad_to_512
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
     ${actionfldname} : ${actionfldwidth};
@@ -195,7 +202,7 @@ struct ${table}_${actionname}_d {
 //::                else:
 //::                    pad_to_512 = 512 - (kd_size)
 //::                #endif
-//::                if pad_to_512:
+//::                if (pad_to_512):
     __pad_to_512b : ${pad_to_512};
 //::                #endif
 };

@@ -378,6 +378,9 @@ p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                    actiondata_before_matchkey_len);
     dest_start_bit += actiondata_before_matchkey_len;
 
+    //When actiondata doesn't pack all the way where matchkey starts, set dest_start_bit
+    dest_start_bit = match_key_start_bit;
+
     p4pd_copy_be_src_to_be_dest(hwentry,
                    dest_start_bit,
                    hwkey,

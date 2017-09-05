@@ -1387,6 +1387,73 @@ class capri_table:
         self.gtm.tm.logger.debug("%s:%s:Split Profiles km0:%s, km1%s" % \
                     (self.gtm.d.name, self.p4_table.name, km0_profile, km1_profile))
 
+    def ct_tcam_get_key_end_bytes(self):
+        # get first and last k bytes and bits from key makers
+        assert self.num_km, pdb.set_trace()
+        _km = self.key_makers[0]
+        km0 = _km.shared_km if _km.shared_km else _km
+        km1 = None
+        if self.num_km > 1:
+            _km = self.key_makers[-1]
+            km1 = _km.shared_km if _km.shared_km else _km
+
+
+        # for tcams, when km_profiles are shared and common bytes are removed
+        # due to that it is possible that first and last k bytes are now different 
+        # than what is in table's combined profile
+        t_fk_byte = -1; t_lk_byte = -1
+        if len(self.combined_profile.k_byte_sel):
+            for b in km0.combined_profile.byte_sel:
+                if b in self.combined_profile.k_byte_sel:
+                    t_fk_byte = b
+                    break
+            if t_fk_byte == -1:
+                for b in km1.combined_profile.byte_sel:
+                    if b in self.combined_profile.k_byte_sel:
+                        t_fk_byte = b
+                        break
+            assert t_fk_byte != -1, pdb.set_trace()
+
+            if km1 != None:
+                for b in reversed(km1.combined_profile.byte_sel):
+                    if b in self.combined_profile.k_byte_sel:
+                        t_lk_byte = b
+                        break
+            if t_lk_byte == -1:
+                for b in reversed(km0.combined_profile.byte_sel):
+                    if b in self.combined_profile.k_byte_sel:
+                        t_lk_byte = b
+                        break
+            assert t_lk_byte != -1, pdb.set_trace()
+
+        t_fk_bit = -1; t_lk_bit = -1
+        if len(self.combined_profile.k_bit_sel):
+            for b in km0.combined_profile.bit_sel:
+                if b in self.combined_profile.k_bit_sel:
+                    t_fk_bit = b
+                    break
+            if t_fk_bit == -1:
+                for b in km1.combined_profile.bit_sel:
+                    if b in self.combined_profile.k_bit_sel:
+                        t_fk_bit = b
+                        break
+            assert t_fk_bit != -1, pdb.set_trace()
+            if km1 != None:
+                for b in reversed(km1.combined_profile.bit_sel):
+                    if b in self.combined_profile.k_bit_sel:
+                        t_lk_bit = b
+                        break
+            if t_lk_bit == -1:
+                for b in reversed(km0.combined_profile.bit_sel):
+                    if b in self.combined_profile.k_bit_sel:
+                        t_lk_bit = b
+                        break
+            assert t_lk_bit != -1, pdb.set_trace()
+
+        self.gtm.tm.logger.debug("%s:TCAM fk_byte %d lk_byte %d, bits %d, %d" % \
+                        (self.p4_table.name, t_fk_byte, t_lk_byte, t_fk_bit, t_lk_bit))
+        return (t_fk_byte, t_lk_byte, t_fk_bit, t_lk_bit)
+    
     def ct_update_key_offsets(self):
         # XXX for tables that do not share key-makers this is already computed - merge the two
         # methods ....
@@ -1397,6 +1464,8 @@ class capri_table:
             # for overflow hash table, fix the key_offset with the parent hash table
             return
 
+        # Re-init the offsets since this function can be called multiple times
+        self.start_key_off = -1; self.end_key_off = -1;
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
 
@@ -1409,6 +1478,7 @@ class capri_table:
         if len(self.combined_profile.k_bit_sel):
             fk_bit = self.combined_profile.k_bit_sel[0]
             lk_bit = self.combined_profile.k_bit_sel[-1]
+
         assert self.num_km, pdb.set_trace()
         _km = self.key_makers[0]
         km0 = _km.shared_km if _km.shared_km else _km
@@ -1416,6 +1486,10 @@ class capri_table:
         if self.num_km > 1:
             _km = self.key_makers[1]
             km1 = _km.shared_km if _km.shared_km else _km
+
+
+        if self.is_tcam_table():
+            fk_byte, lk_byte, fk_bit, lk_bit = self.ct_tcam_get_key_end_bytes()
 
         # compute start offset
         # since key makers are combined, bits may appear before/after/middle of a key
@@ -1534,14 +1608,8 @@ class capri_table:
         # this can be handled differently, need api changes to go with it
         if self.is_overflow:
             return
-        if self.num_actions() <= 1:
-            return
 
         action_id_size = self.gtm.tm.be.hw_model['match_action']['action_id_size']
-
-        if self.start_key_off >= action_id_size:
-            return
-        #pdb.set_trace()
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
         start_km = self.start_key_off / max_km_width
@@ -1553,19 +1621,121 @@ class capri_table:
         else:
             km_prof = self.key_makers[start_km].combined_profile
 
-        if shared_km:
-            # XXX need to fix all shared tables.. if shared table is an idx table, more checks
-            return 
+        if self.num_actions() > 1 and self.start_key_off < action_id_size:
+            #pdb.set_trace()
+            if shared_km:
+                # XXX need to fix all shared tables.. if shared table is an idx table, more checks
+                # so far does not run into it
+                pdb.set_trace()
+            else:
+                assert(len(km_prof.byte_sel) < max_kmB)
+                for _ in range((action_id_size+7)/8):
+                    km_prof.byte_sel.insert(0, -1)
+                    self.start_key_off += 8
+                    self.end_key_off += 8
+                    if km_prof.bit_loc >= 0:
+                        km_prof.bit_loc += 1
+                    if km_prof.bit_loc1 >= 0:
+                        km_prof.bit_loc1 += 1
 
-        assert(len(km_prof.byte_sel) < max_kmB)
-        for _ in range((action_id_size+7)/8):
+        if self.otcam_ct and (self.start_key_off % 16):
+            # if key maker is full - need to move things around.. XXX
+            # this does not happen so far, but needs to be done
+            assert(len(km_prof.byte_sel) < max_kmB), pdb.set_trace()
             km_prof.byte_sel.insert(0, -1)
-        self.end_key_off += 8
-        if km_prof.bit_loc >= 0:
-            km_prof.bit_loc += 1
-        if km_prof.bit_loc1 >= 0:
-            km_prof.bit_loc1 += 1
+            self.start_key_off += 8
+            self.end_key_off += 8
+            if km_prof.bit_loc >= 0:
+                km_prof.bit_loc += 1
+            if km_prof.bit_loc1 >= 0:
+                km_prof.bit_loc1 += 1
 
+    def _fix_tcam_table_key(self):
+        max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        max_kmB = max_km_width/8
+        # hw need tcam key to start at 2B boundary to use AXI shift for aligning the key
+        k_start = self.start_key_off / 8
+        key_szB = (self.final_key_size + 7)/8
+
+        if self.is_otcam:
+            # This needs to be fixed by fixing its parent hash table key - XXX
+            assert (k_start % 2) == 0, pdb.set_trace()
+
+        if (k_start % 2) == 0:
+            return False
+
+        km0_prof = self.key_makers[0].shared_km.combined_profile \
+            if self.key_makers[0].shared_km else \
+            self.key_makers[0].combined_profile
+
+        if self.num_km > 1:
+            km1_prof = self.key_makers[1].shared_km.combined_profile \
+                        if self.key_makers[1].shared_km \
+                        else self.key_makers[1].combined_profile
+        fix_km_prof = None
+        k_end = self.end_key_off / 8
+        if k_start < max_kmB:
+            fix_km_prof = km0_prof
+        else:
+            fix_km_prof = km1_prof
+
+        km_kstart = k_start % max_kmB
+
+        self.gtm.tm.logger.debug("_fix_tcam_table_key:%s: key_offs %d, %d bit_loc %d, %d" % \
+            (self.p4_table.name, self.start_key_off, self.end_key_off,
+            fix_km_prof.bit_loc, fix_km_prof.bit_loc1))
+
+        if len(fix_km_prof.byte_sel) < max_kmB:
+            fix_km_prof.byte_sel.insert(km_kstart, -1)
+            self.start_key_off += 8
+            self.end_key_off += 8
+            if fix_km_prof.bit_loc > km_kstart:
+                fix_km_prof.bit_loc += 1
+            if fix_km_prof.bit_loc1 > km_kstart:
+                fix_km_prof.bit_loc1 += 1
+            self.gtm.tm.logger.debug( \
+                "_fix_tcam_table_key:%s:EXTRA-BYTE: key_offs %d, %d bit_loc %d, %d" % \
+                (self.p4_table.name, self.start_key_off, self.end_key_off,
+                fix_km_prof.bit_loc, fix_km_prof.bit_loc1))
+            return False
+        else:
+            km_kstart = k_start % max_kmB
+            # this could happen when tcam key is right justified in km
+            pdb.set_trace()
+            i = km_kstart
+            for i in range(km_kstart):
+                if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
+                    continue
+                if fix_km_prof.byte_sel[i] < 0:
+                    fix_km_prof.byte_sel.insert(km_kstart+1, -1)
+                    fix_km_prof.byte_sel.pop(i)
+                    break
+            if i < km_kstart:
+                self.start_key_off -= 8
+                # don't change end off unless it is same as start
+                if k_start == k_end:
+                    self.end_key_off -= 8
+                if fix_km_prof.bit_loc > i and fix_km_prof.bit_loc < km_kstart:
+                    fix_km_prof.bit_loc -= 1
+                if fix_km_prof.bit_loc1 > i and fix_km_prof.bit_loc1 < km_kstart:
+                    fix_km_prof.bit_loc1 -= 1
+                return False
+
+            for i in range(km_kstart, max_kmB):
+                if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
+                    continue
+                if fix_km_prof.byte_sel[i] < 0:
+                    fix_km_prof.byte_sel.insert(km_kstart,-1) # add to front
+                    fix_km_prof.byte_sel.pop(i)
+                    break
+            assert i < max_kmB, pdb.set_trace() # cannot find free byte for alignment
+            if fix_km_prof.bit_loc < i and fix_km_prof.bit_loc > km_kstart:
+                fix_km_prof.bit_loc += 1
+            if fix_km_prof.bit_loc1 < i and fix_km_prof.bit_loc1 > km_kstart:
+                fix_km_prof.bit_loc1 += 1
+            # complicated start/end offset manipulation.. let it be done by caller
+            return True
+            
     def _fix_tcam_table_km_profile(self):
         # XXX make it a generic optimization
         # This function is written to handle a specific case seen while compiling nic.p4
@@ -1573,10 +1743,10 @@ class capri_table:
         # tcam table. In this case a lot of fields were common between two key makers,
         # those fields can be removed from one (non-shared) key maker and key can be compressed
         if self.num_km < 2:
-            return
+            return False
 
         if (self.final_key_size - self.key_size) < 64:
-            return  # not worth fixing it ??? XXX
+            return False  # not worth fixing it ??? XXX
 
         km0_shared = False; km1_shared = False
         km0_prof = self.key_makers[0].combined_profile
@@ -1591,7 +1761,7 @@ class capri_table:
 
         # if both kms are shared or both kms not shared, cannot compress
         if km0_shared == km1_shared:
-            return
+            return False
 
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
@@ -1606,7 +1776,7 @@ class capri_table:
             fix_km_prof = km1_prof
 
         if len(common_byte_sel) == 0:
-            return # nothing is common
+            return False # nothing is common
 
         # remove the -1 bytes
         if fix_km_prof.bit_loc1 != -1:
@@ -1617,6 +1787,10 @@ class capri_table:
 
         if -1 in common_byte_sel:
             common_byte_sel.remove(-1)
+
+        if len(common_byte_sel):
+            self.gtm.tm.logger.debug("%s:removing common bytes from km0 and km1 %s" % \
+                (self.p4_table.name, common_byte_sel))
 
         for b in common_byte_sel:
             fix_km_prof.byte_sel.remove(b)
@@ -1643,6 +1817,7 @@ class capri_table:
             # right justify the bytes
             # arrange it as -
             # | ...[pad]....i1_bytes | k_bytes | ki_bits | i2_bytes |
+            num_bytes = 0
             if len(fix_km_prof.bit_sel):
                 num_byte = (len(fix_km_prof.bit_sel) + 7) / 8
                 if len(fix_km_prof.k_byte_sel):
@@ -1653,13 +1828,13 @@ class capri_table:
                     bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.i2_byte_sel[0])
                 else:
                     if right_justify:
-                        bit_loc = max_kmB
+                        bit_loc = max_kmB-1
                     else:
                         bit_loc = 0
 
                 fix_km_prof.bit_loc = bit_loc
                 if num_byte > 1:
-                    if bit_loc == max_kmB:
+                    if bit_loc == max_kmB-1:
                         fix_km_prof.bit_loc1 = bit_loc
                         fix_km_prof.bit_loc = bit_loc - 1
                     else:
@@ -1677,7 +1852,7 @@ class capri_table:
                 fix_km_prof.bit_loc1 = -1
 
             if right_justify:
-                for _ in range(len(fix_km_prof.byte_sel), max_kmB):
+                for _ in range(len(fix_km_prof.byte_sel), max_kmB-num_bytes):
                     fix_km_prof.byte_sel.insert(0, -1)
             
         if not km0_shared:
@@ -1686,6 +1861,7 @@ class capri_table:
             _fix_bit_loc(fix_km_prof, max_kmB, False)
 
         # need to recompute key_offsets - done by caller
+        return True
 
     def _fix_idx_table_km_profile(self):
         # if k_bits: need to move those the the end of bit_sel
@@ -3050,7 +3226,13 @@ class capri_stage:
             if ct.is_hash_table():
                 ct._fix_hbm_hash_table_km_profile()
             if ct.is_tcam_table() and ct.final_key_size > ct.key_phv_size:
-                ct._fix_tcam_table_km_profile()
+                if ct._fix_tcam_table_km_profile():
+                    ct.ct_update_key_offsets()
+            if ct.is_tcam_table():
+                # Same fix is needed for otcam.. but since the key is shared with hash-table
+                # need to fix that too.. XXX will commit a a separate fix
+                if ct._fix_tcam_table_key():
+                    ct.ct_update_key_offsets()
 
         # re-run key_offset calculation as any table sharing km_profile with index table
         # my have changes in offset
@@ -4562,8 +4744,14 @@ class capri_table_manager:
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
                         if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:
-                            #TODO Entry packing should adhere to thos logic
+                            #TODO Entry packing should adhere to those logic
+                            # the shift should be programmed based on gap between data and key_start
+                            # p4pd code should also match this logic.
+                            # Temp HACK - set it to 0 and pad it in p4pd
+                            '''
                             profile['axishift']['value'] = "0x%x" % (ctable.start_key_off / 16)
+                            '''
+                            profile['axishift']['value'] = "0x%x" % (0)
                         else:
                             profile['axishift']['value'] = "0x%x" % (0)
                     elif mem_type == 'tcam':

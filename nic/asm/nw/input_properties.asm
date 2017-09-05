@@ -16,8 +16,7 @@ input_properties:
   phvwr       p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
   phvwr       p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr       p.control_metadata_flow_miss_action, d.input_properties_d.flow_miss_action
-  phvwr       p.control_metadata_flow_miss_tm_oqueue[4:2], d.input_properties_d.flow_miss_tm_oqueue_sbit0_ebit2
-  phvwr       p.control_metadata_flow_miss_tm_oqueue[1:0], d.input_properties_d.flow_miss_tm_oqueue_sbit3_ebit4
+  phvwr       p.control_metadata_flow_miss_tm_oqueue, d.input_properties_d.flow_miss_tm_oqueue
   phvwr       p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwr       p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable
   phvwr       p.control_metadata_lif_filter, d.input_properties_d.filter
