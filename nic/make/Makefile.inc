@@ -128,13 +128,16 @@ CLEANFILES += $(LCLEANFILES)
 OPT = -g 
 # OPT = -O3
 
-CFLAGS = $(OPT) -Wall -Werror -Wuninitialized -fpic
+# For code coverage, do "make GCOV=--coverage <target>"
+GCOV?=
+
+CFLAGS = $(OPT) $(GCOV) -Wall -Werror -Wuninitialized -fpic
 # CFLAGS += -MT $(GENDIR)/$(addsuffix .o,$(basename $(notdir $(<)))) -MMD -MP -MF $(GENDIR)/$(notdir $*).d
 # Original
 CFLAGS += -MT $@ -MMD -MP -MF $(GENDIR)/$*.d
 CFLAGS += $(LCFLAGS)
 
-CXXFLAGS = $(OPT) -std=c++11 -Wall -Werror -Wuninitialized -fpic
+CXXFLAGS = $(OPT) $(GCOV) -std=c++11 -Wall -Werror -Wuninitialized -fpic
 # CXXFLAGS += -MT $(GENDIR)/$(addsuffix .o,$(basename $(notdir $(<)))) -MMD -MP -MF $(GENDIR)/$(notdir $*).d
 # Original
 CXXFLAGS += -MT $@ -MMD -MP -MF $(GENDIR)/$*.d
@@ -272,7 +275,7 @@ CLEANFILES += $(GENLIB)/$(SHAREDLIBRARY)
 all: $(LPREALL) $(GENTARGET) $(LPOSTALL)
 
 quiet_cmd_sliblink = SHARED  $(SHAREDLIBRARY)
-      cmd_sliblink = $(CXX) -shared -o $@ $(OBJECTS) $(SLOBJECTS) $(SLFLAGS)
+      cmd_sliblink = $(CXX) -shared -o $@ $(OBJECTS) $(SLOBJECTS) $(SLFLAGS) $(GCOV)
       # Original
       # cmd_sliblink = $(CXX) -shared -o $@ $(OBJECTS) && cp $@ $(GENLIB)/$(@F)
 

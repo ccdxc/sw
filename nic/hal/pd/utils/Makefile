@@ -58,7 +58,7 @@ CUSTOM_CLEAN = stub_clean
 include $(TOPDIR)/make/Makefile.inc
 
 $(OBJDIR)/libpdutils_stub.so: $(SLOBJECTS_STUB)
-	g++ -g -shared -o $(OBJDIR)/libpdutils_stub.so $(SLOBJECTS_STUB)
+	g++ -g -shared -o $(OBJDIR)/libpdutils_stub.so $(SLOBJECTS_STUB) $(GCOV)
 
 stub_clean:
 	rm -rf ../../../obj/libpdutils_stub.so

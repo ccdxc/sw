@@ -46,7 +46,7 @@ LDFLAGS +=	-lhal \
 			-lzmq \
 			-lsvc \
 			-lpdcommon \
-			-lhostmem
+			-lhostmem \
 
 SRC_FILES :=	hal.cc \
 				hal_mem.cc \
@@ -120,14 +120,14 @@ OBJ_FILES := $(OBJ_FILES:%=$(GENDIR)/%.o)
 
 $(OBJ_DIR)/%.o: %.cc
 	@echo Compiling $@
-	$(CXX) $(CPPFLAGS) $(INC_DIRS) -fpic $< -o $(OBJ_DIR)/$(shell basename $@)
+	$(CXX) $(CPPFLAGS) $(INC_DIRS) -fpic $< -o $(OBJ_DIR)/$(shell basename $@) $(GCOV)
 
 all: $(OBJ_FILES)
 	@#@echo $(OBJ_FILES)
 	@#$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
-	$(CXX) -g -shared -o $(SHARED_OBJS)
-	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal
-	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub
+	$(CXX) -g -shared -o $(SHARED_OBJS) $(GCOV)
+	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal $(GCOV)
+	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV)
 
 clean:
 	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_mem.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
