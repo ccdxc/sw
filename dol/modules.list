@@ -571,6 +571,16 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PKT_TO_ARQ
+        enable  : False
+        package : test.tcp-tls-proxy
+        module  : pkt_to_arq
+        spec    : tcp_proxy.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : PKT_TO_IPSECCBQ
         enable  : False
         package : test.ipsec-proxy

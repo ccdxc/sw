@@ -21,6 +21,7 @@ SessionIdAllocator      = objects.TemplateFieldObject("range/1/65535")
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 TcpCbIdAllocator        = objects.TemplateFieldObject("range/0/32768")
 TlsCbIdAllocator        = objects.TemplateFieldObject("range/0/32768")
+CpuIdAllocator          = objects.TemplateFieldObject("range/1/4")
 IpsecCbIdAllocator      = objects.TemplateFieldObject("range/0/32768")
 SecProfIdAllocator      = objects.TemplateFieldObject("range/1/256")
 

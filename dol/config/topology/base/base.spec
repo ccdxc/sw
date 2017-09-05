@@ -62,3 +62,8 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_OVERLAY_VXLAN
         count   : 1
         lifns   : range/301/400
+
+cpu:
+    - entry:
+        id      : Cpu1 
+        lif_id  : 1003
