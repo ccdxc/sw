@@ -9,6 +9,7 @@ struct phv_ p;
 %%
         .param esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex 
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
+        .param IPSEC_CB_BASE
         .align
 ipsec_encap_txdma_initial_table:
     phvwr p.p4_intr_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -18,7 +19,7 @@ ipsec_encap_txdma_initial_table:
     phvwr p.p4_txdma_intr_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     add r1, r0, d.ipsec_cb_index
-    sll r1, r1, IPSEC_CB_SIZE_SHIFT
+    sll r1, r1, IPSEC_CB_SHIFT_SIZE
     addi r1, r1, IPSEC_CB_BASE 
     phvwr p.txdma1_global_ipsec_cb_addr, r1 
     

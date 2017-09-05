@@ -5,6 +5,8 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
+#define CAPRI_P4PLUS_NUM_SYMBOLS 22
+
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.
@@ -136,7 +138,7 @@ capri_p4p_asm_init()
     }
 
     symbols = (capri_prog_param_info_t *)HAL_CALLOC(capri_prog_param_info_t,
-                        8 * sizeof(capri_prog_param_info_t));
+                        CAPRI_P4PLUS_NUM_SYMBOLS * sizeof(capri_prog_param_info_t));
     symbols[0].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[0].num_params = 1;
     symbols[0].params[0].name = RNMDR_TABLE_BASE;
@@ -173,11 +175,76 @@ capri_p4p_asm_init()
     symbols[7].params[0].name = TNMPR_TABLE_BASE;
     symbols[7].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
+    symbols[8].name = "esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table.bin";
+    symbols[8].num_params = 1;
+    symbols[8].params[0].name = IPSEC_PAD_BYTES_HBM_TABLE_BASE;
+    symbols[8].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
 
+    symbols[9].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet.bin";
+    symbols[9].num_params = 1;
+    symbols[9].params[0].name = IPSEC_CB_BASE;
+    symbols[9].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
+    symbols[10].name = "esp_ipv4_tunnel_h2n_update_input_desc_aol.bin";
+    symbols[10].num_params = 1;
+    symbols[10].params[0].name = IPSEC_CB_BASE;
+    symbols[10].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
+    symbols[11].name = "esp_ipv4_tunnel_n2h_txdma2_load_in_desc.bin";
+    symbols[11].num_params = 1;
+    symbols[11].params[0].name = IPSEC_CB_BASE;
+    symbols[11].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
+    symbols[12].name = "esp_ipv4_tunnel_n2h_txdma_initial_table.bin";
+    symbols[12].num_params = 1;
+    symbols[12].params[0].name = IPSEC_CB_BASE;
+    symbols[12].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
+    symbols[13].name = "esp_ipv4_tunnel_n2h_update_input_desc_aol.bin";
+    symbols[13].num_params = 1;
+    symbols[13].params[0].name = IPSEC_CB_BASE;
+    symbols[13].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
+    symbols[14].name = "esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore.bin";
+    symbols[14].num_params = 1;
+    symbols[14].params[0].name = RNMDR_TABLE_BASE;
+    symbols[14].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[15].name = "esp_ipv4_tunnel_h2n_allocate_input_page_semaphore.bin";
+    symbols[15].num_params = 1;
+    symbols[15].params[0].name = RNMPR_TABLE_BASE;
+    symbols[15].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[16].name = "esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore.bin";
+    symbols[16].num_params = 1;
+    symbols[16].params[0].name = TNMDR_TABLE_BASE;
+    symbols[16].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    symbols[17].name = "esp_ipv4_tunnel_h2n_allocate_output_page_semaphore.bin";
+    symbols[17].num_params = 1;
+    symbols[17].params[0].name = TNMPR_TABLE_BASE;
+    symbols[17].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[18].name = "esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore.bin";
+    symbols[18].num_params = 1;
+    symbols[18].params[0].name = RNMDR_TABLE_BASE;
+    symbols[18].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[19].name = "esp_ipv4_tunnel_n2h_allocate_input_page_semaphore.bin";
+    symbols[19].num_params = 1;
+    symbols[19].params[0].name = RNMPR_TABLE_BASE;
+    symbols[19].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[20].name = "esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore.bin";
+    symbols[20].num_params = 1;
+    symbols[20].params[0].name = TNMDR_TABLE_BASE;
+    symbols[20].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    symbols[21].name = "esp_ipv4_tunnel_n2h_allocate_output_page_semaphore.bin";
+    symbols[21].num_params = 1;
+    symbols[21].params[0].name = TNMPR_TABLE_BASE;
+    symbols[21].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
+    
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
-                            p4plus_prm_base_addr, symbols, 8);
+                            p4plus_prm_base_addr, symbols, CAPRI_P4PLUS_NUM_SYMBOLS);
 
     HAL_FREE(capri_prog_param_info_t, symbols);
 

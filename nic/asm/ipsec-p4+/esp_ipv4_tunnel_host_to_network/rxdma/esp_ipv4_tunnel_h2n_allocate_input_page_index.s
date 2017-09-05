@@ -11,9 +11,9 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_allocate_input_page_index:
     phvwri p.p42p4plus_hdr_table2_valid, 0
-    sll r1, d.in_page_index, DESC_SHIFT_WIDTH 
-    addi r1, r1, IN_PAGE_ADDR_BASE
-    phvwr p.t0_s2s_in_page_addr, r1
+    //sll r1, d.in_page_index, DESC_SHIFT_WIDTH 
+    //addi r1, r1, IN_PAGE_ADDR_BASE
+    phvwr p.t0_s2s_in_page_addr, d.in_page_index
     phvwr p.ipsec_int_header_in_page, r1
     nop.e 
 

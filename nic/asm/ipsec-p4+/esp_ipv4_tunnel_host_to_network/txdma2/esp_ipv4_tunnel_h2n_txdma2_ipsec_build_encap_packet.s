@@ -8,6 +8,7 @@ struct tx_table_s4_t0_tx_table_s4_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
+        .param IPSEC_CB_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
@@ -20,7 +21,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     
     phvwri p.esp_iv_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r1, r0, k.txdma2_global_ipsec_cb_index
-    sll r1, r1, IPSEC_CB_SIZE_SHIFT
+    sll r1, r1, IPSEC_CB_SHIFT_SIZE 
     addi r1, r1, IPSEC_CB_BASE
     addi r1, r1, ESP_BASE_OFFSET
     phvwr p.esp_iv_hdr_dma_cmd_addr, r1

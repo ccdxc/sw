@@ -11,6 +11,7 @@ struct phv_ p;
         .param          esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
         .param          esp_ipv4_tunnel_h2n_allocate_input_page_semaphore
         .param          esp_ipv4_tunnel_h2n_allocate_output_page_semaphore
+        .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
@@ -26,7 +27,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     sub r5, d.block_size, r4
     phvwr p.ipsec_int_header_pad_size, r5
     sll r6, r4, 8
-    addi r6, r6, IPSEC_PAD_BYTES_TABLE_BASE
+    addi r6, r6, IPSEC_PAD_BYTES_HBM_TABLE_BASE 
     phvwr p.ipsec_to_stage3_pad_addr, r6
     phvwr p.ipsec_to_stage3_pad_size, r5
     add r7, r5, d.icv_size

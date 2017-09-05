@@ -8,12 +8,13 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_n2h_allocate_input_page_index
+        .param RNMPR_TABLE_BASE
         .align
 
 esp_ipv4_tunnel_n2h_allocate_input_page_semaphore:
     phvwri p.p42p4plus_hdr_table2_valid, 1
     sll r1, d.in_page_ring_index, 3 
-    addi r1, r1, IN_PAGE_RING_BASE
+    addi r1, r1, RNMPR_TABLE_BASE 
     phvwr  p.common_te2_phv_table_addr, r1
     addi r2, r0, esp_ipv4_tunnel_n2h_allocate_input_page_index
     srl r2, r2, 6 
