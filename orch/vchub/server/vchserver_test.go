@@ -770,15 +770,15 @@ func TestNwIFInspect(t *testing.T) {
 	wCtx, wCancel = context.WithCancel(context.Background())
 
 	doneCh := make(chan bool)
-	go func() {
+	watcherFunc := func(errStr string) {
 		for {
-			stream, err = suite.vcHubClient.WatchNwIFs(wCtx, ws)
+			stream, err := suite.vcHubClient.WatchNwIFs(wCtx, ws)
 			if err != nil {
 				t.Fatalf("Watch failed -- %v", err)
 			}
 			for {
 				_, err = stream.Recv()
-				if err != nil && strings.Contains(err.Error(), "Watch session closed") {
+				if err != nil && strings.Contains(err.Error(), errStr) {
 					close(doneCh)
 					return
 				} else if err != nil {
@@ -787,7 +787,8 @@ func TestNwIFInspect(t *testing.T) {
 				}
 			}
 		}
-	}()
+	}
+	go watcherFunc("Watch session closed")
 
 	suite.w4Channel(t, "/vchub/nwifs/", true)
 
@@ -819,10 +820,7 @@ func TestNwIFInspect(t *testing.T) {
 		t.Fatalf("Watch failed -- %v", err)
 	}
 	doneCh = make(chan bool)
-	go func() {
-		stream.Recv()
-		close(doneCh)
-	}()
+	go watcherFunc("canceled")
 	suite.w4Channel(t, "/vchub/nwifs/", true)
 
 	wCancel()
