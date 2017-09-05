@@ -54,7 +54,7 @@ typedef struct if_s {
     if_id_t             if_id;                       // interface id
     intf::IfType        if_type;                     // interface type
     intf::IfStatus      if_admin_status;             // admin status
-    tenant_id_t         tid;                         // tenant id
+    tenant_id_t         tid;                         // tenant id (TODO: what is this for ?)
 
     union {
         // enic interface info
@@ -295,52 +295,41 @@ extern void *if_get_handle_key_func(void *entry);
 extern uint32_t if_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool if_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t enicif_create(intf::InterfaceSpec& spec, 
+hal_ret_t enic_if_create(intf::InterfaceSpec& spec, 
+                         intf::InterfaceResponse *rsp,
+                         if_t *hal_if);
+hal_ret_t uplink_if_create(intf::InterfaceSpec& spec, 
+                           intf::InterfaceResponse *rsp,
+                           if_t *hal_if);
+hal_ret_t uplink_pc_create(intf::InterfaceSpec& spec, 
+                           intf::InterfaceResponse *rsp,
+                           if_t *hal_if);
+hal_ret_t cpu_if_create(intf::InterfaceSpec& spec, 
                         intf::InterfaceResponse *rsp,
                         if_t *hal_if);
-hal_ret_t uplinkif_create(intf::InterfaceSpec& spec, 
-                          intf::InterfaceResponse *rsp,
-                          if_t *hal_if);
-hal_ret_t uplinkpc_create(intf::InterfaceSpec& spec, 
-                          intf::InterfaceResponse *rsp,
-                          if_t *hal_if);
-hal_ret_t cpuif_create(intf::InterfaceSpec& spec, 
-                       intf::InterfaceResponse *rsp,
-                       if_t *hal_if);
-#if 0
-hal_ret_t enicif_create(intf::InterfaceSpec& spec, 
-                        intf::InterfaceResponse *rsp,
-                        if_t *hal_if);
-#endif
-hal_ret_t uplinkif_update(intf::InterfaceSpec& spec, 
-                          intf::InterfaceResponse *rsp,
-                          if_t *hal_if,
-                          void *if_args);
-hal_ret_t uplinkpc_update(intf::InterfaceSpec& spec, 
-                          intf::InterfaceResponse *rsp,
-                          if_t *hal_if,
-                          void *if_args);
-hal_ret_t tunnelif_create(intf::InterfaceSpec& spec, 
-                          intf::InterfaceResponse *rsp,
-                          if_t *hal_if);
-hal_ret_t get_lif_hdl_for_enicif(intf::InterfaceSpec& spec, 
-                                 intf::InterfaceResponse *rsp,
-                                 if_t *hal_if);
-hal_ret_t get_lif_hdl_for_cpuif(intf::InterfaceSpec& spec, 
-                                intf::InterfaceResponse *rsp,
-                                if_t *hal_if);
-if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_hdl);
+hal_ret_t uplink_if_update(intf::InterfaceSpec& spec, 
+                           intf::InterfaceResponse *rsp,
+                           if_t *hal_if, void *if_args);
+hal_ret_t uplink_pc_update(intf::InterfaceSpec& spec, 
+                           intf::InterfaceResponse *rsp,
+                           if_t *hal_if,
+                           void *if_args);
+hal_ret_t tunnel_if_create(intf::InterfaceSpec& spec, 
+                           intf::InterfaceResponse *rsp,
+                           if_t *hal_if);
+hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec, 
+                                     intf::InterfaceResponse *rsp,
+                                     if_t *hal_if);
+hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec, 
+                                    intf::InterfaceResponse *rsp,
+                                    if_t *hal_if);
+if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_handle);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 
 hal_ret_t lif_create(intf::LifSpec& spec, intf::LifResponse *rsp, 
                      lif_hal_info_t *lif_hal_info);
-hal_ret_t lif_p4_create(intf::LifSpec& spec, 
-                        intf::LifResponse *rsp,
-                        lif_t *lif,
-                        lif_hal_info_t *lif_hal_info);
-
 
 hal_ret_t interface_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);

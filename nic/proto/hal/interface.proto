@@ -170,6 +170,8 @@ message GetQStateRequestMsg {
 }
 
 message QStateGetResp {
+  // TODO: what is user to make out of this error_code if it is non-zero ??
+  //       why this is not using types.ApiStatus ???
   int32 error_code  = 1;  // 0 = success, otherwise errno.
   uint64 q_addr     = 2;  // Address of the queue in HBM.
   bytes queue_state = 3;  // Actual Queue state data.
@@ -206,6 +208,8 @@ message SetQStateRequestMsg {
 }
 
 message QStateSetResp {
+  // TODO: what is user to make out of this error_code if it is non-zero ??
+  //       why this is not using types.ApiStatus ??
   int32 error_code = 1;  // 0 = success, otherwise errno.
 }
 
@@ -461,9 +465,10 @@ message InterfaceGetRequestMsg {
 
 // InterfaceGetResponse captures all the information about a interface
 message InterfaceGetResponse {
-  InterfaceSpec      spec     = 1;    // interface specification/configuration
-  InterfaceStatus    status   = 2;    // interface status
-  InterfaceStats     stats    = 3;    // interface statistics
+  types.ApiStatus    api_status = 1;    // API status code
+  InterfaceSpec      spec       = 2;    // interface specification/configuration
+  InterfaceStatus    status     = 3;    // interface status
+  InterfaceStats     stats      = 4;    // interface statistics
 }
 
 // InterfaceGetResponseMsg is response to InterfaceGetRequestMsg

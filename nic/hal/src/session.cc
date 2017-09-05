@@ -140,7 +140,7 @@ flowkey2str (const flow_key_t& key)
 // extract mirror sessions specified in spec into ingress and egress bitmaps
 //------------------------------------------------------------------------------
 static hal_ret_t
-extract_mirror_sessions(const FlowSpec& spec, uint8_t *ingress, uint8_t *egress)
+extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress)
 {
     int i;
     *ingress = 0;
@@ -330,8 +330,9 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
 // extract all the TCP related state from session spec
 //------------------------------------------------------------------------------
 hal_ret_t
-extract_session_state_from_spec (session_state_t *session_state, bool is_initiator_flow,
-                             const ConnTrackInfo& conn_track_info)
+extract_session_state_from_spec (session_state_t *session_state,
+                                 bool is_initiator_flow,
+                                 const ConnTrackInfo& conn_track_info)
 {
     flow_state_t    *flow_state;
 
@@ -359,7 +360,7 @@ extract_session_state_from_spec (session_state_t *session_state, bool is_initiat
 // given a flow key, get the source and destination endpoint records
 //------------------------------------------------------------------------------
 hal_ret_t
-ep_get_from_flow_key(const flow_key_t* key, ep_t **sep, ep_t **dep)
+ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
 {
     *sep = *dep = NULL;
 
@@ -400,9 +401,11 @@ ep_get_from_flow_key_spec (tenant_id_t tid, const FlowKey& flow_key,
     mac_addr_t    mac_addr;
     ip_addr_t     ip_addr;
 
-    *sep = *dep = NULL;
     HAL_TRACE_DEBUG("has_l2_key: {}; has_v4_key: {}; has_v6_key: {}",
-            flow_key.has_l2_key(), flow_key.has_v4_key(), flow_key.has_v6_key());
+                    flow_key.has_l2_key(), flow_key.has_v4_key(),
+                    flow_key.has_v6_key());
+
+    *sep = *dep = NULL;
     if (flow_key.has_l2_key()) {
         MAC_UINT64_TO_ADDR(mac_addr, flow_key.l2_key().smac());
         *sep = find_ep_by_l2_key(flow_key.l2_key().l2_segment_id(),

@@ -4,9 +4,9 @@
 
 namespace hal {
 
-// ----------------------------------------------------------------------------
-// Convert ip address spec in proto to ip_addr used in HAL
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// convert IP address spec in proto to ip_addr used in HAL
+//----------------------------------------------------------------------------
 hal_ret_t
 ip_addr_spec_to_ip_addr (ip_addr_t *out_ipaddr,
                          const types::IPAddress& in_ipaddr)
@@ -23,35 +23,52 @@ ip_addr_spec_to_ip_addr (ip_addr_t *out_ipaddr,
     } else {
         return HAL_RET_INVALID_ARG;
     }
+
     return HAL_RET_OK;
 }
 
-// ----------------------------------------------------------------------------
-// Convert ip prefix spec in proto to ip_addr used in HAL
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// convert HAL IP address to spec
+//----------------------------------------------------------------------------
 hal_ret_t
-ip_pfx_spec_to_pfx_spec(ip_prefix_t *ip_pfx, 
-                        const types::IPPrefix& in_ippfx)
+ip_addr_to_spec (types::IPAddress *ip_addr_spec,
+                 const ip_addr_t *ip_addr)
+{
+    if (ip_addr->af == types::IP_AF_INET) {
+        ip_addr_spec->set_ip_af(types::IP_AF_INET);
+        ip_addr_spec->set_v4_addr(ip_addr->addr.v4_addr);
+    } else {
+        ip_addr_spec->set_ip_af(types::IP_AF_INET6);
+        ip_addr_spec->set_v6_addr(ip_addr->addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    }
+
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// convert IP prefix spec in proto to ip_addr used in HAL
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx, 
+                         const types::IPPrefix& in_ippfx)
 {
     hal_ret_t ret = HAL_RET_OK;
 
     ip_pfx->len = in_ippfx.prefix_len();
     ret = ip_addr_spec_to_ip_addr(&ip_pfx->addr, in_ippfx.address());
-
     return ret;
-
 }
 
-// ----------------------------------------------------------------------------
-// check if ip address is in ip prefix
-// ----------------------------------------------------------------------------
-bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
+//----------------------------------------------------------------------------
+// check if IP address is in IP prefix
+//----------------------------------------------------------------------------
+bool
+ip_addr_in_ip_pfx (ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
 {
-    int num_bytes = 0;
-    int last_byte = 0;
-    int num_bits_in_last_byte = 0;
-    uint8_t *pos1 = NULL, *pos2 = NULL;
-    unsigned char mask = 0;
+    int              num_bytes = 0, last_byte = 0;
+    int              num_bits_in_last_byte = 0;
+    uint8_t          *pos1 = NULL, *pos2 = NULL;
+    unsigned char    mask = 0;
 
     if (!ipaddr || !ip_pfx) {
         return false;
@@ -64,7 +81,6 @@ bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
     num_bytes = ip_pfx->len >> 3;
     last_byte = (ip_pfx->len & 0x7) ? num_bytes + 1 : -1;
 
-
     if (ipaddr->af == IP_AF_IPV4) {
         pos1 = ipaddr->addr.v6_addr.addr8 + 4;
         pos2 = ip_pfx->addr.addr.v6_addr.addr8 + 4;
@@ -76,7 +92,8 @@ bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
             pos1--;
             pos2--;
         }
-        // Compare last byte
+
+        // compare last byte
         if (last_byte != -1) { 
             num_bits_in_last_byte = ip_pfx->len & 0x7;
             mask = ~((1 << (8 - num_bits_in_last_byte)) - 1);
@@ -85,13 +102,13 @@ bool ip_addr_in_ip_pfx(ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
             }
         }
     } else {
-        // Compare bytes
+        // compare bytes
         if (memcmp(ipaddr->addr.v6_addr.addr8, 
                     ip_pfx->addr.addr.v6_addr.addr8, num_bytes)) {
             return false;
         }
 
-        // Compare last byte
+        // compare last byte
         if (last_byte != -1) { 
             num_bits_in_last_byte = ip_pfx->len & 0x7;
             unsigned char mask = ~((1 << (8 - num_bits_in_last_byte)) - 1);

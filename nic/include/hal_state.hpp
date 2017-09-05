@@ -59,7 +59,6 @@ public:
 
     // get APIs for interface state
     slab *if_slab(void) const { return if_slab_; }
-    indexer *if_hwid_idxr(void) const { return if_hwid_idxr_; }
     ht *if_id_ht(void) const { return if_id_ht_; }
     ht *if_hwid_ht(void) const { return if_hwid_ht_; }
     ht *if_hal_handle_ht(void) const { return if_hal_handle_ht_; }
@@ -179,7 +178,6 @@ private:
     // interface related state
     struct {
         slab       *if_slab_;
-        indexer    *if_hwid_idxr_;
         ht         *if_id_ht_;
         ht         *if_hwid_ht_;
         ht         *if_hal_handle_ht_;

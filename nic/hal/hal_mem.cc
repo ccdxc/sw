@@ -124,9 +124,6 @@ hal_state::init(void)
                              false, true, true, true);
     HAL_ASSERT_RETURN((if_slab_ != NULL), false);
 
-    if_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_INTERFACES);
-    HAL_ASSERT_RETURN((if_hwid_idxr_ != NULL), false);
-
     if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,
                             hal::if_get_key_func,
                             hal::if_compute_hash_func,
@@ -428,7 +425,6 @@ hal_state::hal_state()
     lif_hal_handle_ht_ = NULL;
 
     if_slab_ = NULL;
-    if_hwid_idxr_ = NULL;
     if_id_ht_ = NULL;
     if_hwid_ht_ = NULL;
     if_hal_handle_ht_ = NULL;
@@ -512,7 +508,6 @@ hal_state::~hal_state()
     lif_hal_handle_ht_ ? delete lif_hal_handle_ht_ : HAL_NOP;
 
     if_slab_ ? delete if_slab_ : HAL_NOP;
-    if_hwid_idxr_ ? delete if_hwid_idxr_ : HAL_NOP;
     if_id_ht_ ? delete if_id_ht_ : HAL_NOP;
     if_hwid_ht_ ? delete if_hwid_ht_ : HAL_NOP;
     if_hal_handle_ht_ ? delete if_hal_handle_ht_ : HAL_NOP;
