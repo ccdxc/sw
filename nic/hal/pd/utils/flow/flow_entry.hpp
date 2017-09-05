@@ -74,6 +74,7 @@ public:
     bool get_is_anchor_entry() { return is_anchor_entry_; }
     FlowSpineEntry *get_spine_entry() { return spine_entry_; }
     uint32_t get_fhct_index() { return fhct_index_; }
+    void print_fe();
 
     void set_key(void *key);
     void set_key_len(uint32_t key_len);

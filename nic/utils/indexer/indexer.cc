@@ -243,5 +243,21 @@ end:
     return is_alloced;
 }
 
+// ---------------------------------------------------------------------------
+// usage()
+//  - Returns the number of entries being used (or bits set)
+// ---------------------------------------------------------------------------
+uint32_t
+indexer::usage()
+{
+	uint32_t	usage = 0;
+	for (uint32_t i = 0; i < size_; i++) {
+		if (is_alloced(i)) {
+			usage++;
+		}
+	}
+
+	return usage;
+}
 }    // namespace hal
 }    // namespace utils

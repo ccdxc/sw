@@ -236,6 +236,955 @@ TEST_F(flow_test, test6) {
 
 }
 
+// ----------------------------------------------------------------------------
+// Test 7:
+//      - Create flow table
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test7) {
+
+    // hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+	unsigned seed = std::time(0);
+    std::srand (seed);
+    // uint32_t flow_idx[1000000] = { 0 };
+    uint32_t ft_bits = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+    
+    while (1) {
+        for (int i = 0; i < 4; i++) {
+            key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
+            key.flow_lkp_metadata_lkp_dst[i] = rand() % 256;
+        }
+        key.flow_lkp_metadata_lkp_vrf = rand() % 65536;
+        key.flow_lkp_metadata_lkp_sport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_dport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_proto = rand() % 256;
+
+        ft_bits = fl.calc_hash_(&key, &data);
+        HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
+
+        if (ft_bits == 0x10001) {
+            HAL_TRACE_DEBUG("MATCH::");
+            for (int i = 0; i < 4; i++) {
+                HAL_TRACE_DEBUG("Src[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_src[i]);
+                HAL_TRACE_DEBUG("Dst[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_dst[i]);
+            }
+            HAL_TRACE_DEBUG("Vrf: {:#x}, sport: {:#x}, dport: {:#x}, proto: {:#x}",
+                    key.flow_lkp_metadata_lkp_vrf,
+                    key.flow_lkp_metadata_lkp_sport,
+                    key.flow_lkp_metadata_lkp_dport,
+                    key.flow_lkp_metadata_lkp_proto);
+        }
+    }
+
+
+#if 0
+    data.actionid = 0;
+
+    uint32_t base = 0;
+    for (int i = 0; i < 1000000; i++) {
+        rs = fl.insert((void *)&key, (void *)&data, &flow_idx[i]);
+        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+        key.flow_lkp_metadata_lkp_dport++;
+        if (key.flow_lkp_metadata_lkp_dport == 0) {
+            base++;
+            key.flow_lkp_metadata_lkp_sport = base;
+        }
+    }
+#endif
+
+#if 0
+    data.actionid = 2;
+    rs = fl.update(flow_idx[2] + 1, (void *)&data);
+    ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
+
+    for (int i = 0; i < 3; i++) {
+        rs = fl.update(flow_idx[i], (void *)&data);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
+#endif
+}
+
+// ----------------------------------------------------------------------------
+// Test 8:
+//      - Create flow with collisions
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test8) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Test 9:
+//      - Create flow with collisions
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test9) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Test 10:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Delete 1
+//      - Delete 2
+//      - Delete 3
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test10) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Test 11:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Delete 1
+//      - Delete 3
+//      - Delete 2
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test11) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+// ----------------------------------------------------------------------------
+// Test 12:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Insert 4
+//      - Delete 1
+//      - Delete 2
+//      - Delete 3
+//      - Delete 4
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test12) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 3
+    rs = fl.remove(flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 4
+    rs = fl.remove(flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+// ----------------------------------------------------------------------------
+// Test 13:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Insert 4
+//      - Delete 4
+//      - Delete 3
+//      - Delete 2
+//      - Delete 1
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test13) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Remove Entry 1
+    rs = fl.remove(flow_idx[4]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 2
+    rs = fl.remove(flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 3
+    rs = fl.remove(flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 4
+    rs = fl.remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Test 14:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Insert 4
+//      - Randomly delete
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test14) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+    std::srand ( unsigned ( std::time(0) ) );
+    std::vector<int> myvector;
+
+    for (int i=0; i<4; ++i) myvector.push_back(i);
+
+	std::random_shuffle ( myvector.begin(), myvector.end() );
+	// print out content:
+	std::cout << "myvector contains:";
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+		std::cout << ' ' << *it;
+	std::cout << std::endl;
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+		HAL_TRACE_DEBUG("Removing {}", *it);
+		rs = fl.remove(flow_idx[*it]);
+		ASSERT_TRUE(rs == HAL_RET_OK);
+	}
+}
+
+// ----------------------------------------------------------------------------
+// Test 15:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Insert 4
+//      - Insert 5
+//      - Randomly delete
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test15) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+    std::srand ( unsigned ( std::time(0) ) );
+    std::vector<int> myvector;
+
+    for (int i=0; i<5; ++i) myvector.push_back(i);
+
+	std::random_shuffle ( myvector.begin(), myvector.end() );
+	// print out content:
+	std::cout << "myvector contains:";
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+		std::cout << ' ' << *it;
+	std::cout << std::endl;
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 5:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0;
+    key.flow_lkp_metadata_lkp_dport = 0x36ad;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+		HAL_TRACE_DEBUG("Removing {}", *it);
+		rs = fl.remove(flow_idx[*it]);
+		ASSERT_TRUE(rs == HAL_RET_OK);
+	}
+}
+
+// ----------------------------------------------------------------------------
+// Test 16:
+//      - Create flow with collisions
+//      - Insert 1
+//      - Insert 2
+//      - Insert 3
+//      - Insert 4
+//      - Insert 5
+//      - Insert 6
+//      - Insert 7
+//      - Randomly delete
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test16) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t flow_idx[9] = { 0 };
+	unsigned seed = std::time(0);
+	// unsigned seed = 1504501660;
+    std::srand (seed);
+    // std::srand ( unsigned ( std::time(0) ) );
+    std::vector<int> myvector;
+
+    for (int i=0; i<8; ++i) myvector.push_back(i);
+
+	std::random_shuffle ( myvector.begin(), myvector.end() );
+	// print out content:
+	HAL_TRACE_DEBUG("seed: {}", seed);
+	std::cout << "myvector contains:";
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+		std::cout << ' ' << *it;
+	std::cout << std::endl;
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 5:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0;
+    key.flow_lkp_metadata_lkp_dport = 0x36ad;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 6:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 3;
+    key.flow_lkp_metadata_lkp_dport = 0xd125;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[5]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 7:
+    key.flow_lkp_metadata_lkp_vrf = 0;
+    key.flow_lkp_metadata_lkp_sport = 0;
+    key.flow_lkp_metadata_lkp_dport = 0xc430;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[6]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 8:
+    key.flow_lkp_metadata_lkp_vrf = 1;
+    key.flow_lkp_metadata_lkp_sport = 1;
+    key.flow_lkp_metadata_lkp_dport = 0xc8c3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[7]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+		HAL_TRACE_DEBUG("Removing {}", *it);
+		rs = fl.remove(flow_idx[*it]);
+		ASSERT_TRUE(rs == HAL_RET_OK);
+	}
+}
+// ----------------------------------------------------------------------------
+// Test 17:
+//      - Create flow with collisions
+//      - Insert 1 - 9
+//      - Randomly delete
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test17) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t max = 11;
+    uint32_t flow_idx[max] = { 0 };
+	unsigned seed = std::time(0);
+	// unsigned seed = 1504501660;
+    std::srand (seed);
+    // std::srand ( unsigned ( std::time(0) ) );
+    std::vector<int> myvector;
+
+    for (int i=0; i < max; ++i) myvector.push_back(i);
+
+	std::random_shuffle ( myvector.begin(), myvector.end() );
+	// print out content:
+	HAL_TRACE_DEBUG("seed: {}", seed);
+	std::cout << "myvector contains:";
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+		std::cout << ' ' << *it;
+	std::cout << std::endl;
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    key.flow_lkp_metadata_lkp_src[0] = 0x01;
+    key.flow_lkp_metadata_lkp_src[1] = 0x01;
+    key.flow_lkp_metadata_lkp_src[2] = 0x00;
+    key.flow_lkp_metadata_lkp_src[3] = 0x0a;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x01;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x00;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x0b;
+
+
+    // Entry 1:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xa277;
+    key.flow_lkp_metadata_lkp_dport = 0x2;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[0]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 2:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x3b01;
+    key.flow_lkp_metadata_lkp_dport = 0x3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 3:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0xd238;
+    key.flow_lkp_metadata_lkp_dport = 0x4;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[2]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 4:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0x4b4e;
+    key.flow_lkp_metadata_lkp_dport = 0x5;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[3]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 5:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 0;
+    key.flow_lkp_metadata_lkp_dport = 0x36ad;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[4]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 6:
+    key.flow_lkp_metadata_lkp_vrf = 3;
+    key.flow_lkp_metadata_lkp_sport = 3;
+    key.flow_lkp_metadata_lkp_dport = 0xd125;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[5]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 7:
+    key.flow_lkp_metadata_lkp_vrf = 0;
+    key.flow_lkp_metadata_lkp_sport = 0;
+    key.flow_lkp_metadata_lkp_dport = 0xc430;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[6]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 8:
+    key.flow_lkp_metadata_lkp_vrf = 1;
+    key.flow_lkp_metadata_lkp_sport = 1;
+    key.flow_lkp_metadata_lkp_dport = 0xc8c3;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[7]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 9:
+    key.flow_lkp_metadata_lkp_vrf = 1;
+    key.flow_lkp_metadata_lkp_sport = 2;
+    key.flow_lkp_metadata_lkp_dport = 0x2f4b;
+    data.actionid = 0;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[8]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+
+    // Entry 10:
+    key.flow_lkp_metadata_lkp_vrf = 0x244f;
+    key.flow_lkp_metadata_lkp_sport = 0xd17e;
+    key.flow_lkp_metadata_lkp_dport = 0x804e;
+    key.flow_lkp_metadata_lkp_src[0] = 0xca;
+    key.flow_lkp_metadata_lkp_src[1] = 0xd8;
+    key.flow_lkp_metadata_lkp_src[2] = 0xc7;
+    key.flow_lkp_metadata_lkp_src[3] = 0xf3;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x8f;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x3f;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x7e;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x3b;
+    key.flow_lkp_metadata_lkp_proto = 0xbe;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[9]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+    // Entry 11:
+    key.flow_lkp_metadata_lkp_vrf = 0xd20d;
+    key.flow_lkp_metadata_lkp_sport = 0xe909;
+    key.flow_lkp_metadata_lkp_dport = 0x4d6a;
+    key.flow_lkp_metadata_lkp_proto = 0x38;
+    key.flow_lkp_metadata_lkp_src[0] = 0x94;
+    key.flow_lkp_metadata_lkp_src[1] = 0x4;
+    key.flow_lkp_metadata_lkp_src[2] = 0x26;
+    key.flow_lkp_metadata_lkp_src[3] = 0xa8;
+    key.flow_lkp_metadata_lkp_dst[0] = 0x52;
+    key.flow_lkp_metadata_lkp_dst[1] = 0x85;
+    key.flow_lkp_metadata_lkp_dst[2] = 0x13;
+    key.flow_lkp_metadata_lkp_dst[3] = 0x11;
+    rs = fl.insert((void *)&key, (void *)&data, &flow_idx[10]);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+		HAL_TRACE_DEBUG("Removing {}", *it);
+		rs = fl.remove(flow_idx[*it]);
+		ASSERT_TRUE(rs == HAL_RET_OK);
+	}
+}
 static bool
 get_key (uint512_t x, flow_hash_swkey* key)
 {
@@ -354,9 +1303,84 @@ TEST_F(flow_test, gen_hash_collision) {
 
 }
 
+// ----------------------------------------------------------------------------
+// Test 18:
+//      - Create flow table
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test18) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t max = 20, count = 0;
+    uint32_t flow_idx[max] = { 0 };
+	unsigned seed = std::time(0);
+    std::srand (seed);
+    // uint32_t flow_idx[1000000] = { 0 };
+    uint32_t ft_bits = 0;
+    std::vector<int> myvector;
+
+    for (int i=0; i < max; ++i) myvector.push_back(i);
+
+	std::random_shuffle ( myvector.begin(), myvector.end() );
+	// print out content:
+	HAL_TRACE_DEBUG("seed: {}", seed);
+	std::cout << "myvector contains:";
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+		std::cout << ' ' << *it;
+	std::cout << std::endl;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow fl = Flow("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+    
+    while (1) {
+        for (int i = 0; i < 4; i++) {
+            key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
+            key.flow_lkp_metadata_lkp_dst[i] = rand() % 256;
+        }
+        key.flow_lkp_metadata_lkp_vrf = rand() % 65536;
+        key.flow_lkp_metadata_lkp_sport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_dport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_proto = rand() % 256;
+
+        ft_bits = fl.calc_hash_(&key, &data);
+        HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
+
+        if (ft_bits == 0x10001) {
+            HAL_TRACE_DEBUG("MATCH::");
+            for (int i = 0; i < 4; i++) {
+                HAL_TRACE_DEBUG("Src[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_src[i]);
+                HAL_TRACE_DEBUG("Dst[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_dst[i]);
+            }
+            HAL_TRACE_DEBUG("Vrf: {:#x}, sport: {:#x}, dport: {:#x}, proto: {:#x}",
+                    key.flow_lkp_metadata_lkp_vrf,
+                    key.flow_lkp_metadata_lkp_sport,
+                    key.flow_lkp_metadata_lkp_dport,
+                    key.flow_lkp_metadata_lkp_proto);
+            rs = fl.insert((void *)&key, (void *)&data, &flow_idx[count]);
+            ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+            count++;
+            if (count == max) {
+                break;
+            }
+        }
+    }
+    // Remvoe the entries
+	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+		HAL_TRACE_DEBUG("Removing {}", *it);
+		rs = fl.remove(flow_idx[*it]);
+		ASSERT_TRUE(rs == HAL_RET_OK);
+	}
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
     p4pd_init();
-  return RUN_ALL_TESTS();
+    int res = RUN_ALL_TESTS();
+    p4pd_cleanup();
+    return res;
 }

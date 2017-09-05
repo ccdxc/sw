@@ -53,6 +53,8 @@ public:
     indexer::status alloc_withid(uint32_t index, uint32_t block_size = 1);
     indexer::status free(uint32_t index);
     bool is_alloced(uint32_t index);
+    uint32_t get_size() { return size_; }
+	uint32_t usage();
 };
 
 }    // namespace hal

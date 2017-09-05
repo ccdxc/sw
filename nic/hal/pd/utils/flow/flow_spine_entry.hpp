@@ -47,6 +47,7 @@ public:
     ~FlowSpineEntry() {}
 
     void form_action_data(flow_hash_actiondata *action_data);
+    void form_oflow_action_data(flow_hash_overflow_actiondata *action_data);
     hal_ret_t program_table();
     hal_ret_t deprogram_table();
     uint32_t get_num_hgs();
@@ -60,6 +61,7 @@ public:
 	void replace_fhg(FlowHintGroup *fhg, FlowHintGroup *new_fhg);
     hal_ret_t entry_trace(uint32_t table_id, uint32_t index, 
                           void *key, void *data);
+    void print_fse();
 
     // Getters & Setters
     FlowEntry *get_anchor_entry() { return anchor_entry_; }

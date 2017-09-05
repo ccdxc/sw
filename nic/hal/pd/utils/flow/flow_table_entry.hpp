@@ -23,6 +23,7 @@ class FlowEntry;
 class FlowSpineEntry;
 class FlowHintGroup;
 
+typedef std::map<uint32_t, FlowHintGroup*> FHGMap;
 class FlowTableEntry {
 
 private:
@@ -30,8 +31,9 @@ private:
     uint32_t ft_bits_;
     Flow *flow_;
 
-    std::map<uint32_t, FlowHintGroup*> hint_groups_map_; // Hint (11) -> Group
+    FHGMap  hint_groups_map_; // Hint (11) -> Group
     FlowSpineEntry *spine_entry_;
+    uint32_t num_spine_entries_;
 
 public:
     FlowTableEntry(uint32_t ft_bits, Flow *flow);
@@ -46,6 +48,8 @@ public:
     FlowSpineEntry *get_last_spine_entry();
     FlowEntry *get_last_flow_entry();
     void add_fhg(uint32_t hint_bits, FlowHintGroup *fhg);
+    void remove_fhg(FlowHintGroup *fhg);
+    void print_fte();
     // int find_pos_of_hg(FlowHintGroup *hg);
     // void form_ft_entry_from_hgs(uint32_t begin, uint32_t end, void *ft_entry);
     
@@ -57,6 +61,8 @@ public:
 
     FlowSpineEntry *get_spine_entry();
     void set_spine_entry(FlowSpineEntry *sp_entry);
+    void dec_num_spine_entries() { num_spine_entries_--; }
+    void inc_num_spine_entries() { num_spine_entries_++; }
 };
 
 }   // namespace utils

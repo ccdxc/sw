@@ -40,7 +40,7 @@ public:
     uint32_t get_num_flow_entries();
     uint32_t get_num_anchor_flow_entries();
     bool check_flow_entry_exists(FlowEntry *fe);
-    void print_flow_entries();
+    void print_fhg();
 
     // Getters & Setters
     uint32_t get_hint_bits();

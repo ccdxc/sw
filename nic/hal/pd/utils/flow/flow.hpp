@@ -88,38 +88,35 @@ public:
 private:
 
     // Private Data
-    std::string     table_name_;                // table name
-    uint32_t        table_id_;                  // table id
-    uint32_t        oflow_table_id_;            // oflow table id
-    uint32_t        flow_hash_capacity_;        // size of flow table
-    uint32_t        flow_coll_capacity_;        // size of coll. table
-    uint32_t        key_len_;                   // key len
-    uint32_t        data_len_;                  // data len
-    HashPoly        hash_poly_;                 // hash polynomial
+    std::string         table_name_;                // table name
+    uint32_t            table_id_;                  // table id
+    uint32_t            oflow_table_id_;            // oflow table id
+    uint32_t            flow_hash_capacity_;        // size of flow table
+    uint32_t            flow_coll_capacity_;        // size of coll. table
+    uint32_t            key_len_;                   // key len
+    uint32_t            data_len_;                  // data len
+    HashPoly            hash_poly_;                 // hash polynomial
 
 
-    uint32_t        hash_tbl_key_len_;          // hash table key len (21)
-    uint32_t        hash_coll_tbl_key_len_;     // coll table key len (14)
-    uint32_t        hint_len_;                  // hint len (11)
-    uint32_t        num_hints_per_flow_entry_;  // HGs per Flow Entry (6)
+    uint32_t            hash_tbl_key_len_;          // hash table key len (21)
+    uint32_t            hash_coll_tbl_key_len_;     // coll table key len (14)
+    uint32_t            hint_len_;                  // hint len (11)
+    uint32_t            num_hints_per_flow_entry_;  // HGs per Flow Entry (6)
 
-    uint32_t        hwkey_len_;             // Key len for Flow Hash Table
-    uint32_t        hwdata_len_;            // Data Len for Flow Hash Table
+    uint32_t            hwkey_len_;             // Key len for Flow Hash Table
+    uint32_t            hwdata_len_;            // Data Len for Flow Hash Table
 
-    bool            enable_delayed_del_;    // enable delayed el
+    bool                enable_delayed_del_;    // enable delayed el
 
     // Hash Value(21 bits) => Flow Table Entry
-    std::map<uint32_t, FlowTableEntry*> flow_table_; 
+    FlowTableEntryMap   flow_table_; 
 
     // indexer for Flow Coll. Table
-    indexer         *flow_coll_indexer_;
+    indexer             *flow_coll_indexer_;
 
     // indexer and Map to store Flow Entries
-    indexer         *flow_entry_indexer_;
-    std::map<uint32_t, FlowEntry*> flow_entry_map_;
-
-	// Remove this once p4pd apis are implemented.
-	bool hwkey_is_swkey_;
+    indexer             *flow_entry_indexer_;
+    FlowEntryMap        flow_entry_map_;
 
     // Delayed Delete Queue
     std::queue<FlowEntry *> flow_entry_del_q_;
@@ -170,6 +167,7 @@ public:
     hal_ret_t alloc_fhct_index(uint32_t *index);
     hal_ret_t free_fhct_index(uint32_t index);
     void add_flow_entry_global_map(FlowEntry *fe, uint32_t index);
+    hal_ret_t print_flow();
 
     // Getters & Setters
     bool get_delayed_del_en();

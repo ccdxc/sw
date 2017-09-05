@@ -158,20 +158,23 @@ FlowHintGroup::check_flow_entry_exists(FlowEntry *fe)
 // Prints all flow entries
 // ---------------------------------------------------------------------------
 void
-FlowHintGroup::print_flow_entries()
+FlowHintGroup::print_fhg()
 {
-    HAL_TRACE_DEBUG("Flow Entries for FHG: hint_bits: {}\n", hint_bits_);
+    HAL_TRACE_DEBUG("  FHG:: hint_bits: {:#x}, num_anchors: {}, num_fes: {}", 
+            hint_bits_, anchor_list_.size(), flow_entry_list_.size());
     std::list<FlowEntry*>::iterator itr;
     FlowEntry *tmp_fe = NULL;
-    for (itr = flow_entry_list_.begin(); 
-            itr != flow_entry_list_.end(); itr++) {
-        tmp_fe = (*itr);
-        HAL_TRACE_DEBUG("FE: fhct_index: {}\n", tmp_fe->get_fhct_index());
-    } 
     for (itr = anchor_list_.begin(); 
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
-        HAL_TRACE_DEBUG("FE: Anchors fhct_index: {}\n", tmp_fe->get_fhct_index());
+        HAL_TRACE_DEBUG("    FE: Anchors");
+        tmp_fe->print_fe();
+    } 
+    for (itr = flow_entry_list_.begin(); 
+            itr != flow_entry_list_.end(); itr++) {
+        tmp_fe = (*itr);
+        HAL_TRACE_DEBUG("    FE: Flow Entries");
+        tmp_fe->print_fe();
     } 
 }
 

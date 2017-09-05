@@ -35,11 +35,11 @@ Flow::Flow(std::string table_name, uint32_t table_id,
     hint_len_ = 32/*CRC 32*/ - hash_tbl_key_len_;
 
     HAL_TRACE_DEBUG("Flow:{}: key_len_: {}, data_len_: {}, "
-            " hash_tbl_key_len_: {}, hash_coll_tbl_key_len_: {} "
-            "hint_len: {} flow_hash_capacity_: {} flow_coll_capacity_: {}", 
-            table_name_.c_str(), key_len_, data_len_, 
-            hash_tbl_key_len_, hash_coll_tbl_key_len_, 
-            hint_len_, flow_hash_capacity_, flow_coll_capacity);
+                    " hash_tbl_key_len_: {}, hash_coll_tbl_key_len_: {} "
+                    "hint_len: {} flow_hash_capacity_: {} flow_coll_capacity_: {}", 
+                    table_name_.c_str(), key_len_, data_len_, 
+                    hash_tbl_key_len_, hash_coll_tbl_key_len_, 
+                    hint_len_, flow_hash_capacity_, flow_coll_capacity);
 
     // Allocate indexer for Flow Collision Table
     flow_coll_indexer_ = new indexer(flow_coll_capacity_);
@@ -52,24 +52,12 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 
     p4pd_hwentry_query(table_id_, &hwkey_len_, NULL, &hwdata_len_);
 
+    // round off to higher byte
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
 
-    HAL_TRACE_DEBUG("Flow:{}: hwkey_len: {}, hwdata_len: {}",
+    HAL_TRACE_DEBUG("Flow:{}: in bytes: hwkey_len: {}, hwdata_len: {}",
             __FUNCTION__, hwkey_len_, hwdata_len_);
-
-	// TODO: Remove this once p4pd apis are implemented ... just to gen diff
-    //       hash values
-	// hwkey_len_ = key_len_;
-	// hwdata_len_ = data_len_;
-
-	// TODO: Remove this once p4 apis are implemented. Setting the seed
-	// srand(time(0));
-	// hwkey_is_swkey_ = (rand() %< 2 == 0);
-    hwkey_is_swkey_ = 0;
-
-	HAL_TRACE_DEBUG("Flow:{}: hwkey_is_swkey_: {}", 
-			__FUNCTION__, hwkey_is_swkey_);
 }
            
 // ---------------------------------------------------------------------------
@@ -145,10 +133,6 @@ Flow::calc_hash_(void *key, void *data)
     // call P4 API to get hw key
     hwkey = ::operator new(hwkey_len_);
 	memset(hwkey, 0, hwkey_len_);
-	// TODO: Remove this after P4 API is implemented.
-	if (hwkey_is_swkey_) {
-		memcpy(hwkey, key, key_len_);
-	}
 
     rs = entry->form_hw_key(table_id_, hwkey);
 	if (rs != HAL_RET_OK) HAL_ASSERT(0);
@@ -191,10 +175,6 @@ Flow::insert(void *key, void *data, uint32_t *index)
     // call P4 API to get hw key
     hwkey = ::operator new(hwkey_len_);
 	memset(hwkey, 0, hwkey_len_);
-	// TODO: Remove this after P4 API is implemented.
-	if (hwkey_is_swkey_) {
-		memcpy(hwkey, key, key_len_);
-	}
 
     rs = entry->form_hw_key(table_id_, hwkey);
 	if (rs != HAL_RET_OK) goto end;
@@ -208,7 +188,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
     // check if flow table entry exists
     ft_bits = fetch_flow_table_bits_(hash_val);
     itr = flow_table_.find(ft_bits);
-    HAL_TRACE_DEBUG("Flow::{}: hash_val: {}, flow_table_index: {}", 
+    HAL_TRACE_DEBUG("Flow::{}: hash_val: {:#x}, flow_table_index: {:#x}", 
                     __FUNCTION__, hash_val, ft_bits);
     if (itr != flow_table_.end()) {
         // flow table entry already exists
@@ -255,6 +235,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
 		HAL_ASSERT(rs1 == HAL_RET_OK);
     }
 end:
+    // Uncomment for debugging
+	// print_flow();
     HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
     return rs;
 }
@@ -284,6 +266,7 @@ Flow::update(uint32_t index, void *data)
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
+	print_flow();
     return rs;
 }
 
@@ -318,11 +301,13 @@ Flow::remove(uint32_t index)
             // Remove it from Flow entry map.
             flow_entry_map_.erase(index);
             // Free the index in indexer
-            flow_entry_indexer_->free(index);
+            free_flow_entry_index_(index);
 
             // Check if we have to remove the FT entry
             if (!ft_entry->get_num_flow_hgs() && // No HGs
                     !ft_entry->get_spine_entry()) { // No Spine Entries
+                // Remove from FTE map
+                flow_table_.erase(ft_entry->get_ft_bits());
                 // Free up the Flow Table Entry.
                 delete ft_entry;
             }
@@ -333,6 +318,7 @@ Flow::remove(uint32_t index)
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
+	print_flow();
     return rs;
 }
 
@@ -502,9 +488,13 @@ Flow::alloc_flow_entry_index_(uint32_t *idx)
     // Allocate an index in repl. table
     indexer::status irs = flow_entry_indexer_->alloc(idx);
     if (irs != indexer::SUCCESS) {
+        HAL_TRACE_DEBUG("Flow::{}: Flow Entry Capacity reached: {}", 
+                        __FUNCTION__, flow_entry_indexer_->get_size());
         return HAL_RET_NO_RESOURCE;
     }
 
+    HAL_TRACE_DEBUG("Flow::{}: Alloc Flow_entry_index: {}", 
+                    __FUNCTION__, *idx);
     return rs;
 }
 
@@ -523,6 +513,8 @@ Flow::free_flow_entry_index_(uint32_t idx)
     if (irs != indexer::SUCCESS) {
         return HAL_RET_ERR;
     }
+    HAL_TRACE_DEBUG("Flow::{}: Free Flow_entry_index: {}", 
+                    __FUNCTION__, idx);
 
      return rs;
 }
@@ -566,4 +558,41 @@ Flow::free_fhct_index(uint32_t idx)
                     __FUNCTION__, idx);
      return rs;
 }
+
+// ---------------------------------------------------------------------------
+// Print Flow Table
+// ---------------------------------------------------------------------------
+hal_ret_t
+Flow::print_flow()
+{
+    hal_ret_t   		ret = HAL_RET_OK;
+	uint32_t 			flow_bits = 0, fe_idx = 0;
+	FlowTableEntry 		*fte = NULL;
+	FlowEntry			*fe = NULL;
+
+	HAL_TRACE_DEBUG("Printing Flow Tables:");
+	HAL_TRACE_DEBUG("-------- ---- -------");
+	HAL_TRACE_DEBUG("Total Num_FTEs: {}", flow_table_.size());
+	for (FlowTableEntryMap::const_iterator it = flow_table_.begin();
+			it != flow_table_.end(); ++it) {
+		flow_bits = it->first;
+		fte = it->second;
+		HAL_TRACE_DEBUG("flow_bits: {:#x}", flow_bits);
+		fte->print_fte();
+	}
+
+	HAL_TRACE_DEBUG("Total Num_FEs: {}", flow_entry_map_.size());
+	for (FlowEntryMap::const_iterator it = flow_entry_map_.begin();
+			it != flow_entry_map_.end(); ++it) {
+		fe_idx = it->first;
+		fe = it->second;
+		HAL_TRACE_DEBUG("  fe_idx: {:#x}", fe_idx);
+		fe->print_fe();
+	}
+
+	HAL_ASSERT(flow_entry_map_.size() == flow_entry_indexer_->usage()); 
+
+	return ret;
+}
+
 
