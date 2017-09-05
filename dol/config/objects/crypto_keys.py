@@ -57,7 +57,7 @@ class CryptoKeyObjectHelper:
         lst = []
         lst.append(obj)
         cfglogger.info("Configuring CryptoKeys")
-        halapi.ConfigureCryptoKeys(lst)
+        #halapi.ConfigureCryptoKeys(lst)
         return
         
     def __gen_one(self):

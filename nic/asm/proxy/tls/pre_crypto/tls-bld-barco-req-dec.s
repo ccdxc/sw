@@ -26,10 +26,13 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_input_list_address, k.to_s6_idesc
     phvwr       p.barco_desc_output_list_address, k.to_s6_odesc
     phvwr       p.barco_desc_key_desc_index, d.key_desc_index
+#if 0
+    /* FIXME: */
     phvwr       p.barco_desc_command_core,  d.command_core
     phvwr       p.barco_desc_command_mode, d.command_mode
     phvwr       p.barco_desc_command_op, d.command_op
     phvwr       p.barco_desc_command_param, d.command_param
+#endif
 
     addi        r3, r0, BRQ_QPCB_BASE
     CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_brq_dec_process,

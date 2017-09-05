@@ -20,12 +20,12 @@ header_type tlscb_0_t {
 
         sw_bsq_ci                       : 16;
         dec_flow                        : 8;
-        debug_dol                       : 8;
+        debug_dol                       : 32;
 
         salt                            : 32;
         explicit_iv                     : 64;
-        // TBD: Total used   : 416 bits, pending: 96
-        pad                             : 96;
+        // TBD: Total used   : 440 bits, pending: 72
+        pad                             : 72;
     }
 }
 
@@ -113,27 +113,24 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
 /* BARCO Descriptor definition */
 header_type barco_desc_t {
     fields {
-        rsvd                                : 374;
-        gcm_new_key_flag                    : 1;
-        gcm_key_buf_index                   : 8;
-        doorbell_data                       : 64;
-        doorbell_address                    : 64;
-        application_tag                     : 16;
-        sector_num                          : 32;
-        sector_size                         : 16;
-        opaque_tage_write_en                : 1;
-        opaque_tag_value                    : 32;
-        status_address                      : 64;
-        header_size                         : 32;
-        auth_tag_addr                       : 64;
-        iv_address                          : 64;
-        key_desc_index                      : 32;
-        command_param                       : 20;/* Command[19:0] */
-        command_op                          : 4; /* Command[23:20] */
-        command_mode                        : 4; /* Command[27:24] */
-        command_core                        : 4; /* Command[31:28] */
-        output_list_address                 : 64;
         input_list_address                  : 64;
+        output_list_address                 : 64;
+        command                             : 32;
+        key_desc_index                      : 32;
+        iv_address                          : 64;
+        auth_tag_addr                       : 64;
+        header_size                         : 32;
+        status_address                      : 64;
+        opaque_tag_value                    : 32;
+        opaque_tage_write_en                : 1;
+        sector_size                         : 16;
+        sector_num                          : 32;
+        application_tag                     : 16;
+        doorbell_address                    : 64;
+        doorbell_data                       : 64;
+        gcm_key_buf_index                   : 8;
+        gcm_new_key_flag                    : 1;
+        rsvd                                : 374;
     }
 }
 
