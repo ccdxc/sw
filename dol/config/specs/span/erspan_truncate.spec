@@ -1,7 +1,7 @@
 # Local Span Config Spec
 meta:
-    id: SPAN_TYPE_ERSPAN
+    id: SPAN_TYPE_ERSPAN_TRUNCATE
 
 type    : erspan
-snaplen : const/0
+snaplen : random/64/1500
 dscp    : random/32/64

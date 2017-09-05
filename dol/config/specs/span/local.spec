@@ -3,4 +3,4 @@ meta:
     id: SPAN_TYPE_LOCAL
 
 type    : local
-snaplen : random/64/1500
+snaplen : const/0 
