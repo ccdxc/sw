@@ -57,46 +57,64 @@ def GetPacketTemplateBySessionIflow(testcase, packet):
 def GetPacketTemplateBySessionRflow(testcase, packet):
     return __get_packet_template_impl(testcase.config.session.rconfig.flow)
 
+def IsPriorityTagged(pvtdata):
+    if 'priotag' in pvtdata.__dict__:
+        return pvtdata.priotag
+    return False
+
 def __get_template(tid):
     if tid == None: return None
     return infra_api.GetPacketTemplate(tid)
 
-def __get_packet_encap_vlan(cfg):
-    if cfg.segment.native == False:
+def __get_packet_encap_vlan(testcase, cfg):
+    if cfg.segment.native == False or IsPriorityTagged(testcase.pvtdata):
         return __get_template('ENCAP_QTAG')
     return None
 
-def __get_packet_encap_vxlan(cfg):
+def __get_packet_encap_vxlan(testcase, cfg):
     if cfg.tenant.IsOverlayVxlan():
         return __get_template('ENCAP_VXLAN')
     return None
 
-def __get_packet_encaps(cfg):
+def __get_packet_encaps(testcase, cfg):
     encaps = []
+
     # Check for VLAN encap
-    encap = __get_packet_encap_vlan(cfg)
-    if encap: encaps.append(encap)
+    encap = __get_packet_encap_vlan(testcase, cfg)
+    if encap:
+        encaps.append(encap)
+
     # Check for VXLAN encap
-    encap = __get_packet_encap_vxlan(cfg)
-    if encap: encaps.append(encap)
+    encap = __get_packet_encap_vxlan(testcase, cfg)
+    if encap:
+        encaps.append(encap)
     
-    if len(encaps): return encaps
+    if len(encaps):
+        return encaps
     return None
-   
 
 def GetPacketEncaps(testcase, packet):
-    return __get_packet_encaps(testcase.config.src)
+    return __get_packet_encaps(testcase, testcase.config.src)
 
 def GetExpectedPacketEncaps(testcase, packet):
-    return __get_packet_encaps(testcase.config.dst)
+    ptag = IsPriorityTagged(testcase.pvtdata)
+    testcase.pvtdata.priotag = False
+    encaps = __get_packet_encaps(testcase, testcase.config.dst)
+    testcase.pvtdata.priotag = ptag
+    return encaps
 
 def GetExpectedPacketCos(testcase, packet):
     if testcase.config.flow.eg_qos.cos_rw.get():
         return testcase.config.flow.eg_qos.cos.get()
 
-    if not testcase.config.flow.IsL2() and testcase.config.src.segment.native:
-        # L3 Packet: Untag to Tag: Cos will always be zero.
+    if testcase.config.flow.IsL2():
+        return testcase.config.flow.eg_qos.cos.get()
+
+    # L3 Flow and Source segment not native.
+    if testcase.config.src.segment.native == False or\
+        IsPriorityTagged(testcase.pvtdata) == False:
         return 0
+    
     return testcase.config.flow.eg_qos.cos.get() 
 
 def __get_expected_packet(testcase):
@@ -110,3 +128,8 @@ def GetL2UcExpectedPacket(testcase):
 
 def GetL3UcExpectedPacket(testcase):
     return __get_expected_packet(testcase)
+
+def GetVlanId(testcase, packet):
+    if IsPriorityTagged(testcase.pvtdata):
+        return 0
+    return testcase.config.src.segment.vlan_id

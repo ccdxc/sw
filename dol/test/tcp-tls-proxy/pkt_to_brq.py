@@ -24,8 +24,6 @@ def TestCaseSetup(tc):
     global brq
     global tlscb
 
-    print("TestCaseSetup(): Sample Implementation.")
-    
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
     tcb.rcv_nxt = 0xBABABABA

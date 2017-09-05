@@ -31,6 +31,7 @@ def Setup(infra, module):
         if 'dstseg' in iterelem.__dict__:
             module.testspec.config_filter.dst.segment.Extend(iterelem.dstseg)
 
+
     if module.args == None:
         return
 
@@ -48,6 +49,10 @@ def Verify(infra, module):
     return True
 
 def TestCaseSetup(tc):
+    iterelem = tc.module.iterator.Get()
+    tc.pvtdata.priotag = False
+    if 'priotag' in iterelem.__dict__:
+        tc.pvtdata.priotag = iterelem.priotag
     return
 
 def TestCaseVerify(tc):

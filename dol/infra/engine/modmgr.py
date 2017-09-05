@@ -119,8 +119,11 @@ class Module:
             status = 'Fail'
         else:
             status = 'Pass'
+
+        mod = self.module[:16]
+        name = self.name[:32]
         print("%-16s %-32s %-6s %6d %6d %6d" %\
-              (self.module, self.name, status,
+              (mod, name, status,
                self.stats.passed, self.stats.failed,
                self.stats.total))
         return
@@ -223,10 +226,12 @@ class ModuleDatabase:
     def __init__(self, module_list_file=defs.DEFAULT_MODULES_LIST_FILE):
         self.db = []
         self.parser = ModuleListParser(module_list_file)
-        self.__add_all()
         if GlobalOptions.test != None:
             GlobalOptions.test = GlobalOptions.test.split(',')
+        
+        self.__add_all()
         return
+
     def __is_test_match(self, name):
         if GlobalOptions.test == None:
             return True

@@ -18,7 +18,6 @@ packets:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -26,7 +25,7 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -55,10 +54,12 @@ packets:
     - packet:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
 
     - packet:
         id          : EXP_PKT     # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
                 prio    : ref://testcase/config/flow/eg_qos/cos

@@ -51,7 +51,7 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/src/segment/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 ttl     : callback://networking/packets/GetTtl
             ipv6:

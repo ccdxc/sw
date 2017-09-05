@@ -13,17 +13,16 @@ config_filter:
 
 packets:
     - packet:
-        id          : PKT1     # Input packet 1
+        id          : BASE_PKT  # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_ARP
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
                 type    : ref://testcase/config/flow/ethertype
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             arp:
                 op      : callback://networking/arp/GetArpOpcode
                 hwsrc   : callback://networking/arp/GetArpSourceMAC
@@ -33,14 +32,27 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : IN_PKT    # Input packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+
+    - packet:
+        id          : EXP_PKT  # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag    :
+                prio: ref://testcase/config/flow/eg_qos/cos
+
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : ref://testcase/packets/id=IN_PKT
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : callback://networking/packets/GetL2UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports

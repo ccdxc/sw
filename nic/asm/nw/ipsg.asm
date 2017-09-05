@@ -38,9 +38,10 @@ ipsg_hit:
   nop.c1.e
   sne         c1, k.control_metadata_src_lport, d.u.ipsg_hit_d.src_lport
   sne         c2, k.ethernet_srcAddr, d.u.ipsg_hit_d.mac
-  sne         c3, k.vlan_tag_valid, d.u.ipsg_hit_d.vlan_valid
+  // sne         c3, k.vlan_tag_valid, d.u.ipsg_hit_d.vlan_valid
   sne         c4, k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}, d.u.ipsg_hit_d.vlan_id
-  bcf         [c1|c2|c3|c4], ipsg_drop
+  // bcf         [c1|c2|c3|c4], ipsg_drop
+  bcf         [c1|c2|c4], ipsg_drop
   nop
   nop.e
   nop
