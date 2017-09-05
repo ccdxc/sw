@@ -914,7 +914,7 @@ rdma_configure ()
     //uint8_t              user_key;
     //sqwqe_bind_mw_t *bind_mw_p;
     //sqwqe_send_t    *wr_send_p;
-    uint32_t          lif_id = 0x2;
+    uint32_t          lif_id = 0x3;
 
     HAL_TRACE_DEBUG("sq: {} sqcb0: {}, sqcb1: {}, rqcb: {} rq1: {} rq2: {} cqcb: {} eqcb:{} srqcb: {} sqwqe_base: {} rqwqe_base: {} rsqwqe: {} rrqwqe: {}\n "
            "header_template: {}\n",

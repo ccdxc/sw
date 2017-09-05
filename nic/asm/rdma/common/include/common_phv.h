@@ -58,8 +58,10 @@ struct sram_lif_entry_t {
     log_num_pt_entries: 7;
     cqcb_base_addr_page_id: 20;
     log_num_cq_entries: 5;
-    //prefetch_pool_base_addr_page_id: 20;
-    //log_num_prefetch_pool_entries: 5;
+    prefetch_pool_base_addr_page_id: 20;
+    log_num_prefetch_pool_entries: 5;
+    rsvd: 115;
+    pad: 312;
 };
 
 #endif //__COMMON_PHV_H

@@ -695,14 +695,6 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
                                   P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
     HAL_ASSERT(p4plus_rxdma_dm_tables_ != NULL);
 
-    // start instantiating tables based on the parsed information
-    p4plus_txdma_dm_tables_ =
-        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                                 sizeof(DirectMap *) *
-                                 (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
-                                  P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
-    HAL_ASSERT(p4plus_txdma_dm_tables_ != NULL);
-
     // TODO:
     // 1. take care of instantiating flow_table_, acl_table_ and met_table_
     // 2. When tables are instantiated proper names are not passed today,
@@ -791,14 +783,6 @@ hal_state_pd::p4plus_txdma_init_tables(void)
     // parse the NCC generated table info file for p4+ tables
     rc = p4pluspd_txdma_init();
     HAL_ASSERT(rc == P4PD_SUCCESS);
-
-    // start instantiating tables based on the parsed information
-    p4plus_txdma_dm_tables_ =
-        (DirectMap **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                                 sizeof(DirectMap *) *
-                                 (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
-                                  P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
-    HAL_ASSERT(p4plus_txdma_dm_tables_ != NULL);
 
     // start instantiating tables based on the parsed information
     p4plus_txdma_dm_tables_ =

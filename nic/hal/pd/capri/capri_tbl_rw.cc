@@ -13,6 +13,8 @@
 //#include <base.h>
 
 #include <p4pd.h>
+#include <common_rxdma_actions_p4pd.h>
+#include <common_txdma_actions_p4pd.h>
 #include <p4pd_api.hpp>
 #include <capri_tbl_rw.hpp>
 
@@ -517,6 +519,26 @@ static void capri_sram_entry_details_get(uint32_t tableid, uint32_t index,
 
 }
 
+cap_pics_csr_t*
+p4pd_global_pics_get(uint32_t tableid)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    if ((tableid >= P4TBL_ID_TBLMIN) &&
+        (tableid <= P4TBL_ID_TBLMAX)) {
+        return &cap0.ssi.pics;
+    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return &cap0.rpc.pics;
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return &cap0.tpc.pics;
+    } else {
+        HAL_ASSERT(0);
+    }
+    return ((cap_pics_csr_t*)nullptr);
+}
+
+
 int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,
                             uint8_t  *hwentry,
@@ -598,13 +620,13 @@ int capri_table_entry_write(uint32_t tableid,
             temp[p] = *s; s++;
         }
         if (dir == P4_GRESS_INGRESS) {
-            cap_pics_csr_t & pics_csr = cap0.ssi.pics;
+            cap_pics_csr_t *pics_csr = p4pd_global_pics_get(tableid);
             sram_block_data = 0;
-            pics_csr.hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
+            pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
                                    // (uint8_t*)(g_shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
-            pics_csr.dhs_sram.entry[i]
+            pics_csr->dhs_sram.entry[i]
                         .data((pu_cpp_int<128>)sram_block_data);
-            pics_csr.dhs_sram.entry[i].write();
+            pics_csr->dhs_sram.entry[i].write();
         } else {
             cap_pics_csr_t & pics_csr = cap0.sse.pics;
             sram_block_data = 0;

@@ -2381,6 +2381,8 @@ def capri_pic_csr_output(be, out_pic):
 
     for mem_type in out_pic:
         for direction in out_pic[mem_type]:
+            if be.args.p4_plus and (direction != xgress_to_string(xgress.INGRESS)):
+                continue
             if mem_type == 'hbm':
                 for stage in range(len(out_pic[mem_type][direction])):
                     out_file = out_dir + 'cap_te_' + direction.upper() + '_' + repr(stage) + '_cfg_reg.json'
