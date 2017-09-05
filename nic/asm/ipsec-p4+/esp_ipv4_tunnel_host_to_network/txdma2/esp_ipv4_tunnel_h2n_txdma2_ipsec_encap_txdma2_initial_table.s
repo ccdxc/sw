@@ -8,6 +8,7 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req_ptr
+        .param BRQ_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
@@ -22,7 +23,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr p.common_te0_phv_table_pc, r2 
     add r1, r0, d.barco_ring_cindex
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
-    addi r1, r1, BRQ_REQ_RING_BASE_ADDR
+    addi r1, r1, BRQ_BASE 
     phvwr  p.common_te0_phv_table_addr, r1
 
 
