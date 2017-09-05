@@ -8,12 +8,13 @@ struct phv_ p;
 
 %%
         .param esp_v4_tunnel_n2h_allocate_output_page_index 
+        .param TNMPR_TABLE_BASE
         .align
 
 esp_ipv4_tunnel_n2h_allocate_output_page_semaphore:
     phvwri p.p42p4plus_hdr_table3_valid, 1
     sll r1, d.out_page_ring_index, 3 
-    addi r1, r1, OUT_PAGE_RING_BASE
+    addi r1, r1, TNMPR_TABLE_BASE 
     phvwr p.common_te3_phv_table_addr, r1
     phvwri p.common_te3_phv_table_raw_table_size, 3
     phvwri p.common_te3_phv_table_lock_en, 1

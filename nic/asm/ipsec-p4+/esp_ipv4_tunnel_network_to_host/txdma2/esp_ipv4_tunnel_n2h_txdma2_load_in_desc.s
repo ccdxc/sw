@@ -8,6 +8,7 @@ struct phv_ p;
 
 %%
         .param esp_v4_tunnel_n2h_txdma2_build_decap_packet 
+        .param IPSEC_CB_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     phvwr p.t0_s2s_in_page_addr, d.addr0
@@ -18,7 +19,7 @@ esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     srl r2, r2, 6 
     phvwr p.common_te0_phv_table_pc, r2
     add r3, r0, k.txdma2_global_ipsec_cb_index
-    sll r3, r3, IPSEC_CB_SIZE_SHIFT
+    sll r3, r3, IPSEC_CB_SHIFT_SIZE
     addi r3, r3, IPSEC_CB_BASE 
     phvwr  p.common_te0_phv_table_addr, r3 
     nop.e

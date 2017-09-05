@@ -17,9 +17,9 @@ esp_ipv4_tunnel_n2h_allocate_input_desc_index:
     phvwr p.common_te0_phv_table_pc, r2 
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 1
-    sll r1, d.in_desc_index, DESC_SHIFT_WIDTH
-    addi r1, r1, IN_DESC_ADDR_BASE
-    phvwr p.common_te0_phv_table_addr, r1
+    //sll r1, d.in_desc_index, DESC_SHIFT_WIDTH
+    //addi r1, r1, IN_DESC_ADDR_BASE
+    phvwr p.common_te0_phv_table_addr, d.in_desc_index 
     phvwr.e p.t0_s2s_in_desc_addr, r1
      
 

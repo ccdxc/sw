@@ -17,9 +17,9 @@ esp_ipv4_tunnel_h2n_allocate_output_desc_index:
     phvwr p.common_te1_phv_table_pc, r2 
     phvwri p.common_te1_phv_table_raw_table_size, 4
     phvwri p.common_te1_phv_table_lock_en, 0
-    sll r1, d.out_desc_index, DESC_SHIFT_WIDTH 
-    addi r1, r1, OUT_DESC_ADDR_BASE
-    phvwr p.common_te1_phv_table_addr, r1
+    //sll r1, d.out_desc_index, DESC_SHIFT_WIDTH 
+    //addi r1, r1, OUT_DESC_ADDR_BASE
+    phvwr p.common_te1_phv_table_addr, d.out_desc_index 
     phvwr p.ipsec_int_header_out_desc, r1
     phvwr p.t1_s2s_out_desc_addr, r1
     nop.e 
