@@ -212,7 +212,7 @@ tcp_check_sack_reneging:
 	add.c1		r1, r2, r0
 	/* r1 = max(delay, TCP_RTO_MAX) */
 	add		r2, d.curr_ts, r1
-	phvwr		p.rx2tx_extra_rto_deadline, r2
+	phvwr		p.rx2tx_rto_deadline, r2
 	bcf		[c1], flow_fra_process_done
 	nop
 tcp_check_sack_reneging_done:	

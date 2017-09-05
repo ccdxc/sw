@@ -11,10 +11,11 @@ GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I$(TOPDIR)/include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I$(TOPDIR)/include \
+		   -I../../include
 SRC_DIR = .
-CAPAS_BIN = ../../../asic/capri/model/capsim-gen/bin/capas
-CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
+CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
@@ -22,19 +23,22 @@ my_all: deps asm
 
 deps: $(ASM_HDR_DIR)/ingress.h
 
-SRC_FILES := \
+ORIG_SRC_FILES := \
     $(SRC_DIR)/tcp-fast-timer.s \
-    $(SRC_DIR)/tcp-queue-sched-tx.s \
-    $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
     $(SRC_DIR)/tcp-read-rx2tx-shared.s \
     $(SRC_DIR)/tcp-read-sesq-ci.s \
-    $(SRC_DIR)/tcp-read-sesq.s \
     $(SRC_DIR)/tcp-read-xmit-cursor.s \
-    $(SRC_DIR)/tcp-sesq-consume.s \
     $(SRC_DIR)/tcp-slow-timer.s \
     $(SRC_DIR)/tcp-tdesc-alloc.s \
-    $(SRC_DIR)/tcp-tso.s \
-    $(SRC_DIR)/tcp-tx.s
+
+SRC_FILES := \
+    $(SRC_DIR)/tcp-read-rx2tx-shared.s \
+    $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
+    $(SRC_DIR)/tcp-read-sesq-ci.s \
+    $(SRC_DIR)/tcp-read-sesq-descr.s \
+    $(SRC_DIR)/tcp-sesq-consume.s \
+    $(SRC_DIR)/tcp-tx.s \
+    $(SRC_DIR)/tcp-tso.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
@@ -45,7 +49,6 @@ $(BIN_FILES): %.bin: %.s
 
 %.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
 	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
-	
 
 asm: $(BIN_FILES)
 

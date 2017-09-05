@@ -75,7 +75,8 @@ header_type p4plus_2_p4_app_header_t {
         table1_valid : 1;
         table2_valid : 1;
         table3_valid : 1;
-        app_data : 360;
+        app_data1 : 256;
+        app_data2 : 104;
         app_data_pad : 144;
     }
 }
@@ -388,18 +389,18 @@ header_type dma_cmd_start_pad_t {
 
 header_type pkt_descr_t {
     fields {
-        next_pkt : 64;
-        next_addr : 64;
-        L2 : 32;
-        O2 : 32;
-        A2 : 64;
-        L1 : 32;
-        O1 : 32;
-        A1 : 64;
-        L0 : 32;
-        O0 : 32;
-        A0 : 64;
         scratch : 512;
+        A0 : 64;
+        O0 : 32;
+        L0 : 32;
+        A1 : 64;
+        O1 : 32;
+        L1 : 32;
+        A2 : 64;
+        O2 : 32;
+        L2 : 32;
+        next_addr : 64;
+        next_pkt : 64;
     }
 }
 
@@ -411,17 +412,17 @@ header_type pkt_descr_scratch_t {
 
 header_type pkt_descr_aol_t {
     fields {
-        next_pkt : 64;
-        next_addr : 64;
-        L2 : 32;
-        O2 : 32;
-        A2 : 64;
-        L1 : 32;
-        O1 : 32;
-        A1 : 64;
-        L0 : 32;
-        O0 : 32;
         A0 : 64;
+        O0 : 32;
+        L0 : 32;
+        A1 : 64;
+        O1 : 32;
+        L1 : 32;
+        A2 : 64;
+        O2 : 32;
+        L2 : 32;
+        next_addr : 64;
+        next_pkt : 64;
 
     }
 }

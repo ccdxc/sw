@@ -2,6 +2,7 @@
 
 LIBDIRS = \
 	  tcp/rx \
+	  tcp/tx \
 	  tls \
 	  tls/pre_crypto \
 	  tls/post_crypto \

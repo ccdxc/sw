@@ -23,8 +23,8 @@
 #define TCP_PHV_AOL_END             640
 #define TCP_PHV_AOL_SIZE            64
 
-#define TCP_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_next_pkt)
-#define TCP_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_A0)
+#define TCP_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_A0)
+#define TCP_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_next_pkt)
 
 #define TCP_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define TCP_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
@@ -41,13 +41,13 @@
 #define TCP_PHV_HEADERS_END         (TCP_PHV_TCP_START+TCP_PHV_TCP_SIZE-1)
 
 #define TCP_PHV_RX2TX_SHARED_START  CAPRI_PHV_START_OFFSET(rx2tx_snd_una)
-#define TCP_PHV_RX2TX_SHARED_SIZE   94
-#define TCP_PHV_RX2TX_SHARED_END    CAPRI_PHV_END_OFFSET(rx2tx_pad_rx2tx_pad)
+#define TCP_PHV_RX2TX_SHARED_END    CAPRI_PHV_END_OFFSET(rx2tx__padding)
 
 
 
-#define TCP_PHV_TX2RX_SHARED_START  2576 /* 3088 - 512 */
+#define TCP_PHV_TX2RX_SHARED_START  CAPRI_PHV_START_OFFSET(tx2rx_prr_out)
 #define TCP_PHV_TX2RX_SHARED_SIZE   512
+#define TCP_PHV_TX2RX_SHARED_END    CAPRI_PHV_END_OFFSET(tx2rx_pad2_tx2rx)
 
 //#define TCP_PHV_HEADERS_END      3088
 #define TCP_PHV_DMA_COMMANDS_START      (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
@@ -62,6 +62,11 @@
 #define TCP_PHV_DMA_COMMAND_CMD_LEN     8
 #define TCP_PHV_DMA_COMMAND_TOTAL_LEN   (TCP_PHV_DMA_COMMAND_CMD_OFFESET+TCP_PHV_DMA_COMMAND_CMD_LEN)
 
+#define TCP_PHV_INTRINSIC_START			CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
+#define TCP_PHV_INTRINSIC_END  			CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+
+#define TCP_PHV_TX_APP_HDR_START      	CAPRI_PHV_START_OFFSET(app_header_app_data1)
+#define TCP_PHV_TX_APP_HDR_END  		(CAPRI_PHV_START_OFFSET(app_header_app_data1) + 14) // TODO: end offset not working on unionized struct due to padding issue
 
 struct p_struct {
         // DMA COMMANDS - END

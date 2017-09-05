@@ -7,94 +7,29 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 	
- /* d is the data returned by lookup result */
-struct d_struct {
-	retx_snd_una			: SEQ_NUMBER_WIDTH ;
-	retx_snd_nxt			: SEQ_NUMBER_WIDTH ;
-	retx_head_desc			: ADDRESS_WIDTH ;
-	retx_snd_una_cursor		: ADDRESS_WIDTH ;
-	retx_tail_desc			: ADDRESS_WIDTH ;
-	retx_snd_nxt_cursor		: ADDRESS_WIDTH ;
-	retx_xmit_cursor		: ADDRESS_WIDTH ;
-	retx_xmit_seq			: SEQ_NUMBER_WIDTH ;
-
-	rcv_wup				: WINDOW_WIDTH ;
-
-	xmit_cursor_flags		: 8  ;
-	xmit_cursor_addr		: ADDRESS_WIDTH ;
-	xmit_cursor_offset		: OFFSET_WIDTH ;
-	xmit_cursor_len			: LEN_WIDTH ;
-	
-	/* ethhdr fields from hdr template */
-//	h_dest				: 48 ;
-//	h_source			: 48 ;
-
-	/* iphdr fields from hdr template page */
-//	saddr				: 32 ;
-//	daddr				: 32 ;
-	/* tcphdr fields from hdr template page */
-	fid                             : 32 ;
-	source				: 16 ;
-	dest				: 16 ;
-	pending_ack_tx			: 1  ;
-	pending_delayed_ack_tx		: 1  ;
-
-	/* State needed by RX and TX pipelines
-	 * This has to be at the end.
-	 * Each of these fields will be written by Rx only or Tx only
-	 */
-
-        prr_out				: COUNTER32	        ;\
-
-};
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	xmit_cursor_flags		: 8  ;
-	xmit_cursor_addr		: ADDRESS_WIDTH ;
-	xmit_cursor_offset		: OFFSET_WIDTH ;
-	xmit_cursor_len			: LEN_WIDTH ;
-
-
-	pending_challenge_ack_send	: 1	                ;\
-	pending_ack_send		: 1	                ;\
-	pending_sync_mss		: 1	                ;\
-	pending_tso_keepalive           : 1                     ;\
-	pending_tso_pmtu_probe          : 1                     ;\
-	pending_tso_data		: 1                     ;\
-	pending_tso_probe_data		: 1                     ;\
-	pending_tso_probe		: 1                     ;\
-	pending_ooo_se_recv		: 1                     ;\
-	pending_tso_retx	        : 1                     ;\
-	pending_rexmit		        : 2                     ;\
-
-	rcv_nxt				: SEQ_NUMBER_WIDTH	;\
-	rcv_wnd				: WINDOW_WIDTH          ;\
-        rcv_mss                         : 8                     ;\
-	ca_state			: 8	                ;\
-
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
+struct phv_ p	;
+struct tcp_tx_tso_k k	;
+struct tcp_tx_tso_tso_d d	;
 	
 
 %%
+        .align
 	
-flow_tso_process_start:
+tcp_tso_process_start:
+        CAPRI_CLEAR_TABLE_VALID(0)
 	/* check SESQ for pending data to be transmitted */
-	or 		r1, k.pending_tso_data, k.pending_tso_retx
-	or		r1, r1, k.pending_ack_send
+	or 		r1, k.to_s4_pending_tso_data, k.to_s4_pending_tso_retx
+	or		r1, r1, k.to_s4_pending_ack_send
 	sne		c1, r1, r0
-	jal.c1		r7, tcp_write_xmit
-	nop
-	b		flow_tso_process_done
-	nop
+        bal.c1          r7, tcp_write_xmit
+        nop
+        b		flow_tso_process_done
+        nop
 
-tcp_write_xmit_start:
+tcp_write_xmit:
 	/* Get the point where we are supposed to send next from */
 	seq		c1, d.retx_xmit_cursor, r0
 	/* If the retx was all cleaned up , then reinit the xmit
@@ -111,7 +46,7 @@ tcp_write_xmit_start:
 	bcf		[c1], tcp_write_xmit_done
 	nop
 
-	seq		c1, k.xmit_cursor_addr, r0
+	seq		c1, k.to_s4_xmit_cursor_addr, r0
 	bcf		[c1], tcp_write_xmit_done
 	nop
 
@@ -133,31 +68,46 @@ tcp_write_xmit_start:
 //	phvwr		p.daddr, d.daddr
 	/* Write the tcp header */
 tcp_start:
-	phvwr		p.fid, d.fid
-	phvwr		p.source,d.source
-	phvwr		p.dest, d.dest
-	phvwr		p.seq, d.retx_xmit_seq
-	phvwr		p.ack_seq, k.rcv_nxt
-	phvwri		p.d_off, 5
-	phvwri		p.res1, 0
-	phvwri		p.ack,1
-	phvwr		p.window, k.rcv_wnd
-	phvwri		p.urg_ptr, 0
+	//phvwr		p.fid, d.fid
+	//phvwr		p.source,d.source
+	//phvwr		p.dest, d.dest
+	//phvwr		p.seq, d.retx_xmit_seq
+	//phvwr		p.ack_seq, k.rcv_nxt
+	//phvwri		p.d_off, 5
+	//phvwri		p.res1, 0
+	//phvwri		p.ack,1
+	//phvwr		p.window, k.rcv_wnd
+	//phvwri		p.urg_ptr, 0
 
-dma_cmd_hdr:	
+dma_cmd_intrinsic:	
+        phvwri          p.p4_intr_global_tm_iport, 9
+        phvwri          p.p4_intr_global_tm_oport, 11
+        phvwri          p.p4_intr_global_tm_oq, 0
 	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
 	add		r1, r0, r5
-	phvwr		p.dma_cmd_ptr, r1
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r1
 
-	phvwri		p.dma_cmd0_addr, TCP_PHV_ETH_START
-	phvwri		p.dma_cmd0_pad, 0
-	phvwri		p.dma_cmd0_size, TCP_HDR_SIZE
-	phvwri		p.dma_cmd0_cmd, CAPRI_DMA_COMMAND_PHV_TO_PKT
-
-        addi            r1, r1, TCP_PHV_DMA_COMMAND_TOTAL_LEN
+	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+        phvwr           p.dma_cmd0_dma_cmd_phv_start_addr, TCP_PHV_INTRINSIC_START
+        phvwr           p.dma_cmd0_dma_cmd_phv_end_addr, TCP_PHV_INTRINSIC_END
+dma_cmd_p4plus_to_p4_app_header:
+        phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
+	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+        phvwr           p.dma_cmd1_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
+        phvwr           p.dma_cmd1_dma_cmd_phv_end_addr, TCP_PHV_TX_APP_HDR_END
+dma_cmd_hdr:	
+	phvwri		p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
+        add             r5, r0, k.common_phv_qstate_addr
+        add             r6, r0, k.common_phv_fid, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
+        add             r5, r5, r6
+        addi            r5, r5, TCP_TCB_HEADER_TEMPLATE_OFFSET
+        phvwr           p.dma_cmd2_dma_cmd_addr, r5
+	phvwri		p.dma_cmd2_dma_cmd_size, ETH_IP_TCP_HDR_SIZE
 
 dma_cmd_data:
-	seq		c2, k.xmit_cursor_addr, r0
+	phvwri		p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
+        phvwri          p.dma_cmd3_dma_pkt_eop, 1
+	seq		c2, k.to_s4_xmit_cursor_addr, r0
 	/* r6 has tcp data len being sent */
 	addi		r6, r0, 0
 	/* We can end up taking this branch if we ended up here
@@ -169,41 +119,35 @@ dma_cmd_data:
 
 	/* Write A = xmit_cursor_addr + xmit_cursor_offset */
 
-	add		r2, k.xmit_cursor_addr, k.xmit_cursor_offset
-	phvwr		p.dma_cmd1_addr, r2
-	phvwri		p.dma_cmd1_pad, 0
+	add		r2, k.to_s4_xmit_cursor_addr, k.to_s4_xmit_cursor_offset
+	phvwr		p.dma_cmd3_dma_cmd_addr, r2
 
 	/* Write L = min(mss, descriptor entry len) */
-	slt		c1, k.rcv_mss, k.xmit_cursor_len
-	add.c1		r6, k.rcv_mss, r0
-	add.!c1		r6, k.xmit_cursor_len, r0
-	phvwr		p.dma_cmd1_size, r6
-	phvwri		p.dma_cmd1_cmd, CAPRI_DMA_COMMAND_PHV_TO_PKT
+	slt		c1, k.to_s4_rcv_mss, k.to_s4_xmit_cursor_len
+	add.c1		r6, k.to_s4_rcv_mss, r0
+	add.!c1		r6, k.to_s4_xmit_cursor_len, r0
+	phvwr		p.dma_cmd3_dma_cmd_size, r6
 
-        addi            r1, r1, TCP_PHV_DMA_COMMAND_TOTAL_LEN
-	
 	/*
 	 * if (tcp_in_cwnd_reduction(tp))
 	 *    tp->cc.prr_out += 1
 	 */
-	and		r1, k.ca_state, (TCPF_CA_CWR | TCPF_CA_Recovery)
+	and		r1, k.to_s4_ca_state, (TCPF_CA_CWR | TCPF_CA_Recovery)
 	seq		c1, r1, r0
 	addi.!c1	r1, r0, 1
 	tbladd.!c1	d.prr_out, r1
 
 dma_cmd_write_tx2rx_shared:
 	/* Set the DMA_WRITE CMD for copying tx2rx shared data from phv to mem */
-	addi		r5, r0, TCP_TCB_TABLE_BASE
-	add		r6, r0, k.fid
-	sll		r6, r6, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
+	phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+        phvwri          p.dma_cmd4_dma_cmd_eop, 1
+	add 		r5, r0, k.common_phv_qstate_addr
+	add		r6, r0, k.common_phv_fid, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
 	add		r5, r5, r6
-	add		r6, r0, TCP_TCB_TX2RX_SHARED_OFFSET
-	add		r5, r5, r6
-	phvwr		p.dma_cmd2_addr, r5
-	phvwri		p.dma_cmd2_pad, TCP_PHV_TX2RX_SHARED_START
-	phvwri		p.dma_cmd2_size, TCP_PHV_TX2RX_SHARED_SIZE
-	phvwri		p.dma_cmd2_cmd, CAPRI_DMA_COMMAND_PHV_TO_MEM
-	addi		r4, r4, TCP_PHV_DMA_COMMAND_TOTAL_LEN
+	addi		r5, r5, TCP_TCB_TX2RX_SHARED_WRITE_OFFSET
+	phvwr		p.dma_cmd4_dma_cmd_addr, r5
+	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_TX2RX_SHARED_START
+	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_TX2RX_SHARED_END
 	
 	bcf		[c1], update_xmit_cursor
 	nop
@@ -212,21 +156,21 @@ move_xmit_cursor:
 	/* This clearing of xmit_cursor_addr will cause read of retx_xmit_cursor for
 	 * next pass after tcp-tx stage
 	 */
-	phvwri		p.xmit_cursor_addr, 0
+	phvwri		p.to_s4_xmit_cursor_addr, 0 // TODO : which stage needs this?
 	b		tcp_read_xmit_cursor
 	nop
 
 
 update_xmit_cursor:
 	/* Move offset of descriptor entry by xmit len */
-	add		r4, k.xmit_cursor_offset, r6
+	add		r4, k.to_s4_xmit_cursor_offset, r6
 
 	addi		r2, r0, NIC_DESC_ENTRY_OFF_OFFSET	
 	add		r1, d.retx_xmit_cursor, r2
 	memwr.h		r1, r4
 
 	/* Decrement length of descriptor entry by xmit len */
-	sub		r4, k.xmit_cursor_len, r6
+	sub		r4, k.to_s4_xmit_cursor_len, r6
 
 	addi		r2, r0, NIC_DESC_ENTRY_LEN_OFFSET	
 	add		r1, d.retx_xmit_cursor, r2
@@ -237,7 +181,7 @@ tcp_write_xmit_done:
 	/* Set the tot_len in ip header */
 	addi		r1, r0, TCPIP_HDR_SIZE
 	add		r1, r1, r6
-	phvwr		p.tot_len,r1
+	//phvwr		p.tot_len,r1 // TODO
 	sne		c4, r7, r0
 	jr.c4		r7
 	add		r7, r0, r0
@@ -247,19 +191,16 @@ tcp_retx:
 tcp_retx_done:
 
 tcp_read_xmit_cursor:
+#if 0
 	/* Read the xmit cursor if we have zero xmit cursor addr */
 	add		r1, d.retx_xmit_cursor, r0	
 
 	phvwr		p.table_sel, TABLE_TYPE_RAW
 	phvwr		p.table_mpu_entry_raw, flow_read_xmit_cursor
 	phvwr		p.table_addr, r1
-
-
-	
-	
+#endif
 	
 flow_tso_process_done:
 	nop.e
-	nop.e
+	nop
 
-	

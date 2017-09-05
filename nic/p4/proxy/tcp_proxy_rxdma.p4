@@ -4,6 +4,9 @@
 
 #include "../common-p4+/common_rxdma_dummy.p4"
 
+/******************************************************************************
+ * Table names
+ *****************************************************************************/
 #define rx_table_s1_t0 tcp_rx_tcp_rx
 
 #define rx_table_s2_t0 tcp_rx_tcp_rtt
@@ -29,6 +32,9 @@
 #define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
 
 
+/******************************************************************************
+ * Action names
+ *****************************************************************************/
 #define rx_table_s1_t0_action tcp_rx
 
 #define rx_table_s2_t0_action tcp_rtt
@@ -96,19 +102,25 @@ header_type read_tx2rxd_t {
         eval_last               : 8;
         host                    : 4;
         total                   : 4;
-        pid                     : 16;
+        pid                     : 16; // 8 bytes
 
-        prr_out                 : 32;
-        snd_nxt                 : 32;
-        ecn_flags_tx            : 8;
-        packets_out             : 16;
+        serq_ring_size          : 16;
+        serq_pidx               : 16; 
+        pad2                    : 32; // 8 bytes
+
+        // written by TLS P4+ program
+        serq_cidx               : 16;
+        pad1                    : 48; // 8 bytes
+
+        // written by TCP Tx P4+ program
+        TX2RX_SHARED_STATE           // offset = 24
     }
 }
 
 // d for stage 1
 header_type tcp_rx_d_t {
     fields {
-	serq_base		: 32;
+        serq_base               : 32;
         rcv_nxt                 : 32;
         rcv_tsval               : 32;
         rcv_tstamp              : 32;
@@ -532,7 +544,9 @@ metadata dma_cmd_phv2mem_t dma_cmd7;
 /*
  * Stage 0 table 0 action
  */
-action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, prr_out, snd_nxt, ecn_flags_tx, packets_out) {
+action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
+                  serq_ring_size, serq_pidx, pad2, serq_cidx, pad1, prr_out,
+                  snd_nxt, ecn_flags_tx, packets_out) {
     // k + i for stage 0
 
     // from intrinsic
@@ -575,6 +589,11 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pr
     modify_field(read_tx2rxd.host, host);
     modify_field(read_tx2rxd.total, total);
     modify_field(read_tx2rxd.pid, pid);
+    modify_field(read_tx2rxd.serq_ring_size, serq_ring_size);
+    modify_field(read_tx2rxd.serq_pidx, serq_pidx);
+    modify_field(read_tx2rxd.pad2, pad2);
+    modify_field(read_tx2rxd.serq_cidx, serq_cidx);
+    modify_field(read_tx2rxd.pad1, pad1);
     modify_field(read_tx2rxd.prr_out, prr_out);
     modify_field(read_tx2rxd.snd_nxt, snd_nxt);
     modify_field(read_tx2rxd.ecn_flags_tx, ecn_flags_tx);

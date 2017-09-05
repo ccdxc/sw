@@ -15,13 +15,15 @@ struct tcp_tx_read_rx2tx_extra_k k;
 struct tcp_tx_read_rx2tx_extra_read_rx2tx_extra_d d;
 	
 %%
-	
-flow_read_rx2tx_shared_extra_process_start:
+    .align
+    .param      tcp_tx_sesq_read_stage2_start
+
+tcp_tx_read_rx2tx_shared_extra_stage1_start:
 	/* Write the entire d-vector to p-vector for tx2rx shared state */
-	//TODO: phvwr		p.prior_ssthresh, d.prior_ssthresh
-	//TODO: phvwr		p.high_seq, d.high_seq
-	//TODO: phvwr		p.{sacked_out...fackets_out}, d.{sacked_out...fackets_out}
-	//TODO: phvwr		p.{ooo_datalen...undo_marker}, d.{ooo_datalen...undo_marker}
-	//TODO: phvwr		p.undo_retrans, d.undo_retrans
-	//TODO: phvwr.e         p.{snd_ssthresh...ecn_flags}, d.{snd_ssthresh...ecn_flags}
-	nop
+    // TODO
+#if 0
+    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tcp_tx_sesq_read_stage2_start,
+                         k.to_s1_sesq_ci_addr, TABLE_SIZE_64_BITS)
+#endif
+    nop.e
+    nop

@@ -58,8 +58,8 @@ dma_cmd_dec_desc_entry0:
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
 	phvwr		p.aol_L0, r1
 
-    phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_L0)
-	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_A0)
+    phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_A0)
+	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_L0)
 
     phvwri		p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 	

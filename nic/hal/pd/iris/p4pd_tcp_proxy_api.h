@@ -11,27 +11,33 @@
 #include <p4plus_pd_api.h>
 
 #define P4PD_TCPCB_STAGE_ENTRY_OFFSET   64
+
+// NOTE : ** Change proxy_meta_init to match qstate size
+// Also Change TCP_TCB_TABLE_ENTRY_SIZE and TCP_TCB_TABLE_ENTRY_SIZE_SHFT
+// in tcp-table.h to match **
 #define P4PD_HBM_TCP_CB_ENTRY_SIZE      1024
 
+// NOTE : ** These offsets need to match the offsets in 
+// tcp-table.h **
 typedef enum tcpcb_hwid_order_ {
-    P4PD_HWID_TCP_RX_READ_TX2RX = 0,
-    P4PD_HWID_TCP_TX_READ_RX2TX = 1,
-    P4PD_HWID_TCP_RX_TCP_RX = 2,
-    P4PD_HWID_TCP_RX_RTT = 3,
-    P4PD_HWID_TCP_RX_TCP_FRA = 4,
-    P4PD_HWID_TCP_RX_TCP_CC = 5,
-    P4PD_HWID_TCP_RX_TCP_FC = 6,
+    P4PD_HWID_TCP_TX_READ_RX2TX = 1, // TODO: needs to be 0
+    P4PD_HWID_TCP_RX_READ_TX2RX = 0, // TODO: needs to be 1
+    P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA = 2,
+    P4PD_HWID_TCP_RX_TCP_RX = 3,
+    P4PD_HWID_TCP_RX_RTT = 4,
+    P4PD_HWID_TCP_RX_TCP_FRA = 5,
+    P4PD_HWID_TCP_RX_TCP_CC = 6,
+    P4PD_HWID_TCP_RX_TCP_FC = 7,
+    P4PD_HWID_TCP_RX_WRITE_SERQ = 8,
 
-    P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA = 7,
-    P4PD_HWID_TCP_TX_READ_SESQ_CI = 8,
-    P4PD_HWID_TCP_TX_READ_SESQ = 9,
-    P4PD_HWID_TCP_TX_SESQ_CONSUME = 10,
+    P4PD_HWID_TCP_TX_TCP_TX = 9,
+    P4PD_HWID_TCP_TX_HEADER_TEMPLATE = 10,
 
-    P4PD_HWID_TCP_RX_STATS = 11,
-    P4PD_HWID_TCP_RX_STATS1 = 11,
-    P4PD_HWID_TCP_RX_STATS2 = 12,
+    P4PD_HWID_TCP_RX_STATS = 12,
+    P4PD_HWID_TCP_RX_STATS1 = 12,
+    P4PD_HWID_TCP_RX_STATS2 = 13,
 
-    P4PD_HWID_TCP_TX_STATS = 13,
+    P4PD_HWID_TCP_TX_STATS = 14,
     P4PD_HWID_TCP_TX_STATS1 = 14,
     P4PD_HWID_TCP_TX_STATS2 = 15,
 } tcpcb_hwid_order_t;

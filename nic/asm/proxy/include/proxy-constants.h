@@ -1,0 +1,11 @@
+#ifndef __PROXY_CONSTANTS_H
+#define __PROXY_CONSTANTS_H
+
+#define NIC_DESC_ENTRY_SIZE                  16         /* sizeof(nic_desc_entry_t) */
+#define NIC_DESC_ENTRY_SIZE_SHIFT            3          /* sizeof(nic_desc_entry_t) = 8B */
+#define NIC_SERQ_ENTRY_SIZE                  8
+#define NIC_SERQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
+#define NIC_SESQ_ENTRY_SIZE                  8
+#define NIC_SESQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
+
+#endif // __PROXY_CONSTANTS_H
