@@ -14,6 +14,7 @@ from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.acl                 import AclHelper
 from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
+from config.objects.cpu                 import CpuHelper
 
 from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
@@ -45,9 +46,12 @@ def process(topospec):
     SwDscrRingHelper.main("NMDR")
     SwDscrRingHelper.main("NMPR")
     SwDscrRingHelper.main("BRQ")
+    #SwDscrRingHelper.main("ARQ")
 
     TcpCbHelper.main()    
     IpsecCbHelper.main()    
+    #CpuHelper.main(topospec)
+
     return
 
 def main(topofile):

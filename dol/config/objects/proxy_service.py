@@ -37,6 +37,10 @@ class ProxyServiceObject(base.ConfigObjectBase):
             reqspec.key_or_handle.proxy_id = 2
             reqspec.proxy_type = 3
  
+        if self.type == "CPU_PROXY":
+            reqspec.key_or_handle.proxy_id = 3
+            reqspec.proxy_type = 4
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

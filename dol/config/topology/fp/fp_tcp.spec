@@ -19,3 +19,8 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_FP_TCP
         count   : 1
         lifns   : range/101/128
+
+cpu:
+    - entry:
+        id      : Cpu1
+        lif_id  : 1003

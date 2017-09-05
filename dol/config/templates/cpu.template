@@ -1,0 +1,7 @@
+# CPU Config Object Template
+meta:
+    id: CPU
+
+id         : None  # Name of the object
+lif_id     : 0
+
