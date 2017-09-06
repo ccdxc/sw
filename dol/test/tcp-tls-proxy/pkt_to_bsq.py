@@ -8,6 +8,7 @@ from config.store               import Store
 rnmdr = 0
 rnmpr = 0
 bsq = 0
+tlscb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -21,6 +22,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
     global bsq
+    global tlscb
 
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
@@ -36,7 +38,9 @@ def TestCaseSetup(tc):
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     bsq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TLSCB0000_BSQ"])
-    
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"]) 
+    #tlscb.crypto_obj.CryptoKeyUpdate('CRYPTO_KEY_AES128') 
+    #tlscb.UpdateCryptoIdx(crypto_obj.idx)
     return
 
 def TestCaseVerify(tc):

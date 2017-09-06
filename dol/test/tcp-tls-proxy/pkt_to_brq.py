@@ -3,7 +3,7 @@
 import pdb
 import copy
 
-from config.store               import Store
+from config.store                   import Store
 
 rnmdr = 0
 rnmpr = 0
@@ -39,6 +39,7 @@ def TestCaseSetup(tc):
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ"])
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
+
     return
 
 def TestCaseVerify(tc):

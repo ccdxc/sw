@@ -159,6 +159,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     }
     
     tlscb->cipher_type = spec.cipher_type();
+    tlscb->crypto_key_idx = spec.crypto_key_idx();
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
