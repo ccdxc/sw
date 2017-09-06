@@ -126,8 +126,8 @@ all: $(OBJ_FILES)
 	@#@echo $(OBJ_FILES)
 	@#$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
 	$(CXX) -g -shared -o $(SHARED_OBJS) $(GCOV)
-	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal $(GCOV)
-	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV)
+	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal $(GCOV) -lgcov
+	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV) -lgcov
 
 clean:
 	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_mem.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub

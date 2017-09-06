@@ -45,7 +45,6 @@ SLOBJECTS_STUB = \
 		  $(OBJDIR)/stub_repl_table_entry.o \
 		  $(OBJDIR)/stub_repl_entry.o \
 		  $(OBJDIR)/capri_tbl_rw.o \
-		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \
 		  $(OBJDIR)/p4pluspd_rxdma_api.o \
 		  $(OBJDIR)/p4pluspd_txdma_api.o \

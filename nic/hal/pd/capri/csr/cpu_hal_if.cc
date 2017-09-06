@@ -5,7 +5,7 @@ extern bool write_reg(uint64_t addr, uint32_t  data);
 
 uint32_t
 cpu_hal_if::read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor) {
-    uint32_t data;
+    uint32_t data = 0;
 
     (void)chip;
     read_reg(addr, data);

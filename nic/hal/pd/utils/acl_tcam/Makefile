@@ -25,7 +25,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 $(LPOSTALL):
 	@#echo $(patsubst stub_%, %.cc, $(notdir $(basename $@)))
-	$(CXX) -g -include p4pd_stub.hpp -std=c++11 -Wall -Werror -Wuninitialized -fpic -MT $@ -MMD -MP -MF $*.d $(LCXXFLAGS) -c -o $@ $(patsubst stub_%, %.cc, $(notdir $(basename $@)))
+	$(CXX) -g -include p4pd_stub.hpp -std=c++11 -Wall -Werror -Wuninitialized -fpic -MT $@ -MMD -MP -MF $*.d $(LCXXFLAGS) $(GCOV) -c -o $@ $(patsubst stub_%, %.cc, $(notdir $(basename $@)))
 
 stubclean:
 	rm -rf $(LPOSTALL)
