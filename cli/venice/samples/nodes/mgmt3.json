@@ -1,0 +1,10 @@
+{
+	"kind": "node",
+	"meta": {
+		"name": "mgmt3",
+		"labels": { "type":"bare-metal", "naples":"v1" }
+	},
+	"spec": {
+		"name" : "mgmt3"
+	}
+}

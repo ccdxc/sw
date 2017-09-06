@@ -1,0 +1,11 @@
+{
+	"kind": "mirror",
+	"meta": {
+		"name": "mirror-session-2"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchLabels" : "io.pensando.network.sg:dmz-web-sg"}],
+		"encap" : "erspan",
+		"destinationIp" : "192.131.4.54"
+	}
+}

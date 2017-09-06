@@ -30,7 +30,9 @@ message ObjectMeta {
   string ResourceVersion = 4;
   // UUID is the unique identifier for the object. This can only be set by the server.
   string UUID = 5;
-  // TODO: Add timestamps, labels etc.
+  // Labels are arbitrary (key,value) pairs associated with any object.
+  map <string, string> Labels = 6;
+  // TODO: Add timestamps, etc.
 }
 
 // ObjectRef contains identifying information about an object.

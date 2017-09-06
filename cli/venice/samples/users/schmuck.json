@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "schmuck",
+		"labels": { "dept":"storage", "level":"director" }
+	},
+	"spec": {
+		"roles" : [ "storage-admin" ]
+	}
+}

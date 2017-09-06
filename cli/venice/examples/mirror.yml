@@ -1,0 +1,18 @@
+# please edit and/or delete the lines in this sample
+kind: mirror                                            # kind of this object
+meta:
+  name: mirror-session-2                                # name of this object
+  # tenant: default		                        # override tenant value (applicable only for super user)
+  # labels:			                        # arbitrary user defined tags 'key: value' 
+  #  area: network
+spec:                                                   # configuration specification intent
+  applyToWorkloads:                                     # selection (ORed list) of workloads to which this policy is applied
+  - matchlabels: io.pensando.network.sg:dmz-web-sg      # match applications tagged as labels defined here
+  - matchNames: dev-app*                                # match names of the workloads
+    matchDestPorts: udp/4404                            # match only traffic going to udp/4404
+  - matchDestPrefix: 172.15.0.0/16                      # match a set of destination prefixes
+    matchDestPorts: tcp/4090                            # match flows on to specific ports in addition
+  - matchSrcPrefix: 10.33.2.0/24                        # match a set of source IP address prefixes
+  destinationIp: 192.131.4.54                           # destination IP address to which mirroed packets are to be sent to
+  encap: erspan                                         # erspan encapsulate frames, other options are netflow, tsdb
+

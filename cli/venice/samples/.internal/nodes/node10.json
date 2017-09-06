@@ -1,0 +1,8 @@
+{
+	"kind": "node",
+	"meta": {
+		"name": "node10",
+		"labels": { "os":"linux", "storage":"hdd", "dc":"sjc-lab22" }
+	},
+	"spec": {}
+}

@@ -1,0 +1,11 @@
+{
+	"kind": "qos",
+	"meta": {
+		"name": "qos-best-effort-priority"
+	},
+	"spec": {
+		"applyToWorkloads" : [{ "matchNames" : "*"}],
+		"priority" : "best-effort",
+		"setDscp" : 3
+	}
+}

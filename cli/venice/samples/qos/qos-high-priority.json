@@ -1,0 +1,12 @@
+{
+	"kind": "qos",
+	"meta": {
+		"name": "qos-high-priority"
+	},
+	"spec": { 
+		"applyToWorkloads" : [
+			{ "matchLabels" : "io.pensando.network.prio:high"},
+			{ "matchNames" : "prod*"}],
+		"setDscp" : 6
+	}
+}

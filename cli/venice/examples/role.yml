@@ -1,0 +1,9 @@
+# please edit and/or delete the lines in this sample
+kind: role                      # kind of this object
+meta:
+  name: dev-admin               # unique name of this object
+  labels:			# arbitrary user defined tags 'key: value' 
+    area: network
+spec:                           # configuration specification intent
+  permissions:                  # permissions this role is entitled to
+  - network-rw

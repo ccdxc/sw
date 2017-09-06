@@ -1,0 +1,12 @@
+{
+	"kind": "lbPolicy",
+	"meta": {
+		"name": "prod-lb-policy"
+	},
+	"spec": { 
+		"type" : "L4",
+		"algorithm" : "min-latency",
+		"session-affinity" : "true",
+		"health-check" : { "interval" : 30, "probes-per-interval" : 3, "max-timeouts" : 2, "declare-healthy-count" : 5 }
+	}
+}

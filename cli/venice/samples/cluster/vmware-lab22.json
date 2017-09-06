@@ -1,0 +1,13 @@
+{
+	"kind": "cluster",
+	"meta": {
+		"name": "vmware-lab22",
+		"labels": { "type":"vcenter", "allowed":"qa,prod,dev", "dc":"sjc-lab22" }
+	},
+	"spec": {
+		"virtualIp" : "158.21.34.44",
+		"quorumNodes" : [ "mgmt1", "mgmt2", "mgmt3" ],
+		"ntpServers" : [ "ntp-svr1", "ntp-srv2" ],
+		"dnsSubDomain" : "internal.pensando.io"
+	}
+}

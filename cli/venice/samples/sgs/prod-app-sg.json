@@ -1,0 +1,9 @@
+{
+	"kind": "sg",
+	"meta": {
+		"name": "prod-app-sg"
+	},
+	"spec": {
+		"workload-labels" : [ "io.pensando.network.sg:prod-app-sg" ]
+	}
+}

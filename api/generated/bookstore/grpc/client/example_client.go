@@ -162,8 +162,8 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			"bookstore.BookstoreV1",
 			"AutoListBook",
 			bookstore.EncodeGrpcReqListWatchOptions,
-			bookstore.DecodeGrpcRespAutoMsgBookListHelper,
-			&bookstore.AutoMsgBookListHelper{},
+			bookstore.DecodeGrpcRespBookList,
+			&bookstore.BookList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
@@ -176,8 +176,8 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			"bookstore.BookstoreV1",
 			"AutoListOrder",
 			bookstore.EncodeGrpcReqListWatchOptions,
-			bookstore.DecodeGrpcRespAutoMsgOrderListHelper,
-			&bookstore.AutoMsgOrderListHelper{},
+			bookstore.DecodeGrpcRespOrderList,
+			&bookstore.OrderList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
@@ -190,8 +190,8 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			"bookstore.BookstoreV1",
 			"AutoListPublisher",
 			bookstore.EncodeGrpcReqListWatchOptions,
-			bookstore.DecodeGrpcRespAutoMsgPublisherListHelper,
-			&bookstore.AutoMsgPublisherListHelper{},
+			bookstore.DecodeGrpcRespPublisherList,
+			&bookstore.PublisherList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()

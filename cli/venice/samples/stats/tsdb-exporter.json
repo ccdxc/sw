@@ -1,0 +1,13 @@
+{
+	"kind": "statsexportpolicy",
+	"meta": {
+		"name": "tsdb-exporter"
+	},
+	"spec": { 
+		"targetIpAddress" : "192.54.23.21",
+		"targetPort" : "66590",
+		"encap" : "udp",
+		"formatScheme" : "statsd",
+		"exportInterval" : "3s"
+	}
+}

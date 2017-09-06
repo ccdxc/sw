@@ -1,0 +1,11 @@
+{
+	"kind": "user",
+	"meta": {
+		"tenant":"prod",
+		"name": "prod-admin",
+		"labels": { "dept":"ops" }
+	},
+	"spec": {
+		"roles" : [ "full-access" ]
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"kind": "sgpolicy",
+	"meta": {
+		"name": "dev-sgp"
+	},
+	"spec": {
+		"attach-groups" : [ "dev-sg"],
+		"in-rules" : [
+			{ "peer-group" : "dev-sg", "ports" : "*/*", "action" : "permit,log" },
+			{ "peer-group" : "any", "ports" : "tcp/22,icmp,tcp/23", "action" : "permit,log" }
+	       	]
+	}
+}

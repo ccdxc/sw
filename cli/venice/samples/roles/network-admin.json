@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "network-admin",
+		"labels": { "area":"network" }
+	},
+	"spec": {
+		"permissions" : [ "network-rw" ]
+	}
+}

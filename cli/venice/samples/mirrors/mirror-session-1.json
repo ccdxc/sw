@@ -1,0 +1,11 @@
+{
+	"kind": "mirror",
+	"meta": {
+		"name": "mirror-session-1"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchNames" : "prod-web*"}],
+		"encap" : "vxlan",
+		"destinationIp" : "192.131.4.55"
+	}
+}

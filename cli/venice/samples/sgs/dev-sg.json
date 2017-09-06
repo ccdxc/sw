@@ -1,0 +1,9 @@
+{
+	"kind": "sg",
+	"meta": {
+		"name": "dev-sg"
+	},
+	"spec": {
+		"workload-labels" : [ "io.pensando.network.sg:dev-sg" ]
+	}
+}

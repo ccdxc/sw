@@ -1,0 +1,11 @@
+{
+	"kind": "monitoringpolicy",
+	"meta": {
+		"name": "drop-stats-monitoring-policy"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchNames" : "*"}],
+		"collectionpolicy" : "drop-collector",
+		"exportpolicy" : "tsdb-exporter"
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "prod-netops-api",
+		"labels": { "dept":"ops" }
+	},
+	"spec": {
+		"roles" : [ "full-access" ]
+	}
+}

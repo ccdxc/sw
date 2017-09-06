@@ -114,16 +114,16 @@ type respEndpointV1AutoGetEndpoint struct {
 }
 
 // AutoListEndpoint is endpoint for AutoListEndpoint
-func (e EndpointsEndpointV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
+func (e EndpointsEndpointV1Client) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (*EndpointList, error) {
 	resp, err := e.AutoListEndpointEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgEndpointListHelper{}, err
+		return &EndpointList{}, err
 	}
-	return resp.(*AutoMsgEndpointListHelper), nil
+	return resp.(*EndpointList), nil
 }
 
 type respEndpointV1AutoListEndpoint struct {
-	V   AutoMsgEndpointListHelper
+	V   EndpointList
 	Err error
 }
 
@@ -213,12 +213,12 @@ func MakeEndpointV1AutoGetEndpointEndpoint(s ServiceEndpointV1Server, logger log
 }
 
 // AutoListEndpoint implementation on server Endpoint
-func (e EndpointsEndpointV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (AutoMsgEndpointListHelper, error) {
+func (e EndpointsEndpointV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (EndpointList, error) {
 	resp, err := e.AutoListEndpointEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgEndpointListHelper{}, err
+		return EndpointList{}, err
 	}
-	return *resp.(*AutoMsgEndpointListHelper), nil
+	return *resp.(*EndpointList), nil
 }
 
 // MakeEndpointV1AutoListEndpointEndpoint creates  AutoListEndpoint endpoints for the service
@@ -352,7 +352,7 @@ func (m loggingEndpointV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, 
 	resp, err = m.next.AutoGetEndpoint(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgEndpointListHelper, err error) {
+func (m loggingEndpointV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *EndpointList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -432,7 +432,7 @@ func (m loggingEndpointV1MiddlewareServer) AutoGetEndpoint(ctx context.Context, 
 	resp, err = m.next.AutoGetEndpoint(ctx, in)
 	return
 }
-func (m loggingEndpointV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgEndpointListHelper, err error) {
+func (m loggingEndpointV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp EndpointList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -586,7 +586,7 @@ func (r *EndpointsEndpointV1RestClient) AutoDeleteEndpoint(ctx context.Context, 
 }
 
 // AutoListEndpoint CRUD method for Endpoint
-func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error) {
+func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, options *api.ListWatchOptions) (*EndpointList, error) {
 	path := makeURIEndpointV1AutoListEndpointListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -600,7 +600,7 @@ func (r *EndpointsEndpointV1RestClient) AutoListEndpoint(ctx context.Context, op
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgEndpointListHelper), err
+	return ret.(*EndpointList), err
 }
 
 // AutoWatchEndpoint CRUD method for Endpoint
@@ -706,16 +706,16 @@ type respLbPolicyV1AutoGetLbPolicy struct {
 }
 
 // AutoListLbPolicy is endpoint for AutoListLbPolicy
-func (e EndpointsLbPolicyV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
+func (e EndpointsLbPolicyV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (*LbPolicyList, error) {
 	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgLbPolicyListHelper{}, err
+		return &LbPolicyList{}, err
 	}
-	return resp.(*AutoMsgLbPolicyListHelper), nil
+	return resp.(*LbPolicyList), nil
 }
 
 type respLbPolicyV1AutoListLbPolicy struct {
-	V   AutoMsgLbPolicyListHelper
+	V   LbPolicyList
 	Err error
 }
 
@@ -805,12 +805,12 @@ func MakeLbPolicyV1AutoGetLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log
 }
 
 // AutoListLbPolicy implementation on server Endpoint
-func (e EndpointsLbPolicyV1Server) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgLbPolicyListHelper, error) {
+func (e EndpointsLbPolicyV1Server) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (LbPolicyList, error) {
 	resp, err := e.AutoListLbPolicyEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgLbPolicyListHelper{}, err
+		return LbPolicyList{}, err
 	}
-	return *resp.(*AutoMsgLbPolicyListHelper), nil
+	return *resp.(*LbPolicyList), nil
 }
 
 // MakeLbPolicyV1AutoListLbPolicyEndpoint creates  AutoListLbPolicy endpoints for the service
@@ -944,7 +944,7 @@ func (m loggingLbPolicyV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, 
 	resp, err = m.next.AutoGetLbPolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgLbPolicyListHelper, err error) {
+func (m loggingLbPolicyV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *LbPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1024,7 +1024,7 @@ func (m loggingLbPolicyV1MiddlewareServer) AutoGetLbPolicy(ctx context.Context, 
 	resp, err = m.next.AutoGetLbPolicy(ctx, in)
 	return
 }
-func (m loggingLbPolicyV1MiddlewareServer) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgLbPolicyListHelper, err error) {
+func (m loggingLbPolicyV1MiddlewareServer) AutoListLbPolicy(ctx context.Context, in api.ListWatchOptions) (resp LbPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1178,7 +1178,7 @@ func (r *EndpointsLbPolicyV1RestClient) AutoDeleteLbPolicy(ctx context.Context, 
 }
 
 // AutoListLbPolicy CRUD method for LbPolicy
-func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error) {
+func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*LbPolicyList, error) {
 	path := makeURILbPolicyV1AutoListLbPolicyListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1192,7 +1192,7 @@ func (r *EndpointsLbPolicyV1RestClient) AutoListLbPolicy(ctx context.Context, op
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgLbPolicyListHelper), err
+	return ret.(*LbPolicyList), err
 }
 
 // AutoWatchLbPolicy CRUD method for LbPolicy
@@ -1298,16 +1298,16 @@ type respNetworkV1AutoGetNetwork struct {
 }
 
 // AutoListNetwork is endpoint for AutoListNetwork
-func (e EndpointsNetworkV1Client) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error) {
+func (e EndpointsNetworkV1Client) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (*NetworkList, error) {
 	resp, err := e.AutoListNetworkEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgNetworkListHelper{}, err
+		return &NetworkList{}, err
 	}
-	return resp.(*AutoMsgNetworkListHelper), nil
+	return resp.(*NetworkList), nil
 }
 
 type respNetworkV1AutoListNetwork struct {
-	V   AutoMsgNetworkListHelper
+	V   NetworkList
 	Err error
 }
 
@@ -1397,12 +1397,12 @@ func MakeNetworkV1AutoGetNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 }
 
 // AutoListNetwork implementation on server Endpoint
-func (e EndpointsNetworkV1Server) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (AutoMsgNetworkListHelper, error) {
+func (e EndpointsNetworkV1Server) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (NetworkList, error) {
 	resp, err := e.AutoListNetworkEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgNetworkListHelper{}, err
+		return NetworkList{}, err
 	}
-	return *resp.(*AutoMsgNetworkListHelper), nil
+	return *resp.(*NetworkList), nil
 }
 
 // MakeNetworkV1AutoListNetworkEndpoint creates  AutoListNetwork endpoints for the service
@@ -1536,7 +1536,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetNetwork(ctx context.Context, in
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgNetworkListHelper, err error) {
+func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, in *api.ListWatchOptions) (resp *NetworkList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1616,7 +1616,7 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetNetwork(ctx context.Context, in
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
 }
-func (m loggingNetworkV1MiddlewareServer) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgNetworkListHelper, err error) {
+func (m loggingNetworkV1MiddlewareServer) AutoListNetwork(ctx context.Context, in api.ListWatchOptions) (resp NetworkList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1770,7 +1770,7 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in
 }
 
 // AutoListNetwork CRUD method for Network
-func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error) {
+func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, options *api.ListWatchOptions) (*NetworkList, error) {
 	path := makeURINetworkV1AutoListNetworkListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1784,7 +1784,7 @@ func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, opti
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgNetworkListHelper), err
+	return ret.(*NetworkList), err
 }
 
 // AutoWatchNetwork CRUD method for Network
@@ -1890,16 +1890,16 @@ type respSecurityGroupV1AutoGetSecurityGroup struct {
 }
 
 // AutoListSecurityGroup is endpoint for AutoListSecurityGroup
-func (e EndpointsSecurityGroupV1Client) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error) {
+func (e EndpointsSecurityGroupV1Client) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (*SecurityGroupList, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgSecurityGroupListHelper{}, err
+		return &SecurityGroupList{}, err
 	}
-	return resp.(*AutoMsgSecurityGroupListHelper), nil
+	return resp.(*SecurityGroupList), nil
 }
 
 type respSecurityGroupV1AutoListSecurityGroup struct {
-	V   AutoMsgSecurityGroupListHelper
+	V   SecurityGroupList
 	Err error
 }
 
@@ -1989,12 +1989,12 @@ func MakeSecurityGroupV1AutoGetSecurityGroupEndpoint(s ServiceSecurityGroupV1Ser
 }
 
 // AutoListSecurityGroup implementation on server Endpoint
-func (e EndpointsSecurityGroupV1Server) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (AutoMsgSecurityGroupListHelper, error) {
+func (e EndpointsSecurityGroupV1Server) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (SecurityGroupList, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgSecurityGroupListHelper{}, err
+		return SecurityGroupList{}, err
 	}
-	return *resp.(*AutoMsgSecurityGroupListHelper), nil
+	return *resp.(*SecurityGroupList), nil
 }
 
 // MakeSecurityGroupV1AutoListSecurityGroupEndpoint creates  AutoListSecurityGroup endpoints for the service
@@ -2128,7 +2128,7 @@ func (m loggingSecurityGroupV1MiddlewareClient) AutoGetSecurityGroup(ctx context
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareClient) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSecurityGroupListHelper, err error) {
+func (m loggingSecurityGroupV1MiddlewareClient) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (resp *SecurityGroupList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2208,7 +2208,7 @@ func (m loggingSecurityGroupV1MiddlewareServer) AutoGetSecurityGroup(ctx context
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityGroupV1MiddlewareServer) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSecurityGroupListHelper, err error) {
+func (m loggingSecurityGroupV1MiddlewareServer) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (resp SecurityGroupList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2362,7 +2362,7 @@ func (r *EndpointsSecurityGroupV1RestClient) AutoDeleteSecurityGroup(ctx context
 }
 
 // AutoListSecurityGroup CRUD method for SecurityGroup
-func (r *EndpointsSecurityGroupV1RestClient) AutoListSecurityGroup(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error) {
+func (r *EndpointsSecurityGroupV1RestClient) AutoListSecurityGroup(ctx context.Context, options *api.ListWatchOptions) (*SecurityGroupList, error) {
 	path := makeURISecurityGroupV1AutoListSecurityGroupListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -2376,7 +2376,7 @@ func (r *EndpointsSecurityGroupV1RestClient) AutoListSecurityGroup(ctx context.C
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgSecurityGroupListHelper), err
+	return ret.(*SecurityGroupList), err
 }
 
 // AutoWatchSecurityGroup CRUD method for SecurityGroup
@@ -2482,16 +2482,16 @@ type respServiceV1AutoGetService struct {
 }
 
 // AutoListService is endpoint for AutoListService
-func (e EndpointsServiceV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgServiceListHelper, error) {
+func (e EndpointsServiceV1Client) AutoListService(ctx context.Context, in *api.ListWatchOptions) (*ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgServiceListHelper{}, err
+		return &ServiceList{}, err
 	}
-	return resp.(*AutoMsgServiceListHelper), nil
+	return resp.(*ServiceList), nil
 }
 
 type respServiceV1AutoListService struct {
-	V   AutoMsgServiceListHelper
+	V   ServiceList
 	Err error
 }
 
@@ -2581,12 +2581,12 @@ func MakeServiceV1AutoGetServiceEndpoint(s ServiceServiceV1Server, logger log.Lo
 }
 
 // AutoListService implementation on server Endpoint
-func (e EndpointsServiceV1Server) AutoListService(ctx context.Context, in api.ListWatchOptions) (AutoMsgServiceListHelper, error) {
+func (e EndpointsServiceV1Server) AutoListService(ctx context.Context, in api.ListWatchOptions) (ServiceList, error) {
 	resp, err := e.AutoListServiceEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgServiceListHelper{}, err
+		return ServiceList{}, err
 	}
-	return *resp.(*AutoMsgServiceListHelper), nil
+	return *resp.(*ServiceList), nil
 }
 
 // MakeServiceV1AutoListServiceEndpoint creates  AutoListService endpoints for the service
@@ -2720,7 +2720,7 @@ func (m loggingServiceV1MiddlewareClient) AutoGetService(ctx context.Context, in
 	resp, err = m.next.AutoGetService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareClient) AutoListService(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgServiceListHelper, err error) {
+func (m loggingServiceV1MiddlewareClient) AutoListService(ctx context.Context, in *api.ListWatchOptions) (resp *ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2800,7 +2800,7 @@ func (m loggingServiceV1MiddlewareServer) AutoGetService(ctx context.Context, in
 	resp, err = m.next.AutoGetService(ctx, in)
 	return
 }
-func (m loggingServiceV1MiddlewareServer) AutoListService(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgServiceListHelper, err error) {
+func (m loggingServiceV1MiddlewareServer) AutoListService(ctx context.Context, in api.ListWatchOptions) (resp ServiceList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2954,7 +2954,7 @@ func (r *EndpointsServiceV1RestClient) AutoDeleteService(ctx context.Context, in
 }
 
 // AutoListService CRUD method for Service
-func (r *EndpointsServiceV1RestClient) AutoListService(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgServiceListHelper, error) {
+func (r *EndpointsServiceV1RestClient) AutoListService(ctx context.Context, options *api.ListWatchOptions) (*ServiceList, error) {
 	path := makeURIServiceV1AutoListServiceListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -2968,7 +2968,7 @@ func (r *EndpointsServiceV1RestClient) AutoListService(ctx context.Context, opti
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgServiceListHelper), err
+	return ret.(*ServiceList), err
 }
 
 // AutoWatchService CRUD method for Service
@@ -3074,16 +3074,16 @@ type respSgpolicyV1AutoGetSgpolicy struct {
 }
 
 // AutoListSgpolicy is endpoint for AutoListSgpolicy
-func (e EndpointsSgpolicyV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
+func (e EndpointsSgpolicyV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (*SgpolicyList, error) {
 	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgSgpolicyListHelper{}, err
+		return &SgpolicyList{}, err
 	}
-	return resp.(*AutoMsgSgpolicyListHelper), nil
+	return resp.(*SgpolicyList), nil
 }
 
 type respSgpolicyV1AutoListSgpolicy struct {
-	V   AutoMsgSgpolicyListHelper
+	V   SgpolicyList
 	Err error
 }
 
@@ -3173,12 +3173,12 @@ func MakeSgpolicyV1AutoGetSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log
 }
 
 // AutoListSgpolicy implementation on server Endpoint
-func (e EndpointsSgpolicyV1Server) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgSgpolicyListHelper, error) {
+func (e EndpointsSgpolicyV1Server) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (SgpolicyList, error) {
 	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgSgpolicyListHelper{}, err
+		return SgpolicyList{}, err
 	}
-	return *resp.(*AutoMsgSgpolicyListHelper), nil
+	return *resp.(*SgpolicyList), nil
 }
 
 // MakeSgpolicyV1AutoListSgpolicyEndpoint creates  AutoListSgpolicy endpoints for the service
@@ -3312,7 +3312,7 @@ func (m loggingSgpolicyV1MiddlewareClient) AutoGetSgpolicy(ctx context.Context, 
 	resp, err = m.next.AutoGetSgpolicy(ctx, in)
 	return
 }
-func (m loggingSgpolicyV1MiddlewareClient) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSgpolicyListHelper, err error) {
+func (m loggingSgpolicyV1MiddlewareClient) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp *SgpolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3392,7 +3392,7 @@ func (m loggingSgpolicyV1MiddlewareServer) AutoGetSgpolicy(ctx context.Context, 
 	resp, err = m.next.AutoGetSgpolicy(ctx, in)
 	return
 }
-func (m loggingSgpolicyV1MiddlewareServer) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSgpolicyListHelper, err error) {
+func (m loggingSgpolicyV1MiddlewareServer) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (resp SgpolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3546,7 +3546,7 @@ func (r *EndpointsSgpolicyV1RestClient) AutoDeleteSgpolicy(ctx context.Context, 
 }
 
 // AutoListSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSgpolicyV1RestClient) AutoListSgpolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error) {
+func (r *EndpointsSgpolicyV1RestClient) AutoListSgpolicy(ctx context.Context, options *api.ListWatchOptions) (*SgpolicyList, error) {
 	path := makeURISgpolicyV1AutoListSgpolicyListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -3560,7 +3560,7 @@ func (r *EndpointsSgpolicyV1RestClient) AutoListSgpolicy(ctx context.Context, op
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgSgpolicyListHelper), err
+	return ret.(*SgpolicyList), err
 }
 
 // AutoWatchSgpolicy CRUD method for Sgpolicy
@@ -3666,16 +3666,16 @@ type respTenantV1AutoGetTenant struct {
 }
 
 // AutoListTenant is endpoint for AutoListTenant
-func (e EndpointsTenantV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
+func (e EndpointsTenantV1Client) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (*TenantList, error) {
 	resp, err := e.AutoListTenantEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgTenantListHelper{}, err
+		return &TenantList{}, err
 	}
-	return resp.(*AutoMsgTenantListHelper), nil
+	return resp.(*TenantList), nil
 }
 
 type respTenantV1AutoListTenant struct {
-	V   AutoMsgTenantListHelper
+	V   TenantList
 	Err error
 }
 
@@ -3765,12 +3765,12 @@ func MakeTenantV1AutoGetTenantEndpoint(s ServiceTenantV1Server, logger log.Logge
 }
 
 // AutoListTenant implementation on server Endpoint
-func (e EndpointsTenantV1Server) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (AutoMsgTenantListHelper, error) {
+func (e EndpointsTenantV1Server) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (TenantList, error) {
 	resp, err := e.AutoListTenantEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgTenantListHelper{}, err
+		return TenantList{}, err
 	}
-	return *resp.(*AutoMsgTenantListHelper), nil
+	return *resp.(*TenantList), nil
 }
 
 // MakeTenantV1AutoListTenantEndpoint creates  AutoListTenant endpoints for the service
@@ -3904,7 +3904,7 @@ func (m loggingTenantV1MiddlewareClient) AutoGetTenant(ctx context.Context, in *
 	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareClient) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgTenantListHelper, err error) {
+func (m loggingTenantV1MiddlewareClient) AutoListTenant(ctx context.Context, in *api.ListWatchOptions) (resp *TenantList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3984,7 +3984,7 @@ func (m loggingTenantV1MiddlewareServer) AutoGetTenant(ctx context.Context, in T
 	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
 }
-func (m loggingTenantV1MiddlewareServer) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgTenantListHelper, err error) {
+func (m loggingTenantV1MiddlewareServer) AutoListTenant(ctx context.Context, in api.ListWatchOptions) (resp TenantList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -4138,7 +4138,7 @@ func (r *EndpointsTenantV1RestClient) AutoDeleteTenant(ctx context.Context, in *
 }
 
 // AutoListTenant CRUD method for Tenant
-func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgTenantListHelper, error) {
+func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, options *api.ListWatchOptions) (*TenantList, error) {
 	path := makeURITenantV1AutoListTenantListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -4152,7 +4152,7 @@ func (r *EndpointsTenantV1RestClient) AutoListTenant(ctx context.Context, option
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgTenantListHelper), err
+	return ret.(*TenantList), err
 }
 
 // AutoWatchTenant CRUD method for Tenant

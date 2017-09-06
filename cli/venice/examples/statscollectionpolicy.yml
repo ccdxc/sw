@@ -1,0 +1,15 @@
+# please edit and/or delete the lines in this sample
+kind: statscollectionpolicy     # kind of this object
+meta:
+  name: flow-collector          # name of this object
+  labels:			# arbitrary user defined tags 'key: value' 
+    source: bonzo-bot
+spec:
+  ActiveConns: false            # set of fields we need to collect
+  NumLBConns: false
+  NumSGRules: false
+  RxBytes: false
+  RxPackets: false
+  TxBytes: false
+  TxPackets: false
+

@@ -879,6 +879,23 @@
 			"revisionTime": "2017-07-06T21:30:02Z"
 		},
 		{
+			"path": "github.com/google/protobuf/examples/tutorial",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "e/Kc2UOy1lKAy31xWlK37M1r2e8=",
+			"path": "github.com/google/shlex",
+			"revision": "6f45313302b9c56850fc17f99e40caebce98c716",
+			"revisionTime": "2015-01-27T13:39:51Z"
+		},
+		{
+			"checksumSHA1": "6vi0BHESE7HjF6tp9bqwNlv7gHg=",
+			"origin": "github.com/pensando/vic/vendor/github.com/google/uuid",
+			"path": "github.com/google/uuid",
+			"revision": "fbffc215d34cc7bf8b8d7e3a985effd5543606b1",
+			"revisionTime": "2017-07-06T21:30:02Z"
+		},
+		{
 			"checksumSHA1": "hniadkbjSPo45tV/GWyoWJemr2g=",
 			"origin": "k8s.io/client-go/vendor/github.com/googleapis/gnostic/OpenAPIv2",
 			"path": "github.com/googleapis/gnostic/OpenAPIv2",
@@ -1400,6 +1417,12 @@
 			"revisionTime": "2016-10-28T23:23:40Z"
 		},
 		{
+			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
+			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
 			"checksumSHA1": "tn/D4Ep6iCFoyN6JArMvPNvsiRY=",
 			"path": "github.com/sony/gobreaker",
 			"revision": "809bcd5a528f344e95c2368796c9225d128f9b3e",
@@ -1418,6 +1441,12 @@
 		{
 			"path": "github.com/ugorji/go/codec",
 			"revision": "f1f1a805ed361a0e078bb537e4ea78cd37dcf065"
+		},
+		{
+			"checksumSHA1": "9LeR7BH4PSu8LRDZ8bY7QY1HXJE=",
+			"path": "github.com/urfave/cli",
+			"revision": "4b90d79a682b4bf685762c7452db20f2a676ecb2",
+			"revisionTime": "2017-07-06T19:46:25Z"
 		},
 		{
 			"path": "github.com/vishvananda/netlink",

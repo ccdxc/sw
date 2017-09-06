@@ -1,0 +1,20 @@
+# please edit and/or delete the lines in this sample
+kind: sgpolicy                          # kind of this object
+meta:
+  name: dev-sgp                         # name of this object
+  # labels:			        # arbitrary user defined tags 'key: value' 
+  #  area: network
+spec:
+  attachGroup: dev-sg                   # apply security policy to this group
+  inRules:                              # apply a list of inbound rules
+  - action: permit,log                  #  permit and log new incoming connections
+    peerGroup: dev-sg                   #   only permit from the specified peer group
+    ports: '*/*'                        #   allow all ports, yml requires '*' be specified in quotes
+  - action: permit,log                  #  another rule that permits traffic
+    peerGroup: '*'                      #   from any group
+    ports: tcp/22,icmp,tcp/23           #   but ports '22' and '23'
+  outRules:                             # apply a list of outbound rules
+  - action: permit,log                  #  permit and log new incoming connections
+    peerGroup: '*'                      #   only permit from the specified peer group
+    ports: tcp/80,tcp/8080              #   allow all ports
+

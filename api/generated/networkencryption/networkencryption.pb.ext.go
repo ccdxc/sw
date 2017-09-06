@@ -24,7 +24,7 @@ func (m *TrafficEncryptionPolicy) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgTrafficEncryptionPolicyListHelper) MakeKey(prefix string) string {
+func (m *TrafficEncryptionPolicyList) MakeKey(prefix string) string {
 	obj := TrafficEncryptionPolicy{}
 	return obj.MakeKey(prefix)
 }

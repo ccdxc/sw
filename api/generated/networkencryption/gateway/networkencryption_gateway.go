@@ -52,7 +52,7 @@ func (a adapterTrafficEncryptionPolicyV1) AutoGetTrafficEncryptionPolicy(oldctx 
 	return a.service.AutoGetTrafficEncryptionPolicy(ctx, t)
 }
 
-func (a adapterTrafficEncryptionPolicyV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*networkencryption.AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (a adapterTrafficEncryptionPolicyV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*networkencryption.TrafficEncryptionPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListTrafficEncryptionPolicy(ctx, t)

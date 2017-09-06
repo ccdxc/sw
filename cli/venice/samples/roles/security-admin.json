@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "security-admin",
+		"labels": { "dept":"it" }
+	},
+	"spec": {
+		"permissions" : [ "security-rw" ]
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"kind": "qos",
+	"meta": {
+		"name": "qos-critical-priority"
+	},
+	"spec": { 
+		"applyToWorkloads" : [ {"matchSrcPrefix": "177.34.2.0/24"},{ "matchLabels" : "io.pensando.network.prio:critical"}],
+		"priority" : "critical",
+		"setDscp" : 7
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "doe",
+		"labels": { "dept":"it", "level":"mgr" }
+	},
+	"spec": {
+		"roles" : [ "storage-admin", "network-admin" ]
+	}
+}

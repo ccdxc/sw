@@ -22,7 +22,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgTenantListHelper"
+              "$ref": "#/definitions/networkTenantList"
             }
           }
         },
@@ -278,7 +278,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgEndpointListHelper"
+              "$ref": "#/definitions/networkEndpointList"
             }
           }
         },
@@ -433,28 +433,27 @@
           },
           {
             "name": "Status.EndpointUUID",
-            "description": "workload selector for the service (list of labels to match).",
+            "description": "list of security groups this policy is attached to.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Status.WorkloadUUID",
-            "description": "Virtual IP of the load balancer.",
+            "description": "Incoming rules.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Status.WorkloadName",
-            "description": "load balancer port.",
+            "description": "Outgoing rules.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Status.Network",
-            "description": "load balancing policy (reference to LbPolicy object).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -615,7 +614,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgLbPolicyListHelper"
+              "$ref": "#/definitions/networkLbPolicyList"
             }
           }
         },
@@ -770,28 +769,26 @@
           },
           {
             "name": "Spec.Type",
-            "description": "Health check interval.",
+            "description": "list of workloads that are backends of this service (load balancer).",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.Algorithm",
-            "description": "# of probes per interval.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.SessionAffinity",
-            "description": "probe URL.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "Spec.HealthCheck.Interval",
-            "description": "list of workloads that are backends of this service (load balancer).",
+            "description": "list of workloads in this group.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -826,7 +823,6 @@
           },
           {
             "name": "Status.Services",
-            "description": "load balancing type.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -911,7 +907,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgNetworkListHelper"
+              "$ref": "#/definitions/networkNetworkList"
             }
           }
         },
@@ -1066,6 +1062,7 @@
           },
           {
             "name": "Spec.Type",
+            "description": "list of service objects refering this lb-policy.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1201,7 +1198,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgSecurityGroupListHelper"
+              "$ref": "#/definitions/networkSecurityGroupList"
             }
           }
         },
@@ -1476,7 +1473,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgServiceListHelper"
+              "$ref": "#/definitions/networkServiceList"
             }
           }
         },
@@ -1742,7 +1739,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/networkAutoMsgSgpolicyListHelper"
+              "$ref": "#/definitions/networkSgpolicyList"
             }
           }
         },
@@ -2035,6 +2032,13 @@
         "UUID": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -2053,26 +2057,20 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
-    "networkAutoMsgEndpointListHelper": {
+    "networkAutoMsgEndpointWatchHelper": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
+        "Type": {
+          "type": "string",
           "title": "Tenant admin user"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkEndpoint"
-          }
+        "Object": {
+          "$ref": "#/definitions/networkEndpoint"
         }
       },
       "title": "spec part of tenant object"
     },
-    "networkAutoMsgEndpointWatchHelper": {
+    "networkAutoMsgLbPolicyWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2080,65 +2078,39 @@
           "title": "list of all users in this tenant"
         },
         "Object": {
-          "$ref": "#/definitions/networkEndpoint",
+          "$ref": "#/definitions/networkLbPolicy",
           "title": "list of all networks in this tenant"
         }
       },
       "title": "status part of tenant object"
     },
-    "networkAutoMsgLbPolicyListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkLbPolicy"
-          },
-          "description": "Spec contains the configuration of the tenant."
-        }
-      },
-      "title": "Tenant represents an org or a tenant"
-    },
-    "networkAutoMsgLbPolicyWatchHelper": {
+    "networkAutoMsgNetworkWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string"
         },
         "Object": {
-          "$ref": "#/definitions/networkLbPolicy"
+          "$ref": "#/definitions/networkNetwork"
         }
       },
-      "title": "list of tenants"
+      "title": "Tenant represents an org or a tenant"
     },
-    "networkAutoMsgNetworkListHelper": {
+    "networkAutoMsgSecurityGroupWatchHelper": {
       "type": "object",
       "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
+        "Type": {
+          "type": "string",
           "title": "type of network. (vlan/vxlan/routed etc)"
         },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta",
+        "Object": {
+          "$ref": "#/definitions/networkSecurityGroup",
           "title": "IPv4 subnet CIDR"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkNetwork"
-          },
-          "title": "IPv4 gateway for this subnet"
         }
       },
       "title": "spec part of network object"
     },
-    "networkAutoMsgNetworkWatchHelper": {
+    "networkAutoMsgServiceWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
@@ -2146,96 +2118,11 @@
           "title": "list of all workloads in this network"
         },
         "Object": {
-          "$ref": "#/definitions/networkNetwork",
+          "$ref": "#/definitions/networkService",
           "title": "allocated IPv4 addresses (bitmap)"
         }
       },
       "title": "status part of network object"
-    },
-    "networkAutoMsgSecurityGroupListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkSecurityGroup"
-          },
-          "description": "Spec contains the configuration of the network."
-        }
-      },
-      "title": "Network represents a subnet"
-    },
-    "networkAutoMsgSecurityGroupWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/networkSecurityGroup"
-        }
-      },
-      "title": "list of networks"
-    },
-    "networkAutoMsgServiceListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Workload selector (list of labels)"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta",
-          "title": "Service object selector"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkService"
-          },
-          "title": "list of CIDRs that are part of this security group"
-        }
-      },
-      "title": "security group configuration"
-    },
-    "networkAutoMsgServiceWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string",
-          "title": "list of workloads that are part of this security group"
-        },
-        "Object": {
-          "$ref": "#/definitions/networkService",
-          "title": "list of all policies attached to this security group"
-        }
-      },
-      "title": "security group status"
-    },
-    "networkAutoMsgSgpolicyListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkSgpolicy"
-          },
-          "description": "Spec contains the configuration of the security group."
-        }
-      },
-      "title": "SecurityGroup represents a security zone or domain"
     },
     "networkAutoMsgSgpolicyWatchHelper": {
       "type": "object",
@@ -2247,50 +2134,32 @@
           "$ref": "#/definitions/networkSgpolicy"
         }
       },
-      "title": "list of security groups"
-    },
-    "networkAutoMsgTenantListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "match ports for the rule"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta",
-          "title": "Rule action (allow/deny/log/train)"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkTenant"
-          },
-          "title": "Peer group for the rule (from/to group depending on direction)"
-        }
-      }
+      "title": "Network represents a subnet"
     },
     "networkAutoMsgTenantWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "list of security groups this policy is attached to"
+          "title": "Workload selector (list of labels)"
         },
         "Object": {
           "$ref": "#/definitions/networkTenant",
-          "title": "Incoming rules"
+          "title": "Service object selector"
         }
-      }
+      },
+      "title": "security group configuration"
     },
     "networkEndpoint": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "list of workloads in this group"
+          "title": "list of workloads that are part of this security group"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta"
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "list of all policies attached to this security group"
         },
         "Spec": {
           "$ref": "#/definitions/networkEndpointSpec"
@@ -2298,30 +2167,48 @@
         "Status": {
           "$ref": "#/definitions/networkEndpointStatus"
         }
-      }
+      },
+      "title": "security group status"
+    },
+    "networkEndpointList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkEndpoint"
+          },
+          "description": "Spec contains the configuration of the security group."
+        }
+      },
+      "title": "SecurityGroup represents a security zone or domain"
     },
     "networkEndpointSpec": {
-      "type": "object",
-      "title": "list of sgpolicies"
+      "type": "object"
     },
     "networkEndpointStatus": {
       "type": "object",
       "properties": {
         "EndpointUUID": {
           "type": "string",
-          "title": "workload selector for the service (list of labels to match)"
+          "title": "list of security groups this policy is attached to"
         },
         "WorkloadUUID": {
           "type": "string",
-          "title": "Virtual IP of the load balancer"
+          "title": "Incoming rules"
         },
         "WorkloadName": {
           "type": "string",
-          "title": "load balancer port"
+          "title": "Outgoing rules"
         },
         "Network": {
-          "type": "string",
-          "title": "load balancing policy (reference to LbPolicy object)"
+          "type": "string"
         },
         "HomingHostAddr": {
           "type": "string"
@@ -2366,8 +2253,7 @@
             "type": "string"
           }
         }
-      },
-      "title": "spec part of service object(load balancer)"
+      }
     },
     "networkHealthCheckSpec": {
       "type": "object",
@@ -2375,7 +2261,7 @@
         "Interval": {
           "type": "integer",
           "format": "int64",
-          "title": "list of workloads that are backends of this service (load balancer)"
+          "title": "list of workloads in this group"
         },
         "ProbesPerInterval": {
           "type": "integer",
@@ -2392,8 +2278,7 @@
           "type": "integer",
           "format": "int64"
         }
-      },
-      "title": "status part of service object"
+      }
     },
     "networkLbPolicy": {
       "type": "object",
@@ -2406,35 +2291,54 @@
         },
         "Spec": {
           "$ref": "#/definitions/networkLbPolicySpec",
-          "description": "Spec contains the configuration of the Service."
+          "description": "Spec contains the configuration of the sgpolicy."
         },
         "Status": {
           "$ref": "#/definitions/networkLbPolicyStatus",
-          "description": "Status contains the current state of the Service."
+          "description": "Status contains the current state of the sgpolicy."
         }
       },
-      "title": "Service represents a L4 load balancer"
+      "title": "Sgpolicy represents a security policy for security groups"
+    },
+    "networkLbPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "workload selector for the service (list of labels to match)"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "Virtual IP of the load balancer"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkLbPolicy"
+          },
+          "title": "load balancer port"
+        }
+      },
+      "title": "spec part of service object(load balancer)"
     },
     "networkLbPolicySpec": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "Health check interval"
+          "title": "list of workloads that are backends of this service (load balancer)"
         },
         "Algorithm": {
-          "type": "string",
-          "title": "# of probes per interval"
+          "type": "string"
         },
         "SessionAffinity": {
-          "type": "string",
-          "title": "probe URL"
+          "type": "string"
         },
         "HealthCheck": {
-          "$ref": "#/definitions/networkHealthCheckSpec",
-          "title": "timeout for declaring backend down"
+          "$ref": "#/definitions/networkHealthCheckSpec"
         }
-      }
+      },
+      "title": "status part of service object"
     },
     "networkLbPolicyStatus": {
       "type": "object",
@@ -2443,26 +2347,49 @@
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "title": "load balancing type"
+          }
         }
-      }
+      },
+      "title": "Service represents a L4 load balancer"
     },
     "networkNetwork": {
       "type": "object",
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "list of service objects refering this lb-policy"
+          "title": "Health check interval"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta"
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "# of probes per interval"
         },
         "Spec": {
-          "$ref": "#/definitions/networkNetworkSpec"
+          "$ref": "#/definitions/networkNetworkSpec",
+          "title": "probe URL"
         },
         "Status": {
-          "$ref": "#/definitions/networkNetworkStatus"
+          "$ref": "#/definitions/networkNetworkStatus",
+          "title": "timeout for declaring backend down"
+        }
+      }
+    },
+    "networkNetworkList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "load balancing type"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "load balancing algorithm"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkNetwork"
+          },
+          "title": "session affinity"
         }
       }
     },
@@ -2470,7 +2397,8 @@
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string"
+          "type": "string",
+          "title": "list of service objects refering this lb-policy"
         },
         "IPv4Subnet": {
           "type": "string"
@@ -2492,8 +2420,7 @@
           "type": "integer",
           "format": "int64"
         }
-      },
-      "title": "list of lb-policies"
+      }
     },
     "networkNetworkStatus": {
       "type": "object",
@@ -2509,42 +2436,60 @@
           "format": "byte"
         }
       },
-      "title": "spec part of Endpoint object"
+      "title": "LbPolicy represents a load balancer policy"
     },
     "networkSGRule": {
       "type": "object",
       "properties": {
         "Ports": {
-          "type": "string",
-          "title": "endpoint UUID"
+          "type": "string"
         },
         "Action": {
-          "type": "string",
-          "title": "VM or container UUID"
+          "type": "string"
         },
         "PeerGroup": {
-          "type": "string",
-          "title": "VM or container name"
+          "type": "string"
         }
       },
-      "title": "status part of Endpoint object"
+      "title": "spec part of Endpoint object"
     },
     "networkSecurityGroup": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta"
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "endpoint UUID"
         },
         "O": {
-          "$ref": "#/definitions/apiObjectMeta"
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "VM or container UUID"
         },
         "Spec": {
           "$ref": "#/definitions/networkSecurityGroupSpec",
-          "description": "Spec contains the configuration of the Endpoint."
+          "title": "VM or container name"
         },
         "Status": {
           "$ref": "#/definitions/networkSecurityGroupStatus",
-          "description": "Status contains the current state of the Endpoint."
+          "title": "network this endpoint belogs to"
+        }
+      },
+      "title": "status part of Endpoint object"
+    },
+    "networkSecurityGroupList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSecurityGroup"
+          },
+          "description": "Spec contains the configuration of the Endpoint."
         }
       },
       "title": "Endpoint represents a network endpoint"
@@ -2606,6 +2551,23 @@
         }
       }
     },
+    "networkServiceList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkService"
+          }
+        }
+      }
+    },
     "networkServiceSpec": {
       "type": "object",
       "properties": {
@@ -2651,6 +2613,23 @@
         },
         "Status": {
           "$ref": "#/definitions/networkSgpolicyStatus"
+        }
+      }
+    },
+    "networkSgpolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkSgpolicy"
+          }
         }
       }
     },
@@ -2702,6 +2681,23 @@
         },
         "Status": {
           "$ref": "#/definitions/networkTenantStatus"
+        }
+      }
+    },
+    "networkTenantList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkTenant"
+          }
         }
       }
     },

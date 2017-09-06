@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "bonzo",
+		"labels": { "dept":"network", "level":"director" }
+	},
+	"spec": {
+		"roles" : [ "network-admin" ]
+	}
+}

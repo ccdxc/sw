@@ -7,20 +7,20 @@ Input file: protos/example.proto
 
 The following Messages are defined.
 
-  AutoMsgBookListHelper
   AutoMsgBookWatchHelper
-  AutoMsgOrderListHelper
   AutoMsgOrderWatchHelper
-  AutoMsgPublisherListHelper
   AutoMsgPublisherWatchHelper
   Book
+  BookList
   BookSpec
   BookStatus
   Order
   OrderItem
+  OrderList
   OrderSpec
   OrderStatus
   Publisher
+  PublisherList
   PublisherSpec
 
 The following Services and Methods are defined.

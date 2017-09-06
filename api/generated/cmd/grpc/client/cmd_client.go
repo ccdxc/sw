@@ -162,8 +162,8 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 			"cmd.CmdV1",
 			"AutoListCluster",
 			cmd.EncodeGrpcReqListWatchOptions,
-			cmd.DecodeGrpcRespAutoMsgClusterListHelper,
-			&cmd.AutoMsgClusterListHelper{},
+			cmd.DecodeGrpcRespClusterList,
+			&cmd.ClusterList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
@@ -176,8 +176,8 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 			"cmd.CmdV1",
 			"AutoListNode",
 			cmd.EncodeGrpcReqListWatchOptions,
-			cmd.DecodeGrpcRespAutoMsgNodeListHelper,
-			&cmd.AutoMsgNodeListHelper{},
+			cmd.DecodeGrpcRespNodeList,
+			&cmd.NodeList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
@@ -190,8 +190,8 @@ func NewCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.ServiceCmdV1Client {
 			"cmd.CmdV1",
 			"AutoListSmartNIC",
 			cmd.EncodeGrpcReqListWatchOptions,
-			cmd.DecodeGrpcRespAutoMsgSmartNICListHelper,
-			&cmd.AutoMsgSmartNICListHelper{},
+			cmd.DecodeGrpcRespSmartNICList,
+			&cmd.SmartNICList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()

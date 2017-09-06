@@ -1,0 +1,11 @@
+{
+	"kind": "permission",
+	"meta": {
+		"name": "storage-rw",
+		"labels": { "area":"storage" }
+	},
+	"spec": {
+		"Action" : "read,write",
+		"MatchFields" : { "kind":"volume,replicaitonPolicy,snapshotPolicy" }
+	}
+}

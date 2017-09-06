@@ -7,19 +7,12 @@ Input file: protos/network.proto
 
 The following Messages are defined.
 
-  AutoMsgEndpointListHelper
   AutoMsgEndpointWatchHelper
-  AutoMsgLbPolicyListHelper
   AutoMsgLbPolicyWatchHelper
-  AutoMsgNetworkListHelper
   AutoMsgNetworkWatchHelper
-  AutoMsgSecurityGroupListHelper
   AutoMsgSecurityGroupWatchHelper
-  AutoMsgServiceListHelper
   AutoMsgServiceWatchHelper
-  AutoMsgSgpolicyListHelper
   AutoMsgSgpolicyWatchHelper
-  AutoMsgTenantListHelper
   AutoMsgTenantWatchHelper
   Endpoint
   EndpointList

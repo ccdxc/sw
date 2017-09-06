@@ -7,17 +7,16 @@ Input file: protos/cmd.proto
 
 The following Messages are defined.
 
-  AutoMsgClusterListHelper
   AutoMsgClusterWatchHelper
-  AutoMsgNodeListHelper
   AutoMsgNodeWatchHelper
-  AutoMsgSmartNICListHelper
   AutoMsgSmartNICWatchHelper
   Cluster
+  ClusterList
   ClusterSpec
   ClusterStatus
   Node
   NodeCondition
+  NodeList
   NodeSpec
   NodeStatus
   PortCondition
@@ -25,6 +24,7 @@ The following Messages are defined.
   PortStatus
   SmartNIC
   SmartNICCondition
+  SmartNICList
   SmartNICSpec
   SmartNICStatus
 

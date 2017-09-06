@@ -64,41 +64,8 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"cmd.AutoMsgClusterListHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cmd.AutoMsgClusterListHelper{}
-			r := cmd.Cluster{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"cmd.AutoMsgClusterWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgClusterWatchHelper"),
-		"cmd.AutoMsgNodeListHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cmd.AutoMsgNodeListHelper{}
-			r := cmd.Node{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
-		"cmd.AutoMsgNodeWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgNodeWatchHelper"),
-		"cmd.AutoMsgSmartNICListHelper": apisrvpkg.NewMessage("cmd.AutoMsgSmartNICListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := cmd.AutoMsgSmartNICListHelper{}
-			r := cmd.SmartNIC{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
+		"cmd.AutoMsgClusterWatchHelper":  apisrvpkg.NewMessage("cmd.AutoMsgClusterWatchHelper"),
+		"cmd.AutoMsgNodeWatchHelper":     apisrvpkg.NewMessage("cmd.AutoMsgNodeWatchHelper"),
 		"cmd.AutoMsgSmartNICWatchHelper": apisrvpkg.NewMessage("cmd.AutoMsgSmartNICWatchHelper"),
 		"cmd.Cluster": apisrvpkg.NewMessage("cmd.Cluster").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
@@ -152,6 +119,17 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}),
+		"cmd.ClusterList": apisrvpkg.NewMessage("cmd.ClusterList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cmd.ClusterList{}
+			r := cmd.Cluster{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
 		}),
 		"cmd.ClusterSpec":   apisrvpkg.NewMessage("cmd.ClusterSpec"),
 		"cmd.ClusterStatus": apisrvpkg.NewMessage("cmd.ClusterStatus"),
@@ -209,6 +187,17 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return txn.Delete(key)
 		}),
 		"cmd.NodeCondition": apisrvpkg.NewMessage("cmd.NodeCondition"),
+		"cmd.NodeList": apisrvpkg.NewMessage("cmd.NodeList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cmd.NodeList{}
+			r := cmd.Node{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
 		"cmd.NodeSpec":      apisrvpkg.NewMessage("cmd.NodeSpec"),
 		"cmd.NodeStatus":    apisrvpkg.NewMessage("cmd.NodeStatus"),
 		"cmd.PortCondition": apisrvpkg.NewMessage("cmd.PortCondition"),
@@ -268,8 +257,19 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return txn.Delete(key)
 		}),
 		"cmd.SmartNICCondition": apisrvpkg.NewMessage("cmd.SmartNICCondition"),
-		"cmd.SmartNICSpec":      apisrvpkg.NewMessage("cmd.SmartNICSpec"),
-		"cmd.SmartNICStatus":    apisrvpkg.NewMessage("cmd.SmartNICStatus"),
+		"cmd.SmartNICList": apisrvpkg.NewMessage("cmd.SmartNICList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cmd.SmartNICList{}
+			r := cmd.SmartNIC{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
+		"cmd.SmartNICSpec":   apisrvpkg.NewMessage("cmd.SmartNICSpec"),
+		"cmd.SmartNICStatus": apisrvpkg.NewMessage("cmd.SmartNICStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
@@ -313,13 +313,13 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoGetSmartNIC")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgClusterListHelper"], "cmd", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.ClusterList"], "cmd", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListNode = srv.AddMethod("AutoListNode",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgNodeListHelper"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.NodeList"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListSmartNIC = srv.AddMethod("AutoListSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.AutoMsgSmartNICListHelper"], "cmd", "AutoListSmartNIC")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.SmartNICList"], "cmd", "AutoListSmartNIC")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsCmdV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
 			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
@@ -577,28 +577,28 @@ func (e *eCmdV1Endpoints) AutoGetSmartNIC(ctx context.Context, t cmd.SmartNIC) (
 	return cmd.SmartNIC{}, err
 
 }
-func (e *eCmdV1Endpoints) AutoListCluster(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgClusterListHelper, error) {
+func (e *eCmdV1Endpoints) AutoListCluster(ctx context.Context, t api.ListWatchOptions) (cmd.ClusterList, error) {
 	r, err := e.fnAutoListCluster(ctx, t)
 	if err == nil {
-		return r.(cmd.AutoMsgClusterListHelper), err
+		return r.(cmd.ClusterList), err
 	}
-	return cmd.AutoMsgClusterListHelper{}, err
+	return cmd.ClusterList{}, err
 
 }
-func (e *eCmdV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgNodeListHelper, error) {
+func (e *eCmdV1Endpoints) AutoListNode(ctx context.Context, t api.ListWatchOptions) (cmd.NodeList, error) {
 	r, err := e.fnAutoListNode(ctx, t)
 	if err == nil {
-		return r.(cmd.AutoMsgNodeListHelper), err
+		return r.(cmd.NodeList), err
 	}
-	return cmd.AutoMsgNodeListHelper{}, err
+	return cmd.NodeList{}, err
 
 }
-func (e *eCmdV1Endpoints) AutoListSmartNIC(ctx context.Context, t api.ListWatchOptions) (cmd.AutoMsgSmartNICListHelper, error) {
+func (e *eCmdV1Endpoints) AutoListSmartNIC(ctx context.Context, t api.ListWatchOptions) (cmd.SmartNICList, error) {
 	r, err := e.fnAutoListSmartNIC(ctx, t)
 	if err == nil {
-		return r.(cmd.AutoMsgSmartNICListHelper), err
+		return r.(cmd.SmartNICList), err
 	}
-	return cmd.AutoMsgSmartNICListHelper{}, err
+	return cmd.SmartNICList{}, err
 
 }
 func (e *eCmdV1Endpoints) AutoUpdateCluster(ctx context.Context, t cmd.Cluster) (cmd.Cluster, error) {

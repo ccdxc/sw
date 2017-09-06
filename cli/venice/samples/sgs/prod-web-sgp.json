@@ -1,0 +1,12 @@
+{
+	"kind": "sgpolicy",
+	"meta": {
+		"name": "prod-web-sgp"
+	},
+	"spec": {
+		"attach-groups" : [ "prod-web-sg" ],
+		"in-rules" : [
+			{ "peer-group" : "any", "ports" : "tcp/8080,tcp/80", "action" : "permit,log" }
+	       	]
+	}
+}

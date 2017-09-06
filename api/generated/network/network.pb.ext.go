@@ -54,43 +54,43 @@ func (m *Tenant) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgEndpointListHelper) MakeKey(prefix string) string {
+func (m *EndpointList) MakeKey(prefix string) string {
 	obj := Endpoint{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgLbPolicyListHelper) MakeKey(prefix string) string {
+func (m *LbPolicyList) MakeKey(prefix string) string {
 	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgNetworkListHelper) MakeKey(prefix string) string {
+func (m *NetworkList) MakeKey(prefix string) string {
 	obj := Network{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSecurityGroupListHelper) MakeKey(prefix string) string {
+func (m *SecurityGroupList) MakeKey(prefix string) string {
 	obj := SecurityGroup{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgServiceListHelper) MakeKey(prefix string) string {
+func (m *ServiceList) MakeKey(prefix string) string {
 	obj := Service{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSgpolicyListHelper) MakeKey(prefix string) string {
+func (m *SgpolicyList) MakeKey(prefix string) string {
 	obj := Sgpolicy{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgTenantListHelper) MakeKey(prefix string) string {
+func (m *TenantList) MakeKey(prefix string) string {
 	obj := Tenant{}
 	return obj.MakeKey(prefix)
 }

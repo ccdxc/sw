@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "storage-admin",
+		"labels": { "area":"storage" }
+	},
+	"spec": {
+		"permissions" : [ "storage-rw" ]
+	}
+}

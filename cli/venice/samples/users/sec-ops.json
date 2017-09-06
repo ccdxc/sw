@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "sec-ops",
+		"labels": { "dept":"security", "color-code":"purple" }
+	},
+	"spec": {
+		"roles" : [ "security-admin" ]
+	}
+}

@@ -38,6 +38,7 @@ type kvContext struct {
 	mapKey    string
 	prefixKey string
 	fieldName string
+	inSlice   bool
 }
 
 // GetKvs recursively reads an object and extract all fields as (key, value) pairs
@@ -95,7 +96,7 @@ func FieldByName(v reflect.Value, fieldName string) []string {
 			val := v.Field(i)
 			typeField := v.Type().Field(i)
 			if typeField.Name == currF {
-				if isPrimitive(val.Kind()) {
+				if isPrimitive(val.Kind(), getKindString(val.Kind())) {
 					if len(rFs) == 0 {
 						retSubStr := fmt.Sprintf("%v", val)
 						if retSubStr != "" {
@@ -228,7 +229,7 @@ func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FIn
 
 func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	fieldName := kvCtx.fieldName
-	if isPrimitive(kind) {
+	if isPrimitive(kind, getKindString(kind)) {
 		veniceTag := kvCtx.prefixKey
 		t, val, isLeaf := getKv(kvCtx, v)
 		if isLeaf {
@@ -254,6 +255,8 @@ func getKvsSlice(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[strin
 	if elemKind == reflect.Ptr {
 		elem = elem.Elem()
 	}
+	oldInSlice := kvCtx.inSlice
+	kvCtx.inSlice = true
 	if v.Len() == 0 {
 		vi := getSubObj(v, elem.Name(), elem.Kind(), refCtx)
 		vi = reflect.Indirect(vi)
@@ -267,19 +270,44 @@ func getKvsSlice(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[strin
 			getKvsSliceOne(elem.Kind(), vi, kvCtx, refCtx, kvs)
 		}
 	}
+	kvCtx.inSlice = oldInSlice
 }
 
 func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	elem := v.Type().Elem()
-	if v.Len() == 0 && !isPrimitive(elem.Kind()) {
-		rv := reflect.ValueOf(refCtx.GetSubObj(elem.Name()))
-		getKvs(rv, kvCtx, refCtx, kvs)
+	if v.Len() == 0 {
+		rv := getSubObj(v, elem.Name(), elem.Kind(), refCtx)
+		if isPrimitive(elem.Kind(), getKindString(elem.Kind())) {
+			typeStr := getKindString(elem.Kind())
+			fieldName := kvCtx.fieldName
+			veniceTag := kvCtx.prefixKey
+			kvs[fieldName] = FInfo{TypeStr: typeStr, SSkip: veniceTagBool(veniceTag, "sskip"), Key: veniceTagBool(veniceTag, "key")}
+		} else {
+			getKvs(rv, kvCtx, refCtx, kvs)
+		}
 	}
 	for _, key := range v.MapKeys() {
 		val := v.MapIndex(key)
-		kvCtx.mapKey = fmt.Sprintf("%s", key)
-		getKvs(val, kvCtx, refCtx, kvs)
-		kvCtx.mapKey = ""
+		if isPrimitive(elem.Kind(), getKindString(elem.Kind())) {
+			typeStr := getKindString(elem.Kind())
+			fieldName := kvCtx.fieldName
+			veniceTag := kvCtx.prefixKey
+			valueStr := fmt.Sprintf("%s:%s", key, val)
+			if newVal, ok := kvs[fieldName]; ok {
+				newVal.ValueStr = append(newVal.ValueStr, valueStr)
+				kvs[fieldName] = newVal
+			} else {
+				kvs[fieldName] = FInfo{
+					TypeStr:  typeStr,
+					ValueStr: []string{valueStr},
+					SSkip:    veniceTagBool(veniceTag, "sskip"),
+					Key:      veniceTagBool(veniceTag, "key")}
+			}
+		} else {
+			kvCtx.mapKey = fmt.Sprintf("%s", key)
+			getKvs(val, kvCtx, refCtx, kvs)
+			kvCtx.mapKey = ""
+		}
 	}
 }
 
@@ -319,49 +347,33 @@ func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[stri
 
 func getKv(kvCtx *kvContext, v reflect.Value) (string, string, bool) {
 	typeStr := getKindString(v.Kind())
+	if kvCtx.inSlice {
+		typeStr = "slice"
+	}
 	valueStr := ""
 	if kvCtx.mapKey != "" {
 		valueStr = kvCtx.mapKey + ":"
 	}
 	isLeaf := false
 	switch v.Kind() {
-	case reflect.Ptr, reflect.Struct:
+	case reflect.Ptr, reflect.Struct, reflect.Slice, reflect.Array, reflect.Map:
 		return typeStr, valueStr, false
-	case reflect.Slice, reflect.Array:
-		elem := v.Type().Elem()
-		if isPrimitive(elem.Kind()) {
-			retStr := ""
-			for i := 0; i < v.Len(); i++ {
-				retStr += fmt.Sprintf("%s,", v.Index(i))
-			}
-			valueStr += strings.TrimSuffix(retStr, ",")
-			isLeaf = true
-		}
-	case reflect.Map:
-		elem := v.Type().Elem()
-		if isPrimitive(elem.Kind()) {
-			retStr := ""
-			for _, k := range v.MapKeys() {
-				retStr += fmt.Sprintf("%s:%s,", k, v.MapIndex(k))
-			}
-			valueStr += strings.TrimSuffix(retStr, ",")
-			isLeaf = true
-		}
-	case reflect.Bool, reflect.Int, reflect.Uint64, reflect.String:
+	case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint32, reflect.Uint64, reflect.String:
 		valueStr += fmt.Sprintf("%v", v)
 		isLeaf = true
 	default:
-		valueStr = fmt.Sprintf("%s", v)
+		valueStr = fmt.Sprintf("unknown-type: %s", v)
 		isLeaf = true
 	}
 	return typeStr, valueStr, isLeaf
 }
 
 // writeKvs is shadow routine that works recursively for WriteKvs
-func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
+func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) reflect.Value {
+	mapKey := reflect.Value{}
 	switch orig.Kind() {
 	case reflect.Struct:
-		writeKvsStruct(new, orig, kvCtx, refCtx, kvs)
+		mapKey = writeKvsStruct(new, orig, kvCtx, refCtx, kvs)
 
 	case reflect.Slice, reflect.Array:
 		writeKvsSlice(new, orig, kvCtx, refCtx, kvs)
@@ -371,21 +383,42 @@ func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[
 	default:
 		new.Set(orig)
 	}
+	return mapKey
 }
 
 func writeKvsMap(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
+	elem := orig.Type().Elem()
+	fieldName := kvCtx.fieldName
+	elemKind := elem.Kind()
+	if elemKind == reflect.Ptr {
+		elem = elem.Elem()
+	}
+	replace := isStructFieldFound(elem.Kind(), elem.Name(), kvCtx, refCtx, kvs)
+
 	new.Set(reflect.MakeMap(orig.Type()))
-	for _, key := range orig.MapKeys() {
-		origValue := orig.MapIndex(key)
-		copyValue := reflect.New(origValue.Type()).Elem()
-		kvCtx.mapKey = fmt.Sprintf("%s", key)
-		writeKvs(copyValue, origValue, kvCtx, refCtx, kvs)
-		kvCtx.mapKey = ""
-		new.SetMapIndex(key, copyValue)
+	if replace || len(orig.MapKeys()) == 0 {
+		oldMapKey := kvCtx.mapKey
+		kvCtx.mapKey = "withinMap"
+		numRecs, subStructs, mapKeys := getSubStructs(fieldName, elem.Name(), elemKind, elem.Kind(), kvCtx, refCtx, kvs)
+		kvCtx.mapKey = oldMapKey
+
+		for idx := 0; idx < numRecs; idx++ {
+			new.SetMapIndex(mapKeys[idx], subStructs[idx])
+		}
+	} else {
+		for _, key := range orig.MapKeys() {
+			origValue := orig.MapIndex(key)
+			copyValue := reflect.New(origValue.Type()).Elem()
+			oldMapKey := kvCtx.mapKey
+			kvCtx.mapKey = fmt.Sprintf("%s", key)
+			writeKvs(copyValue, origValue, kvCtx, refCtx, kvs)
+			kvCtx.mapKey = oldMapKey
+			new.SetMapIndex(key, copyValue)
+		}
 	}
 }
 
-func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
+func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) reflect.Value {
 	if fi, ok := kvs[fieldName]; ok {
 		if len(fi.ValueStr) > 1 {
 			newfi := FInfo{TypeStr: fi.TypeStr, SSkip: fi.SSkip, Key: fi.Key, ValueStr: fi.ValueStr[1:]}
@@ -394,17 +427,18 @@ func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kv
 			delete(kvs, fieldName)
 		}
 		if fi.ValueStr[0] != "" {
-			writeKv(new, orig, fi.ValueStr[0])
+			return writeKv(new, orig, fi.ValueStr[0], kvCtx)
 		}
 	} else {
-		writeKv(new, orig, currValue)
+		return writeKv(new, orig, currValue, kvCtx)
 	}
+	return reflect.Value{}
 }
 
 func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) bool {
 	replace := false
 	fieldName := kvCtx.fieldName
-	if isPrimitive(elemKind) {
+	if isKindPrimitive(elemKind) {
 		if kvCtx.prefixKey != "" {
 			fieldName = kvCtx.prefixKey + "_" + fieldName
 		}
@@ -412,7 +446,11 @@ func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext
 			replace = true
 		}
 	} else {
-		subObjVal := reflect.ValueOf(refCtx.GetSubObj(elemName))
+		subObjPtr := refCtx.GetSubObj(elemName)
+		if subObjPtr == nil {
+			panic(fmt.Sprintf("invalid sub object: kind %s name %s\n", elemKind, elemName))
+		}
+		subObjVal := reflect.ValueOf(subObjPtr)
 		subObjVal = reflect.Indirect(subObjVal)
 		subObj := subObjVal.Interface()
 		subKvs := make(map[string]FInfo)
@@ -432,6 +470,50 @@ func isStructFieldFound(elemKind reflect.Kind, elemName string, kvCtx *kvContext
 	return replace
 }
 
+func getSubStructs(fieldName, elemName string, parentElemKind, elemKind reflect.Kind, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) (int, []reflect.Value, []reflect.Value) {
+	numRecs := 0
+	mapKeys := []reflect.Value{}
+	subStructs := []reflect.Value{}
+	for len(kvs) > 0 {
+		var subObjPtr interface{}
+
+		prevKvs := map[string]FInfo{}
+		for k, v := range kvs {
+			prevKvs[k] = v
+		}
+
+		if isPrimitive(elemKind, elemName) {
+			subObjPtr = getBaseObj(getKindString(elemKind))
+		} else {
+			subObjPtr = refCtx.GetSubObj(elemName)
+		}
+		if subObjPtr == nil {
+			panic(fmt.Sprintf("invalid sub object: kind %s name %s\n", elemKind, elemName))
+		}
+		rvOrig := reflect.Indirect(reflect.ValueOf(subObjPtr))
+		rvNew := reflect.Indirect(reflect.ValueOf(subObjPtr))
+
+		mapKey := reflect.Value{}
+		if isKindPrimitive(elemKind) {
+			mapKey = writeKvsOne(fieldName, "", rvNew, rvOrig, kvCtx, refCtx, kvs)
+		} else {
+			mapKey = writeKvs(rvNew, rvOrig, kvCtx, refCtx, kvs)
+		}
+
+		if reflect.DeepEqual(prevKvs, kvs) {
+			break
+		}
+		if parentElemKind == reflect.Ptr {
+			subStructs = append(subStructs, reflect.ValueOf(subObjPtr))
+		} else {
+			subStructs = append(subStructs, rvNew)
+		}
+		mapKeys = append(mapKeys, mapKey)
+		numRecs++
+	}
+	return numRecs, subStructs, mapKeys
+}
+
 func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	elem := orig.Type().Elem()
 	fieldName := kvCtx.fieldName
@@ -441,44 +523,13 @@ func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs
 	}
 	replace := isStructFieldFound(elem.Kind(), elem.Name(), kvCtx, refCtx, kvs)
 
-	if (replace || orig.Len() == 0) && !isPrimitive(elemKind) {
-		numRecs := 0
-		subStructs := []reflect.Value{}
-		for len(kvs) > 0 {
-			prevKvs := map[string]FInfo{}
-			for k, v := range kvs {
-				prevKvs[k] = v
-			}
-			subObjPtr := getBaseObj(elem.Name())
-			if !isPrimitive(elem.Kind()) {
-				subObjPtr = refCtx.GetSubObj(elem.Name())
-			}
-			rvOrig := reflect.Indirect(reflect.ValueOf(subObjPtr))
-			rvNew := reflect.Indirect(reflect.ValueOf(subObjPtr))
-
-			if isPrimitive(elem.Kind()) {
-				writeKvsOne(fieldName, "", rvNew, rvOrig, kvCtx, refCtx, kvs)
-			} else {
-				writeKvs(rvNew, rvOrig, kvCtx, refCtx, kvs)
-			}
-
-			if reflect.DeepEqual(prevKvs, kvs) {
-				break
-			}
-			if elemKind == reflect.Ptr {
-				subStructs = append(subStructs, reflect.ValueOf(subObjPtr))
-			} else {
-				subStructs = append(subStructs, rvNew)
-			}
-			numRecs++
-		}
+	if replace || orig.Len() == 0 {
+		numRecs, subStructs, _ := getSubStructs(fieldName, elem.Name(), elemKind, elem.Kind(), kvCtx, refCtx, kvs)
 
 		if numRecs > 0 {
 			if orig.Kind() == reflect.Slice {
 				new.Set(reflect.MakeSlice(orig.Type(), numRecs, numRecs))
 			} else {
-				fmt.Printf("orig.Type() %s \n", orig.Type())
-				fmt.Printf("new.Type() %s \n", new.Type())
 				new.Set(reflect.Indirect(reflect.New(orig.Type())))
 			}
 			for idx := 0; idx < numRecs; idx++ {
@@ -497,7 +548,9 @@ func writeKvsSlice(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs
 	}
 }
 
-func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
+func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) reflect.Value {
+	mapKey := reflect.Value{}
+
 	for i := 0; i < orig.NumField(); i++ {
 		typeField := orig.Type().Field(i)
 		val := orig.Field(i)
@@ -524,70 +577,45 @@ func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kv
 
 		_, v, isLeaf := getKv(kvCtx, val)
 		if isLeaf {
-			writeKvsOne(fieldName, v, newField, origField, kvCtx, refCtx, kvs)
+			mapKey = writeKvsOne(fieldName, v, newField, origField, kvCtx, refCtx, kvs)
 		} else {
 			insTag := insertTag(kvCtx, veniceTag, fieldName)
-			writeKvs(newField, origField, kvCtx, refCtx, kvs)
+			mapKey = writeKvs(newField, origField, kvCtx, refCtx, kvs)
 			removeTag(kvCtx, insTag)
 		}
 	}
+
+	return mapKey
 }
 
-func writeKv(new, orig reflect.Value, kvString string) {
+func writeKv(new, orig reflect.Value, kvString string, kvCtx *kvContext) reflect.Value {
+	key := ""
+	valueString := kvString
+	kvMap := strings.Split(kvString, ":")
+	if kvCtx.mapKey == "withinMap" && len(kvMap) > 1 {
+		key = kvMap[0]
+		valueString = strings.Join(kvMap[1:], ":")
+	}
 
 	switch orig.Kind() {
-	case reflect.Slice, reflect.Array:
-		strs := strings.Split(kvString, ",")
-		if len(strs) <= 0 {
-			log.Errorf("error parsing kvstring: %s\n", kvString)
-			return
-		}
-		if orig.Kind() == reflect.Slice {
-			new.Set(reflect.MakeSlice(orig.Type(), len(strs), len(strs)))
-		} else {
-			new.Set(reflect.New(orig.Type()))
-		}
-		new.Set(reflect.MakeSlice(orig.Type(), len(strs), len(strs)))
-		for i := 0; i < len(strs); i++ {
-			newSliceItem := new.Index(i)
-			newSliceItem.SetString(strs[i])
-		}
-	case reflect.Map:
-		strs := strings.Split(kvString, ",")
-		if len(strs) <= 0 {
-			log.Errorf("error parsing kvstring: %s\n", kvString)
-			return
-		}
-		new.Set(reflect.MakeMap(orig.Type()))
-
-		for i := range strs {
-			kvs := strings.Split(strs[i], ":")
-			if len(kvs) != 2 {
-				log.Errorf("error parsing map value from kvstring '%s', kv '%s'\n", kvString, strs[i])
-				return
-			}
-			mapKey := reflect.New(reflect.TypeOf("")).Elem()
-			mapKey.SetString(kvs[0])
-			mapValue := reflect.New(reflect.TypeOf("")).Elem()
-			mapValue.SetString(kvs[1])
-			new.SetMapIndex(mapKey, mapValue)
-		}
-	case reflect.Int:
-		intVal, _ := strconv.ParseInt(kvString, 10, 64)
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		intVal, _ := strconv.ParseInt(valueString, 10, 64)
 		new.SetInt(intVal)
-	case reflect.Uint64:
+	case reflect.Uint64, reflect.Uint32:
 		var uintVal uint64
-		if strings.HasPrefix(kvString, "0x") {
-			uintVal, _ = strconv.ParseUint(strings.TrimPrefix(kvString, "0x"), 16, 64)
+		if strings.HasPrefix(valueString, "0x") {
+			uintVal, _ = strconv.ParseUint(strings.TrimPrefix(valueString, "0x"), 16, 64)
 		} else {
-			uintVal, _ = strconv.ParseUint(kvString, 10, 64)
+			uintVal, _ = strconv.ParseUint(valueString, 10, 64)
 		}
 		new.SetUint(uintVal)
 	case reflect.String:
-		new.SetString(kvString)
+		new.SetString(valueString)
 	default:
-		log.Errorf("Invalid kind %s \n", orig.Kind())
+		log.Errorf("Invalid kind %s %+v\n", orig.Kind(), orig)
 	}
+
+	return reflect.ValueOf(key)
 }
 
 // walkObj is shadow routine that works recursively for WalkStruct
@@ -611,13 +639,17 @@ func walkObjMap(v reflect.Value, refCtx *RfCtx, level int) string {
 	elem := v.Type().Elem()
 	outStr := fmt.Sprintf("map[%s]%s\n", v.Type().Key().Kind(), elem.Kind())
 	level++
-	if v.Len() == 0 && !isPrimitive(elem.Kind()) {
-		val := reflect.Indirect(reflect.ValueOf(refCtx.GetSubObj(elem.Name())))
+	if v.Len() == 0 && !isKindPrimitive(elem.Kind()) {
+		subObjPtr := refCtx.GetSubObj(elem.Name())
+		if subObjPtr == nil {
+			panic(fmt.Sprintf("invalid sub object: name %s\n", elem.Name()))
+		}
+		val := reflect.Indirect(reflect.ValueOf(subObjPtr))
 		outStr += walkObj(val, refCtx, level)
 	} else {
 		for _, key := range v.MapKeys() {
 			val := v.MapIndex(key)
-			if isPrimitive(val.Kind()) {
+			if isPrimitive(val.Kind(), getKindString(val.Kind())) {
 				valueStr := fmt.Sprintf("%s", val)
 				if valueStr == "" {
 					valueStr = fmt.Sprintf("%s", getKindString(val.Kind()))
@@ -634,7 +666,7 @@ func walkObjMap(v reflect.Value, refCtx *RfCtx, level int) string {
 func walkObjSlice(v reflect.Value, refCtx *RfCtx, level int) string {
 	elem := v.Type().Elem()
 	outStr := fmt.Sprintf("[]")
-	if !isPrimitive(elem.Kind()) {
+	if !isKindPrimitive(elem.Kind()) {
 		if v.Len() == 0 {
 			if elem.Kind() == reflect.Ptr {
 				elem = elem.Elem()
@@ -642,7 +674,7 @@ func walkObjSlice(v reflect.Value, refCtx *RfCtx, level int) string {
 			}
 			nv := getSubObj(v, elem.Name(), elem.Kind(), refCtx)
 			nv = reflect.Indirect(nv)
-			if isPrimitive(nv.Kind()) {
+			if isPrimitive(nv.Kind(), elem.Name()) {
 				outStr += fmt.Sprintf("%s\n", elem.Name())
 			} else {
 				outStr += walkObj(nv, refCtx, level+1)
@@ -673,7 +705,7 @@ func walkObjStruct(v reflect.Value, refCtx *RfCtx, level int) string {
 			ptrStr = "*"
 		}
 
-		if isPrimitive(val.Kind()) {
+		if isKindPrimitive(val.Kind()) {
 			valueStr := fmt.Sprintf("%s", val.Kind())
 			outStr += fmt.Sprintf("%s%s: %s\n", GetIndent(level), ptrStr+typeField.Name, valueStr)
 		} else {
@@ -686,52 +718,73 @@ func walkObjStruct(v reflect.Value, refCtx *RfCtx, level int) string {
 }
 
 // Utilities functions are defined to assist with other routines
-func isPrimitive(v reflect.Kind) bool {
-	if v != reflect.Struct &&
-		v != reflect.Map &&
-		v != reflect.Slice &&
-		v != reflect.Interface &&
-		v != reflect.Array &&
-		v != reflect.Ptr {
+func isKindPrimitive(v reflect.Kind) bool {
+	if v == reflect.Bool || v == reflect.String || v == reflect.Int || v == reflect.Int8 ||
+		v == reflect.Int16 || v == reflect.Int32 || v == reflect.Int64 || v == reflect.Float32 ||
+		v == reflect.Float64 || v == reflect.Uint || v == reflect.Uint8 || v == reflect.Uint16 ||
+		v == reflect.Uint32 || v == reflect.Uint64 || v == reflect.Uintptr ||
+		v == reflect.Complex64 || v == reflect.Complex128 {
 		return true
 	}
 	return false
 }
 
-func getKindString(kind reflect.Kind) string {
-	switch kind {
-	case reflect.Struct:
-		return "struct"
-	case reflect.Bool:
-		return "bool"
-	case reflect.String:
-		return "string"
-	case reflect.Ptr:
-		return "ptr"
-	case reflect.Array:
-		return "array"
-	case reflect.Map:
-		return "map"
-	case reflect.Slice:
-		return "slice"
-	case reflect.Interface:
-		return "interface"
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
-		reflect.Uint64, reflect.Uintptr, reflect.Float32, reflect.Float64,
-		reflect.Complex64, reflect.Complex128:
-		return "int"
-	default:
-		return "unknown"
+func isPrimitive(v reflect.Kind, elemName string) bool {
+	if isKindPrimitive(v) && getKindString(v) == elemName {
+		return true
 	}
+
+	return false
+}
+
+func getKindString(kind reflect.Kind) string {
+	return kind.String()
+	/*
+		switch kind {
+		case reflect.Struct:
+			return "struct"
+		case reflect.Bool:
+			return "bool"
+		case reflect.String:
+			return "string"
+		case reflect.Ptr:
+			return "ptr"
+		case reflect.Array:
+			return "array"
+		case reflect.Map:
+			return "map"
+		case reflect.Slice:
+			return "slice"
+		case reflect.Interface:
+			return "interface"
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+			return "int"
+
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32,
+			reflect.Uint64, reflect.Uintptr:
+			return "uint"
+		default:
+			log.Errorf("invalid kind: %s", kind)
+			return "unknown"
+		}
+	*/
 }
 
 func getSubObj(val reflect.Value, name string, kind reflect.Kind, refCtx *RfCtx) reflect.Value {
 	if !val.IsValid() || val.IsNil() {
-		if isPrimitive(kind) {
-			val = reflect.ValueOf(getBaseObj(name))
+		if isPrimitive(kind, name) {
+			subObjPtr := getBaseObj(name)
+			if subObjPtr == nil {
+				panic(fmt.Sprintf("invalid primitive object: name %s kind %s\n", name, kind))
+			}
+			val = reflect.ValueOf(subObjPtr)
 		} else {
-			val = reflect.ValueOf(refCtx.GetSubObj(name))
+			subObjPtr := refCtx.GetSubObj(name)
+			if subObjPtr == nil {
+				panic(fmt.Sprintf("invalid sub object: name %s kind %s\n", name, kind))
+			}
+			val = reflect.ValueOf(subObjPtr)
 		}
 	}
 	return val
@@ -739,13 +792,46 @@ func getSubObj(val reflect.Value, name string, kind reflect.Kind, refCtx *RfCtx)
 
 func getBaseObj(name string) interface{} {
 	switch name {
+	case "bool":
+		v := false
+		return &v
 	case "string":
 		v := ""
 		return &v
+
 	case "int":
-		v := 0
+		v := int(0)
+		return &v
+	case "int8":
+		v := int8(0)
+		return &v
+	case "int16":
+		v := int16(0)
+		return &v
+	case "int32":
+		v := int32(0)
+		return &v
+	case "int64":
+		v := int64(0)
+		return &v
+
+	case "uint":
+		v := uint(0)
+		return &v
+	case "uint8":
+		v := uint8(0)
+		return &v
+	case "uint16":
+		v := uint16(0)
+		return &v
+	case "uint32":
+		v := uint32(0)
+		return &v
+	case "uint64":
+		v := uint64(0)
 		return &v
 
 	}
+	log.Errorf("Invalid base obj type '%s'", name)
 	return nil
 }

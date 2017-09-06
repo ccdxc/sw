@@ -1,0 +1,9 @@
+{
+	"kind": "tenant",
+	"meta": {
+		"name": "dev"
+	},
+	"spec": {
+		"admin-user" : "dev-admin"
+	}
+}

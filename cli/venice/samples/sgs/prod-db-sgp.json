@@ -1,0 +1,12 @@
+{
+	"kind": "sgpolicy",
+	"meta": {
+		"name": "prod-db-sgp"
+	},
+	"spec": {
+		"attach-groups" : [ "prod-db-sg" ],
+		"in-rules" : [
+			{ "peer-group" : "prod-app-sg", "ports" : "tcp/6379", "action" : "permit,log" }
+	       	]
+	}
+}

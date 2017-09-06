@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "network-read",
+		"labels": { "area":"network" }
+	},
+	"spec": {
+		"permissions" : [ "network-r" ]
+	}
+}

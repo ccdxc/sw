@@ -1,0 +1,11 @@
+{
+	"kind": "workload",
+	"meta": {
+		"name": "eng-vm6",
+		"labels" : { "io.pensando.network.sg":"eng-sg" }
+	},
+	"spec": {
+		"network" : "sjc-lab2-net10.15",
+		"node" : "node10"
+	}
+}

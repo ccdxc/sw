@@ -88,19 +88,19 @@ func (a adapterCmdV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cmd.SmartNIC
 	return a.service.AutoGetSmartNIC(ctx, t)
 }
 
-func (a adapterCmdV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgClusterListHelper, error) {
+func (a adapterCmdV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.ClusterList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListCluster(ctx, t)
 }
 
-func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgNodeListHelper, error) {
+func (a adapterCmdV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.NodeList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListNode(ctx, t)
 }
 
-func (a adapterCmdV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.AutoMsgSmartNICListHelper, error) {
+func (a adapterCmdV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cmd.SmartNICList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListSmartNIC(ctx, t)

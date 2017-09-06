@@ -1,0 +1,13 @@
+{
+	"kind": "sgpolicy",
+	"meta": {
+		"name": "eng-sgp"
+	},
+	"spec": {
+		"attach-groups" : [ "eng-sg" ],
+		"in-rules" : [
+			{ "peer-group" : "eng-sg", "ports" : "*/*", "action" : "permit,log" },
+			{ "peer-group" : "any", "ports" : "tcp/22,icmp", "action" : "permit,log" }
+	       	]
+	}
+}

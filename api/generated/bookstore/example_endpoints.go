@@ -232,44 +232,44 @@ type respBookstoreV1AutoGetPublisher struct {
 }
 
 // AutoListBook is endpoint for AutoListBook
-func (e EndpointsBookstoreV1Client) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgBookListHelper, error) {
+func (e EndpointsBookstoreV1Client) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (*BookList, error) {
 	resp, err := e.AutoListBookEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgBookListHelper{}, err
+		return &BookList{}, err
 	}
-	return resp.(*AutoMsgBookListHelper), nil
+	return resp.(*BookList), nil
 }
 
 type respBookstoreV1AutoListBook struct {
-	V   AutoMsgBookListHelper
+	V   BookList
 	Err error
 }
 
 // AutoListOrder is endpoint for AutoListOrder
-func (e EndpointsBookstoreV1Client) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgOrderListHelper, error) {
+func (e EndpointsBookstoreV1Client) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (*OrderList, error) {
 	resp, err := e.AutoListOrderEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgOrderListHelper{}, err
+		return &OrderList{}, err
 	}
-	return resp.(*AutoMsgOrderListHelper), nil
+	return resp.(*OrderList), nil
 }
 
 type respBookstoreV1AutoListOrder struct {
-	V   AutoMsgOrderListHelper
+	V   OrderList
 	Err error
 }
 
 // AutoListPublisher is endpoint for AutoListPublisher
-func (e EndpointsBookstoreV1Client) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgPublisherListHelper, error) {
+func (e EndpointsBookstoreV1Client) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions) (*PublisherList, error) {
 	resp, err := e.AutoListPublisherEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgPublisherListHelper{}, err
+		return &PublisherList{}, err
 	}
-	return resp.(*AutoMsgPublisherListHelper), nil
+	return resp.(*PublisherList), nil
 }
 
 type respBookstoreV1AutoListPublisher struct {
-	V   AutoMsgPublisherListHelper
+	V   PublisherList
 	Err error
 }
 
@@ -529,12 +529,12 @@ func MakeBookstoreV1AutoGetPublisherEndpoint(s ServiceBookstoreV1Server, logger 
 }
 
 // AutoListBook implementation on server Endpoint
-func (e EndpointsBookstoreV1Server) AutoListBook(ctx context.Context, in api.ListWatchOptions) (AutoMsgBookListHelper, error) {
+func (e EndpointsBookstoreV1Server) AutoListBook(ctx context.Context, in api.ListWatchOptions) (BookList, error) {
 	resp, err := e.AutoListBookEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgBookListHelper{}, err
+		return BookList{}, err
 	}
-	return *resp.(*AutoMsgBookListHelper), nil
+	return *resp.(*BookList), nil
 }
 
 // MakeBookstoreV1AutoListBookEndpoint creates  AutoListBook endpoints for the service
@@ -551,12 +551,12 @@ func MakeBookstoreV1AutoListBookEndpoint(s ServiceBookstoreV1Server, logger log.
 }
 
 // AutoListOrder implementation on server Endpoint
-func (e EndpointsBookstoreV1Server) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (AutoMsgOrderListHelper, error) {
+func (e EndpointsBookstoreV1Server) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (OrderList, error) {
 	resp, err := e.AutoListOrderEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgOrderListHelper{}, err
+		return OrderList{}, err
 	}
-	return *resp.(*AutoMsgOrderListHelper), nil
+	return *resp.(*OrderList), nil
 }
 
 // MakeBookstoreV1AutoListOrderEndpoint creates  AutoListOrder endpoints for the service
@@ -573,12 +573,12 @@ func MakeBookstoreV1AutoListOrderEndpoint(s ServiceBookstoreV1Server, logger log
 }
 
 // AutoListPublisher implementation on server Endpoint
-func (e EndpointsBookstoreV1Server) AutoListPublisher(ctx context.Context, in api.ListWatchOptions) (AutoMsgPublisherListHelper, error) {
+func (e EndpointsBookstoreV1Server) AutoListPublisher(ctx context.Context, in api.ListWatchOptions) (PublisherList, error) {
 	resp, err := e.AutoListPublisherEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgPublisherListHelper{}, err
+		return PublisherList{}, err
 	}
-	return *resp.(*AutoMsgPublisherListHelper), nil
+	return *resp.(*PublisherList), nil
 }
 
 // MakeBookstoreV1AutoListPublisherEndpoint creates  AutoListPublisher endpoints for the service
@@ -872,7 +872,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetPublisher(ctx context.Context
 	resp, err = m.next.AutoGetPublisher(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgBookListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (resp *BookList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -885,7 +885,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in
 	resp, err = m.next.AutoListBook(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareClient) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgOrderListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareClient) AutoListOrder(ctx context.Context, in *api.ListWatchOptions) (resp *OrderList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -898,7 +898,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListOrder(ctx context.Context, i
 	resp, err = m.next.AutoListOrder(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareClient) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgPublisherListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareClient) AutoListPublisher(ctx context.Context, in *api.ListWatchOptions) (resp *PublisherList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1108,7 +1108,7 @@ func (m loggingBookstoreV1MiddlewareServer) AutoGetPublisher(ctx context.Context
 	resp, err = m.next.AutoGetPublisher(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareServer) AutoListBook(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgBookListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareServer) AutoListBook(ctx context.Context, in api.ListWatchOptions) (resp BookList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1121,7 +1121,7 @@ func (m loggingBookstoreV1MiddlewareServer) AutoListBook(ctx context.Context, in
 	resp, err = m.next.AutoListBook(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareServer) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgOrderListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareServer) AutoListOrder(ctx context.Context, in api.ListWatchOptions) (resp OrderList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1134,7 +1134,7 @@ func (m loggingBookstoreV1MiddlewareServer) AutoListOrder(ctx context.Context, i
 	resp, err = m.next.AutoListOrder(ctx, in)
 	return
 }
-func (m loggingBookstoreV1MiddlewareServer) AutoListPublisher(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgPublisherListHelper, err error) {
+func (m loggingBookstoreV1MiddlewareServer) AutoListPublisher(ctx context.Context, in api.ListWatchOptions) (resp PublisherList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1345,7 +1345,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteOrder(ctx context.Context, in
 }
 
 // AutoListOrder CRUD method for Order
-func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgOrderListHelper, error) {
+func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, options *api.ListWatchOptions) (*OrderList, error) {
 	path := makeURIBookstoreV1AutoListOrderListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1359,7 +1359,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, opti
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgOrderListHelper), err
+	return ret.(*OrderList), err
 }
 
 // AutoWatchOrder CRUD method for Order
@@ -1401,7 +1401,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteBook(ctx context.Context, in 
 }
 
 // AutoListBook CRUD method for Book
-func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgBookListHelper, error) {
+func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, options *api.ListWatchOptions) (*BookList, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -1431,7 +1431,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeletePublisher(ctx context.Context
 }
 
 // AutoListPublisher CRUD method for Publisher
-func (r *EndpointsBookstoreV1RestClient) AutoListPublisher(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgPublisherListHelper, error) {
+func (r *EndpointsBookstoreV1RestClient) AutoListPublisher(ctx context.Context, options *api.ListWatchOptions) (*PublisherList, error) {
 	return nil, errors.New("not allowed")
 }
 

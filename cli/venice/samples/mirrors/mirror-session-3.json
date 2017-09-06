@@ -1,0 +1,11 @@
+{
+	"kind": "mirror",
+	"meta": {
+		"name": "mirror-session-3"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchPrefix" : "10.1.0.0/16", "matchPorts": "tcp/3344"}],
+		"encap" : "vxlan",
+		"destinationIp" : "192.131.4.55"
+	}
+}

@@ -52,17 +52,6 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"networkencryption.AutoMsgTrafficEncryptionPolicyListHelper": apisrvpkg.NewMessage("networkencryption.AutoMsgTrafficEncryptionPolicyListHelper").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := networkencryption.AutoMsgTrafficEncryptionPolicyListHelper{}
-			r := networkencryption.TrafficEncryptionPolicy{}
-			key := r.MakeKey(prefix)
-			err := kvs.List(ctx, key, &into)
-			if err != nil {
-				return nil, err
-			}
-			return into, nil
-		}),
 		"networkencryption.AutoMsgTrafficEncryptionPolicyWatchHelper": apisrvpkg.NewMessage("networkencryption.AutoMsgTrafficEncryptionPolicyWatchHelper"),
 		"networkencryption.IPsecProtocolSpec":                         apisrvpkg.NewMessage("networkencryption.IPsecProtocolSpec"),
 		"networkencryption.TLSProtocolSpec":                           apisrvpkg.NewMessage("networkencryption.TLSProtocolSpec"),
@@ -119,6 +108,17 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
 		}),
+		"networkencryption.TrafficEncryptionPolicyList": apisrvpkg.NewMessage("networkencryption.TrafficEncryptionPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := networkencryption.TrafficEncryptionPolicyList{}
+			r := networkencryption.TrafficEncryptionPolicy{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}),
 		"networkencryption.TrafficEncryptionPolicySpec":   apisrvpkg.NewMessage("networkencryption.TrafficEncryptionPolicySpec"),
 		"networkencryption.TrafficEncryptionPolicyStatus": apisrvpkg.NewMessage("networkencryption.TrafficEncryptionPolicyStatus"),
 		// Add a message handler for ListWatch options
@@ -144,7 +144,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoGetTrafficEncryptionPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoListTrafficEncryptionPolicy = srv.AddMethod("AutoListTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["networkencryption.AutoMsgTrafficEncryptionPolicyListHelper"], "trafficEncryptionPolicy", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["networkencryption.TrafficEncryptionPolicyList"], "trafficEncryptionPolicy", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoUpdateTrafficEncryptionPolicy = srv.AddMethod("AutoUpdateTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
@@ -242,12 +242,12 @@ func (e *eTrafficEncryptionPolicyV1Endpoints) AutoGetTrafficEncryptionPolicy(ctx
 	return networkencryption.TrafficEncryptionPolicy{}, err
 
 }
-func (e *eTrafficEncryptionPolicyV1Endpoints) AutoListTrafficEncryptionPolicy(ctx context.Context, t api.ListWatchOptions) (networkencryption.AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (e *eTrafficEncryptionPolicyV1Endpoints) AutoListTrafficEncryptionPolicy(ctx context.Context, t api.ListWatchOptions) (networkencryption.TrafficEncryptionPolicyList, error) {
 	r, err := e.fnAutoListTrafficEncryptionPolicy(ctx, t)
 	if err == nil {
-		return r.(networkencryption.AutoMsgTrafficEncryptionPolicyListHelper), err
+		return r.(networkencryption.TrafficEncryptionPolicyList), err
 	}
-	return networkencryption.AutoMsgTrafficEncryptionPolicyListHelper{}, err
+	return networkencryption.TrafficEncryptionPolicyList{}, err
 
 }
 func (e *eTrafficEncryptionPolicyV1Endpoints) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, t networkencryption.TrafficEncryptionPolicy) (networkencryption.TrafficEncryptionPolicy, error) {

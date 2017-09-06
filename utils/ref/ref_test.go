@@ -3,6 +3,7 @@ package ref
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 )
@@ -52,24 +53,41 @@ type IPOpt struct {
 	Protocol string `json:"protocol,omitempty" venice:"id=ip_proto"`
 }
 
+type NodeSpecNodeRole int32
+
+type NodeConditionType int32
+type ConditionStatus int32
+type NodeCondition struct {
+	Type               NodeConditionType `json:"type,omitempty"`
+	Status             ConditionStatus   `json:"status,omitempty"`
+	LastTransitionTime int64             `json:"lastTransitionTime,omitempty"`
+	Reason             string            `json:"reason,omitempty"`
+	Message            string            `json:"message,omitempty"`
+}
+
 type UserSpec struct {
-	Aliases      string            `json:"aliases,omitempty"`
-	Roles        []string          `json:"roles,omitempty"`
-	MatchLabels  map[string]string `json:"matchLabels,omitempty"`
-	AttachGroup  string            `json:"attachGroup,omitempty"`
-	InRules      []SGRule          `json:"igRules,omitempty" venice:"ins=in"`
-	OutRules     []SGRule          `json:"egRules,omitempty" venice:"ins=out"`
-	Interval     int               `json:"interval,omitempty"`
-	SkippedField string            `json:"uuid,omitempty" venice:"sskip"`
-	Perms        *Permission       `json:"perm,omitempty"`
-	Policies     map[string]Policy `json:"permMap,omitempty"`
-	UserHandle   uint64            `json:"userHandle,omitempty"`
-	SIPAddress   *string           `json:"sipAddress,omitempty"`
-	MacAddrs     []*string         `json:"macAdds,omitempty"`
-	IPOpts       []*IPOpt          `json:"fwProfiles,omitempty"`
-	InRulesR     []*SGRule         `json:"igRulesR,omitempty" venice:"ins=inr"`
-	OutRulesR    []*SGRule         `json:"egRulesR,omitempty" venice:"ins=outr"`
-	FixedRules   [2]SGRule         `json:"fixedRule,omitempty" venice:"ins=fix"`
+	Aliases      string             `json:"aliases,omitempty"`
+	Roles        []string           `json:"roles,omitempty"`
+	DummyRoles   []string           `json:"dummyRoles,omitempty"`
+	MatchLabels  map[string]string  `json:"matchLabels,omitempty"`
+	AttachGroup  string             `json:"attachGroup,omitempty"`
+	InRules      []SGRule           `json:"igRules,omitempty" venice:"ins=in"`
+	OutRules     []SGRule           `json:"egRules,omitempty" venice:"ins=out"`
+	Interval     int                `json:"interval,omitempty"`
+	SkippedField string             `json:"uuid,omitempty" venice:"sskip"`
+	Perms        *Permission        `json:"perm,omitempty"`
+	Policies     map[string]Policy  `json:"policiesMap,omitempty"`
+	UserHandle   uint64             `json:"userHandle,omitempty"`
+	Uint32Field  uint32             `json:"uint32Field,omitempty"`
+	Int32Field   int32              `json:"int32Field,omitempty"`
+	SIPAddress   *string            `json:"sipAddress,omitempty"`
+	MacAddrs     []*string          `json:"macAdds,omitempty"`
+	IPOpts       []*IPOpt           `json:"fwProfiles,omitempty"`
+	InRulesR     []*SGRule          `json:"igRulesR,omitempty" venice:"ins=inr"`
+	OutRulesR    []*SGRule          `json:"egRulesR,omitempty" venice:"ins=outr"`
+	FixedRules   [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
+	NodeRoles    []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
+	Conditions   []*NodeCondition   `json:"conditions,omitempty"`
 }
 
 type UserList struct {
@@ -95,6 +113,7 @@ func TestWalkStruct(t *testing.T) {
   Spec:   {
     Aliases: string
     Roles: []string
+    DummyRoles: []string
     MatchLabels: map[string]string
     AttachGroup: string
     InRules: []      {
@@ -119,6 +138,8 @@ func TestWalkStruct(t *testing.T) {
         FromGroup: string
         }
     UserHandle: uint64
+    Uint32Field: uint32
+    Int32Field: int32
     *SIPAddress: string
     MacAddrs: []*string
     IPOpts: []*      {
@@ -144,6 +165,14 @@ func TestWalkStruct(t *testing.T) {
         Ports: string
         Action: string
         PeerGroup: string
+        }
+    NodeRoles: []int32
+    Conditions: []*      {
+        Type: int32
+        Status: int32
+        LastTransitionTime: int64
+        Reason: string
+        Message: string
         }
     }
   }
@@ -211,6 +240,11 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("Roles not found in kvs")
 	}
 	total++
+	if _, ok := kvs["DummyRoles"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("DummyRoles not found in kvs")
+	}
+	total++
 	if _, ok := kvs["MatchLabels"]; !ok {
 		printKvs("kvs", kvs, true)
 		t.Fatalf("MatchLabels not found in kvs")
@@ -251,7 +285,7 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("out_peer_group not found in kvs")
 	}
 	total++
-	if _, ok := kvs["Interval"]; !ok {
+	if v, ok := kvs["Interval"]; !ok || v.TypeStr != "int" {
 		printKvs("kvs", kvs, true)
 		t.Fatalf("Interval not found in kvs")
 	}
@@ -284,6 +318,16 @@ func TestEmptyGet(t *testing.T) {
 	if _, ok := kvs["UserHandle"]; !ok {
 		printKvs("kvs", kvs, true)
 		t.Fatalf("UserHandle not found in kvs")
+	}
+	total++
+	if v, ok := kvs["Uint32Field"]; !ok || v.TypeStr != "uint32" {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("Uint32Field not found in kvs")
+	}
+	total++
+	if v, ok := kvs["Int32Field"]; !ok || v.TypeStr != "int32" {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("Int32Field not found in kvs")
 	}
 	total++
 	if _, ok := kvs["SIPAddress"]; !ok {
@@ -351,6 +395,36 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("fix_peer_group not found in kvs")
 	}
 	total++
+	if _, ok := kvs["NodeRoles"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
+	if _, ok := kvs["Type"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
+	if _, ok := kvs["Status"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
+	if _, ok := kvs["LastTransitionTime"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
+	if _, ok := kvs["Reason"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
+	if _, ok := kvs["Message"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -367,6 +441,8 @@ func TestGet(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
+	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
@@ -374,28 +450,31 @@ func TestGet(t *testing.T) {
 		Spec: UserSpec{
 			Aliases:     "jhonny",
 			Roles:       []string{"storage-admin", "security-admin"},
-			MatchLabels: map[string]string{"io.pensando.area": "network"},
+			MatchLabels: map[string]string{"io.pensando.area": "network", "color": "purple"},
 			AttachGroup: "app-sg",
 			InRules: []SGRule{
 				{Ports: "tcp/80,tcp/443", Action: "permit,log", PeerGroup: "web-sg"},
-			},
+				{Ports: "tcp/844", Action: "permit", PeerGroup: "db-sg"}},
 			OutRules: []SGRule{
-				{Ports: "tcp/6379", Action: "permit,log", PeerGroup: "db-sg"},
-			},
+				{Ports: "tcp/6379", Action: "permit,log", PeerGroup: "db-sg"}},
 			Interval: 33,
 			Perms:    &Permission{ToObj: "network", RWX: "rw"},
 			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
 				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
-			UserHandle: 0x45544422,
-			SIPAddress: &ip1,
-			MacAddrs:   []*string{&mac1, &mac2},
-			IPOpts:     []*IPOpt{&ipOpt1, &ipOpt2},
-			InRulesR:   []*SGRule{&inr1, &inr2},
-			OutRulesR:  []*SGRule{&outr1},
+			UserHandle:  0x45544422,
+			Uint32Field: 9821,
+			Int32Field:  8832,
+			SIPAddress:  &ip1,
+			MacAddrs:    []*string{&mac1, &mac2},
+			IPOpts:      []*IPOpt{&ipOpt1, &ipOpt2},
+			InRulesR:    []*SGRule{&inr1, &inr2},
+			OutRulesR:   []*SGRule{&outr1},
 			FixedRules: [2]SGRule{
 				{Ports: "tcp/80,tcp/443", Action: "permit,log", PeerGroup: "web-sg"},
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "app-sg"},
 			},
+			NodeRoles:  []NodeSpecNodeRole{997, 799},
+			Conditions: []*NodeCondition{&cond1, &cond2},
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -423,9 +502,10 @@ func TestGet(t *testing.T) {
 	}
 
 	if fi, ok := kvs["Labels"]; ok {
-		if fi.Key || fi.ValueStr[0] != "dept:eng,level:mts" && fi.ValueStr[0] != "level:mts,dept:eng" {
+		sort.Strings(fi.ValueStr)
+		if fi.Key || fi.ValueStr[0] != "dept:eng" && fi.ValueStr[1] != "level:mts" {
 			printKvs("Meta", kvs, false)
-			t.Fatalf("error! value not set correctly")
+			t.Fatalf("error! value not set correctly %+v", fi)
 		}
 	} else {
 		t.Fatalf("Labels not found in kvs")
@@ -440,8 +520,7 @@ func TestGet(t *testing.T) {
 	}
 
 	if fi, ok := kvs["Roles"]; ok {
-		if fi.Key || fi.ValueStr[0] != "security-admin,storage-admin" &&
-			fi.ValueStr[0] != "storage-admin,security-admin" {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "storage-admin" || fi.ValueStr[1] != "security-admin" {
 			printKvs("Spec", kvs, false)
 			t.Fatalf("error! value not set correctly")
 		}
@@ -450,22 +529,48 @@ func TestGet(t *testing.T) {
 	}
 
 	if fi, ok := kvs["MatchLabels"]; ok {
-		if fi.Key || fi.ValueStr[0] != "io.pensando.area:network" {
+		sort.Strings(fi.ValueStr)
+		if fi.Key || fi.ValueStr[0] != "color:purple" || fi.ValueStr[1] != "io.pensando.area:network" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! labels fetched '%s' not set correctly", fi.ValueStr[0])
+			t.Fatalf("error! labels fetched %+v  not set correctly", fi)
 		}
 	} else {
 		t.Fatalf("MatchLabels not found in kvs")
 	}
 
 	if fi, ok := kvs["in_port"]; ok {
-		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "tcp/80,tcp/443" {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "tcp/80,tcp/443" || fi.ValueStr[1] != "tcp/844" {
 			printKvs("spec", kvs, false)
 			t.Fatalf("error! in_port fetched '%s' not set correctly", fi.ValueStr)
 		}
+		if fi.TypeStr != "slice" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! in_port type set to '%s'\n", fi.TypeStr)
+		}
+
 	} else {
 		printKvs("spec", kvs, false)
 		t.Fatalf("in_port not found")
+	}
+
+	if fi, ok := kvs["in_Action"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "permit,log" || fi.ValueStr[1] != "permit" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! in_action fetched '%s' not set correctly", fi.ValueStr)
+		}
+	} else {
+		printKvs("spec", kvs, false)
+		t.Fatalf("in_Action not found, kvs %+v ", kvs)
+	}
+
+	if fi, ok := kvs["in_peer_group"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "web-sg" || fi.ValueStr[1] != "db-sg" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Peer Group fetched '%s' not set correctly", fi.ValueStr)
+		}
+	} else {
+		printKvs("spec", kvs, false)
+		t.Fatalf("in_peer_group not found")
 	}
 
 	if fi, ok := kvs["out_port"]; ok {
@@ -476,16 +581,6 @@ func TestGet(t *testing.T) {
 	} else {
 		printKvs("spec", kvs, false)
 		t.Fatalf("out_port not found")
-	}
-
-	if fi, ok := kvs["in_peer_group"]; ok {
-		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "web-sg" {
-			printKvs("spec", kvs, false)
-			t.Fatalf("error! Peer Group fetched '%s' not set correctly", fi.ValueStr)
-		}
-	} else {
-		printKvs("spec", kvs, false)
-		t.Fatalf("in_peer_group not found")
 	}
 
 	if fi, ok := kvs["out_peer_group"]; ok {
@@ -558,16 +653,36 @@ func TestGet(t *testing.T) {
 		handle, _ := strconv.ParseUint(fi.ValueStr[0], 10, 64)
 		if fi.Key || len(fi.ValueStr) != 1 || handle != 0x45544422 {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! handle %v not found '%s'", handle, fi.ValueStr)
+			t.Fatalf("error! handle %v not found '%v'", handle, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("UserHandle not found")
 	}
 
+	if fi, ok := kvs["Int32Field"]; ok {
+		handle, _ := strconv.Atoi(fi.ValueStr[0])
+		if fi.Key || len(fi.ValueStr) != 1 || handle != 8832 {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Int32Field %d not found '%v'", handle, fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Int32Field not found")
+	}
+
+	if fi, ok := kvs["Uint32Field"]; ok {
+		handle, _ := strconv.ParseUint(fi.ValueStr[0], 10, 32)
+		if fi.Key || len(fi.ValueStr) != 1 || handle != 9821 {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Uint32Field %v not found '%v'", handle, fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Uint32Field not found")
+	}
+
 	if fi, ok := kvs["SIPAddress"]; ok {
 		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != ip1 {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! SIPAddress %v not found '%s'", ip1, fi.ValueStr)
+			t.Fatalf("error! SIPAddress %v not found '%v'", ip1, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("SIPAddress not found")
@@ -576,7 +691,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["MacAddrs"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != mac1 && fi.ValueStr[1] != mac2 {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! MacAddrs %s,%s not found '%s'", mac1, mac2, fi.ValueStr)
+			t.Fatalf("error! MacAddrs %s,%s not found '%v'", mac1, mac2, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("MacAddrs not found")
@@ -585,7 +700,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["ip_ver"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "v4" && fi.ValueStr[1] != "v6" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! ip_ver %s,%s not found '%s'", ipOpt1, ipOpt2, fi.ValueStr)
+			t.Fatalf("error! ip_ver %s,%s not found '%v'", ipOpt1, ipOpt2, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("ip_ver not found")
@@ -594,7 +709,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["inr_port"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "tcp/221" || fi.ValueStr[1] != "tcp/222" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! inr_port %s,%s not found '%s'", inr1, inr2, fi.ValueStr)
+			t.Fatalf("error! inr_port %s,%s not found '%v'", inr1, inr2, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("inr_port not found")
@@ -602,7 +717,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["inr_peer_group"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "g2" || fi.ValueStr[1] != "g1" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! inr_peer_group %s,%s not found '%s'", inr1, inr2, fi.ValueStr)
+			t.Fatalf("error! inr_peer_group %s,%s not found '%v'", inr1, inr2, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("inr_peer_group not found")
@@ -611,7 +726,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["inr_Action"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "permittt" || fi.ValueStr[1] != "permittt" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! inr_Action %s,%s not found '%s'", inr1, inr2, fi.ValueStr)
+			t.Fatalf("error! inr_Action %s,%s not found '%v'", inr1, inr2, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("inr_Action not found")
@@ -620,7 +735,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["outr_port"]; ok {
 		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "udp/221" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! outr_port %s, not found '%s'", outr1, fi.ValueStr)
+			t.Fatalf("error! outr_port %s, not found '%v'", outr1, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("outr_port not found")
@@ -629,7 +744,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["outr_peer_group"]; ok {
 		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "g3" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! outr_peer_group %s, not found '%s'", outr1, fi.ValueStr)
+			t.Fatalf("error! outr_peer_group %s, not found '%v'", outr1, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("outr_peer_group not found")
@@ -638,7 +753,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["outr_Action"]; ok {
 		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "dennny" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! outr_Action %s not found '%s'", outr1, fi.ValueStr)
+			t.Fatalf("error! outr_Action %s not found '%v'", outr1, fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("outr_Action not found")
@@ -647,7 +762,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["fix_port"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "tcp/80,tcp/443" || fi.ValueStr[1] != "udp/80" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! fix_port not found '%s'", fi.ValueStr)
+			t.Fatalf("error! fix_port not found '%v'", fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("fix_port not found")
@@ -656,7 +771,7 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["fix_peer_group"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "web-sg" || fi.ValueStr[1] != "app-sg" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! fix_peer_group not found '%s'", fi.ValueStr)
+			t.Fatalf("error! fix_peer_group not found '%v'", fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("fix_peer_group not found")
@@ -665,10 +780,52 @@ func TestGet(t *testing.T) {
 	if fi, ok := kvs["fix_Action"]; ok {
 		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "permit,log" || fi.ValueStr[1] != "permit,log" {
 			printKvs("spec", kvs, false)
-			t.Fatalf("error! fix_Action not found '%s'", fi.ValueStr)
+			t.Fatalf("error! fix_Action not found '%v'", fi.ValueStr)
 		}
 	} else {
 		t.Fatalf("fix_Action not found")
+	}
+
+	if fi, ok := kvs["NodeRoles"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "997" || fi.ValueStr[1] != "799" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! NodeRoles not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("NodeRoles not found")
+	}
+
+	if fi, ok := kvs["Type"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "1" || fi.ValueStr[1] != "2" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Condition Type not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Condition Type not found")
+	}
+	if fi, ok := kvs["Status"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "2" || fi.ValueStr[1] != "0" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Condition Status not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Condition Status not found")
+	}
+	if fi, ok := kvs["LastTransitionTime"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "90001" || fi.ValueStr[1] != "80001" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Condition LastTransitionTime not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Condition LastTransitionTime not found")
+	}
+	if fi, ok := kvs["Reason"]; ok {
+		if fi.Key || len(fi.ValueStr) != 2 || fi.ValueStr[0] != "some reason" || fi.ValueStr[1] != "some other reason" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Condition Reason not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Condition Reason not found")
 	}
 }
 
@@ -681,12 +838,15 @@ func TestUpdate(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
+	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
 		ObjectMeta: ObjectMeta{Name: "joe", Labels: map[string]string{"dept": "eng", "level": "mts"}},
 		Spec: UserSpec{
 			Aliases:     "jhonny",
 			Roles:       []string{"storage-admin", "security-admin"},
+			DummyRoles:  []string{"dummy1", "dummy2"},
 			MatchLabels: map[string]string{"io.pensando.area": "network"},
 			AttachGroup: "app-sg",
 			InRules: []SGRule{
@@ -700,16 +860,20 @@ func TestUpdate(t *testing.T) {
 			Perms:    &Permission{ToObj: "sgpolicy", RWX: "r"},
 			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
 				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
-			UserHandle: 0x45544422,
-			SIPAddress: &ip1,
-			MacAddrs:   []*string{&mac1, &mac2},
-			IPOpts:     []*IPOpt{&ipOpt1, &ipOpt2},
-			InRulesR:   []*SGRule{&inr1, &inr2},
-			OutRulesR:  []*SGRule{&outr1},
+			UserHandle:  0x45544422,
+			Uint32Field: 9821,
+			Int32Field:  7473,
+			SIPAddress:  &ip1,
+			MacAddrs:    []*string{&mac1, &mac2},
+			IPOpts:      []*IPOpt{&ipOpt1, &ipOpt2},
+			InRulesR:    []*SGRule{&inr1, &inr2},
+			OutRulesR:   []*SGRule{&outr1},
 			FixedRules: [2]SGRule{
 				{Ports: "tcp/88,tcp/444", Action: "log-only", PeerGroup: "some-other-sg"},
 				{Ports: "tcp/6777", Action: "bluff", PeerGroup: "some-sg"},
 			},
+			NodeRoles:  []NodeSpecNodeRole{997, 799},
+			Conditions: []*NodeCondition{&cond1, &cond2},
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -727,6 +891,12 @@ func TestUpdate(t *testing.T) {
 	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
 	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
 	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["NodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
+	kvs["Status"] = NewFInfo([]string{"3", "4"})
+	kvs["Type"] = NewFInfo([]string{"9", "9"})
+	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
+	kvs["Message"] = NewFInfo([]string{"one", "two"})
+	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(u, refCtx, kvs)
@@ -744,6 +914,12 @@ func TestUpdate(t *testing.T) {
 		newUser.Spec.Roles[0] != "blah-blah" {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write Roles")
+	}
+	if len(newUser.Spec.DummyRoles) != 2 ||
+		newUser.Spec.DummyRoles[0] != "dummy1" ||
+		newUser.Spec.DummyRoles[1] != "dummy2" {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to preserve DummyRoles")
 	}
 	if newUser.Spec.Aliases != "jhonny" {
 		t.Fatalf("unable to find aliases")
@@ -830,15 +1006,33 @@ func TestUpdate(t *testing.T) {
 		fmt.Printf("unable to fetch FixedRuleR: got %+v %+v \n", fix1, fix2)
 		t.Fatalf("unable to write FixedRulesR struct pointer with tags")
 	}
+
+	if len(newUser.Spec.NodeRoles) != 3 || newUser.Spec.NodeRoles[0] != 455 ||
+		newUser.Spec.NodeRoles[1] != 544 || newUser.Spec.NodeRoles[2] != 5544 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write NodeRoles array to indirect type")
+	}
+
+	newCond1 := newUser.Spec.Conditions[0]
+	newCond2 := newUser.Spec.Conditions[1]
+	if newCond1.Status != 3 || newCond2.Status != 4 ||
+		newCond1.Type != 9 || newCond2.Type != 9 ||
+		newCond1.Reason != "new reason" || newCond2.Reason != "another new reason" ||
+		newCond1.Message != "one" || newCond2.Message != "two" ||
+		newCond1.LastTransitionTime != 666666 || newCond2.LastTransitionTime != 7777777 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write NodeRoles array to indirect type")
+	}
 }
 
 func TestNewWrite(t *testing.T) {
 	kvs := make(map[string]FInfo)
 	kvs["Name"] = NewFInfo([]string{"joe"})
-	kvs["Labels"] = NewFInfo([]string{"dept:eng,level:mts"})
-	kvs["Roles"] = NewFInfo([]string{"storage-admin,security-admin"})
+	kvs["Labels"] = NewFInfo([]string{"dept:eng", "level:mts"})
+	kvs["Roles"] = NewFInfo([]string{"storage-admin", "security-admin"})
 	kvs["Aliases"] = NewFInfo([]string{"jhonny"})
-	kvs["MatchLabels"] = NewFInfo([]string{"io.pensando.area:network"})
+	kvs["MatchLabels"] = NewFInfo([]string{"io.pensando.area:network", "color:purple"})
+	kvs["Interval"] = NewFInfo([]string{"4554"})
 	kvs["in_port"] = NewFInfo([]string{"tcp/80,tcp/443", "tcp/6379"})
 	kvs["out_port"] = NewFInfo([]string{"tcp/8181"})
 	kvs["in_Action"] = NewFInfo([]string{"permit,log", "permit,log"})
@@ -847,6 +1041,8 @@ func TestNewWrite(t *testing.T) {
 	kvs["ToObj"] = NewFInfo([]string{"sgpolicy"})
 	kvs["RWX"] = NewFInfo([]string{"rw"})
 	kvs["UserHandle"] = NewFInfo([]string{"0x45544422"})
+	kvs["Uint32Field"] = NewFInfo([]string{"9823"})
+	kvs["Int32Field"] = NewFInfo([]string{"7473"})
 	kvs["SIPAddress"] = NewFInfo([]string{"10.1.1.2"})
 	kvs["MacAddrs"] = NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
 	kvs["ip_ver"] = NewFInfo([]string{"ipv4", "ipv6"})
@@ -860,6 +1056,12 @@ func TestNewWrite(t *testing.T) {
 	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
 	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
 	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["NodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
+	kvs["Status"] = NewFInfo([]string{"3", "4"})
+	kvs["Type"] = NewFInfo([]string{"9", "9"})
+	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
+	kvs["Message"] = NewFInfo([]string{"one", "two"})
+	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(User{}, refCtx, kvs)
@@ -882,7 +1084,7 @@ func TestNewWrite(t *testing.T) {
 	if newUser.Spec.Aliases != "jhonny" {
 		t.Fatalf("unable to find aliases")
 	}
-	if newUser.Spec.MatchLabels["io.pensando.area"] != "network" {
+	if newUser.Spec.MatchLabels["io.pensando.area"] != "network" && newUser.Spec.MatchLabels["color"] != "purple" {
 		t.Fatalf("unable to find label based Permissions")
 	}
 
@@ -901,6 +1103,11 @@ func TestNewWrite(t *testing.T) {
 		t.Fatalf("unable to write PeerGroup InRules")
 	}
 
+	if newUser.Spec.Interval != 4554 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write integer value Interval")
+	}
+
 	if newUser.Spec.Perms == nil || newUser.Spec.Perms.ToObj != "sgpolicy" || newUser.Spec.Perms.RWX != "rw" {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write Perms into pointer object")
@@ -909,6 +1116,16 @@ func TestNewWrite(t *testing.T) {
 	if newUser.Spec.UserHandle != 0x45544422 {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write UserHandle into pointer object")
+	}
+
+	if newUser.Spec.Uint32Field != 9823 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write Uint32Field into pointer object")
+	}
+
+	if newUser.Spec.Int32Field != 7473 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write Int32Field into pointer object")
 	}
 
 	if *newUser.Spec.SIPAddress != "10.1.1.2" {
@@ -964,6 +1181,23 @@ func TestNewWrite(t *testing.T) {
 		fmt.Printf("unable to fetch FixedRuleR: got %+v %+v \n", fix1, fix2)
 		t.Fatalf("unable to write FixedRulesR struct pointer with tags")
 	}
+
+	if len(newUser.Spec.NodeRoles) != 3 || newUser.Spec.NodeRoles[0] != 455 ||
+		newUser.Spec.NodeRoles[1] != 544 || newUser.Spec.NodeRoles[2] != 5544 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write NodeRoles array to indirect type")
+	}
+
+	newCond1 := newUser.Spec.Conditions[0]
+	newCond2 := newUser.Spec.Conditions[1]
+	if newCond1.Status != 3 || newCond2.Status != 4 ||
+		newCond1.Type != 9 || newCond2.Type != 9 ||
+		newCond1.Reason != "new reason" || newCond2.Reason != "another new reason" ||
+		newCond1.Message != "one" || newCond2.Message != "two" ||
+		newCond1.LastTransitionTime != 666666 || newCond2.LastTransitionTime != 7777777 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write NodeRoles array to indirect type")
+	}
 }
 
 func TestFieldByName(t *testing.T) {
@@ -975,6 +1209,8 @@ func TestFieldByName(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
+	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
 		ObjectMeta: ObjectMeta{Name: "joe", Labels: map[string]string{"dept": "eng", "level": "mts"}},
@@ -994,16 +1230,20 @@ func TestFieldByName(t *testing.T) {
 			Perms:    &Permission{ToObj: "network", RWX: "rw"},
 			Policies: map[string]Policy{"key1": {ToGroup: "to-key1", FromGroup: "from-key1"},
 				"key2": {ToGroup: "to-key2", FromGroup: "from-key2"}},
-			UserHandle: 0x45544422,
-			SIPAddress: &ip1,
-			MacAddrs:   []*string{&mac1, &mac2},
-			IPOpts:     []*IPOpt{&ipOpt1, &ipOpt2},
-			InRulesR:   []*SGRule{&inr1, &inr2},
-			OutRulesR:  []*SGRule{&outr1},
+			UserHandle:  0x45544422,
+			Uint32Field: 9823,
+			Int32Field:  5351,
+			SIPAddress:  &ip1,
+			MacAddrs:    []*string{&mac1, &mac2},
+			IPOpts:      []*IPOpt{&ipOpt1, &ipOpt2},
+			InRulesR:    []*SGRule{&inr1, &inr2},
+			OutRulesR:   []*SGRule{&outr1},
 			FixedRules: [2]SGRule{
 				{Ports: "tcp/80,tcp/443", Action: "permit,log", PeerGroup: "fix-sg1"},
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "fix-sg2"},
 			},
+			NodeRoles:  []NodeSpecNodeRole{997, 799},
+			Conditions: []*NodeCondition{&cond1, &cond2},
 		},
 	}
 	user := reflect.ValueOf(u)
@@ -1068,6 +1308,21 @@ func TestFieldByName(t *testing.T) {
 	if len(fixPgs) != 2 || fixPgs[0] != "fix-sg1" || fixPgs[1] != "fix-sg2" {
 		t.Fatalf("Invalid fixPgs %s \n", fixPgs)
 	}
+
+	nodeRoles := FieldByName(user, "Spec.NodeRoles")
+	if len(nodeRoles) != 2 || nodeRoles[0] != "997" || nodeRoles[1] != "799" {
+		t.Fatalf("Invalid fixPgs %s \n", fixPgs)
+	}
+
+	condReasons := FieldByName(user, "Spec.Conditions.Reason")
+	if len(condReasons) != 2 || condReasons[0] != "some reason" || condReasons[1] != "some other reason" {
+		t.Fatalf("Invalid condReasons %s \n", condReasons)
+	}
+
+	transitionTimes := FieldByName(user, "Spec.Conditions.LastTransitionTime")
+	if len(transitionTimes) != 2 || transitionTimes[0] != "90001" || transitionTimes[1] != "80001" {
+		t.Fatalf("Invalid transitionTimes %s \n", transitionTimes)
+	}
 }
 
 func printKvs(hdr string, kvs map[string]FInfo, onlyKey bool) {
@@ -1086,13 +1341,23 @@ func printKvs(hdr string, kvs map[string]FInfo, onlyKey bool) {
 func subObj(kind string) interface{} {
 	switch kind {
 	case "SGRule":
-		return &SGRule{}
+		var v SGRule
+		return &v
 	case "Permission":
-		return &Permission{}
+		var v Permission
+		return &v
 	case "Policy":
-		return &Policy{}
+		var v Policy
+		return &v
 	case "IPOpt":
-		return &IPOpt{}
+		var v IPOpt
+		return &v
+	case "NodeSpecNodeRole":
+		var v NodeSpecNodeRole
+		return &v
+	case "NodeCondition":
+		var v NodeCondition
+		return &v
 	}
 	return nil
 }

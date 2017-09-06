@@ -78,8 +78,8 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			"networkencryption.TrafficEncryptionPolicyV1",
 			"AutoListTrafficEncryptionPolicy",
 			networkencryption.EncodeGrpcReqListWatchOptions,
-			networkencryption.DecodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper,
-			&networkencryption.AutoMsgTrafficEncryptionPolicyListHelper{},
+			networkencryption.DecodeGrpcRespTrafficEncryptionPolicyList,
+			&networkencryption.TrafficEncryptionPolicyList{},
 			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()

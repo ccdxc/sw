@@ -1,0 +1,14 @@
+# please edit and/or delete the lines in this sample
+kind: network                   # kind of this object
+meta:
+  name: dev-network             # unique name of this object
+  labels:			# arbitrary user defined tags 'key: value' 
+    dmz: internal
+    dns: auto
+    ipam: dhcp
+  # tenant: default		# override tenant value (applicable only for super user)
+spec:                           # configuration specification intent
+  type: bridged                 # bridged network, other options are 'routed', 'overlay'
+  gateway: 10.13.1.254          # default gateway (aka router IP address) for the network
+  subnet: 10.13.0.0/16          # subnet and mask for the network
+

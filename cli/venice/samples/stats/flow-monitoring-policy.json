@@ -1,0 +1,11 @@
+{
+	"kind": "monitoringpolicy",
+	"meta": {
+		"name": "flow-monitoring-policy"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchNames" : "prod*"}, { "matchNams" : "dev*"}],
+		"collectionpolicy" : "flow-collector",
+		"exportpolicy" : "tsdb-slow-exporter"
+	}
+}

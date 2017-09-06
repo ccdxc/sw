@@ -19,7 +19,7 @@ type ServiceTrafficEncryptionPolicyV1Client interface {
 	AutoAddTrafficEncryptionPolicy(ctx context.Context, t *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	AutoDeleteTrafficEncryptionPolicy(ctx context.Context, t *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	AutoGetTrafficEncryptionPolicy(ctx context.Context, t *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	AutoListTrafficEncryptionPolicy(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgTrafficEncryptionPolicyListHelper, error)
+	AutoListTrafficEncryptionPolicy(ctx context.Context, t *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error)
 	AutoUpdateTrafficEncryptionPolicy(ctx context.Context, t *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 
 	AutoWatchTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyClient, error)
@@ -30,7 +30,7 @@ type ServiceTrafficEncryptionPolicyV1Server interface {
 	AutoAddTrafficEncryptionPolicy(ctx context.Context, t TrafficEncryptionPolicy) (TrafficEncryptionPolicy, error)
 	AutoDeleteTrafficEncryptionPolicy(ctx context.Context, t TrafficEncryptionPolicy) (TrafficEncryptionPolicy, error)
 	AutoGetTrafficEncryptionPolicy(ctx context.Context, t TrafficEncryptionPolicy) (TrafficEncryptionPolicy, error)
-	AutoListTrafficEncryptionPolicy(ctx context.Context, t api.ListWatchOptions) (AutoMsgTrafficEncryptionPolicyListHelper, error)
+	AutoListTrafficEncryptionPolicy(ctx context.Context, t api.ListWatchOptions) (TrafficEncryptionPolicyList, error)
 	AutoUpdateTrafficEncryptionPolicy(ctx context.Context, t TrafficEncryptionPolicy) (TrafficEncryptionPolicy, error)
 
 	AutoWatchTrafficEncryptionPolicy(in *api.ListWatchOptions, stream TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyServer) error

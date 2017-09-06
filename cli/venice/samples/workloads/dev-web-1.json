@@ -1,0 +1,12 @@
+{
+	"kind": "workload",
+	"meta": {
+		"name": "dev-web-1",
+		"labels" : { "io.pensando.network.prio":"best-effort", "io.pensando.network.sg":"dev-sg", "io.pensando.network.svc" : "dev-web" }
+	},
+	"spec": {
+		"network" : "sjc-lab2-net10.15",
+		"node" : "node6",
+		"dns" : "auto"
+	}
+}

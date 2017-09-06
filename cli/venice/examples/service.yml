@@ -1,0 +1,16 @@
+# please edit and/or delete the lines in this sample
+kind: service
+meta:
+  name: prod-web-svc                            # name of this object
+  # tenant: default		                # override tenant value (applicable only for super user)
+  labels:			                # arbitrary user defined tags 'key: value' 
+    zone: dmz
+    monitor: "yes"                              # yml convention requires bools to be quoted if value (i.e. string)
+    policy: auto-compute
+spec:                                           # configuration specification intent
+  lbPolicy: basic-lb-policy                     # load balancing policy used by the service
+  ports: tcp/80                                 # port(s) this service is served on
+  virtualIp: 141.34.55.12                       # VIP of the service
+  workloadLabels:                               # workloads that this service represents the backend
+    io.pensando.network.svc: prod-web           # match all workloads that match a specific label
+

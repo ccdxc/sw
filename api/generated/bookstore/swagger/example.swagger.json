@@ -90,6 +90,7 @@
           },
           {
             "name": "Spec.IdProvider",
+            "description": "Spec is not allowed to be Null hence disabling nullable.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -114,7 +115,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/bookstoreAutoMsgOrderListHelper"
+              "$ref": "#/definitions/bookstoreOrderList"
             }
           }
         },
@@ -393,6 +394,13 @@
         "UUID": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -411,23 +419,6 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
-    "bookstoreAutoMsgBookListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bookstoreBook"
-          }
-        }
-      }
-    },
     "bookstoreAutoMsgBookWatchHelper": {
       "type": "object",
       "properties": {
@@ -439,23 +430,6 @@
         }
       }
     },
-    "bookstoreAutoMsgOrderListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bookstoreOrder"
-          }
-        }
-      }
-    },
     "bookstoreAutoMsgOrderWatchHelper": {
       "type": "object",
       "properties": {
@@ -464,23 +438,6 @@
         },
         "Object": {
           "$ref": "#/definitions/bookstoreOrder"
-        }
-      }
-    },
-    "bookstoreAutoMsgPublisherListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bookstorePublisher"
-          }
         }
       }
     },
@@ -505,10 +462,28 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreBookSpec"
+          "$ref": "#/definitions/bookstoreBookSpec",
+          "description": "Added in  version 2 of the API."
         },
         "Status": {
           "$ref": "#/definitions/bookstoreBookStatus"
+        }
+      }
+    },
+    "bookstoreBookList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreBook"
+          }
         }
       }
     },
@@ -522,7 +497,8 @@
           "type": "string"
         },
         "IdProvider": {
-          "type": "string"
+          "type": "string",
+          "description": "Spec is not allowed to be Null hence disabling nullable."
         }
       }
     },
@@ -561,6 +537,23 @@
         "Quantity": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "bookstoreOrderList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreOrder"
+          }
         }
       }
     },
@@ -614,6 +607,23 @@
         },
         "Spec": {
           "$ref": "#/definitions/bookstorePublisherSpec"
+        }
+      }
+    },
+    "bookstorePublisherList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstorePublisher"
+          }
         }
       }
     },

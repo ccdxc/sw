@@ -52,7 +52,7 @@ func (a adapterEndpointV1) AutoGetEndpoint(oldctx oldcontext.Context, t *network
 	return a.service.AutoGetEndpoint(ctx, t)
 }
 
-func (a adapterEndpointV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgEndpointListHelper, error) {
+func (a adapterEndpointV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.EndpointList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListEndpoint(ctx, t)
@@ -151,7 +151,7 @@ func (a adapterLbPolicyV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network
 	return a.service.AutoGetLbPolicy(ctx, t)
 }
 
-func (a adapterLbPolicyV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgLbPolicyListHelper, error) {
+func (a adapterLbPolicyV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.LbPolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListLbPolicy(ctx, t)
@@ -250,7 +250,7 @@ func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.N
 	return a.service.AutoGetNetwork(ctx, t)
 }
 
-func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgNetworkListHelper, error) {
+func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.NetworkList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListNetwork(ctx, t)
@@ -349,7 +349,7 @@ func (a adapterSecurityGroupV1) AutoGetSecurityGroup(oldctx oldcontext.Context, 
 	return a.service.AutoGetSecurityGroup(ctx, t)
 }
 
-func (a adapterSecurityGroupV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgSecurityGroupListHelper, error) {
+func (a adapterSecurityGroupV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.SecurityGroupList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListSecurityGroup(ctx, t)
@@ -448,7 +448,7 @@ func (a adapterServiceV1) AutoGetService(oldctx oldcontext.Context, t *network.S
 	return a.service.AutoGetService(ctx, t)
 }
 
-func (a adapterServiceV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgServiceListHelper, error) {
+func (a adapterServiceV1) AutoListService(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.ServiceList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListService(ctx, t)
@@ -547,7 +547,7 @@ func (a adapterSgpolicyV1) AutoGetSgpolicy(oldctx oldcontext.Context, t *network
 	return a.service.AutoGetSgpolicy(ctx, t)
 }
 
-func (a adapterSgpolicyV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgSgpolicyListHelper, error) {
+func (a adapterSgpolicyV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.SgpolicyList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListSgpolicy(ctx, t)
@@ -646,7 +646,7 @@ func (a adapterTenantV1) AutoGetTenant(oldctx oldcontext.Context, t *network.Ten
 	return a.service.AutoGetTenant(ctx, t)
 }
 
-func (a adapterTenantV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.AutoMsgTenantListHelper, error) {
+func (a adapterTenantV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.TenantList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListTenant(ctx, t)

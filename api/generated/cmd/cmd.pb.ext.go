@@ -34,19 +34,19 @@ func (m *SmartNIC) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgClusterListHelper) MakeKey(prefix string) string {
+func (m *ClusterList) MakeKey(prefix string) string {
 	obj := Cluster{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgNodeListHelper) MakeKey(prefix string) string {
+func (m *NodeList) MakeKey(prefix string) string {
 	obj := Node{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSmartNICListHelper) MakeKey(prefix string) string {
+func (m *SmartNICList) MakeKey(prefix string) string {
 	obj := SmartNIC{}
 	return obj.MakeKey(prefix)
 }

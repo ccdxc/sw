@@ -114,16 +114,16 @@ type respTrafficEncryptionPolicyV1AutoGetTrafficEncryptionPolicy struct {
 }
 
 // AutoListTrafficEncryptionPolicy is endpoint for AutoListTrafficEncryptionPolicy
-func (e EndpointsTrafficEncryptionPolicyV1Client) AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (e EndpointsTrafficEncryptionPolicyV1Client) AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error) {
 	resp, err := e.AutoListTrafficEncryptionPolicyEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgTrafficEncryptionPolicyListHelper{}, err
+		return &TrafficEncryptionPolicyList{}, err
 	}
-	return resp.(*AutoMsgTrafficEncryptionPolicyListHelper), nil
+	return resp.(*TrafficEncryptionPolicyList), nil
 }
 
 type respTrafficEncryptionPolicyV1AutoListTrafficEncryptionPolicy struct {
-	V   AutoMsgTrafficEncryptionPolicyListHelper
+	V   TrafficEncryptionPolicyList
 	Err error
 }
 
@@ -213,12 +213,12 @@ func MakeTrafficEncryptionPolicyV1AutoGetTrafficEncryptionPolicyEndpoint(s Servi
 }
 
 // AutoListTrafficEncryptionPolicy implementation on server Endpoint
-func (e EndpointsTrafficEncryptionPolicyV1Server) AutoListTrafficEncryptionPolicy(ctx context.Context, in api.ListWatchOptions) (AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (e EndpointsTrafficEncryptionPolicyV1Server) AutoListTrafficEncryptionPolicy(ctx context.Context, in api.ListWatchOptions) (TrafficEncryptionPolicyList, error) {
 	resp, err := e.AutoListTrafficEncryptionPolicyEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgTrafficEncryptionPolicyListHelper{}, err
+		return TrafficEncryptionPolicyList{}, err
 	}
-	return *resp.(*AutoMsgTrafficEncryptionPolicyListHelper), nil
+	return *resp.(*TrafficEncryptionPolicyList), nil
 }
 
 // MakeTrafficEncryptionPolicyV1AutoListTrafficEncryptionPolicyEndpoint creates  AutoListTrafficEncryptionPolicy endpoints for the service
@@ -352,7 +352,7 @@ func (m loggingTrafficEncryptionPolicyV1MiddlewareClient) AutoGetTrafficEncrypti
 	resp, err = m.next.AutoGetTrafficEncryptionPolicy(ctx, in)
 	return
 }
-func (m loggingTrafficEncryptionPolicyV1MiddlewareClient) AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgTrafficEncryptionPolicyListHelper, err error) {
+func (m loggingTrafficEncryptionPolicyV1MiddlewareClient) AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *TrafficEncryptionPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -432,7 +432,7 @@ func (m loggingTrafficEncryptionPolicyV1MiddlewareServer) AutoGetTrafficEncrypti
 	resp, err = m.next.AutoGetTrafficEncryptionPolicy(ctx, in)
 	return
 }
-func (m loggingTrafficEncryptionPolicyV1MiddlewareServer) AutoListTrafficEncryptionPolicy(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgTrafficEncryptionPolicyListHelper, err error) {
+func (m loggingTrafficEncryptionPolicyV1MiddlewareServer) AutoListTrafficEncryptionPolicy(ctx context.Context, in api.ListWatchOptions) (resp TrafficEncryptionPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -581,7 +581,7 @@ func (r *EndpointsTrafficEncryptionPolicyV1RestClient) AutoDeleteTrafficEncrypti
 }
 
 // AutoListTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
-func (r *EndpointsTrafficEncryptionPolicyV1RestClient) AutoListTrafficEncryptionPolicy(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (r *EndpointsTrafficEncryptionPolicyV1RestClient) AutoListTrafficEncryptionPolicy(ctx context.Context, options *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error) {
 	return nil, errors.New("not allowed")
 }
 

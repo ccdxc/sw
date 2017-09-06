@@ -1,0 +1,12 @@
+{
+	"kind": "workload",
+	"meta": {
+		"name": "prod-db",
+		"labels" : { "io.pensando.network.prio":"high", "io.pensando.network.sg":"prod-db-sg" }
+	},
+	"spec": {
+		"network" : "sjc-lab2-net10.13",
+		"node" : "node5",
+		"dns" : "auto"
+	}
+}

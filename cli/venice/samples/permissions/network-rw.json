@@ -1,0 +1,11 @@
+{
+	"kind": "permission",
+	"meta": {
+		"name": "network-rw",
+		"labels": { "area":"network" }
+	},
+	"spec": {
+		"Action" : "read,write",
+		"MatchFields" : { "kind":"network" }
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"kind": "user",
+	"meta": {
+		"tenant":"default",
+		"name": "default-admin",
+		"labels": { "dept":"all" }
+	},
+	"spec": {
+		"roles" : [ "full-access" ]
+	}
+}

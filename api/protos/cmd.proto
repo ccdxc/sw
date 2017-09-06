@@ -35,7 +35,7 @@ message Cluster {
 
     api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = "metadata,omitempty"];
+                            (gogoproto.jsontag) = "meta,omitempty"];
 
     // Spec contains the configuration of the cluster.
     ClusterSpec Spec     = 3 [(gogoproto.nullable) = false,
@@ -105,14 +105,14 @@ message Node {
 
     api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
-                            (gogoproto.jsontag) = "metadata,omitempty"];
+                            (gogoproto.jsontag) = "meta,omitempty"];
 
     // Spec contains the configuration of the node.
     NodeSpec Spec       = 3 [(gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the node.
-    NodeStatus Status   = 4 [(gogoproto.nullable) = true,
+    NodeStatus Status   = 4 [(gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "status,omitempty"];
 }
 
@@ -221,14 +221,14 @@ message SmartNIC {
     //Object name is Serial-Number of the SmartNIC
     api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
                                 (gogoproto.nullable) = false,
-                                (gogoproto.jsontag) = "metadata,omitempty"];
+                                (gogoproto.jsontag) = "meta,omitempty"];
 
     // SmartNICSpec contains the configuration of the network adapter.
     SmartNICSpec Spec       = 3 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "spec,omitempty"];
 
     // SmartNICStatus contains the current state of the network adapter.
-    SmartNICStatus Status   = 4 [(gogoproto.nullable) = true,
+    SmartNICStatus Status   = 4 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "status,omitempty"];
 }
 

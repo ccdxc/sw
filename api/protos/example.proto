@@ -11,7 +11,7 @@ option(venice.fileGrpcDest) = "localhost:8082";
 
 message Publisher {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
   // Option to define writing to KV store and the prefix for the object. The option could also be
   // specified with dynamic parameters in {..} (for example tenant, namespace etc.) as needed.
@@ -27,7 +27,7 @@ message PublisherSpec {
 
 message Book {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
   option (venice.objectPrefix) = "books";
 
@@ -48,7 +48,7 @@ message BookStatus {
 
 message Order {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
   option (venice.objectPrefix) = "orders";
 

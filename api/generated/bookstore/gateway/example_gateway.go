@@ -88,19 +88,19 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 	return a.service.AutoGetPublisher(ctx, t)
 }
 
-func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.AutoMsgBookListHelper, error) {
+func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.BookList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListBook(ctx, t)
 }
 
-func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.AutoMsgOrderListHelper, error) {
+func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.OrderList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListOrder(ctx, t)
 }
 
-func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.AutoMsgPublisherListHelper, error) {
+func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.PublisherList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListPublisher(ctx, t)

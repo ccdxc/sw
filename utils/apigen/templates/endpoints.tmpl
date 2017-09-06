@@ -316,7 +316,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoDelete{{.}}(ctx context.Context, i
 }{{end}}
 
 // AutoList{{.}} CRUD method for {{.}}
-func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, options *api.ListWatchOptions) (*AutoMsg{{.}}ListHelper, error) { {{if isRestMethod $svc "AutoList" .}}
+func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, options *api.ListWatchOptions) (*{{.}}List, error) { {{if isRestMethod $svc "AutoList" .}}
 	path := makeURI{{$svcname}}AutoList{{.}}ListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -330,7 +330,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, opt
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsg{{.}}ListHelper), err
+	return ret.(*{{.}}List), err
 }{{else}}
 	return nil, errors.New("not allowed")
 }{{end}}

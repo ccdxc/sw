@@ -1,0 +1,11 @@
+{
+	"kind": "permission",
+	"meta": {
+		"name": "security-rw",
+		"labels": { "area":"security" }
+	},
+	"spec": {
+		"Action" : "read,write",
+		"MatchFields" : { "kind":"kmip" }
+	}
+}

@@ -65,7 +65,7 @@ func MakeGRPCServerTrafficEncryptionPolicyV1(ctx context.Context, endpoints Endp
 		AutoListTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper,
+			EncodeGrpcRespTrafficEncryptionPolicyList,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListTrafficEncryptionPolicy", logger)))...,
 		),
 
@@ -132,7 +132,7 @@ func decodeHTTPrespTrafficEncryptionPolicyV1AutoGetTrafficEncryptionPolicy(_ con
 	return &resp, err
 }
 
-func (s *grpcServerTrafficEncryptionPolicyV1) AutoListTrafficEncryptionPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgTrafficEncryptionPolicyListHelper, error) {
+func (s *grpcServerTrafficEncryptionPolicyV1) AutoListTrafficEncryptionPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error) {
 	_, resp, err := s.AutoListTrafficEncryptionPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func decodeHTTPrespTrafficEncryptionPolicyV1AutoListTrafficEncryptionPolicy(_ co
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp AutoMsgTrafficEncryptionPolicyListHelper
+	var resp TrafficEncryptionPolicyList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -170,40 +170,6 @@ func decodeHTTPrespTrafficEncryptionPolicyV1AutoUpdateTrafficEncryptionPolicy(_ 
 
 func (s *grpcServerTrafficEncryptionPolicyV1) AutoWatchTrafficEncryptionPolicy(in *api.ListWatchOptions, stream TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyServer) error {
 	return s.Endpoints.AutoWatchTrafficEncryptionPolicy(in, stream)
-}
-
-func encodeHTTPAutoMsgTrafficEncryptionPolicyListHelper(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAutoMsgTrafficEncryptionPolicyListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgTrafficEncryptionPolicyListHelper
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAutoMsgTrafficEncryptionPolicyListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgTrafficEncryptionPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgTrafficEncryptionPolicyListHelper)
-	return req, nil
-}
-
-// DecodeGrpcReqAutoMsgTrafficEncryptionPolicyListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgTrafficEncryptionPolicyListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgTrafficEncryptionPolicyListHelper)
-	return req, nil
-}
-
-// EncodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgTrafficEncryptionPolicyListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
 }
 
 func encodeHTTPIPsecProtocolSpec(ctx context.Context, req *http.Request, request interface{}) error {
@@ -305,6 +271,40 @@ func EncodeGrpcRespTrafficEncryptionPolicy(ctx context.Context, response interfa
 
 // DecodeGrpcRespTrafficEncryptionPolicy decodes GRPC response
 func DecodeGrpcRespTrafficEncryptionPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTrafficEncryptionPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTrafficEncryptionPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TrafficEncryptionPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTrafficEncryptionPolicyList encodes GRPC request
+func EncodeGrpcReqTrafficEncryptionPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TrafficEncryptionPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqTrafficEncryptionPolicyList decodes GRPC request
+func DecodeGrpcReqTrafficEncryptionPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TrafficEncryptionPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespTrafficEncryptionPolicyList endodes the GRPC response
+func EncodeGrpcRespTrafficEncryptionPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTrafficEncryptionPolicyList decodes the GRPC response
+func DecodeGrpcRespTrafficEncryptionPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

@@ -1,0 +1,17 @@
+{
+	"kind": "statscollectionpolicy",
+	"meta": {
+		"name": "drop-collector"
+	},
+	"spec": { 
+		"statscollectionparams" : {
+			"rx-drop" : true,
+			"tx-drop" : true,
+			"buffer-drop" : true,
+			"policy-drop" : true,
+			"firewall-drop" : true
+		},
+		"statsfilterparams" : {
+		}
+	}
+}

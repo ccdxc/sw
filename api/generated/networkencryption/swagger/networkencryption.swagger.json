@@ -115,26 +115,28 @@
           },
           {
             "name": "Spec.Tls.Version",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.Tls.CipherSuite",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.IPsec.EncryptionTransform",
             "description": "Possible values: TLS, IPsec.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "Spec.IPsec.IntegrityTransform",
+            "name": "Spec.Tls.CipherSuite",
             "description": "TLS Parameters for workload-to-workload connections.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPsec.EncryptionTransform",
+            "description": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.IPsec.IntegrityTransform",
+            "description": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -256,6 +258,13 @@
         "UUID": {
           "type": "string",
           "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -274,35 +283,16 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
-    "networkencryptionAutoMsgTrafficEncryptionPolicyListHelper": {
-      "type": "object",
-      "properties": {
-        "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "TLS version: only supported value at present is 1.2"
-        },
-        "ListMeta": {
-          "$ref": "#/definitions/apiListMeta",
-          "title": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
-          }
-        }
-      }
-    },
     "networkencryptionAutoMsgTrafficEncryptionPolicyWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string",
-          "title": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106)"
+          "title": "TLS version: only supported value at present is 1.2"
         },
         "Object": {
           "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy",
-          "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
+          "title": "The name of the cipher suite in IANA format\ndefault is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
         }
       }
     },
@@ -311,11 +301,11 @@
       "properties": {
         "EncryptionTransform": {
           "type": "string",
-          "title": "Possible values: TLS, IPsec"
+          "title": "ESP encryption algorithm. Default is \"aes-256-gcm-128\" (See RFC4106)"
         },
         "IntegrityTransform": {
           "type": "string",
-          "title": "TLS Parameters for workload-to-workload connections"
+          "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
         }
       }
     },
@@ -323,10 +313,12 @@
       "type": "object",
       "properties": {
         "Version": {
-          "type": "string"
+          "type": "string",
+          "title": "Possible values: TLS, IPsec"
         },
         "CipherSuite": {
-          "type": "string"
+          "type": "string",
+          "title": "TLS Parameters for workload-to-workload connections"
         }
       }
     },
@@ -340,12 +332,28 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicySpec",
-          "description": "Spec contains the configuration of the encryption policy."
+          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicySpec"
         },
         "Status": {
-          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicyStatus",
-          "description": "Status contains the current state of the encryption policy."
+          "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicyStatus"
+        }
+      }
+    },
+    "networkencryptionTrafficEncryptionPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkencryptionTrafficEncryptionPolicy"
+          },
+          "description": "Spec contains the configuration of the encryption policy."
         }
       }
     },

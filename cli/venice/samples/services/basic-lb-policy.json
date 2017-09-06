@@ -1,0 +1,12 @@
+{
+	"kind": "lbPolicy",
+	"meta": {
+		"name": "basic-lb-policy"
+	},
+	"spec": { 
+		"type" : "L4",
+		"algorithm" : "round-robin",
+		"session-affinity" : "true",
+		"health-check" : { "interval" : 30, "probes-per-interval" : 1, "max-timeouts" : 3, "declare-healthy-count" : 5 }
+	}
+}

@@ -1,0 +1,14 @@
+# please edit and/or delete the lines in this sample
+kind: workload                                  # kind of this object
+meta:
+  name: dev-app-1                               # name of this object
+  # tenant: default		                # override tenant value (applicable only for super user)
+  labels:			                # arbitrary user defined tags 'key: value' 
+    io.pensando.network.prio: best-effort       # indicates the priority to be best-effort
+    io.pensando.network.sg: dev-sg              # indicates security group for the network is dev-sg
+    io.pensando.network.svc: dev-app            # this workload is backend of service 'dev-app'
+spec:                                           # configuration specification intent
+  dns: auto                                     # automatically publish dns information against the app
+  network: dev-network                          # workload's network association
+  node: node4                                   # node on which workload is scheduled
+

@@ -4,7 +4,7 @@ EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./utils/... ./agent/... ./cmd/... ./apigw/... ./orch/... \
 ./apiserver/... ./globals/... ./ctrler/... ./test/... ./api/ ./api/hooks/... \
-./api/listerwatcher/... ./api/cache/... ./api/integration/...
+./api/listerwatcher/... ./api/cache/... ./api/integration/... ./cli/...
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
@@ -32,6 +32,10 @@ govet-src: $(PKG_DIRS)
 	@for dir in $(PKG_DIRS); do $(GOVET_CMD) $${dir} || exit 1;done
 
 checks: gofmt-src golint-src govet-src
+
+# pregen target generates code that is needed by other binaries
+pregen:
+	@$(PWD)/cli/venice/scripts/gen.sh
 
 qbuild:
 	$(info +++ go install $(TO_BUILD))

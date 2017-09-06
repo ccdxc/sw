@@ -1,0 +1,12 @@
+{
+	"kind": "workload",
+	"meta": {
+		"name": "prod-web-1",
+		"labels" : { "io.pensando.network.prio":"high", "io.pensando.network.sg":"dmz-web-sg", "io.pensando.network.svc" : "prod-web" }
+	},
+	"spec": {
+		"network" : "sjc-dc10-net114",
+		"node" : "node10",
+		"dns" : "auto"
+	}
+}

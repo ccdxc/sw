@@ -117,21 +117,21 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 		AutoListBookHdlr: grpctransport.NewServer(
 			endpoints.AutoListBookEndpoint,
 			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgBookListHelper,
+			EncodeGrpcRespBookList,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListBook", logger)))...,
 		),
 
 		AutoListOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoListOrderEndpoint,
 			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgOrderListHelper,
+			EncodeGrpcRespOrderList,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListOrder", logger)))...,
 		),
 
 		AutoListPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoListPublisherEndpoint,
 			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAutoMsgPublisherListHelper,
+			EncodeGrpcRespPublisherList,
 			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListPublisher", logger)))...,
 		),
 
@@ -320,7 +320,7 @@ func decodeHTTPrespBookstoreV1AutoGetPublisher(_ context.Context, r *http.Respon
 	return &resp, err
 }
 
-func (s *grpcServerBookstoreV1) AutoListBook(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgBookListHelper, error) {
+func (s *grpcServerBookstoreV1) AutoListBook(ctx oldcontext.Context, req *api.ListWatchOptions) (*BookList, error) {
 	_, resp, err := s.AutoListBookHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -333,12 +333,12 @@ func decodeHTTPrespBookstoreV1AutoListBook(_ context.Context, r *http.Response) 
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp AutoMsgBookListHelper
+	var resp BookList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerBookstoreV1) AutoListOrder(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgOrderListHelper, error) {
+func (s *grpcServerBookstoreV1) AutoListOrder(ctx oldcontext.Context, req *api.ListWatchOptions) (*OrderList, error) {
 	_, resp, err := s.AutoListOrderHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -351,12 +351,12 @@ func decodeHTTPrespBookstoreV1AutoListOrder(_ context.Context, r *http.Response)
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp AutoMsgOrderListHelper
+	var resp OrderList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
 
-func (s *grpcServerBookstoreV1) AutoListPublisher(ctx oldcontext.Context, req *api.ListWatchOptions) (*AutoMsgPublisherListHelper, error) {
+func (s *grpcServerBookstoreV1) AutoListPublisher(ctx oldcontext.Context, req *api.ListWatchOptions) (*PublisherList, error) {
 	_, resp, err := s.AutoListPublisherHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -369,7 +369,7 @@ func decodeHTTPrespBookstoreV1AutoListPublisher(_ context.Context, r *http.Respo
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp AutoMsgPublisherListHelper
+	var resp PublisherList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -440,108 +440,6 @@ func (s *grpcServerBookstoreV1) AutoWatchPublisher(in *api.ListWatchOptions, str
 	return s.Endpoints.AutoWatchPublisher(in, stream)
 }
 
-func encodeHTTPAutoMsgBookListHelper(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAutoMsgBookListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgBookListHelper
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAutoMsgBookListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgBookListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgBookListHelper)
-	return req, nil
-}
-
-// DecodeGrpcReqAutoMsgBookListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgBookListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgBookListHelper)
-	return req, nil
-}
-
-// EncodeGrpcRespAutoMsgBookListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgBookListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAutoMsgBookListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgBookListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPAutoMsgOrderListHelper(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAutoMsgOrderListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgOrderListHelper
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAutoMsgOrderListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgOrderListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgOrderListHelper)
-	return req, nil
-}
-
-// DecodeGrpcReqAutoMsgOrderListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgOrderListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgOrderListHelper)
-	return req, nil
-}
-
-// EncodeGrpcRespAutoMsgOrderListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgOrderListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAutoMsgOrderListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgOrderListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPAutoMsgPublisherListHelper(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAutoMsgPublisherListHelper(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AutoMsgPublisherListHelper
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAutoMsgPublisherListHelper encodes GRPC request
-func EncodeGrpcReqAutoMsgPublisherListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgPublisherListHelper)
-	return req, nil
-}
-
-// DecodeGrpcReqAutoMsgPublisherListHelper decodes GRPC request
-func DecodeGrpcReqAutoMsgPublisherListHelper(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AutoMsgPublisherListHelper)
-	return req, nil
-}
-
-// EncodeGrpcRespAutoMsgPublisherListHelper endodes the GRPC response
-func EncodeGrpcRespAutoMsgPublisherListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAutoMsgPublisherListHelper decodes the GRPC response
-func DecodeGrpcRespAutoMsgPublisherListHelper(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPBook(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -573,6 +471,40 @@ func EncodeGrpcRespBook(ctx context.Context, response interface{}) (interface{},
 
 // DecodeGrpcRespBook decodes GRPC response
 func DecodeGrpcRespBook(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPBookList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBookList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BookList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBookList encodes GRPC request
+func EncodeGrpcReqBookList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BookList)
+	return req, nil
+}
+
+// DecodeGrpcReqBookList decodes GRPC request
+func DecodeGrpcReqBookList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BookList)
+	return req, nil
+}
+
+// EncodeGrpcRespBookList endodes the GRPC response
+func EncodeGrpcRespBookList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBookList decodes the GRPC response
+func DecodeGrpcRespBookList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -712,6 +644,40 @@ func DecodeGrpcRespOrderItem(ctx context.Context, response interface{}) (interfa
 	return response, nil
 }
 
+func encodeHTTPOrderList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPOrderList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req OrderList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqOrderList encodes GRPC request
+func EncodeGrpcReqOrderList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OrderList)
+	return req, nil
+}
+
+// DecodeGrpcReqOrderList decodes GRPC request
+func DecodeGrpcReqOrderList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OrderList)
+	return req, nil
+}
+
+// EncodeGrpcRespOrderList endodes the GRPC response
+func EncodeGrpcRespOrderList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespOrderList decodes the GRPC response
+func DecodeGrpcRespOrderList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPOrderSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -811,6 +777,40 @@ func EncodeGrpcRespPublisher(ctx context.Context, response interface{}) (interfa
 
 // DecodeGrpcRespPublisher decodes GRPC response
 func DecodeGrpcRespPublisher(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPublisherList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPublisherList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PublisherList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPublisherList encodes GRPC request
+func EncodeGrpcReqPublisherList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PublisherList)
+	return req, nil
+}
+
+// DecodeGrpcReqPublisherList decodes GRPC request
+func DecodeGrpcReqPublisherList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PublisherList)
+	return req, nil
+}
+
+// EncodeGrpcRespPublisherList endodes the GRPC response
+func EncodeGrpcRespPublisherList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPublisherList decodes the GRPC response
+func DecodeGrpcRespPublisherList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

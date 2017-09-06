@@ -1,0 +1,12 @@
+{
+	"kind": "network",
+	"meta": {
+		"name": "sjc-lab2-net10.13",
+		"labels" : { "dmz":"yes", "dns":"auto", "ipam":"dhcp" }
+	},
+	"spec": {
+		"type" : "l2",
+		"ipv4-subnet" : "10.13.0.0/16",
+		"ipv4-gateway" : "10.13.1.254"
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "analytics-bot",
+		"labels": { "dept":"ops" }
+	},
+	"spec": {
+		"roles" : [ "network-read","storage-read" ]
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"kind": "permission",
+	"meta": {
+		"name": "storage-r",
+		"labels": { "area":"storage" }
+	},
+	"spec": {
+		"Action" : "read",
+		"MatchFields" : { "kind":"volume,replicaitonPolicy,snapshotPolicy" }
+	}
+}

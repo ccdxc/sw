@@ -1,0 +1,13 @@
+kind: lbpolicy 			# kind of this object
+meta:
+  name: basic-lb-policy 	# name of this object
+  # tenant: default		# override tenant value (applicable only for super user)
+spec:				# configuration specification intent
+  type: L4			# type of load balancing 'l4', or 'l7'
+  algorithm: round-robin	# load balancing algorithm, can be 'round-robin', 'random', or 'latency-based'
+  sessionAffinity: "true"	# 'true' or 'false' indicating if affinity to the backend must be maintained
+  healthCheck:			# health check parameters for a given backend
+    interval: 30                # time interval within which to send a probe
+    maxtimeouts: 3              # maximum number of timeouts before declaing a backend dead
+    probesPerInterval: 1        # how many probes are sent within healthCheck interval
+

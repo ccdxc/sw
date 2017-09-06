@@ -232,44 +232,44 @@ type respCmdV1AutoGetSmartNIC struct {
 }
 
 // AutoListCluster is endpoint for AutoListCluster
-func (e EndpointsCmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgClusterListHelper, error) {
+func (e EndpointsCmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (*ClusterList, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgClusterListHelper{}, err
+		return &ClusterList{}, err
 	}
-	return resp.(*AutoMsgClusterListHelper), nil
+	return resp.(*ClusterList), nil
 }
 
 type respCmdV1AutoListCluster struct {
-	V   AutoMsgClusterListHelper
+	V   ClusterList
 	Err error
 }
 
 // AutoListNode is endpoint for AutoListNode
-func (e EndpointsCmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgNodeListHelper, error) {
+func (e EndpointsCmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (*NodeList, error) {
 	resp, err := e.AutoListNodeEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgNodeListHelper{}, err
+		return &NodeList{}, err
 	}
-	return resp.(*AutoMsgNodeListHelper), nil
+	return resp.(*NodeList), nil
 }
 
 type respCmdV1AutoListNode struct {
-	V   AutoMsgNodeListHelper
+	V   NodeList
 	Err error
 }
 
 // AutoListSmartNIC is endpoint for AutoListSmartNIC
-func (e EndpointsCmdV1Client) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error) {
+func (e EndpointsCmdV1Client) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions) (*SmartNICList, error) {
 	resp, err := e.AutoListSmartNICEndpoint(ctx, in)
 	if err != nil {
-		return &AutoMsgSmartNICListHelper{}, err
+		return &SmartNICList{}, err
 	}
-	return resp.(*AutoMsgSmartNICListHelper), nil
+	return resp.(*SmartNICList), nil
 }
 
 type respCmdV1AutoListSmartNIC struct {
-	V   AutoMsgSmartNICListHelper
+	V   SmartNICList
 	Err error
 }
 
@@ -529,12 +529,12 @@ func MakeCmdV1AutoGetSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 }
 
 // AutoListCluster implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (AutoMsgClusterListHelper, error) {
+func (e EndpointsCmdV1Server) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (ClusterList, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgClusterListHelper{}, err
+		return ClusterList{}, err
 	}
-	return *resp.(*AutoMsgClusterListHelper), nil
+	return *resp.(*ClusterList), nil
 }
 
 // MakeCmdV1AutoListClusterEndpoint creates  AutoListCluster endpoints for the service
@@ -551,12 +551,12 @@ func MakeCmdV1AutoListClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 }
 
 // AutoListNode implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoListNode(ctx context.Context, in api.ListWatchOptions) (AutoMsgNodeListHelper, error) {
+func (e EndpointsCmdV1Server) AutoListNode(ctx context.Context, in api.ListWatchOptions) (NodeList, error) {
 	resp, err := e.AutoListNodeEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgNodeListHelper{}, err
+		return NodeList{}, err
 	}
-	return *resp.(*AutoMsgNodeListHelper), nil
+	return *resp.(*NodeList), nil
 }
 
 // MakeCmdV1AutoListNodeEndpoint creates  AutoListNode endpoints for the service
@@ -573,12 +573,12 @@ func MakeCmdV1AutoListNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endp
 }
 
 // AutoListSmartNIC implementation on server Endpoint
-func (e EndpointsCmdV1Server) AutoListSmartNIC(ctx context.Context, in api.ListWatchOptions) (AutoMsgSmartNICListHelper, error) {
+func (e EndpointsCmdV1Server) AutoListSmartNIC(ctx context.Context, in api.ListWatchOptions) (SmartNICList, error) {
 	resp, err := e.AutoListSmartNICEndpoint(ctx, in)
 	if err != nil {
-		return AutoMsgSmartNICListHelper{}, err
+		return SmartNICList{}, err
 	}
-	return *resp.(*AutoMsgSmartNICListHelper), nil
+	return *resp.(*SmartNICList), nil
 }
 
 // MakeCmdV1AutoListSmartNICEndpoint creates  AutoListSmartNIC endpoints for the service
@@ -872,7 +872,7 @@ func (m loggingCmdV1MiddlewareClient) AutoGetSmartNIC(ctx context.Context, in *S
 	resp, err = m.next.AutoGetSmartNIC(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareClient) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgClusterListHelper, err error) {
+func (m loggingCmdV1MiddlewareClient) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (resp *ClusterList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -885,7 +885,7 @@ func (m loggingCmdV1MiddlewareClient) AutoListCluster(ctx context.Context, in *a
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgNodeListHelper, err error) {
+func (m loggingCmdV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.ListWatchOptions) (resp *NodeList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -898,7 +898,7 @@ func (m loggingCmdV1MiddlewareClient) AutoListNode(ctx context.Context, in *api.
 	resp, err = m.next.AutoListNode(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareClient) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions) (resp *AutoMsgSmartNICListHelper, err error) {
+func (m loggingCmdV1MiddlewareClient) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions) (resp *SmartNICList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1108,7 +1108,7 @@ func (m loggingCmdV1MiddlewareServer) AutoGetSmartNIC(ctx context.Context, in Sm
 	resp, err = m.next.AutoGetSmartNIC(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareServer) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgClusterListHelper, err error) {
+func (m loggingCmdV1MiddlewareServer) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (resp ClusterList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1121,7 +1121,7 @@ func (m loggingCmdV1MiddlewareServer) AutoListCluster(ctx context.Context, in ap
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareServer) AutoListNode(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgNodeListHelper, err error) {
+func (m loggingCmdV1MiddlewareServer) AutoListNode(ctx context.Context, in api.ListWatchOptions) (resp NodeList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1134,7 +1134,7 @@ func (m loggingCmdV1MiddlewareServer) AutoListNode(ctx context.Context, in api.L
 	resp, err = m.next.AutoListNode(ctx, in)
 	return
 }
-func (m loggingCmdV1MiddlewareServer) AutoListSmartNIC(ctx context.Context, in api.ListWatchOptions) (resp AutoMsgSmartNICListHelper, err error) {
+func (m loggingCmdV1MiddlewareServer) AutoListSmartNIC(ctx context.Context, in api.ListWatchOptions) (resp SmartNICList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1367,7 +1367,7 @@ func (r *EndpointsCmdV1RestClient) AutoDeleteCluster(ctx context.Context, in *Cl
 }
 
 // AutoListCluster CRUD method for Cluster
-func (r *EndpointsCmdV1RestClient) AutoListCluster(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgClusterListHelper, error) {
+func (r *EndpointsCmdV1RestClient) AutoListCluster(ctx context.Context, options *api.ListWatchOptions) (*ClusterList, error) {
 	path := makeURICmdV1AutoListClusterListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1381,7 +1381,7 @@ func (r *EndpointsCmdV1RestClient) AutoListCluster(ctx context.Context, options 
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgClusterListHelper), err
+	return ret.(*ClusterList), err
 }
 
 // AutoWatchCluster CRUD method for Cluster
@@ -1462,7 +1462,7 @@ func (r *EndpointsCmdV1RestClient) AutoDeleteNode(ctx context.Context, in *Node)
 }
 
 // AutoListNode CRUD method for Node
-func (r *EndpointsCmdV1RestClient) AutoListNode(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgNodeListHelper, error) {
+func (r *EndpointsCmdV1RestClient) AutoListNode(ctx context.Context, options *api.ListWatchOptions) (*NodeList, error) {
 	path := makeURICmdV1AutoListNodeListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1476,7 +1476,7 @@ func (r *EndpointsCmdV1RestClient) AutoListNode(ctx context.Context, options *ap
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgNodeListHelper), err
+	return ret.(*NodeList), err
 }
 
 // AutoWatchNode CRUD method for Node
@@ -1544,7 +1544,7 @@ func (r *EndpointsCmdV1RestClient) AutoDeleteSmartNIC(ctx context.Context, in *S
 }
 
 // AutoListSmartNIC CRUD method for SmartNIC
-func (r *EndpointsCmdV1RestClient) AutoListSmartNIC(ctx context.Context, options *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error) {
+func (r *EndpointsCmdV1RestClient) AutoListSmartNIC(ctx context.Context, options *api.ListWatchOptions) (*SmartNICList, error) {
 	path := makeURICmdV1AutoListSmartNICListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
@@ -1558,7 +1558,7 @@ func (r *EndpointsCmdV1RestClient) AutoListSmartNIC(ctx context.Context, options
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*AutoMsgSmartNICListHelper), err
+	return ret.(*SmartNICList), err
 }
 
 // AutoWatchSmartNIC CRUD method for SmartNIC

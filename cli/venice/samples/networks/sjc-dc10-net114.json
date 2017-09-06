@@ -1,0 +1,12 @@
+{
+	"kind": "network",
+	"meta": {
+		"name": "sjc-dc10-net114",
+		"labels" : { "dmz":"yes", "dns":"auto" }
+	},
+	"spec": {
+		"type" : "l2",
+		"ipv4-subnet" : "114.1.1.0/24",
+		"ipv4-gateway" : "114.1.1.254"
+	}
+}

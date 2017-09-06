@@ -1,0 +1,11 @@
+{
+	"kind": "monitoringpolicy",
+	"meta": {
+		"name": "prod-netflow-monitoring-policy"
+	},
+	"spec": { 
+		"applyToWorkloads" : [{ "matchLabels" : "io.pensando.network.svc:prod-web"}, { "matchLabels" : "io.pensando.network.svc:prod-app"}],
+		"collectionpolicy" : "netflow-collector",
+		"exportpolicy" : "netflow-slow-exporter"
+	}
+}

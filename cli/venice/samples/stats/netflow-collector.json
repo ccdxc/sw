@@ -1,0 +1,17 @@
+{
+	"kind": "statscollectionpolicy",
+	"meta": {
+		"name": "netflow-collector"
+	},
+	"spec": { 
+		"statscollectionparams" : {
+			"src-ip" : true,
+			"dst-ip" : true,
+			"src-port" : true,
+			"dst-port" : true,
+			"protocol" : true
+		},
+		"statsfilterparams" : {
+		}
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"kind": "user",
+	"meta": {
+		"name": "joe",
+		"labels": { "dept":"security", "level":"manager" }
+	},
+	"spec": {
+		"roles" : [ "rbac-admin" ]
+	}
+}

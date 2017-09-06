@@ -1,0 +1,11 @@
+# please edit and/or delete the lines in this sample
+kind: user              # kind of this object
+meta:
+  name: joe             # unique name of this object
+  # tenant: default	# override tenant value (applicable only for super user)
+  labels:		# arbitrary user defined tags 'key: value' 
+    dept: eng
+    level: mts
+spec:                   # configuration specification intent
+  roles:                # roles this user has
+  - dev-admin

@@ -1,0 +1,15 @@
+# please edit and/or delete the lines in this sample
+kind: sg                                                # kind of this object
+meta:
+  name: dev-sg                                          # name of this object
+  # tenant: default		                        # override tenant value (applicable only for super user)
+  # labels:			                        # arbitrary user defined tags 'key: value' 
+  #  area: network
+spec:
+  workloadLabels:                                       # workloads selection that are part of this group
+    io.pensando.network.sg: dev-sg                      # match applications tagged as labels
+  serviceLabels:                                        # match all services with specified labels
+    io.pensando.network.sg: prod                        # match services tagged with specific label(s)
+  matchPrefixs:                                         # match specified IP prefixes
+  - 123.99.8.0/24                                       # match all workloads with ip address in the specified prefix
+

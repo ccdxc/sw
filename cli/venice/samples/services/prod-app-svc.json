@@ -1,0 +1,12 @@
+{
+	"kind": "service",
+	"meta": {
+		"name": "prod-app-svc"
+	},
+	"spec": { 
+		"workload-labels" : [ "io.pensando.network.svc:prod-app" ],
+		"virtual-ip" : "141.34.55.15",
+		"ports" : "tcp/8080,tcp/80",
+		"lb-policy" : "basic-lb-policy"
+	}
+}

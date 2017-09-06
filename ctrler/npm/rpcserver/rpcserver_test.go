@@ -4,6 +4,7 @@ package rpcserver
 
 import (
 	"context"
+	"reflect"
 	"testing"
 	"time"
 
@@ -189,7 +190,7 @@ func TestEndpointRPC(t *testing.T) {
 	ometa := api.ObjectMeta{Name: "testEndpoint", Tenant: "default"}
 	epo, err := endpointRPRClient.GetEndpoint(context.Background(), &ometa)
 	AssertOk(t, err, "Error getting endpoint")
-	Assert(t, (epo.ObjectMeta == eps.ObjectMeta), "Got invalid endpoint params", epo)
+	Assert(t, reflect.DeepEqual(&epo.ObjectMeta, &eps.ObjectMeta), "Got invalid endpoint params", epo)
 
 	// verify list endpoint
 	endpoints, err := endpointRPRClient.ListEndpoints(context.Background(), &ometa)
@@ -316,13 +317,13 @@ func TestSecurityGroupRPC(t *testing.T) {
 	ometa := api.ObjectMeta{Name: "testsg", Tenant: "default"}
 	sgo, err := sgRPCClient.GetSecurityGroup(context.Background(), &ometa)
 	AssertOk(t, err, "Error getting sg")
-	Assert(t, (sgo.ObjectMeta == sgp.ObjectMeta), "Got invalid sg params", sgo)
+	Assert(t, reflect.DeepEqual(&sgo.ObjectMeta, &sgp.ObjectMeta), "Got invalid sg params", sgo)
 
 	// verify list works
 	sgl, err := sgRPCClient.ListSecurityGroups(context.Background(), &ometa)
 	AssertOk(t, err, "Error listing security groups")
 	Assert(t, (len(sgl.SecurityGroups) == 1), "Invalid number of security groups in list", sgl)
-	Assert(t, (sgl.SecurityGroups[0].ObjectMeta == sgp.ObjectMeta), "Invalid sg params", sgl.SecurityGroups[0])
+	Assert(t, reflect.DeepEqual(&sgl.SecurityGroups[0].ObjectMeta, &sgp.ObjectMeta), "Invalid sg params", sgl.SecurityGroups[0])
 
 	// verify getting non-existing security group returns an error
 	ometa = api.ObjectMeta{Name: "invalid", Tenant: "default"}
@@ -334,7 +335,7 @@ func TestSecurityGroupRPC(t *testing.T) {
 	AssertOk(t, err, "Error watching sg")
 	evt, err := stream.Recv()
 	AssertOk(t, err, "Error receiving sg")
-	Assert(t, (evt.SecurityGroup.ObjectMeta == sgp.ObjectMeta), "Received invalid sg", evt.SecurityGroup)
+	Assert(t, reflect.DeepEqual(&evt.SecurityGroup.ObjectMeta, &sgp.ObjectMeta), "Received invalid sg", evt.SecurityGroup)
 
 	// create a sgpolicy
 	pol := network.Sgpolicy{
@@ -386,7 +387,7 @@ func TestSecurityGroupRPC(t *testing.T) {
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving sg")
 	Assert(t, (evt.EventType == api.EventType_CreateEvent), "Invalid event type", evt)
-	Assert(t, (evt.SecurityGroup.ObjectMeta == sgp2.ObjectMeta), "Received invalid sg", evt.SecurityGroup)
+	Assert(t, reflect.DeepEqual(&evt.SecurityGroup.ObjectMeta, &sgp2.ObjectMeta), "Received invalid sg", evt.SecurityGroup)
 
 	// delete the sg policy
 	err = stateMgr.DeleteSgpolicy("default", "pol1")

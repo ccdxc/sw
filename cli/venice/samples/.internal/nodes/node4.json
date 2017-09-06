@@ -1,0 +1,8 @@
+{
+	"kind": "node",
+	"meta": {
+		"name": "node4",
+		"labels": { "os":"linux", "storage":"ssd", "dc":"sjc-lab22" }
+	},
+	"spec": {}
+}

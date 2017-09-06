@@ -164,7 +164,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, m, pkg string, reste
 	insertMethod(svc,
 		fmt.Sprintf("AutoList%s", m),
 		".api.ListWatchOptions",
-		fmt.Sprintf(".%s.AutoMsg%sListHelper", pkg, m),
+		fmt.Sprintf(".%s.%sList", pkg, m),
 		"list", false, restopt)
 
 	// Watch method
@@ -239,7 +239,7 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 	}
 	// List helper message
 	{
-		name := fmt.Sprintf("AutoMsg%sListHelper", msg)
+		name := fmt.Sprintf("%sList", msg)
 		autoption := "listhelper"
 		embed := true
 		nullable := false

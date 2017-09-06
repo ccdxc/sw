@@ -34,19 +34,19 @@ func (m *Publisher) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgBookListHelper) MakeKey(prefix string) string {
+func (m *BookList) MakeKey(prefix string) string {
 	obj := Book{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgOrderListHelper) MakeKey(prefix string) string {
+func (m *OrderList) MakeKey(prefix string) string {
 	obj := Order{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgPublisherListHelper) MakeKey(prefix string) string {
+func (m *PublisherList) MakeKey(prefix string) string {
 	obj := Publisher{}
 	return obj.MakeKey(prefix)
 }

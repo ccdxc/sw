@@ -1,0 +1,11 @@
+{
+	"kind": "permission",
+	"meta": {
+		"name": "network-r",
+		"labels": { "area":"network" }
+	},
+	"spec": {
+		"Action" : "read",
+		"MatchFields" : { "kind":"network" }
+	}
+}

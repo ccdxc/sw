@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "rbac-admin",
+		"labels": { "dept":"security" }
+	},
+	"spec": {
+		"permissions" : [ "rbac-rw" ]
+	}
+}

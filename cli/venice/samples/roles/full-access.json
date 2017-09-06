@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "full-access",
+		"labels": { "dept":"it" }
+	},
+	"spec": {
+		"permissions" : [ "security-rw", "network-rw", "storage-rw" ]
+	}
+}

@@ -7,11 +7,11 @@ Input file: protos/networkencryption.proto
 
 The following Messages are defined.
 
-  AutoMsgTrafficEncryptionPolicyListHelper
   AutoMsgTrafficEncryptionPolicyWatchHelper
   IPsecProtocolSpec
   TLSProtocolSpec
   TrafficEncryptionPolicy
+  TrafficEncryptionPolicyList
   TrafficEncryptionPolicySpec
   TrafficEncryptionPolicyStatus
 

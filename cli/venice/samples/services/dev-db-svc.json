@@ -1,0 +1,12 @@
+{
+	"kind": "service",
+	"meta": {
+		"name": "dev-web-svc"
+	},
+	"spec": { 
+		"workload-labels" : [ "io.pensando.network.svc:dev-web" ],
+		"virtual-ip" : "141.34.55.18",
+		"ports" : "tcp/3434",
+		"lb-policy" : "basic-lb-policy"
+	}
+}

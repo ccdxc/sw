@@ -154,7 +154,7 @@ func TestMutator(t *testing.T) {
 		c := found[*file.Name]
 		c.msgcount = len(file.MessageType)
 		for _, msgs := range file.MessageType {
-			if strings.Contains(*msgs.Name, "ListHelper") {
+			if strings.Contains(*msgs.Name, "List") {
 				c.autoList++
 			}
 			if strings.Contains(*msgs.Name, "WatchHelper") {
@@ -211,6 +211,14 @@ func TestMutator(t *testing.T) {
 		}
 	}
 	if !reflect.DeepEqual(expected, found) {
+		for _, protoName := range []string{"example.proto", "another.proto"} {
+			t.Logf("===> %s", protoName)
+			t.Logf("expected: %+v\nfound: %+v", expected[protoName], found[protoName])
+			t.Logf("full_crud expected: %+v\nfull_crud found %+v",
+				expected[protoName].svcs["full_crudservice"], found[protoName].svcs["full_crudservice"])
+			t.Logf("hybrid_crud expected: %+v\nhybrid_crud found %+v",
+				expected[protoName].svcs["hybrid_crudservice"], found[protoName].svcs["hybrid_crudservice"])
+		}
 		t.Fatalf("expected and found do not match")
 	}
 }

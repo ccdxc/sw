@@ -1,0 +1,10 @@
+{
+	"kind": "role",
+	"meta": {
+		"name": "storage-read",
+		"labels": { "area":"storage" }
+	},
+	"spec": {
+		"permissions" : [ "storage-r" ]
+	}
+}

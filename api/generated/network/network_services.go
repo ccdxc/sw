@@ -19,7 +19,7 @@ type ServiceEndpointV1Client interface {
 	AutoAddEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 	AutoDeleteEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 	AutoGetEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
-	AutoListEndpoint(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgEndpointListHelper, error)
+	AutoListEndpoint(ctx context.Context, t *api.ListWatchOptions) (*EndpointList, error)
 	AutoUpdateEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (EndpointV1_AutoWatchEndpointClient, error)
@@ -30,7 +30,7 @@ type ServiceLbPolicyV1Client interface {
 	AutoAddLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoDeleteLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoGetLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
-	AutoListLbPolicy(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgLbPolicyListHelper, error)
+	AutoListLbPolicy(ctx context.Context, t *api.ListWatchOptions) (*LbPolicyList, error)
 	AutoUpdateLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions) (LbPolicyV1_AutoWatchLbPolicyClient, error)
@@ -41,7 +41,7 @@ type ServiceNetworkV1Client interface {
 	AutoAddNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoDeleteNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoGetNetwork(ctx context.Context, t *Network) (*Network, error)
-	AutoListNetwork(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgNetworkListHelper, error)
+	AutoListNetwork(ctx context.Context, t *api.ListWatchOptions) (*NetworkList, error)
 	AutoUpdateNetwork(ctx context.Context, t *Network) (*Network, error)
 
 	AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchNetworkClient, error)
@@ -52,7 +52,7 @@ type ServiceSecurityGroupV1Client interface {
 	AutoAddSecurityGroup(ctx context.Context, t *SecurityGroup) (*SecurityGroup, error)
 	AutoDeleteSecurityGroup(ctx context.Context, t *SecurityGroup) (*SecurityGroup, error)
 	AutoGetSecurityGroup(ctx context.Context, t *SecurityGroup) (*SecurityGroup, error)
-	AutoListSecurityGroup(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgSecurityGroupListHelper, error)
+	AutoListSecurityGroup(ctx context.Context, t *api.ListWatchOptions) (*SecurityGroupList, error)
 	AutoUpdateSecurityGroup(ctx context.Context, t *SecurityGroup) (*SecurityGroup, error)
 
 	AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (SecurityGroupV1_AutoWatchSecurityGroupClient, error)
@@ -63,7 +63,7 @@ type ServiceServiceV1Client interface {
 	AutoAddService(ctx context.Context, t *Service) (*Service, error)
 	AutoDeleteService(ctx context.Context, t *Service) (*Service, error)
 	AutoGetService(ctx context.Context, t *Service) (*Service, error)
-	AutoListService(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgServiceListHelper, error)
+	AutoListService(ctx context.Context, t *api.ListWatchOptions) (*ServiceList, error)
 	AutoUpdateService(ctx context.Context, t *Service) (*Service, error)
 
 	AutoWatchService(ctx context.Context, in *api.ListWatchOptions) (ServiceV1_AutoWatchServiceClient, error)
@@ -74,7 +74,7 @@ type ServiceSgpolicyV1Client interface {
 	AutoAddSgpolicy(ctx context.Context, t *Sgpolicy) (*Sgpolicy, error)
 	AutoDeleteSgpolicy(ctx context.Context, t *Sgpolicy) (*Sgpolicy, error)
 	AutoGetSgpolicy(ctx context.Context, t *Sgpolicy) (*Sgpolicy, error)
-	AutoListSgpolicy(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgSgpolicyListHelper, error)
+	AutoListSgpolicy(ctx context.Context, t *api.ListWatchOptions) (*SgpolicyList, error)
 	AutoUpdateSgpolicy(ctx context.Context, t *Sgpolicy) (*Sgpolicy, error)
 
 	AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (SgpolicyV1_AutoWatchSgpolicyClient, error)
@@ -85,7 +85,7 @@ type ServiceTenantV1Client interface {
 	AutoAddTenant(ctx context.Context, t *Tenant) (*Tenant, error)
 	AutoDeleteTenant(ctx context.Context, t *Tenant) (*Tenant, error)
 	AutoGetTenant(ctx context.Context, t *Tenant) (*Tenant, error)
-	AutoListTenant(ctx context.Context, t *api.ListWatchOptions) (*AutoMsgTenantListHelper, error)
+	AutoListTenant(ctx context.Context, t *api.ListWatchOptions) (*TenantList, error)
 	AutoUpdateTenant(ctx context.Context, t *Tenant) (*Tenant, error)
 
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (TenantV1_AutoWatchTenantClient, error)
@@ -96,7 +96,7 @@ type ServiceEndpointV1Server interface {
 	AutoAddEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 	AutoDeleteEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 	AutoGetEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
-	AutoListEndpoint(ctx context.Context, t api.ListWatchOptions) (AutoMsgEndpointListHelper, error)
+	AutoListEndpoint(ctx context.Context, t api.ListWatchOptions) (EndpointList, error)
 	AutoUpdateEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 
 	AutoWatchEndpoint(in *api.ListWatchOptions, stream EndpointV1_AutoWatchEndpointServer) error
@@ -107,7 +107,7 @@ type ServiceLbPolicyV1Server interface {
 	AutoAddLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoDeleteLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoGetLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
-	AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (AutoMsgLbPolicyListHelper, error)
+	AutoListLbPolicy(ctx context.Context, t api.ListWatchOptions) (LbPolicyList, error)
 	AutoUpdateLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 
 	AutoWatchLbPolicy(in *api.ListWatchOptions, stream LbPolicyV1_AutoWatchLbPolicyServer) error
@@ -118,7 +118,7 @@ type ServiceNetworkV1Server interface {
 	AutoAddNetwork(ctx context.Context, t Network) (Network, error)
 	AutoDeleteNetwork(ctx context.Context, t Network) (Network, error)
 	AutoGetNetwork(ctx context.Context, t Network) (Network, error)
-	AutoListNetwork(ctx context.Context, t api.ListWatchOptions) (AutoMsgNetworkListHelper, error)
+	AutoListNetwork(ctx context.Context, t api.ListWatchOptions) (NetworkList, error)
 	AutoUpdateNetwork(ctx context.Context, t Network) (Network, error)
 
 	AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error
@@ -129,7 +129,7 @@ type ServiceSecurityGroupV1Server interface {
 	AutoAddSecurityGroup(ctx context.Context, t SecurityGroup) (SecurityGroup, error)
 	AutoDeleteSecurityGroup(ctx context.Context, t SecurityGroup) (SecurityGroup, error)
 	AutoGetSecurityGroup(ctx context.Context, t SecurityGroup) (SecurityGroup, error)
-	AutoListSecurityGroup(ctx context.Context, t api.ListWatchOptions) (AutoMsgSecurityGroupListHelper, error)
+	AutoListSecurityGroup(ctx context.Context, t api.ListWatchOptions) (SecurityGroupList, error)
 	AutoUpdateSecurityGroup(ctx context.Context, t SecurityGroup) (SecurityGroup, error)
 
 	AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityGroupV1_AutoWatchSecurityGroupServer) error
@@ -140,7 +140,7 @@ type ServiceServiceV1Server interface {
 	AutoAddService(ctx context.Context, t Service) (Service, error)
 	AutoDeleteService(ctx context.Context, t Service) (Service, error)
 	AutoGetService(ctx context.Context, t Service) (Service, error)
-	AutoListService(ctx context.Context, t api.ListWatchOptions) (AutoMsgServiceListHelper, error)
+	AutoListService(ctx context.Context, t api.ListWatchOptions) (ServiceList, error)
 	AutoUpdateService(ctx context.Context, t Service) (Service, error)
 
 	AutoWatchService(in *api.ListWatchOptions, stream ServiceV1_AutoWatchServiceServer) error
@@ -151,7 +151,7 @@ type ServiceSgpolicyV1Server interface {
 	AutoAddSgpolicy(ctx context.Context, t Sgpolicy) (Sgpolicy, error)
 	AutoDeleteSgpolicy(ctx context.Context, t Sgpolicy) (Sgpolicy, error)
 	AutoGetSgpolicy(ctx context.Context, t Sgpolicy) (Sgpolicy, error)
-	AutoListSgpolicy(ctx context.Context, t api.ListWatchOptions) (AutoMsgSgpolicyListHelper, error)
+	AutoListSgpolicy(ctx context.Context, t api.ListWatchOptions) (SgpolicyList, error)
 	AutoUpdateSgpolicy(ctx context.Context, t Sgpolicy) (Sgpolicy, error)
 
 	AutoWatchSgpolicy(in *api.ListWatchOptions, stream SgpolicyV1_AutoWatchSgpolicyServer) error
@@ -162,7 +162,7 @@ type ServiceTenantV1Server interface {
 	AutoAddTenant(ctx context.Context, t Tenant) (Tenant, error)
 	AutoDeleteTenant(ctx context.Context, t Tenant) (Tenant, error)
 	AutoGetTenant(ctx context.Context, t Tenant) (Tenant, error)
-	AutoListTenant(ctx context.Context, t api.ListWatchOptions) (AutoMsgTenantListHelper, error)
+	AutoListTenant(ctx context.Context, t api.ListWatchOptions) (TenantList, error)
 	AutoUpdateTenant(ctx context.Context, t Tenant) (Tenant, error)
 
 	AutoWatchTenant(in *api.ListWatchOptions, stream TenantV1_AutoWatchTenantServer) error

@@ -10,17 +10,16 @@
 		cmd.proto
 
 	It has these top-level messages:
-		AutoMsgClusterListHelper
 		AutoMsgClusterWatchHelper
-		AutoMsgNodeListHelper
 		AutoMsgNodeWatchHelper
-		AutoMsgSmartNICListHelper
 		AutoMsgSmartNICWatchHelper
 		Cluster
+		ClusterList
 		ClusterSpec
 		ClusterStatus
 		Node
 		NodeCondition
+		NodeList
 		NodeSpec
 		NodeStatus
 		PortCondition
@@ -28,6 +27,7 @@
 		PortStatus
 		SmartNIC
 		SmartNICCondition
+		SmartNICList
 		SmartNICSpec
 		SmartNICStatus
 */
@@ -240,39 +240,15 @@ func (PortConditionType) EnumDescriptor() ([]byte, []int) { return fileDescripto
 //          o NetOps-admin
 //              - TBD
 //
-type AutoMsgClusterListHelper struct {
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	// Spec contains the configuration of the cluster.
-	Items []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AutoMsgClusterListHelper) Reset()                    { *m = AutoMsgClusterListHelper{} }
-func (m *AutoMsgClusterListHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgClusterListHelper) ProtoMessage()               {}
-func (*AutoMsgClusterListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{0} }
-
-func (m *AutoMsgClusterListHelper) GetItems() []*Cluster {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-// ClusterSpec contains the configuration of the cluster.
 type AutoMsgClusterWatchHelper struct {
-	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
-	// nodes in the cluster.
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// VirtualIP is the IP address for managing the cluster. It will be hosted by
-	// the winner of election between quorum nodes.
+	Type   string   `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
 	Object *Cluster `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
 func (m *AutoMsgClusterWatchHelper) Reset()                    { *m = AutoMsgClusterWatchHelper{} }
 func (m *AutoMsgClusterWatchHelper) String() string            { return proto.CompactTextString(m) }
 func (*AutoMsgClusterWatchHelper) ProtoMessage()               {}
-func (*AutoMsgClusterWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{1} }
+func (*AutoMsgClusterWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{0} }
 
 func (m *AutoMsgClusterWatchHelper) GetType() string {
 	if m != nil {
@@ -288,22 +264,57 @@ func (m *AutoMsgClusterWatchHelper) GetObject() *Cluster {
 	return nil
 }
 
-// ClusterStatus contains the current state of the Cluster.
-type AutoMsgNodeListHelper struct {
-	// Leader contains the node name of the cluster leader.
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+// ClusterSpec contains the configuration of the cluster.
+type AutoMsgNodeWatchHelper struct {
+	// QuorumNodes contains the list of hostnames for nodes configured to be quorum
+	// nodes in the cluster.
+	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	// VirtualIP is the IP address for managing the cluster. It will be hosted by
+	// the winner of election between quorum nodes.
+	Object *Node `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
 }
 
-func (m *AutoMsgNodeListHelper) Reset()                    { *m = AutoMsgNodeListHelper{} }
-func (m *AutoMsgNodeListHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgNodeListHelper) ProtoMessage()               {}
-func (*AutoMsgNodeListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{2} }
+func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
+func (m *AutoMsgNodeWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgNodeWatchHelper) ProtoMessage()               {}
+func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{1} }
 
-func (m *AutoMsgNodeListHelper) GetItems() []*Node {
+func (m *AutoMsgNodeWatchHelper) GetType() string {
 	if m != nil {
-		return m.Items
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgNodeWatchHelper) GetObject() *Node {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
+// ClusterStatus contains the current state of the Cluster.
+type AutoMsgSmartNICWatchHelper struct {
+	// Leader contains the node name of the cluster leader.
+	Type   string    `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *SmartNIC `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Reset()                    { *m = AutoMsgSmartNICWatchHelper{} }
+func (m *AutoMsgSmartNICWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgSmartNICWatchHelper) ProtoMessage()               {}
+func (*AutoMsgSmartNICWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{2} }
+
+func (m *AutoMsgSmartNICWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgSmartNICWatchHelper) GetObject() *SmartNIC {
+	if m != nil {
+		return m.Object
 	}
 	return nil
 }
@@ -332,93 +343,19 @@ func (m *AutoMsgNodeListHelper) GetItems() []*Node {
 //          o CMD
 //              - TBD
 //
-type AutoMsgNodeWatchHelper struct {
-	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Object *Node  `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgNodeWatchHelper) Reset()                    { *m = AutoMsgNodeWatchHelper{} }
-func (m *AutoMsgNodeWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgNodeWatchHelper) ProtoMessage()               {}
-func (*AutoMsgNodeWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{3} }
-
-func (m *AutoMsgNodeWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgNodeWatchHelper) GetObject() *Node {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-// NodeSpec contains the configuration of the node.
-type AutoMsgSmartNICListHelper struct {
-	// Roles is of list of roles a node can be configured with.
-	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
-	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
-	Items        []*SmartNIC `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
-}
-
-func (m *AutoMsgSmartNICListHelper) Reset()                    { *m = AutoMsgSmartNICListHelper{} }
-func (m *AutoMsgSmartNICListHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgSmartNICListHelper) ProtoMessage()               {}
-func (*AutoMsgSmartNICListHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{4} }
-
-func (m *AutoMsgSmartNICListHelper) GetItems() []*SmartNIC {
-	if m != nil {
-		return m.Items
-	}
-	return nil
-}
-
-// NodeStatus contains the current state of the node.
-type AutoMsgSmartNICWatchHelper struct {
-	// Current lifecycle phase of the node.
-	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	// List of current node conditions
-	Object *SmartNIC `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
-}
-
-func (m *AutoMsgSmartNICWatchHelper) Reset()                    { *m = AutoMsgSmartNICWatchHelper{} }
-func (m *AutoMsgSmartNICWatchHelper) String() string            { return proto.CompactTextString(m) }
-func (*AutoMsgSmartNICWatchHelper) ProtoMessage()               {}
-func (*AutoMsgSmartNICWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{5} }
-
-func (m *AutoMsgSmartNICWatchHelper) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-func (m *AutoMsgSmartNICWatchHelper) GetObject() *SmartNIC {
-	if m != nil {
-		return m.Object
-	}
-	return nil
-}
-
-// NodeCondition describes the state of a Node at a certain point.
 type Cluster struct {
-	// Type indicates a certain node condition
-	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	// Condition Status
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
-	// The last time the condition transitioned
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	// Spec contains the configuration of the node.
 	Spec ClusterSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	// The reason for the condition's last transition
+	// Status contains the current state of the node.
 	Status ClusterStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *Cluster) Reset()                    { *m = Cluster{} }
 func (m *Cluster) String() string            { return proto.CompactTextString(m) }
 func (*Cluster) ProtoMessage()               {}
-func (*Cluster) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{6} }
+func (*Cluster) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{3} }
 
 func (m *Cluster) GetSpec() ClusterSpec {
 	if m != nil {
@@ -434,39 +371,42 @@ func (m *Cluster) GetStatus() ClusterStatus {
 	return ClusterStatus{}
 }
 
-// ------------------------------------ SMART NIC  -------------------------------------------
-//
-// SmartNIC represents the Naples I/O subsystem
-//
-// Entity responsible & scenarios involved in managing this object:
-//
-//      Create:
-//          o CMD
-//              - created as part of NIC registration, Admittance
-//      Modify:
-//          o CMD
-//              - update spec attributes
-//              - update status attributes
-//      Delete:
-//          o CMD
-//              - aging out stale or rejected NICs (TBD)
-//          o NetOps, SecOps
-//              - Decomission a NIC (TBD)
-//
+// NodeSpec contains the configuration of the node.
+type ClusterList struct {
+	// Roles is of list of roles a node can be configured with.
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Cluster `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *ClusterList) Reset()                    { *m = ClusterList{} }
+func (m *ClusterList) String() string            { return proto.CompactTextString(m) }
+func (*ClusterList) ProtoMessage()               {}
+func (*ClusterList) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{4} }
+
+func (m *ClusterList) GetItems() []*Cluster {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// NodeStatus contains the current state of the node.
 type ClusterSpec struct {
+	// Current lifecycle phase of the node.
 	QuorumNodes []string `protobuf:"bytes,1,rep,name=QuorumNodes" json:"quorumNodes,omitempty"`
-	// Object name is Serial-Number of the SmartNIC
+	// List of current node conditions
 	VirtualIP string `protobuf:"bytes,2,opt,name=VirtualIP,proto3" json:"virtualIp,omitempty"`
-	// SmartNICSpec contains the configuration of the network adapter.
-	NTPServers []string `protobuf:"bytes,3,rep,name=NTPServers" json:"ntpServers,omitempty"`
-	// SmartNICStatus contains the current state of the network adapter.
-	DNSSubDomain string `protobuf:"bytes,4,opt,name=DNSSubDomain,proto3" json:"dnsSubdomain,omitempty"`
+	// Nics holds a list of Mac addresses each uniquely identifying
+	// a SmartNIC subsystem that is part of the Node
+	NTPServers   []string `protobuf:"bytes,3,rep,name=NTPServers" json:"ntpServers,omitempty"`
+	DNSSubDomain string   `protobuf:"bytes,4,opt,name=DNSSubDomain,proto3" json:"dnsSubdomain,omitempty"`
 }
 
 func (m *ClusterSpec) Reset()                    { *m = ClusterSpec{} }
 func (m *ClusterSpec) String() string            { return proto.CompactTextString(m) }
 func (*ClusterSpec) ProtoMessage()               {}
-func (*ClusterSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7} }
+func (*ClusterSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{5} }
 
 func (m *ClusterSpec) GetQuorumNodes() []string {
 	if m != nil {
@@ -496,16 +436,16 @@ func (m *ClusterSpec) GetDNSSubDomain() string {
 	return ""
 }
 
-// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
+// NodeCondition describes the state of a Node at a certain point.
 type ClusterStatus struct {
-	// Ports holds a list of Port Specs
+	// Type indicates a certain node condition
 	Leader string `protobuf:"bytes,1,opt,name=Leader,proto3" json:"leader,omitempty"`
 }
 
 func (m *ClusterStatus) Reset()                    { *m = ClusterStatus{} }
 func (m *ClusterStatus) String() string            { return proto.CompactTextString(m) }
 func (*ClusterStatus) ProtoMessage()               {}
-func (*ClusterStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{8} }
+func (*ClusterStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{6} }
 
 func (m *ClusterStatus) GetLeader() string {
 	if m != nil {
@@ -514,22 +454,39 @@ func (m *ClusterStatus) GetLeader() string {
 	return ""
 }
 
-// SmartNICStatus contains current status of a SmartNIC
+// ------------------------------------ SMART NIC  -------------------------------------------
+//
+// SmartNIC represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
 type Node struct {
-	// Current lifecycle phase of the SmartNIC.
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	// List of current NIC conditions
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
-	// Serial number
+	// Object name is Serial-Number of the SmartNIC
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	// SmartNICSpec contains the configuration of the network adapter.
 	Spec NodeSpec `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	// Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
-	Status *NodeStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	// SmartNICStatus contains the current state of the network adapter.
+	Status NodeStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *Node) Reset()                    { *m = Node{} }
 func (m *Node) String() string            { return proto.CompactTextString(m) }
 func (*Node) ProtoMessage()               {}
-func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{9} }
+func (*Node) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{7} }
 
 func (m *Node) GetSpec() NodeSpec {
 	if m != nil {
@@ -538,31 +495,27 @@ func (m *Node) GetSpec() NodeSpec {
 	return NodeSpec{}
 }
 
-func (m *Node) GetStatus() *NodeStatus {
+func (m *Node) GetStatus() NodeStatus {
 	if m != nil {
 		return m.Status
 	}
-	return nil
+	return NodeStatus{}
 }
 
-// SmartNICCondition describes the state of a SmartNIC at a certain point.
+// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
 type NodeCondition struct {
-	// Type indicates a certain NIC condition
-	Type NodeConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.NodeConditionType" json:"type,omitempty"`
-	// Condition Status
-	Status ConditionStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
-	// The last time the condition transitioned
-	LastTransitionTime int64 `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
-	// The reason for the condition's last transition
-	Reason string `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
-	// A detailed message indicating details about the transition.
-	Message string `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
+	// Ports holds a list of Port Specs
+	Type               NodeConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.NodeConditionType" json:"type,omitempty"`
+	Status             ConditionStatus   `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
+	LastTransitionTime int64             `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
+	Reason             string            `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
+	Message            string            `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
 }
 
 func (m *NodeCondition) Reset()                    { *m = NodeCondition{} }
 func (m *NodeCondition) String() string            { return proto.CompactTextString(m) }
 func (*NodeCondition) ProtoMessage()               {}
-func (*NodeCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{10} }
+func (*NodeCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{8} }
 
 func (m *NodeCondition) GetType() NodeConditionType {
 	if m != nil {
@@ -599,16 +552,38 @@ func (m *NodeCondition) GetMessage() string {
 	return ""
 }
 
-// PortSpec contains configuration of a port in SmartNIC
+// SmartNICStatus contains current status of a SmartNIC
+type NodeList struct {
+	// Current lifecycle phase of the SmartNIC.
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	// List of current NIC conditions
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	// Serial number
+	Items []*Node `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *NodeList) Reset()                    { *m = NodeList{} }
+func (m *NodeList) String() string            { return proto.CompactTextString(m) }
+func (*NodeList) ProtoMessage()               {}
+func (*NodeList) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{9} }
+
+func (m *NodeList) GetItems() []*Node {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// SmartNICCondition describes the state of a SmartNIC at a certain point.
 type NodeSpec struct {
-	// Mac address of the Port, which is key identifier of the port
+	// Type indicates a certain NIC condition
 	Roles []NodeRole `protobuf:"varint,1,rep,packed,name=Roles,enum=cmd.NodeRole" json:"roles,omitempty"`
 }
 
 func (m *NodeSpec) Reset()                    { *m = NodeSpec{} }
 func (m *NodeSpec) String() string            { return proto.CompactTextString(m) }
 func (*NodeSpec) ProtoMessage()               {}
-func (*NodeSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{11} }
+func (*NodeSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{10} }
 
 func (m *NodeSpec) GetRoles() []NodeRole {
 	if m != nil {
@@ -617,20 +592,18 @@ func (m *NodeSpec) GetRoles() []NodeRole {
 	return nil
 }
 
-// PortStatus contains current status of a Port
+// PortSpec contains configuration of a port in SmartNIC
 type NodeStatus struct {
 	// Mac address of the Port, which is key identifier of the port
-	Phase NodePhase `protobuf:"varint,1,opt,name=Phase,proto3,enum=cmd.NodePhase" json:"phase,omitempty"`
-	// LinkSpeed of the Port
+	Phase      NodePhase        `protobuf:"varint,1,opt,name=Phase,proto3,enum=cmd.NodePhase" json:"phase,omitempty"`
 	Conditions []*NodeCondition `protobuf:"bytes,2,rep,name=Conditions" json:"conditions,omitempty"`
-	// List of current Port conditions
-	Nics []string `protobuf:"bytes,3,rep,name=Nics" json:"nics,omitempty"`
+	Nics       []string         `protobuf:"bytes,3,rep,name=Nics" json:"nics,omitempty"`
 }
 
 func (m *NodeStatus) Reset()                    { *m = NodeStatus{} }
 func (m *NodeStatus) String() string            { return proto.CompactTextString(m) }
 func (*NodeStatus) ProtoMessage()               {}
-func (*NodeStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{12} }
+func (*NodeStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{11} }
 
 func (m *NodeStatus) GetPhase() NodePhase {
 	if m != nil {
@@ -653,24 +626,22 @@ func (m *NodeStatus) GetNics() []string {
 	return nil
 }
 
-// PortCondition describes the state of a Port at a certain point.
+// PortStatus contains current status of a Port
 type PortCondition struct {
-	// Type indicates a certain Port condition
+	// Mac address of the Port, which is key identifier of the port
 	Type PortConditionType `protobuf:"varint,1,opt,name=Type,proto3,enum=cmd.PortConditionType" json:"type,omitempty"`
-	// Condition Status
+	// LinkSpeed of the Port
 	Status ConditionStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=cmd.ConditionStatus" json:"status,omitempty"`
-	// The last time the condition transitioned
-	LastTransitionTime int64 `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
-	// The reason for the condition's last transition
-	Reason string `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
-	// A detailed message indicating details about the transition.
-	Message string `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
+	// List of current Port conditions
+	LastTransitionTime int64  `protobuf:"varint,3,opt,name=LastTransitionTime,proto3" json:"lastTransitionTime,omitempty"`
+	Reason             string `protobuf:"bytes,4,opt,name=Reason,proto3" json:"reason,omitempty"`
+	Message            string `protobuf:"bytes,5,opt,name=Message,proto3" json:"message,omitempty"`
 }
 
 func (m *PortCondition) Reset()                    { *m = PortCondition{} }
 func (m *PortCondition) String() string            { return proto.CompactTextString(m) }
 func (*PortCondition) ProtoMessage()               {}
-func (*PortCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{13} }
+func (*PortCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{12} }
 
 func (m *PortCondition) GetType() PortConditionType {
 	if m != nil {
@@ -707,14 +678,16 @@ func (m *PortCondition) GetMessage() string {
 	return ""
 }
 
+// PortCondition describes the state of a Port at a certain point.
 type PortSpec struct {
+	// Type indicates a certain Port condition
 	MacAddress string `protobuf:"bytes,1,opt,name=MacAddress,proto3" json:"macAddress,omitempty"`
 }
 
 func (m *PortSpec) Reset()                    { *m = PortSpec{} }
 func (m *PortSpec) String() string            { return proto.CompactTextString(m) }
 func (*PortSpec) ProtoMessage()               {}
-func (*PortSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{14} }
+func (*PortSpec) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{13} }
 
 func (m *PortSpec) GetMacAddress() string {
 	if m != nil {
@@ -732,7 +705,7 @@ type PortStatus struct {
 func (m *PortStatus) Reset()                    { *m = PortStatus{} }
 func (m *PortStatus) String() string            { return proto.CompactTextString(m) }
 func (*PortStatus) ProtoMessage()               {}
-func (*PortStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{15} }
+func (*PortStatus) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{14} }
 
 func (m *PortStatus) GetMacAddress() string {
 	if m != nil {
@@ -757,15 +730,15 @@ func (m *PortStatus) GetConditions() []*PortCondition {
 
 type SmartNIC struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"metadata,omitempty"`
-	Spec           SmartNICSpec    `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         *SmartNICStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+	Spec           SmartNICSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         SmartNICStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
 }
 
 func (m *SmartNIC) Reset()                    { *m = SmartNIC{} }
 func (m *SmartNIC) String() string            { return proto.CompactTextString(m) }
 func (*SmartNIC) ProtoMessage()               {}
-func (*SmartNIC) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{16} }
+func (*SmartNIC) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{15} }
 
 func (m *SmartNIC) GetSpec() SmartNICSpec {
 	if m != nil {
@@ -774,11 +747,11 @@ func (m *SmartNIC) GetSpec() SmartNICSpec {
 	return SmartNICSpec{}
 }
 
-func (m *SmartNIC) GetStatus() *SmartNICStatus {
+func (m *SmartNIC) GetStatus() SmartNICStatus {
 	if m != nil {
 		return m.Status
 	}
-	return nil
+	return SmartNICStatus{}
 }
 
 type SmartNICCondition struct {
@@ -792,7 +765,7 @@ type SmartNICCondition struct {
 func (m *SmartNICCondition) Reset()                    { *m = SmartNICCondition{} }
 func (m *SmartNICCondition) String() string            { return proto.CompactTextString(m) }
 func (*SmartNICCondition) ProtoMessage()               {}
-func (*SmartNICCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{17} }
+func (*SmartNICCondition) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{16} }
 
 func (m *SmartNICCondition) GetType() SmartNICConditionType {
 	if m != nil {
@@ -827,6 +800,24 @@ func (m *SmartNICCondition) GetMessage() string {
 		return m.Message
 	}
 	return ""
+}
+
+type SmartNICList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*SmartNIC `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *SmartNICList) Reset()                    { *m = SmartNICList{} }
+func (m *SmartNICList) String() string            { return proto.CompactTextString(m) }
+func (*SmartNICList) ProtoMessage()               {}
+func (*SmartNICList) Descriptor() ([]byte, []int) { return fileDescriptorCmd, []int{17} }
+
+func (m *SmartNICList) GetItems() []*SmartNIC {
+	if m != nil {
+		return m.Items
+	}
+	return nil
 }
 
 type SmartNICSpec struct {
@@ -902,17 +893,16 @@ func (m *SmartNICStatus) GetPorts() []*PortStatus {
 }
 
 func init() {
-	proto.RegisterType((*AutoMsgClusterListHelper)(nil), "cmd.AutoMsgClusterListHelper")
 	proto.RegisterType((*AutoMsgClusterWatchHelper)(nil), "cmd.AutoMsgClusterWatchHelper")
-	proto.RegisterType((*AutoMsgNodeListHelper)(nil), "cmd.AutoMsgNodeListHelper")
 	proto.RegisterType((*AutoMsgNodeWatchHelper)(nil), "cmd.AutoMsgNodeWatchHelper")
-	proto.RegisterType((*AutoMsgSmartNICListHelper)(nil), "cmd.AutoMsgSmartNICListHelper")
 	proto.RegisterType((*AutoMsgSmartNICWatchHelper)(nil), "cmd.AutoMsgSmartNICWatchHelper")
 	proto.RegisterType((*Cluster)(nil), "cmd.Cluster")
+	proto.RegisterType((*ClusterList)(nil), "cmd.ClusterList")
 	proto.RegisterType((*ClusterSpec)(nil), "cmd.ClusterSpec")
 	proto.RegisterType((*ClusterStatus)(nil), "cmd.ClusterStatus")
 	proto.RegisterType((*Node)(nil), "cmd.Node")
 	proto.RegisterType((*NodeCondition)(nil), "cmd.NodeCondition")
+	proto.RegisterType((*NodeList)(nil), "cmd.NodeList")
 	proto.RegisterType((*NodeSpec)(nil), "cmd.NodeSpec")
 	proto.RegisterType((*NodeStatus)(nil), "cmd.NodeStatus")
 	proto.RegisterType((*PortCondition)(nil), "cmd.PortCondition")
@@ -920,6 +910,7 @@ func init() {
 	proto.RegisterType((*PortStatus)(nil), "cmd.PortStatus")
 	proto.RegisterType((*SmartNIC)(nil), "cmd.SmartNIC")
 	proto.RegisterType((*SmartNICCondition)(nil), "cmd.SmartNICCondition")
+	proto.RegisterType((*SmartNICList)(nil), "cmd.SmartNICList")
 	proto.RegisterType((*SmartNICSpec)(nil), "cmd.SmartNICSpec")
 	proto.RegisterType((*SmartNICStatus)(nil), "cmd.SmartNICStatus")
 	proto.RegisterEnum("cmd.NodeRole", NodeRole_name, NodeRole_value)
@@ -951,9 +942,9 @@ type CmdV1Client interface {
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
-	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error)
-	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNodeListHelper, error)
-	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSmartNICListHelper, error)
+	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error)
+	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error)
+	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SmartNICList, error)
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
@@ -1051,8 +1042,8 @@ func (c *cmdV1Client) AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ..
 	return out, nil
 }
 
-func (c *cmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgClusterListHelper, error) {
-	out := new(AutoMsgClusterListHelper)
+func (c *cmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error) {
+	out := new(ClusterList)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListCluster", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1060,8 +1051,8 @@ func (c *cmdV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOpti
 	return out, nil
 }
 
-func (c *cmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgNodeListHelper, error) {
-	out := new(AutoMsgNodeListHelper)
+func (c *cmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error) {
+	out := new(NodeList)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListNode", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1069,8 +1060,8 @@ func (c *cmdV1Client) AutoListNode(ctx context.Context, in *api.ListWatchOptions
 	return out, nil
 }
 
-func (c *cmdV1Client) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AutoMsgSmartNICListHelper, error) {
-	out := new(AutoMsgSmartNICListHelper)
+func (c *cmdV1Client) AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SmartNICList, error) {
+	out := new(SmartNICList)
 	err := grpc.Invoke(ctx, "/cmd.CmdV1/AutoListSmartNIC", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1213,9 +1204,9 @@ type CmdV1Server interface {
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoGetNode(context.Context, *Node) (*Node, error)
 	AutoGetSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
-	AutoListCluster(context.Context, *api.ListWatchOptions) (*AutoMsgClusterListHelper, error)
-	AutoListNode(context.Context, *api.ListWatchOptions) (*AutoMsgNodeListHelper, error)
-	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*AutoMsgSmartNICListHelper, error)
+	AutoListCluster(context.Context, *api.ListWatchOptions) (*ClusterList, error)
+	AutoListNode(context.Context, *api.ListWatchOptions) (*NodeList, error)
+	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*SmartNICList, error)
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
 	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
@@ -1646,52 +1637,6 @@ var _CmdV1_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cmd.proto",
 }
 
-func (m *AutoMsgClusterListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgClusterListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n1, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
-	n2, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
 func (m *AutoMsgClusterWatchHelper) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1717,57 +1662,11 @@ func (m *AutoMsgClusterWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
-		n3, err := m.Object.MarshalTo(dAtA[i:])
+		n1, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
-	}
-	return i, nil
-}
-
-func (m *AutoMsgNodeListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgNodeListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
-	n5, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n5
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
+		i += n1
 	}
 	return i, nil
 }
@@ -1797,57 +1696,11 @@ func (m *AutoMsgNodeWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
-		n6, err := m.Object.MarshalTo(dAtA[i:])
+		n2, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
-	}
-	return i, nil
-}
-
-func (m *AutoMsgSmartNICListHelper) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AutoMsgSmartNICListHelper) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n7
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
-	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n8
-	if len(m.Items) > 0 {
-		for _, msg := range m.Items {
-			dAtA[i] = 0x22
-			i++
-			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
+		i += n2
 	}
 	return i, nil
 }
@@ -1877,11 +1730,11 @@ func (m *AutoMsgSmartNICWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCmd(dAtA, i, uint64(m.Object.Size()))
-		n9, err := m.Object.MarshalTo(dAtA[i:])
+		n3, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n3
 	}
 	return i, nil
 }
@@ -1904,35 +1757,81 @@ func (m *Cluster) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n4
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n11, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n5, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n5
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
-	n12, err := m.Spec.MarshalTo(dAtA[i:])
+	n6, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n12
+	i += n6
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
-	n13, err := m.Status.MarshalTo(dAtA[i:])
+	n7, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n13
+	i += n7
+	return i, nil
+}
+
+func (m *ClusterList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClusterList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n9, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -2038,37 +1937,35 @@ func (m *Node) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n10, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n14
+	i += n10
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n15, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n11, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n15
+	i += n11
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
-	n16, err := m.Spec.MarshalTo(dAtA[i:])
+	n12, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n16
-	if m.Status != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
-		n17, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n17
+	i += n12
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
+	n13, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
 	}
+	i += n13
 	return i, nil
 }
 
@@ -2117,6 +2014,52 @@ func (m *NodeCondition) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *NodeList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NodeList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n14, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n14
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n15, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n15
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *NodeSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2133,21 +2076,21 @@ func (m *NodeSpec) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Roles) > 0 {
-		dAtA19 := make([]byte, len(m.Roles)*10)
-		var j18 int
+		dAtA17 := make([]byte, len(m.Roles)*10)
+		var j16 int
 		for _, num := range m.Roles {
 			for num >= 1<<7 {
-				dAtA19[j18] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA17[j16] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j18++
+				j16++
 			}
-			dAtA19[j18] = uint8(num)
-			j18++
+			dAtA17[j16] = uint8(num)
+			j16++
 		}
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintCmd(dAtA, i, uint64(j18))
-		i += copy(dAtA[i:], dAtA19[:j18])
+		i = encodeVarintCmd(dAtA, i, uint64(j16))
+		i += copy(dAtA[i:], dAtA17[:j16])
 	}
 	return i, nil
 }
@@ -2331,37 +2274,35 @@ func (m *SmartNIC) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
-	n20, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n18, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n18
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n19, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n19
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
+	n20, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n20
-	dAtA[i] = 0x12
+	dAtA[i] = 0x22
 	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n21, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
+	n21, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n21
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintCmd(dAtA, i, uint64(m.Spec.Size()))
-	n22, err := m.Spec.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n22
-	if m.Status != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintCmd(dAtA, i, uint64(m.Status.Size()))
-		n23, err := m.Status.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n23
-	}
 	return i, nil
 }
 
@@ -2406,6 +2347,52 @@ func (m *SmartNICCondition) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintCmd(dAtA, i, uint64(len(m.Message)))
 		i += copy(dAtA[i:], m.Message)
+	}
+	return i, nil
+}
+
+func (m *SmartNICList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SmartNICList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.TypeMeta.Size()))
+	n22, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n22
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintCmd(dAtA, i, uint64(m.ListMeta.Size()))
+	n23, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n23
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintCmd(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -2532,22 +2519,6 @@ func encodeVarintCmd(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *AutoMsgClusterListHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovCmd(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *AutoMsgClusterWatchHelper) Size() (n int) {
 	var l int
 	_ = l
@@ -2562,22 +2533,6 @@ func (m *AutoMsgClusterWatchHelper) Size() (n int) {
 	return n
 }
 
-func (m *AutoMsgNodeListHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovCmd(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *AutoMsgNodeWatchHelper) Size() (n int) {
 	var l int
 	_ = l
@@ -2588,22 +2543,6 @@ func (m *AutoMsgNodeWatchHelper) Size() (n int) {
 	if m.Object != nil {
 		l = m.Object.Size()
 		n += 1 + l + sovCmd(uint64(l))
-	}
-	return n
-}
-
-func (m *AutoMsgSmartNICListHelper) Size() (n int) {
-	var l int
-	_ = l
-	l = m.TypeMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	l = m.ListMeta.Size()
-	n += 1 + l + sovCmd(uint64(l))
-	if len(m.Items) > 0 {
-		for _, e := range m.Items {
-			l = e.Size()
-			n += 1 + l + sovCmd(uint64(l))
-		}
 	}
 	return n
 }
@@ -2633,6 +2572,22 @@ func (m *Cluster) Size() (n int) {
 	n += 1 + l + sovCmd(uint64(l))
 	l = m.Status.Size()
 	n += 1 + l + sovCmd(uint64(l))
+	return n
+}
+
+func (m *ClusterList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2681,10 +2636,8 @@ func (m *Node) Size() (n int) {
 	n += 1 + l + sovCmd(uint64(l))
 	l = m.Spec.Size()
 	n += 1 + l + sovCmd(uint64(l))
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovCmd(uint64(l))
-	}
+	l = m.Status.Size()
+	n += 1 + l + sovCmd(uint64(l))
 	return n
 }
 
@@ -2707,6 +2660,22 @@ func (m *NodeCondition) Size() (n int) {
 	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *NodeList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
 	}
 	return n
 }
@@ -2807,10 +2776,8 @@ func (m *SmartNIC) Size() (n int) {
 	n += 1 + l + sovCmd(uint64(l))
 	l = m.Spec.Size()
 	n += 1 + l + sovCmd(uint64(l))
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovCmd(uint64(l))
-	}
+	l = m.Status.Size()
+	n += 1 + l + sovCmd(uint64(l))
 	return n
 }
 
@@ -2833,6 +2800,22 @@ func (m *SmartNICCondition) Size() (n int) {
 	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovCmd(uint64(l))
+	}
+	return n
+}
+
+func (m *SmartNICList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovCmd(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovCmd(uint64(l))
+		}
 	}
 	return n
 }
@@ -2894,147 +2877,6 @@ func sovCmd(x uint64) (n int) {
 }
 func sozCmd(x uint64) (n int) {
 	return sovCmd(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *AutoMsgClusterListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCmd
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgClusterListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgClusterListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &Cluster{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCmd(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCmd
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *AutoMsgClusterWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -3148,147 +2990,6 @@ func (m *AutoMsgClusterWatchHelper) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AutoMsgNodeListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCmd
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgNodeListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgNodeListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &Node{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCmd(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCmd
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *AutoMsgNodeWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3377,147 +3078,6 @@ func (m *AutoMsgNodeWatchHelper) Unmarshal(dAtA []byte) error {
 				m.Object = &Node{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCmd(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCmd
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AutoMsgSmartNICListHelper) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCmd
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AutoMsgSmartNICListHelper: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AutoMsgSmartNICListHelper: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCmd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthCmd
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Items = append(m.Items, &SmartNIC{})
-			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3800,6 +3360,147 @@ func (m *Cluster) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClusterList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClusterList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClusterList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Cluster{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4214,9 +3915,6 @@ func (m *Node) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Status == nil {
-				m.Status = &NodeStatus{}
-			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4385,6 +4083,147 @@ func (m *NodeCondition) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NodeList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NodeList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NodeList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Node{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5176,9 +5015,6 @@ func (m *SmartNIC) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Status == nil {
-				m.Status = &SmartNICStatus{}
-			}
 			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5347,6 +5183,147 @@ func (m *SmartNICCondition) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCmd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCmd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SmartNICList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCmd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SmartNICList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SmartNICList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCmd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCmd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &SmartNIC{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5776,131 +5753,131 @@ var (
 func init() { proto.RegisterFile("cmd.proto", fileDescriptorCmd) }
 
 var fileDescriptorCmd = []byte{
-	// 2013 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x59, 0x4b, 0x6f, 0x1b, 0xd7,
-	0x15, 0xe6, 0x90, 0x92, 0x2c, 0x1e, 0x89, 0xaf, 0xab, 0x87, 0x39, 0xb4, 0x22, 0xaa, 0xd3, 0xb4,
-	0x90, 0x59, 0x47, 0xb4, 0x1d, 0xb4, 0x70, 0x5c, 0xd9, 0x05, 0x5f, 0xb6, 0x19, 0x53, 0x24, 0x45,
-	0x52, 0x76, 0x9b, 0xb6, 0x30, 0x46, 0x9c, 0x5b, 0x69, 0x5a, 0x0e, 0x67, 0xca, 0x19, 0x3a, 0x30,
-	0x8a, 0x02, 0x45, 0x58, 0xaf, 0xba, 0x09, 0x5a, 0xa3, 0x28, 0xd2, 0x9d, 0x97, 0x5a, 0xe6, 0x57,
-	0xa4, 0xbb, 0xc0, 0x5d, 0x34, 0xc8, 0x42, 0x08, 0x8c, 0xa2, 0x0b, 0xfd, 0x85, 0x6e, 0x8a, 0xfb,
-	0x98, 0x99, 0x3b, 0x24, 0xa5, 0x30, 0x28, 0x92, 0x55, 0x76, 0x9c, 0x73, 0xcf, 0xf9, 0xce, 0xeb,
-	0x3b, 0xf7, 0xce, 0x5c, 0x42, 0xb4, 0x6b, 0x68, 0x3b, 0xd6, 0xc0, 0x74, 0x4c, 0x14, 0xe9, 0x1a,
-	0x5a, 0x66, 0xe3, 0xc8, 0x34, 0x8f, 0x7a, 0x38, 0xaf, 0x5a, 0x7a, 0x5e, 0xed, 0xf7, 0x4d, 0x47,
-	0x75, 0x74, 0xb3, 0x6f, 0x33, 0x95, 0xcc, 0xdd, 0x23, 0xdd, 0x39, 0x1e, 0x1e, 0xee, 0x74, 0x4d,
-	0x23, 0x6f, 0xe1, 0xbe, 0xad, 0xf6, 0x35, 0x33, 0x6f, 0xbf, 0x9f, 0x1f, 0x3a, 0x7a, 0xcf, 0x26,
-	0x36, 0x47, 0xb8, 0x2f, 0x9a, 0xe5, 0xf5, 0x7e, 0xb7, 0x37, 0xd4, 0xb0, 0x6b, 0xff, 0x96, 0x60,
-	0x7f, 0x64, 0x1e, 0x99, 0x79, 0x2a, 0x3e, 0x1c, 0xfe, 0x8a, 0x3e, 0xd1, 0x07, 0xfa, 0x8b, 0xab,
-	0x7f, 0xef, 0x1c, 0x77, 0x24, 0x38, 0x03, 0x3b, 0x2a, 0x53, 0x53, 0xfe, 0x2a, 0x41, 0xba, 0x30,
-	0x74, 0xcc, 0x3d, 0xfb, 0xa8, 0xd4, 0x1b, 0xda, 0x0e, 0x1e, 0xd4, 0x74, 0xdb, 0x79, 0x80, 0x7b,
-	0x16, 0x1e, 0x20, 0x05, 0xa4, 0x4e, 0x3a, 0xbc, 0x25, 0x6d, 0x2f, 0xdd, 0x8c, 0xed, 0xa8, 0x96,
-	0xbe, 0xd3, 0x79, 0x66, 0xe1, 0x3d, 0xec, 0xa8, 0xc5, 0xc5, 0x4f, 0x4e, 0xb3, 0xa1, 0x4f, 0x4f,
-	0xb3, 0x12, 0xba, 0x0a, 0x8b, 0xc4, 0x82, 0x48, 0xd3, 0x11, 0x41, 0xd5, 0x15, 0x0a, 0xaa, 0x57,
-	0x60, 0xbe, 0xea, 0x60, 0xc3, 0x4e, 0xcf, 0x6d, 0x45, 0xb6, 0x97, 0x6e, 0x2e, 0xef, 0x90, 0xfa,
-	0x71, 0xaf, 0xb7, 0xe3, 0x9f, 0xbf, 0x58, 0x85, 0x9e, 0x6e, 0x3b, 0xc7, 0xd4, 0xb7, 0xf2, 0x53,
-	0x90, 0x83, 0x71, 0x3d, 0x56, 0x9d, 0xee, 0x31, 0x0f, 0x6c, 0x19, 0xe6, 0x48, 0x28, 0x69, 0x69,
-	0x4b, 0xda, 0x8e, 0xa2, 0x0d, 0x58, 0x68, 0x1c, 0xfe, 0x1a, 0x77, 0x1d, 0x1e, 0x6b, 0x10, 0x38,
-	0xf1, 0xf9, 0x8b, 0xd5, 0xa5, 0xf7, 0x89, 0x31, 0x47, 0xfe, 0x50, 0x82, 0x35, 0x0e, 0x5d, 0x37,
-	0x35, 0xfc, 0xf5, 0xe5, 0x9b, 0x0e, 0xe6, 0x1b, 0xa5, 0x61, 0x11, 0x97, 0x13, 0xc9, 0xb6, 0x60,
-	0x5d, 0x88, 0xe8, 0xfc, 0x4c, 0xe5, 0xb1, 0x4c, 0x05, 0xc8, 0x89, 0x34, 0xff, 0x26, 0x79, 0x15,
-	0x6c, 0x1b, 0xea, 0xc0, 0xa9, 0x57, 0x4b, 0x5f, 0x5f, 0xaa, 0x1b, 0xc1, 0x54, 0x63, 0x34, 0x2e,
-	0xd7, 0xed, 0x44, 0xba, 0xef, 0x41, 0x66, 0x2c, 0xb2, 0xf3, 0x53, 0x7e, 0x63, 0x2c, 0xe5, 0x31,
-	0xe8, 0x89, 0xb4, 0xff, 0x14, 0x86, 0x4b, 0xbc, 0xf5, 0xe8, 0x3a, 0x49, 0x52, 0x9a, 0x96, 0xe4,
-	0x8a, 0x1b, 0xf9, 0xd9, 0x69, 0xf6, 0xd2, 0x35, 0xbd, 0xdf, 0xd3, 0xfb, 0xb8, 0x25, 0x75, 0xd0,
-	0x1d, 0x90, 0x1a, 0xdc, 0x51, 0x82, 0x5a, 0x30, 0xdf, 0xd4, 0x66, 0x53, 0xb0, 0x41, 0x64, 0x84,
-	0x34, 0xd5, 0x51, 0xaf, 0x99, 0x86, 0xee, 0x60, 0xc3, 0x72, 0x9e, 0xb5, 0xa4, 0x06, 0xda, 0x85,
-	0xb9, 0xb6, 0x85, 0xbb, 0xbc, 0x5a, 0x49, 0x91, 0x87, 0x44, 0x5e, 0x5c, 0x27, 0x10, 0x67, 0xa7,
-	0xd9, 0xb8, 0x6d, 0xe1, 0xae, 0x60, 0x4a, 0xad, 0x50, 0x19, 0x16, 0xda, 0x8e, 0xea, 0x0c, 0x49,
-	0x15, 0x89, 0x3d, 0x0a, 0xd8, 0xd3, 0x95, 0x62, 0x9a, 0x23, 0x24, 0x6d, 0xfa, 0x2c, 0x60, 0x70,
-	0xdb, 0xdb, 0x4b, 0xaf, 0x9e, 0xcb, 0x97, 0xba, 0xcc, 0x48, 0xf9, 0xaf, 0x04, 0x4b, 0x42, 0x00,
-	0xe8, 0xc7, 0xb0, 0xb4, 0x3f, 0x34, 0x07, 0x43, 0x83, 0x70, 0xc6, 0x4e, 0x4b, 0x5b, 0x91, 0xed,
-	0x68, 0x51, 0x3e, 0x3b, 0xcd, 0xae, 0xfd, 0xd6, 0x17, 0x0b, 0xa0, 0xa2, 0x36, 0xfa, 0x21, 0x44,
-	0x1f, 0xe9, 0x03, 0x67, 0xa8, 0xf6, 0xaa, 0x4d, 0x5a, 0xa4, 0x68, 0xf1, 0xf2, 0xd9, 0x69, 0x76,
-	0xe5, 0x29, 0x17, 0x5a, 0x82, 0xa1, 0xaf, 0x89, 0x6e, 0x01, 0xd4, 0x3b, 0xcd, 0x36, 0x1e, 0x3c,
-	0xc5, 0x03, 0x3b, 0x1d, 0xa1, 0x2e, 0xd3, 0x67, 0xa7, 0xd9, 0xd5, 0xbe, 0x63, 0x71, 0xa9, 0x60,
-	0x28, 0xe8, 0xa2, 0xbb, 0xb0, 0x5c, 0xae, 0xb7, 0xdb, 0xc3, 0xc3, 0xb2, 0x69, 0xa8, 0x7a, 0x9f,
-	0x96, 0x25, 0x5a, 0xcc, 0x9c, 0x9d, 0x66, 0xd7, 0xb5, 0xbe, 0xdd, 0x1e, 0x1e, 0x6a, 0x54, 0x2e,
-	0x58, 0x07, 0xf4, 0x95, 0x3b, 0x10, 0x0b, 0x54, 0x0f, 0x5d, 0x83, 0x85, 0x1a, 0x56, 0x35, 0x3c,
-	0x60, 0xe4, 0x2a, 0xae, 0x92, 0x4a, 0xf6, 0xa8, 0x44, 0xac, 0x24, 0xd3, 0x51, 0xfe, 0x10, 0x86,
-	0x39, 0x92, 0xf9, 0x37, 0xcf, 0xa3, 0x77, 0x02, 0x3c, 0x8a, 0x79, 0x53, 0x3e, 0x03, 0x89, 0x0a,
-	0x63, 0x24, 0x4a, 0xf8, 0xc6, 0x3e, 0x83, 0xa4, 0x0b, 0x19, 0x14, 0x7d, 0xf5, 0x5c, 0x9e, 0xef,
-	0x93, 0x96, 0x2b, 0x9f, 0x85, 0x21, 0x46, 0x6c, 0x4b, 0x66, 0x5f, 0xd3, 0xc9, 0xb1, 0x84, 0x8a,
-	0xc2, 0x74, 0xc6, 0x6f, 0xae, 0x7b, 0xe8, 0x9e, 0x06, 0x59, 0xa5, 0x31, 0x12, 0x27, 0x71, 0xe7,
-	0x99, 0x85, 0xc5, 0x18, 0xc9, 0x2a, 0xba, 0xe7, 0xc5, 0x18, 0xa6, 0x28, 0xab, 0x8c, 0xe8, 0x2e,
-	0xc2, 0xac, 0x81, 0xa2, 0x0e, 0xa0, 0x9a, 0x6a, 0x3b, 0x9d, 0x81, 0xda, 0xb7, 0x99, 0x6f, 0xdd,
-	0xc0, 0xb4, 0x68, 0x91, 0xe2, 0x9b, 0xdc, 0x7a, 0xa3, 0x37, 0xa1, 0x21, 0x20, 0x4d, 0xb1, 0x47,
-	0xd7, 0x61, 0xa1, 0x85, 0x55, 0xdb, 0x74, 0xf9, 0xe6, 0xc5, 0x31, 0xa0, 0x52, 0x31, 0x0e, 0xa6,
-	0x87, 0xde, 0x86, 0x4b, 0x7b, 0xd8, 0xb6, 0xd5, 0x23, 0x9c, 0x9e, 0xa7, 0x26, 0x32, 0x37, 0x49,
-	0x19, 0x4c, 0x2c, 0xd8, 0xb8, 0x9a, 0x4a, 0x19, 0x16, 0xdd, 0x96, 0xa2, 0x5b, 0x30, 0xdf, 0x32,
-	0x7b, 0x7c, 0x20, 0xe3, 0x42, 0xc3, 0x89, 0xb4, 0xb8, 0x72, 0x76, 0x9a, 0x4d, 0x0c, 0xc8, 0xba,
-	0x80, 0xc3, 0x0c, 0x94, 0x7f, 0x48, 0x00, 0x7e, 0x73, 0xd1, 0x1d, 0x98, 0x6f, 0x1e, 0xab, 0xb6,
-	0xdb, 0x9e, 0xb8, 0x07, 0x44, 0xa5, 0xc5, 0xcb, 0x3c, 0xae, 0x84, 0x45, 0x1e, 0x45, 0x34, 0xba,
-	0x8e, 0x9a, 0x00, 0x5e, 0x17, 0x48, 0x73, 0x22, 0xde, 0x2e, 0x14, 0x68, 0x71, 0x71, 0x83, 0xe3,
-	0xac, 0x76, 0x3d, 0x6d, 0x71, 0x84, 0x7d, 0x0c, 0x94, 0x83, 0xb9, 0xba, 0xde, 0x75, 0xc7, 0xde,
-	0xa3, 0x45, 0x5f, 0xef, 0x8a, 0x16, 0x54, 0x87, 0x92, 0xad, 0x69, 0x0e, 0x9c, 0x8b, 0xc9, 0x16,
-	0xd0, 0xf8, 0x96, 0x6c, 0xb3, 0x91, 0xed, 0x01, 0x2c, 0x92, 0xba, 0x51, 0xb2, 0xed, 0x02, 0xec,
-	0xa9, 0xdd, 0x82, 0xa6, 0x0d, 0xb0, 0x6d, 0xf3, 0x8d, 0xd0, 0x6b, 0xa8, 0xe1, 0xad, 0x88, 0x0d,
-	0xf5, 0xf5, 0x95, 0x7f, 0x49, 0x00, 0x14, 0x8a, 0x55, 0xe5, 0xff, 0x02, 0x43, 0xef, 0x40, 0xb4,
-	0xa6, 0xf7, 0x7f, 0xd3, 0xb6, 0x30, 0xd6, 0xf8, 0x89, 0x72, 0x85, 0x1b, 0xaf, 0xf4, 0xdc, 0x05,
-	0xf1, 0x54, 0xf1, 0xb4, 0xc7, 0xa8, 0x1a, 0x11, 0xa8, 0x1a, 0x20, 0xc8, 0xec, 0x54, 0x55, 0x3e,
-	0x0c, 0xc3, 0xa2, 0xfb, 0x5e, 0xf1, 0xcd, 0x6f, 0xf9, 0x77, 0x02, 0x5b, 0x7e, 0x2a, 0xf0, 0x96,
-	0x33, 0xc3, 0xb6, 0x5f, 0x19, 0xdb, 0xf6, 0x57, 0x82, 0x00, 0xb3, 0x6e, 0xfd, 0xb1, 0x57, 0xcf,
-	0xe5, 0xa8, 0x4d, 0xac, 0xc8, 0x84, 0x2a, 0x5f, 0x84, 0x21, 0xe5, 0x62, 0xf8, 0x53, 0x79, 0x2f,
-	0x30, 0x95, 0x99, 0x80, 0xa7, 0x6f, 0x27, 0xf3, 0x2b, 0x4e, 0x66, 0x0d, 0x96, 0xc5, 0x36, 0xa3,
-	0x5d, 0x98, 0x27, 0x04, 0x66, 0x47, 0x81, 0x7b, 0xf6, 0xbb, 0xb3, 0x4b, 0x37, 0xf0, 0x10, 0xdd,
-	0xc0, 0x89, 0x4e, 0x60, 0x03, 0x27, 0x02, 0xe5, 0xe3, 0x08, 0xc4, 0x83, 0x4d, 0x47, 0x85, 0xe0,
-	0x91, 0x80, 0x02, 0xed, 0x9a, 0xed, 0x58, 0xe8, 0x4c, 0x39, 0x16, 0xd6, 0xa7, 0xb7, 0xfd, 0x2b,
-	0x1c, 0x0d, 0xbb, 0x10, 0x6d, 0xe3, 0x81, 0xae, 0xf6, 0xea, 0x43, 0x83, 0x76, 0x2b, 0x4a, 0xe7,
-	0x84, 0x18, 0xaf, 0xdb, 0xee, 0xc2, 0x61, 0xe0, 0xcd, 0xcc, 0x37, 0x40, 0xfb, 0x90, 0x6a, 0x0e,
-	0x74, 0x43, 0x1d, 0x3c, 0x13, 0xf6, 0x1f, 0xd6, 0xa9, 0xef, 0x72, 0x94, 0x2b, 0xd6, 0xb8, 0x82,
-	0x00, 0x35, 0x69, 0x8d, 0x7e, 0xc4, 0x4e, 0xe4, 0xba, 0x6a, 0xb8, 0x0d, 0xcc, 0x70, 0x24, 0xd4,
-	0xe7, 0x72, 0x01, 0xc0, 0xd3, 0x45, 0x77, 0xdd, 0x96, 0x2d, 0xd0, 0xca, 0x24, 0xfc, 0x96, 0x31,
-	0x06, 0xfb, 0xe5, 0x9d, 0xda, 0xb4, 0x5c, 0x89, 0xf9, 0x25, 0x07, 0x3a, 0x5a, 0x81, 0x44, 0xa9,
-	0x51, 0xef, 0xb4, 0x1a, 0xb5, 0x5a, 0xa5, 0xf5, 0xa4, 0xde, 0x28, 0x57, 0x92, 0x21, 0x94, 0x82,
-	0xd8, 0xe3, 0x46, 0xeb, 0x61, 0xad, 0x51, 0x28, 0x33, 0x91, 0x84, 0x12, 0xb0, 0xb4, 0x7f, 0xd0,
-	0x68, 0x1d, 0xec, 0x31, 0x41, 0x38, 0xb7, 0x0f, 0x51, 0xef, 0x9c, 0x47, 0x49, 0x58, 0x26, 0xe2,
-	0x27, 0x07, 0xf5, 0x87, 0xf5, 0xc6, 0xe3, 0x7a, 0x32, 0xe4, 0x49, 0x9a, 0x95, 0x7a, 0xb9, 0x5a,
-	0xbf, 0xcf, 0x10, 0xa8, 0xe4, 0xdd, 0x46, 0xb5, 0x5e, 0x29, 0x27, 0xc3, 0x9e, 0xe0, 0x5e, 0xa1,
-	0x5a, 0xab, 0x94, 0x93, 0x91, 0xdc, 0x9b, 0x90, 0x9a, 0x78, 0xb3, 0xf3, 0xb4, 0x6a, 0x95, 0x42,
-	0xb9, 0xd2, 0x4a, 0x86, 0x72, 0xfb, 0x90, 0x18, 0x1b, 0x59, 0xb4, 0x06, 0xa9, 0x52, 0xa3, 0x5e,
-	0xae, 0x76, 0xaa, 0x8d, 0xba, 0x10, 0x03, 0x82, 0xb8, 0x2f, 0xee, 0xb4, 0x0e, 0x48, 0x1e, 0x2c,
-	0x5f, 0x2e, 0xbb, 0x57, 0xa8, 0xb5, 0x49, 0x2e, 0x07, 0x10, 0x0b, 0x10, 0x94, 0x3a, 0xad, 0x96,
-	0xc6, 0xd2, 0xa9, 0x96, 0x9e, 0xb4, 0x2a, 0xef, 0x56, 0x4a, 0x9d, 0x4a, 0x99, 0xa7, 0x53, 0x2d,
-	0x79, 0xf9, 0x85, 0x5d, 0x95, 0x42, 0x79, 0xaf, 0xda, 0xe9, 0xd0, 0x7c, 0xb6, 0x61, 0x6d, 0xea,
-	0x36, 0xe5, 0xda, 0x3e, 0xa8, 0x14, 0x6a, 0x9d, 0x07, 0x3f, 0x4b, 0x86, 0x72, 0x5b, 0x90, 0x9a,
-	0x78, 0xcd, 0x40, 0x4b, 0x70, 0xa9, 0xd9, 0x68, 0x75, 0x9e, 0x1c, 0x34, 0x93, 0xa1, 0x9b, 0xff,
-	0x89, 0xc3, 0x7c, 0xc9, 0xd0, 0x1e, 0xdd, 0x40, 0xbb, 0x10, 0x27, 0x1f, 0xb3, 0x05, 0x4d, 0x73,
-	0x3f, 0x3b, 0x03, 0xf7, 0x0f, 0x99, 0xc0, 0x93, 0x12, 0xff, 0xec, 0xc5, 0xaa, 0xf4, 0xf1, 0x1f,
-	0xe5, 0x85, 0xee, 0x00, 0xab, 0x0e, 0xd9, 0x03, 0x97, 0xb8, 0x35, 0xfd, 0xd2, 0xf0, 0x3f, 0xe8,
-	0x33, 0xfe, 0x4f, 0xe5, 0x3b, 0x41, 0xa3, 0x0f, 0xfe, 0xf9, 0xef, 0xbf, 0x84, 0x63, 0x10, 0xba,
-	0x2d, 0xe5, 0x94, 0x85, 0x3c, 0x7d, 0x51, 0x47, 0x3f, 0x81, 0x04, 0xc7, 0xf1, 0x8e, 0xb0, 0xe0,
-	0x97, 0x72, 0x26, 0xf8, 0x38, 0x11, 0xc8, 0x2f, 0x20, 0x45, 0x00, 0xca, 0xb8, 0x87, 0x1d, 0x3c,
-	0x4b, 0x26, 0x3f, 0x70, 0x01, 0x34, 0x6a, 0x42, 0x83, 0xba, 0x0c, 0xa1, 0xdb, 0xa1, 0x5c, 0x2a,
-	0xcf, 0x3f, 0x3f, 0xf3, 0xbf, 0x6b, 0xec, 0x90, 0x09, 0xf9, 0x3d, 0xda, 0x67, 0x45, 0x62, 0xe8,
-	0x17, 0x64, 0x7a, 0x75, 0x0a, 0xe8, 0x1a, 0x05, 0x4d, 0xb0, 0x44, 0x7d, 0x48, 0x15, 0x90, 0x0f,
-	0x39, 0x63, 0xd2, 0x6f, 0x4d, 0x81, 0x97, 0x29, 0xfc, 0x4a, 0xde, 0x3b, 0xf5, 0x7c, 0x17, 0x8f,
-	0x58, 0xd4, 0xf7, 0xb1, 0x33, 0x4b, 0x41, 0xb6, 0x39, 0x78, 0xe4, 0x08, 0x3b, 0x7e, 0x35, 0xd0,
-	0x94, 0x6a, 0x3c, 0x64, 0x4d, 0xbf, 0x8f, 0x9d, 0x0b, 0x4a, 0xf1, 0xfd, 0x71, 0x38, 0x5a, 0x07,
-	0x34, 0x51, 0x87, 0x9f, 0xb3, 0xce, 0xdf, 0xc7, 0xce, 0x8c, 0x45, 0xc8, 0x8d, 0x03, 0xd3, 0x0a,
-	0xa0, 0xa9, 0x15, 0xd0, 0x19, 0x78, 0x4d, 0xb7, 0xbd, 0x12, 0xac, 0x79, 0x77, 0x40, 0xf4, 0xd2,
-	0xa6, 0x61, 0xd1, 0xdd, 0x3c, 0xf3, 0x06, 0x75, 0x72, 0xde, 0x55, 0xa2, 0xb2, 0xc5, 0x9d, 0xce,
-	0xf5, 0x74, 0x9b, 0x79, 0x8d, 0x53, 0xaf, 0x8b, 0x6e, 0x75, 0x90, 0x0a, 0xcb, 0xae, 0x2b, 0x5a,
-	0x95, 0x73, 0xfc, 0x64, 0x44, 0x3f, 0xc1, 0xfb, 0x3b, 0x65, 0x73, 0xc2, 0xc9, 0x32, 0x75, 0xe2,
-	0x0e, 0x89, 0x01, 0x49, 0xd7, 0x85, 0x57, 0xab, 0x73, 0xdc, 0x6c, 0x8a, 0x6e, 0x26, 0xef, 0xcf,
-	0x14, 0x65, 0xc2, 0x55, 0x92, 0xba, 0x02, 0xbf, 0x8a, 0xe8, 0x97, 0x6c, 0xa4, 0x0e, 0x2c, 0x4d,
-	0x9d, 0x6d, 0xa4, 0xae, 0xb9, 0xf4, 0x1c, 0x52, 0x13, 0x0a, 0x9b, 0xa6, 0x73, 0x9e, 0x99, 0xc2,
-	0xa2, 0x16, 0x63, 0x27, 0x83, 0xbf, 0x80, 0x48, 0xb9, 0x29, 0xa8, 0xeb, 0x0c, 0x75, 0x82, 0x4c,
-	0x87, 0x6c, 0xa8, 0x18, 0xe6, 0x8c, 0x7c, 0xda, 0x99, 0x82, 0x9f, 0x61, 0xf8, 0x53, 0x39, 0xf5,
-	0x1e, 0xeb, 0x02, 0x2d, 0xf7, 0x97, 0x90, 0x6a, 0x73, 0x0a, 0xa9, 0x84, 0xab, 0x42, 0x25, 0xc6,
-	0x5d, 0xcf, 0xd3, 0x1b, 0xc0, 0xeb, 0x12, 0xea, 0x40, 0xcc, 0xc3, 0xbe, 0x88, 0x45, 0x57, 0xc6,
-	0x59, 0x74, 0x21, 0x2a, 0xdf, 0x1b, 0xa9, 0xce, 0x97, 0x11, 0x27, 0x3b, 0x8d, 0x38, 0x17, 0xa1,
-	0x67, 0xfe, 0x1e, 0xfe, 0xf3, 0x48, 0x0e, 0x3f, 0xbd, 0xf1, 0xd1, 0x48, 0x8e, 0x74, 0x0d, 0xed,
-	0xe5, 0x48, 0x76, 0x2f, 0x30, 0x5f, 0x8e, 0x64, 0x7a, 0x01, 0xf5, 0x72, 0x24, 0x7b, 0x5f, 0x26,
-	0x27, 0x23, 0x59, 0xf6, 0x6f, 0x38, 0x29, 0xfd, 0x32, 0xde, 0x10, 0x9d, 0x8c, 0xe4, 0x1d, 0x7f,
-	0x31, 0x62, 0x0d, 0x1d, 0x44, 0xa6, 0x1c, 0xf1, 0xfd, 0x6e, 0x0a, 0x8b, 0x4e, 0x46, 0xf2, 0x55,
-	0x7e, 0xcb, 0x35, 0xa9, 0x3e, 0x4e, 0x8f, 0x93, 0x91, 0x9c, 0xe1, 0xca, 0x73, 0x96, 0x69, 0x3b,
-	0xdc, 0x3d, 0x1f, 0xaf, 0x93, 0x91, 0x7c, 0x43, 0xf8, 0x82, 0x9a, 0x84, 0x9b, 0xc6, 0x86, 0x93,
-	0x91, 0xbc, 0x21, 0x18, 0x31, 0x40, 0x61, 0x88, 0x8a, 0x9b, 0x1f, 0x7d, 0x20, 0xc7, 0x7b, 0x66,
-	0x57, 0xed, 0x1d, 0x9b, 0xb6, 0x73, 0xfb, 0xd6, 0xf5, 0x5b, 0x37, 0x3f, 0x79, 0xbd, 0x29, 0x7d,
-	0xfa, 0x7a, 0x53, 0xfa, 0xe2, 0xf5, 0xa6, 0xd4, 0x94, 0x0e, 0x17, 0xe8, 0x3f, 0x19, 0x6f, 0xff,
-	0x2f, 0x00, 0x00, 0xff, 0xff, 0x71, 0x6c, 0xd1, 0x1f, 0x8f, 0x19, 0x00, 0x00,
+	// 2001 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x59, 0xcd, 0x73, 0x1b, 0x49,
+	0x15, 0xd7, 0x48, 0xfe, 0xd2, 0xb3, 0xf5, 0xd5, 0xfe, 0x88, 0x46, 0x31, 0xb6, 0x19, 0x16, 0xca,
+	0x11, 0x59, 0x2b, 0xc9, 0x16, 0x54, 0x62, 0x92, 0x50, 0xfa, 0x4a, 0xa2, 0x8d, 0x2c, 0xc9, 0x92,
+	0x9c, 0xc0, 0xb2, 0x54, 0x18, 0x4b, 0x8d, 0x3d, 0x20, 0xcd, 0x0c, 0x33, 0xa3, 0x6c, 0xa5, 0x28,
+	0x2e, 0x2b, 0x52, 0x14, 0x05, 0x27, 0xc8, 0x69, 0xb9, 0xe5, 0xe8, 0xe3, 0xfe, 0x03, 0x5c, 0x97,
+	0xdb, 0x56, 0x38, 0xb0, 0xb5, 0x07, 0xd7, 0x56, 0x8a, 0x93, 0xff, 0x05, 0x38, 0x50, 0xfd, 0x31,
+	0x33, 0x3d, 0x92, 0xec, 0xd5, 0x16, 0xb5, 0x7b, 0xca, 0xcd, 0x7a, 0xfd, 0x7e, 0xbf, 0xee, 0xf7,
+	0xfa, 0xd7, 0xef, 0xf5, 0xb4, 0x21, 0xda, 0xe9, 0x77, 0x77, 0x4c, 0xcb, 0x70, 0x0c, 0x14, 0xe9,
+	0xf4, 0xbb, 0x99, 0xf5, 0x23, 0xc3, 0x38, 0xea, 0xe1, 0x9c, 0x6a, 0x6a, 0x39, 0x55, 0xd7, 0x0d,
+	0x47, 0x75, 0x34, 0x43, 0xb7, 0x99, 0x4b, 0xe6, 0xee, 0x91, 0xe6, 0x1c, 0x0f, 0x0e, 0x77, 0x3a,
+	0x46, 0x3f, 0x67, 0x62, 0xdd, 0x56, 0xf5, 0xae, 0x91, 0xb3, 0x3f, 0xc8, 0x0d, 0x1c, 0xad, 0x67,
+	0x13, 0xcc, 0x11, 0xd6, 0x45, 0x58, 0x4e, 0xd3, 0x3b, 0xbd, 0x41, 0x17, 0xbb, 0xf8, 0xb7, 0x05,
+	0xfc, 0x91, 0x71, 0x64, 0xe4, 0xa8, 0xf9, 0x70, 0xf0, 0x4b, 0xfa, 0x8b, 0xfe, 0xa0, 0x7f, 0x71,
+	0xf7, 0xef, 0x9e, 0x33, 0x1d, 0x59, 0x5c, 0x1f, 0x3b, 0x2a, 0x73, 0x53, 0x7e, 0x02, 0x72, 0x7e,
+	0xe0, 0x18, 0x7b, 0xf6, 0x51, 0xb1, 0x37, 0xb0, 0x1d, 0x6c, 0x3d, 0x56, 0x9d, 0xce, 0xf1, 0x03,
+	0xdc, 0x33, 0xb1, 0x85, 0x96, 0x60, 0xa6, 0xfd, 0xcc, 0xc4, 0x69, 0x69, 0x4b, 0xda, 0x8e, 0xa2,
+	0x75, 0x98, 0xab, 0x1f, 0xfe, 0x0a, 0x77, 0x9c, 0x74, 0x78, 0x4b, 0xda, 0x5e, 0xbc, 0xb1, 0xb4,
+	0x43, 0xe2, 0xe7, 0xb0, 0xdd, 0xc4, 0xe7, 0x2f, 0x56, 0x16, 0x3f, 0x20, 0xe0, 0x63, 0x0a, 0x56,
+	0x9a, 0xb0, 0xc6, 0x99, 0x6b, 0x46, 0x17, 0x9f, 0x4f, 0x2b, 0x8f, 0xd0, 0x46, 0x29, 0x2d, 0xc1,
+	0x8c, 0x73, 0xbe, 0x07, 0x19, 0xce, 0xd9, 0xea, 0xab, 0x96, 0x53, 0xab, 0x14, 0xcf, 0xe7, 0xfd,
+	0xd6, 0x08, 0x6f, 0x8c, 0xf2, 0xba, 0xb8, 0x71, 0xee, 0x3f, 0x84, 0x61, 0x9e, 0x07, 0x83, 0xae,
+	0x81, 0xd4, 0xa6, 0x34, 0x04, 0xa6, 0x9a, 0xda, 0x0e, 0xe1, 0xdd, 0xc3, 0x8e, 0x5a, 0x58, 0xfe,
+	0xe4, 0x74, 0x33, 0xf4, 0xe9, 0xe9, 0xa6, 0x74, 0x76, 0xba, 0x39, 0x7f, 0x55, 0xd3, 0x7b, 0x9a,
+	0x8e, 0x9b, 0x52, 0x1b, 0xdd, 0x02, 0xa9, 0xce, 0x27, 0x4a, 0x50, 0x04, 0x9b, 0x9b, 0x62, 0x32,
+	0x02, 0x26, 0x4e, 0x72, 0x7f, 0xd5, 0xe8, 0x6b, 0x0e, 0xee, 0x9b, 0xce, 0xb3, 0xa6, 0x54, 0x47,
+	0xb7, 0x61, 0xa6, 0x65, 0xe2, 0x4e, 0x3a, 0x42, 0xd1, 0x49, 0x31, 0xab, 0xc4, 0x5e, 0x58, 0x23,
+	0x70, 0x02, 0xb5, 0x4d, 0xdc, 0x11, 0xa0, 0x14, 0x85, 0x4a, 0x30, 0xd7, 0x72, 0x54, 0x67, 0x60,
+	0xa7, 0x67, 0x28, 0x1e, 0x05, 0xf0, 0x74, 0xa4, 0x90, 0xe6, 0x0c, 0x49, 0x9b, 0xfe, 0x16, 0x38,
+	0x38, 0x76, 0x77, 0xf1, 0xd5, 0x73, 0x79, 0xbe, 0xc3, 0x40, 0xca, 0x1f, 0x25, 0x58, 0xe4, 0x04,
+	0x55, 0xcd, 0x76, 0x90, 0x42, 0xb2, 0x11, 0x9e, 0x94, 0x8d, 0x05, 0x37, 0x32, 0x74, 0x05, 0x16,
+	0x88, 0x2f, 0xb1, 0xf2, 0x40, 0x98, 0xab, 0x6b, 0x14, 0x5c, 0x2f, 0xc3, 0x6c, 0xc5, 0xc1, 0x7d,
+	0xb2, 0xe0, 0xc8, 0x98, 0x8c, 0xe2, 0x9f, 0xbf, 0x58, 0x81, 0x9e, 0x66, 0x3b, 0x7c, 0x57, 0xfe,
+	0xe3, 0xaf, 0x85, 0x86, 0xfb, 0x23, 0x58, 0xdc, 0x1f, 0x18, 0xd6, 0xa0, 0x4f, 0x04, 0x62, 0xa7,
+	0xa5, 0xad, 0xc8, 0x76, 0xb4, 0x20, 0x9f, 0x9d, 0x6e, 0xae, 0xfe, 0xc6, 0x37, 0x0b, 0x01, 0x8a,
+	0xde, 0xe8, 0x07, 0x10, 0x7d, 0xa4, 0x59, 0xce, 0x40, 0xed, 0x55, 0x1a, 0x34, 0xa0, 0x68, 0xe1,
+	0xd2, 0xd9, 0xe9, 0xe6, 0xf2, 0x53, 0x6e, 0x34, 0x05, 0xa0, 0xef, 0x89, 0x6e, 0x02, 0xd4, 0xda,
+	0x8d, 0x16, 0xb6, 0x9e, 0x62, 0xcb, 0x4e, 0x47, 0xe8, 0x94, 0xe9, 0xb3, 0xd3, 0xcd, 0x15, 0xdd,
+	0x31, 0xb9, 0x55, 0x00, 0x0a, 0xbe, 0xe8, 0x2e, 0x2c, 0x95, 0x6a, 0xad, 0xd6, 0xe0, 0xb0, 0x64,
+	0xf4, 0x55, 0x4d, 0xa7, 0x5b, 0x14, 0x2d, 0x64, 0xce, 0x4e, 0x37, 0xd7, 0xba, 0xba, 0xdd, 0x1a,
+	0x1c, 0x76, 0xa9, 0x5d, 0x40, 0x07, 0xfc, 0x95, 0x3b, 0x10, 0x0b, 0xec, 0x24, 0xba, 0x0a, 0x73,
+	0x55, 0xac, 0x76, 0xb1, 0xc5, 0x44, 0x5e, 0x58, 0x21, 0xbb, 0xda, 0xa3, 0x16, 0x71, 0x57, 0x99,
+	0x8f, 0xf2, 0x5f, 0x09, 0x66, 0x48, 0xe4, 0xdf, 0xac, 0x9e, 0x6f, 0x05, 0xf4, 0x1c, 0xf3, 0x8e,
+	0xf3, 0x14, 0x62, 0xce, 0x8f, 0x88, 0x39, 0xe1, 0x83, 0xa7, 0x55, 0x72, 0xf4, 0xd5, 0x73, 0x79,
+	0x56, 0x27, 0xdb, 0xad, 0x7c, 0x16, 0x86, 0x18, 0xc1, 0x16, 0x0d, 0xbd, 0xab, 0x91, 0x9a, 0x8a,
+	0x0a, 0x42, 0x85, 0x88, 0xdf, 0x58, 0xf3, 0xd8, 0x3d, 0x0f, 0x32, 0x4a, 0xd7, 0x48, 0x63, 0x73,
+	0x9e, 0x99, 0x58, 0x5c, 0x23, 0x19, 0x45, 0xf7, 0xbc, 0x35, 0x86, 0x29, 0xcb, 0x0a, 0xd3, 0xaf,
+	0xcb, 0x20, 0x2c, 0x54, 0xba, 0x68, 0xa1, 0xa8, 0x0d, 0xa8, 0xaa, 0xda, 0x4e, 0xdb, 0x52, 0x75,
+	0x9b, 0xcd, 0xad, 0xf5, 0x31, 0x4d, 0x5a, 0xa4, 0xf0, 0x16, 0x47, 0xaf, 0xf7, 0xc6, 0x3c, 0x04,
+	0xa6, 0x09, 0x78, 0x74, 0x0d, 0xe6, 0x9a, 0x58, 0xb5, 0x0d, 0x57, 0x6b, 0xde, 0x3a, 0x2c, 0x6a,
+	0x15, 0xd7, 0xc1, 0xfc, 0xd0, 0x3b, 0x30, 0xbf, 0x87, 0x6d, 0x5b, 0x3d, 0xc2, 0xe9, 0x59, 0x0a,
+	0x91, 0x39, 0x24, 0xd5, 0x67, 0x66, 0x01, 0xe3, 0x7a, 0x2a, 0x43, 0x09, 0x16, 0x48, 0xe2, 0xbe,
+	0x8e, 0xfa, 0x90, 0x0e, 0xd6, 0x07, 0xa1, 0x1f, 0x8c, 0x16, 0x87, 0x12, 0x5b, 0x04, 0x95, 0xce,
+	0x4d, 0x98, 0x6d, 0x1a, 0x3d, 0x5e, 0x12, 0xe2, 0x82, 0xec, 0x88, 0xb5, 0xb0, 0x7c, 0x76, 0xba,
+	0x99, 0xb0, 0xc8, 0xb8, 0x10, 0x0d, 0x03, 0x28, 0xff, 0x90, 0x00, 0x7c, 0x89, 0xa1, 0x3b, 0x30,
+	0xdb, 0x38, 0x56, 0x6d, 0x57, 0x24, 0x71, 0x8f, 0x88, 0x5a, 0x0b, 0x97, 0x78, 0x76, 0x12, 0x26,
+	0xf9, 0x29, 0xb2, 0xd1, 0x71, 0xd4, 0x00, 0xf0, 0xb4, 0x40, 0x24, 0x12, 0xf1, 0x6a, 0x72, 0x40,
+	0x68, 0x85, 0x75, 0xce, 0xb3, 0xd2, 0xf1, 0xbc, 0xc5, 0x22, 0xe2, 0x73, 0xa0, 0x2c, 0xcc, 0xd4,
+	0xb4, 0x8e, 0x5b, 0x78, 0x3c, 0x71, 0xea, 0x5a, 0x47, 0x44, 0x50, 0x1f, 0x2a, 0xf9, 0x86, 0x61,
+	0x39, 0x17, 0x4b, 0x3e, 0xe0, 0xf1, 0x46, 0xf2, 0xd3, 0x49, 0xfe, 0x01, 0x2c, 0x90, 0xbc, 0x51,
+	0xb1, 0xdd, 0x06, 0xd8, 0x53, 0x3b, 0xf9, 0x6e, 0xd7, 0xc2, 0xb6, 0xcd, 0x4b, 0xb1, 0xb7, 0xa1,
+	0x7d, 0x6f, 0x44, 0xdc, 0x50, 0xdf, 0x5f, 0xf9, 0x97, 0x04, 0x40, 0xa9, 0x58, 0x56, 0xfe, 0x2f,
+	0x32, 0x74, 0x0b, 0xa2, 0x55, 0x4d, 0xff, 0x75, 0xcb, 0xc4, 0xb8, 0xcb, 0x7b, 0xda, 0x65, 0x0e,
+	0x5e, 0xee, 0xb9, 0x03, 0x62, 0x5f, 0xf3, 0xbc, 0x47, 0xa4, 0x1a, 0x11, 0xa4, 0x1a, 0x10, 0xc8,
+	0xf4, 0x52, 0x55, 0xfe, 0x1c, 0x86, 0x05, 0xf7, 0x86, 0xf5, 0xcd, 0x36, 0x9d, 0x3b, 0x81, 0xa6,
+	0x93, 0x0a, 0xdc, 0xf5, 0xa6, 0x68, 0x3c, 0xe5, 0x91, 0xc6, 0xb3, 0x1c, 0x24, 0x98, 0xb6, 0xf9,
+	0xc4, 0x5e, 0x3d, 0x97, 0xa3, 0x36, 0x41, 0x91, 0xd3, 0xa9, 0x7c, 0x11, 0x86, 0x94, 0xcb, 0xe1,
+	0x9f, 0xc8, 0x7b, 0x81, 0x13, 0x99, 0x09, 0xcc, 0xf4, 0xe6, 0x54, 0x7e, 0xc5, 0x53, 0xf9, 0x27,
+	0x09, 0x96, 0xdc, 0xe4, 0x7d, 0x1d, 0xcd, 0x68, 0x3d, 0xd8, 0x8c, 0x46, 0x3e, 0x22, 0x46, 0x1b,
+	0x52, 0xd5, 0x5f, 0x0c, 0xaf, 0x13, 0xb3, 0xe4, 0x28, 0xb1, 0xa6, 0xe4, 0xa2, 0xdd, 0x2a, 0x42,
+	0x5b, 0x49, 0x88, 0xb6, 0x12, 0xe2, 0x13, 0x68, 0x25, 0xc4, 0xa0, 0x7c, 0x1c, 0x81, 0x78, 0x50,
+	0x82, 0x28, 0x1f, 0x6c, 0x4e, 0x28, 0xb0, 0x9c, 0xe9, 0x1a, 0x54, 0x7b, 0x42, 0x83, 0x5a, 0x9b,
+	0x2c, 0xc2, 0xaf, 0xd0, 0xa4, 0x6e, 0x43, 0xb4, 0x85, 0x2d, 0x4d, 0xed, 0xd5, 0x06, 0x7d, 0x9a,
+	0xd3, 0x68, 0x61, 0x83, 0x83, 0xd7, 0x6c, 0x77, 0xe0, 0x30, 0x70, 0x4b, 0xf5, 0x01, 0x68, 0x1f,
+	0x52, 0x0d, 0x4b, 0xeb, 0xab, 0xd6, 0x33, 0xa1, 0x12, 0x32, 0xdd, 0x7c, 0x87, 0xb3, 0x5c, 0x36,
+	0x47, 0x1d, 0x04, 0xaa, 0x71, 0x34, 0xfa, 0x21, 0xbb, 0x1b, 0xd4, 0xd4, 0xbe, 0x2b, 0xa7, 0x0c,
+	0x67, 0x42, 0x3a, 0xb7, 0x0b, 0x04, 0x9e, 0x2f, 0xba, 0xeb, 0x6e, 0xd9, 0x1c, 0xcd, 0x4c, 0xc2,
+	0xdf, 0x32, 0x76, 0x9e, 0xfc, 0xf4, 0x4e, 0xdc, 0xb4, 0x6c, 0x91, 0xcd, 0x4b, 0xae, 0x16, 0x68,
+	0x19, 0x12, 0xc5, 0x7a, 0xad, 0xdd, 0xac, 0x57, 0xab, 0xe5, 0xe6, 0x93, 0x5a, 0xbd, 0x54, 0x4e,
+	0x86, 0x50, 0x0a, 0x62, 0x8f, 0xeb, 0xcd, 0x87, 0xd5, 0x7a, 0xbe, 0xc4, 0x4c, 0x12, 0x4a, 0xc0,
+	0xe2, 0xfe, 0x41, 0xbd, 0x79, 0xb0, 0xc7, 0x0c, 0xe1, 0xec, 0x3e, 0x44, 0xbd, 0x1b, 0x07, 0x4a,
+	0xc2, 0x12, 0x31, 0x3f, 0x39, 0xa8, 0x3d, 0xac, 0xd5, 0x1f, 0xd7, 0x92, 0x21, 0xcf, 0xd2, 0x28,
+	0xd7, 0x4a, 0x95, 0xda, 0x7d, 0xc6, 0x40, 0x2d, 0xef, 0xd6, 0x2b, 0xb5, 0x72, 0x29, 0x19, 0xf6,
+	0x0c, 0xf7, 0xf2, 0x95, 0x6a, 0xb9, 0x94, 0x8c, 0x64, 0xdf, 0x82, 0xd4, 0xd8, 0x4d, 0xd7, 0xf3,
+	0xaa, 0x96, 0xf3, 0xa5, 0x72, 0x33, 0x19, 0xca, 0xee, 0x43, 0x62, 0xa4, 0x80, 0xa0, 0x55, 0x48,
+	0x15, 0xeb, 0xb5, 0x52, 0xa5, 0x5d, 0xa9, 0xd7, 0x84, 0x35, 0x20, 0x88, 0xfb, 0xe6, 0x76, 0xf3,
+	0x80, 0xc4, 0xc1, 0xe2, 0xe5, 0xb6, 0x7b, 0xf9, 0x6a, 0x8b, 0xc4, 0x72, 0x00, 0xb1, 0x80, 0x40,
+	0xe9, 0xa4, 0x95, 0xe2, 0x48, 0x38, 0x95, 0xe2, 0x93, 0x66, 0xf9, 0xdd, 0x72, 0xb1, 0x5d, 0x2e,
+	0xf1, 0x70, 0x2a, 0x45, 0x2f, 0xbe, 0xb0, 0xeb, 0x92, 0x2f, 0xed, 0x55, 0xda, 0x6d, 0x1a, 0xcf,
+	0x36, 0xac, 0x4e, 0x2c, 0x9a, 0x2e, 0xf6, 0x41, 0x39, 0x5f, 0x6d, 0x3f, 0xf8, 0x69, 0x32, 0x94,
+	0xdd, 0x82, 0xd4, 0xd8, 0x85, 0x07, 0x2d, 0xc2, 0x7c, 0xa3, 0xde, 0x6c, 0x3f, 0x39, 0x68, 0x24,
+	0x43, 0x37, 0xfe, 0x1e, 0x87, 0xd9, 0x62, 0xbf, 0xfb, 0xe8, 0x3a, 0xba, 0x0d, 0xf1, 0xfc, 0xc0,
+	0x31, 0xf2, 0xdd, 0xae, 0xfb, 0x14, 0x10, 0xf8, 0x3c, 0xcd, 0x04, 0x7e, 0x29, 0xf1, 0xcf, 0x5e,
+	0xac, 0x48, 0x1f, 0xff, 0x5e, 0x9e, 0xeb, 0x58, 0x58, 0x75, 0x48, 0x45, 0x5e, 0xe4, 0x68, 0xfa,
+	0xd5, 0xe5, 0xdf, 0x5c, 0x33, 0xfe, 0x9f, 0xca, 0xb7, 0x83, 0xa0, 0x0f, 0xff, 0xf9, 0xef, 0xbf,
+	0x86, 0x63, 0x10, 0xda, 0x95, 0xb2, 0xca, 0x5c, 0x8e, 0x7e, 0xb8, 0xa0, 0x1f, 0x43, 0x82, 0xf3,
+	0x78, 0xcd, 0x34, 0x58, 0x78, 0x32, 0xc1, 0x9f, 0x63, 0x0b, 0x79, 0x1f, 0x52, 0x84, 0xa0, 0x84,
+	0x7b, 0xd8, 0xc1, 0xd3, 0x44, 0xf2, 0x7d, 0x97, 0xa0, 0x4b, 0x21, 0x74, 0x51, 0x97, 0x20, 0xb4,
+	0x1b, 0xca, 0xa6, 0x72, 0xfc, 0x59, 0x20, 0xf7, 0xdb, 0xfa, 0x0e, 0x39, 0x21, 0xbf, 0x43, 0xfb,
+	0x2c, 0x49, 0x8c, 0xfd, 0x82, 0x48, 0xaf, 0x4c, 0x20, 0x5d, 0xa5, 0xa4, 0x09, 0x16, 0xa8, 0x4f,
+	0xa9, 0x02, 0xf2, 0x29, 0xa7, 0x0c, 0xfa, 0xed, 0x09, 0xf4, 0x32, 0xa5, 0x5f, 0xce, 0x79, 0x3d,
+	0xd8, 0x9f, 0xe2, 0x11, 0x5b, 0xf5, 0x7d, 0xec, 0x4c, 0x93, 0x90, 0x6d, 0x4e, 0x1e, 0x39, 0xc2,
+	0x8e, 0x9f, 0x0d, 0x34, 0x21, 0x1b, 0x0f, 0xd9, 0xa6, 0xdf, 0xc7, 0xce, 0x05, 0xa9, 0xf8, 0xde,
+	0x28, 0x1d, 0xcd, 0x03, 0x1a, 0xcb, 0xc3, 0xcf, 0xd8, 0xce, 0xdf, 0xc7, 0xce, 0x94, 0x49, 0xc8,
+	0x8e, 0x12, 0xd3, 0x0c, 0xa0, 0x89, 0x19, 0x78, 0x9f, 0x91, 0x93, 0x2e, 0xe7, 0xa6, 0x60, 0xd5,
+	0xeb, 0x7b, 0xf4, 0x21, 0xad, 0x6e, 0xd2, 0x6a, 0x9e, 0x09, 0x3c, 0x42, 0x91, 0x51, 0x65, 0x8b,
+	0xcf, 0x33, 0x43, 0xba, 0x1d, 0x9d, 0x28, 0x4e, 0x27, 0x5a, 0x70, 0x13, 0x82, 0xda, 0xb0, 0xe4,
+	0xb2, 0xd3, 0x44, 0x9c, 0x43, 0xed, 0x7f, 0x98, 0x51, 0xde, 0x8d, 0x31, 0xde, 0x25, 0xca, 0xeb,
+	0x1e, 0x85, 0x5f, 0x40, 0xd2, 0x65, 0xf5, 0x32, 0x72, 0x0e, 0x73, 0xf0, 0xd2, 0x47, 0xd9, 0x95,
+	0x31, 0xf6, 0x24, 0x65, 0x07, 0x3f, 0x3d, 0xe8, 0xe7, 0xec, 0xac, 0x1c, 0x98, 0x5d, 0x75, 0xba,
+	0xb3, 0x72, 0xd5, 0xd5, 0xdd, 0x80, 0x42, 0x28, 0x6d, 0x9a, 0x1e, 0xe0, 0xcc, 0x04, 0x79, 0x34,
+	0x99, 0xec, 0x18, 0xfd, 0x05, 0x0a, 0xc9, 0x4e, 0x60, 0x5d, 0x63, 0xac, 0x63, 0x2a, 0x39, 0x64,
+	0xa7, 0x85, 0x71, 0x4e, 0x29, 0x94, 0x9d, 0x09, 0xfc, 0x19, 0xc6, 0x3f, 0x51, 0x2c, 0xef, 0xb1,
+	0xc4, 0xd3, 0x0c, 0x7f, 0x89, 0x5a, 0x36, 0xe8, 0x4c, 0xe7, 0x3e, 0x23, 0x2b, 0x31, 0x3e, 0xf5,
+	0x2c, 0x7d, 0x6e, 0xbd, 0x26, 0xa1, 0x36, 0xc4, 0x3c, 0xee, 0x8b, 0xb4, 0x72, 0x59, 0x24, 0x1e,
+	0x79, 0x45, 0x1e, 0x67, 0xe5, 0x45, 0x8f, 0xfa, 0x7c, 0x99, 0x56, 0x36, 0x45, 0xe6, 0x09, 0x6f,
+	0xc9, 0x63, 0xec, 0x99, 0xbf, 0x85, 0xff, 0x32, 0x94, 0xc3, 0x4f, 0xaf, 0x7f, 0x34, 0x94, 0x23,
+	0x9d, 0x7e, 0xf7, 0xe5, 0x50, 0x76, 0x5f, 0x8b, 0x5f, 0x0e, 0x65, 0xfa, 0xca, 0xf6, 0x72, 0x28,
+	0x7b, 0x1f, 0x3f, 0x27, 0x43, 0x59, 0xf6, 0x9f, 0x93, 0xa9, 0xfc, 0x32, 0xde, 0x51, 0x39, 0x19,
+	0xca, 0x3b, 0xfe, 0x60, 0xc4, 0x1c, 0x38, 0x88, 0x1c, 0x5f, 0xc4, 0x0b, 0xd9, 0x04, 0x15, 0x9d,
+	0x0c, 0xe5, 0x2b, 0xfc, 0x29, 0x6f, 0xdc, 0x7d, 0x54, 0x1e, 0x27, 0x43, 0x39, 0xc3, 0x9d, 0x67,
+	0x4c, 0xc3, 0x76, 0xf8, 0xf4, 0xfc, 0x44, 0x9d, 0x0c, 0xe5, 0xeb, 0xc2, 0x47, 0xda, 0x38, 0xdd,
+	0x24, 0x35, 0x9c, 0x0c, 0xe5, 0x75, 0x01, 0xc4, 0x08, 0x85, 0x43, 0x54, 0xd8, 0xf8, 0xe8, 0x43,
+	0x39, 0xde, 0x33, 0x3a, 0x6a, 0xef, 0xd8, 0xb0, 0x9d, 0xdd, 0x9b, 0xd7, 0x6e, 0xde, 0xf8, 0xe4,
+	0xf5, 0x86, 0xf4, 0xe9, 0xeb, 0x0d, 0xe9, 0x8b, 0xd7, 0x1b, 0x52, 0x43, 0x3a, 0x9c, 0xa3, 0xff,
+	0x6f, 0x78, 0xe7, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2b, 0xfb, 0x63, 0xd0, 0x35, 0x19, 0x00,
+	0x00,
 }

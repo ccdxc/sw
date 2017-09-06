@@ -44,13 +44,6 @@ message Tenant {
      TenantStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// list of tenants
-message TenantList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated Tenant Tenants = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "tenants,omitempty"];
-}
-
 // Tenant REST API
 service TenantV1 {
      // Prefix for all resources served by this service.
@@ -111,13 +104,6 @@ message Network {
      NetworkStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// list of networks
-message NetworkList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated Network Networks = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "networks,omitempty"];
-}
-
 // Network REST API
 service NetworkV1 {
      // Prefix for all resources served by this service.
@@ -173,13 +159,6 @@ message SecurityGroup {
 
     // Status contains the current state of the security group.
   SecurityGroupStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// list of security groups
-message SecurityGroupList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated SecurityGroup SecurityGroups = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-groups,omitempty"];
 }
 
 // SecurityGroup REST API
@@ -241,13 +220,6 @@ message Sgpolicy {
     SgpolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// list of sgpolicies
-message SgpolicyList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated Sgpolicy SgPolicies = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sgpolicies,omitempty"];
-}
-
 // Sgpolicy REST API
 service SgpolicyV1 {
     // Prefix for all resources served by this service.
@@ -303,13 +275,6 @@ message Service {
 
     // Status contains the current state of the Service.
     ServiceStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// list of services
-message ServiceList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated Service Services = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
 }
 
 // Service REST API
@@ -374,13 +339,6 @@ message LbPolicy {
 
     // Status contains the current state of the LbPolicy.
     LbPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// list of lb-policies
-message LbPolicyList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated LbPolicy LbPolicies = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "lb-policies,omitempty"];
 }
 
 // LbPolicy REST API
@@ -459,13 +417,6 @@ message Endpoint {
 
     // Status contains the current state of the Endpoint.
     EndpointStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// list of endpoints
-message EndpointList {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ListMeta L =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    repeated Endpoint Endpoints = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "endpoints,omitempty"];
 }
 
 // endpoint REST API

@@ -1,0 +1,12 @@
+{
+	"kind": "workload",
+	"meta": {
+		"name": "prod-app-1",
+		"labels" : { "io.pensando.network.prio":"high", "io.pensando.network.sg":"prod-app-sg", "io.pensando.network.svc" : "prod-app" }
+	},
+	"spec": {
+		"network" : "sjc-lab2-net10.13",
+		"node" : "node5",
+		"dns" : "auto"
+	}
+}
