@@ -542,13 +542,15 @@ def capri_asm_output_pa(gress_pa):
                         next_flit_bits = (cf.phv_bit + cf.width) % flit_sz
                         this_flit_bits = cf.width - next_flit_bits
 
-                    pstr += indent + ('%s : %d; // %s, Crossed Flits ' \
+                    if this_flit_bits:
+                        pstr += indent + ('%s : %d; // %s, Crossed Flits ' \
                             '(from flit %d to %d). Split into two fields\n' % \
                             (_get_output_name(cf.hfname) + '_1',  this_flit_bits,
                                 _get_phv_loc(flit_inst, cf.phv_bit, this_flit_bits),
                                 flit_inst, flit_inst+1))
 
-                    nextflit_pstr = indent + ('%s : %d; // %s, Crossed Flits' \
+                    if next_flit_bits:
+                        nextflit_pstr = indent + ('%s : %d; // %s, Crossed Flits' \
                             '(from flit %d to %d). Split ' \
                             'into two fields\n' % \
                             (_get_output_name(cf.hfname) + '_0', next_flit_bits,
