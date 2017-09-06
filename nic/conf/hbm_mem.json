@@ -118,7 +118,7 @@
         }, 
         {
             "name": "ipsec_pad_table",
-            "size_kb": 64
+            "size_kb": 1 
         },
         {
             "name":"ipsec_ip_header",
