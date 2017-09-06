@@ -646,7 +646,7 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 
 	select {
 	case ev, ok := <-evCh:
-		if ok {
+		if ok && ev.Type != WatcherError {
 			t.Fatalf("Received event on cancelled watch: %+v\n", ev)
 		}
 	default:
