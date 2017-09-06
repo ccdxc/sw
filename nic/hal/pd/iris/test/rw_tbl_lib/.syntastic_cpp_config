@@ -1,0 +1,9 @@
+-I ../../../../../third-party/googletest-release-1.8.0/googletest/include
+-I ../../../../third-party/spdlog/include
+-I ../../
+-I ../../../../../include
+-I ../../../../../third-party/spdlog/include
+-I ../../../../../gen/iris/include
+-I ../../../../../gen/common_rxdma_actions/include
+-I ../../../../../gen/common_txdma_actions/include
+-std=c++11

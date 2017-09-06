@@ -151,6 +151,11 @@ public:
     // get APIs for L4LB related state
     slab *l4lb_pd_slab(void) const { return l4lb_pd_slab_; }
 
+    // get APIs for RW table related state
+    slab *rw_entry_slab(void) const { return rw_entry_slab_; }
+    ht *rw_table_ht(void) const { return rw_table_ht_; }
+    indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
+
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
@@ -338,6 +343,13 @@ private:
     // l4lb related state
     struct {
         slab       *l4lb_pd_slab_;
+    } __PACK__;
+
+    // rw table management
+    struct {
+        slab      *rw_entry_slab_;
+        ht        *rw_table_ht_;   
+        indexer   *rw_tbl_idxr_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

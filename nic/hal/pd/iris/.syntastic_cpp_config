@@ -3,6 +3,7 @@
 -I ../../../hal/pd
 -I ../../../gen
 -I ../../../gen/common_rxdma_actions/include
+-I ../../../gen/common_txdma_actions/include
 -I ../../../p4/nw/include
 -I ../../../gen/protobuf
 -I ../../pd/common

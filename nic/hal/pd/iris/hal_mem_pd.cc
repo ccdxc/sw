@@ -27,6 +27,7 @@
 #include <crypto_keys_pd.hpp>
 #include <ipseccb_pd.hpp>
 #include <l4lb_pd.hpp>
+#include <rw_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -250,6 +251,20 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((l4lb_pd_slab_ != NULL), false);
 
+    // initialize rw table management structures
+    rw_entry_slab_ = slab::factory("RW TBL", HAL_SLAB_RW_PD,
+                                 sizeof(hal::pd::pd_rw_entry_t), 128,
+                                 true, true, false, true);
+    HAL_ASSERT_RETURN((rw_entry_slab_ != NULL), false);
+
+    rw_table_ht_ = ht::factory(HAL_MAX_RW_TBL_ENTRIES,
+                               hal::pd::rw_entry_pd_get_key_func,
+                               hal::pd::rw_entry_pd_compute_hash_func,
+                               hal::pd::rw_entry_pd_compare_key_func);
+    HAL_ASSERT_RETURN((rw_table_ht_ != NULL), false);
+
+    rw_tbl_idxr_ = new hal::utils::indexer(HAL_MAX_RW_TBL_ENTRIES);
+    HAL_ASSERT_RETURN((rw_tbl_idxr_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -334,6 +349,10 @@ hal_state_pd::hal_state_pd()
     
     ipseccb_slab_ = NULL;
     ipseccb_hwid_ht_ = NULL;
+
+    rw_entry_slab_ = NULL;
+    rw_table_ht_ = NULL;
+    rw_tbl_idxr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -396,6 +415,11 @@ hal_state_pd::~hal_state_pd()
 
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
+
+
+    rw_entry_slab_ ? delete rw_entry_slab_ : HAL_NOP;
+    rw_table_ht_ ? delete rw_table_ht_ : HAL_NOP;
+    rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -1005,6 +1029,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_L4LB_PD:
+        g_hal_state_pd->l4lb_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_RW_PD:
+        g_hal_state_pd->rw_entry_slab()->free_(elem);
         break;
 
     default:
