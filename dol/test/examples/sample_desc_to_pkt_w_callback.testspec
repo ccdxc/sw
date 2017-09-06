@@ -1,5 +1,5 @@
 # Test Spec
-config_filter:
+selectors:
     src:
         tenant  : filter://any
         segment : filter://any

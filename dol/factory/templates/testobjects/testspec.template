@@ -2,7 +2,7 @@
 meta:
     id: TESTSPEC
 
-config_filter:
+selectors:
     src:
         tenant      : filter://any
         segment     : filter://any
@@ -14,9 +14,9 @@ config_filter:
         endpoint    : filter://any
         interface   : filter://any
     flow: None
-    maxflows: None
+    maxflows: 0
     session: None
-    maxsessions: None
+    maxsessions: 0
     rdma:
         lqpair  : filter://any # Local QPair
         rqpair  : filter://any # Remote QPair

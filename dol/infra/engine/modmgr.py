@@ -66,8 +66,8 @@ class Module:
 
     def __select_config(self):
         utils.LogFunctionBegin(self.logger)
-        objs = SessionHelper.GetMatchingConfigObjects(self.testspec.config_filter)
-        self.testspec.config_filter.matching_objects = objs
+        objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+        self.testspec.selectors.matching_objects = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS

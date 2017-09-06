@@ -1,5 +1,5 @@
 # TCP Proxy RX Inorder Sample TestSpec file.
-config_filter:
+selectors:
     # Update: Vikasd
     # Choose the config, that only selects flows matching below packet
     # templates.

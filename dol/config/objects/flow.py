@@ -314,46 +314,46 @@ class FlowObject(base.ConfigObjectBase):
         return
 
 
-    def IsFilterMatch(self, config_filter):
+    def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching Flow %s" % self.GID())
         # Match Source Tenant
-        match = self.__sten.IsFilterMatch(config_filter.src.tenant)
+        match = self.__sten.IsFilterMatch(selectors.src.tenant)
         cfglogger.debug("- Source Tenant Filter Match =", match)
         if match == False: return match
         # Match Destination Tenant
-        match = self.__dten.IsFilterMatch(config_filter.dst.tenant)
+        match = self.__dten.IsFilterMatch(selectors.dst.tenant)
         cfglogger.debug("- Destination Tenant Filter Match =", match)
         if match == False: return match
         # Match Source Segment
-        match = self.__sseg.IsFilterMatch(config_filter.src.segment)
+        match = self.__sseg.IsFilterMatch(selectors.src.segment)
         cfglogger.debug("- Source Segment Filter Match =", match)
         if match == False: return match
         # Match Destination Segment
-        match = self.__dseg.IsFilterMatch(config_filter.dst.segment)
+        match = self.__dseg.IsFilterMatch(selectors.dst.segment)
         cfglogger.debug("- Destination Segment Filter Match =", match)
         if match == False: return match
         # Match Source Endpoint
         if self.__sep:
-            match = self.__sep.IsFilterMatch(config_filter.src.endpoint)
+            match = self.__sep.IsFilterMatch(selectors.src.endpoint)
             cfglogger.debug("- Source Endpoint Filter Match =", match)
             if match == False: return match
         # Match Destination Endpoint
         if self.__dep:
-            match = self.__dep.IsFilterMatch(config_filter.dst.endpoint)
+            match = self.__dep.IsFilterMatch(selectors.dst.endpoint)
             cfglogger.debug("- Destination Endpoint Filter Match =", match)
             if match == False: return match
         # Match Source Interface
         if self.__sep:
-            match = self.__sep.intf.IsFilterMatch(config_filter.src.interface)
+            match = self.__sep.intf.IsFilterMatch(selectors.src.interface)
             cfglogger.debug("- Source Interface Filter Match =", match)
             if match == False: return match
         # Match Destination Interface
         if self.__dep:
-            match = self.__dep.intf.IsFilterMatch(config_filter.dst.interface)
+            match = self.__dep.intf.IsFilterMatch(selectors.dst.interface)
             cfglogger.debug("- Destination Interface Filter Match =", match)
             if match == False: return match
         # Match Flow
-        match = super().IsFilterMatch(config_filter.flow.filters)
+        match = super().IsFilterMatch(selectors.flow.filters)
         cfglogger.debug("- Flow Filter Match =", match)
         if match == False: return match
         return True

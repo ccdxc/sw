@@ -1,5 +1,5 @@
 # Test Spec
-config_filter:
+selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://native=False

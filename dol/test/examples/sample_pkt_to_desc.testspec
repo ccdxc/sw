@@ -1,5 +1,5 @@
 # Ethernet RX Sample TestSpec file.
-config_filter:
+selectors:
     src:
         tenant  : filter://any
         segment : filter://any

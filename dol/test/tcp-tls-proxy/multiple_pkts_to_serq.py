@@ -13,7 +13,7 @@ tlscb = 0
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     elem = module.iterator.Get()
-    module.testspec.config_filter.flow.Extend(elem.flow)
+    module.testspec.selectors.flow.Extend(elem.flow)
     return
 
 def Teardown(infra, module):

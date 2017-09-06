@@ -123,20 +123,20 @@ class SessionObject(base.ConfigObjectBase):
 
         return
 
-    def IsFilterMatch(self, config_filter):
+    def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching Session %s" % self.GID())
         # Match on Initiator Flow
-        config_filter.flow = config_filter.session.iflow
-        match = self.iflow.IsFilterMatch(config_filter)
+        selectors.flow = selectors.session.iflow
+        match = self.iflow.IsFilterMatch(selectors)
         cfglogger.debug("- IFlow Filter Match =", match)
         if match == False: return match
         # Match on Responder Flow
-        config_filter.flow = config_filter.session.rflow
-        match = self.rflow.IsFilterMatch(config_filter)
+        selectors.flow = selectors.session.rflow
+        match = self.rflow.IsFilterMatch(selectors)
         cfglogger.debug("- RFlow Filter Match =", match)
         if match == False: return match
         # Match on the Session
-        match = super().IsFilterMatch(config_filter.session.base.filters)
+        match = super().IsFilterMatch(selectors.session.base.filters)
         cfglogger.debug("- Session Filter Match =", match)
         return match
 
@@ -338,35 +338,35 @@ class SessionObjectHelper:
     def GetAll(self):
         return self.objlist
 
-    def __get_matching_sessions(self, config_filter = None):
+    def __get_matching_sessions(self, selectors = None):
         ssns = []
         for ssn in self.objlist:
-            if ssn.IsFilterMatch(config_filter):
+            if ssn.IsFilterMatch(selectors):
                 ssns.append(ssn)
-        if config_filter.maxsessions == None:
+        if selectors.maxsessions == None:
             return ssns
-        if config_filter.maxsessions >= len(ssns):
+        if selectors.maxsessions >= len(ssns):
             return ssns
-        return ssns[:config_filter.maxsessions]
+        return ssns[:selectors.maxsessions]
 
-    def __get_matching_flows(self, config_filter = None):
+    def __get_matching_flows(self, selectors = None):
         flows = []
         for ssn in self.objlist:
-            if ssn.iflow.IsFilterMatch(config_filter):
+            if ssn.iflow.IsFilterMatch(selectors):
                 flows.append(ssn.iflow)
-            if ssn.rflow.IsFilterMatch(config_filter):
+            if ssn.rflow.IsFilterMatch(selectors):
                 flows.append(ssn.rflow)
-        if config_filter.maxflows == None:
+        if selectors.maxflows == None:
             return flows
-        if config_filter.maxflows >= len(flows):
+        if selectors.maxflows >= len(flows):
             return flows
-        return flows[:config_filter.maxflows]
+        return flows[:selectors.maxflows]
 
-    def GetMatchingConfigObjects(self, config_filter = None):
-        if config_filter.IsFlowBased():
-            return self.__get_matching_flows(config_filter)
-        elif config_filter.IsSessionBased():
-            return self.__get_matching_sessions(config_filter)
+    def GetMatchingConfigObjects(self, selectors = None):
+        if selectors.IsFlowBased():
+            return self.__get_matching_flows(selectors)
+        elif selectors.IsSessionBased():
+            return self.__get_matching_sessions(selectors)
         
         cfglogger.error("INVALID Config Filter in testspec.")
         return []

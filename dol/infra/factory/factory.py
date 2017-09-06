@@ -30,7 +30,7 @@ def init():
     return
 
 def Generate(infra_data, module):
-    for obj in module.testspec.config_filter.matching_objects:
+    for obj in module.testspec.selectors.matching_objects:
         tcid = TestCaseIdAllocator.get()
         if GlobalOptions.tcid != None:
             gl_opt_tcid = utils.ParseInteger(GlobalOptions.tcid)

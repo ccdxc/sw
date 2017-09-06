@@ -61,7 +61,7 @@ class TestSpecObject(objects.FrameworkObject):
             self.session[0].step = step
 
         self.__merge()
-        self.config_filter = TestSpecConfigFilter(self.config_filter)
+        self.selectors = TestSpecConfigFilter(self.selectors)
         return
 
     def __merge_section(self, sec_name):
@@ -75,7 +75,7 @@ class TestSpecObject(objects.FrameworkObject):
         return
 
     def __merge(self):
-        self.__merge_section('config_filter')
+        self.__merge_section('selectors')
         self.__merge_section('packets')
         self.__merge_section('descriptors')
         self.__merge_section('buffers')
