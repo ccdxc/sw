@@ -9,7 +9,7 @@ entries:
     - entry:
         label: networking
         responder:
-            port : const/28750
+            port : const/1
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1
@@ -17,7 +17,7 @@ entries:
                     dscp_rw : const/1
                     dscp    : const/3
         initiator: 
-            port : const/2
+            port : const/3
             flow_info:
                 eg_qos:    
                     dscp_rw : const/1
@@ -39,13 +39,13 @@ entries:
     - entry:
         label: recirc
         responder:
-            port : const/1
+            port : const/36031
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1
                     cos     : const/5
         initiator: 
-            port : const/4
+            port : const/2
 
     - entry:
         label: gft_drop

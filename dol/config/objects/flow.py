@@ -306,7 +306,7 @@ class FlowObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.flow_handle
-        if resp_spec.flow_coll and self.label == 'NETWORKING':
+        if resp_spec.flow_coll and self.label == 'RECIRC':
             self.label = FLOW_COLLISION_LABEL
         cfglogger.info("- %s %s = (HDL = %x), Label = %s" %\
                        (self.direction, self.GID(),

@@ -502,24 +502,26 @@ modules:
         args    :
             maxflows : 1
         iterate:
+            # Tagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
               segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=True
             - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
               segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
-              segment : filter://native=True
             - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
               segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
-              segment : filter://native=True
             - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
               segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=True
             - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
               segment : filter://native=False
+            # Untagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
             - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
               segment : filter://native=True
 
@@ -548,8 +550,28 @@ modules:
         args    :
             maxflows : 1
         iterate:
-            - flow     : filter://fwtype=L3,type=IPV4,proto=UDP,label=FLOW-COLLISION,action=ALLOW
-            - flow     : filter://fwtype=L3,type=IPV6,proto=UDP,label=FLOW-COLLISION,action=ALLOW
+            # Tagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            # Untagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
 
     - module:
         name    : PKT_TO_SERQ_V4
