@@ -12,6 +12,16 @@ input_properties_mac_vlan:
   seq         c2, k.recirc_header_valid, TRUE
   phvwr.c2    p.control_metadata_recirc_reason, k.recirc_header_reason
 
+  seq         c2, k.capri_intrinsic_tm_iport, TM_PORT_DMA
+  phvwr.c2    p.p4plus_to_p4_valid, FALSE
+  cmov        r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
+                       CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
+                       P4PLUS_TO_P4_HDR_SZ), CAPRI_GLOBAL_INTRINSIC_HDR_SZ
+  sub         r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
+                     capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
+  phvwr       p.control_metadata_packet_len, r1
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   // if table lookup is miss, return
   nop.!c1.e
   seq         c1, d.input_properties_mac_vlan_d.src_lif_check_en, 1
@@ -28,13 +38,8 @@ input_properties_mac_vlan:
   phvwr       p.control_metadata_flow_miss_idx, d.input_properties_mac_vlan_d.flow_miss_idx
   phvwr       p.control_metadata_ipsg_enable, d.input_properties_mac_vlan_d.ipsg_enable
   phvwr       p.control_metadata_lif_filter, d.input_properties_mac_vlan_d.filter
-  phvwr       p.qos_metadata_dscp, d.input_properties_mac_vlan_d.dscp
+  phvwr.e     p.qos_metadata_dscp, d.input_properties_mac_vlan_d.dscp
   phvwr       p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx
-
-  seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
-  cmov        r1, c1, 15, 20
-  sub.e       r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
-  phvwr       p.control_metadata_packet_len, r1
 
 dejavu_check_failed:
   phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_MAPPING_DEJAVU], 1

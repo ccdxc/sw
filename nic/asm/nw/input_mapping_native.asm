@@ -57,7 +57,6 @@ native_ipv4_packet:
   phvwr       p.flow_lkp_metadata_ipv4_hlen, r5
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
   phvwr       p.flow_lkp_metadata_ip_version, k.ipv4_version
-  phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
@@ -115,8 +114,6 @@ native_ipv6_packet:
   phvwr       p.flow_lkp_metadata_lkp_proto, k.ipv6_nextHdr
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
   phvwr       p.flow_lkp_metadata_ip_version, k.ipv6_version
-  add         r7, k.ipv6_payloadLen, 40
-  phvwr       p.l3_metadata_payload_length, r7
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr

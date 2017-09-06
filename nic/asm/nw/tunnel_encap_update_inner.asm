@@ -23,7 +23,6 @@ encap_inner_ipv4_udp_rewrite:
   // TODO: End
   phvwr       p.inner_ipv4_dstAddr, k.ipv4_dstAddr
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
-  phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_UDP
   phvwr       p.udp_valid, FALSE
   phvwr       p.ipv4_valid, FALSE
@@ -43,7 +42,6 @@ encap_inner_ipv4_unknown_rewrite:
   phvwr       p.inner_ipv4_protocol, k.ipv4_protocol
   // TODO: End
   phvwr       p.inner_ipv4_dstAddr, k.ipv4_dstAddr
-  phvwr       p.l3_metadata_payload_length, k.ipv4_totalLen
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4
   phvwr.e     p.ipv4_valid, FALSE
   phvwr       p.inner_ipv4_valid, TRUE
@@ -60,8 +58,6 @@ encap_inner_ipv6_udp_rewrite:
                   k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
   phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
-  add         r7, k.ipv6_payloadLen, 40
-  phvwr       p.l3_metadata_payload_length, r7
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwr       p.udp_valid, FALSE
   phvwr       p.ipv6_valid, FALSE
@@ -81,8 +77,6 @@ encap_inner_ipv6_unknown_rewrite:
   phvwr       p.{inner_ipv6_payloadLen...inner_ipv6_dstAddr[127:120]}, \
                   k.{ipv6_nextHdr...ipv6_dstAddr_sbit0_ebit7}
   phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
-  add         r7, k.ipv6_payloadLen, 40
-  phvwr       p.l3_metadata_payload_length, r7
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwr.e     p.ipv6_valid, FALSE
   phvwr       p.inner_ipv6_valid, TRUE

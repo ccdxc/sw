@@ -28,7 +28,7 @@ encap_vxlan:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN
   phvwr       p.udp_checksum, 0
-  add         r7, k.l3_metadata_payload_length, 30
+  add         r7, k.control_metadata_packet_len, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{vxlan_flags,vxlan_reserved}, 0x08000000
@@ -60,7 +60,7 @@ encap_vxlan_gpe:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN_GPE
   phvwr       p.udp_checksum, 0
-  add         r7, k.l3_metadata_payload_length, 30
+  add         r7, k.control_metadata_packet_len, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{vxlan_gpe_flags,vxlan_gpe_reserved}, 0x90000000
@@ -92,7 +92,7 @@ encap_genv:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_GENV
   phvwr       p.udp_checksum, 0
-  add         r7, k.l3_metadata_payload_length, 30
+  add         r7, k.control_metadata_packet_len, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{genv_ver...genv_protoType}, ETHERTYPE_ETHERNET
@@ -135,7 +135,7 @@ encap_nvgre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.l3_metadata_payload_length, 22
+  add         r7, k.control_metadata_packet_len, 8
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
   b.!c1       f_insert_ipv6_header
@@ -156,7 +156,7 @@ encap_gre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.l3_metadata_payload_length, 4
+  add         r7, k.control_metadata_packet_len, 4
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
     b.!c1       f_insert_ipv6_header
@@ -186,7 +186,7 @@ encap_erspan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.l3_metadata_payload_length, 30
+  add         r7, k.control_metadata_packet_len, 16
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
   b.!c1       f_insert_ipv6_header
@@ -200,7 +200,7 @@ encap_ip:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, r0, k.l3_metadata_payload_length
+  sub         r7, k.control_metadata_packet_len, 14
   bcf         [c1],  f_insert_ipv4_header
   add         r6, 0x4000, k.tunnel_metadata_inner_ip_proto, 8
   b.!c1       f_insert_ipv6_header

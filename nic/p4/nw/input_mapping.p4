@@ -22,7 +22,6 @@ action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv4.ttl);
     modify_field(flow_lkp_metadata.ip_version, inner_ipv4.version);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
-    modify_field(l3_metadata.payload_length, inner_ipv4.totalLen);
     modify_field(l3_metadata.ipv4_option_seen, l3_metadata.inner_ipv4_option_seen);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
@@ -41,7 +40,6 @@ action tunneled_ipv6_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
     modify_field(flow_lkp_metadata.ip_version, inner_ipv6.version);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
-    add(l3_metadata.payload_length, inner_ipv6.payloadLen, 40);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     if (inner_ipv6.nextHdr == IP_PROTO_TCP) {
@@ -88,7 +86,6 @@ action native_ipv4_packet() {
     modify_field(flow_lkp_metadata.ipv4_hlen, ipv4.ihl);
     modify_field(flow_lkp_metadata.ip_ttl, ipv4.ttl);
     modify_field(flow_lkp_metadata.ip_version, ipv4.version);
-    modify_field(l3_metadata.payload_length, ipv4.totalLen);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     if (ipv4.protocol == IP_PROTO_TCP) {
@@ -110,7 +107,6 @@ action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_proto, ipv6.nextHdr);
     modify_field(flow_lkp_metadata.ip_ttl, ipv6.hopLimit);
     modify_field(flow_lkp_metadata.ip_version, ipv6.version);
-    add(l3_metadata.payload_length, ipv6.payloadLen, 40);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     if (ipv6.nextHdr == IP_PROTO_TCP) {
@@ -211,16 +207,6 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
 
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
     modify_field(control_metadata.src_lport, src_lport);
-
-    // update packet length based on tm_iport
-    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
-        subtract(control_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 0x0);
-    } else {
-        subtract(control_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 0x0);
-    }
-    modify_field(capri_p4_intrinsic.packet_len, control_metadata.packet_len);
 }
 
 // this table will only be programmed for uplinks and not for southbound enics
@@ -269,6 +255,19 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  ipsg_enable, dscp, l4_profile_idx, src_lport,
                                  filter, flow_miss_tm_oqueue) {
     adjust_recirc_header();
+
+    // update packet length based on tm_iport
+    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_TO_P4_HDR_SZ));
+        remove_header(p4plus_to_p4);
+    } else {
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
+                 CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+    }
+    modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
+    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 
     // if table is a miss, return. do not perform rest of the actions.
 

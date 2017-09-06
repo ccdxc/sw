@@ -383,16 +383,23 @@
 #define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_CLASSIC_NIC
 #define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_CPU
 
-/*****************************************************************************/
-/* P4+ header size constants (in bytes)                                      */
-/*****************************************************************************/
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+
+/*****************************************************************************/
+/* P4 to P4+ header size constants (in bytes)                                */
+/*****************************************************************************/
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
 #define P4PLUS_ROCE_HDR_SZ             6
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      44
 #define P4PLUS_CPU_HDR_SZ              44
 #define P4PLUS_IPSEC_HDR_SZ            14
+
+/*****************************************************************************/
+/* P4+ to P4 header size constants (in bytes)                                */
+/*****************************************************************************/
+#define CAPRI_TXDMA_INTRINSIC_HDR_SZ   9
+#define P4PLUS_TO_P4_HDR_SZ            14
 
 /*****************************************************************************/
 /* Classic NIC flags                                                         */

@@ -127,18 +127,18 @@ table tunnel_decap_copy_inner {
 /*****************************************************************************/
 action remove_tunnel_hdrs() {
     if (ipv4.valid == TRUE) {
-        subtract(l3_metadata.payload_length, ipv4.totalLen, 20 + 14);
+        subtract(control_metadata.packet_len, ipv4.totalLen, 20);
     } else {
-        subtract(l3_metadata.payload_length, ipv6.payloadLen, 14);
+        modify_field(control_metadata.packet_len, ipv6.payloadLen);
     }
     if ((vxlan.valid == TRUE) or (genv.valid == TRUE)) {
-        add_to_field(l3_metadata.payload_length, -16);
+        add_to_field(control_metadata.packet_len, -16);
     }
     if (gre.valid == TRUE) {
-        add_to_field(l3_metadata.payload_length, -4);
+        add_to_field(control_metadata.packet_len, -4);
     }
     if (nvgre.valid == TRUE) {
-        add_to_field(l3_metadata.payload_length, -4);
+        add_to_field(control_metadata.packet_len, -4);
     }
     remove_header(vxlan);
     remove_header(genv);
@@ -187,7 +187,7 @@ action f_insert_vxlan_header(mac_sa, mac_da) {
     modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_VXLAN);
     modify_field(udp.checksum, 0);
-    add(udp.len, l3_metadata.payload_length, 30);
+    add(udp.len, control_metadata.packet_len, 16);
 
     modify_field(vxlan.flags, 0x8);
     modify_field(vxlan.reserved, 0);
@@ -199,12 +199,12 @@ action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     f_insert_vxlan_header(mac_sa, mac_da);
     if (ip_type == IP_HEADER_TYPE_IPV4) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv4.totalLen, l3_metadata.payload_length, 50);
+        add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         if (ip_type == IP_HEADER_TYPE_IPV6) {
             f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
-            add(ipv6.payloadLen, l3_metadata.payload_length, 30);
+            add(ipv6.payloadLen, control_metadata.packet_len, 16);
             modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
         }
     }
@@ -233,7 +233,7 @@ action f_insert_vxlan_gpe_header(mac_sa, mac_da) {
     modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_VXLAN_GPE);
     modify_field(udp.checksum, 0);
-    add(udp.len, l3_metadata.payload_length, 30);
+    add(udp.len, control_metadata.packet_len, 16);
 
     modify_field(vxlan_gpe.flags, 0x9);
     modify_field(vxlan_gpe.reserved, 0);
@@ -246,11 +246,11 @@ action encap_vxlan_gpe(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_i
     f_insert_vxlan_gpe_header(mac_sa, mac_da);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv4.totalLen, l3_metadata.payload_length, 50);
+        add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 30);
+        add(ipv6.payloadLen, control_metadata.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
     }
     if (vlan_valid == TRUE) {
@@ -279,7 +279,7 @@ action f_insert_genv_header(mac_sa, mac_da) {
     modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_GENV);
     modify_field(udp.checksum, 0);
-    add(udp.len, l3_metadata.payload_length, 30);
+    add(udp.len, control_metadata.packet_len, 16);
 
     modify_field(genv.ver, 0);
     modify_field(genv.oam, 0);
@@ -295,11 +295,11 @@ action encap_genv(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     f_insert_genv_header(mac_sa, mac_da);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv4.totalLen, l3_metadata.payload_length, 50);
+        add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 30);
+        add(ipv6.payloadLen, control_metadata.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
     }
 
@@ -344,11 +344,11 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     f_insert_nvgre_header(mac_sa, mac_da);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv4.totalLen, l3_metadata.payload_length, 42);
+        add(ipv4.totalLen, control_metadata.packet_len, 28);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 22);
+        add(ipv6.payloadLen, control_metadata.packet_len, 8);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
     }
     if (vlan_valid == TRUE) {
@@ -378,11 +378,11 @@ action encap_gre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     modify_field(gre.proto, ethernet.etherType);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv4.totalLen, l3_metadata.payload_length, 24);
+        add(ipv4.totalLen, control_metadata.packet_len, 24);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 4);
+        add(ipv6.payloadLen, control_metadata.packet_len, 4);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
     }
     if (vlan_valid == TRUE) {
@@ -425,11 +425,11 @@ action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) 
     f_insert_erspan_t3_header(mac_sa, mac_da);
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv4.totalLen, l3_metadata.payload_length, 50);
+        add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
-        add(ipv6.payloadLen, l3_metadata.payload_length, 30);
+        add(ipv6.payloadLen, control_metadata.packet_len, 16);
         modify_field(ethernet.etherType, ETHERTYPE_IPV4);
     }
     if (vlan_valid == TRUE) {
@@ -450,11 +450,11 @@ action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) 
 action encap_ip(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     if (ip_type == 0) {
         f_insert_ipv4_header(ip_sa, ip_da, tunnel_metadata.inner_ip_proto);
-        add(ipv4.totalLen, l3_metadata.payload_length, 20);
+        add(ipv4.totalLen, control_metadata.packet_len, 20);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
         f_insert_ipv6_header(ip_sa, ip_da, tunnel_metadata.inner_ip_proto);
-        modify_field(ipv6.payloadLen, l3_metadata.payload_length);
+        modify_field(ipv6.payloadLen, control_metadata.packet_len);
         modify_field(ethernet.etherType, ETHERTYPE_IPV4);
     }
     if (vlan_valid == TRUE) {
@@ -546,7 +546,7 @@ action encap_mpls(mac_sa, mac_da, eompls, num_labels, label0, exp0, bos0, ttl0,
 action encap_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
 {
     f_insert_ipv4_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv4.totalLen, l3_metadata.payload_length,20); // 20 IP. Need to still add padding and esp trailer.
+    add(ipv4.totalLen, control_metadata.packet_len, 20);
     // 42 = Eth(14)+ip(20)
     modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 34);
     // add outer-mac header length
@@ -562,7 +562,7 @@ action encap_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
 action encap_vlan_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
 {
     f_insert_ipv4_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv4.totalLen, l3_metadata.payload_length,20); // 20 IP. Need to still add padding and esp trailer.
+    add(ipv4.totalLen, control_metadata.packet_len, 20);
     f_encap_vlan(vlan_id, ETHERTYPE_IPV4);
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
@@ -577,7 +577,7 @@ action encap_vlan_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
 action encap_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
 {
     f_insert_ipv6_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv6.payloadLen, l3_metadata.payload_length, 40);
+    add(ipv6.payloadLen, control_metadata.packet_len, 40);
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
     add_header(p4_to_p4plus_ipsec);
@@ -592,7 +592,7 @@ action encap_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
 action encap_vlan_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
 {
     f_insert_ipv6_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv6.payloadLen, l3_metadata.payload_length, 40);
+    add(ipv6.payloadLen, control_metadata.packet_len, 40);
     f_encap_vlan(vlan_id, ETHERTYPE_IPV6);
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
@@ -633,7 +633,6 @@ table tunnel_rewrite {
 action encap_inner_ipv4_udp_rewrite() {
     copy_header(inner_ipv4, ipv4);
     copy_header(inner_udp, udp);
-    modify_field(l3_metadata.payload_length, ipv4.totalLen);
     remove_header(udp);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
@@ -646,7 +645,6 @@ action encap_inner_ipv4_udp_rewrite() {
 
 action encap_inner_ipv4_tcp_rewrite() {
     copy_header(inner_ipv4, ipv4);
-    modify_field(l3_metadata.payload_length, ipv4.totalLen);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
@@ -658,14 +656,12 @@ action encap_inner_ipv4_tcp_rewrite() {
 
 action encap_inner_ipv4_icmp_rewrite() {
     copy_header(inner_ipv4, ipv4);
-    modify_field(l3_metadata.payload_length, ipv4.totalLen);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 }
 
 action encap_inner_ipv4_unknown_rewrite() {
     copy_header(inner_ipv4, ipv4);
-    modify_field(l3_metadata.payload_length, ipv4.totalLen);
     remove_header(ipv4);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 }
@@ -673,7 +669,6 @@ action encap_inner_ipv4_unknown_rewrite() {
 action encap_inner_ipv6_udp_rewrite() {
     copy_header(inner_ipv6, ipv6);
     copy_header(inner_udp, udp);
-    add(l3_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(udp);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
@@ -681,21 +676,18 @@ action encap_inner_ipv6_udp_rewrite() {
 
 action encap_inner_ipv6_tcp_rewrite() {
     copy_header(inner_ipv6, ipv6);
-    add(l3_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
 }
 
 action encap_inner_ipv6_icmp_rewrite() {
     copy_header(inner_ipv6, ipv6);
-    add(l3_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
 }
 
 action encap_inner_ipv6_unknown_rewrite() {
     copy_header(inner_ipv6, ipv6);
-    add(l3_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(ipv6);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV6);
 }

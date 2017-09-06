@@ -25,7 +25,6 @@
 
 header_type l3_metadata_t {
     fields {
-        payload_length             : 16;
         ipv4_option_seen           : 1;
         inner_ipv4_option_seen     : 1;
         ipv4_frag                  : 1;
@@ -202,6 +201,7 @@ header_type scratch_metadata_t {
 
         classic_nic_flags             : 16;
         cpu_flags                     : 24;
+        packet_len                    : 16;
     }
 }
 
