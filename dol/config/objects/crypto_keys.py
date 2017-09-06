@@ -51,14 +51,13 @@ class CryptoKeyObject(base.ConfigObjectBase):
 # Helper Class to Generate/Configure/Manage CryptoKeyObject Objects
 class CryptoKeyObjectHelper:
     def __init__(self):
-        self.objlist = []
         return
 
-    def Configure(self, objlist = None):
-        if objlist == None:
-            objlist = Store.objects.GetAllByClass(CryptoKeyObject)
-        cfglogger.info("Configuring %d CryptoKeys" % len(objlist)) 
-        halapi.ConfigureCryptoKeys(objlist)
+    def Configure(self, obj):
+        lst = []
+        lst.append(obj)
+        cfglogger.info("Configuring CryptoKeys")
+        halapi.ConfigureCryptoKeys(lst)
         return
         
     def __gen_one(self):
@@ -69,12 +68,11 @@ class CryptoKeyObjectHelper:
         return obj
 
     def Generate(self):
-        self.objlist.append(self.__gen_one())
-        return self.objlist
+        return self.__gen_one()
 
     def main(self):
-        objlist = self.Generate()
-        self.Configure(self.objlist)
-        return objlist
+        obj = self.Generate()
+        self.Configure(obj)
+        return obj
 
 CryptoKeyHelper = CryptoKeyObjectHelper() 

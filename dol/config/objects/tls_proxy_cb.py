@@ -29,11 +29,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.tcpcb = tcpcb 
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
-        objs = CryptoKeyHelper.main() 
-        if len(objs) != 1:
-           assert(0)
-        for obj in objs:
-            self.crypto_obj = obj
+        self.crypto_obj = CryptoKeyHelper.main() 
         return
 
     def PrepareHALRequestSpec(self, reqspec):
