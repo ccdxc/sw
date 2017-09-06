@@ -17,6 +17,14 @@
 #include <fte.hpp>
 #include <plugins/plugins.hpp>
 
+extern "C" void __gcov_flush(void);
+
+#ifdef COVERAGE
+#define HAL_GCOV_FLUSH()     { ::__gcov_flush(); }
+#else
+#define HAL_GCOV_FLUSH()     { }
+#endif
+
 namespace hal {
 
 // process globals
@@ -73,14 +81,24 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     HAL_TRACE_ERR("HAL received signal {}", sig);
 
     switch (sig) {
+    case SIGINT:
+    case SIGKILL:
+        HAL_GCOV_FLUSH();
+        utils::hal_logger().flush();
+        exit(0);
+        break;
+
+    case SIGUSR1:
+    case SIGUSR2:
+        HAL_GCOV_FLUSH();
+        utils::hal_logger().flush();
+        break;
+
     case SIGHUP:
     case SIGQUIT:
-    case SIGINT:
-    case SIGUSR1:
     case SIGSEGV:
     case SIGCHLD:
     case SIGURG:
-    case SIGUSR2:
     case SIGTERM:
     default:
         utils::hal_logger().flush();

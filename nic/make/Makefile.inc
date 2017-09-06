@@ -128,7 +128,7 @@ CLEANFILES += $(LCLEANFILES)
 OPT = -g 
 # OPT = -O3
 
-# For code coverage, do "make GCOV=--coverage <target>"
+# For code coverage, do "make GCOV="--coverage -DCOVERAGE" <target>"
 GCOV?=
 
 CFLAGS = $(OPT) $(GCOV) -Wall -Werror -Wuninitialized -fpic
