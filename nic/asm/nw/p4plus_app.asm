@@ -57,7 +57,8 @@ p4plus_app_classic_nic_l4_inner_udp:
 p4plus_app_classic_nic_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_common
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.udp_srcPort
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport[15:8], k.udp_srcPort_sbit0_ebit7
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport[7:0], k.udp_srcPort_sbit8_ebit15
   phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.udp_dstPort
   phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.udp_checksum
 
@@ -103,26 +104,27 @@ p4plus_app_tcp_proxy:
 .align
 p4plus_app_cpu:
   or          r1, r0, r0
-  seq         c1, k.inner_ipv4_valid, TRUE
-  seq         c2, k.inner_ipv6_valid, TRUE
-  seq         c3, k.inner_ethernet_valid, TRUE
-  setcf       c4, [c1|c2|c3]
-  bcf         [!c4], p4plus_app_cpu_native
-  phvwr.c4    p.p4_to_p4plus_cpu_inner_ip_valid, TRUE
+  seq         c1, k.ipv4_valid, TRUE
+  seq         c2, k.ipv6_valid, TRUE
+  seq         c3, k.inner_ipv4_valid, TRUE
+  seq         c4, k.inner_ipv6_valid, TRUE
+  seq         c5, k.inner_ethernet_valid, TRUE
+  or.c1       r1, r1, CPU_FLAGS_IPV4_VALID
+  or.c2       r1, r1, CPU_FLAGS_IPV6_VALID
+  or.c3       r1, r1, CPU_FLAGS_INNER_IPV4_VALID
+  or.c4       r1, r1, CPU_FLAGS_INNER_IPV6_VALID
 
-  or.c1       r1, r1, CPU_FLAGS_INNER_IPV4_VALID
-  phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv4_protocol
-  or.c2       r1, r1, CPU_FLAGS_INNER_IPV6_VALID
+  setcf       c6, [c3|c4|c5]
+  bcf         [!c6], p4plus_app_cpu_native
+  phvwr.c6    p.p4_to_p4plus_cpu_inner_ip_valid, TRUE
+
+  phvwr.c3    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv4_protocol
   b           p4plus_app_cpu_l4_tcp
-  phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv6_nextHdr
+  phvwr.c4    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv6_nextHdr
 
 p4plus_app_cpu_native:
   phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
-  seq         c1, k.ipv4_valid, TRUE
-  seq         c2, k.ipv6_valid, TRUE
-  or.c1       r1, r1, CPU_FLAGS_IPV4_VALID
   phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol
-  or.c2       r1, r1, CPU_FLAGS_IPV6_VALID
   phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr
 
 p4plus_app_cpu_l4_tcp:
@@ -149,10 +151,14 @@ p4plus_app_cpu_l4_inner_udp:
 p4plus_app_cpu_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_cpu_common
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.udp_srcPort
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport[15:8], k.udp_srcPort_sbit0_ebit7
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport[7:0], k.udp_srcPort_sbit8_ebit15
   phvwr       p.p4_to_p4plus_cpu_l4_dport, k.udp_dstPort
 
 p4plus_app_cpu_common:
+  add         r2, k.control_metadata_packet_len, P4PLUS_CPU_PKT_SZ
+  phvwr       p.p4_to_p4plus_cpu_packet_len, r2
+  phvwr       p.p4_to_p4plus_cpu_pkt_flags, r1
   phvwr       p.p4_to_p4plus_cpu_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE

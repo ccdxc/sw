@@ -192,6 +192,7 @@ header_type p4_to_p4plus_cpu_header_t {
  *  12      : inner ipv6 valid
  *  [13-16] : inner ipv4 flags bits
  *  17      : vlan or vni
+ *  18      : flow lkp direction
  */
 header_type p4_to_p4plus_cpu_pkt_t {
     fields {

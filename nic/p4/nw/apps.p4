@@ -182,6 +182,8 @@ action p4plus_app_cpu() {
         }
     }
 
+    add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
+        P4PLUS_CPU_PKT_SZ);
     modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);

@@ -393,6 +393,7 @@
 #define P4PLUS_TCP_PROXY_HDR_SZ        61
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      44
 #define P4PLUS_CPU_HDR_SZ              44
+#define P4PLUS_CPU_PKT_SZ              130
 #define P4PLUS_IPSEC_HDR_SZ            14
 
 /*****************************************************************************/
