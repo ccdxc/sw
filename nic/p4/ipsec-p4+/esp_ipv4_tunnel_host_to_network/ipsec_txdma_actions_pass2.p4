@@ -116,7 +116,9 @@ metadata ipsec_int_header_t ipsec_int_header;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_app_hdr;
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t eth_ip_hdr;
+metadata dma_cmd_mem2pkt_t eth_hdr;
+@pragma dont_trim
+metadata dma_cmd_mem2pkt_t ip_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t esp_iv_hdr;
 @pragma dont_trim
@@ -130,7 +132,7 @@ metadata dma_cmd_mem2pkt_t icv_header;
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
-
+#define IPV4_HEADER_SIZE 20
 
 //stage 4
 action ipsec_build_encap_packet()
@@ -139,7 +141,8 @@ action ipsec_build_encap_packet()
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
     // Add ethernet, optional-vlan and outer-ip from input-descriptor
-    DMA_COMMAND_MEM2PKT_FILL(eth_ip_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
+    DMA_COMMAND_MEM2PKT_FILL(eth_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
+    DMA_COMMAND_MEM2PKT_FILL(ip_hdr, t0_s2s.in_page_addr+t0_s2s.headroom_offset, IPV4_HEADER_SIZE, 0, 0, 0) 
 
     // Add ESP header from IPSec-CB by adding spi,esn_lo,iv which are all contiguous in IPSec-CB
     DMA_COMMAND_MEM2PKT_FILL(esp_iv_hdr, (txdma2_global.ipsec_cb_index*IPSEC_CB_SIZE)+IPSEC_CB_BASE+ESP_BASE_OFFSET, 8+txdma2_global.iv_size, 0, 0, 0)
