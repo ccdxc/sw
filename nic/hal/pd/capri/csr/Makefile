@@ -4,6 +4,7 @@ SYSTEM_LIBRARIES = -lmodelclient -lcapri
 
 CAPTOP = $(TOPDIR)/asic/capri/model
 CAPMODS = $(wildcard $(CAPTOP)/cap_*)
+CAPMODS += $(CAPTOP)/cap_he/readonly
 CAPMODS += $(CAPTOP)/utils
 CAPMODS += $(TOPDIR)/asic/ip/verif/pcpp
 VPATH = $(subst ' ',:, $(CAPMODS))
@@ -44,8 +45,11 @@ SOURCES = \
     cap_pbc_csr.cc \
     cap_pbm_csr.cc \
     cap_wa_csr.cc \
-    cap_he_csr.cc \
     cap_dpr_csr.cc \
+    cap_hens_csr.cc \
+    cap_hese_csr.cc \
+    cap_mpns_csr.cc \
+    cap_mpse_csr.cc \
     cap_dpp_csr.cc \
     cap_dpphdr_csr.cc \
     cap_dprstats_csr.cc \

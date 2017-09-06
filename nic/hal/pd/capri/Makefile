@@ -4,6 +4,7 @@ SHAREDLIBRARY = libcapri.so
 CAPTOP = $(TOPDIR)/asic/capri/model
 CAPMODS = $(wildcard $(CAPTOP)/cap_*)
 CAPMODS += $(CAPTOP)/utils
+CAPMODS += $(CAPTOP)/cap_he/readonly
 CAPMODS += $(TOPDIR)/asic/ip/verif/pcpp
 CAPINC = $(patsubst %, -I%, $(CAPMODS))
 

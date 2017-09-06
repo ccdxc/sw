@@ -18,7 +18,7 @@ uint64_t    key_desc_array_base = 0;
 uint32_t    key_desc_array_size = 0;
 
 
-
+#ifdef BARCO_OLD_REG_LAYOUT
 hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
         uint64_t key_desc_array_base, uint32_t key_desc_array_size)
 {
@@ -27,6 +27,9 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
     cap_he_csr_t &                      he_csr = cap0.he.he;
     cap_he_csr_dhs_cap_he_ipcore_ctl_t  he_ipcore_ctl = he_csr.dhs_cap_he_ipcore_ctl;
 
+    HAL_TRACE_DEBUG("Barco gcm0 key descriptor base setup @ {:x}, key descriptor count {}",
+            key_desc_array_base, key_desc_array_size);
+
     he_ipcore_ctl.dma_gcm0_key_array_base_w0.fld((uint32_t)(key_desc_array_base & 0xffffffff));
     he_ipcore_ctl.dma_gcm0_key_array_base_w0.write();
     he_ipcore_ctl.dma_gcm0_key_array_base_w1.fld((uint32_t)(key_desc_array_base >> 32));
@@ -34,6 +37,9 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
 
     he_ipcore_ctl.dma_gcm0_key_array_size.fld(key_desc_array_size);
     he_ipcore_ctl.dma_gcm0_key_array_size.write();
+
+    HAL_TRACE_DEBUG("Barco gcm0 descriptor base setup @ {:x}, descriptor count {}",
+            ring_base, ring_size);
 
     he_ipcore_ctl.dma_gcm0_ring_base_w0.fld((uint32_t)(ring_base & 0xffffffff));
     he_ipcore_ctl.dma_gcm0_ring_base_w0.write();
@@ -58,6 +64,47 @@ hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
 
     return HAL_RET_OK;
 } 
+#else
+
+hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
+        uint64_t key_desc_array_base, uint32_t key_desc_array_size)
+{
+
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    cap_hese_csr_t &                    hese = cap0.md.hese;
+
+    HAL_TRACE_DEBUG("Barco gcm0 key descriptor base setup @ {:x}, key descriptor count {}",
+            key_desc_array_base, key_desc_array_size);
+
+    hese.dhs_crypto_ctl.gcm0_key_array_base_w0.fld((uint32_t)(key_desc_array_base & 0xffffffff));
+    hese.dhs_crypto_ctl.gcm0_key_array_base_w0.write();
+    hese.dhs_crypto_ctl.gcm0_key_array_base_w1.fld((uint32_t)(key_desc_array_base >> 32));
+    hese.dhs_crypto_ctl.gcm0_key_array_base_w1.write();
+
+    hese.dhs_crypto_ctl.gcm0_key_array_size.fld(key_desc_array_size);
+    hese.dhs_crypto_ctl.gcm0_key_array_size.write();
+
+    HAL_TRACE_DEBUG("Barco gcm0 descriptor base setup @ {:x}, descriptor count {}",
+            ring_base, ring_size);
+
+    hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.gcm0_ring_base_w0.write();
+    hens.dhs_crypto_ctl.gcm0_ring_base_w1.fld((uint32_t)(ring_base >> 32));
+    hens.dhs_crypto_ctl.gcm0_ring_base_w1.write();
+
+    hens.dhs_crypto_ctl.gcm0_ring_size.fld(ring_size);
+    hens.dhs_crypto_ctl.gcm0_ring_size.write();
+
+    hens.dhs_crypto_ctl.gcm0_producer_idx.fld(0);
+    hens.dhs_crypto_ctl.gcm0_producer_idx.write();
+
+    hens.dhs_crypto_ctl.gcm0_consumer_idx.fld(0);
+    hens.dhs_crypto_ctl.gcm0_consumer_idx.write();
+
+    return HAL_RET_OK;
+} 
+#endif
 
 hal_ret_t capri_barco_crypto_init(void)
 {
