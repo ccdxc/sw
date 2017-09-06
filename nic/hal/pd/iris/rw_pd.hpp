@@ -104,6 +104,8 @@ extern void *rw_entry_pd_get_key_func(void *entry);
 extern uint32_t rw_entry_pd_compute_hash_func(void *key, uint32_t ht_size);
 extern bool rw_entry_pd_compare_key_func(void *key1, void *key2);
 
+hal_ret_t rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe);
+hal_ret_t rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe);
 hal_ret_t rw_entry_find(pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe);
 hal_ret_t rw_entry_alloc(pd_rw_entry_key_t *rw_key, 
                          pd_rw_entry_info_t *rw_info, 

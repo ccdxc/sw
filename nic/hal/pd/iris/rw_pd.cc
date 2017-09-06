@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <hal_lock.hpp>
 #include <rw_pd.hpp>
+#include <if_pd_utils.hpp>
 #include <netinet/ether.h>
 
 namespace hal {
@@ -142,6 +143,9 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
     HAL_TRACE_DEBUG(buf.c_str());
 
+    // Program HW
+    ret = rw_pd_pgm_rw_tbl(rwe);
+
 	*rw_idx = tmp_rw_idx;
 
 end:
@@ -224,6 +228,13 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
     HAL_TRACE_DEBUG(buf.c_str());
 
     if (rwe->ref_cnt == 0) {
+
+        // Deprogram HW
+        ret = rw_pd_depgm_rw_tbl(rwe);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+
         ret = del_rw_entry_pd_from_db(rwe);
         if (ret != HAL_RET_OK) {
             HAL_ASSERT_RETURN(0, HAL_RET_ERR);
@@ -235,6 +246,78 @@ end:
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Deprogramming the hw entry
+//-----------------------------------------------------------------------------
+hal_ret_t
+rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe) 
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    DirectMap            *rw_tbl = NULL;
+    fmt::MemoryWriter    buf;
+
+    rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
+    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
+
+    ret = rw_tbl->remove(rwe->rw_idx);
+    if (ret != HAL_RET_OK) {
+        buf.write("PD-RW: Unable to de-program at rw_id: {} for [ rw_act: {}, ",
+                  rwe->rw_idx, 
+                  rwe->rw_key.rw_act);
+        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
+        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
+    } else {
+        buf.write("PD-RW: De-Programmed at rw_id: {} for [ rw_act: {}, ",
+                  rwe->rw_idx, 
+                  rwe->rw_key.rw_act);
+        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
+        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
+    }
+    HAL_TRACE_DEBUG(buf.c_str());
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Programming the hw entry
+//-----------------------------------------------------------------------------
+hal_ret_t
+rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    rewrite_actiondata   data;
+    DirectMap            *rw_tbl = NULL;
+    fmt::MemoryWriter    buf;
+
+    memset(&data, 0, sizeof(data));
+    
+
+    rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
+    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
+
+    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, rwe->rw_key.mac_sa, 6);
+    memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
+    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, rwe->rw_key.mac_da, 6);
+    memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
+    data.actionid = rwe->rw_key.rw_act;
+    ret = rw_tbl->insert_withid(&data, rwe->rw_idx);
+    if (ret != HAL_RET_OK) {
+        buf.write("PD-RW: Unable to program at rw_id: {} for [ rw_act: {}, ",
+                  rwe->rw_idx, 
+                  rwe->rw_key.rw_act);
+        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
+        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
+    } else {
+        buf.write("PD-RW: Programmed at rw_id: {} for [ rw_act: {}, ",
+                  rwe->rw_idx, 
+                  rwe->rw_key.rw_act);
+        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
+        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
+    }
+    HAL_TRACE_DEBUG(buf.c_str());
+
+    return ret;
+}
 
 }    // namespace pd
 }    // namespace hal

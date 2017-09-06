@@ -50,6 +50,7 @@ PGMDIRS = \
 		  hal/pd/utils/met/test \
 		  hal/pd/utils/tcam/test \
 		  hal/pd/utils/acl_tcam/test \
+		  hal/pd/iris/test/rw_tbl_lib \
 		  hal/test \
 		  agents \
 		  $(NULL)
