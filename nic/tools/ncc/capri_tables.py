@@ -3270,19 +3270,26 @@ class capri_stage:
 
         num_profiles_2B = (len(km_prof_2B) + 1) / 2
         km_profiles_used = num_profiles_2B + len(km_prof_normal)
-        if km_profiles_used > max_km_profiles:
-            # "Not enough km_profiles"
-            assert 0, pdb.set_trace()
 
         # assign hw_ids to km_profiles
         # need to create final hw_profiles with correct byte_sels
         hw_id = 0
+        allocated_km_profs = []
         for km_prof in km_prof_normal:
-            #pdb.set_trace()
+            # Share the same hw_id for identical km_profiles
+            for used_km_prof in allocated_km_profs:
+                if used_km_prof.byte_sel == km_prof.byte_sel and \
+                    used_km_prof.bit_sel == km_prof.bit_sel:
+                    # reuse hw_id
+                    km_prof.hw_id = used_km_prof.hw_id
+                    break
+            if km_prof.hw_id >= 0:
+                continue
             km_prof.hw_id = hw_id
             km_prof.mode = 0 # normal
             hw_id += 1
             self.hw_km_profiles[km_prof.hw_id] = km_prof
+            allocated_km_profs.append(km_prof)
 
         i = 0
         hw_prof2B = None
@@ -3302,7 +3309,11 @@ class capri_stage:
             if (i%2):
                 hw_id += 1
                 hw_prof2B = None
-
+        
+        if hw_id > max_km_profiles:
+            # "Not enough km_profiles"
+            self.gtm.tm.logger.critical("Not enough km_profiles")
+            assert 0, pdb.set_trace()
         # fix table key-makers E.g. assign otcams/collision tbl to get the same km as its hash table
         for ct in self.ct_list:
             if ct.is_overflow:
