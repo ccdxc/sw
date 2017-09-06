@@ -113,6 +113,8 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/ipseccb.pb.o \
 				$(OBJ_DIR)/ipseccb.o \
 				$(OBJ_DIR)/l4lb.o \
+				$(OBJ_DIR)/cpucb.pb.o \
+				$(OBJ_DIR)/cpucb.o \
 
 
 HAL_OBJS := $(OBJ_DIR)/main.o 

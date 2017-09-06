@@ -77,6 +77,10 @@
             "size_kb": 128
         },
         {
+            "name": "arq-rx",
+            "size_kb": 64
+        },
+        {
             "name": "descriptor-tx",
             "size_kb": 2048
         },

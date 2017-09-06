@@ -28,6 +28,7 @@
 #include <ipseccb_pd.hpp>
 #include <l4lb_pd.hpp>
 #include <rw_pd.hpp>
+#include <cpucb_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -265,6 +266,18 @@ hal_state_pd::init(void)
 
     rw_tbl_idxr_ = new hal::utils::indexer(HAL_MAX_RW_TBL_ENTRIES);
     HAL_ASSERT_RETURN((rw_tbl_idxr_ != NULL), false);
+    
+    // initialize CPUCB related data structures
+    cpucb_slab_ = slab::factory("CPUCB PD", HAL_SLAB_CPUCB_PD,
+                                 sizeof(hal::pd::pd_cpucb_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((cpucb_slab_ != NULL), false);
+
+    cpucb_hwid_ht_ = ht::factory(HAL_MAX_HW_CPUCBS,
+                                 hal::pd::cpucb_pd_get_hw_key_func,
+                                 hal::pd::cpucb_pd_compute_hw_hash_func,
+                                 hal::pd::cpucb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((cpucb_hwid_ht_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -353,6 +366,9 @@ hal_state_pd::hal_state_pd()
     rw_entry_slab_ = NULL;
     rw_table_ht_ = NULL;
     rw_tbl_idxr_ = NULL;
+
+    cpucb_slab_ = NULL;
+    cpucb_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -415,6 +431,9 @@ hal_state_pd::~hal_state_pd()
 
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
+    
+    cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
+    cpucb_hwid_ht_ ? delete cpucb_hwid_ht_ : HAL_NOP;
 
 
     rw_entry_slab_ ? delete rw_entry_slab_ : HAL_NOP;
@@ -1029,6 +1048,9 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free_(elem);
+    
+    case HAL_SLAB_CPUCB_PD:
+        g_hal_state_pd->cpucb_slab()->free_(elem);
         break;
 
     case HAL_SLAB_L4LB_PD:

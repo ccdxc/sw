@@ -19,10 +19,13 @@ LCXXFLAGS = \
 			-I../../../gen/iris/include \
 			-I../../../gen/tcp_proxy_rxdma/include \
 			-I../../../gen/tcp_proxy_txdma/include \
-                        -I../../../gen/common_rxdma_actions/include \
-                        -I../../../gen/common_txdma_actions/include \
+            -I../../../gen/common_rxdma_actions/include \
+            -I../../../gen/common_txdma_actions/include \
 			-I../../../gen/tls_txdma_pre_crypto/include \
 			-I../../../gen/ipsec_rxdma_actions/include \
+			-I../../../gen/cpu_rxdma/include \
+            -I../../../gen/common_rxdma_actions/include \
+			-I../../../gen/tls_txdma/include \
 			-I../../../p4/nw/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \
@@ -64,6 +67,7 @@ SOURCES = \
 		  ipseccb_pd.cc \
 		  l4lb_pd.cc \
 		  rw_pd.cc \
+		  cpucb_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

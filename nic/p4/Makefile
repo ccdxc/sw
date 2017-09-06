@@ -8,6 +8,7 @@ LIBDIRS = \
           ipsec-p4+ \
           storage \
           rdma \
+		  cpu-p4+ \
           $(NULL)
 
 PGMDIRS = $(NULL)

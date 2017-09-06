@@ -5,7 +5,7 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 26
+#define CAPRI_P4PLUS_NUM_SYMBOLS 29
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -170,6 +170,7 @@ capri_p4p_asm_init()
     symbols[6].num_params = 1;
     symbols[6].params[0].name = TNMDR_TABLE_BASE;
     symbols[6].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    
     symbols[7].name = "tls-read-tnmpr-free-idx.bin";
     symbols[7].num_params = 1;
     symbols[7].params[0].name = TNMPR_TABLE_BASE;
@@ -257,6 +258,21 @@ capri_p4p_asm_init()
     symbols[25].num_params = 1;
     symbols[25].params[0].name = BRQ_BASE;
     symbols[25].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    
+    symbols[26].name = "cpu_read_desc_pindex.bin";
+    symbols[26].num_params = 1;
+    symbols[26].params[0].name = RNMDR_TABLE_BASE;
+    symbols[26].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    
+    symbols[27].name = "cpu_read_page_pindex.bin";
+    symbols[27].num_params = 1;
+    symbols[27].params[0].name = RNMPR_TABLE_BASE;
+    symbols[27].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+
+    symbols[28].name = "cpu_initial_action.bin";
+    symbols[28].num_params = 1;
+    symbols[28].params[0].name = ARQRX_BASE;
+    symbols[28].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     

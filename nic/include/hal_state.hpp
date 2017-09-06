@@ -134,6 +134,10 @@ public:
     ht *ipseccb_id_ht(void) const { return ipseccb_id_ht_; }
     ht *ipseccb_hal_handle_ht(void) const { return ipseccb_hal_handle_ht_; }
 
+    // get APIs for CPU CB state
+    slab *cpucb_slab(void) const { return cpucb_slab_; }
+    ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
+    ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
 
 private:
     bool init(void);
@@ -280,6 +284,13 @@ private:
         slab       *ipseccb_slab_;
         ht         *ipseccb_id_ht_;
         ht         *ipseccb_hal_handle_ht_;
+    } __PACK__;
+    
+    // CPU CB related state
+    struct {
+        slab       *cpucb_slab_;
+        ht         *cpucb_id_ht_;
+        ht         *cpucb_hal_handle_ht_;
     } __PACK__;
 };
 

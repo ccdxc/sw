@@ -36,6 +36,7 @@ SOURCES = \
 		  nwsec.cc \
 		  tlscb.cc \
 		  tcpcb.cc \
+		  cpucb.cc \
 		  qos.cc \
 		  interface_api.cc \
 		  l2segment_api.cc \

@@ -15,6 +15,7 @@
 #include <wring.hpp>
 #include <proxy.hpp>
 #include <ipseccb.hpp>
+#include <cpucb.hpp>
  
 namespace hal {
 
@@ -400,6 +401,25 @@ hal_state::init(void)
                                        hal::l4lb_compute_handle_hash_func,
                                        hal::l4lb_compare_handle_key_func);
     HAL_ASSERT_RETURN((l4lb_hal_handle_ht_ != NULL), false);
+    
+    // initialize CPU CB related data structures
+    cpucb_slab_ = slab::factory("cpucb", HAL_SLAB_CPUCB,
+                                sizeof(hal::cpucb_t), 16,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((cpucb_slab_ != NULL), false);
+
+    cpucb_id_ht_ = ht::factory(HAL_MAX_CPUCB,
+                               hal::cpucb_get_key_func,
+                               hal::cpucb_compute_hash_func,
+                               hal::cpucb_compare_key_func);
+    HAL_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
+
+    cpucb_hal_handle_ht_ = ht::factory(HAL_MAX_CPUCB,
+                                       hal::cpucb_get_handle_key_func,
+                                       hal::cpucb_compute_handle_hash_func,
+                                       hal::cpucb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((cpucb_hal_handle_ht_ != NULL), false);
+
     return true;
 }
 
@@ -484,6 +504,10 @@ hal_state::hal_state()
     ipseccb_slab_ = NULL;
     ipseccb_id_ht_ = NULL;
     ipseccb_hal_handle_ht_ = NULL;
+    
+    cpucb_slab_ = NULL;
+    cpucb_id_ht_ = NULL;
+    cpucb_hal_handle_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -569,6 +593,10 @@ hal_state::~hal_state()
     l4lb_slab_ ? delete l4lb_slab_ : HAL_NOP;
     l4lb_ht_ ? delete l4lb_ht_ : HAL_NOP;
     l4lb_hal_handle_ht_ ? delete l4lb_hal_handle_ht_ : HAL_NOP;
+    
+    cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
+    cpucb_id_ht_ ? delete cpucb_id_ht_ : HAL_NOP;
+    cpucb_hal_handle_ht_ ? delete cpucb_hal_handle_ht_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -680,6 +708,9 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB:
         g_hal_state->ipseccb_slab()->free_(elem);
+    
+    case HAL_SLAB_CPUCB:
+        g_hal_state->cpucb_slab()->free_(elem);
         break;
 
     default:

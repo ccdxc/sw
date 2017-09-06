@@ -150,6 +150,10 @@ public:
 
     // get APIs for L4LB related state
     slab *l4lb_pd_slab(void) const { return l4lb_pd_slab_; }
+    
+    // get APIs for TCP CB related state
+    slab *cpucb_slab(void) const { return cpucb_slab_; }
+    ht *cpucb_hwid_ht(void) const { return cpucb_hwid_ht_; }
 
     // get APIs for RW table related state
     slab *rw_entry_slab(void) const { return rw_entry_slab_; }
@@ -350,6 +354,12 @@ private:
         slab      *rw_entry_slab_;
         ht        *rw_table_ht_;   
         indexer   *rw_tbl_idxr_;
+    } __PACK__;
+    
+    // cpucb related state
+    struct {
+        slab       *cpucb_slab_;
+        ht         *cpucb_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

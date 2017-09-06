@@ -6,6 +6,8 @@
 #include <proxy_svc.hpp>
 #include <pd_api.hpp>
 #include <lif_manager.hpp>
+#include <interface.hpp>
+#include <cpucb.hpp>
 
 namespace hal {
 
@@ -26,10 +28,12 @@ proxy_meta_init() {
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
         (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
+    
+    g_meta[types::PROXY_TYPE_CPU] = 
+        (proxy_meta_t) {true, SERVICE_LIF_CPU, 0, 1, 1};
 
     return HAL_RET_OK;
 }
-
 
 void *
 proxy_get_key_func (void *entry)
@@ -100,12 +104,9 @@ validate_proxy_enable (ProxySpec& spec, ProxyResponse *rsp)
 static inline hal_ret_t
 add_proxy_to_db (proxy_t *proxy)
 {
-    hal_ret_t   ret;
-    ret = g_hal_state->proxy_hal_handle_ht()->insert(proxy,
+    g_hal_state->proxy_hal_handle_ht()->insert(proxy,
                                                &proxy->hal_handle_ht_ctxt);
-    HAL_TRACE_DEBUG("Return1: {} for type: {}", ret, proxy->type);
-    ret = g_hal_state->proxy_type_ht()->insert(proxy, &proxy->ht_ctxt);
-    HAL_TRACE_DEBUG("Return2: {}, type: {}", ret, proxy->type) ;
+    g_hal_state->proxy_type_ht()->insert(proxy, &proxy->ht_ctxt);
     return HAL_RET_OK;
 }
 
@@ -173,7 +174,9 @@ proxy_program_lif(proxy_t* proxy)
     // Create LIF 
     lif_spec.mutable_key_or_handle()->set_lif_id(proxy->lif_id); 
     lif_spec.set_admin_status(intf::IF_STATUS_UP);
+    lif_hal_info.with_hw_lif_id = true;
     lif_hal_info.hw_lif_id = proxy->lif_id;
+    HAL_TRACE_DEBUG("Calling lif create with id: {}", lif_hal_info.hw_lif_id);
     ret = lif_create(lif_spec, &rsp, &lif_hal_info);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("lif creation failed for proxy service" );
@@ -215,7 +218,7 @@ proxy_init_default_params(proxy_t* proxy)
     proxy->qtype = meta->qtype; 
     proxy->qstate_size = meta->qstate_size;
     proxy->qstate_entries = meta->qstate_entries;
- 
+    
     return HAL_RET_OK;
 }
 
@@ -282,6 +285,41 @@ proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
 //------------------------------------------------------------------------------
 // Initialize default proxy services
 //------------------------------------------------------------------------------
+hal_ret_t
+proxy_create_cpucb(void)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    cpucb::CpuCbSpec        spec;
+    cpucb::CpuCbResponse   rsp;
+
+    spec.mutable_key_or_handle()->set_cpucb_id(0);
+    ret = cpucb_create(spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create cpucb: {}", ret);    
+    }
+
+    return ret;
+}
+
+hal_ret_t 
+proxy_create_cpuif(void)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    intf::InterfaceSpec   spec;
+    intf::InterfaceResponse rsp;
+
+    spec.mutable_key_or_handle()->set_interface_id(SERVICE_LIF_CPU);
+    spec.set_type(intf::IF_TYPE_CPU);
+    spec.set_admin_status(intf::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(SERVICE_LIF_CPU);
+    
+    ret = interface_create(spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create CPU if {}", ret);
+    }
+
+    return ret;
+}
 hal_ret_t 
 hal_proxy_system_svc_init(void)
 {
@@ -301,12 +339,11 @@ hal_proxy_system_svc_init(void)
     return HAL_RET_OK;
 }
 
-
 hal_ret_t 
 hal_proxy_svc_init(void)
 {
     hal_ret_t       ret = HAL_RET_OK;
-
+    
     // Reserve Service LIFs
     if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START)) 
             <= 0) 
@@ -328,7 +365,19 @@ hal_proxy_svc_init(void)
         HAL_TRACE_ERR("Failed to initialize proxy system services");
         return ret;
     }
-   
+    
+    /*
+    ret = proxy_create_cpuif();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to create cpu if");    
+    }
+    */
+
+    ret = proxy_create_cpucb();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to create cpu cb");    
+    }
+
     return HAL_RET_OK;
 }
 

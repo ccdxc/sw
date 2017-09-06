@@ -102,14 +102,15 @@ hal_ret_t
 pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    indexer::status      rs = indexer::SUCCESS;
+    //indexer::status      rs = indexer::SUCCESS;
 
+    pd_cpuif->cpu_lport_id = CPU_LPORT;
     // Allocate lport
-    rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_cpuif->
-            cpu_lport_id);
-    if (rs != indexer::SUCCESS) {
-        return HAL_RET_NO_RESOURCE;
-    }
+    //rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_cpuif->
+    //        cpu_lport_id);
+    //if (rs != indexer::SUCCESS) {
+    //    return HAL_RET_NO_RESOURCE;
+    //}
     HAL_TRACE_DEBUG("PD-CPUIf:{}: if_id:{} Allocated lport_id:{}", 
                     __FUNCTION__, 
                     if_get_if_id((if_t *)pd_cpuif->pi_if),
