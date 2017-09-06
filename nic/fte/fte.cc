@@ -45,16 +45,16 @@ hal_ret_t register_feature(const feature_id_t& fid, const std::string& name,
 {
     feature_t *feature;
 
-    HAL_TRACE_DEBUG("{}: id={}, name={}", __FUNCTION__, fid, name);
+    HAL_TRACE_DEBUG("fte::{}: id={}, name={}", __FUNCTION__, fid, name);
 
     if (!exec_handler) {
-        HAL_TRACE_ERR("skipping invalid feature id={} name={} - null exec_handler",
+        HAL_TRACE_ERR("fte: skipping invalid feature id={} name={} - null exec_handler",
                       fid, name);
         return HAL_RET_INVALID_ARG;
     }
 
     if ((feature = feature_lookup_(fid)) != nullptr) {
-        HAL_TRACE_ERR("skipping duplicate feature id={} name={} old-name={}",
+        HAL_TRACE_ERR("fte: skipping duplicate feature id={} name={} old-name={}",
                       fid, name, feature->name);
         return HAL_RET_DUP_INS_FAIL;
     }
@@ -124,8 +124,10 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx)
     for (int i = 0; i < pipeline->num_features; i++) {
         feature_t *feature = pipeline->features[i];
 
+        ctx.set_feature_name(feature->name.c_str());
+        ctx.set_feature_status(HAL_RET_OK);
         rc = feature->exec_handler(ctx);
-        HAL_TRACE_DEBUG("exec handler feature={} pipeline={} rc={}", feature->name,
+        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} action={}", feature->name,
                         pipeline->name, rc);
 
         if (rc != PIPELINE_CONTINUE) {
@@ -143,9 +145,9 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
 {
     pipeline_t *pipeline;
 
-    HAL_TRACE_DEBUG("{}: name={} lifq={}", __FUNCTION__, name, lifq);
+    HAL_TRACE_DEBUG("fte::{}: name={} lifq={}", __FUNCTION__, name, lifq);
     if ((pipeline = pipeline_lookup_(lifq)) != nullptr) {
-        HAL_TRACE_ERR("skipping duplicate pipline {} lifq={} old-name={}",
+        HAL_TRACE_ERR("fte: skipping duplicate pipline {} lifq={} old-name={}",
                       name, lifq, pipeline->name);
         return HAL_RET_DUP_INS_FAIL;
     }
@@ -160,11 +162,12 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
     for (int i = 0; i < num_features; i++) {
         feature_t *feature = feature_lookup_(features[i]);
         if (!feature) {
-            HAL_TRACE_ERR("unknown feature-id {} in pipeline {} - skipping",
+            HAL_TRACE_ERR("fte: unknown feature-id {} in pipeline {} - skipping",
                           features[i], name);
             HAL_FREE(pipeline_t, pipeline);
             return HAL_RET_INVALID_ARG;
         }
+        HAL_TRACE_DEBUG("fte: pipeline feature {}/{}", name, feature->name);
         pipeline->features[i] = feature;
     }
 
@@ -179,16 +182,16 @@ pipeline_execute_(ctx_t &ctx)
 {
     pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq());
     if (!pipeline) {
-        HAL_TRACE_ERR("pipeline not registered for lifq {} - ignoring packet", ctx.arm_lifq());
+        HAL_TRACE_ERR("fte: pipeline not registered for lifq {} - ignoring packet", ctx.arm_lifq());
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("executing pipeline {} lifq={}", pipeline->name, pipeline->lifq);
+    HAL_TRACE_DEBUG("fte: executing pipeline {} lifq={}", pipeline->name, pipeline->lifq);
 
     // Invoke all feature handlers
     pipeline_action_t rc = pipeline_invoke_exec_(pipeline, ctx);
     if (rc != PIPELINE_RESTART) {
-        return HAL_RET_OK;
+        return ctx.feature_status();
     }
 
     // Reexecute new pipeline (tail recursion)
@@ -220,12 +223,92 @@ void unregister_features_and_pipelines() {
     }
 }
 
+// Process grpc session_create
+hal_ret_t
+session_create (SessionSpec& spec, SessionResponse *rsp)
+{
+    hal_ret_t ret;
+    ctx_t ctx = {};
+    flow_t iflow, rflow, iflow_post, rflow_post;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
+                    spec.session_id(), spec.meta().tenant_id());
+
+    //Init context
+    ret = ctx.init(&spec, rsp,  &iflow, &rflow, &iflow_post, &rflow_post);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+        goto end;
+    }
+
+    // execute the pipeline
+    ret = execute_pipeline(ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
+        goto end;
+    }
+
+    // update GFT
+    ret = ctx.update_gft();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
+        goto end;
+    }
+
+ end:
+    //update api status
+    switch (ret) {
+    case HAL_RET_OK:
+        rsp->set_api_status(types::API_STATUS_OK);
+        break;
+    case HAL_RET_HW_PROG_ERR:
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        break;
+    case HAL_RET_TABLE_FULL:
+    case HAL_RET_OTCAM_FULL:
+        rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+        break;
+    case HAL_RET_OOM:
+        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+        break;
+    case HAL_RET_INVALID_ARG:
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        break;
+    case HAL_RET_TENANT_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        break;
+    case HAL_RET_L2SEG_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+        break;
+    case HAL_RET_IF_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+        break;
+    case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
+        break;
+    case HAL_RET_POLICER_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_POLICER_NOT_FOUND);
+        break;
+    case HAL_RET_HANDLE_INVALID:
+        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
+        break;
+    default:
+        rsp->set_api_status(types::API_STATUS_ERR);
+        break;
+    }
+
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
 // FTE main pkt loop
 void
 pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
          hal_ret_t (*tx)(const phv_t *phv, const uint8_t *pkt, size_t pkt_len))
 {
-    hal_ret_t rc;
+    hal_ret_t ret;
     phv_t *phv;
     uint8_t *pkt;
     size_t pkt_len;
@@ -234,30 +317,30 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
 
     while(true) {
         // read the packet
-        rc = rx(&phv, &pkt, &pkt_len);
-        if (rc != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte - arm rx failed, rc={}", rc);
+        ret = rx(&phv, &pkt, &pkt_len);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: arm rx failed, ret={}", ret);
             continue;
         }
 
         // Init ctx_t
-        rc = ctx.init(phv, pkt, pkt_len, &iflow, &rflow, &iflow_post, &rflow_post);
-        if (rc != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte - failied to init context, rc={}", rc);
+        ret = ctx.init(phv, pkt, pkt_len, &iflow, &rflow, &iflow_post, &rflow_post);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
             continue;
         }
 
         // execute the pipeline
-        rc = execute_pipeline(ctx);
-        if (rc != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte - failied to execute pipeline, rc={}", rc);
+        ret = execute_pipeline(ctx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
             continue;
         }
 
         // update GFT
-        rc = ctx.update_gft();
-        if (rc != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte - failied to updated gft, rc={}", rc);
+        ret = ctx.update_gft();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
             continue;
         }
 

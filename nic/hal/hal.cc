@@ -14,6 +14,8 @@
 #include <interface.hpp>
 #include <tcpcb.hpp>
 #include <proxy.hpp>
+#include <fte.hpp>
+#include <plugins/plugins.hpp>
 
 namespace hal {
 
@@ -274,6 +276,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+
+    // init fte and hal plugins
+    hal::init_plugins();
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init() == HAL_RET_OK);

@@ -102,13 +102,14 @@ flowkey2str (const flow_key_t& key)
 
     switch (key.flow_type) {
     case FLOW_TYPE_L2:
-        out.write("l2seg={}, smac={}, dmac={}", key.l2seg_id, key.smac, key.dmac);
+        out.write("l2seg={}, smac={}, dmac={}", key.l2seg_id, macaddr2str(key.smac),
+                  macaddr2str(key.dmac));
         break;
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
         out.write("tid={}, ", key.tenant_id);
         if (key.flow_type == FLOW_TYPE_V4) {
-            out.write("sip={}, dip={}, ", key.sip.v4_addr, key.dip.v4_addr);
+            out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr), ipv4addr2str(key.dip.v4_addr));
         } else {
             out.write("sip={}, dip={}, ", key.sip.v6_addr, key.dip.v6_addr);
         }
@@ -129,10 +130,12 @@ flowkey2str (const flow_key_t& key)
         }
         break;
     default:
-        out.write("flow-type=unknonw(%d)", key.flow_type);
+        out.write("flow-type=unknown(%d)", key.flow_type);
     }
 
     out.write("}}");
+    
+    buf[out.size()] = '\0';
 
     return buf;
 }
@@ -298,7 +301,6 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    flow->state = flow_spec.flow_data().flow_info().tcp_state();
     flow->action = flow_spec.flow_data().flow_info().flow_action();
     flow->role = is_initiator_flow ? FLOW_ROLE_INITIATOR : FLOW_ROLE_RESPONDER;
     flow->nat_type = flow_spec.flow_data().flow_info().nat_type();
@@ -332,9 +334,10 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
 hal_ret_t
 extract_session_state_from_spec (session_state_t *session_state,
                                  bool is_initiator_flow,
-                                 const ConnTrackInfo& conn_track_info)
+                                 const FlowData& flow_data)
 {
     flow_state_t    *flow_state;
+    const ConnTrackInfo& conn_track_info = flow_data.conn_track_info();
 
     if (is_initiator_flow) {
         flow_state = &session_state->iflow_state;
@@ -342,6 +345,7 @@ extract_session_state_from_spec (session_state_t *session_state,
         flow_state = &session_state->rflow_state;
     }
 
+    flow_state->state = flow_data.flow_info().tcp_state();
     flow_state->tcp_seq_num = conn_track_info.tcp_seq_num();
     flow_state->tcp_ack_num = conn_track_info.tcp_ack_num();
     flow_state->tcp_win_sz = conn_track_info.tcp_win_sz();
@@ -1620,23 +1624,6 @@ flow_create(const flow_cfg_t *cfg, session_t *session)
     return flow;
 }
 
-#if 0
-hal_ret_t
-flow_update_fwding_info(flow_cfg_t *flow, if_t *dif)
-{
-    flow->lif = hal::pd::if_get_hw_lif_id(dif);
-
-    if (dif->if_type != intf::IF_TYPE_ENIC) {
-        flow->qid_en = 0;
-        return HAL_RET_OK;
-    }
-
-    // TODO Update flow_info
-
-    return HAL_RET_OK;
-}
-#endif
-
 hal_ret_t
 session_create (const session_args_t *args, hal_handle_t *session_handle)
 {
@@ -1811,8 +1798,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         args.session_state = &session_state;
         args.session_state->tcp_ts_option = spec.tcp_ts_option();
         extract_session_state_from_spec(args.session_state, TRUE,
-                          spec.initiator_flow().flow_data().conn_track_info());
-        session.syn_ack_delta = spec.iflow_syn_ack_delta();
+                          spec.initiator_flow().flow_data());
+        session_state.iflow_state.syn_ack_delta = spec.iflow_syn_ack_delta();
     }
 
     // extract responder's flow key and data from flow spec
@@ -1825,7 +1812,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         }
         if (session.conn_track_en) {
             extract_session_state_from_spec(args.session_state, FALSE,
-                          spec.responder_flow().flow_data().conn_track_info());
+                          spec.responder_flow().flow_data());
+            session_state.rflow_state.syn_ack_delta = spec.iflow_syn_ack_delta();
         }
     }
 
@@ -1869,5 +1857,195 @@ session_get (SessionGetRequest& spec, SessionGetResponse *rsp)
 {
     return HAL_RET_OK;
 }
+
+
+//-----------------------------------------------------------------------------
+// Flow Create FTE
+//-----------------------------------------------------------------------------
+static flow_t *
+flow_create_fte(const flow_cfg_t *cfg,
+                const flow_cfg_t *cfg_assoc,
+                const flow_pgm_attrs_t *attrs,
+                const flow_pgm_attrs_t *attrs_assoc,
+                session_t *session)
+{
+    flow_t      *assoc_flow = NULL;
+
+    flow_t *flow = (flow_t *)g_hal_state->flow_slab()->alloc();
+    if (!flow) {
+        return NULL;
+    }
+
+    *flow = {};
+    HAL_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_PRIVATE);
+    flow->flow_key_ht_ctxt.reset();
+
+    if (cfg){
+        flow->config = *cfg;
+    }
+
+    if (attrs) {
+        flow->pgm_attrs = *attrs;
+    }
+
+    flow->session = session;
+
+    // Check if we have to create associated flow
+    if (cfg_assoc) {
+        assoc_flow = (flow_t *)g_hal_state->flow_slab()->alloc();
+        if (!assoc_flow) {
+            return NULL;
+        }
+        *assoc_flow = {};
+        HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_PRIVATE);
+        assoc_flow->flow_key_ht_ctxt.reset();
+        assoc_flow->config = *cfg;
+        if (attrs_assoc) {
+            assoc_flow->pgm_attrs = *attrs_assoc;            
+        }
+        assoc_flow->session = session;
+        // If its an aug flow, goto assoc flow to get all params
+        assoc_flow->is_aug_flow = true;
+
+        // Link 
+        flow->assoc_flow = assoc_flow;
+        assoc_flow->assoc_flow = flow;
+    }
+
+    return flow;
+}
+
+hal_ret_t
+session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+{
+    hal_ret_t ret;
+    nwsec_profile_t         *nwsec_prof;
+    pd::pd_session_args_t    pd_session_args;
+    session_t               *session;
+
+    HAL_ASSERT(args->tenant && args->iflow && args->iflow_attrs &&args->sep && args->dep &&
+               args->sif && args->dif && args->sl2seg && args->dl2seg);
+
+    // allocate a session
+    session = (session_t *)g_hal_state->session_slab()->alloc();
+    if (session == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    *session = {};
+    session->config = *args->session;
+    session->tenant = args->tenant;
+
+    // fetch the security profile, if any
+    if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        nwsec_prof = find_nwsec_profile_by_handle(args->tenant->nwsec_profile_handle);
+    } else {
+        nwsec_prof = NULL;
+    }
+
+    // Handle the spec info not handled in the FTE
+    // TODO(goli) all these should go to appropriate fte features
+    if (args->spec) {
+        uint8_t  ingress, egress;
+        qos_extract_action_from_spec(&args->iflow->in_qos_action, 
+                                     args->spec->initiator_flow().flow_data().flow_info().in_qos_actions(),
+                                     hal::INGRESS_QOS);
+        qos_extract_action_from_spec(&args->iflow->eg_qos_action, 
+                                     args->spec->initiator_flow().flow_data().flow_info().eg_qos_actions(),
+                                     hal::EGRESS_QOS);
+        ret = extract_mirror_sessions(args->spec->initiator_flow(), &ingress, &egress);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+            return ret;
+        }
+        args->iflow->ing_mirror_session = ingress;
+        args->iflow->eg_mirror_session = egress;
+
+        if(args->rflow && args->spec->has_responder_flow()) {
+            qos_extract_action_from_spec(&args->rflow->in_qos_action, 
+                                         args->spec->responder_flow().flow_data().flow_info().in_qos_actions(),
+                                         hal::INGRESS_QOS);
+            qos_extract_action_from_spec(&args->rflow->eg_qos_action, 
+                                         args->spec->responder_flow().flow_data().flow_info().eg_qos_actions(),
+                                         hal::EGRESS_QOS);
+            ret = extract_mirror_sessions(args->spec->responder_flow(), &ingress, &egress);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
+                return ret;
+            }
+            args->rflow->ing_mirror_session = ingress;
+            args->rflow->eg_mirror_session = egress;
+        }
+    }
+
+    // create flows
+    session->iflow = flow_create_fte(args->iflow, args->iflow_assoc,
+                                     args->iflow_attrs, args->iflow_attrs_assoc,
+                                     session);
+    if (session->iflow == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    session->iflow->sl2seg = args->sl2seg;
+    session->iflow->dl2seg = args->dl2seg;
+    session->iflow->sep = args->sep;
+    session->iflow->dep = args->dep;
+    session->iflow->sif = args->sif;
+    session->iflow->dif = args->dif;
+
+    if (args->rflow) {
+        session->rflow = flow_create_fte(args->rflow, args->rflow_assoc,
+                                         args->rflow_attrs, args->rflow_attrs_assoc,
+                                         session);
+        if (session->rflow == NULL) {
+            ret = HAL_RET_OOM;
+            goto end;
+        }
+
+        session->rflow->sl2seg = args->dl2seg;
+        session->rflow->dl2seg = args->sl2seg;
+        session->rflow->sep = args->dep;
+        session->rflow->dep = args->sep;
+        session->rflow->sif = args->dif;
+        session->rflow->dif = args->sif;
+
+        session->iflow->reverse_flow = session->rflow;
+        session->rflow->reverse_flow = session->iflow;
+    }
+    session->hal_handle = hal_alloc_handle();
+
+    // allocate all PD resources and finish programming, if any
+    pd::pd_session_args_init(&pd_session_args);
+    pd_session_args.tenant = args->tenant;
+    pd_session_args.nwsec_prof = nwsec_prof;
+    pd_session_args.session = session;
+    pd_session_args.session_state = args->session_state;
+    pd_session_args.rsp = args->rsp;
+
+    ret = pd::pd_session_create(&pd_session_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD session create failure, err : {}", ret);
+        goto end;
+    }
+
+    // add this session to our db
+    add_session_to_db(session->tenant, args->sl2seg, args->dl2seg,
+                      args->sep, args->dep, args->sif, args->dif, session);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
+    if (session_handle) {
+        *session_handle = session->hal_handle;
+    }
+
+ end:
+    if (session && ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("session create failure, err={}", ret);
+        session_cleanup(session);
+    }
+
+    return ret;
+}
+
 }    // namespace hal
 

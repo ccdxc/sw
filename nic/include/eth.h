@@ -52,7 +52,7 @@ typedef struct eth_dot1q_hdr_ {
 #define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[5] & 0x1)
 
 // thread safe helper to stringify MAC address
-extern char *macaddr2str(mac_addr_t mac_addr);
+extern char *macaddr2str(const mac_addr_t mac_addr);
 
 static inline void
 mac_str_to_addr (char *str, mac_addr_t *mac)

@@ -45,6 +45,9 @@ hal_ret_t execute_pipeline(ctx_t &ctx);
 // for unit test code only
 void unregister_features_and_pipelines();
 
+// grpc session request
+hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
+
 // FTE pkt loop (infinite loop)
 void pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
               hal_ret_t (*tx)(phv_t *phv, uint8_t *pkt, size_t pkt_len));

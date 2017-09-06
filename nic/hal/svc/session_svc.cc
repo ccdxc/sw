@@ -6,6 +6,7 @@
 #include <trace.hpp>
 #include <session_svc.hpp>
 #include <session.hpp>
+#include <fte.hpp>
 
 Status
 SessionServiceImpl::SessionCreate(ServerContext *context,

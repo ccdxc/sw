@@ -6,7 +6,7 @@
 // thread safe helper to stringify MAC address
 //------------------------------------------------------------------------------
 char *
-macaddr2str (mac_addr_t mac_addr)
+macaddr2str (const mac_addr_t mac_addr)
 {
     static thread_local char       macaddr_str[4][20];
     static thread_local uint8_t    macaddr_str_next = 0;

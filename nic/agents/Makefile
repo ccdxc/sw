@@ -28,7 +28,7 @@ all:
 	$(CXX) $(GCOV) $(CPPFLAGS) $(INCLUDE_DIRS) -c -o $(OBJ_DIR)/nw_agent.o network/nw_agent.cc
 	$(CXX) $(GCOV) $(CPPFLAGS) $(INCLUDE_DIRS) -c -o $(OBJ_DIR)/svc_reg.o network/svc_reg.cc
 	$(CXX) $(GCOV) $(CPPFLAGS) $(INCLUDE_DIRS) -c -o $(OBJ_DIR)/nw_svc.o network/nw_svc.cc
-	$(CXX) $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/net.pb.o $(OBJ_DIR)/net.grpc.pb.o $(OBJ_DIR)/nw_agent.o $(OBJ_DIR)/svc_reg.o $(OBJ_DIR)/nw_svc.o $(LDFLAGS) -lhal -lperiodic -liris -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapri -lcapricsr -lbitmap -lslab -lindexer -lht -ltwheel -ltrace -lbitmap -lthread -lprint -lpdutils -lhostmem -o $(OBJ_DIR)/nw_agent $(GCOV)
+	$(CXX) $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/net.pb.o $(OBJ_DIR)/net.grpc.pb.o $(OBJ_DIR)/nw_agent.o $(OBJ_DIR)/svc_reg.o $(OBJ_DIR)/nw_svc.o $(LDFLAGS) -lhal -lperiodic -liris -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapri -lcapricsr -lbitmap -lslab -lindexer -lht -ltwheel -ltrace -lbitmap -lthread -lprint -lpdutils -lhostmem -lfte -lnetwork -o $(OBJ_DIR)/nw_agent $(GCOV)
 
 clean:
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d $(GEN_DIR)/*.cc $(GEN_DIR)/*.h $(OBJ_DIR)/vlan_test_grpc_client

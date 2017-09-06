@@ -12,7 +12,7 @@ namespace fte {
     ENTRY(FLOWUPD_HEADER_REWRITE,1, "modify the header")                \
     ENTRY(FLOWUPD_HEADER_PUSH,   2, "push header")                      \
     ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
-    ENTRY(FLOWUPD_CONN_TRACK,    4, "connection tracking")              \
+    ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")        \
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
@@ -102,17 +102,27 @@ typedef struct header_fld_s {
     uint32_t label2:1;
 } __PACK__ header_fld_t;
 
-#define HEADER_FLD_SET(obj, hdr, fld, val)          \
+#define HEADER_SET_FLD(obj, hdr, fld, val)          \
     {                                               \
-        obj.valid_hdrs  |= FTE_HEADER_ ## hdr;      \
+        obj.valid_hdrs  |= fte::FTE_HEADER_ ## hdr; \
         obj.valid_flds.fld = 1;                     \
         obj.hdr.fld = val;                          \
     }
 
-#define HEADER_COPY_FLD(dst, src, hdr, fld)     \
-    if (src.valid_flds.fld) {                   \
-        HEADER_FLD_SET(dst, hdr, fld, src.hdr.fld); \
+#define HEADER_COPY_FLD(dst, src, hdr, fld)         \
+    if (src.valid_flds.fld) {                       \
+        HEADER_SET_FLD(dst, hdr, fld, src.hdr.fld); \
     }
+
+#define HEADER_FORMAT_FLD(out, obj, header, fld)                    \
+    if (obj.valid_flds.fld) {                                       \
+        out.write(#header "." #fld "={}, ", obj.header.fld);        \
+    }
+
+#define HEADER_FORMAT_IPV4_FLD(out, obj, header, fld)                   \
+    if (obj.valid_flds.fld) {                                           \
+        out.write(#header "." #fld "={}, ", ipv4addr2str(obj.header.fld)); \
+    }  
 
 typedef struct header_rewrite_info_s {
     header_type_t valid_hdrs;
@@ -155,12 +165,16 @@ typedef struct header_rewrite_info_s {
     };
 } __PACK__ header_rewrite_info_t;
 
+std::ostream& operator<<(std::ostream& os, const header_rewrite_info_t& val);
+
 typedef struct mpls_label_s {
     uint32_t label;
     uint8_t exp;
     uint8_t bos;
     uint8_t ttl;
 } __PACK__ mpls_label_t;
+
+std::ostream& operator<<(std::ostream& os, const mpls_label_t& val);
 
 typedef struct header_push_info_s {
     header_type_t valid_hdrs;
@@ -192,43 +206,43 @@ typedef struct header_push_info_s {
         } gre, erspan, ip_in_ip, ipsec_esp;
         struct {
             uint8_t eompls;
-            mpls_label_t label0, label, label2;
+            mpls_label_t label0, label1, label2;
         } mpls;
     };
 } __PACK__ header_push_info_t;
+
+std::ostream& operator<<(std::ostream& os, const header_push_info_t& val);
 
 typedef struct header_pop_info_s {
     //empty
 } __PACK__ header_pop_info_t;
 
-typedef struct action_info_s {
-    uint8_t deny : 1; //deny flow 
-} __PACK__ action_info_t;
+std::ostream& operator<<(std::ostream& os, const header_pop_info_t& val);
 
-typedef struct conn_track_info_s {
-    uint8_t enable: 1;    // enable connection tracking
-    uint8_t state: 4;     // TCP state
-    int32_t syn_ack_delta;
-} __PACK__ conn_track_info_t;
+typedef hal::flow_state_t flow_state_t;
+typedef session::FlowAction flow_action_t;
 
 typedef struct fwding_info_s {
-    uint64_t lport : 11;
-    uint64_t  qid_en: 1;
-    uint64_t qtype: 3;
-    uint64_t qid: 24;    
-} __PACK__ fwding_info_t;
+    uint64_t lport:11;
+    uint64_t qid_en:1;
+    uint64_t qtype:3;
+    uint64_t qid:24;
+} fwding_info_t;
+
+std::ostream& operator<<(std::ostream& os, const fwding_info_t& val);
 
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
-        action_info_t action;
+        session::FlowAction action;
         header_rewrite_info_t header_rewrite;
         header_push_info_t header_push;
         header_pop_info_t header_pop;
-        conn_track_info_t conn_track;
+        flow_state_t flow_state;
         fwding_info_t fwding;
     };
 }__PACK__ flow_update_t;
+
 
 typedef struct header_update_s {
     header_update_type_t type;
@@ -264,6 +278,10 @@ struct lifqid_s {
     uint64_t qid : 24;
 } __PACK__;
 
+const uint16_t ARM_LIF = 1;
+const lifqid_t FLOW_MISS_LIFQ = {ARM_LIF, 0, 0};
+
+
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
     return os << fmt::format("{{lif={}, qtype={}, qid={}}}",
@@ -279,8 +297,12 @@ public:
     hal_ret_t init(phv_t *phv, uint8_t *pkt, size_t pkt_len,
                    flow_t *iflow, flow_t *rflow, flow_t *iflow_post,
                    flow_t *rflow_post);
-    hal_ret_t update_iflow(const flow_update_t&);
-    hal_ret_t update_rflow(const flow_update_t&);
+    hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
+                   flow_t *iflow, flow_t *rflow, flow_t *iflow_post,
+                   flow_t *rflow_post);
+
+    hal_ret_t update_flow(hal::flow_role_t role, const flow_update_t& flowupd);
+
     hal_ret_t update_gft();
 
     // Firewall action
@@ -297,13 +319,32 @@ public:
         return flow_ == iflow_ ? hal::FLOW_ROLE_INITIATOR : hal::FLOW_ROLE_RESPONDER;
     }
 
+    // Following are valid only for packets punted to ARM
     const phv_t* phv() const { return phv_; }
     const uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
+
+    //proto spec is valid when flow update triggered via hal proto api
+    bool protobuf_request() { return sess_spec_ != NULL; }
+    session::SessionSpec* sess_spec() {return sess_spec_; }
+    session::SessionResponse* sess_resp() {return sess_resp_; }
+
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
-    bool flow_miss() const { return session_ == NULL; }
+
+    // executing post p4+ features
     bool post_svcs() const { return post_svcs_; }
+    void set_post_svcs(bool val) { post_svcs_ = val; }
+
+    // name of the feature being executed
+    const char* feature_name() const { return feature_name_; } 
+    void set_feature_name(const char* name) { feature_name_ = name; }
+
+    // return staus of the feature handler
+    hal_ret_t feature_status() const { return feature_status_; } 
+    void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
+
+    bool flow_miss() const { return session_ == NULL; }
     bool valid_rflow() const { return rflow_ != NULL; }
 
     hal::tenant_t *tenant() const { return tenant_; }
@@ -322,7 +363,12 @@ private:
     uint8_t               *pkt_;
     size_t                pkt_len_;
 
-    uint8_t               post_svcs_;   // executing post p4+ svcs pipeline
+    session::SessionSpec           *sess_spec_;
+    session::SessionResponse       *sess_resp_;
+
+    uint8_t               post_svcs_;      // executing post p4+ svcs pipeline
+    const char*           feature_name_;   // Name of the feature being executed (for logging)
+    hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
 
     hal::session_t        *session_;
     flow_t                *flow_;        // Current pkt flow (i or r)
@@ -339,12 +385,17 @@ private:
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
 
-    hal_ret_t init_flows();
+    hal_ret_t init_flows(flow_t *iflow, flow_t *rflow,
+                         flow_t *iflow_post, flow_t *rflow_post);
     hal_ret_t lookup_flow_objs();
     hal_ret_t lookup_session();
     hal_ret_t create_session();
-    hal_ret_t build_flow_key();
-    hal_ret_t update_flow(flow_t *flow, const flow_update_t& flowupd);
+    hal_ret_t extract_flow_key_from_phv();
+    hal_ret_t update_for_dnat(hal::flow_role_t role,
+                              const header_rewrite_info_t& header);
+    static hal_ret_t extract_flow_key_from_spec(hal::flow_key_t *key,
+                                                const FlowKey&  flow_spec_key,
+                                                hal::tenant_id_t tid);
 };
 
 } // namespace fte

@@ -155,13 +155,10 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     // populate the action information
     d.actionid = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
 
-    d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
-        iflow->config.state;
-    d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_state =
-        rflow->config.state;
-
     if (session_state) {
         // initiator flow specific information
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
+            session_state->iflow_state.state;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
             session_state->iflow_state.tcp_seq_num;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
@@ -176,6 +173,8 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
             session_state->iflow_state.exception_bmap;
 
         // responder flow specific information
+        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_state =
+            session_state->rflow_state.state;
         d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
             session_state->rflow_state.tcp_seq_num;
         d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
@@ -188,12 +187,12 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
             session_state->rflow_state.tcp_mss;
         d.session_state_action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
             session_state->rflow_state.exception_bmap;
+
+
+        d.session_state_action_u.session_state_tcp_session_state_info.syn_cookie_delta =
+            session_state->iflow_state.syn_ack_delta;
     }
     
-
-    // session level information
-    d.session_state_action_u.session_state_tcp_session_state_info.syn_cookie_delta =
-        session->config.syn_ack_delta;
     d.session_state_action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
@@ -626,7 +625,9 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                          &session_pd->iflow);
     if (ret == HAL_RET_FLOW_COLL) {
-        args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+        if (args->rsp) {
+            args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+        }
         HAL_TRACE_DEBUG("IFlow Collision!");
         ret = HAL_RET_OK;
     }
@@ -649,7 +650,9 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              // (pd_l2seg_t *)args->l2seg_d->pd,
                                              &session_pd->rflow);
         if (ret == HAL_RET_FLOW_COLL) {
-            args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+            }
             HAL_TRACE_DEBUG("RFlow Collision!");
             ret = HAL_RET_OK;
         }
@@ -689,17 +692,18 @@ pd_session_create (pd_session_args_t *args)
     }
     session_pd->session = args->session;
     args->session->pd = session_pd;
-    if (args->session->rflow) {
+
+    if (session->rflow) {
         session_pd->rflow_valid = TRUE;
+        if (session->rflow->assoc_flow) {
+            session_pd->rflow_aug_valid = true;
+        }
     } else {
         session_pd->rflow_valid = FALSE;
     }
 
     if (session->iflow->assoc_flow) {
         session_pd->iflow_aug_valid = true;
-    }
-    if (session->rflow->assoc_flow) {
-        session_pd->rflow_aug_valid = true;
     }
 
     // add flow stats entries first

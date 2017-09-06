@@ -41,8 +41,8 @@ enum flow_direction_t {
 };
 
 #define FLOW_ROLES(ENTRY)                                           \
-    ENTRY(FLOW_ROLE_INITIATOR,      0, "IFLOW")                     \
-    ENTRY(FLOW_ROLE_RESPONDER,      1, "RFLOW")                     
+    ENTRY(FLOW_ROLE_INITIATOR,      0, "iflow")                     \
+    ENTRY(FLOW_ROLE_RESPONDER,      1, "rflow")                     
 
 DEFINE_ENUM(flow_role_t, FLOW_ROLES)
 #undef FLOW_ROLES
@@ -121,7 +121,6 @@ inline std::ostream& operator<<(std::ostream& os, const flow_key_t& key)
 // flow config
 typedef struct flow_cfg_s {
     flow_key_t                key;                 // flow's key
-    uint16_t                  state:4;             // flow state
     uint16_t                  action:3;            // flow action(s)
     uint16_t                  role:1;              // flow role (initiator or responder)
     uint16_t                  nat_type:3;          // type of NAT
@@ -136,28 +135,29 @@ typedef struct flow_cfg_s {
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {
-    uint16_t                  role:1;              // flow role (initiator or responder)
-    uint16_t                  drop:1;              // drop for this flow
-    uint16_t                  mac_sa_rewrite:1;    // rewrite src mac
-    uint16_t                  mac_da_rewrite:1;    // rewrite dst mac
-    rewrite_actions_en        rw_act;              // rewrite action
-    uint32_t                  rw_idx;              // rewrite index
-    tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
-    uint32_t                  tnnl_rw_idx;         // tunnel rewrite index
-    uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan    
-    uint16_t                  ttl_dec:1;           // decrement ttl
-    uint16_t                  lport:11;            // dest lport
+    uint64_t                  role:1;              // flow role (initiator or responder)
+    uint64_t                  drop:1;              // drop for this flow
+    uint64_t                  mac_sa_rewrite:1;    // rewrite src mac
+    uint64_t                  mac_da_rewrite:1;    // rewrite dst mac
+    uint64_t                  ttl_dec:1;           // decrement ttl
+    uint64_t                  mcast_en:1;          // mcast enable
+    uint64_t                  tunnel_orig:1;       // tunnel originate
+    uint64_t                  lport:11;            // dest lport
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
     uint16_t                  nat_type:3;          // type of NAT
+
+    rewrite_actions_en        rw_act;              // rewrite action
+    uint32_t                  rw_idx;              // rewrite index
+    tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
+    uint32_t                  tnnl_rw_idx;         // tunnel rewrite index
+    uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
     uint16_t                  nat_l4_port;         // NAT L4 port
-    uint8_t                   mcast_en:1;          // mcast enable
-    uint8_t                   tunnel_orig:1;       // tunnel originate
     ep_t                      *dep;                // only to get rw idx in PD
 } __PACK__ flow_pgm_attrs_t;
 
@@ -196,12 +196,29 @@ typedef struct flow_state_s {
     uint64_t        packets;             // packet count on this flow
     uint64_t        bytes;               // byte count on this flow
     uint32_t        exception_bmap;      // exceptions seen on this flow
+    session::FlowTCPState   state;             // flow state
     uint32_t        tcp_seq_num;
     uint32_t        tcp_ack_num;
     uint32_t        tcp_win_sz;
     uint8_t         tcp_win_scale;
     uint16_t        tcp_mss;
+    int32_t         syn_ack_delta;            // ACK delta of iflow
 } __PACK__ flow_state_t;
+
+inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
+{
+    os << "{state=" << val.state;
+    if (val.syn_ack_delta) {
+        os << ", syn_ack_delta=" << val.syn_ack_delta;
+    }
+    if (val.tcp_seq_num) {
+        os << ", tcp_seq_num=" << val.tcp_seq_num;
+    }
+    if (val.tcp_ack_num) {
+        os << ", syn_ack_delta=" << val.tcp_ack_num;
+    }
+    return os << "}";
+}
 
 typedef struct session_state_s {
     uint8_t             tcp_ts_option:1;
@@ -212,7 +229,6 @@ typedef struct session_state_s {
 typedef struct session_cfg_s {
     session_id_t        session_id;               // unique session id
     uint16_t            conn_track_en:1;          // enable connection tracking
-    int32_t             syn_ack_delta;            // ACK delta of iflow
 } __PACK__ session_cfg_t;
 
 typedef struct session_args_s {
@@ -231,7 +247,32 @@ typedef struct session_args_s {
 #endif
     SessionSpec        *spec;                     // session spec
     SessionResponse    *rsp;                      // session response
-} __PACK__ session_args_t;
+} __PACK__ session_args_t; 
+
+typedef struct session_args_fte_s {
+    session_cfg_t      *session;                  // session config
+    flow_cfg_t         *iflow;                    // initiator flow
+    flow_cfg_t         *rflow;                    // responder flow
+    flow_pgm_attrs_t   *iflow_attrs;              // initiator flow attrs
+    flow_pgm_attrs_t   *rflow_attrs;              // responder flow attrs
+    flow_cfg_t         *iflow_assoc;              // initiator associated flow
+    flow_cfg_t         *rflow_assoc;              // responder associated flow
+    flow_pgm_attrs_t   *iflow_attrs_assoc;        // initiator assoc flow attrs
+    flow_pgm_attrs_t   *rflow_attrs_assoc;        // responder assoc flow attrs
+
+
+    session_state_t    *session_state;            // connection tracking state
+    tenant_t           *tenant;                   // tenant
+
+    ep_t               *sep;                      // spurce ep
+    ep_t               *dep;                      // dest ep
+    if_t               *sif;                      // source interface
+    if_t               *dif;                      // dest interface
+    l2seg_t            *sl2seg;                   // source l2seg
+    l2seg_t            *dl2seg;                   // dest l2seg
+    SessionSpec        *spec;                     // session spec
+    SessionResponse    *rsp;                      // session response
+} __PACK__ session_args_fte_t;
 
 
 //------------------------------------------------------------------------------
@@ -304,6 +345,7 @@ bool flow_needs_associate_flow(const flow_key_t *flow_key);
 extern hal_ret_t session_release(session_t *session);
 
 hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
+hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle);
 
 hal_ret_t session_create(session::SessionSpec& spec,
                          session::SessionResponse *rsp);

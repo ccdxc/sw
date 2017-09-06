@@ -24,7 +24,7 @@ hal::flowkey2str(const hal::flow_key_t&)
 }
 
 hal_ret_t
-hal::session_create(const hal::session_args_s *, hal_handle_t*)
+hal::session_create_fte(const hal::session_args_fte_t *, hal_handle_t*)
 {
     return HAL_RET_OK;
 }
@@ -35,3 +35,20 @@ hal::pd::find_l2seg_by_hwid(hal::pd::l2seg_hw_id_t)
     return NULL;
 }
 
+hal_ret_t
+hal::qos_extract_action_from_spec(hal::qos_action_s*, qos::QOSActions const&, hal::qos_direction_e)
+{
+    return HAL_RET_OK;
+}
+
+uint32_t
+hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(hal::ep_t*, rewrite_actions_en)
+{
+    return 0;
+}
+uint32_t
+hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(hal::ep_t*, 
+                                              tunnel_rewrite_actions_en)
+{
+    return 0;
+}

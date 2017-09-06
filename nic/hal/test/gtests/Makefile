@@ -27,7 +27,7 @@ CUS_BINARIES := $(CUS_PFXES:%=$(OBJ_DIR)/%)
 all: $(CUS_BINARIES)
 
 quiet_cmd_cuslink = LINK	$(basename $<)
-cmd_cuslink = $(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $< $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -o $@ $(GCOV)
+cmd_cuslink = $(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $< $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -lfte -lnetwork -o $@ $(GCOV)
 
 $(OBJ_DIR)/%: %.cc
 	$(call cmd,cuslink)

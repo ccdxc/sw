@@ -23,8 +23,6 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
         HEADER_COPY_FLD(dst, src, ether, vlan_id);
         HEADER_COPY_FLD(dst, src, ether, dot1p);
         break;
-    default:
-        HAL_ASSERT_RETURN(0, HAL_RET_INVALID_ARG);
     }
     
     // l3 header fields
@@ -41,8 +39,6 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
         HEADER_COPY_FLD(dst, src, ipv6, ttl);
         HEADER_COPY_FLD(dst, src, ipv6, dscp);
         break;
-    default:
-        HAL_ASSERT_RETURN(0, HAL_RET_INVALID_ARG);
     }
     
     // l4 header fields
@@ -55,8 +51,6 @@ flow_t::merge_header_rewrite(header_rewrite_info_t &dst,
         HEADER_COPY_FLD(dst, src, udp, sport);
         HEADER_COPY_FLD(dst, src, udp, dport);
         break;
-    default:
-        HAL_ASSERT_RETURN(0, HAL_RET_INVALID_ARG);
     }
 
     return HAL_RET_OK;
@@ -74,8 +68,6 @@ flow_t::merge_header_rewrite_with_push(header_push_info_t &dst,
         HEADER_COPY_FLD(dst, src, ether, dmac);
         HEADER_COPY_FLD(dst, src, ether, vlan_id);
         break;
-    default:
-        HAL_ASSERT_RETURN(0, HAL_RET_INVALID_ARG);
     }
 
     // l3 header fields
@@ -88,8 +80,6 @@ flow_t::merge_header_rewrite_with_push(header_push_info_t &dst,
         HEADER_COPY_FLD(dst, src, ipv6, sip);
         HEADER_COPY_FLD(dst, src, ipv6, dip);
         break;
-    default:
-        HAL_ASSERT_RETURN(0, HAL_RET_INVALID_ARG);
     }
 
     return HAL_RET_OK;
@@ -98,7 +88,7 @@ flow_t::merge_header_rewrite_with_push(header_push_info_t &dst,
 hal_ret_t flow_t::header_pop(const header_pop_info_t &header_pop)
 {
     if (num_header_updates_ >= MAX_HEADER_UPDATES) {
-        HAL_TRACE_ERR("header updates exceeded");
+        HAL_TRACE_ERR("fte: header updates exceeded");
         return HAL_RET_ERR;
     }
 
@@ -116,7 +106,7 @@ hal_ret_t flow_t::header_push(const header_push_info_t &header_push)
     }
 
     if (num_header_updates_ >= MAX_HEADER_UPDATES) {
-        HAL_TRACE_ERR("header updates exceeded");
+        HAL_TRACE_ERR("fte: header updates exceeded");
         return HAL_RET_ERR;
     }
 
@@ -151,7 +141,7 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
     case HEADER_POP:
         // Allocate new update entry
         if (num_header_updates_ >= MAX_HEADER_UPDATES) {
-            HAL_TRACE_ERR("header updates exceeded");
+            HAL_TRACE_ERR("fte: header updates exceeded");
             ret = HAL_RET_ERR;
             break;
         }
@@ -174,105 +164,86 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
 
 
 rewrite_actions_enum
-flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type, int nat_type)
+flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
+                           bool snat, bool dnat)
 {
-    // index1: 0(ipv4), 1(ipv6)
-    // index2: 0(snat), 1(dnat), 2(twice_nat)
-    // index3: 0(tcp), 1(udp), 2(none)
-    static rewrite_actions_enum actions[2][3][3] = {
-        {{REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_REWRITE_ID},
-         {REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID, REWRITE_IPV4_NAT_DST_REWRITE_ID},
-         {REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_REWRITE_ID}},
-        {{REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_REWRITE_ID},
-         {REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID, REWRITE_IPV4_NAT_DST_REWRITE_ID},
-         {REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_REWRITE_ID}}
+    static int proto_tcp = 0, proto_udp = 1, proto_other = 2;
+    static int af_v4 = 0, af_v6 = 1;
+    static rewrite_actions_enum snat_actions[2][3] = {
+        {REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID,
+         REWRITE_IPV4_NAT_SRC_REWRITE_ID},
+        {REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID,
+         REWRITE_IPV6_NAT_SRC_REWRITE_ID}
     };
-    
-    int index1, index2, index3;
-    switch(l3_type) {
-    case FTE_HEADER_ipv4: index1 = 0; break;
-    case FTE_HEADER_ipv6: index1 = 1; break;
-    default: return REWRITE_NOP_ID;
+    static rewrite_actions_enum dnat_actions[2][3] = {
+        {REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID,
+         REWRITE_IPV4_NAT_DST_REWRITE_ID},
+        {REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID,
+         REWRITE_IPV6_NAT_DST_REWRITE_ID}
+    };
+
+    static rewrite_actions_enum twice_nat_actions[2][3] = {
+        {REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID,
+         REWRITE_IPV4_TWICE_NAT_REWRITE_ID},
+        {REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID,
+         REWRITE_IPV6_TWICE_NAT_REWRITE_ID}
+    };
+
+    int proto = (l4_type == FTE_HEADER_tcp) ? proto_tcp :
+        (l4_type == FTE_HEADER_udp) ? proto_udp : proto_other;
+    int af = (l3_type == FTE_HEADER_ipv4) ? af_v4: af_v6;
+
+    if (snat && dnat) {
+        return twice_nat_actions[af][proto];
+    } else if (snat) {
+        return snat_actions[af][proto];
+    } else if (dnat) {
+        return dnat_actions[af][proto];
     }
 
-    switch (nat_type) {
-    case hal::NAT_TYPE_SNAT: index2 = 0; break; 
-    case hal::NAT_TYPE_DNAT: index2 = 1; break;
-    case hal::NAT_TYPE_TWICE_NAT: index2 = 2; break;
-    default: return REWRITE_NOP_ID;
-    }
-
-    switch (l4_type) {
-    case FTE_HEADER_tcp: index3 = 0; break;
-    case FTE_HEADER_udp: index3 = 1; break;
-    default: index3 = 2; break;
-    }
-
-    return actions[index1][index2][index3];
+    return REWRITE_REWRITE_ID;        
 }
 
-hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &flow_cfg,
+hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
                                        const header_rewrite_info_t &rewrite)
 {
-    // TODO(bharat): Please take care of this after changes in flow design
-#if 0
-       // flags
-    flow_cfg.ttl_dec = rewrite.flags.dec_ttl;
+    attrs.rw_act = REWRITE_NOP_ID;
+    attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+
+    // flags
+    attrs.ttl_dec = rewrite.flags.dec_ttl;
 
     // MAC rewrite
-    flow_cfg.mac_sa_rewrite = rewrite.valid_flds.smac;
-    flow_cfg.mac_da_rewrite = rewrite.valid_flds.dmac;
-    if (flow_cfg.mac_sa_rewrite || flow_cfg.mac_da_rewrite) {
-        flow_cfg.rw_act = REWRITE_REWRITE_ID;
-        // TODO(goli)update rewrite table with sa da
-    }
+    attrs.mac_sa_rewrite = rewrite.valid_flds.smac;
+    attrs.mac_da_rewrite = rewrite.valid_flds.dmac;
+    // TODO(goli)update rewrite table with sa da
 
     //VLAN rewrite
     if (rewrite.valid_flds.vlan_id) {
-        flow_cfg.tnnl_vnid = rewrite.ether.vlan_id;
-        flow_cfg.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
-    }
-
-    // NAT rewrite
-    bool snat = rewrite.valid_flds.sip || rewrite.valid_flds.sport;
-    bool dnat = rewrite.valid_flds.dip || rewrite.valid_flds.dport;
-
-    if (snat && dnat){
-        flow_cfg.nat_type = hal::NAT_TYPE_TWICE_NAT;
-    } else if (snat){
-        flow_cfg.nat_type = hal::NAT_TYPE_SNAT;
-    } else if (dnat) {
-        flow_cfg.nat_type = hal::NAT_TYPE_DNAT;
-    } else {
-        flow_cfg.nat_type = hal::NAT_TYPE_NONE;
-    }
-
-    if (flow_cfg.nat_type != hal::NAT_TYPE_NONE) {
-        flow_cfg.rw_act = nat_rewrite_action(rewrite.valid_hdrs&FTE_L3_HEADERS,
-                                              rewrite.valid_hdrs&FTE_L4_HEADERS,
-                                              flow_cfg.nat_type);
+        attrs.tnnl_vnid = rewrite.ether.vlan_id;
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
     }
 
     // L3 rewrite
     switch(rewrite.valid_hdrs&FTE_L3_HEADERS) {
     case FTE_HEADER_ipv4:
         if (rewrite.valid_flds.sip) {
-            flow_cfg.nat_sip.af = IP_AF_IPV4;
-            flow_cfg.nat_sip.addr.v4_addr = rewrite.ipv4.sip;
+            attrs.nat_sip.af = IP_AF_IPV4;
+            attrs.nat_sip.addr.v4_addr = rewrite.ipv4.sip;
         }
         if (rewrite.valid_flds.dip) {
-            flow_cfg.nat_dip.af = IP_AF_IPV4;
-            flow_cfg.nat_dip.addr.v4_addr = rewrite.ipv4.dip;
+            attrs.nat_dip.af = IP_AF_IPV4;
+            attrs.nat_dip.addr.v4_addr = rewrite.ipv4.dip;
         }
         break;
     case FTE_HEADER_ipv6:
         if (rewrite.valid_flds.sip) {
-            flow_cfg.nat_sip.af = IP_AF_IPV6;
-            flow_cfg.nat_sip.addr.v6_addr = rewrite.ipv6.sip;
+            attrs.nat_sip.af = IP_AF_IPV6;
+            attrs.nat_sip.addr.v6_addr = rewrite.ipv6.sip;
         }
         if (rewrite.valid_flds.dip) {
-            flow_cfg.nat_dip.af = IP_AF_IPV6;
-            flow_cfg.nat_dip.addr.v6_addr = rewrite.ipv6.dip;
+            attrs.nat_dip.af = IP_AF_IPV6;
+            attrs.nat_dip.addr.v6_addr = rewrite.ipv6.dip;
         }
         break;
     }
@@ -281,45 +252,104 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &flow_cfg,
     switch(rewrite.valid_hdrs&FTE_L4_HEADERS) {
     case FTE_HEADER_tcp:
         if (rewrite.valid_flds.sport) {
-            flow_cfg.nat_sport = rewrite.tcp.sport;
+            attrs.nat_sport = rewrite.tcp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            flow_cfg.nat_sport = rewrite.tcp.dport;
+            attrs.nat_sport = rewrite.tcp.dport;
         }
         break;
     case FTE_HEADER_udp:
         if (rewrite.valid_flds.sport) {
-            flow_cfg.nat_sport = rewrite.udp.sport;
+            attrs.nat_sport = rewrite.udp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            flow_cfg.nat_sport = rewrite.udp.dport;
+            attrs.nat_sport = rewrite.udp.dport;
         }
         break;
     }
 
-    //TODO(goli)need to create rewrite table entry with appropraite action (l3 or nat_xxx)
-#endif
+    // rewrite action
+    attrs.rw_act = nat_rewrite_action(rewrite.valid_hdrs&FTE_L3_HEADERS,
+                                      rewrite.valid_hdrs&FTE_L4_HEADERS,
+                                      rewrite.valid_flds.sip || rewrite.valid_flds.sport,
+                                      rewrite.valid_flds.dip || rewrite.valid_flds.dport);
+
+    // tunnel rewrite action
+    attrs.tnnl_rw_act = rewrite.valid_flds.vlan_id ? TUNNEL_REWRITE_ENCAP_VLAN_ID :
+        TUNNEL_REWRITE_NOP_ID;
+
+    //TODO(goli) need to create rewrite table entry with appropraite
+    //action (l3 or nat_xxx)
     return HAL_RET_OK;
 }
 
-hal_ret_t flow_t::to_config(hal::flow_cfg_t &flow_cfg) const
+hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
+                                           const header_push_info_t &header)
+{
+    attrs.tunnel_orig = TRUE;
+
+    switch (header.valid_hdrs&FTE_ENCAP_HEADERS) {
+    case FTE_HEADER_vxlan:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+        break;
+    case FTE_HEADER_vxlan_gpe:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
+        break;
+    case FTE_HEADER_geneve:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GENV_ID;
+        break;
+    case FTE_HEADER_nvgre:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_NVGRE_ID;
+        break;
+    case FTE_HEADER_gre:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GRE_ID;
+        break;
+    case FTE_HEADER_erspan:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
+        break;
+    case FTE_HEADER_ip_in_ip:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IP_ID;
+        break;
+    case FTE_HEADER_ipsec_esp:
+        if (header.valid_hdrs&FTE_HEADER_ipv6) {
+            if (header.valid_flds.vlan_id) {
+                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_IPV6_IPSEC_TUNNEL_ESP_ID;
+            } else {
+                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPV6_IPSEC_TUNNEL_ESP_ID;
+            }
+        } else {
+            if (header.valid_flds.vlan_id) {
+                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_IPV4_IPSEC_TUNNEL_ESP_ID;
+            } else {
+                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPV4_IPSEC_TUNNEL_ESP_ID;
+            }
+        }
+        break;
+    case FTE_HEADER_mpls:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_MPLS_ID;
+        break;
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attrs) const
 {
     hal_ret_t ret;
-    flow_cfg.key = key_;
 
-    flow_cfg.action = action_.deny ? session::FLOW_ACTION_DROP : session::FLOW_ACTION_ALLOW;
+    config.key = key_;
 
-    // conn_track info
-    flow_cfg.state = conn_track_.state;
+    if (valid_.action) {
+        config.action = action_;
+        attrs.drop =  (action_ == session::FLOW_ACTION_DROP);
+    }
 
-    // TODO(bharat): Please take care of this after changes in flow design
-#if 0
-    // fwding info
-    flow_cfg.lport = fwding_.lport;
-    flow_cfg.qid_en = fwding_.qid_en;
-    flow_cfg.qtype = fwding_.qtype;
-    flow_cfg.qid = fwding_.qid;
-#endif
+    if (valid_.fwding) {
+        attrs.lport = fwding_.lport;
+        attrs.qid_en =  fwding_.qid_en;
+        attrs.qtype = fwding_.qtype;
+        attrs.qid = fwding_.qid;
+    }
 
     // header manipulations
     for (int i = 0; i < num_header_updates_; i++) {
@@ -331,12 +361,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &flow_cfg) const
             break;
 
         case HEADER_PUSH:
-            // TODO(goli) not supportef yet
-            ret = HAL_RET_INVALID_OP;
+            ret = build_push_header_config(attrs, entry->header_push);
             break;
 
         case HEADER_REWRITE:
-            ret = build_rewrite_config(flow_cfg, entry->header_rewrite);
+            ret = build_rewrite_config(attrs, entry->header_rewrite);
             break;
         }
 
@@ -356,8 +385,8 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
         set_action(flow.action());
     }
 
-    if (flow.valid_conn_track()) {
-        set_conn_track(flow.conn_track());
+    if (flow.valid_flow_state()) {
+        set_flow_state(flow.flow_state());
     }
 
     if (flow.valid_fwding()) {
@@ -388,7 +417,7 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
     return ret;
 }
 
-void flow_t::from_config(const hal::flow_cfg_t &flow_cfg)
+void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_attrs_t  &attrs)
 {
     // TODO(goli)
 }
