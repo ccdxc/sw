@@ -181,9 +181,11 @@ capri_p4p_asm_init()
     symbols[8].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
 
     symbols[9].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet.bin";
-    symbols[9].num_params = 1;
+    symbols[9].num_params = 2;
     symbols[9].params[0].name = IPSEC_CB_BASE;
     symbols[9].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+    symbols[9].params[1].name = IPSEC_IP_HDR_BASE;
+    symbols[9].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_IP_HDR);
 
     symbols[10].name = "esp_ipv4_tunnel_h2n_update_input_desc_aol.bin";
     symbols[10].num_params = 1;
@@ -255,6 +257,7 @@ capri_p4p_asm_init()
     symbols[25].num_params = 1;
     symbols[25].params[0].name = BRQ_BASE;
     symbols[25].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);

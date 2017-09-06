@@ -25,7 +25,6 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     phvwr p.common_te0_phv_table_addr, r3 
 
     phvwr p.barco_desc_in_A0_addr, k.t0_s2s_in_page_addr 
-    // get the correct way of giving it as a single 14 bit field
     //phvwr p.barco_desc_in_L0, k.ipsec_global_frame_size
     phvwri p.barco_desc_in_O0, 0
 
@@ -38,11 +37,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len
 
 dma_cmd_to_write_pad_bytes:
-    //add r1, r0, k.ipsec_to_stage3_pad_size
-    //sll r1, r1, 8
-    //addi r1, r1, IPSEC_PAD_BYTES_HBM_TABLE_BASE
     add r2, r0, k.t0_s2s_in_page_addr
-    //add r2, r2, k.ipsec_global_frame_size
     //source - from fixed hbm pad table data structure.
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_MEM
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC
