@@ -13,6 +13,7 @@ update_flow_from_nat_spec(fte::ctx_t& ctx, hal::flow_role_t role,
     auto nat_type = flow_info.nat_type();
     if (nat_type == session::NAT_TYPE_SNAT || nat_type == session::NAT_TYPE_TWICE_NAT) {
         if (flow_info.has_nat_sip()) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, ether_addr{}); // TODO(goli)read service mac
             if (flow_info.nat_sip().ip_af() == types::IP_AF_INET) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, sip, flow_info.nat_sip().v4_addr());
             } else {
@@ -32,6 +33,7 @@ update_flow_from_nat_spec(fte::ctx_t& ctx, hal::flow_role_t role,
 
     if (nat_type == session::NAT_TYPE_DNAT || nat_type == session::NAT_TYPE_TWICE_NAT) {
         if (flow_info.has_nat_dip()) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, ether_addr{}); // TODO(goli)read service mac
             if (flow_info.nat_dip().ip_af() == types::IP_AF_INET) {
                 HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dip, flow_info.nat_dip().v4_addr());
             } else {
@@ -62,7 +64,7 @@ lb_exec(fte::ctx_t& ctx)
                                   ctx.sess_spec()->initiator_flow().flow_data().flow_info());
         
         update_flow_from_nat_spec(ctx, hal::FLOW_ROLE_RESPONDER,
-                                  ctx.sess_spec()->initiator_flow().flow_data().flow_info());
+                                  ctx.sess_spec()->responder_flow().flow_data().flow_info());
         return fte::PIPELINE_CONTINUE;
     }
 

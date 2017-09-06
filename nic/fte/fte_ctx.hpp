@@ -294,30 +294,25 @@ class flow_t;
 // FTE context passed between features in a pipeline
 class ctx_t {
 public:
+    static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
+
     hal_ret_t init(phv_t *phv, uint8_t *pkt, size_t pkt_len,
-                   flow_t *iflow, flow_t *rflow, flow_t *iflow_post,
-                   flow_t *rflow_post);
+                   flow_t iflow[], flow_t rflow[]);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
-                   flow_t *iflow, flow_t *rflow, flow_t *iflow_post,
-                   flow_t *rflow_post);
+                   flow_t iflow[], flow_t rflow[]);
 
     hal_ret_t update_flow(hal::flow_role_t role, const flow_update_t& flowupd);
 
     hal_ret_t update_gft();
 
     // Firewall action
-    bool drop() const;
+    bool drop() const { return drop_; }
 
     // direction of the current pkt
     hal::flow_direction_t direction() {return (hal::flow_direction_t)(key_.dir); };
 
     // flow key of the current pkts flow
     const hal::flow_key_t& key() const { return key_; }
-
-    // role of the current pkts flow
-    hal::flow_role_t role() const {
-        return flow_ == iflow_ ? hal::FLOW_ROLE_INITIATOR : hal::FLOW_ROLE_RESPONDER;
-    }
 
     // Following are valid only for packets punted to ARM
     const phv_t* phv() const { return phv_; }
@@ -332,9 +327,11 @@ public:
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
 
-    // executing post p4+ features
-    bool post_svcs() const { return post_svcs_; }
-    void set_post_svcs(bool val) { post_svcs_ = val; }
+    uint8_t stage() const { return stage_; }
+    hal_ret_t advance_to_next_stage() {
+        HAL_ASSERT_RETURN(stage_ + 1 >= MAX_STAGES, HAL_RET_INVALID_OP);
+        stage_++;
+    }
 
     // name of the feature being executed
     const char* feature_name() const { return feature_name_; } 
@@ -345,7 +342,7 @@ public:
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
     bool flow_miss() const { return session_ == NULL; }
-    bool valid_rflow() const { return rflow_ != NULL; }
+    bool valid_rflow() const { return valid_rflow_; }
 
     hal::tenant_t *tenant() const { return tenant_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
@@ -366,16 +363,15 @@ private:
     session::SessionSpec           *sess_spec_;
     session::SessionResponse       *sess_resp_;
 
-    uint8_t               post_svcs_;      // executing post p4+ svcs pipeline
     const char*           feature_name_;   // Name of the feature being executed (for logging)
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
 
+    bool                  drop_;           // Drop the packet
     hal::session_t        *session_;
-    flow_t                *flow_;        // Current pkt flow (i or r)
-    flow_t                *iflow_;       // iflow pre-services
-    flow_t                *rflow_;       // rflow pre-services
-    flow_t                *iflow_post_;  // iflow post-services
-    flow_t                *rflow_post_;  // rflow post-services
+    uint8_t               stage_;          // current stage
+    bool                  valid_rflow_;
+    flow_t                *iflow_[MAX_STAGES];       // iflow 
+    flow_t                *rflow_[MAX_STAGES];       // rflow 
 
     hal::tenant_t         *tenant_;
     hal::l2seg_t          *sl2seg_;
@@ -385,8 +381,7 @@ private:
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
 
-    hal_ret_t init_flows(flow_t *iflow, flow_t *rflow,
-                         flow_t *iflow_post, flow_t *rflow_post);
+    hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t lookup_flow_objs();
     hal_ret_t lookup_session();
     hal_ret_t create_session();

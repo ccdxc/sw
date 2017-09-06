@@ -1867,7 +1867,7 @@ flow_create_fte(const flow_cfg_t *cfg,
                 const flow_cfg_t *cfg_assoc,
                 const flow_pgm_attrs_t *attrs,
                 const flow_pgm_attrs_t *attrs_assoc,
-                session_t *session)
+                session_t *session, bool bridged)
 {
     flow_t      *assoc_flow = NULL;
 
@@ -1890,6 +1890,11 @@ flow_create_fte(const flow_cfg_t *cfg,
 
     flow->session = session;
 
+    // TODO(goli) fix it - we need to get rw-idx using smac, dmac, act
+    if (bridged && cfg->nat_type == NAT_TYPE_SNAT) {
+        flow->pgm_attrs.rw_idx = flow_get_l4lb_rw_idx(flow, flow->pgm_attrs.rw_act);
+    }
+
     // Check if we have to create associated flow
     if (cfg_assoc) {
         assoc_flow = (flow_t *)g_hal_state->flow_slab()->alloc();
@@ -1904,6 +1909,11 @@ flow_create_fte(const flow_cfg_t *cfg,
             assoc_flow->pgm_attrs = *attrs_assoc;            
         }
         assoc_flow->session = session;
+        // TODO(goli) fix it - we need to get rw-idx using smac, dmac, act
+        if (bridged && cfg_assoc->nat_type == NAT_TYPE_SNAT) {
+            assoc_flow->pgm_attrs.rw_idx = flow_get_l4lb_rw_idx(assoc_flow, assoc_flow->pgm_attrs.rw_act);
+        }
+
         // If its an aug flow, goto assoc flow to get all params
         assoc_flow->is_aug_flow = true;
 
@@ -1922,6 +1932,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     nwsec_profile_t         *nwsec_prof;
     pd::pd_session_args_t    pd_session_args;
     session_t               *session;
+    bool bridged = (args->sl2seg == args->dl2seg);
 
     HAL_ASSERT(args->tenant && args->iflow && args->iflow_attrs &&args->sep && args->dep &&
                args->sif && args->dif && args->sl2seg && args->dl2seg);
@@ -1947,10 +1958,10 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     // TODO(goli) all these should go to appropriate fte features
     if (args->spec) {
         uint8_t  ingress, egress;
-        qos_extract_action_from_spec(&args->iflow->in_qos_action, 
+        qos_extract_action_from_spec(&args->iflow[0]->in_qos_action, 
                                      args->spec->initiator_flow().flow_data().flow_info().in_qos_actions(),
                                      hal::INGRESS_QOS);
-        qos_extract_action_from_spec(&args->iflow->eg_qos_action, 
+        qos_extract_action_from_spec(&args->iflow[0]->eg_qos_action, 
                                      args->spec->initiator_flow().flow_data().flow_info().eg_qos_actions(),
                                      hal::EGRESS_QOS);
         ret = extract_mirror_sessions(args->spec->initiator_flow(), &ingress, &egress);
@@ -1958,14 +1969,14 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
             HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
             return ret;
         }
-        args->iflow->ing_mirror_session = ingress;
-        args->iflow->eg_mirror_session = egress;
+        args->iflow[0]->ing_mirror_session = ingress;
+        args->iflow[0]->eg_mirror_session = egress;
 
-        if(args->rflow && args->spec->has_responder_flow()) {
-            qos_extract_action_from_spec(&args->rflow->in_qos_action, 
+        if(args->rflow[0] && args->spec->has_responder_flow()) {
+            qos_extract_action_from_spec(&args->rflow[0]->in_qos_action, 
                                          args->spec->responder_flow().flow_data().flow_info().in_qos_actions(),
                                          hal::INGRESS_QOS);
-            qos_extract_action_from_spec(&args->rflow->eg_qos_action, 
+            qos_extract_action_from_spec(&args->rflow[0]->eg_qos_action, 
                                          args->spec->responder_flow().flow_data().flow_info().eg_qos_actions(),
                                          hal::EGRESS_QOS);
             ret = extract_mirror_sessions(args->spec->responder_flow(), &ingress, &egress);
@@ -1973,15 +1984,16 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
                 HAL_TRACE_ERR("session create failure extracting mirror sessions: {}", __FUNCTION__);
                 return ret;
             }
-            args->rflow->ing_mirror_session = ingress;
-            args->rflow->eg_mirror_session = egress;
+            args->rflow[0]->ing_mirror_session = ingress;
+            args->rflow[0]->eg_mirror_session = egress;
         }
     }
 
+
     // create flows
-    session->iflow = flow_create_fte(args->iflow, args->iflow_assoc,
-                                     args->iflow_attrs, args->iflow_attrs_assoc,
-                                     session);
+    session->iflow = flow_create_fte(args->iflow[0], args->iflow[1],
+                                     args->iflow_attrs[0], args->iflow_attrs[1],
+                                     session, bridged);
     if (session->iflow == NULL) {
         ret = HAL_RET_OOM;
         goto end;
@@ -1995,9 +2007,9 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     session->iflow->dif = args->dif;
 
     if (args->rflow) {
-        session->rflow = flow_create_fte(args->rflow, args->rflow_assoc,
-                                         args->rflow_attrs, args->rflow_attrs_assoc,
-                                         session);
+        session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
+                                         args->rflow_attrs[0], args->rflow_attrs[1],
+                                         session, bridged);
         if (session->rflow == NULL) {
             ret = HAL_RET_OOM;
             goto end;

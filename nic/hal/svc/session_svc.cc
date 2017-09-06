@@ -24,7 +24,7 @@ SessionServiceImpl::SessionCreate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::session_create(spec, response);
+        fte::session_create(spec, response);
     }
     return Status::OK;
 }

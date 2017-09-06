@@ -165,7 +165,7 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
 
 rewrite_actions_enum
 flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
-                           bool snat, bool dnat)
+                           session::NatType nat_type)
 {
     static int proto_tcp = 0, proto_udp = 1, proto_other = 2;
     static int af_v4 = 0, af_v6 = 1;
@@ -193,22 +193,29 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
         (l4_type == FTE_HEADER_udp) ? proto_udp : proto_other;
     int af = (l3_type == FTE_HEADER_ipv4) ? af_v4: af_v6;
 
-    if (snat && dnat) {
+    switch(nat_type) {
+    case session::NAT_TYPE_TWICE_NAT:
         return twice_nat_actions[af][proto];
-    } else if (snat) {
+    case session::NAT_TYPE_SNAT:
         return snat_actions[af][proto];
-    } else if (dnat) {
+    case session::NAT_TYPE_DNAT:
         return dnat_actions[af][proto];
+    default:
+        return REWRITE_REWRITE_ID;        
     }
-
-    return REWRITE_REWRITE_ID;        
 }
 
 hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
                                        const header_rewrite_info_t &rewrite)
 {
+    bool snat, dnat;
+    session::NatType nat_type;
+    ip_addr_t nat_sip{}, nat_dip{};
+    uint16_t nat_sport{}, nat_dport{};
+
     attrs.rw_act = REWRITE_NOP_ID;
     attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+
 
     // flags
     attrs.ttl_dec = rewrite.flags.dec_ttl;
@@ -228,22 +235,22 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     switch(rewrite.valid_hdrs&FTE_L3_HEADERS) {
     case FTE_HEADER_ipv4:
         if (rewrite.valid_flds.sip) {
-            attrs.nat_sip.af = IP_AF_IPV4;
-            attrs.nat_sip.addr.v4_addr = rewrite.ipv4.sip;
+            nat_sip.af = IP_AF_IPV4;
+            nat_sip.addr.v4_addr = rewrite.ipv4.sip;
         }
         if (rewrite.valid_flds.dip) {
-            attrs.nat_dip.af = IP_AF_IPV4;
-            attrs.nat_dip.addr.v4_addr = rewrite.ipv4.dip;
+            nat_dip.af = IP_AF_IPV4;
+            nat_dip.addr.v4_addr = rewrite.ipv4.dip;
         }
         break;
     case FTE_HEADER_ipv6:
         if (rewrite.valid_flds.sip) {
-            attrs.nat_sip.af = IP_AF_IPV6;
-            attrs.nat_sip.addr.v6_addr = rewrite.ipv6.sip;
+            nat_sip.af = IP_AF_IPV6;
+            nat_sip.addr.v6_addr = rewrite.ipv6.sip;
         }
         if (rewrite.valid_flds.dip) {
-            attrs.nat_dip.af = IP_AF_IPV6;
-            attrs.nat_dip.addr.v6_addr = rewrite.ipv6.dip;
+            nat_dip.af = IP_AF_IPV6;
+            nat_dip.addr.v6_addr = rewrite.ipv6.dip;
         }
         break;
     }
@@ -252,32 +259,54 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     switch(rewrite.valid_hdrs&FTE_L4_HEADERS) {
     case FTE_HEADER_tcp:
         if (rewrite.valid_flds.sport) {
-            attrs.nat_sport = rewrite.tcp.sport;
+            nat_sport = rewrite.tcp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            attrs.nat_sport = rewrite.tcp.dport;
+            nat_dport = rewrite.tcp.dport;
         }
         break;
     case FTE_HEADER_udp:
         if (rewrite.valid_flds.sport) {
-            attrs.nat_sport = rewrite.udp.sport;
+            nat_sport = rewrite.udp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            attrs.nat_sport = rewrite.udp.dport;
+            nat_dport = rewrite.udp.dport;
         }
         break;
     }
 
+    snat = (rewrite.valid_flds.sip || rewrite.valid_flds.sport);
+    dnat = (rewrite.valid_flds.dip || rewrite.valid_flds.dport);
+    if (snat && dnat){
+        // TODO(goli)we need to flip these if role is responder
+        attrs.nat_dip = nat_dip;
+        attrs.nat_dport = attrs.nat_l4_port = nat_dport;
+        attrs.nat_sip = nat_sip;
+        attrs.nat_sport = nat_sport;
+        nat_type = session::NAT_TYPE_TWICE_NAT;
+    } else if (snat){
+        attrs.nat_sip = nat_sip;
+        attrs.nat_sport = attrs.nat_l4_port = nat_sport;
+        nat_type = session::NAT_TYPE_SNAT;
+    } else if (dnat){
+        attrs.nat_dip = nat_dip;
+        attrs.nat_dport = attrs.nat_l4_port = nat_dport;
+        nat_type = session::NAT_TYPE_DNAT;
+    } else {
+        nat_type = session::NAT_TYPE_NONE;
+    }
+    
     // rewrite action
     attrs.rw_act = nat_rewrite_action(rewrite.valid_hdrs&FTE_L3_HEADERS,
                                       rewrite.valid_hdrs&FTE_L4_HEADERS,
-                                      rewrite.valid_flds.sip || rewrite.valid_flds.sport,
-                                      rewrite.valid_flds.dip || rewrite.valid_flds.dport);
+                                      nat_type);
+    attrs.nat_type = nat_type;
 
     // tunnel rewrite action
     attrs.tnnl_rw_act = rewrite.valid_flds.vlan_id ? TUNNEL_REWRITE_ENCAP_VLAN_ID :
         TUNNEL_REWRITE_NOP_ID;
 
+  
     //TODO(goli) need to create rewrite table entry with appropraite
     //action (l3 or nat_xxx)
     return HAL_RET_OK;
@@ -291,15 +320,19 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     switch (header.valid_hdrs&FTE_ENCAP_HEADERS) {
     case FTE_HEADER_vxlan:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+        attrs.tnnl_vnid = header.vxlan.tenant_id;
         break;
     case FTE_HEADER_vxlan_gpe:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
+        attrs.tnnl_vnid = header.vxlan_gpe.tenant_id;
         break;
     case FTE_HEADER_geneve:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GENV_ID;
-        break;
+        attrs.tnnl_vnid = header.geneve.tenant_id;
+      break;
     case FTE_HEADER_nvgre:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_NVGRE_ID;
+        attrs.tnnl_vnid = header.geneve.tenant_id;
         break;
     case FTE_HEADER_gre:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GRE_ID;
@@ -374,6 +407,13 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         }
     }
 
+    // Fill the config
+    config.nat_type = attrs.nat_type;
+    config.nat_sip = attrs.nat_sip;
+    config.nat_dip = attrs.nat_dip;
+    config.nat_sport = attrs.nat_sport;
+    config.nat_dport = attrs.nat_dport;
+  
     return ret;
 }
 

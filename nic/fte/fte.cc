@@ -229,14 +229,14 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 {
     hal_ret_t ret;
     ctx_t ctx = {};
-    flow_t iflow, rflow, iflow_post, rflow_post;
+    flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
                     spec.session_id(), spec.meta().tenant_id());
 
     //Init context
-    ret = ctx.init(&spec, rsp,  &iflow, &rflow, &iflow_post, &rflow_post);
+    ret = ctx.init(&spec, rsp,  iflow, rflow);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
         goto end;
@@ -313,7 +313,7 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
     uint8_t *pkt;
     size_t pkt_len;
     ctx_t ctx;
-    flow_t iflow, rflow, iflow_post, rflow_post;
+    flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
     while(true) {
         // read the packet
@@ -324,7 +324,7 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
         }
 
         // Init ctx_t
-        ret = ctx.init(phv, pkt, pkt_len, &iflow, &rflow, &iflow_post, &rflow_post);
+        ret = ctx.init(phv, pkt, pkt_len, iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
             continue;

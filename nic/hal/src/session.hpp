@@ -249,17 +249,13 @@ typedef struct session_args_s {
     SessionResponse    *rsp;                      // session response
 } __PACK__ session_args_t; 
 
+static const uint8_t MAX_SESSION_FLOWS = 2;
 typedef struct session_args_fte_s {
-    session_cfg_t      *session;                  // session config
-    flow_cfg_t         *iflow;                    // initiator flow
-    flow_cfg_t         *rflow;                    // responder flow
-    flow_pgm_attrs_t   *iflow_attrs;              // initiator flow attrs
-    flow_pgm_attrs_t   *rflow_attrs;              // responder flow attrs
-    flow_cfg_t         *iflow_assoc;              // initiator associated flow
-    flow_cfg_t         *rflow_assoc;              // responder associated flow
-    flow_pgm_attrs_t   *iflow_attrs_assoc;        // initiator assoc flow attrs
-    flow_pgm_attrs_t   *rflow_attrs_assoc;        // responder assoc flow attrs
-
+    session_cfg_t      *session;                          // session config
+    flow_cfg_t         *iflow[MAX_SESSION_FLOWS];         // initiator flow
+    flow_cfg_t         *rflow[MAX_SESSION_FLOWS];         // responder flow
+    flow_pgm_attrs_t   *iflow_attrs[MAX_SESSION_FLOWS];   // initiator flow attrs
+    flow_pgm_attrs_t   *rflow_attrs[MAX_SESSION_FLOWS];   // responder flow attrs
 
     session_state_t    *session_state;            // connection tracking state
     tenant_t           *tenant;                   // tenant

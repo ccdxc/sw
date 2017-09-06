@@ -94,7 +94,7 @@ private:
                                                     const  header_rewrite_info_t &src);
     static rewrite_actions_enum nat_rewrite_action(header_type_t l3_type,
                                                    header_type_t l4_type,
-                                                   bool snat, bool dnat);
+                                                   session::NatType nat_type);
     static hal_ret_t build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
                                           const header_rewrite_info_t &rewrite);
     static hal_ret_t build_push_header_config(hal::flow_pgm_attrs_t &attrs,
