@@ -2,7 +2,9 @@
 #include <capri_hbm.hpp>
 #include <pd_api.hpp>
 #include <capri_barco_crypto.hpp>
+#include <p4plus_pd_api.h>
 
+#define MAX_IPSEC_PAD_SIZE 256
 
 namespace hal {
 namespace pd {
@@ -75,6 +77,25 @@ hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
     return ret;
 }
 
+hal_ret_t
+crypto_init_ipsec_pad_table(void)
+{
+    uint8_t ipsec_pad_bytes[MAX_IPSEC_PAD_SIZE];
+    uint64_t ipsec_pad_base_addr = 0;
+
+    HAL_TRACE_DEBUG("Initializing IPSEC Pad Bytes table"); 
+    // Increasing number pattern as per RFC 1-255 
+    for (int i = 0; i < MAX_IPSEC_PAD_SIZE; i++) {
+        ipsec_pad_bytes[i] = i+1;
+    }
+     
+    ipsec_pad_base_addr = get_start_offset(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
+    if (ipsec_pad_base_addr) {
+        p4plus_hbm_write(ipsec_pad_base_addr, ipsec_pad_bytes, MAX_IPSEC_PAD_SIZE);
+    }
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t crypto_pd_init(void)
 {
@@ -87,6 +108,11 @@ hal_ret_t crypto_pd_init(void)
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
     ret = capri_barco_crypto_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    ret = crypto_init_ipsec_pad_table();
+
     return ret;
 }
 
