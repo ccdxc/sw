@@ -41,11 +41,8 @@
 #include <acl_svc.hpp>
 #include <telemetry_svc.hpp>
 #include <ipseccb_svc.hpp>
-<<<<<<< HEAD
 #include <cpucb_svc.hpp>
-=======
 #include <crypto_keys_svc.hpp>
->>>>>>> e987bda... crypto_key dol first code drop
 
 using grpc::Server;
 using grpc::ServerBuilder;
