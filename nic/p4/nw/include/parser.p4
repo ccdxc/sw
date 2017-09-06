@@ -519,7 +519,7 @@ parser parse_ipv6_extn_hdrs {
         0x3c: parse_v6_generic_ext_hdr;
         0x87: parse_v6_generic_ext_hdr;
         0x3b: ingress;
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp;
         IP_PROTO_GRE : parse_gre;
@@ -534,7 +534,7 @@ parser parse_ipv6 {
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     return select(parser_metadata.ipv6_nextHdr) {
         // go to ulp if no extention headers to avoid a state transition
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp;
         IP_PROTO_GRE : parse_gre;
@@ -568,6 +568,16 @@ parser parse_icmp {
     return select(latest.typeCode) {
         ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
         ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
+        default: ingress;
+    }
+}
+
+parser parse_icmpv6 {
+    extract(icmp);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.typeCode);
+    return select(latest.typeCode) {
+        ICMPV6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_req_reply;
+        ICMPV6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_req_reply;
         default: ingress;
     }
 }
@@ -1129,7 +1139,7 @@ parser parse_inner_ipv6 {
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
     return select(latest.nextHdr) {
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_inner_udp;
         default: ingress;

@@ -20,6 +20,8 @@ modules:
               segment : filter://native=False
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=False
             # Untagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -30,6 +32,8 @@ modules:
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=True
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
               segment : filter://native=True
 
     - module:
@@ -57,7 +61,9 @@ modules:
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment : filter://native=True
               priotag : True
-
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
 
     - module:
         name    : L2UC_IP_GFT_DROP
@@ -80,6 +86,8 @@ modules:
               segment : filter://native=False
             - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
               segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              segment : filter://native=False
             # Untagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
               segment : filter://native=True
@@ -90,6 +98,8 @@ modules:
             - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
               segment : filter://native=True
             - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
               segment : filter://native=True
 
     - module:
@@ -116,6 +126,9 @@ modules:
               segment : filter://native=True
               priotag : True
             - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
               segment : filter://native=True
               priotag : True
 
@@ -369,6 +382,8 @@ modules:
               srcseg    : filter://native=False
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
               srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=False
             # Untagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               srcseg    : filter://native=True
@@ -380,6 +395,9 @@ modules:
               srcseg    : filter://native=True
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
               srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+
 
     - module:
         name    : L3UC_PTAG
@@ -405,6 +423,9 @@ modules:
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
               srcseg    : filter://native=True
               priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
 
     - module:
         name    : L3UC_GFT_DROP
@@ -425,6 +446,8 @@ modules:
               srcseg    : filter://native=False
             - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
               srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg    : filter://native=False
             # Untagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=GFT_DROP
               srcseg    : filter://native=True
@@ -436,6 +459,8 @@ modules:
               srcseg    : filter://native=True
             - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
               srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg    : filter://native=True
 
     - module:
         name    : L3UC_PTAG_GFT_DROP
@@ -444,7 +469,10 @@ modules:
         module  : networking
         spec    : l3uc.testspec
         ignore  : False
+        args    :
+            maxflows : 1
         iterate :
+            # Priority Tag Cases
             - flow      : filter://type=IPV4,proto=UDP,label=GFT_DROP
               srcseg    : filter://native=True
               priotag   : True
@@ -458,6 +486,9 @@ modules:
               srcseg    : filter://native=True
               priotag   : True
             - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
               srcseg    : filter://native=True
               priotag   : True
 

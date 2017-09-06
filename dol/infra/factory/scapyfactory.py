@@ -32,6 +32,15 @@ class ScapyHeaderBuilder_BASE:
         return shdr
 BASE_builder = ScapyHeaderBuilder_BASE()
 
+class ScapyHeaderBuilder_ICMPV6(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        if hdr.fields.type in penscapy.icmp6typescls:
+            hdr.meta.scapy = penscapy.icmp6typescls[hdr.fields.type]
+        else:
+            hdr.meta.scapy = 'ICMPv6Unknown'
+        return super().build(hdr)
+ICMPV6_builder = ScapyHeaderBuilder_ICMPV6()
+
 class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
     flags_map = [
         ('fin', 'F'),

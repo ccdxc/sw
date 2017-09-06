@@ -1,0 +1,13 @@
+meta:
+    id      : ICMPv6EchoReply
+    scapy   : ICMPv6EchoReply
+    size    : 16
+
+fields:
+    type    : 0
+    code    : 0
+    cksum   : None
+    id      : 0
+    seq     : 0
+    data    : 0
+

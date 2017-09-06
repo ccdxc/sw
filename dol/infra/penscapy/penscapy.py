@@ -3,6 +3,7 @@ import pdb
 
 from third_party.scapy import *
 from third_party.scapy.all import *
+from third_party.scapy.layers.inet6 import _ICMPv6
 
 class PAYLOAD(Packet):
     name = "PAYLOAD"

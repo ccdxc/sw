@@ -7,10 +7,10 @@ capri_model = {
     'name': 'Capri-Asic',
     'phv': {
         'max_size' : 4096,
-        'num_flits' : 8,
+        'num_flits' : 10,   # change containers as well (below)
         'max_hw_flits' : 12,    # max allowed value for num_flits
         'flit_size' : 512, # max_size/num_flits
-        'containers': {8: 512} # {size:num} all 8 bit containers
+        'containers': {8: 640} # {size:num} all 8 bit containers
     },
     'match_action': {
         'num_stages' : 6,
@@ -54,7 +54,7 @@ capri_model = {
         'num_ohi' : 64,
         'num_ohi_per_state' : 4,
         'ohi_threshold' : 48,   # artificial limit to test and also to reserve some ohis for crc..
-        'parser_num_flits' : 4,
+        'parser_num_flits' : 5,
         'max_lkp_offset' : 64,      # bytes
         'max_extract' : 64,         # bytes
         'max_offset_adv' : 256,     # bytes XXX: this restriction is not removed XXX

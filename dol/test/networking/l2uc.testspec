@@ -45,9 +45,9 @@ packets:
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
             icmpv6:
-                #code    : ref://testcase/config/flow/icmpcode
-                #type    : ref://testcase/config/flow/icmptype
-                #id      : ref://testcase/config/flow/icmpid
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

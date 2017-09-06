@@ -1,0 +1,13 @@
+meta:
+    id      : ICMPV6
+    scapy   : None
+    size    : 16
+
+fields:
+    type    : 0
+    code    : 0
+    cksum   : None
+    id      : 0
+    seq     : 0
+    data    : 0
+
