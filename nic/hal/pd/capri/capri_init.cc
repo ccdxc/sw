@@ -5,7 +5,7 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 22
+#define CAPRI_P4PLUS_NUM_SYMBOLS 26
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -239,6 +239,22 @@ capri_p4p_asm_init()
     symbols[21].params[0].name = TNMPR_TABLE_BASE;
     symbols[21].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
+    symbols[22].name = "esp_ipv4_tunnel_n2h_txdma2_initial_table.bin";
+    symbols[22].num_params = 1;
+    symbols[22].params[0].name = BRQ_BASE;
+    symbols[22].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[23].name = "esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.bin";
+    symbols[23].num_params = 1;
+    symbols[23].params[0].name = BRQ_BASE;
+    symbols[23].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[24].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.bin";
+    symbols[24].num_params = 1;
+    symbols[24].params[0].name = BRQ_BASE;
+    symbols[24].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
+    symbols[25].name = "esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex.bin";
+    symbols[25].num_params = 1;
+    symbols[25].params[0].name = BRQ_BASE;
+    symbols[25].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
