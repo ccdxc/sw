@@ -67,6 +67,7 @@ packets:
                 reserved : callback://normalization/callbacks/GetInputTcpReserved
                 flags    : callback://normalization/callbacks/GetInputTcpFlags
                 urgptr   : callback://normalization/callbacks/GetInputTcpUrgPtr
+                options  : callback://normalization/callbacks/GetInputTcpOptions
 
     - packet:
         id          : PKT2     # Expected packet 2
@@ -86,7 +87,7 @@ packets:
                 reserved : callback://normalization/callbacks/GetExpectedTcpReserved
                 flags    : callback://normalization/callbacks/GetExpectedTcpFlags
                 urgptr   : callback://normalization/callbacks/GetExpectedTcpUrgPtr
-
+                options  : callback://normalization/callbacks/GetExpectedTcpOptions
 
 session:
     - step:

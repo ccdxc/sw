@@ -1,6 +1,12 @@
 #! /usr/bin/python3
 import pdb
 
+class TcpOptions:
+    def __init__(self, kind, data):
+        self.kind = kind
+        self.data = data
+        return
+
 def GetInputIpv4Flags(testcase, packet):
     profile_name = testcase.module.iterator.Get()
     if 'IP_RSVD_FLAGS_ACTION_ALLOW' in profile_name:
@@ -155,49 +161,30 @@ def GetInputTcpFlags(testcase, packet):
         return None
     return None
 
-def GetInputTcpOptionsKind(testcase, packet):
+def GetInputTcpOptions(testcase, packet):
     profile_name = testcase.module.iterator.Get()
+    echo_ts = []
+    echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
+    echo_ts.append(TcpOptions('NOP', None))
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return 'MSS'
+        return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return 'MSS'
+        return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return 'MSS'
+        return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return 'WScale'
+        return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return 'WScale'
+        return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return 'WScale'
+        return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
-        return 'Timestamp'
+        return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
-        return 'Timestamp'
+        return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
-        return 'Timestamp'
-    return None
-
-def GetInputTcpOptionsData(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return 0x4
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return 0x4
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return 0x4
-    elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
-        return 0x12
-    elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
-        return 0x12
-    elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
-        return 0x12
-    return None
+        return echo_ts
+    return []
 
 def GetInputTcpUrgPtr(testcase, packet):
     profile_name = testcase.module.iterator.Get()
@@ -211,7 +198,11 @@ def GetInputTcpUrgPtr(testcase, packet):
 
 def GetExpectedTcpReserved(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'TCP_RSVD_FLAGS_ACTION_EDIT' in profile_name:
+    if 'TCP_RSVD_FLAGS_ACTION_ALLOW' in profile_name:
+        return 0x1
+    elif 'TCP_RSVD_FLAGS_ACTION_DROP' in profile_name:
+        return 0x1
+    elif 'TCP_RSVD_FLAGS_ACTION_EDIT' in profile_name:
         return 0x0
     return 0x0
 
@@ -264,43 +255,33 @@ def GetExpectedTcpFlags(testcase, packet):
         return None
     return None
 
-def GetExpectedTcpOptionsKind(testcase, packet):
+def GetExpectedTcpOptions(testcase, packet):
     profile_name = testcase.module.iterator.Get()
+    echo_ts = []
+    echo_ts_edit = []
+    echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
+    echo_ts.append(TcpOptions('NOP', None))
+    echo_ts_edit.append(TcpOptions('Timestamp', '0x3 0x0'))
+    echo_ts_edit.append(TcpOptions('NOP', None))
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return 'MSS'
+        return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return 'MSS'
+        return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return 'MSS'
+        return [TcpOptions('NOP', None)]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return 'WScale'
+        return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return 'WScale'
+        return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return 'WScale'
-    return None
-
-def GetExpectedTcpOptionsData(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
-    if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return 0x400
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
-        return 0x4
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
-        return 0x4
-    elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return 0x4
+        return [TcpOptions('NOP', None)]
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
-        return 0x12
+        return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
-        return 0x12
+        return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
-        return 0
-    return None
+        return echo_ts_edit
+    return []
 
 def GetExpectedTcpUrgPtr(testcase, packet):
     profile_name = testcase.module.iterator.Get()
@@ -324,5 +305,4 @@ def GetInputPayloadSize(testcase, packet):
 
 def GetExpectedPayloadSize(testcase, packet):
     return 150
-
 
