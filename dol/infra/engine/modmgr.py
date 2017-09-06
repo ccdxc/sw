@@ -103,6 +103,9 @@ class Module:
         return
 
     def GetFinalResult(self):
+        if self.stats.total == 0:
+            return 1
+
         if self.stats.failed == 0:
             return 0
         assert(self.stats.failed >= self.stats.ignored)
@@ -113,7 +116,9 @@ class Module:
 
     def PrintResultSummary(self):
         status = ''
-        if self.ignore:
+        if self.stats.total == 0:
+            status = 'Error'
+        elif self.ignore:
             status = 'Ignore'
         elif self.GetFinalResult():
             status = 'Fail'

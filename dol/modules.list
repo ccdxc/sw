@@ -241,7 +241,7 @@ modules:
 
     - module:
         name    : ARP_RARP_GFT_DROP
-        enable  : True
+        enable  : False
         package : test.networking
         module  : networking
         spec    : arp.testspec
@@ -277,7 +277,7 @@ modules:
 
     - module:
         name    : ARP_RARP_PTAG_GFT_DROP
-        enable  : True
+        enable  : False
         package : test.networking
         module  : networking
         spec    : arp.testspec
@@ -527,7 +527,7 @@ modules:
 
     - module:
         name    : RECIRC_L2UC_NONIP
-        enable  : True
+        enable  : False
         package : test.networking
         module  : networking
         spec    : l2uc_nonip.testspec
@@ -645,7 +645,7 @@ modules:
 
     - module:
         name    : RDMA_BTH_BASIC
-        enable  : True
+        enable  : False
         package : test.rdma
         module  : rdma
         spec    : firstpacket.testspec
