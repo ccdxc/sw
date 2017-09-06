@@ -74,12 +74,8 @@ svc_reg (const std::string& server_addr)
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecCbServiceImpl       ipseccb_svc;
-<<<<<<< HEAD
     CpuCbServiceImpl         cpucb_svc;
- 
-=======
     CryptoKeyServiceImpl     crypto_key_svc; 
->>>>>>> e987bda... crypto_key dol first code drop
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
