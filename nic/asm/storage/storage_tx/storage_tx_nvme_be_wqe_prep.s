@@ -30,8 +30,9 @@ storage_tx_nvme_be_wqe_prep_start:
                      dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_pri_q_state_push_start)
+   LOAD_TABLE_FOR_INDEX_PARAM(STORAGE_KIVEC0_DST_QADDR, d.ssd_handle,
+                              STORAGE_KIVEC2_SSD_Q_SIZE, Q_STATE_SIZE,
+                              storage_tx_pri_q_state_push_start)
 
 exit:
    nop.e

@@ -43,6 +43,11 @@
 #define STORAGE_KIVEC1_SRC_QADDR	\
 	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
 
+#define STORAGE_KIVEC2_SSD_Q_NUM	\
+	k.storage_kivec2_ssd_q_num
+#define STORAGE_KIVEC2_SSD_Q_SIZE	\
+	k.storage_kivec2_ssd_q_size
+
 #define STAGE0_KIVEC_LIF		\
 	k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define STAGE0_KIVEC_QTYPE		\
@@ -95,6 +100,16 @@
   phvwr		p.common_te0_phv_table_addr, r1;			\
   phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									
+
+// Load a table based with a calculation based on index
+// addr = _table_base + (_entry_index * (2 ^_entry_size))
+// PC input is a .param resolved by the loader (34-bit value)
+#define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index,		\
+                                   _entry_size, _load_size, _pc)	\
+  addi		r5, r0, _pc;						\
+  srl		r5, r5, 6;						\
+  addi		r6, r0, _load_size;					\
+  LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size, r6, r5)	\
 
 // Load a table based with a calculation based on index and priority
 // addr = _table_base + ((_entry_index + ( _pri * (2 ^ _num_entries))) 
@@ -381,15 +396,13 @@
    
 
 #define R2N_WQE_BASE_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_opcode},			\
-		d.{handle...opcode};					\
-   phvwr 	p.r2n_wqe_status, d.status;				\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_status},			\
+		d.{handle...status};					\
 
 #define R2N_WQE_FULL_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_opcode},			\
-		d.{handle...opcode};					\
-   phvwr 	p.{r2n_wqe_status...r2n_wqe_pri_qaddr},			\
-		d.{status...pri_qaddr};					\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},		\
+		d.{handle...nvme_cmd_cid};				\
+   phvwr 	p.r2n_wqe_pri_qaddr, d.pri_qaddr;			\
 
 // Calculate the table address based on the command index offset into
 // the SSD's list of outstanding commands

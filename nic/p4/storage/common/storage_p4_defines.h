@@ -89,7 +89,9 @@ header_type q_state_t {
     vf_id	: 16;   // VF id (valid only for NVME LIF)
     sq_id	: 16;   // Submission queue id (valid only for NVME LIF)
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
-    pad		: 138;	// Align to 64 bytes
+    ssd_q_num	: 16;	// Number of entries in the SSD priority queue
+    ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
+    pad		: 106;	// Align to 64 bytes
   }
 }
 
@@ -159,6 +161,8 @@ header_type pri_q_state_t {
   modify_field(q_state.vf_id, vf_id);			\
   modify_field(q_state.sq_id, sq_id);			\
   modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
+  modify_field(q_state.ssd_q_num, ssd_q_num);	\
+  modify_field(q_state.ssd_q_size, ssd_q_size);	\
 
 #define Q_STATE_COPY(q_state)				\
   Q_STATE_COPY_STAGE0(q_state)				\
@@ -299,9 +303,11 @@ header_type pri_q_state_t {
         PHV_FIELD_OFFSET(qpush_doorbell_data.data),		\
         0, 0, 0, 0)
 
-// Priority queue full macros
+// Storage K+I vectors
+
+// kivec0: header union with stage_2_stage for table 0
 header_type storage_kivec0_t {
-   fields {
+  fields {
     w_ndx	: 16;	// Working consumer index
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
@@ -312,16 +318,25 @@ header_type storage_kivec0_t {
     io_priority	: 8;	// I/O priority to select ring with the queue
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
     cmd_index	: 8;	// Index into the bitmap of saved commands
-   }
+  }
 }
 
+// kivec1: header union with global
 header_type storage_kivec1_t {
-   fields {
+  fields {
     src_lif	: 11;	// Source LIF number
     src_qtype	: 3;	// Source LIF type (within the LIF)
     src_qid	: 24;	// Source queue number (within the LIF)
     src_qaddr	: 34;	// Source queue state address
-   }
+  }
+}
+
+// kivec2: header union with to_stage_2
+header_type storage_kivec2_t {
+  fields {
+    ssd_q_num	: 16;	// Number of entries in the SSD priority queue
+    ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
+  }
 }
 
 #define STORAGE_KIVEC0_USE(scratch, kivec)				\
@@ -341,6 +356,10 @@ header_type storage_kivec1_t {
   modify_field(scratch.src_qtype, kivec.src_qtype);			\
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
+
+#define STORAGE_KIVEC2_USE(scratch, kivec)				\
+  modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\
+  modify_field(scratch.ssd_q_size, kivec.ssd_q_size);			\
 
 // PRP size calculation
 #define PRP_SIZE(p)				(PRP_SIZE_SUB - (p & PRP_SIZE_MASK))
@@ -419,8 +438,16 @@ header_type pvm_status_t {
     cid		: 16;	// Command identifier
     phase	: 1;	// Phase bit
     status	: 15;	// Status
+  }
+}
 
+// Trailer in the PVM status used to push the status back
+header_type pvm_status_trailer_t {
+  fields {
     // Information passed back by PVM
+    dst_lif	: 11;	// Destination LIF number
+    dst_qtype	: 3;	// Destination LIF type (within the LIF)
+    dst_qid	: 24;	// Destination queue number (within the LIF)
     dst_qaddr	: 34;	// Destination queue state address
   }
 }
@@ -529,7 +556,7 @@ header_type ssd_cmds_t {
 // to 16 byte boundary
 header_type storage_pad_t {
   fields {
-    pad		: 48;	// Align DMA commands to 16 byte to boundary
+    pad		: 88;	// Align DMA commands to 16 byte to boundary
   }
 }
 

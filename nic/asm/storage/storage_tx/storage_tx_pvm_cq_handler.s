@@ -23,7 +23,13 @@ storage_tx_pvm_cq_handler_start:
    QUEUE_POP_DOORBELL_UPDATE
 
    // Initialize the remaining fields of the PVM command in the PHV
-   phvwr	p.{pvm_status_cspec...pvm_status_dst_qaddr}, d.{cspec...dst_qaddr}                                           
+   phvwr	p.{pvm_status_cspec...pvm_status_status},		\
+		d.{cspec...status}
+
+   // Overwrite the destination queue parameters in K+I vector based on the
+   // PVM status passed in
+   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr},	\
+		d.{dst_lif...dst_qaddr}
 
    // Setup the DMA command to push the NVME status entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
@@ -32,7 +38,7 @@ storage_tx_pvm_cq_handler_start:
                      dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+   LOAD_TABLE_FOR_ADDR_PARAM(d.dst_qaddr, Q_STATE_SIZE,
                              storage_tx_q_state_push_start)
 
 exit:

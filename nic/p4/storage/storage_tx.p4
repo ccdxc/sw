@@ -47,6 +47,8 @@
 metadata storage_kivec0_t storage_kivec0;
 @pragma pa_header_union ingress common_global
 metadata storage_kivec1_t storage_kivec1;
+@pragma pa_header_union ingress to_stage_2
+metadata storage_kivec2_t storage_kivec2;
 
 // NVME backend command (occupies full flit, so keep it first) 
 @pragma dont_trim
@@ -58,12 +60,6 @@ metadata pvm_cmd_t pvm_cmd;
 @pragma dont_trim
 metadata pvm_status_t pvm_status;
 
-// Push/Pop doorbells
-@pragma dont_trim
-metadata storage_doorbell_data_t qpush_doorbell_data;
-@pragma dont_trim
-metadata storage_doorbell_data_t qpop_doorbell_data;
-
 // R2N work queue entry 
 @pragma dont_trim
 metadata r2n_wqe_t r2n_wqe;
@@ -73,6 +69,12 @@ metadata r2n_wqe_t r2n_wqe;
 metadata nvme_be_sta_hdr_t nvme_be_sta_hdr;
 @pragma dont_trim
 metadata nvme_be_sta_t nvme_be_sta;
+
+// Push/Pop doorbells
+@pragma dont_trim
+metadata storage_doorbell_data_t qpush_doorbell_data;
+@pragma dont_trim
+metadata storage_doorbell_data_t qpop_doorbell_data;
 
 // Manually computed pad to align DMA commands to 16 byte boundary
 // TODO: Remove this when NCC supports pragma for this
@@ -130,10 +132,16 @@ metadata storage_kivec0_t storage_kivec0_scratch;
 metadata storage_kivec1_t storage_kivec1_scratch;
 
 @pragma scratch_metadata
+metadata storage_kivec2_t storage_kivec2_scratch;
+
+@pragma scratch_metadata
 metadata ssd_cmds_t ssd_cmds;
 
 @pragma scratch_metadata
 metadata r2n_wqe_t r2n_wqe_scratch;
+
+@pragma scratch_metadata
+metadata pvm_status_trailer_t pvm_status_trailer;
 
 /*****************************************************************************
  * exit: Exit action handler needs to be stubbed out for NCC 
@@ -152,7 +160,7 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                    total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                    num_entries, base_addr, entry_size, next_pc, dst_qaddr,
                    dst_lif, dst_qtype, dst_qid, vf_id, sq_id,
-                   ssd_bm_addr, pad) {
+                   ssd_bm_addr, ssd_q_num, ssd_q_size, sad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY_STAGE0(q_state_scratch)
@@ -166,10 +174,10 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
    
     // Store fields needed in the K+I vector
     modify_field(storage_kivec0.w_ndx, w_ndx);
-    modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
     modify_field(storage_kivec0.dst_lif, dst_lif);
     modify_field(storage_kivec0.dst_qtype, dst_qtype);
     modify_field(storage_kivec0.dst_qid, dst_qid);
+    modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
     modify_field(storage_kivec0.ssd_bm_addr, ssd_bm_addr);
 
     // In ASM, derive these from the K+I for stage 0
@@ -293,7 +301,7 @@ action nvme_sq_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
  *****************************************************************************/
 
 action pvm_cq_handler(cspec, rsvd0, sq_head, sq_id, cid, phase, status,
-                      dst_qaddr) {
+                      dst_lif, dst_qtype, dst_qid, dst_qaddr) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -311,7 +319,19 @@ action pvm_cq_handler(cspec, rsvd0, sq_head, sq_id, cid, phase, status,
   modify_field(pvm_status.cid, cid);
   modify_field(pvm_status.phase, phase);
   modify_field(pvm_status.status, status);
-  modify_field(pvm_status.dst_qaddr, dst_qaddr);
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(pvm_status_trailer.dst_lif, dst_lif);
+  modify_field(pvm_status_trailer.dst_qtype, dst_qtype);
+  modify_field(pvm_status_trailer.dst_qid, dst_qid);
+  modify_field(pvm_status_trailer.dst_qaddr, dst_qaddr);
+
+  // Overwrite the K+I vector for the push operation to derive the correct 
+  // destination queue
+  modify_field(storage_kivec0.dst_lif, dst_lif);
+  modify_field(storage_kivec0.dst_qtype, dst_qtype);
+  modify_field(storage_kivec0.dst_qid, dst_qid);
+  modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
 
   // Setup the DMA command to push the NVME status entry
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
@@ -335,7 +355,7 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                     total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
                     num_entries, base_addr, entry_size, next_pc, dst_qaddr,
                     dst_lif, dst_qtype, dst_qid, vf_id, sq_id,
-                    ssd_bm_addr, pad) {
+                    ssd_bm_addr, ssd_q_num, ssd_q_size, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -634,6 +654,7 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+  STORAGE_KIVEC2_USE(storage_kivec2_scratch, storage_kivec2)
 
   // Carry forward state information to be saved with R2N WQE in PHV
   NVME_BE_CMD_HDR_COPY(r2n_wqe)
@@ -647,7 +668,9 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
                            0, 0, 0, 0)
 
   // Load the NVME backkend SQ context for the next stage to push the command
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr, 
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        storage_kivec0.dst_qaddr + 
+                        nvme_be_cmd_hdr.ssd_handle * storage_kivec2.ssd_q_size,
                         Q_STATE_SIZE, pri_q_state_push_start)
 }
 
