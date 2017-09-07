@@ -57,8 +57,7 @@ p4plus_app_classic_nic_l4_inner_udp:
 p4plus_app_classic_nic_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_common
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport[15:8], k.udp_srcPort_sbit0_ebit7
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport[7:0], k.udp_srcPort_sbit8_ebit15
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.udp_srcPort
   phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.udp_dstPort
   phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.udp_checksum
 
@@ -151,8 +150,7 @@ p4plus_app_cpu_l4_inner_udp:
 p4plus_app_cpu_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_cpu_common
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport[15:8], k.udp_srcPort_sbit0_ebit7
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport[7:0], k.udp_srcPort_sbit8_ebit15
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.udp_srcPort
   phvwr       p.p4_to_p4plus_cpu_l4_dport, k.udp_dstPort
 
 p4plus_app_cpu_common:

@@ -95,6 +95,8 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
             key.tunnel_metadata_tunnel_vni = l2seg_get_fab_encap_val(args->l2seg);
             HAL_TRACE_DEBUG("PD-ADD-L2SEG-UPIF/PC::{}: Encap_type VXLAN tunnel_vni: {}",
                             __FUNCTION__, key.tunnel_metadata_tunnel_vni);
+            /* No IPSG check for packets coming in on tunnel interfaces */
+            inp_prop.ipsg_enable = FALSE;
         }
 
         // Insert

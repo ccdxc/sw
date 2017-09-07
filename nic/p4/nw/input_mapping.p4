@@ -269,6 +269,22 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 
+//  TBD: Currently commented out the lookup meta sport/dport setting in
+//  input_properties for ipsec pkts. Will be re-enabled once we get the
+//  axishift fix from Mahesh
+//    if (ah.valid == TRUE) {
+//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
+//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
+//    }
+//    if (esp.valid == TRUE) {
+//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
+//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
+//    }
+//    if (v6_ah_esp.valid == TRUE) {
+//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
+//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
+//    }
+
     // if table is a miss, return. do not perform rest of the actions.
 
     // dejavu check

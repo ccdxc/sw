@@ -334,7 +334,7 @@ modules:
         package : test.networking
         module  : networking
         spec    : l2uc_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING

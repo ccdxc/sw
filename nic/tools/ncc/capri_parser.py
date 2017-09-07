@@ -1686,6 +1686,9 @@ class capri_parser:
                 continue
             if not split_reg_found:
                 if (lkp_reg.pkt_off/8) < split_off and ((lkp_reg.pkt_off + 16)/8) <= split_off:
+                    # since the register is loaded in the first half of the split state
+                    # add it to new state to RETAIN the value
+                    new_cs.lkp_regs[r].type = lkp_reg_type.LKP_REG_RETAIN
                     continue
 
                 if (lkp_reg.pkt_off/8) < split_off:

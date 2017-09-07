@@ -75,10 +75,11 @@ validate_tunneled_packet2_ipv6:
   or          r3, k.inner_ipv6_srcAddr_sbit120_ebit127, k.inner_ipv6_srcAddr_sbit64_ebit119, 8
   seq         c2, r2, r0
   seq         c3, r3, r1
-  seq         c4, r2[63:56], 0xff
-  seq         c5, r2, k.inner_ipv6_dstAddr[127:64]
-  seq         c6, r3, k.inner_ipv6_dstAddr[63:0]
-  bcf         [c1|c2|c3|c4|c5|c6], malformed_tunneled_packet
+  andcf       c2, [c3]
+  seq         c3, r2[63:56], 0xff
+  seq         c4, r2, k.inner_ipv6_dstAddr[127:64]
+  seq         c5, r3, k.inner_ipv6_dstAddr[63:0]
+  bcf         [c1|c2|c3|c4|c5], malformed_tunneled_packet
   nop
   jr          r7
   nop

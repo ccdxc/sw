@@ -13,8 +13,8 @@ nop:
 
 .align
 native_ipv4_packet:
-  or          r1, r0, k.ethernet_srcAddr
-  or          r5, r0, k.ipv4_ihl
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  or          r5, k.ipv4_ihl_sbit1_ebit3, k.ipv4_ihl_sbit0_ebit0, 3
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -63,7 +63,7 @@ native_ipv4_packet:
 
 .align
 native_ipv6_packet:
-  or          r1, r0, k.ethernet_srcAddr
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -76,14 +76,15 @@ native_ipv6_packet:
   or          r4, k.ipv6_dstAddr_sbit32_ebit127[95:64], k.ipv6_dstAddr_sbit0_ebit31, 32
   add         r5, r0, k.ipv6_dstAddr_sbit32_ebit127[63:0]
 
+  add         r6, r0, 1
   sne         c1, k.ipv6_version, 6
   seq         c2, k.ipv6_hopLimit, 0
-  seq         c3, r4, 0
-  seq         c4, r5, 0
-  seq         c5, r5, 1
+  seq         c3, r4, r0
+  seq         c4, r5, r0
+  seq         c5, r5, r6
   andcf       c3, [c4|c5]
-  seq         c4, r2, 0
-  seq         c5, r2, 1
+  seq         c4, r2, r0
+  seq         c5, r3, r6
   andcf       c4, [c5]
   seq         c5, r2[63:56], 0xff
   seq         c6, r2, r4
@@ -120,7 +121,7 @@ native_ipv6_packet:
 
 .align
 native_non_ip_packet:
-  or          r1, r0, k.ethernet_srcAddr
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
