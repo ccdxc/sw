@@ -180,6 +180,13 @@ def UpdateTcpCbs(objlist):
              stub.TcpCbUpdate)
     return
 
+def UpdateTlsCbs(objlist):
+    if IsHalDisabled(): return
+    stub = tlscb_pb2_grpc.TlsCbStub(HalChannel)
+    __config(objlist, tlscb_pb2.TlsCbRequestMsg,
+             stub.TlsCbUpdate)
+    return
+
 def UpdateIpsecCbs(objlist):
     if IsHalDisabled(): return
     stub = ipseccb_pb2_grpc.IpsecCbStub(HalChannel)

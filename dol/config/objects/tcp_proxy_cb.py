@@ -49,6 +49,8 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.rcv_tsval                 = self.rcv_tsval
            req_spec.ts_recent                 = self.ts_recent
            req_spec.debug_dol                 = self.debug_dol
+           req_spec.sesq_pi                   = self.sesq_pi
+           req_spec.sesq_ci                   = self.sesq_ci
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -62,6 +64,8 @@ class TcpCbObject(base.ConfigObjectBase):
             self.rcv_tsval = resp_spec.spec.rcv_tsval
             self.ts_recent = resp_spec.spec.ts_recent
             self.debug_dol = resp_spec.spec.debug_dol
+            self.sesq_pi = resp_spec.spec.sesq_pi
+            self.sesq_ci = resp_spec.spec.sesq_ci
         return
 
     def GetObjValPd(self):

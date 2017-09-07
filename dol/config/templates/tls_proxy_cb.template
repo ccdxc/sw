@@ -14,3 +14,4 @@ serq_ci               : 0
 bsq_pi                : 0
 bsq_ci                : 0
 crypto_obj            : None
+debug_dol             : 0

@@ -20,8 +20,8 @@
 // NOTE : ** These offsets need to match the offsets in 
 // tcp-table.h **
 typedef enum tcpcb_hwid_order_ {
-    P4PD_HWID_TCP_TX_READ_RX2TX = 1, // TODO: needs to be 0
-    P4PD_HWID_TCP_RX_READ_TX2RX = 0, // TODO: needs to be 1
+    P4PD_HWID_TCP_TX_READ_RX2TX = 0,
+    P4PD_HWID_TCP_RX_READ_TX2RX = 1,
     P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA = 2,
     P4PD_HWID_TCP_RX_TCP_RX = 3,
     P4PD_HWID_TCP_RX_RTT = 4,

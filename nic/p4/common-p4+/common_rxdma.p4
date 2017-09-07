@@ -1061,37 +1061,56 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
     SCRATCH_METADATA_INIT_7(scratch_metadata0)
 }
 
+#define COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY \
+        p4_rxdma_intr.qstate_addr : exact;
+
+#define COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_ACTIONS \
+        common_p4plus_stage0_app_header_table_action; \
+        common_p4plus_stage0_app_header_table_action_dummy; \
+        common_p4plus_stage0_app_header_table_action_dummy1; \
+        common_p4plus_stage0_app_header_table_action_dummy2; \
+        common_p4plus_stage0_app_header_table_action_dummy3; \
+        common_p4plus_stage0_app_header_table_action_dummy4; \
+        common_p4plus_stage0_app_header_table_action_dummy5; \
+        common_p4plus_stage0_app_header_table_action_dummy5; \
+        common_p4plus_stage0_app_header_table_action_dummy6; \
+        common_p4plus_stage0_app_header_table_action_dummy7; \
+        common_p4plus_stage0_app_header_table_action_dummy8; \
+        common_p4plus_stage0_app_header_table_action_dummy9; \
+        common_p4plus_stage0_app_header_table_action_dummy10; \
+        common_p4plus_stage0_app_header_table_action_dummy11; \
+        common_p4plus_stage0_app_header_table_action_dummy12; \
+        common_p4plus_stage0_app_header_table_action_dummy13; \
+        common_p4plus_stage0_app_header_table_action_dummy14; \
+        common_p4plus_stage0_app_header_table_action_dummy15;
+
 @pragma stage 0
 @pragma raw_index_table
 table common_p4plus_stage0_app_header_table {
     reads { 
-        // dummy - we do not need any key to this table, we just need 52 bytes of app-data to go into K+I
-        p4_rxdma_intr.qstate_addr : exact;
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
     }
     actions {
-        common_p4plus_stage0_app_header_table_action;
-        common_p4plus_stage0_app_header_table_action_dummy;
-        common_p4plus_stage0_app_header_table_action_dummy1;
-        common_p4plus_stage0_app_header_table_action_dummy2;
-        common_p4plus_stage0_app_header_table_action_dummy3;
-        common_p4plus_stage0_app_header_table_action_dummy4;
-        common_p4plus_stage0_app_header_table_action_dummy5;
-        common_p4plus_stage0_app_header_table_action_dummy5;
-        common_p4plus_stage0_app_header_table_action_dummy6;
-        common_p4plus_stage0_app_header_table_action_dummy7;
-        common_p4plus_stage0_app_header_table_action_dummy8;
-        common_p4plus_stage0_app_header_table_action_dummy9;
-        common_p4plus_stage0_app_header_table_action_dummy10;
-        common_p4plus_stage0_app_header_table_action_dummy11;
-        common_p4plus_stage0_app_header_table_action_dummy12;
-        common_p4plus_stage0_app_header_table_action_dummy13;
-        common_p4plus_stage0_app_header_table_action_dummy14;
-        common_p4plus_stage0_app_header_table_action_dummy15;
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_ACTIONS
     }
 }
 
+@pragma stage 0
+@pragma raw_index_table
+table common_p4plus_stage0_app_header_table_offset_64 {
+    reads { 
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
+    }
+    actions {
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_ACTIONS
+    }
+}
 control common_p4plus_stage0 {
-    apply(common_p4plus_stage0_app_header_table);
+    if (app_header.app_type == P4PLUS_APPTYPE_TCPTLS) {
+        apply(common_p4plus_stage0_app_header_table_offset_64);
+    } else {
+        apply(common_p4plus_stage0_app_header_table);
+    }
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
         apply(common_p4plus_stage0_lif_table0);
     }

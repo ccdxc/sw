@@ -499,11 +499,36 @@ cleanup:
     return ret;
 }
 
+hal_ret_t
+p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t *tcpcb_pd)
+{
+    tcp_tx_read_rx2tx_d   data = {0};
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get tx: tcp_tx_read_rx2tx_entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
+    tcpcb_pd->tcpcb->sesq_ci = data.u.read_rx2tx_d.ci_0;
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
 p4pd_get_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd)
 {
-    /* TODO */
-    return HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+
+    ret = p4pd_get_tcp_tx_read_rx2tx_entry(tcpcb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+cleanup:
+    return ret;
 }
 
 /**************************/

@@ -32,8 +32,10 @@ class TlsCbObject(base.ConfigObjectBase):
         self.crypto_obj = CryptoKeyHelper.main() 
         return
 
-    def PrepareHALRequestSpec(self, reqspec):
-        reqspec.key_or_handle.tlscb_id    = self.id
+    def PrepareHALRequestSpec(self, req_spec):
+        req_spec.key_or_handle.tlscb_id    = self.id
+        if req_spec.__class__.__name__ != 'TlsCbGetRequest':
+            req_spec.debug_dol                 = self.debug_dol
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -51,6 +53,12 @@ class TlsCbObject(base.ConfigObjectBase):
         lst = []
         lst.append(self)
         halapi.GetTlsCbs(lst)
+        return
+
+    def SetObjValPd(self):
+        lst = []
+        lst.append(self)
+        halapi.UpdateTlsCbs(lst)
         return
 
     def Read(self):
