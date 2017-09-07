@@ -1,4 +1,8 @@
 # Configuration Spec
+# # Topology specification
+meta:
+    id: TOPO_BASE
+
 uplink:
     - entry:
         id      : Uplink1
@@ -24,3 +28,5 @@ cpu:
     - entry:
         id      : Cpu1
         lif_id  : 1003
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT

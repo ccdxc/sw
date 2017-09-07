@@ -645,11 +645,11 @@ modules:
 
     - module:
         name    : PKT_TO_IPSECCBQ
-        enable  : False
+        enable  : True 
         package : test.ipsec-proxy
         module  : pkt_to_ipseccbq
         spec    : pkt_to_ipseccbq.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow: filter://type=IPV4,proto=TCP
 
