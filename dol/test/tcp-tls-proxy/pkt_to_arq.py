@@ -64,7 +64,7 @@ def TestCaseVerify(tc):
 
     # 2. Verify descriptor
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
+    if rnmdr.ringentries[0].handle != arq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
         #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
