@@ -29,6 +29,18 @@ message IpsecCbSpec {
   IpsecCbKeyHandle      key_or_handle              = 1;    // ipsec_cb being created/updated
   uint32                pi                    = 2;
   uint32                ci                    = 3;
+  uint32                tunnel_sip4           = 4;
+  uint32                tunnel_dip4           = 5;
+  uint32                iv_size               = 6;
+  uint32                icv_size              = 7;
+  uint32                block_size            = 8;
+  uint32                key_index             = 9;
+  uint32                barco_enc_cmd         = 10;
+  fixed64               iv                    = 11;
+  uint32                iv_salt               = 12;
+  uint32                esn_hi                = 13;
+  uint32                esn_lo                = 14;
+  uint32                spi                   = 15;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

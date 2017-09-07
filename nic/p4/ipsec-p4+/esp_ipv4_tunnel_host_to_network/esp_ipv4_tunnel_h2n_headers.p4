@@ -118,6 +118,7 @@ header_type p4plus_to_p4_ipsec_header_t {
     modify_field(ipsec_cb_scratch.icv_size, icv_size); \
     modify_field(ipsec_cb_scratch.spi, spi); \
     modify_field(ipsec_cb_scratch.esn_lo, esn_lo); \
+    modify_field(ipsec_cb_scratch.esn_hi, esn_hi); \
     modify_field(ipsec_cb_scratch.iv, iv); \
     modify_field(ipsec_cb_scratch.barco_enc_cmd, barco_enc_cmd); \
     modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index); \

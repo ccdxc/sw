@@ -78,10 +78,52 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
         HAL_TRACE_DEBUG("Received pc address", pc_offset);
         data.action_id = pc_offset;
         //data.u.ipsec_encap_rxdma_initial_table_d.xxx = FFFF
+        data.u.ipsec_encap_rxdma_initial_table_d.iv = ipseccb_pd->ipseccb->iv;
+        data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipseccb_pd->ipseccb->iv_salt;
+        data.u.ipsec_encap_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;
+        data.u.ipsec_encap_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
+        data.u.ipsec_encap_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
+        data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
+        data.u.ipsec_encap_rxdma_initial_table_d.esn_hi = ipseccb_pd->ipseccb->esn_hi;
+        data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = ipseccb_pd->ipseccb->esn_lo;
+        data.u.ipsec_encap_rxdma_initial_table_d.spi = ipseccb_pd->ipseccb->spi;
+        data.u.ipsec_encap_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
+hal_ret_t
+p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_t* ipseccb_pd, bool del)
+{
+    pd_ipseccb_ip4_hdr_t ip_hdr = {0};
+    hal_ret_t                                   ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
+        (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_IP_HDR);
+
+    if (!del) {
+        ip_hdr.version = 4;
+        ip_hdr.ihl = 5;
+        ip_hdr.tos = 0;
+        //p4 will update/correct this part - fixed for now.
+        ip_hdr.tot_len = 64; 
+        ip_hdr.id = 0;
+        ip_hdr.frag_off = 0;
+        ip_hdr.ttl = 255;
+        ip_hdr.protocol = 50; // ESP - will hash define it.
+        ip_hdr.check = 0; // P4 to fill the right checksum
+        ip_hdr.saddr = ipseccb_pd->ipseccb->tunnel_sip4;
+        ip_hdr.daddr = ipseccb_pd->ipseccb->tunnel_dip4;
+    }
+    HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&ip_hdr, sizeof(ip_hdr))){
+        HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
@@ -93,6 +135,10 @@ p4pd_add_or_del_ipseccb_rxdma_entry(pd_ipseccb_t* ipseccb_pd, bool del)
     hal_ret_t   ret = HAL_RET_OK;
 
     ret = p4pd_add_or_del_ipsec_rx_stage0_entry(ipseccb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+    ret = p4pd_add_or_del_ipsec_ip_header_entry(ipseccb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

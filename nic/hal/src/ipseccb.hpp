@@ -21,6 +21,18 @@ typedef struct ipseccb_s {
     ipseccb_id_t          cb_id;                   // CB id
     uint16_t              pi;
     uint16_t              ci;
+    uint32_t              tunnel_sip4;
+    uint32_t              tunnel_dip4;
+    uint8_t               iv_size;
+    uint8_t               icv_size;
+    uint8_t               block_size;
+    uint32_t              key_index;
+    uint32_t              barco_enc_cmd;
+    uint64_t              iv;
+    uint32_t              iv_salt;
+    uint32_t              esn_hi;
+    uint32_t              esn_lo;
+    uint32_t              spi;
     hal_handle_t          hal_handle;              // HAL allocated handle
 
     // PD state
