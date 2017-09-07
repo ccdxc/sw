@@ -91,6 +91,10 @@ header_type scratch_metadata_t {
         log_en                     : 1;
         ingress_mirror_en          : 1;
         egress_mirror_en           : 1;
+        rewrite_en                 : 1;
+        tunnel_rewrite_en          : 1;
+        dst_lport_en               : 1;
+        egress_policer_en          : 1;
         entry_valid                : 1;
         oport_en                   : 1;
         stats_idx                  : 5;

@@ -18,6 +18,7 @@ using hal::acl_t;
 // Acl APIs
 uint32_t acl_get_acl_id(acl_t *pi_acl);
 void acl_set_pd_acl(acl_t *pi_acl, void *pd_acl);
+void* acl_get_pd_acl(acl_t *pi_acl);
 acl_match_spec_t *acl_get_match_spec(acl_t *pi_acl);
 acl_action_spec_t *acl_get_action_spec(acl_t *pi_acl);
 uint32_t acl_get_priority(acl_t *pi_acl);

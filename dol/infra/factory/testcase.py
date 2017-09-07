@@ -284,6 +284,8 @@ class TestCase(objects.FrameworkObject):
 
     def verify_callback(self):
         if self.module.RunModuleCallback('TestCaseVerify', self):
-            return defs.status.SUCCESS
+            status =  defs.status.SUCCESS
         else:
-            return defs.status.ERROR
+            status = defs.status.ERROR
+        self.__teardown_callback()
+        return status

@@ -201,10 +201,9 @@ class Module:
             self.__select_config()
             self.__generate()
             self.__execute()
+            self.__teardown_callback()
             self.iterator.Next()
 
-        # Teardown must be called only once after iterating all elements.
-        self.__teardown_callback()
         self.__unload()
         self.stats.total = len(self.CompletedTestCases)
         return

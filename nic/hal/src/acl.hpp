@@ -84,6 +84,7 @@ typedef struct acl_action_spec_s {
     bool           egr_mirror_en;
     hal_handle_t   egr_mirror_session_handle;
     hal_handle_t   copp_policer_handle;
+    hal_handle_t   redirect_if_handle;
 } __PACK__ acl_action_spec_t;
 
 // Acl structure
@@ -102,53 +103,6 @@ typedef struct acl_s {
 
     void              *pd_acl;
 } __PACK__ acl_t;
-
-
-// allocate a Acl instance
-static inline acl_t *
-acl_alloc (void)
-{
-    acl_t    *acl;
-
-    acl = (acl_t *)g_hal_state->acl_slab()->alloc();
-    if (acl == NULL) {
-        return NULL;
-    }
-    return acl;
-}
-
-// initialize a Acl instance
-static inline acl_t *
-acl_init (acl_t *acl)
-{
-    if (!acl) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&acl->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-
-    // initialize meta information
-    acl->ht_ctxt.reset();
-    acl->hal_handle_ht_ctxt.reset();
-
-    return acl;
-}
-
-// allocate and initialize a acl instance
-static inline acl_t *
-acl_alloc_init (void)
-{
-    return acl_init(acl_alloc());
-}
-
-static inline hal_ret_t
-acl_free (acl_t *acl)
-{
-    HAL_SPINLOCK_DESTROY(&acl->slock);
-    g_hal_state->acl_slab()->free(acl);
-    return HAL_RET_OK;
-}
 
 static inline acl_t *
 find_acl_by_id (acl_id_t acl_id)
@@ -174,6 +128,8 @@ hal_ret_t acl_create(acl::AclSpec& spec,
                      acl::AclResponse *rsp);
 hal_ret_t acl_update(acl::AclSpec& spec,
                      acl::AclResponse *rsp);
+hal_ret_t acl_delete(acl::AclDeleteRequest& req,
+                     acl::AclDeleteResponse *rsp);
 
 
 }    // namespace hal

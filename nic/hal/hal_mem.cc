@@ -697,6 +697,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ACL:
         g_hal_state->acl_slab()->free_(elem);
+        break;
 
     case HAL_SLAB_WRING:
         g_hal_state->wring_slab()->free_(elem);

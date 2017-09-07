@@ -25,14 +25,16 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : callback://acl/packets/GetVlan
+                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : callback://acl/packets/GetIPv4SIP
                 dst     : callback://acl/packets/GetIPv4DIP
+                proto   : callback://acl/packets/GetProto
                 ttl     : 64
             ipv6:
                 src     : callback://acl/packets/GetIPv6SIP
                 dst     : callback://acl/packets/GetIPv6DIP
+                nh      : callback://acl/packets/GetProto
                 hlim    : 64
             udp:
                 sport   : callback://acl/packets/GetUDPSport

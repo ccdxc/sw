@@ -56,6 +56,57 @@ acl_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a Acl instance
+static inline acl_t *
+acl_alloc (void)
+{
+    acl_t    *acl;
+
+    acl = (acl_t *)g_hal_state->acl_slab()->alloc();
+    if (acl == NULL) {
+        return NULL;
+    }
+    return acl;
+}
+
+// initialize a Acl instance
+static inline acl_t *
+acl_init (acl_t *acl)
+{
+    if (!acl) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&acl->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+
+    // initialize meta information
+    acl->ht_ctxt.reset();
+    acl->hal_handle_ht_ctxt.reset();
+
+    return acl;
+}
+
+// allocate and initialize a acl instance
+static inline acl_t *
+acl_alloc_init (void)
+{
+    return acl_init(acl_alloc());
+}
+
+static inline hal_ret_t
+acl_free (acl_t **acl_)
+{
+    acl_t *acl = *acl_;
+    if (!acl) {
+        return HAL_RET_OK;
+    }
+    HAL_SPINLOCK_DESTROY(&acl->slock);
+    g_hal_state->acl_slab()->free(acl);
+    acl_ = NULL;
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // insert this acl in all meta data structures
 //------------------------------------------------------------------------------
@@ -64,6 +115,14 @@ add_acl_to_db (acl_t *acl)
 {
     g_hal_state->acl_id_ht()->insert(acl, &acl->ht_ctxt);
     g_hal_state->acl_hal_handle_ht()->insert(acl, &acl->hal_handle_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+remove_acl_from_db (acl_t *acl)
+{
+    g_hal_state->acl_id_ht()->remove(&acl->acl_id);
+    g_hal_state->acl_hal_handle_ht()->remove(&acl->hal_handle);
     return HAL_RET_OK;
 }
 
@@ -518,7 +577,10 @@ extract_action_spec (acl_action_spec_t *as,
                     const acl::AclActionInfo &ainfo,
                     AclResponse *rsp)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t    ret = HAL_RET_OK;
+    if_t         *redirect_if = NULL;
+    if_id_t      redirect_if_id;
+    hal_handle_t redirect_if_handle = 0;
 
     as->action = ainfo.action();
     as->ing_mirror_en = ainfo.ing_mirror_en();
@@ -526,6 +588,38 @@ extract_action_spec (acl_action_spec_t *as,
     as->egr_mirror_en = ainfo.egr_mirror_en();;
     as->egr_mirror_session_handle = ainfo.egr_mirror_session_handle();
     as->copp_policer_handle = ainfo.copp_policer_handle();
+
+    if (ainfo.has_redirect_if_key_handle()) {
+        if (as->action != acl::ACL_ACTION_REDIRECT) {
+            HAL_TRACE_ERR("PI-ACL:{}: Redirect interface specified with action {} ",
+                          __func__, as->action);
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+        auto redirect_if_kh = ainfo.redirect_if_key_handle();
+        if (redirect_if_kh.key_or_handle_case() == 
+            intf::InterfaceKeyHandle::kInterfaceId) {
+            redirect_if_id = redirect_if_kh.interface_id();
+            redirect_if = find_if_by_id(redirect_if_id);
+        } else {
+            redirect_if_handle = redirect_if_kh.if_handle();
+            redirect_if = find_if_by_handle(redirect_if_handle);
+        }
+
+        if(redirect_if == NULL) {
+            HAL_TRACE_ERR("PI-ACL:{}: Redirect interface not found",
+                          __func__);
+            rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        } else {
+            as->redirect_if_handle = redirect_if->hal_handle;
+        }
+    }
+
+end:
     return ret;
 }
 
@@ -533,8 +627,8 @@ hal_ret_t
 acl_create (AclSpec& spec,
             AclResponse *rsp)
 {
-    hal_ret_t             ret = HAL_RET_OK;
-    acl_t             *acl;
+    hal_ret_t         ret = HAL_RET_OK;
+    acl_t             *acl = NULL;
     pd::pd_acl_args_t pd_acl_args;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -545,7 +639,7 @@ acl_create (AclSpec& spec,
         HAL_TRACE_ERR("PI-ACL:{}: Acl create request validation failed."
                       " Err: {}",
                       __func__, HAL_RET_INVALID_ARG);
-        return ret;
+        goto end;
     }
 
     HAL_TRACE_DEBUG("PI-ACL:{}: Acl create for id {}",
@@ -600,7 +694,7 @@ acl_create (AclSpec& spec,
 end:
 
     if (ret != HAL_RET_OK && acl != NULL) {
-        acl_free(acl);
+        acl_free(&acl);
     }
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
@@ -613,4 +707,75 @@ acl_update (AclSpec& spec,
     return HAL_RET_OK;
 }
 
+static acl_t*
+validate_acl_delete (acl::AclDeleteRequest& req,
+                     acl::AclDeleteResponse* rsp)
+{
+    acl_t        *acl = NULL;
+    acl_id_t     acl_id;
+    hal_handle_t acl_handle;
+
+    if (!req.has_key_or_handle()) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return NULL;
+    }
+
+    auto acl_kh = req.key_or_handle();
+    if (acl_kh.key_or_handle_case() == acl::AclKeyHandle::kAclId) {
+        acl_id = acl_kh.acl_id();
+        acl = find_acl_by_id(acl_id);
+    } else {
+        acl_handle = acl_kh.acl_handle().handle();
+        acl = find_acl_by_handle(acl_handle);
+    }
+
+    if (!acl) {
+        rsp->set_api_status(types::API_STATUS_ACL_NOT_FOUND);
+        return NULL;
+    }
+
+    return acl;
+}
+
+hal_ret_t 
+acl_delete (acl::AclDeleteRequest& req,
+            acl::AclDeleteResponse* rsp)
+{
+    hal_ret_t         ret = HAL_RET_OK;
+    acl_t             *acl;
+    pd::pd_acl_args_t pd_acl_args;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-ACL:{}: Acl delete ", __func__);
+
+    acl = validate_acl_delete(req, rsp);
+    if (!acl) {
+        HAL_TRACE_ERR("PI-ACL:{}: Acl delete request validation failed. Err {}",
+                      __func__, HAL_RET_INVALID_ARG);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("PI-ACL:{}: Acl delete for id {} handle {}",
+                    __func__, acl->acl_id, acl->hal_handle);
+
+    // delete PD resources and deprogram hardware
+    pd::pd_acl_args_init(&pd_acl_args);
+    pd_acl_args.acl = acl;
+    ret = pd::pd_acl_delete(&pd_acl_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD acl delete failure, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
+
+    // Cleanup the PI state and free the ACL
+    remove_acl_from_db(acl);
+    acl_free(&acl);
+
+    rsp->set_api_status(types::API_STATUS_OK);
+end:
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
 }    // namespace hal

@@ -108,19 +108,21 @@ message AclSelector {
 
 // AclAction specifies all possible actions for ACL entries
 enum AclAction {
-  ACL_ACTION_NONE   = 0;
-  ACL_ACTION_PERMIT = 1;    // permit all the matched the packets
-  ACL_ACTION_LOG    = 2;    // log all the matched packets
-  ACL_ACTION_DENY   = 3;    // deny all the matched packets
+  ACL_ACTION_NONE     = 0;
+  ACL_ACTION_PERMIT   = 1;    // permit all the matched the packets
+  ACL_ACTION_LOG      = 2;    // log all the matched packets
+  ACL_ACTION_DENY     = 3;    // deny all the matched packets
+  ACL_ACTION_REDIRECT = 4;    // redirect all the matched packets
 }
 
 message AclActionInfo {
-  AclAction action                    = 1;    // forwarding action
-  bool      ing_mirror_en             = 2;    // enable ingress mirror
-  fixed64   ing_mirror_session_handle = 3;    // ingress mirror session
-  bool      egr_mirror_en             = 4;    // enable egress mirror
-  fixed64   egr_mirror_session_handle = 5;    // egress mirror session
-  fixed64   copp_policer_handle       = 6;    // egress copp policer
+  AclAction               action                    = 1;    // forwarding action
+  bool                    ing_mirror_en             = 2;    // enable ingress mirror
+  fixed64                 ing_mirror_session_handle = 3;    // ingress mirror session
+  bool                    egr_mirror_en             = 4;    // enable egress mirror
+  fixed64                 egr_mirror_session_handle = 5;    // egress mirror session
+  fixed64                 copp_policer_handle       = 6;    // egress copp policer
+  intf.InterfaceKeyHandle redirect_if_key_handle    = 7;    // redirect interface
 }
 
 // ACL entry configuration
@@ -164,9 +166,14 @@ message AclDeleteRequestMsg {
   repeated AclDeleteRequest request = 1;    // batched request
 }
 
+// AclDeleteResponse is response to Acl delete request
+message AclDeleteResponse {
+  types.ApiStatus api_status = 1;    // API status code
+}
+
 // AclDeleteResponseMsg is batched response to AclDeleteRequestMsg
 message AclDeleteResponseMsg {
-  repeated types.ApiStatus api_status = 1;    // API status code
+  repeated AclDeleteResponse response = 1;    // batched responses
 }
 
 // AclGetRequest is used to get information about a acl

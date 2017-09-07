@@ -1701,7 +1701,6 @@ class capri_table:
         else:
             km_kstart = k_start % max_kmB
             # this could happen when tcam key is right justified in km
-            pdb.set_trace()
             i = km_kstart
             for i in range(km_kstart):
                 if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
@@ -1711,6 +1710,8 @@ class capri_table:
                     fix_km_prof.byte_sel.pop(i)
                     break
             if i < km_kstart:
+                # just move the start key offset back and let p4pd treat the
+                # leading bytes as non-key and mask it
                 self.start_key_off -= 8
                 # don't change end off unless it is same as start
                 if k_start == k_end:
@@ -3240,6 +3241,9 @@ class capri_stage:
         for ct in ct_list:
             if not ct.is_index_table():
                 ct.ct_update_key_offsets()
+                if ct.is_tcam_table():
+                    if ct._fix_tcam_table_key():
+                        ct.ct_update_key_offsets()
             
         max_km_profiles = self.gtm.tm.be.hw_model['match_action']['num_km_profiles']
         km_prof_normal = []

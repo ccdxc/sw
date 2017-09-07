@@ -10,11 +10,12 @@ def Setup(infra, module):
     return
 
 def Teardown(infra, module):
-    asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
-    profile = infra.ConfigStore.objects.Get('SEC_PROF_DEFAULT')
-    module.logger.info("Restoring Active Security Profile --> SEC_PROF_DEFAULT")
-    asp.CloneFields(profile)
-    asp.Update()
+    if module.iterator.End():
+        asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
+        profile = infra.ConfigStore.objects.Get('SEC_PROF_DEFAULT')
+        module.logger.info("Restoring Active Security Profile --> SEC_PROF_DEFAULT")
+        asp.CloneFields(profile)
+        asp.Update()
     return
 
 def TestCaseVerify(tc):

@@ -1,3 +1,4 @@
+#include <base.h>
 #include <acl.hpp>
 #include <types.pb.h>
 #include <acl.pb.h>
@@ -12,6 +13,8 @@ using acl::AclResponse;
 using acl::AclKeyHandle;
 using acl::AclSelector;
 using acl::AclActionInfo;
+using acl::AclDeleteRequest;
+using acl::AclDeleteResponse;
 
 void
 hal_initialize()
@@ -104,7 +107,6 @@ TEST_F(acl_test, test1)
     spec.Clear();
 }
 
-// Create acls with marking action in a batch
 TEST_F(acl_test, test2)
 {
     hal_ret_t     ret;
@@ -131,6 +133,52 @@ TEST_F(acl_test, test2)
         ASSERT_TRUE(ret == HAL_RET_OK);
         spec.Clear();
     }
+}
+
+// Create and Delete ACLs
+TEST_F(acl_test, test3)
+{
+    hal_ret_t     ret;
+    AclSpec       spec;
+    AclResponse   rsp;
+    AclDeleteRequest del_req;
+    AclDeleteResponse del_rsp;
+
+    AclSelector   *match; 
+    AclActionInfo *action;
+
+    std::vector<hal_handle_t> entries;
+
+    for (int i = 0; i < 10; i++) {
+        match = spec.mutable_match();
+        match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
+        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
+        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v6_addr("00010001000100010001000100010001");
+        match->mutable_ip_selector()->mutable_src_prefix()->set_prefix_len(64);
+
+        action = spec.mutable_action();
+        action->set_action(acl::AclAction::ACL_ACTION_DENY);
+
+        spec.mutable_key_or_handle()->set_acl_id(1);
+        spec.set_priority(100);
+
+        ret = hal::acl_create(spec, &rsp);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+
+        entries.push_back(rsp.status().acl_handle().handle());
+        spec.Clear();
+        rsp.Clear();
+    }
+
+    for (auto &entry : entries) {
+        del_req.mutable_key_or_handle()->mutable_acl_handle()->set_handle(entry);
+        ret = hal::acl_delete(del_req, &del_rsp);
+        ASSERT_EQ(ret, HAL_RET_OK);
+        ASSERT_EQ(del_rsp.api_status(), types::API_STATUS_OK);
+        del_req.Clear();
+        del_rsp.Clear();
+    }
+
 }
 
 

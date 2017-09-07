@@ -17,6 +17,8 @@ using acl::AclResponse;
 using acl::AclResponseMsg;
 using acl::AclDeleteRequestMsg;
 using acl::AclDeleteResponseMsg;
+using acl::AclDeleteRequest;
+using acl::AclDeleteResponse;
 using acl::AclGetRequestMsg;
 using acl::AclGetResponseMsg;
 

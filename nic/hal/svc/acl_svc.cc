@@ -13,7 +13,7 @@ AclServiceImpl::AclCreate(ServerContext *context,
                               const AclRequestMsg *req,
                               AclResponseMsg *rsp)
 {
-    uint32_t           i, nreqs = req->request_size();
+    uint32_t       i, nreqs = req->request_size();
     AclResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd Acl Create Request");
@@ -40,10 +40,22 @@ AclServiceImpl::AclUpdate(ServerContext *context,
 
 Status
 AclServiceImpl::AclDelete(ServerContext *context,
-                              const AclDeleteRequestMsg *req,
+                              const AclDeleteRequestMsg *req_msg,
                               AclDeleteResponseMsg *rsp)
 {
-    HAL_TRACE_DEBUG("Rcvd Acl Update Request");
+    uint32_t            i, nreqs = req_msg->request_size();
+    AclDeleteResponse   *response;
+
+    HAL_TRACE_DEBUG("Rcvd Acl Delete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto req = req_msg->request(i);
+        hal::acl_delete(req, response);
+    }
     return Status::OK;
 }
 

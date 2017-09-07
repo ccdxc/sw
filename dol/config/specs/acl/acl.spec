@@ -147,7 +147,7 @@ entries:
                 type    : v6
             l4:
                 type    : proto
-                proto   : const/300
+                proto   : const/100
         action:
             action: deny 
 
@@ -216,17 +216,29 @@ entries:
 #    - entry:
 #        id: ACL_ICMPV6_ACTION_DROP
 #
-#    - entry:
-#        id: ACL_VLAN_ACTION_DROP
-#
+    - entry:
+        id: ACL_SEGMENT_ACTION_DROP
+        match:
+            segment_match : True
+        action:
+            action: deny
+
+
 #    - entry:
 #        id: ACL_VNID_ACTION_DROP
 #
-#    - entry:
-#        id: ACL_VRF_ACTION_DROP
-#
-#    - entry:
-#        id: ACL_DIF_ACTION_DROP
-#
-#    - entry:
-#        id: ACL_SIF_ACTION_DROP
+
+    - entry:
+        id: ACL_DIF_ACTION_DROP
+        match:
+            dst_if_match : True
+        action:
+            action: deny
+
+    - entry:
+        id: ACL_SIF_ACTION_DROP
+        match:
+            src_if_match : True
+        action:
+            action: deny
+

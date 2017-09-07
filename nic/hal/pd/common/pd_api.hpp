@@ -363,6 +363,8 @@ pd_acl_args_init (pd_acl_args_t *args)
 }
 
 hal_ret_t pd_acl_create(pd_acl_args_t *acl);
+hal_ret_t pd_acl_delete(pd_acl_args_t *acl);
+
 hal_ret_t pd_wring_create(pd_wring_args_t *wring);
 hal_ret_t pd_wring_update(pd_wring_args_t *wring);
 hal_ret_t pd_wring_delete(pd_wring_args_t *wring);

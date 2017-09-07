@@ -6,6 +6,12 @@ fields:
     priority: const/0
     match:
         type: None
+        src_if_match    : False
+        src_if          : None
+        dst_if_match    : False
+        dst_if          : None
+        segment_match   : False
+        segment         : None
         eth: 
             ethertype      : const/0
             ethertype_mask : const/0

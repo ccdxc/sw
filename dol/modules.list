@@ -802,12 +802,14 @@ modules:
         args    : 
             maxflows: 1
         iterate:
-            - id    : ACL_SMAC_DMAC_ETYPE_ACTION_DROP
-#            - id    : ACL_VLAN_ACTION_DROP
+            - id        : ACL_SMAC_DMAC_ETYPE_ACTION_DROP
+            - id        : ACL_SEGMENT_ACTION_DROP
+              srcseg    : filter://native=False
+            - id        : ACL_SEGMENT_ACTION_DROP
+              srcseg    : filter://native=True
 #            - id    : ACL_VNID_ACTION_DROP
-#            - id    : ACL_VRF_ACTION_DROP
-#            - id    : ACL_DIF_ACTION_DROP
-#            - id    : ACL_SIF_ACTION_DROP
+            - id        : ACL_DIF_ACTION_DROP
+            - id        : ACL_SIF_ACTION_DROP
 
     - module:
         name    : ACL_IP_DROP
@@ -866,26 +868,30 @@ modules:
 #              flow  : filter://type=IPV4,proto=ICMP
 #            - id    : ACL_ICMPV6_ACTION_DROP
 #              flow  : filter://type=IPV6,proto=ICMPV6
-#            - id    : ACL_VLAN_ACTION_DROP
-#              flow  : filter://type=IPV4
+            - id        : ACL_SEGMENT_ACTION_DROP
+              flow      : filter://type=IPV4
+              srcseg    : filter://native=False
+            - id        : ACL_SEGMENT_ACTION_DROP
+              flow      : filter://type=IPV4
+              srcseg    : filter://native=True
 #            - id    : ACL_VNID_ACTION_DROP
 #              flow  : filter://type=IPV4
-#            - id    : ACL_VRF_ACTION_DROP
-#              flow  : filter://type=IPV4
-#            - id    : ACL_DIF_ACTION_DROP
-#              flow  : filter://type=IPV4
-#            - id    : ACL_SIF_ACTION_DROP
-#              flow  : filter://type=IPV4
-#            - id    : ACL_VLAN_ACTION_DROP
-#              flow  : filter://type=IPV6
+            - id    : ACL_DIF_ACTION_DROP
+              flow  : filter://type=IPV4
+            - id    : ACL_SIF_ACTION_DROP
+              flow  : filter://type=IPV4
+            - id        : ACL_SEGMENT_ACTION_DROP
+              flow      : filter://type=IPV6
+              srcseg    : filter://native=False
+            - id        : ACL_SEGMENT_ACTION_DROP
+              flow      : filter://type=IPV6
+              srcseg    : filter://native=True
 #            - id    : ACL_VNID_ACTION_DROP
 #              flow  : filter://type=IPV6
-#            - id    : ACL_VRF_ACTION_DROP
-#              flow  : filter://type=IPV6
-#            - id    : ACL_DIF_ACTION_DROP
-#              flow  : filter://type=IPV6
-#            - id    : ACL_SIF_ACTION_DROP
-#              flow  : filter://type=IPV6
+            - id    : ACL_DIF_ACTION_DROP
+              flow  : filter://type=IPV6
+            - id    : ACL_SIF_ACTION_DROP
+              flow  : filter://type=IPV6
 
     - module:
         name    : SFW_IN_SEQUENCE

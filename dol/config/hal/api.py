@@ -67,7 +67,7 @@ class HalInterfaceSegmentAssociation:
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
 
-def __process_response(resp_msg, req_msg, req_objs):
+def __process_response(resp_msg, req_msg, req_objs, respcb):
     num_req_specs = len(req_msg.request)
     num_resp_specs = len(resp_msg.response)
     if num_req_specs != num_resp_specs:
@@ -79,33 +79,40 @@ def __process_response(resp_msg, req_msg, req_objs):
         req_spec = req_msg.request[idx]
         resp_spec = resp_msg.response[idx]
         req_obj = req_objs[idx]
-        req_obj.ProcessHALResponse(req_spec, resp_spec)
+        getattr(req_obj, respcb)(req_spec, resp_spec)
         if resp_spec.api_status != types_pb2.API_STATUS_OK:
             assert(0)
     return
 
-
-def __config(objs, reqmsg_class, config_method):
+def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
     req_msg = reqmsg_class()
     req_objs = []
     count = 0
     for obj in objs:
         req_spec = req_msg.request.add()
-        obj.PrepareHALRequestSpec(req_spec)
+        getattr(obj,reqcb)(req_spec)
         req_objs.append(obj)
 
         count += 1
         if count >= HAL_MAX_BATCH_SIZE:
-            resp_msg = config_method(req_msg)
-            __process_response(resp_msg, req_msg, req_objs)
+            resp_msg = api(req_msg)
+            __process_response(resp_msg, req_msg, req_objs, respcb)
             req_msg = reqmsg_class()
             req_objs = []
             count = 0
 
     if count != 0:
-        resp_msg = config_method(req_msg)
-        __process_response(resp_msg, req_msg, req_objs)
+        resp_msg = api(req_msg)
+        __process_response(resp_msg, req_msg, req_objs, respcb)
     return
+
+def __config(objs, reqmsg_class, config_method):
+    return __hal_api_handler(objs, reqmsg_class, config_method,\
+                            "PrepareHALRequestSpec", "ProcessHALResponse")
+
+def __delete(objs, reqmsg_class, config_method):
+    return __hal_api_handler(objs, reqmsg_class, config_method,\
+                            "PrepareHALDeleteRequestSpec", "ProcessHALDeleteResponse")
 
 def init():
     global HalChannel
@@ -309,6 +316,14 @@ def ConfigureAcls(objlist):
     __config(objlist, acl_pb2.AclRequestMsg,
              stub.AclCreate)
     return
+
+def DeleteAcls(objlist):
+    if IsHalDisabled(): return
+    stub = acl_pb2_grpc.AclStub(HalChannel)
+    __delete(objlist, acl_pb2.AclDeleteRequestMsg,
+             stub.AclDelete)
+    return
+
 
 def ConfigureL4LbBackends(objlist):
     if IsHalDisabled(): return

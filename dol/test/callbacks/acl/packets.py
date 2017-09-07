@@ -30,14 +30,6 @@ def GetEtherType(tc, packet):
 
     return None
 
-def GetVlan(tc, packet):
-    acl = __get_acl_from_tc(tc)
-
-    if acl.MatchOnVlan():
-        return acl.MatchVlan()
-
-    return tc.config.src.segment.vlan_id
-
 def GetIPv4SIP(tc, packet):
     acl = __get_acl_from_tc(tc)
 
@@ -69,6 +61,17 @@ def GetIPv6DIP(tc, packet):
         return acl.MatchIPv6DIP()
 
     return tc.config.flow.dip 
+
+def GetProto(tc, packet):
+    acl = __get_acl_from_tc(tc)
+
+    if acl.MatchOnProto():
+        return acl.MatchProto()
+
+    if tc.config.flow.IsIPV4():
+        return tc.config.flow.proto.lower()
+    else:
+        return tc.config.flow.proto.upper()
 
 def GetUDPSport(tc, packet):
     acl = __get_acl_from_tc(tc)
