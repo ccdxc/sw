@@ -64,17 +64,18 @@ class CpuObjectHelper:
         return
 
     def Generate(self, topospec):
+        if topospec.cpu == None: return
         for cpu in topospec.cpu:
             obj = CpuObject()
             obj.Init(cpu.entry)
             self.objlist.append(obj)
+        Store.objects.SetAll(self.objlist)
         return
 
     def main(self, topospec):
         self.Generate(topospec)
         self.Configure()
         cfglogger.info("Adding %d Cpus to Store." % len(self.objlist))
-        Store.objects.SetAll(self.objlist)
         return
 
     def GetAll(self):
