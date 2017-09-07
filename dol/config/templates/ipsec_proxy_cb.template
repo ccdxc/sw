@@ -7,3 +7,15 @@ spec             : None # (REF) IPSEC Proxy CB Spec from Base Config.
 ipseccbq_base    : 0
 pi               : 0
 ci               : 0
+tunnel_sip4      : 0
+tunnel_dip4      : 0
+iv_size          : 0
+icv_size         : 0
+block_size       : 0
+key_index        : 0
+barco_enc_cmd    : 0
+iv               : 0
+iv_salt          : 0
+esn_hi           : 0
+esn_lo           : 0
+spi              : 0

@@ -30,6 +30,19 @@ class IpsecCbObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.ipseccb_id    = self.id
+        if req_spec.__class__.__name__ != 'IpsecCbGetRequest':
+            req_spec.tunnel_sip4               = self.tunnel_sip4
+            req_spec.tunnel_dip4               = self.tunnel_dip4
+            req_spec.iv_size                   = self.iv_size
+            req_spec.icv_size                  = self.icv_size
+            req_spec.block_size                = self.block_size
+            req_spec.key_index                 = self.key_index
+            req_spec.barco_enc_cmd             = self.barco_enc_cmd
+            req_spec.iv                        = self.iv
+            req_spec.iv_salt                   = self.iv_salt
+            req_spec.esn_hi                    = self.esn_hi
+            req_spec.esn_lo                    = self.esn_lo
+            req_spec.spi                       = self.spi
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -41,13 +54,13 @@ class IpsecCbObject(base.ConfigObjectBase):
     def GetObjValPd(self):
         lst = []
         lst.append(self)
-        #halapi.GetIpsecCbs(lst)
+        halapi.GetIpsecCbs(lst)
         return
 
     def SetObjValPd(self):
         lst = []
         lst.append(self)
-        #halapi.UpdateIpsecCbs(lst)
+        halapi.UpdateIpsecCbs(lst)
         return
 
 
@@ -61,7 +74,7 @@ class IpsecCbObjectHelper:
         if objlist == None:
             objlist = Store.objects.GetAllByClass(IpsecCbObject)
         cfglogger.info("Configuring %d IpsecCbs." % len(objlist)) 
-        #halapi.ConfigureIpsecCbs(objlist)
+        halapi.ConfigureIpsecCbs(objlist)
         return
         
     def __gen_one(self, ):
