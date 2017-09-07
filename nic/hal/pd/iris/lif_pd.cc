@@ -105,6 +105,11 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
         HAL_TRACE_DEBUG("HACK ALERT: SETTING HW LIF ID to {}", pd_lif->hw_lif_id);
         return ret;
     }
+    if(((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
+        pd_lif->hw_lif_id = 1004;
+        HAL_TRACE_DEBUG("HACK ALERT: SETTING HW LIF ID to {}", pd_lif->hw_lif_id);
+        return ret;
+    }
 
     if (args->with_hw_lif_id) {
         pd_lif->hw_lif_id = args->hw_lif_id;
@@ -160,14 +165,21 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     memset(&data, 0, sizeof(data));
 
-    if(((lif_t *)pd_lif->pi_lif)->lif_id != 1001) {
+    if ((((lif_t *)pd_lif->pi_lif)->lif_id != 1001) && 
+        (((lif_t *)pd_lif->pi_lif)->lif_id != 1004)) {
         tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
         tm_oport = TM_PORT_DMA;
-    } else {
+    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1001) {
         pd_lif->lif_lport_id = 1001;
         pd_lif->hw_lif_id = 1001;
         tm_oport = 9;
         p4plus_app_id = 3;
+        HAL_TRACE_ERR("xxx: setting tm_port = 9");
+    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
+        pd_lif->lif_lport_id = 1004;
+        pd_lif->hw_lif_id = 1004;
+        tm_oport = 9;
+        p4plus_app_id = 4;
         HAL_TRACE_ERR("xxx: setting tm_port = 9");
     }
 

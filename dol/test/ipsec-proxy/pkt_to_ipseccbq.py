@@ -28,7 +28,19 @@ def TestCaseSetup(tc):
     
     # 1. Configure IPSECCB in HBM before packet injection
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
-    #ipseccb.SetObjValPd()
+    ipseccb.tunnel_sip4               = 0x40000004
+    ipseccb.tunnel_dip4               = 0x40000005
+    ipseccb.iv_size                   = 8
+    ipseccb.icv_size                  = 16
+    ipseccb.block_size                = 16
+    ipseccb.key_index                 = 0
+    ipseccb.barco_enc_cmd             = 0
+    ipseccb.iv                        = 0xaaaaaaaaaaaaaaaa
+    ipseccb.iv_salt                   = 0xbbbbbbbb
+    ipseccb.esn_hi                    = 0
+    ipseccb.esn_lo                    = 0
+    ipseccb.spi                       = 0
+    ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
