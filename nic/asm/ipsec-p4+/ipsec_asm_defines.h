@@ -1,12 +1,13 @@
 #include "capri-macros.h"
 
-#define IPSEC_CB_SHIFT_SIZE 6
+#define IPSEC_CB_SHIFT_SIZE 7
 #define IPHDR_SHIFT_SIZE 6 
 
 #define IPV4_HDR_SIZE 20
 #define IPV6_HDR_SIZE 40
 
 #define IPSEC_CB_IV_OFFSET 14
+#define IPSEC_IP_HDR_OFFSET 64
 
 #define IPSEC_CB_BASE ipsec_cb_base
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE ipsec_pad_table_base

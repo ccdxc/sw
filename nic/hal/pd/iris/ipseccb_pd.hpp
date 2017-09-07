@@ -17,11 +17,13 @@ namespace pd {
 
 typedef enum ipseccb_hwid_order_ {
     P4PD_HWID_IPSEC_RX_STAGE0 = 0,
+    P4PD_HWID_IPSEC_IP_HDR = 1,
 } ipseccb_hwid_order_t;
 
 typedef uint64_t    ipseccb_hw_id_t;
 
 // ipseccb pd state
+
 struct pd_ipseccb_s {
     ipseccb_t           *ipseccb;              // PI IPSEC CB
 
@@ -31,6 +33,20 @@ struct pd_ipseccb_s {
     // meta data maintained for IPSEC CB pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 } __PACK__;
+
+typedef struct pd_ipseccb_ip4_hdr_s {
+    uint8_t    version:4;
+    uint8_t    ihl:4;
+    uint8_t    tos;
+    uint16_t   tot_len;
+    uint16_t   id;
+    uint16_t   frag_off;
+    uint8_t    ttl;
+    uint8_t    protocol;
+    uint16_t   check;
+    uint32_t   saddr;
+    uint32_t   daddr;
+} pd_ipseccb_ip4_hdr_t;
 
 // allocate a ipseccb pd instance
 static inline pd_ipseccb_t *

@@ -110,7 +110,21 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     }
 
     ipseccb->cb_id = spec.key_or_handle().ipseccb_id();
-    
+
+    ipseccb->iv_size = spec.iv_size();
+    ipseccb->icv_size = spec.icv_size();
+    ipseccb->block_size = spec.block_size();
+    ipseccb->iv = spec.iv();
+    ipseccb->iv_salt = spec.iv_salt();
+    ipseccb->esn_hi = spec.esn_hi();
+    ipseccb->esn_lo = spec.esn_lo();
+    ipseccb->spi = spec.spi();
+    ipseccb->key_index = spec.key_index();
+    ipseccb->barco_enc_cmd = spec.barco_enc_cmd();
+
+    ipseccb->tunnel_sip4 = spec.tunnel_sip4();
+    ipseccb->tunnel_dip4 = spec.tunnel_dip4();
+ 
     ipseccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
