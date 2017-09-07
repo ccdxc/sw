@@ -115,6 +115,16 @@ action p4plus_app_ipsec() {
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_IPSEC_HDR_SZ));
+    if (vlan_tag.valid == TRUE) {
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 18);
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
+    } else {
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 14);
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
+    }
+    modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv4.protocol);
+    modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
+
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
 }

@@ -172,7 +172,14 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
-
+  phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv4_protocol
+  sll         r2, k.ipv4_ihl, 2
+  phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2 
+  seq         c1, k.vlan_tag_valid, TRUE
+  cmov        r6, c1, 18, 14
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6 
+  add         r3, r6, k.ipv4_totalLen
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
