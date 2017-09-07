@@ -7,10 +7,10 @@
 
 // NOTE : ** These offsets need to match the offsets in 
 // tcp_proxy_api.h **
-#define TCP_TCB_RX2TX_SHARED_OFFSET     64 // TODO: needs to be 0
+#define TCP_TCB_RX2TX_SHARED_OFFSET     0
 #define TCP_TCB_RX2TX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 36)  // skip intrinsic part etc
-#define TCP_TCB_TX2RX_SHARED_OFFSET     0 // TODO : needs to be 64
+#define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 24)  // skip intrinsic part etc
 #define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128

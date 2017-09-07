@@ -624,6 +624,16 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PKT_TCP_TX_TO_P4_BYPASS_BARCO
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : pkt_tcp_tx_to_p4_bypass_barco
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : PKT_TO_ARQ
         enable  : False
         package : test.tcp-tls-proxy

@@ -22,3 +22,5 @@ ts_recent   : 0
 serq_base   : 0
 tlscb       : None
 debug_dol   : 0
+sesq_pi     : 0
+sesq_ci     : 0

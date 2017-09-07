@@ -224,6 +224,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
     rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
     rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
+    rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);
+    rsp->mutable_spec()->set_sesq_ci(rtcpcb.sesq_ci);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

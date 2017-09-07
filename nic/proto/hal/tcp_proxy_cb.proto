@@ -33,7 +33,9 @@ message TcpCbSpec {
   uint32                rcv_tsval                  = 5;
   uint32                ts_recent                  = 6;
   fixed64               serq_base                  = 7;
-  bool                  debug_dol                  = 8;
+  uint32                debug_dol                  = 8;
+  uint32                sesq_pi                    = 9;
+  uint32                sesq_ci                    = 10;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

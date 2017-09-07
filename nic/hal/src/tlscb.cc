@@ -112,6 +112,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
 
     tlscb->cb_id = spec.key_or_handle().tlscb_id();
     tlscb->cipher_type = spec.cipher_type(); 
+    tlscb->debug_dol = spec.debug_dol();
 
     tlscb->hal_handle = hal_alloc_handle();
 
@@ -160,6 +161,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     
     tlscb->cipher_type = spec.cipher_type();
     tlscb->crypto_key_idx = spec.crypto_key_idx();
+    tlscb->debug_dol = spec.debug_dol();
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
