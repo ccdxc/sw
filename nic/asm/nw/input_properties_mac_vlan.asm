@@ -13,7 +13,6 @@ input_properties_mac_vlan:
   phvwr.c2    p.control_metadata_recirc_reason, k.recirc_header_reason
 
   seq         c2, k.capri_intrinsic_tm_iport, TM_PORT_DMA
-  phvwr.c2    p.p4plus_to_p4_valid, FALSE
   cmov        r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                        CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
                        P4PLUS_TO_P4_HDR_SZ), CAPRI_GLOBAL_INTRINSIC_HDR_SZ

@@ -449,3 +449,10 @@
 #define IPSEC_ENCAP_TYPE_AH_ESP        3
 
 #define IPSEC_L3_PROTOCOL_IPV4         1
+
+/*****************************************************************************/
+/* P4+ to P4 flags                                                           */
+/*****************************************************************************/
+#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN        0x02
+#define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO    0x04
+#define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN       0x08

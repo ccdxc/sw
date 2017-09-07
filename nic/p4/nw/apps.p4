@@ -209,3 +209,31 @@ table p4plus_app {
     }
     size : P4PLUS_APP_TABLE_SIZE;
 }
+
+/*****************************************************************************/
+/* P4+ to P4 app processing                                                  */
+/*****************************************************************************/
+action f_p4plus_to_p4() {
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
+        if (ipv4.valid == TRUE) {
+            modify_field(ipv4.totalLen, p4plus_to_p4.ip_len);
+        } else {
+            if (ipv6.valid == TRUE) {
+                modify_field(ipv6.payloadLen, p4plus_to_p4.ip_len);
+            }
+        }
+    }
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) != 0) {
+        modify_field(udp.len, p4plus_to_p4.udp_len);
+    }
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
+        add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
+    }
+    remove_header(p4plus_to_p4);
+}
+
+action p4plus_to_p4_apps() {
+    if (p4plus_to_p4.valid == TRUE) {
+        f_p4plus_to_p4();
+    }
+}

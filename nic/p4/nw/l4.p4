@@ -160,6 +160,7 @@ action l4_profile(ip_normalization_en,
 
     validate_tunneled_packet2();
     ip_normalization_checks();
+    p4plus_to_p4_apps();
 }
 
 @pragma stage 1

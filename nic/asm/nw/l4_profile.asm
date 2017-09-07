@@ -43,6 +43,9 @@ l4_profile:
   xor         r6, -1, r0
   bal         r7, f_ip_normalization
   nop
+  seq         c2, k.p4plus_to_p4_valid, TRUE
+  bal.c2      r7, f_p4plus_to_p4_apps
+  nop
   nop.e
   nop
 
@@ -72,7 +75,7 @@ validate_tunneled_packet2_ipv6:
   andcf       c1, [c2|c3]
   // inner_srcAddr => r2(hi) r3(lo)
   add         r2, r0, k.{inner_ipv6_srcAddr_sbit0_ebit31,inner_ipv6_srcAddr_sbit32_ebit63}
-  or          r3, k.inner_ipv6_srcAddr_sbit120_ebit127, k.inner_ipv6_srcAddr_sbit64_ebit119, 8
+  or          r3, k.inner_ipv6_srcAddr_sbit64_ebit127, r0
   seq         c2, r2, r0
   seq         c3, r3, r1
   andcf       c2, [c3]
@@ -134,6 +137,25 @@ lb_ip_norm_header_length:
 lb_ip_norm_ttl:
   jr r7
   nop
+
+f_p4plus_to_p4_apps:
+  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN, \
+                  P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
+  seq         c3, k.ipv4_valid, TRUE
+  seq         c4, k.ipv6_valid, TRUE
+  andcf       c3, [c2]
+  andcf       c4, [c2]
+  phvwr.c3    p.ipv4_totalLen, k.p4plus_to_p4_ip_len
+  phvwr.c4    p.ipv6_payloadLen, k.p4plus_to_p4_ip_len
+  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
+                  P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
+  phvwr.c2    p.udp_len, k.p4plus_to_p4_udp_len
+  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO, \
+                  P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO
+  add         r1, k.tcp_seqNo, k.p4plus_to_p4_tcp_seq_delta
+  phvwr.c2    p.tcp_seqNo, r1
+  jr          r7
+  phvwr       p.p4plus_to_p4_valid, FALSE
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

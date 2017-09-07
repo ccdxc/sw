@@ -261,7 +261,7 @@ header_type p4plus_to_p4_header_t {
         ip_id               : 16;
         ip_len              : 16;
         udp_len             : 16;
-        tcp_seq_no          : 32;
+        tcp_seq_delta       : 32;
         vlan_pcp            : 3;
         vlan_dei            : 1;
         vlan_id             : 12;

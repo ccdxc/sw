@@ -261,7 +261,6 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_TO_P4_HDR_SZ));
-        remove_header(p4plus_to_p4);
     } else {
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
                  CAPRI_GLOBAL_INTRINSIC_HDR_SZ);

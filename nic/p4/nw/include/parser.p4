@@ -272,6 +272,7 @@ parser parse_vm_bounce {
     return parse_ethernet;
 }
 
+@pragma xgress ingress
 parser parse_txdma {
     extract(capri_intrinsic);
     extract(p4plus_to_p4);
@@ -424,25 +425,29 @@ parser parse_ipv4_option_security {
 
 parser parse_ipv4_option_timestamp {
     extract(ipv4_option_timestamp);
-    set_metadata(parser_metadata.parse_ipv4_counter, parser_metadata.parse_ipv4_counter - ipv4_option_timestamp.len);
+    set_metadata(parser_metadata.parse_ipv4_counter,
+                 parser_metadata.parse_ipv4_counter - ipv4_option_timestamp.len);
     return parse_ipv4_options;
 }
 
 parser parse_ipv4_option_lsr{
     extract(ipv4_option_lsr);
-    set_metadata(parser_metadata.parse_ipv4_counter, parser_metadata.parse_ipv4_counter - ipv4_option_lsr.len);
+    set_metadata(parser_metadata.parse_ipv4_counter,
+                 parser_metadata.parse_ipv4_counter - ipv4_option_lsr.len);
     return parse_ipv4_options;
 }
 
 parser parse_ipv4_option_ssr{
     extract(ipv4_option_ssr);
-    set_metadata(parser_metadata.parse_ipv4_counter, parser_metadata.parse_ipv4_counter - ipv4_option_ssr.len);
+    set_metadata(parser_metadata.parse_ipv4_counter,
+                 parser_metadata.parse_ipv4_counter - ipv4_option_ssr.len);
     return parse_ipv4_options;
 }
 
 parser parse_ipv4_option_rr{
     extract(ipv4_option_rr);
-    set_metadata(parser_metadata.parse_ipv4_counter, parser_metadata.parse_ipv4_counter - ipv4_option_rr.len);
+    set_metadata(parser_metadata.parse_ipv4_counter,
+                 parser_metadata.parse_ipv4_counter - ipv4_option_rr.len);
     return parse_ipv4_options;
 }
 
@@ -740,8 +745,10 @@ parser parse_tcp_option_sack_perm {
 
 parser parse_tcp_timestamp {
     extract(tcp_option_timestamp);
-    set_metadata(parser_metadata.parse_tcp_counter, parser_metadata.parse_tcp_counter - tcp_option_timestamp.optLength);
-    set_metadata(parser_metadata.l4_options_length, parser_metadata.l4_options_length + tcp_option_timestamp.optLength);
+    set_metadata(parser_metadata.parse_tcp_counter,
+                 parser_metadata.parse_tcp_counter - tcp_option_timestamp.optLength);
+    set_metadata(parser_metadata.l4_options_length,
+                 parser_metadata.l4_options_length + tcp_option_timestamp.optLength);
     return parse_tcp_options;
 }
 
