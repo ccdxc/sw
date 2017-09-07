@@ -1,6 +1,6 @@
 # LIF Configuration Template
 meta:
-    id: LIF_DEFAULT
+    id: LIF_ETH
 
 rdma: True
 

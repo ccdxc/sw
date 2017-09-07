@@ -109,8 +109,9 @@ class SecurityProfileObjectHelper:
         halapi.ConfigureSecurityProfiles(self.sps)
         return
         
-    def Generate(self):
-        spec = Store.specs.Get('SECURITY_PROFILES')
+    def Generate(self, topospec):
+        if topospec.security_profiles == None: return
+        spec = topospec.security_profiles.Get(Store)
         cfglogger.info("Creating %d SecurityProfiles." % len(spec.profiles))
         for p in spec.profiles:
             profile = SecurityProfileObject()
@@ -119,8 +120,8 @@ class SecurityProfileObjectHelper:
         Store.objects.SetAll(self.sps)
         return
 
-    def main(self):
-        self.Generate()
+    def main(self, topospec):
+        self.Generate(topospec)
         self.Configure()
         return
 

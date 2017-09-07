@@ -118,6 +118,8 @@ def init():
     cfglogger.info("Creating GRPC channel to HAL")
     server = 'localhost:' + port
     HalChannel = grpc.insecure_channel(server)
+    cfglogger.info("Waiting for HAL to be ready ...")
+    grpc.channel_ready_future(HalChannel).result()
     return
 
 def IsHalDisabled():

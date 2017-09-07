@@ -93,6 +93,7 @@ class SegmentObject(base.ConfigObjectBase):
         cfglogger.info("  - VLAN       = %d" % self.vlan_id)
         if not self.IsInfraSegment():
             cfglogger.info("  - VXLAN      = %s" % self.vxlan_id)
+        cfglogger.info("  - Native     = %s" % self.native)
         cfglogger.info("  - MAC        = %s" % self.macaddr.get())
         cfglogger.info("  - Subnet     = %s" % self.subnet.get())
         cfglogger.info("  - Subnet6    = %s" % self.subnet6.get())

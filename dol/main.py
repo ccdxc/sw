@@ -38,7 +38,9 @@ def Main():
     logger.info("Initializing Factory.")
     factory.init()
 
-    generator.main(glopts.GlobalOptions.topology)
+    topo = glopts.GlobalOptions.topology
+    topofile = '%s/%s.topo' % (topo, topo)
+    generator.main(topofile)
 
     if glopts.GlobalOptions.cfgonly:
         logger.info("CONFIG Only Run......Stopping.")

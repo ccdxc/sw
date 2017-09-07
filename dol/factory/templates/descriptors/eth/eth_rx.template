@@ -6,6 +6,6 @@ meta:
     module  : descriptor
     objname : EthRxDescriptorObject
 
-address     : None
-length      : None
-rsvd        : const/0x0
+addr        : None
+len         : None
+rsvd0       : const/0x0

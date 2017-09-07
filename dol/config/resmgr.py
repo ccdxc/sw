@@ -1,13 +1,16 @@
 #! /usr/bin/python3
 
 import infra.common.objects as objects
+from ctypes import *
+import os
+
 
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 L4LbServiceIdAllocator  = objects.TemplateFieldObject("range/1/4096")
 L4LbBackendIdAllocator  = objects.TemplateFieldObject("range/1/16384")
 InterfaceIdAllocator    = objects.TemplateFieldObject("range/1/32768")
 LifIdAllocator          = objects.TemplateFieldObject("range/1025/2047")
-QueueIdAllocator        = objects.TemplateFieldObject("range/1/16384")
+QueueIdAllocator        = objects.TemplateFieldObject("range/0/16384")
 TenIdAllocator          = objects.TemplateFieldObject("range/1/1000")
 SegIdAllocator          = objects.TemplateFieldObject("range/1/8192")
 SegVlanAllocator        = objects.TemplateFieldObject("range/2/4095")
@@ -46,14 +49,87 @@ L4LbServiceIpv6Allocator        = objects.TemplateFieldObject("ipv6step/3333::0:
 L4LbBackendIpSubnetAllocator    = objects.TemplateFieldObject("ipstep/172.16.0.0/0.1.0.0")
 L4LbBackendIpv6SubnetAllocator  = objects.TemplateFieldObject("ipv6step/4444::0/0::1:0:0")
 
+
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")
     # Dont use the Subnet/32 address
     allocator.get()
     return allocator
 
+
 def CreateIpv6AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipv6step/" + subnet + "/::1")
     # Dont use the Subnet/128 address
     allocator.get()
     return allocator
+
+
+class MemHandle(object):
+
+    def __init__(self, va, pa):
+        self.va = va
+        self.pa = pa
+
+    def __str__(self):
+        return '<va=0x%x, pa=0x%x>' % (self.va, self.pa)
+
+    def __add__(self, other):
+        assert isinstance(other, int)
+        return MemHandle(self.va + other, self.pa + other)
+
+
+class HostMemory(object):
+
+    lib = cdll.LoadLibrary(os.path.join(os.environ['WS_TOP'], 'nic/obj/libhostmem.so'))
+
+    init_host_mem = lib.init_host_mem
+    delete_host_mem = lib.delete_host_mem
+
+    alloc_host_mem = lib.alloc_host_mem
+    alloc_host_mem.argtypes = [c_uint64]
+    alloc_host_mem.restype = c_void_p
+
+    host_mem_v2p = lib.host_mem_v2p
+    host_mem_v2p.argtypes = [c_void_p]
+    host_mem_v2p.restype = c_uint64
+
+    free_host_mem = lib.free_host_mem
+    free_host_mem.argtypes = [c_void_p]
+
+    def __init__(self):
+        self.init_host_mem()
+
+    def get(self, size):
+        ptr = self.alloc_host_mem(size)
+        #char_ptr = cast(ptr, c_char_p)
+        #return char_ptr, self.host_mem_v2p(ptr)
+        return MemHandle(ptr, self.host_mem_v2p(ptr))
+
+    def write(self, memhandle, data):
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(data, bytes)
+        va = memhandle.va
+        ba = bytearray(data)
+        arr = c_char * len(ba)
+        arr = arr.from_buffer(ba)
+        # print([x for x in arr])
+        memmove(va, arr, sizeof(arr))
+
+    def read(self, memhandle, size):
+        assert isinstance(memhandle, MemHandle)
+        va = memhandle.va
+        ba = bytearray([0x0]*size)
+        arr = c_char * size
+        arr = arr.from_buffer(ba)
+        memmove(arr, va, sizeof(arr))
+        # print([x for x in out_arr])
+        return bytes(ba)
+
+    def zero(self, memhandle, size):
+        va = memhandle.va
+        memset(va, 0, size)
+
+    def __del__(self):
+        self.delete_host_mem()
+
+HostMemoryAllocator = HostMemory()

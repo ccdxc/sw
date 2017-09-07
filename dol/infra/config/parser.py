@@ -6,6 +6,7 @@ import infra.common.parser  as parser
 import infra.common.logging as logging
 
 from infra.common.logging   import logger
+from infra.common.glopts    import GlobalOptions
 
 class ConfigFileParser(parser.ParserBase):
     def __init__(self):
@@ -26,10 +27,14 @@ class ConfigFileParser(parser.ParserBase):
         return
 
     def ParseSpecs(self, store = None):
-        objlist = self.__parse(defs.CONFIG_SPEC_PATH,
-                               defs.SPEC_FILE_EXTN)
-        self.__resolve(objlist, store)
-        return objlist
+        splist = self.__parse(defs.CONFIG_SPEC_PATH, defs.SPEC_FILE_EXTN)
+        self.__resolve(splist, store)
+
+        path = 'config/topology/%s/' % GlobalOptions.topology
+        tsplist = self.__parse(path, defs.SPEC_FILE_EXTN)
+        self.__resolve(tsplist, store)
+
+        return splist + tsplist
 
     def ParseTemplates(self, store = None):
         objlist = self.__parse(defs.CONFIG_TEMPLATE_PATH,

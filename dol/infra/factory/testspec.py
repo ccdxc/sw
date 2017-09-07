@@ -64,14 +64,68 @@ class TestSpecObject(objects.FrameworkObject):
         self.selectors = TestSpecConfigFilter(self.selectors)
         return
 
-    def __merge_section(self, sec_name):
-        spec_section = None
-        template_section = self.template.__dict__[sec_name]
-        if sec_name in self.__dict__:
-            spec_section = self.__dict__[sec_name]
+    def __merge_section(self, name):
+        spsn = None
+        tpsn = self.template.__dict__[name]
+        if name in self.__dict__:
+            spsn = self.__dict__[name]
+        
+        self.__dict__[name] = objects.MergeObjects(spsn, tpsn)
+        return
 
-        self.__dict__[sec_name] = objects.MergeObjects(spec_section,
-                                                       template_section)
+    def __merge_obj_list(self, splist, tp):
+        objs = []
+        for sp in splist:
+            obj = objects.MergeObjects(sp, tp)
+            objs.append(obj)
+        return objs
+
+    def __merge_packets(self, sp, tp):
+        if sp == None or tp == None: return
+        if 'packets' not in sp.__dict__: return None
+        return self.__merge_obj_list(sp.packets, tp.packets[0])
+            
+    def __merge_descriptors(self, sp, tp):
+        if sp == None or tp == None: return
+        if 'descriptors' not in sp.__dict__: return None
+        return self.__merge_obj_list(sp.descriptors, tp.descriptors[0])
+
+    def __merge_buffers(self, sp, tp):
+        if sp == None or tp == None: return
+        if 'buffers' not in sp.__dict__: return None
+        return self.__merge_obj_list(sp.buffers, tp.buffers[0])
+
+    def __merge_doorbell(self, sp, tp):
+        if sp == None or tp == None: return
+        if 'doorbell' not in sp.__dict__: return None
+        return objects.MergeObjects(sp.doorbell, tp.doorbell)
+
+    def __merge_trig_exp_common(self, sp, tp):
+        if sp == None or tp == None: return None
+        sp.packets = self.__merge_packets(sp, tp)
+        sp.descriptors = self.__merge_descriptors(sp, tp)
+        sp.buffers = self.__merge_buffers(sp, tp)
+        sp.doorbell = self.__merge_doorbell(sp, tp)
+        return sp
+
+    def __merge_step(self, sp, tp):
+        sp.trigger = self.__merge_trig_exp_common(sp.trigger, tp.trigger)
+        sp.expect = self.__merge_trig_exp_common(sp.expect, tp.expect)
+        return sp
+
+    def __merge_step_entry(self, sp, tp):
+        sp.step = self.__merge_step(sp.step, tp.step)
+        return sp
+
+    def __merge_session(self):
+        spsn = self.__dict__['session']
+        tpsn = self.template.__dict__['session']
+        tp = tpsn[0]
+        steps = []
+        for sp in spsn:
+            step = self.__merge_step_entry(sp, tp)
+            steps.append(step)
+        self.__dict__['session'] = steps
         return
 
     def __merge(self):
@@ -80,8 +134,6 @@ class TestSpecObject(objects.FrameworkObject):
         self.__merge_section('descriptors')
         self.__merge_section('buffers')
         self.__merge_section('state')
-        self.__merge_section('session')
-        #self.__merge_section('trigger')
-        #self.__merge_section('expect')
+        self.__merge_session()
         return
 

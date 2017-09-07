@@ -21,6 +21,12 @@ def Setup(infra, module):
             module.testspec.selectors.src.segment.Extend(iterelem.segment)
             module.testspec.selectors.dst.segment.Extend(iterelem.segment)
 
+        if 'srcseg' in iterelem.__dict__:
+            module.testspec.selectors.src.segment.Extend(iterelem.srcseg)
+
+        if 'dstseg' in iterelem.__dict__:
+            module.testspec.selectors.dst.segment.Extend(iterelem.dstseg)
+
     if module.args == None:
         return
 

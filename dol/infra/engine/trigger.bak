@@ -434,14 +434,6 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 exp_pkt.packet.spkt = penscapy.Parse(
                     bytes(exp_pkt.packet.spkt))
 
-            ring_set = set()
-            for descriptor in self._tc_step.trigger.descriptors:
-                assert descriptor.descriptor and descriptor.descriptor.object and descriptor.descriptor.ring
-                self._logger.info("Posting to ring = %s, descriptor(id=%s) = %s" % (
-                    descriptor.descriptor.ring.GID(), descriptor.descriptor.object.GID(), descriptor.descriptor.object))
-                descriptor.descriptor.ring.Post(descriptor.descriptor.object)
-                ring_set.add(descriptor.descriptor.ring)
-
             for packet in self._tc_step.trigger.packets:
                 assert packet.packet
                 sdata = bytes(packet.packet.spkt)
@@ -453,6 +445,14 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                             "Sending Input Packet (id=%s) of len:%d, Port = %d" % (packet.packet.GID(), len(sdata), port))
                         self._connector.send(sdata, port)
 
+            ring_set = set()
+            for descriptor in self._tc_step.trigger.descriptors:
+                assert descriptor.descriptor and descriptor.descriptor.object and descriptor.descriptor.ring
+                self._logger.info("Posting to ring = %s, descriptor(id=%s) = %s" % (
+                    descriptor.descriptor.ring.GID(), descriptor.descriptor.object.GID(), descriptor.descriptor.object))
+                descriptor.descriptor.ring.Post(descriptor.descriptor.object)
+                ring_set.add(descriptor.descriptor.ring)
+            
             if (hasattr(self._tc_step.trigger, "doorbell") and
                 self._tc_step.trigger.doorbell and
                     self._tc_step.trigger.doorbell.object):
@@ -596,8 +596,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     new_packet_ctx = PacketContext(
                         None, penscapy.Parse(packet_ctx.packet), packet_ctx.port)
                     recvd_packets.append(new_packet_ctx)
-                    new_packet_ctx.packet.show2(
-                        indent=0, label_lvl=self._logger.GetLogPrefix())
+                    penscapy.ShowPacket(new_packet_ctx.packet, self._logger)
                 except:
                     extra_pkt = PacketResult()
                     # TODO : Decide how to store this.
@@ -730,70 +729,31 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def __descriptors_process_result(self):
         result = DescriptorsTestStepResult()
         for ring in self._exp_rcv_descr.keys():
-            for edescr, adescr in zip(self._exp_rcv_descr[ring].expected,
-                                      self._exp_rcv_descr[ring].received):
-
-                cmpresult = TriggerObjectCompareResult()
-                self._logger.info("Comparing Descriptors: %s <--> %s "%\
-                                  (adescr.GID(), edescr.GID()))
-                if adescr != edescr.object:
-                    self._logger.error("Descriptor compare result = MisMatch")
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
-                self._logger.info("Descriptor compare result = Match")
-                result.matched.append(cmpresult)
-
-                if edescr.buffer == None:
-                    result._set_status()
-                    return
+            for expected, received in zip(self._exp_rcv_descr[ring].expected,
+                                          self._exp_rcv_descr[ring].received):
                 
-                # Next compare the buffers.
-                cmpresult = TriggerObjectCompareResult()
-                ebuf = utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
-                abuf = utils.SafeFnCall(None, self._logger, adescr.object.GetBuffer)
-                if ebuf == None or abuf == None:
-                    self._logger.error("Buffer Compare: Expected is %s, Actual is %s" % (type(ebuf), type(abuf)))
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
+                obj_compare_result = ObjectCompare(
+                    received, expected.object, partial_match=None)
+                if obj_compare_result.not_empty():
+                    mismatch_result = DescriptorMismatchResult()
+                    mismatch_result.id, mismatch_result.expected, mismatch_result.actual = expected.GID(
+                    ), expected.object, received
+                    mismatch_result.mismatch = obj_compare_result
+                    result.mismatch.append(mismatch_result)
+                else:
+                    matched = DescriptorResult()
+                    matched.object = expected.object
+                    result.matched.append(matched)
 
-                self._logger.info("Comparing Buffers: %s <--> %s "%\
-                                  (ebuf.GID(), abuf.GID()))
-                if ebuf != abuf:
-                    self._logger.error("Buffer compare result = Mismatch")
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
-                self._logger.info("Buffer compare result = Match")
-                result.matched.append(cmpresult)
+            for expected in self._exp_rcv_descr[ring].expected[len(self._exp_rcv_descr[ring].received):]:
+                missing = DescriptorResult()
+                missing.object = expected.object
+                result.missing.append(missing)
 
-                if edescr.packet == None:
-                    result._set_status()
-                    return
-
-                # Next compare the packets
-                cmpresult = TriggerObjectCompareResult()
-                epktbuf = ebuf.Read()
-                assert(epktbuf != None)
-                epkt = penscapy.Parse(bytes(apktbuf))
-                
-                apktbuf = abuf.Read()
-                assert(apktbuf != None)
-                apkt = penscapy.Parse(bytes(apktbuf))
-
-                self._logger.info("Comparing Packets:")
-                self._logger.info("============ RX Packet ============")
-                penscapy.ShowPacket(apkt, self._logger)
-                pktresult = PacketCompare(epkt, apkt)
-                self.print_packet_mismatch(pktresult)
-                if pktresult.matched() == False:
-                    self._logger.error("Packet compare result = Mismatch")
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
-                self._logger.info("Packet compare result = Match")
-                result.matched.append(cmpresult)
+            for expected in self._exp_rcv_descr[ring].received[len(self._exp_rcv_descr[ring].expected):]:
+                extra = DescriptorResult()
+                extra.object = expected
+                result.extra.append(extra)
 
         result._set_status()
         return result
@@ -1234,7 +1194,7 @@ class Trigger(InfraThreadHandler):
 
         return test_case_out
 
-    def get_run_report(self, max_wait_time=600):
+    def get_run_report(self, max_wait_time=6000000):
         end_wait_time = time.time() + max_wait_time
         logger.info("Trying to get Trigger Report..")
         while not self.all_test_cases_done() and end_wait_time > time.time():

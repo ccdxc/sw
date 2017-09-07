@@ -88,6 +88,8 @@ session:
                 - descriptor:
                     object      : None  # Expected DESCRIPTOR object
                     ring        : None  # Expected RING
+                    buffer      : None  # Expected Buffer
+                    packet      : None  # Expected Packet
 
             buffers:
                 - buffer:

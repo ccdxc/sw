@@ -2,6 +2,8 @@
 import socket
 import json
 import pickle
+import pdb
+import copy
 import model_sim.src.model_wrap as model_wrap
 from infra.common.logging import logger
 from infra.common.thread import EvQueue
@@ -186,6 +188,14 @@ class ModelConnector(Connector):
                 descrs.append(read_desc)
             if descrs:
                 self._eventQueue.enqueueEv(RingContext(ring, descrs))
+
+    def ConsumeDescriptor(self, ring, exp_descr):
+        descrs = []
+        actual_descr = copy.copy(exp_descr)
+        ring.Consume(actual_descr)
+        descrs.append(actual_descr)
+        self._eventQueue.enqueueEv(RingContext(ring, descrs))
+        return
 
     def close(self):
         pass

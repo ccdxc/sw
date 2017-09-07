@@ -26,14 +26,29 @@ class TestCaseParser(parser.ParserBase):
 
 class TestCaseTrigExpPacketObject:
     def __init__(self):
-        self.packet = None
-        self.ports  = None
+        self.packet     = None
+        self.ports      = None
         return
+
+class TestCaseTrigExpDoorbellObject:
+    def __init__(self):
+        self.object = None
+        self.spec = None
+        return
+
+    def GID(self):
+        return self.object.GID()
+
 class TestCaseTrigExpDescriptorObject:
     def __init__(self):
         self.object = None
         self.ring   = None
+        self.buffer = None
+        self.packet = None
         return
+
+    def GID(self):
+        return self.object.GID()
 
 class TestCaseTrigExpDescriptorSpec:
     def __init__(self):
@@ -133,22 +148,29 @@ class TestCase(objects.FrameworkObject):
 
     def GetLogPrefix(self):
         return self.logger.GetLogPrefix() + ' ' + self.logpfx
-    
+   
+
+    def ShowScapyObject(self, scapyobj):
+        scapyobj.show2(indent = 0,
+                        label_lvl = self.GetLogPrefix())
+
     def __generate_packets(self):
         self.info("Generating Packet Objects")
         for pspec in self.testspec.packets:
             packet = pktfactory.Packet(self, pspec.packet)
+            #packet.Build(self)
             self.packets.Add(packet)
         return
 
     def __generate_objects(self):
         self.__generate_packets()
-        memfactory.GenerateDescriptors(self)
         memfactory.GenerateBuffers(self)
+        memfactory.GenerateDescriptors(self)
         return
         
-    def __setup_packets(self, step_id, tc_section, spec_section):
-        for spec_pkt in spec_section.packets:
+    def __setup_packets(self, step_id, tcsn, spsn):
+        if spsn.packets == None: return
+        for spec_pkt in spsn.packets:
             if spec_pkt.packet.object == None: continue
             tc_pkt = TestCaseTrigExpPacketObject()
             # Resolve the packet.
@@ -172,39 +194,54 @@ class TestCase(objects.FrameworkObject):
             self.info("- Adding Packet: %s, Ports :" %\
                       tc_pkt.packet.GID(), tc_pkt.ports)
             tc_pkt.packet.Show(self)
-            tc_section.packets.append(tc_pkt)
+            tcsn.packets.append(tc_pkt)
         return
 
-    def __setup_descriptors(self, tc_section, spec_section):
-        for spec_desc_entry in spec_section.descriptors:
+    def __setup_descriptors(self, tcsn, spsn):
+        if spsn.descriptors == None: return
+        for spec_desc_entry in spsn.descriptors:
             if spec_desc_entry.descriptor.object == None: continue
             tc_desc_spec = TestCaseTrigExpDescriptorSpec()
             tc_desc_spec.descriptor.object = spec_desc_entry.descriptor.object.Get(self)
             tc_desc_spec.descriptor.ring   = spec_desc_entry.descriptor.ring.Get(self)
             self.info("- Adding Descriptor: %s, Ring: %s" %\
-                      (tc_desc.descriptor.object.GID(), tc_desc.descriptor.ring.GID()))
-            tc_section.descriptors.append(tc_desc_spec)
-            return
-    
-    def __setup_trigger(self, tc_ssn_step, spec_ssn_step):
+                      (tc_desc_spec.descriptor.object.GID(), tc_desc_spec.descriptor.ring.GID()))
+            buff = getattr(spec_desc_entry.descriptor, 'buffer', None)
+            if buff:
+                tc_desc_spec.descriptor.buffer = spec_desc_entry.descriptor.buffer.Get(self)
+                self.info("  - Expected Buffer: %s" %\
+                          tc_desc_spec.descriptor.buffer.GID())
+                packet = getattr(spec_desc_entry.descriptor, 'packet', None)
+                if packet:
+                    tc_desc_spec.descriptor.packet = spec_desc_entry.descriptor.packet.Get(self)
+                    self.info("  - Expected Packet: %s" %\
+                              tc_desc_spec.descriptor.packet.GID())
+            tcsn.descriptors.append(tc_desc_spec)
+        return
+ 
+    def __setup_doorbell(self, tcsn, spsn):
+        if spsn.doorbell == None: return
+        if spsn.doorbell.object == None: return
+        tcsn.doorbell.object = spsn.doorbell.object.Get(self)
+        tcsn.doorbell.spec = spsn.doorbell.fields
+        self.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
+        return
+   
+    def __setup_trigger(self, tcstep, spstep):
         self.info("- Setting up Trigger.")
-        self.__setup_packets(tc_ssn_step.step_id, 
-                             tc_ssn_step.trigger,
-                             spec_ssn_step.trigger)
-        self.__setup_descriptors(tc_ssn_step.trigger,
-                                 spec_ssn_step.trigger)
+        self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
+        self.__setup_descriptors(tcstep.trigger, spstep.trigger)
+        self.__setup_doorbell(tcstep.trigger, spstep.trigger)
         return defs.status.SUCCESS
 
-    def __setup_expect(self, tc_ssn_step, spec_ssn_step):
+    def __setup_expect(self, tcstep, spstep):
         self.info("- Setting up Expect.")
-        self.__setup_packets(tc_ssn_step.step_id,
-                             tc_ssn_step.expect,
-                             spec_ssn_step.expect)
-        self.__setup_descriptors(tc_ssn_step.expect,
-                                 spec_ssn_step.expect)
-        if hasattr(spec_ssn_step.expect, "callback"):
-            assert(objects.IsCallback(spec_ssn_step.expect.callback))
-            tc_ssn_step.expect.callback = spec_ssn_step.expect.callback
+        if spstep.expect == None: return
+        self.__setup_packets(tcstep.step_id, tcstep.expect, spstep.expect)
+        self.__setup_descriptors(tcstep.expect, spstep.expect)
+        if hasattr(spstep.expect, "callback"):
+            assert(objects.IsCallback(spstep.expect.callback))
+            tcstep.expect.callback = spstep.expect.callback
         return defs.status.SUCCESS
 
     def __setup_session(self):

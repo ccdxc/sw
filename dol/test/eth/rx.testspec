@@ -3,14 +3,14 @@ selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://fwtype=L2
+    flow            : filter://fwtype=L2,label=NETWORKING,type=IPV4
     maxflows        : 1
 
 packets:
@@ -36,7 +36,6 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : ack
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
@@ -49,22 +48,22 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
             tcp:
                 flags: ack
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : PKT2 # Expected Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/segment/vlan_id
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: ref://testcase/config/flow/eg_qos/cos
             ipv4:
                 tos : ref://testcase/config/flow/eg_qos/dscp
@@ -73,36 +72,60 @@ packets:
             tcp:
                 flags: ack
 
+
 buffers:
     - buffer:
         id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           size: ref://testcase/packets/id=PKT1/size
-           data: ref://testcase/packets/id=PKT1/bytes
+           hw   : True
+           size : 1518
+           data : None
+
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            hw  : False
+            size: ref://testcase/packets/id=PKT2/size
+            data: ref://testcase/packets/id=PKT2/bytes
 
 descriptors:
     - descriptor:
         id      : DESC1
-        template: ref://factory/templates/id=DESCR_ETH_TX
+        template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 
+    - descriptor:
+        id      : DESC2
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
+
 trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-        fields:
-            upd : 1
-
-expect:
     packets:
         - packet:
-            object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            # Expected Buffer on this descriptor
+            buffer  : ref://testcase/buffers/id=BUF2
+            # Expected packet from this descriptor/buffer.
+            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
+            # and compares with the below packet.
+            packet  : ref://testcase/packets/id=PKT2
+

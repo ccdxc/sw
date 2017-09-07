@@ -315,7 +315,8 @@ class FlowObject(base.ConfigObjectBase):
 
 
     def IsFilterMatch(self, selectors):
-        cfglogger.debug("Matching Flow %s" % self.GID())
+        cfglogger.debug("Matching %s Flow:%s, Session:%s" %\
+                        (self.direction, self.GID(), self.__session.GID()))
         # Match Source Tenant
         match = self.__sten.IsFilterMatch(selectors.src.tenant)
         cfglogger.debug("- Source Tenant Filter Match =", match)

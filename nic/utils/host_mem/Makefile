@@ -9,6 +9,7 @@ LCXXFLAGS = \
 SOURCES = \
 	host_mem.cc \
 	bm_allocator.cc \
+	c_if.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

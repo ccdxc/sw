@@ -69,6 +69,14 @@ def __get_template(tid):
 def __get_packet_encap_vlan(testcase, cfg):
     if cfg.segment.native == False or IsPriorityTagged(testcase.pvtdata):
         return __get_template('ENCAP_QTAG')
+    
+    if cfg.endpoint:
+        if cfg.endpoint.remote == True: 
+            return None
+
+        if cfg.endpoint.intf.IsUseg() or\
+            cfg.endpoint.intf.IsPvlan():
+            return __get_template('ENCAP_QTAG')
     return None
 
 def __get_packet_encap_vxlan(testcase, cfg):
@@ -121,7 +129,6 @@ def __get_expected_packet(testcase):
     if testcase.config.flow.IsDrop():
         return None
     return testcase.packets.Get('EXP_PKT')
-   
 
 def GetL2UcExpectedPacket(testcase):
     return __get_expected_packet(testcase)

@@ -16,8 +16,7 @@ parser.add_argument('--config-only', dest='cfgonly',
 parser.add_argument('--dryrun', dest='dryrun',
                     action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
-parser.add_argument('--topo', dest='topology',
-                    default='base/base.spec',
+parser.add_argument('--topo', dest='topology', default='base',
                     help='Topology to generate Config Objects.')
 parser.add_argument('--test', dest='test',
                     default=None,

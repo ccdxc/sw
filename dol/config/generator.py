@@ -21,7 +21,7 @@ from config.objects.swdr                import SwDscrRingHelper
 
 def process(topospec):
     # Security Profiles
-    SecurityProfileHelper.main()
+    SecurityProfileHelper.main(topospec)
     # Uplinks
     UplinkHelper.main(topospec)
     # UplinkPC
@@ -39,19 +39,23 @@ def process(topospec):
 
     # Generate all sessions
     SessionHelper.main()
-    
-    ProxyServiceHelper.main()
+   
+    proxy = getattr(topospec, 'proxy', False)
+    if proxy == True:
+        # Global descriptors and page rings
+        ProxyServiceHelper.main()
+        SwDscrRingHelper.main("NMDR")
+        SwDscrRingHelper.main("NMPR")
+        SwDscrRingHelper.main("BRQ")
+        SwDscrRingHelper.main("ARQ")
 
-    # Global descriptors and page rings
-    SwDscrRingHelper.main("NMDR")
-    SwDscrRingHelper.main("NMPR")
-    SwDscrRingHelper.main("BRQ")
-    SwDscrRingHelper.main("ARQ")
+        TcpCbHelper.main()    
 
-    TcpCbHelper.main()    
-    IpsecCbHelper.main()    
+    ipsec = getattr(topospec, 'ipsec', False)
+    if ipsec:
+        IpsecCbHelper.main()    
+
     CpuHelper.main(topospec)
-
     return
 
 def main(topofile):

@@ -896,14 +896,6 @@ modules:
         ignore  : false
 
     - module:
-        name    : ETH_TX
-        enable  : False
-        package : test.eth
-        module  : eth
-        spec    : tx.testspec
-        ignore  : True
-
-    - module:
         name    : TELEMETRY_FP
         enable  : True
         package : test.telemetry
@@ -927,3 +919,97 @@ modules:
         spec    : l4lb_l3.testspec
         ignore  : False
 
+    - module:
+        name    : ETH_TX # L2UC_IP cases
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx.testspec
+        ignore  : True
+        args    :
+            maxflows : 1
+        iterate:
+            # Untagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            # Tagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+
+    - module:
+        name    : ETH_TX_L2UC_IP_GFT_DROP
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx.testspec
+        ignore  : True
+        args    :
+            maxflows : 1
+        iterate:
+            # Tagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=False
+            # Untagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+
+    - module:
+        name    : ETH_TX_L2UC_NONIP
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx_nonip.testspec
+        ignore  : True
+        args    :
+            maxflows : 1
+        iterate:
+            # Tagged Flows
+            - segment: filter://native=False
+              flow   : filter://label=NETWORKING
+            - segment: filter://native=False
+              flow   : filter://label=GFT_DROP
+            # Untagged Flows
+            - segment: filter://native=True
+              flow   : filter://label=GFT_DROP
+            - segment: filter://native=True
+              flow   : filter://label=NETWORKING
+
+    - module:
+        name    : ETH_RX
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False

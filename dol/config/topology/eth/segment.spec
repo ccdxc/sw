@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_REMOTE
+    id: SEGMENT_ETH
 
 type        : tenant
 native      : False

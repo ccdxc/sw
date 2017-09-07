@@ -21,6 +21,14 @@ def IsTemplateField(string):
         return True
     return False
 
+# Returns 'default' in case of an exception
+def SafeFnCall(default, lgh, fn, *args):
+    try:
+        ret = fn(*args)
+    except:
+        log_exception(lgh)
+        ret = default
+    return ret
 
 def GetFullPath(name, path=None, logger=None):
     ws_top = os.environ["WS_TOP"]

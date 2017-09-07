@@ -44,7 +44,7 @@ def CreateInfraData():
 
 def ProcessReport():
     report = TrigExpEngine.get_run_report()
-    report.show()
+    #report.show()
     for tcid,tcreport in report.details.items():
         tc = TestCaseDB.Get(tcid)
         tc.status = tcreport.status

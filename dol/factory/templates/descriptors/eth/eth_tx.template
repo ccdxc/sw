@@ -6,14 +6,14 @@ meta:
     module  : descriptor
     objname : EthTxDescriptorObject
 
-address     : None
-vlan_tag    : None
-length      : None
-mss         : None
-enc         : const/0x0
-hdr_len     : const/0x0
-mode_o      : const/0x0
-bit_e       : const/0x0
-bit_c       : const/0x1
-bit_v       : const/0x0
-rsvd        : const/0x0
+addr          : None
+len           : None
+vlan_tag      : None
+mss           : None
+encap         : const/0x0
+hdr_len       : const/0x0
+offload_mode  : const/0x0
+eop           : const/0x0
+cq_entry      : const/0x1
+vlan_insert   : const/0x0
+rsvd0         : const/0x0

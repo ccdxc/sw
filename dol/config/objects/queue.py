@@ -1,11 +1,12 @@
 #! /usr/bin/python3
 import pdb
+import math
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
-
+import config.objects.eth.ring  as ring
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
@@ -15,44 +16,44 @@ from infra.common.logging       import cfglogger
 class QueueObject(objects.FrameworkObject):
     def __init__(self):
         super().__init__()
-        return
 
-    def Init(self, lif, spec):
+    def Init(self, queue_type, spec):
         self.GID(spec.id)
-        self.lif        = lif
-        self.type       = spec.type
-        self.purpose    = spec.purpose.upper()
-        self.size       = spec.size
+        self.queue_type = queue_type
+        self.id         = queue_type.GetQid()
+
         self.rings      = objects.ObjectDatabase(cfglogger)
-        self.obj_helper_ring = ring.RingObjectHelper()
-        self.obj_helper_ring.Generate(self, spec.ring)
+        self.obj_helper_ring = ring.EthRingObjectHelper()
+        self.obj_helper_ring.Generate(self, spec)
         self.rings.SetAll(self.obj_helper_ring.rings)
+
         self.Show()
-        return
+
+    def GetQstateBaseAddr(self):
+        return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
+
+    def ConfigureRings(self):
+        self.obj_helper_ring.Configure()
 
     def PrepareHALRequestSpec(self, req_spec):
-        return
-
-    def ProcessHALResponse(self, req_spec, resp_spec):
-        return
+        pass
 
     def Show(self):
         cfglogger.info('Queue: %s' % self.GID())
-        cfglogger.info('- lif    : %s' % self.lif.GID())
-        cfglogger.info('- type   : %s' % self.type)
-        cfglogger.info('- purpose: %s' % self.purpose)
-        cfglogger.info('- size   : %s' % self.size)
-        return
+        cfglogger.info('- type   : %s' % self.queue_type.GID())
+        cfglogger.info('- id     : %s' % self.id)
 
 class QueueObjectHelper:
     def __init__(self):
         self.queues = []
-        return
 
-    def Generate(self, lif, lifspec):
-        for espec in lifspec.entries:
-            for e in range(espec.entry.count):
+    def Generate(self, queue_type, spec):
+        for espec in spec.queues:
+            for qspec in range(espec.queue.count):
                 queue = QueueObject()
-                queue.Init(lif, espec.entry)
+                queue.Init(queue_type, espec.queue)
                 self.queues.append(queue)
-        return
+
+    def Configure(self):
+        for queue in self.queues:
+            queue.ConfigureRings()

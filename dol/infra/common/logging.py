@@ -130,6 +130,10 @@ class Logger:
     def GetLogPrefix(self):
         return "[%s][INFO]" % self.name
 
+    def ShowScapyObject(self, scapyobj):
+        scapyobj.show2(indent = 0,
+                        label_lvl = self.GetLogPrefix())
+
 start_level = levels.INFO
 if GlobalOptions.debug:
     start_level = levels.DEBUG

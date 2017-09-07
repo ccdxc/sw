@@ -1,5 +1,5 @@
 meta:
-    id: SECURITY_PROFILES
+    id: SECURITY_PROFILES_DEFAULT
 
 profiles:
     - id: SEC_PROF_ACTIVE

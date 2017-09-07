@@ -163,6 +163,8 @@ class Packet(objects.FrameworkObject):
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
         self.__build_complete = False
+        self.bytes = None
+        self.size = None
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
@@ -314,10 +316,12 @@ class Packet(objects.FrameworkObject):
         return
 
     def Build(self, tc):
-        if not self.__build_complete:
+        if not self.spkt:
             self.__resolve(tc)
             self.spkt = scapyfactory.main(self)
             self.spkt[penscapy.PENDOL].id = tc.GID()
+            self.bytes = bytes(self.spkt)
+            self.size = len(self.bytes)
         self.__build_complete = True
         return
 
