@@ -2,6 +2,7 @@
 #include <hal_lock.hpp>
 #include <pd_api.hpp>
 #include <wring_pd.hpp>
+#include <hal_state_pd.hpp>
 #include <capri_loader.h>
 #include <capri_hbm.hpp>
 #include <capri_common.h>
@@ -70,6 +71,61 @@ wring_pd_meta_init() {
 
     return HAL_RET_OK;
 }
+
+pd_wring_meta_t* wring_pd_get_meta(types::WRingType type)
+{
+    return &g_meta[type];    
+}
+/**************************
+ * Helper functions
+ *************************/
+// allocate a wring pd instance
+static inline pd_wring_t *
+wring_pd_alloc (void)
+{
+    pd_wring_t    *wring_pd;
+
+    wring_pd = (pd_wring_t *)g_hal_state_pd->wring_slab()->alloc();
+    if (wring_pd == NULL) {
+        return NULL;
+    }
+
+    return wring_pd;
+}
+
+// allocate and initialize a wring pd instance
+static inline pd_wring_t *
+wring_pd_alloc_init (void)
+{
+    return wring_pd_init(wring_pd_alloc());
+}
+
+// free wring pd instance
+static inline hal_ret_t
+wring_pd_free (pd_wring_t *wring_pd)
+{
+    g_hal_state_pd->wring_slab()->free(wring_pd);
+    return HAL_RET_OK;
+}
+
+// insert wring pd state in all meta data structures
+static inline hal_ret_t
+add_wring_pd_to_db (pd_wring_t *wring_pd)
+{
+    g_hal_state_pd->wring_hwid_ht()->insert(wring_pd, &wring_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a wring pd instance given its hw id
+static inline pd_wring_t *
+find_wring_by_hwid (wring_hw_id_t hwid)
+{
+    return (pd_wring_t *)g_hal_state_pd->wring_hwid_ht()->lookup(&hwid);
+}
+
+/*****************************
+ * APIs
+ *****************************/
 
 hal_ret_t
 get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)

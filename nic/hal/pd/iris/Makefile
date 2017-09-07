@@ -68,6 +68,7 @@ SOURCES = \
 		  l4lb_pd.cc \
 		  rw_pd.cc \
 		  cpucb_pd.cc \
+		  cpupkt_api.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

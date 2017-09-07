@@ -19,14 +19,14 @@
 #define TABLE_SIZE_256_BITS            5
 #define TABLE_SIZE_512_BITS            6
 
-#define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
-#define NIC_PAGE_HDR_SIZE              52         /* sizeof(nic_page_hdr_t) */
-#define CACHE_LINE_SIZE                64
+#define NIC_DESC_ENTRY_0_OFFSET        64         /* &((nic_desc_t *)0)->entry[0]*/
+#define NIC_PAGE_HDR_SIZE              0         /* sizeof(nic_page_hdr_t) */
+#define CACHE_LINE_SIZE                0
 #define NIC_PAGE_HEADROOM             (17 * CACHE_LINE_SIZE)
 
 
-#define CPU_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_next_pkt)
-#define CPU_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_A0)
+#define CPU_PHV_AOL_DESC_START      CAPRI_PHV_START_OFFSET(aol_A0)
+#define CPU_PHV_AOL_DESC_END        CAPRI_PHV_END_OFFSET(aol_next_pkt)
 
 #define NIC_ARQRX_ENTRY_SIZE                  8
 #define NIC_ARQRX_ENTRY_SIZE_SHIFT            3          /* for 8B */

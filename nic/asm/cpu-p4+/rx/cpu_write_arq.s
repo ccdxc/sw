@@ -26,8 +26,7 @@ dma_cmd_data:
 
     phvwr   p.dma_cmd0_dma_cmd_addr, r1
     add     r2, r0, k.to_s3_payload_len
-    /*phvwr   p.dma_cmd0_dma_cmd_size, k.to_s3_payload_len */
-    phvwr   p.dma_cmd0_dma_cmd_size, 0x64   
+    phvwr   p.dma_cmd0_dma_cmd_size, k.to_s3_payload_len 
 
     phvwri  p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     phvwri  p.dma_cmd0_dma_cmd_eop, 0
@@ -39,9 +38,9 @@ dma_cmd_descr:
     addi    r1, r5, NIC_DESC_ENTRY_0_OFFSET
     phvwr   p.dma_cmd1_dma_cmd_addr, r1
 
-    phvwr   p.aol_A0, r5
-    phvwr   p.aol_O0, r3
-    phvwr   p.aol_L0, k.to_s3_payload_len
+    phvwr   p.aol_A0, k.{to_s3_page}.dx
+    phvwr   p.aol_O0, r3.wx
+    phvwr   p.aol_L0, k.{to_s3_payload_len}.wx
     phvwr   p.aol_A1, r0
     phvwr   p.aol_O1, r0
     phvwr   p.aol_L1, r0
