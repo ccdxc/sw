@@ -255,7 +255,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
 
     if (ms->l2seg_match) {
         l2seg = find_l2seg_by_handle(ms->l2seg_handle);
-        key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
+        key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->hw_id;
         mask.flow_lkp_metadata_lkp_vrf_mask = 
             ~(mask.flow_lkp_metadata_lkp_vrf_mask & 0);
     }
