@@ -302,25 +302,6 @@ proxy_create_cpucb(void)
 }
 
 hal_ret_t 
-proxy_create_cpuif(void)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-    intf::InterfaceSpec   spec;
-    intf::InterfaceResponse rsp;
-
-    spec.mutable_key_or_handle()->set_interface_id(SERVICE_LIF_CPU);
-    spec.set_type(intf::IF_TYPE_CPU);
-    spec.set_admin_status(intf::IF_STATUS_UP);
-    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(SERVICE_LIF_CPU);
-    
-    ret = interface_create(spec, &rsp);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to create CPU if {}", ret);
-    }
-
-    return ret;
-}
-hal_ret_t 
 hal_proxy_system_svc_init(void)
 {
     for(int i = 1; i < types::ProxyType_ARRAYSIZE; i++) {
@@ -366,13 +347,6 @@ hal_proxy_svc_init(void)
         return ret;
     }
     
-    /*
-    ret = proxy_create_cpuif();
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create cpu if");    
-    }
-    */
-
     ret = proxy_create_cpucb();
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to create cpu cb");    

@@ -83,7 +83,6 @@ flow_miss:
   br          r1[1:0]
   phvwr       p.control_metadata_flow_miss_ingress, 1
   .brcase FLOW_MISS_ACTION_CPU
-  phvwr       p.capri_intrinsic_drop, 1
   phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   phvwr       p.control_metadata_dst_lport, CPU_LPORT
   .brcase FLOW_MISS_ACTION_DROP

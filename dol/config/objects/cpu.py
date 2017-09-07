@@ -56,7 +56,6 @@ class CpuObject(base.ConfigObjectBase):
 class CpuObjectHelper:
     def __init__(self):
         self.objlist = []
-        self.trunks = []
         return
 
     def Configure(self):

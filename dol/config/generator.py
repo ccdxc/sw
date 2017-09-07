@@ -46,11 +46,11 @@ def process(topospec):
     SwDscrRingHelper.main("NMDR")
     SwDscrRingHelper.main("NMPR")
     SwDscrRingHelper.main("BRQ")
-    #SwDscrRingHelper.main("ARQ")
+    SwDscrRingHelper.main("ARQ")
 
     TcpCbHelper.main()    
     IpsecCbHelper.main()    
-    #CpuHelper.main(topospec)
+    CpuHelper.main(topospec)
 
     return
 

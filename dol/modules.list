@@ -625,11 +625,11 @@ modules:
 
     - module:
         name    : PKT_TO_ARQ
-        enable  : False
+        enable  : True
         package : test.tcp-tls-proxy
         module  : pkt_to_arq
-        spec    : tcp_proxy.testspec
-        ignore  : True
+        spec    : pkt_to_arq.testspec
+        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
 
