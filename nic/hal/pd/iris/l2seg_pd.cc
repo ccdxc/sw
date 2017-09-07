@@ -1,6 +1,7 @@
 #include <hal_lock.hpp>
 #include <pd_api.hpp>
 #include <l2seg_pd.hpp>
+#include <tenant_pd.hpp>
 #include <pd.hpp>
 #include <hal_state_pd.hpp>
 #include "if_pd_utils.hpp"
@@ -12,7 +13,7 @@ void *
 l2seg_pd_get_hw_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((pd_l2seg_t *)entry)->hw_id);
+    return (void *)&(((pd_l2seg_t *)entry)->l2seg_ten_hw_id);
 }
 
 uint32_t
@@ -42,8 +43,9 @@ hal_ret_t
 pd_l2seg_create (pd_l2seg_args_t *args)
 {
     hal_ret_t               ret;
-    indexer::status         rs;
-    pd_l2seg_s              *l2seg_pd;
+    // indexer::status         rs;
+    pd_l2seg_s              *l2seg_pd = NULL;
+    pd_tenant_t             *ten_pd = NULL;
 
     HAL_TRACE_DEBUG("PD-L2Seg:{}: L2Seg Create ", __FUNCTION__);
 
@@ -54,13 +56,21 @@ pd_l2seg_create (pd_l2seg_args_t *args)
     }
     l2seg_pd->l2seg = args->l2seg;
 
+    ten_pd = pd_l2seg_get_pd_tenant(l2seg_pd);
+    HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_TENANT_NOT_FOUND);
+
+    tenant_pd_alloc_l2seg_hw_id(ten_pd, (uint32_t *)&l2seg_pd->l2seg_hw_id);
+
+    l2seg_pd->l2seg_ten_hw_id = ten_pd->ten_hw_id << 12 | l2seg_pd->l2seg_hw_id; 
+
+#if 0
     // allocate h/w id for this L2 segment
     rs = g_hal_state_pd->l2seg_hwid_idxr()->alloc((uint32_t *)&l2seg_pd->hw_id);
     if (rs != indexer::SUCCESS) {
         g_hal_state_pd->l2seg_slab()->free(l2seg_pd);
         return HAL_RET_NO_RESOURCE;
     }
-    if(l2seg_pd->hw_id == 0) {
+    if(l2seg_pd->l2seg_hw_id == 0) {
         // TODO: remove this hack. p4 doesn't like 0 hwid
         HAL_TRACE_DEBUG("HACK ALERT: Allocating hwid again for l2seg");
         rs = g_hal_state_pd->l2seg_hwid_idxr()->alloc((uint32_t *)&l2seg_pd->hw_id);
@@ -69,7 +79,12 @@ pd_l2seg_create (pd_l2seg_args_t *args)
             return HAL_RET_NO_RESOURCE;
         }
     }
-    HAL_TRACE_DEBUG("PD-L2Seg:{}: L2Seg hwid: {} ", __FUNCTION__, l2seg_pd->hw_id);
+#endif
+
+    HAL_TRACE_DEBUG("PD-L2Seg:{}: l2seg_hwid: {}, ten_hwid: {}, "
+            "l2seg_ten_hw_id: {} ", 
+            __FUNCTION__, l2seg_pd->l2seg_hw_id, ten_pd->ten_hw_id, 
+            l2seg_pd->l2seg_ten_hw_id);
 
     // add to db
     ret = add_l2seg_pd_to_db(l2seg_pd);
@@ -83,7 +98,7 @@ pd_l2seg_create (pd_l2seg_args_t *args)
 cleanup:
 
     if (l2seg_pd) {
-        g_hal_state_pd->l2seg_hwid_idxr()->free(l2seg_pd->hw_id);
+        tenant_pd_free_l2seg_hw_id(ten_pd, l2seg_pd->l2seg_hw_id);
         l2seg_pd_free(l2seg_pd);
     }
     return ret;
@@ -103,6 +118,22 @@ pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg)
 
     return ten_get_nwsec_prof_hw_id(pi_tenant);
 }
+
+pd_tenant_t *
+pd_l2seg_get_pd_tenant(pd_l2seg_t *pd_l2seg)
+{
+    l2seg_t         *pi_l2seg = NULL;
+    tenant_t        *pi_tenant = NULL;
+
+    pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
+    HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
+
+    pi_tenant = l2seg_get_pi_tenant(pi_l2seg);
+    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+
+    return (pd_tenant_t *)pi_tenant->pd;
+}
+
 
 }    // namespace pd
 }    // namespace hal

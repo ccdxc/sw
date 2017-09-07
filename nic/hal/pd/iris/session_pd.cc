@@ -574,7 +574,7 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
         // TODO: for now !!
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_NONE;
     }
-    key.flow_lkp_metadata_lkp_vrf = l2seg_pd->hw_id;
+    key.flow_lkp_metadata_lkp_vrf = l2seg_pd->l2seg_ten_hw_id;
     key.flow_lkp_metadata_lkp_proto = flow->key.proto;
     key.flow_lkp_metadata_lkp_dir = flow->key.dir;
 

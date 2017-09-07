@@ -76,7 +76,6 @@ public:
 
     // get APIs for L2 segment related state
     slab *l2seg_slab(void) const { return l2seg_slab_; }
-    indexer *l2seg_hwid_idxr(void) const { return l2seg_hwid_idxr_; }
     ht *l2seg_hwid_ht(void) const { return l2seg_hwid_ht_; }
 
     // get API for lport indexer
@@ -237,7 +236,6 @@ private:
     // l2seg related state
     struct {
         slab       *l2seg_slab_;
-        indexer    *l2seg_hwid_idxr_;
         ht         *l2seg_hwid_ht_;
     } __PACK__;
 

@@ -9,7 +9,7 @@ void *
 tenant_pd_get_hw_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((pd_tenant_t *)entry)->hw_id);
+    return (void *)&(((pd_tenant_t *)entry)->ten_hw_id);
 }
 
 uint32_t
@@ -45,14 +45,14 @@ pd_tenant_create (pd_tenant_args_t *args)
     tenant_pd->tenant = args->tenant;
 
     // allocate h/w id for this tenant
-    rs = g_hal_state_pd->tenant_hwid_idxr()->alloc((uint32_t *)&tenant_pd->hw_id);
+    rs = g_hal_state_pd->tenant_hwid_idxr()->alloc((uint32_t *)&tenant_pd->ten_hw_id);
     if (rs != indexer::SUCCESS) {
         g_hal_state_pd->tenant_slab()->free(tenant_pd);
         return HAL_RET_NO_RESOURCE;
     }
 
     HAL_TRACE_DEBUG("PD-Tenant:{}: Allocated ten_hw_id:{}", 
-                    __FUNCTION__, tenant_pd->hw_id);
+                    __FUNCTION__, tenant_pd->ten_hw_id);
 
     // add to db
     ret = add_tenant_pd_to_db(tenant_pd);
@@ -66,11 +66,55 @@ pd_tenant_create (pd_tenant_args_t *args)
 cleanup:
 
     if (tenant_pd) {
-        g_hal_state_pd->tenant_hwid_idxr()->free(tenant_pd->hw_id);
+        g_hal_state_pd->tenant_hwid_idxr()->free(tenant_pd->ten_hw_id);
         tenant_pd_free(tenant_pd);
     }
     return ret;
 }
 
+hal_ret_t
+tenant_pd_alloc_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t *l2seg_hw_id)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    indexer::status     rs = indexer::SUCCESS;
+
+    if (!tenant_pd || !l2seg_hw_id) {
+        ret =  HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    rs = tenant_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
+    if (rs != indexer::SUCCESS) {
+        HAL_TRACE_ERR("PD-Tenant: Failed to alloc l2seg_hw_id err: {}", rs);
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+tenant_pd_free_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t l2seg_hw_id)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    indexer::status     rs = indexer::SUCCESS;
+
+    if (!tenant_pd) {
+        ret =  HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    rs = tenant_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
+    if (rs != indexer::SUCCESS) {
+        HAL_TRACE_ERR("PD-Tenant: Failed to free l2seg_hw_id:{} err: {}",
+                l2seg_hw_id, rs);
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
+    }
+
+end:
+    return ret;
+}
 }    // namespace pd
 }    // namespace hal

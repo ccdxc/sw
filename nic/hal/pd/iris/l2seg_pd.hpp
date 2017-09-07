@@ -4,6 +4,7 @@
 #include <base.h>
 #include <ht.hpp>
 #include <pd.hpp>
+#include <pd_api.hpp>
 #include <hal_state_pd.hpp>
 
 using hal::utils::ht_ctxt_t;
@@ -15,10 +16,12 @@ namespace pd {
 
 // l2seg pd state
 struct pd_l2seg_s {
-    void               *l2seg;              // PI L2 segment
+    void                *l2seg;              // PI L2 segment
 
     // operational state of l2seg pd
-    l2seg_hw_id_t      hw_id;               // hw id for this segment
+    l2seg_hw_id_t       l2seg_hw_id;         // hw id for this segment
+
+    uint16_t            l2seg_ten_hw_id;     // used in data plane as vrf   
 
     // meta data maintained for l2seg pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
@@ -94,6 +97,7 @@ extern uint32_t l2seg_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool l2seg_pd_compare_hw_key_func(void *key1, void *key2);
 
 uint32_t pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg);
+pd_tenant_t *pd_l2seg_get_pd_tenant(pd_l2seg_t *pd_l2seg);
 
 }   // namespace pd
 }   // namespace hal

@@ -51,6 +51,7 @@ hal_state_pd::init(void)
 
     tenant_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS);
     HAL_ASSERT_RETURN((tenant_hwid_idxr_ != NULL), false);
+    tenant_hwid_idxr_->alloc_withid(0);
 
     tenant_hwid_ht_ = ht::factory(HAL_MAX_HW_VRFS,
                                   hal::pd::tenant_pd_get_hw_key_func,
@@ -67,9 +68,6 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::pd_l2seg_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
-
-    l2seg_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_L2SEGMENTS);
-    HAL_ASSERT_RETURN((l2seg_hwid_idxr_ != NULL), false);
 
     l2seg_hwid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS,
                                  hal::pd::l2seg_pd_get_hw_key_func,
@@ -307,7 +305,6 @@ hal_state_pd::hal_state_pd()
     nwsec_profile_hwid_idxr_ = NULL;
 
     l2seg_slab_ = NULL;
-    l2seg_hwid_idxr_ = NULL;
     l2seg_hwid_ht_ = NULL;
 
     lport_idxr_ = NULL;
@@ -386,7 +383,6 @@ hal_state_pd::~hal_state_pd()
     nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
 
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
-    l2seg_hwid_idxr_ ? delete l2seg_hwid_idxr_ : HAL_NOP;
     l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
 
     lport_idxr_ ? delete lport_idxr_ : HAL_NOP;

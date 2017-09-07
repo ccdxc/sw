@@ -346,7 +346,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     key.entry_status_inactive = 0;
     l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-    key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->hw_id;
+    key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
     memcpy(key.flow_lkp_metadata_lkp_src, 
            pi_ip_entry->ip_addr.addr.v6_addr.addr8,
            IP6_ADDR8_LEN);

@@ -201,6 +201,7 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_rw_entry_t       *rwe = NULL;
+    indexer::status     rs = indexer::SUCCESS;
     fmt::MemoryWriter   buf;
 
     if (!rw_key) {
@@ -235,10 +236,18 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
             goto end;
         }
 
+        // Delete from DB
         ret = del_rw_entry_pd_from_db(rwe);
         if (ret != HAL_RET_OK) {
             HAL_ASSERT_RETURN(0, HAL_RET_ERR);
         }
+
+        // Free the index
+        rs = g_hal_state_pd->rw_tbl_idxr()->free(rwe->rw_idx);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("PD-RW: Failed to free Indexer err: {}", rs);
+        }
+
         rw_entry_pd_free(rwe);
     }
 

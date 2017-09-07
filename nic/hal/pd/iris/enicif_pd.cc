@@ -267,7 +267,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 
     data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
-    inp_prop_mac_vlan_data.vrf = pd_l2seg->hw_id;
+    inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_ten_hw_id;
     inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
     inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
     inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
