@@ -17,3 +17,6 @@ def GetNxtPktSeqNum (tc, pkt):
 
 def GetNxtPktAckNum (tc, pkt):
     return 0xefeff043
+
+def GetDstIp (tc, pkt):
+    return "54.0.0.2"

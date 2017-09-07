@@ -49,24 +49,27 @@ def TestCaseVerify(tc):
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["AR"]
+    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
     arq_cur.Configure()
 
     # 2. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        return false
+        #return False
 
     # 3. Verify PI for ARQ got incremented by 1
     if (arq_cur.pi != arq.pi+1):
         print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
-        return false
+        #return False
 
     # 2. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
+    #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
+    if rnmdr.ringentries[0].handle != arq_cur.ringentries[0].handle:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
+        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
+    print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
     # 3. Verify page
     if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in arq_cur.swdre_list")

@@ -60,6 +60,15 @@ pd_l2seg_create (pd_l2seg_args_t *args)
         g_hal_state_pd->l2seg_slab()->free(l2seg_pd);
         return HAL_RET_NO_RESOURCE;
     }
+    if(l2seg_pd->hw_id == 0) {
+        // TODO: remove this hack. p4 doesn't like 0 hwid
+        HAL_TRACE_DEBUG("HACK ALERT: Allocating hwid again for l2seg");
+        rs = g_hal_state_pd->l2seg_hwid_idxr()->alloc((uint32_t *)&l2seg_pd->hw_id);
+        if (rs != indexer::SUCCESS) {
+            g_hal_state_pd->l2seg_slab()->free(l2seg_pd);
+            return HAL_RET_NO_RESOURCE;
+        }
+    }
     HAL_TRACE_DEBUG("PD-L2Seg:{}: L2Seg hwid: {} ", __FUNCTION__, l2seg_pd->hw_id);
 
     // add to db
