@@ -14,12 +14,14 @@ nop:
 
 .align
 local_span:
+  phvwr       p.capri_intrinsic_tm_span_session, 0
   phvwr       p.control_metadata_dst_lport, d.u.local_span_d.dst_lport
   seq.e       c1, d.u.local_span_d.truncate_len, 0
   phvwr.!c1   p.capri_p4_intrinsic_frame_size, d.u.local_span_d.truncate_len
 
 .align
 remote_span:
+  phvwr       p.capri_intrinsic_tm_span_session, 0
   phvwr       p.control_metadata_dst_lport, d.u.remote_span_d.dst_lport
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.remote_span_d.tunnel_rewrite_index
@@ -30,6 +32,7 @@ remote_span:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 erspan_mirror:
+  phvwr       p.capri_intrinsic_tm_span_session, 0
   phvwr       p.control_metadata_dst_lport, d.u.erspan_mirror_d.dst_lport
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.erspan_mirror_d.tunnel_rewrite_index

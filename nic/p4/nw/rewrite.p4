@@ -99,11 +99,13 @@ action mirror_truncate(truncate_len) {
 }
 
 action local_span(dst_lport, truncate_len) {
+    modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
     mirror_truncate(truncate_len);
 }
 
 action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan) {
+    modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
@@ -112,6 +114,7 @@ action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan) {
 }
 
 action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index) {
+    modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(tunnel_metadata.tunnel_originate, TRUE);
