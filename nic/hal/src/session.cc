@@ -1261,6 +1261,7 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     iflow->config.key.dir = 
         (sep->ep_flags & EP_FLAGS_LOCAL) ? FLOW_DIR_FROM_ENIC : 
         FLOW_DIR_FROM_UPLINK; 
+    HAL_TRACE_DEBUG("iflow direction: {} sep_ep_flags: {}", iflow->config.key.dir, sep->ep_flags);
 
     // lookup ingress & egress interfaces
     iflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);

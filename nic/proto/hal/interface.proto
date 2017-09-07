@@ -127,6 +127,7 @@ message LifSpec {
   bool                     vlan_strip_en     = 9;    // LIF vlan strip enable
   //bool                     allmulti          = 10;   // LIF set all multicast group
   bool                     enable_rdma       = 11;   // enable RDMA on LIF
+  repeated QStateSetReq    lif_qstate    = 12;   // Initialize Qstate
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -140,10 +141,18 @@ message LifStatus {
   fixed64     lif_handle = 2;    // id of the interface returned by HAL
 }
 
-// LifResponse s response to one LifSpec
+// LifQstate entries
+message LifQState {
+  uint32 type_num   = 1;  // Queue type
+  uint64 addr       = 2;  // Address of QState in HBM.
+}
+
+// LifResponse response to one LifSpec
 message LifResponse {
-  types.ApiStatus    api_status  = 1;    // API status code
-  LifStatus          status      = 2;    // operational status
+  types.ApiStatus     api_status   = 1;    // API status code
+  LifStatus           status       = 2;    // operational status
+  uint64              hw_lif_id    = 3;    // Hardware Lif Id
+  repeated LifQState  qstate       = 4;    // Qstate Address info
 }
 
 // LifResponseMsg is response to LifRequestMsg

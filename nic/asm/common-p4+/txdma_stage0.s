@@ -20,10 +20,11 @@
     .param      tcp_tx_read_shared_stage0_start
     .param      tls_stage0
     .param      tcp_tx_read_rx2tx_shared_process
+    .param      eth_tx_fetch_desc
 
-.align
+
 eth_tx_stage0:
-   nop.e
+   j    eth_tx_fetch_desc
    nop
 
 .align

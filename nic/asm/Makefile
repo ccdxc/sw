@@ -8,6 +8,7 @@ LIBDIRS = \
           ipsec-p4+ \
           storage \
 		  cpu-p4+ \
+          eth \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

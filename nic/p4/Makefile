@@ -9,6 +9,7 @@ LIBDIRS = \
           storage \
           rdma \
 		  cpu-p4+ \
+          eth \
           $(NULL)
 
 PGMDIRS = $(NULL)

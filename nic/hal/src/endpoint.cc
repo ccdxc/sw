@@ -225,6 +225,13 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     ep->tenant_id = tid;
     ep->useg_vlan = spec.useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        ep->ep_flags |= EP_FLAGS_LOCAL;
+        HAL_TRACE_DEBUG("Setting local flag in ep: {}", ep->ep_flags);
+    } else {
+        ep->ep_flags |= EP_FLAGS_REMOTE;
+        HAL_TRACE_DEBUG("Setting remote flag in ep: {}", ep->ep_flags);
+    }
 
     // handle IP address information, if any
     // TODO: check if any IPs are already known to us already !!
@@ -233,7 +240,8 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         // add the IP to EP
         utils::dllist_reset(&ip_entry[i]->ep_ip_lentry);
         ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.ip_address(i));
-        ip_entry[i]->ip_flags = ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
+        ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
+        ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
         utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
 
         // add a hash table lookup entry for this EP with (VRF, IP) key

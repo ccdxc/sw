@@ -228,6 +228,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     hal_ret_t          ret = HAL_RET_OK;
     lif_t              *lif = NULL;
     uint32_t           hw_lif_id = 0;
+    std::unique_ptr<uint8_t[]> buf;
+    lif_hal_info_t       lif_info;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: Lif Create for id {}", __FUNCTION__, 
@@ -282,6 +284,9 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
+        lif_hal_info = &lif_info;
+        lif_hal_info->with_hw_lif_id = 1;
+        lif_hal_info->hw_lif_id = hw_lif_id;
     }
 
     // init queues
@@ -294,14 +299,57 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     ret = lif_fwd_create(spec, rsp, lif, lif_hal_info);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
+        ret = HAL_RET_ERR;
         goto end;
     }
+
+
+    // Initialize QState
+    for (int i = 0; i < spec.lif_qstate_size(); i++) {
+        const auto &req = spec.lif_qstate(i);
+
+        const uint8_t *state = (const uint8_t *)req.queue_state().c_str();
+        if (req.has_label()) {
+            uint8_t off;
+            int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
+                req.label().prog_name().c_str(),
+                req.label().label().c_str(), &off);
+            if (ret < 0) {
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+            buf.reset(new uint8_t[req.queue_state().size()]);
+            bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
+            buf.get()[0] = off;
+            state = buf.get();
+        }
+
+        int ret = g_lif_manager->WriteQState(hw_lif_id, req.type_num(),
+                                             req.qid(), state,
+                                             req.queue_state().size());
+        if (ret < 0) {
+            HAL_TRACE_ERR("Failed to set LIFQState : {}", ret);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+    }
+
+    ret = HAL_RET_OK;
 
     // add this lif to the db
     add_lif_to_db(lif);
     rsp->set_api_status(types::API_STATUS_OK);
+    rsp->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_status(lif->admin_status);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
+
+    // Return LifQstate addresses
+    intf::LifQState *entry;
+    for (int type_num = 0; type_num < spec.lif_qstate_map_size(); type_num++) {
+        entry = rsp->add_qstate();
+        entry->set_type_num(type_num);
+        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, type_num, 0));
+    }
 
 end:
 

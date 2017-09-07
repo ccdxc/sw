@@ -11,6 +11,7 @@
 #include "if_pd_utils.hpp"
 #include <defines.h>
 
+
 namespace hal {
 namespace pd {
 
@@ -23,7 +24,7 @@ pd_enicif_create(pd_if_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
 
-    HAL_TRACE_DEBUG("PD-ENICIF::{}: Creating pd state for Enicif: {}", 
+    HAL_TRACE_DEBUG("PD-ENICIF::{}: Creating pd state for EnicIf: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create Enic If PD
@@ -40,7 +41,7 @@ pd_enicif_create(pd_if_args_t *args)
     ret = pd_enicif_alloc_res(pd_enicif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-enicIF::{}: Unable to alloc. resources for Uplinnkif: {}",
+        HAL_TRACE_ERR("PD-ENICIF::{}: Unable to alloc. resources for EnicIf: {}",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -58,7 +59,7 @@ end:
 }
 
 // ----------------------------------------------------------------------------
-// Allocate and Initialize Uplinkif PD Instance
+// Allocate and Initialize EnicIf PD Instance
 // ----------------------------------------------------------------------------
 pd_enicif_t *
 pd_enicif_alloc_init(void)
@@ -67,7 +68,7 @@ pd_enicif_alloc_init(void)
 }
 
 // ----------------------------------------------------------------------------
-// Allocate Uplink IF Instance
+// Allocate EnicIf Instance
 // ----------------------------------------------------------------------------
 pd_enicif_t *
 pd_enicif_alloc (void)
@@ -82,7 +83,7 @@ pd_enicif_alloc (void)
 }
 
 // ----------------------------------------------------------------------------
-// Initialize Uplink IF PD instance
+// Initialize EnicIF PD instance
 // ----------------------------------------------------------------------------
 pd_enicif_t *
 pd_enicif_init (pd_enicif_t *enicif)
@@ -98,7 +99,7 @@ pd_enicif_init (pd_enicif_t *enicif)
 }
 
 // ----------------------------------------------------------------------------
-// Allocate resources for PD Uplink if
+// Allocate resources for PD EnicIf
 // ----------------------------------------------------------------------------
 hal_ret_t 
 pd_enicif_alloc_res(pd_enicif_t *pd_enicif)
@@ -157,6 +158,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
 
     tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
     tm_oport = TM_PORT_DMA;
+    p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
@@ -180,7 +182,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
 }
 
 // ----------------------------------------------------------------------------
-// Freeing ENICIF PD
+// Freeing EnicIF PD
 // ----------------------------------------------------------------------------
 hal_ret_t
 pd_enicif_free (pd_enicif_t *enicif)

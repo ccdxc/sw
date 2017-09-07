@@ -18,11 +18,12 @@
     .param      tcp_rx_read_shared_stage0_start
     .param      resp_rx_rqcb_process
     .param      cpu_rx_read_shared_stage0_start
+    .param      eth_rx_fetch_desc
 
-.align
+
 eth_rx_stage0:
-   nop.e
-   nop
+    j eth_rx_fetch_desc
+    nop
 
 .align
 tcp_rx_stage0:
