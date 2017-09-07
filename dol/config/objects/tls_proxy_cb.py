@@ -6,9 +6,10 @@ import infra.common.objects     as objects
 import infra.config.base        as base
 import config.resmgr            as resmgr
 
-from config.store               import Store
-from infra.common.logging       import cfglogger
-from config.objects.swdr        import SwDscrRingHelper
+from config.store                      import Store
+from infra.common.logging              import cfglogger
+from config.objects.swdr               import SwDscrRingHelper
+from config.objects.crypto_keys        import CryptoKeyHelper
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -28,6 +29,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.tcpcb = tcpcb 
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
+        self.crypto_obj = CryptoKeyHelper.main() 
         return
 
     def PrepareHALRequestSpec(self, reqspec):

@@ -24,7 +24,7 @@ typedef struct tlscb_s {
     uint16_t              serq_ci;
     uint16_t              bsq_pi;
     uint16_t              bsq_ci;
-
+    uint32_t              crypto_key_idx;
     // operational state of TLS Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

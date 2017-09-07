@@ -24,7 +24,7 @@ proxy_meta_init() {
         (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 4, 10};
  
     g_meta[types::PROXY_TYPE_TLS] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 1, 10};
+        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 2, 10};
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
         (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
