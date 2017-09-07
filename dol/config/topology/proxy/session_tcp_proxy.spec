@@ -1,6 +1,6 @@
 # Flow generation configuration template.
 meta:
-    id: SESSION_TCP_FP
+    id: SESSION_TCP_PROXY
 
 proto: tcp
 
