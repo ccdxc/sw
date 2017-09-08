@@ -76,6 +76,7 @@ dma_cmd_serq_slot:
 
 	phvwr		p.dma_cmd2_dma_cmd_addr, r1
 	phvwr		p.ring_entry_descr_addr, k.to_s6_descr
+    CAPRI_OPERAND_DEBUG(k.to_s6_descr)
 	phvwri		p.dma_cmd2_dma_cmd_phv_start_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_START
 	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, TCP_PHV_RING_ENTRY_DESC_ADDR_END
 	phvwri		p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM

@@ -37,6 +37,8 @@ message TlsCbSpec {
   uint32                bsq_pi                     = 9;
   uint32                bsq_ci                     = 10;
   uint32                crypto_key_idx             = 11;
+  uint32                serq_base                  = 12;
+  uint32                sesq_base                  = 13;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

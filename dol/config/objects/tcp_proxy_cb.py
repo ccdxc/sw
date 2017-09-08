@@ -8,6 +8,7 @@ import config.resmgr            as resmgr
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from config.objects.swdr        import SwDscrRingHelper
 from config.objects.tls_proxy_cb     import TlsCbHelper
 
 import config.hal.defs          as haldefs
@@ -35,6 +36,7 @@ class TcpCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
         self.tlscb = TlsCbHelper.main(self)
+        self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
 
         return
 

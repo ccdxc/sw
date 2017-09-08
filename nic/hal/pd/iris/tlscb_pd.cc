@@ -55,10 +55,20 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
         HAL_TRACE_ERR("Failed to get tx: s0_t0_read_tls_stg0 entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
+    tlscb_pd->tlscb->sesq_base = data.u.read_tls_stg0_d.sesq_base;
+    tlscb_pd->tlscb->serq_base = data.u.read_tls_stg0_d.serq_base;
     tlscb_pd->tlscb->serq_pi = data.u.read_tls_stg0_d.pi_0;
     tlscb_pd->tlscb->serq_ci = data.u.read_tls_stg0_d.ci_0;
     tlscb_pd->tlscb->bsq_pi = data.u.read_tls_stg0_d.pi_1;
     tlscb_pd->tlscb->bsq_ci = data.u.read_tls_stg0_d.ci_1;
+    tlscb_pd->tlscb->debug_dol = data.u.read_tls_stg0_d.debug_dol;
+    HAL_TRACE_DEBUG("Received sesq_base: 0x{0:x}", tlscb_pd->tlscb->sesq_base);
+    HAL_TRACE_DEBUG("Received serq_base: 0x{0:x}", tlscb_pd->tlscb->serq_base);
+    HAL_TRACE_DEBUG("Received serq_pi: 0x{0:x}", tlscb_pd->tlscb->serq_pi);
+    HAL_TRACE_DEBUG("Received serq_ci: 0x{0:x}", tlscb_pd->tlscb->serq_ci);
+    HAL_TRACE_DEBUG("Received bsq_pi: 0x{0:x}", tlscb_pd->tlscb->bsq_pi);
+    HAL_TRACE_DEBUG("Received bsq_ci: 0x{0:x}", tlscb_pd->tlscb->bsq_ci);
+    HAL_TRACE_DEBUG("Received debug_dol: 0x{0:x}", tlscb_pd->tlscb->debug_dol);
     return HAL_RET_OK;
 }
 
@@ -128,6 +138,9 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
     
     if(!del) {
+        data.u.read_tls_stg0_d.debug_dol = tlscb_pd->tlscb->debug_dol;
+        HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received debug_dol 0x{0:x}", tlscb_pd->tlscb->debug_dol);
+
         uint64_t pc_offset;
         // get pc address
         if(p4pd_get_tls_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
