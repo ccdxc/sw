@@ -3,6 +3,7 @@
 /*****************************************************************************/
 header_type flow_lkp_metadata_t {
     fields {
+        lkp_inst         : 1;
         lkp_type         : 4;
         ipv4_hlen        : 4;          // To catch ping of death.
         lkp_vrf          : 16;
@@ -279,6 +280,7 @@ action flow_hash_info(entry_valid, export_en,
 @pragma hash_type 0
 table flow_hash {
     reads {
+        flow_lkp_metadata.lkp_inst  : exact;
         flow_lkp_metadata.lkp_dir   : exact;
         flow_lkp_metadata.lkp_type  : exact;
         flow_lkp_metadata.lkp_vrf   : exact;
@@ -295,7 +297,7 @@ table flow_hash {
     size : FLOW_HASH_TABLE_SIZE;
 }
 
-action flow_hash_overflow(lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_proto,
+action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_proto,
                           lkp_sport, lkp_dport, entry_valid, export_en,
                           flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
@@ -304,7 +306,8 @@ action flow_hash_overflow(lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_prot
     remove_header(recirc_header);
 
     // check if the key matches the entry data
-    if ((lkp_dir == flow_lkp_metadata.lkp_dir) and
+    if ((lkp_inst == flow_lkp_metadata.lkp_inst) and
+        (lkp_dir == flow_lkp_metadata.lkp_dir) and
         (lkp_type == flow_lkp_metadata.lkp_type) and
         (lkp_vrf == flow_lkp_metadata.lkp_vrf) and
         (lkp_src == flow_lkp_metadata.lkp_src) and
@@ -322,6 +325,7 @@ action flow_hash_overflow(lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_prot
     }
 
     // dummy ops to keep compiler happy
+    modify_field(scratch_metadata.lkp_inst, lkp_inst);
     modify_field(scratch_metadata.lkp_dir, lkp_dir);
     modify_field(scratch_metadata.lkp_type, lkp_type);
     modify_field(scratch_metadata.lkp_vrf, lkp_vrf);

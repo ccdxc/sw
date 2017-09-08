@@ -127,6 +127,7 @@ header_type scratch_metadata_t {
         more_hints                 : 14;
 
         // flow key
+        lkp_inst                   : 1;
         lkp_dir                    : 1;
         lkp_type                   : 4;
         lkp_vrf                    : 16;
