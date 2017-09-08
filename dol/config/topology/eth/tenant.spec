@@ -18,7 +18,6 @@ security_profile: None
 
 sessions:
     unidest:
-        scale: 1
         ipv4:
             - ref://store/specs/id=SESSION_UDP_ETH
             - ref://store/specs/id=SESSION_TCP_ETH

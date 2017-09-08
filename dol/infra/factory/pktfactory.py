@@ -190,7 +190,7 @@ class Packet(objects.FrameworkObject):
 
         if pktspec.template == None:
             pktlogger.error("No Template or Clone specified for packet.")
-            assert(0)
+            return None
 
         if objects.IsReference(pktspec.template):
             self.template = pktspec.template.Get(FactoryStore)

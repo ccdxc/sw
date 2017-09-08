@@ -61,7 +61,6 @@ class EnicObject(base.ConfigObjectBase):
         summary += '/%s' % self.lif.GID()
         return summary
 
-
     def IsSegmentMatch(self, segid):
         return self.segment.GID() == segid
 

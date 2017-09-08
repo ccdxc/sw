@@ -103,6 +103,7 @@ class UplinkObjectHelper:
         return
 
     def Generate(self, topospec):
+        if topospec.uplink == None: return
         for upl in topospec.uplink:
             obj = UplinkObject()
             obj.Init(upl.entry)
@@ -114,6 +115,7 @@ class UplinkObjectHelper:
         self.Generate(topospec)
         self.Configure()
         cfglogger.info("Adding %d Uplinks to Store." % len(self.objlist))
+        if len(self.objlist) == 0: return
         Store.objects.SetAll(self.objlist)
         Store.SetTrunkingUplinks(self.trunks)
         return

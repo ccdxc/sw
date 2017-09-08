@@ -150,17 +150,18 @@ class TestCase(objects.FrameworkObject):
     def GetLogPrefix(self):
         return self.logger.GetLogPrefix() + ' ' + self.logpfx
    
-
     def ShowScapyObject(self, scapyobj):
         scapyobj.show2(indent = 0,
                         label_lvl = self.GetLogPrefix())
 
     def __generate_packets(self):
         self.info("Generating Packet Objects")
+        if self.testspec.packets == None: return
         for pspec in self.testspec.packets:
+            if pspec.packet.id == None: return
             packet = pktfactory.Packet(self, pspec.packet)
             packet.Build(self)
-            self.packets.Add(packet)
+            if packet: self.packets.Add(packet)
         return
 
     def __generate_objects(self):
@@ -230,6 +231,7 @@ class TestCase(objects.FrameworkObject):
    
     def __setup_trigger(self, tcstep, spstep):
         self.info("- Setting up Trigger.")
+        if spstep.trigger == None: return
         self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
         self.__setup_descriptors(tcstep.trigger, spstep.trigger)
         self.__setup_doorbell(tcstep.trigger, spstep.trigger)
@@ -290,3 +292,7 @@ class TestCase(objects.FrameworkObject):
             status = defs.status.ERROR
         self.__teardown_callback()
         return status
+
+    def TriggerCallback(self):
+        self.module.RunModuleCallback('TestCaseTrigger', self)
+        return

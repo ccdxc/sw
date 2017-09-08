@@ -1060,4 +1060,15 @@ modules:
         package : test.eth
         module  : eth
         spec    : rx.testspec
-        ignore  : True
+        ignore  : False
+
+    - module:
+        name    : NVME
+        enable  : True
+        package : test.storage
+        module  : nvme
+        spec    : nvme.testspec
+        ignore  : False
+        iterate :
+            - TESTCASE1
+            - TESTCASE2

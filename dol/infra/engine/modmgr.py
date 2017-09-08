@@ -168,6 +168,7 @@ class Module:
         return
 
     def __execute_testcase(self, testcase):
+        testcase.TriggerCallback()
         testcase.status = self.infra_data.TrigExpEngine.run_test_case(testcase)
         self.__debug_testcase(testcase)
         self.__update_results(testcase)

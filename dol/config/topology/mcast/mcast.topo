@@ -1,0 +1,42 @@
+# Topology Specification
+meta:
+    id: TOPO_MCAST
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink3
+        port    : 3
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink4
+        port    : 4
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+
+acls: None
+
+security_profiles: None
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_MCAST
+        count   : 1
+        lifns   : range/101/104
+
+cpu: None

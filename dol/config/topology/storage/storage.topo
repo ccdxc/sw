@@ -1,0 +1,18 @@
+# Topology Specification
+meta:
+    id: TOPO_STORAGE
+
+uplink: None
+
+uplinkpc: None
+
+acls: None
+
+security_profiles: None
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_STORAGE
+        count   : 1
+        lifns   : range/101/108
+
+cpu: None
