@@ -35,8 +35,11 @@ dma_cmd_sesq_slot:
 	add		    r1, r5, d.u.read_tls_stg0_d.sesq_base
 
 	phvwr		p.dma_cmd0_dma_cmd_addr, r1
-    phvwr       p.ring_entry_descr_addr, k.to_s4_odesc
-	phvwri		p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
+    add         r3, r0, k.to_s4_odesc
+    phvwr       p.ring_entry_descr_addr, r3.dx
+    CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
+
+    phvwri		p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd0_dma_cmd_eop, 0

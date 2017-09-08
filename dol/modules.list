@@ -634,6 +634,16 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PKT_TO_SESQ
+        enable  : True
+        package : test.tcp-tls-proxy
+        module  : pkt_to_sesq
+        spec    : tcp_proxy.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : PKT_TO_ARQ
         enable  : True
         package : test.tcp-tls-proxy

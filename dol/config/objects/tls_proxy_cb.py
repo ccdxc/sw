@@ -54,6 +54,11 @@ class TlsCbObject(base.ConfigObjectBase):
         lst.append(self)
         halapi.GetTlsCbs(lst)
         return
+    def SetObjValPd(self):
+        lst = []
+        lst.append(self)
+        halapi.UpdateTlsCbs(lst)
+        return
 
     def SetObjValPd(self):
         lst = []

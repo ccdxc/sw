@@ -157,6 +157,7 @@ dma_cmd_output_list_addr:
 	phvwr		p.dma_cmd6_dma_cmd_addr, r5
 
     
+    /* For Barco use output descriptor */
     phvwri      p.dma_cmd6_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_output_list_address)
 	phvwri		p.dma_cmd6_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_output_list_address)
 
@@ -170,6 +171,13 @@ dma_cmd_output_list_addr:
     bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
     nop
 
+    /* for Barco bypass - use input descriptor */
+    phvwri      p.dma_cmd6_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_input_list_address)
+	phvwri		p.dma_cmd6_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_input_list_address)
+
+    phvwri		p.dma_cmd6_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri      p.dma_cmd6_dma_cmd_eop, 0
+        
 dma_cmd_ring_bsq_doorbell:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
@@ -205,6 +213,7 @@ dma_cmd_brq_doorbell:
     phvwri		p.dma_cmd7_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd7_dma_cmd_eop, 1
     phvwri      p.dma_cmd7_dma_cmd_wr_fence, 1
+
 
 tls_queue_brq_process_done:
 	nop.e

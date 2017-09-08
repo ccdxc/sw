@@ -29,11 +29,11 @@ struct tx_table_s1_t0_k k	    ;
         
         
 tls_read_serq_entry_process_start:
-    phvwr   p.to_s2_idesc, d.idesc
-    phvwr   p.to_s4_idesc, d.idesc
-    phvwr   p.to_s5_idesc, d.idesc
-    phvwr   p.to_s6_idesc, d.idesc
-    add     r1, r0, d.idesc
+    phvwr   p.to_s2_idesc, d.{idesc}
+    phvwr   p.to_s4_idesc, d.{idesc}
+    phvwr   p.to_s5_idesc, d.{idesc}
+    phvwr   p.to_s6_idesc, d.{idesc}
+    add     r1, r0, d.{idesc}
 
 table_read_rx_serq:
     seq     c1, r0, k.tls_global_phv_dec_flow
