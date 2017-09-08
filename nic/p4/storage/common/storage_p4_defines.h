@@ -63,6 +63,7 @@
 #define nvme_be_wqe_release_start	0x80007000
 #define nvme_be_wqe_handler_start	0x80008000
 #define nvme_be_cmd_handler_start	0x80009000
+#define seq_barco_ring_push_start	0x8000A000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -96,7 +97,7 @@ header_type q_state_t {
   }
 }
 
-// Generic Queue State. Total size can be 64 bytes at most.
+// Pririority Queue State. Total size can be 64 bytes at most.
 header_type pri_q_state_t {
   fields {
     pc_offset	: 8;	// Program counter (relative offset)
@@ -135,6 +136,18 @@ header_type pri_q_state_t {
     dst_qid	: 24;	// Destination queue number (within the LIF)
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
     pad		: 10;	// Align to 64 bytes
+  }
+}
+
+// Barco XTS ring 
+header_type barco_xts_ring_t {
+  fields {
+    base_addr	: 64;	// Base address of queue entries
+    num_entries	: 32;	// Number of entries in the barco ring
+    p_ndx	: 32;	// Producer Index
+    opa_tag	: 64;	// Operation tag
+    c_ndx	: 32;	// Consumer Index
+    status	: 32;	// Status from barco
   }
 }
 
@@ -304,21 +317,23 @@ header_type pri_q_state_t {
         PHV_FIELD_OFFSET(qpush_doorbell_data.data),		\
         0, 0, 0, 0)
 
+
 // Storage K+I vectors
 
 // kivec0: header union with stage_2_stage for table 0
 header_type storage_kivec0_t {
   fields {
-    w_ndx	: 16;	// Working consumer index
-    dst_lif	: 11;	// Destination LIF number
-    dst_qtype	: 3;	// Destination LIF type (within the LIF)
-    dst_qid	: 24;	// Destination queue number (within the LIF)
-    dst_qaddr	: 34;	// Destination queue state address
-    prp_assist	: 1;	// Download additional PRP entries (upto 16)
-    is_q0	: 1;	// Is queue id 0 ? Used to distinguish admin queue
-    io_priority	: 8;	// I/O priority to select ring with the queue
-    ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
-    cmd_index	: 8;	// Index into the bitmap of saved commands
+    w_ndx		: 16;	// Working consumer index
+    dst_lif		: 11;	// Destination LIF number
+    dst_qtype		: 3;	// Destination LIF type (within the LIF)
+    dst_qid		: 24;	// Destination queue number (within the LIF)
+    dst_qaddr		: 34;	// Destination queue state address
+    prp_assist		: 1;	// Download additional PRP entries (upto 16)
+    is_q0		: 1;	// Is queue id 0 (admin queue) ?
+    io_priority		: 8;	// I/O priority to select ring with the queue
+    ssd_bm_addr		: 34;	// Pointer to bitmap used to save SSD commands
+    cmd_index		: 8;	// Index into bitmap of saved SSD commands
+    xts_desc_size	: 16;	// Barco XTS descriptor size
   }
 }
 
@@ -351,6 +366,7 @@ header_type storage_kivec2_t {
   modify_field(scratch.io_priority, kivec.io_priority);			\
   modify_field(scratch.ssd_bm_addr, kivec.ssd_bm_addr);			\
   modify_field(scratch.cmd_index, kivec.cmd_index);			\
+  modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
 
 #define STORAGE_KIVEC1_USE(scratch, kivec)				\
   modify_field(scratch.src_lif, kivec.src_lif);				\
@@ -600,6 +616,19 @@ header_type seq_r2n_entry_t {
     dst_qaddr		: 34;	// Destination queue state address
   }
 }
+
+// Sequencer metadata for pushing Barco XTS descriptor
+header_type seq_barco_entry_t {
+  fields {
+    xts_desc_addr	: 64;	// Address of the XTS descriptor to push
+    xts_desc_size	: 32;	// Size of the XTS descriptor to push
+    xts_db_addr		: 64;	// 64 bit address of the XTS doorbell to ring
+    xts_db_data		: 64;	// 64 bit data of the XTS doorbell to ring
+    xts_ring_load_size	: 16;	// Size of the XTS ring state to be loaded
+    xts_ring_addr	: 34;	// Address of the XTS ring
+  }
+}
+
 
 // Copy the basic part of R2N WQE - the one sent by PVM
 #define R2N_WQE_BASE_COPY(wqe)					\

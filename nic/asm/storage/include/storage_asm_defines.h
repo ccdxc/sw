@@ -33,6 +33,8 @@
 	k.{storage_kivec0_ssd_bm_addr_sbit0_ebit5...storage_kivec0_ssd_bm_addr_sbit30_ebit33}
 #define STORAGE_KIVEC0_CMD_INDEX	\
 	k.{storage_kivec0_cmd_index_sbit0_ebit3...storage_kivec0_cmd_index_sbit4_ebit7}
+#define STORAGE_KIVEC0_XTS_DESC_SIZE	\
+	k.{storage_kivec0_xts_desc_size_sbit0_ebit3...storage_kivec0_xts_desc_size_sbit12_ebit15}
 
 #define STORAGE_KIVEC1_SRC_LIF		\
 	k.{storage_kivec1_src_lif_sbit0_ebit7...storage_kivec1_src_lif_sbit8_ebit10}
@@ -74,6 +76,13 @@
   phvwr		p.common_te0_phv_table_addr, _table_addr;		\
   phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
   nop;									\
+
+// Load a table based on absolute address and size specified without immediate
+// PC input is a .param resolved by the loader (34-bit value)
+#define LOAD_TABLE_FOR_ADDR_SIZE_PARAM(_table_addr, _load_size, _pc)	\
+  addi		r1, r0, _pc;						\
+  srl		r1, r1, 6;						\
+  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, r1)			\
 
 // Load a table based on absolute address
 // PC input is a .param resolved by the loader (34-bit value)
@@ -257,7 +266,7 @@
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        DOORBELL_SCHED_WR_NONE,				\
-                       DOORBELL_UPDATE_P_NDX_INCR)			\
+                       DOORBELL_UPDATE_P_NDX)				\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
@@ -270,7 +279,7 @@
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        DOORBELL_SCHED_WR_NONE,				\
-                       DOORBELL_UPDATE_P_NDX_INCR)			\
+                       DOORBELL_UPDATE_P_NDX)				\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
@@ -313,6 +322,7 @@
    sllv		r2, _p_ndx, r1;						\
    add		r7, r2, _base_addr;					\
 
+
 // Priority queue pop check - based on queue empty AND 
 // priority counter < priority weight
 #define	PRI_QUEUE_CAN_POP(_p_ndx, _c_ndx, _pri_running, _pri_weight,	\
@@ -351,7 +361,8 @@
 // 2. Calculate the address to which the command has to be written to in the
 //    priority queue. Output will be stored in GPR r7.
 // 3. Update DMA command 1 with the address stored in GPR r7.
-// 4. Form and ring the doorbell for the recipient of the push. 
+// 4. Push the entry to the queue (this increments p_ndx and writes to table).
+// 5. Form and ring the doorbell for the recipient of the push. 
 #define PRI_QUEUE_PUSH(_pri_vec, _pri_val, _c_ndx, _p_ndx, _base_addr,	\
                        _num_entries, _entry_size, _branch_instr1, 	\
                        _branch_instr2)					\
@@ -361,6 +372,7 @@
    PRI_QUEUE_PUSH_ADDR(_pri_vec, _base_addr, _p_ndx, _num_entries,	\
                        _entry_size)					\
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
+   QUEUE_PUSH(_p_ndx, _num_entries)					\
    PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx)			\
 
 
