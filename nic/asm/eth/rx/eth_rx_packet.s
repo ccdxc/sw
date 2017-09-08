@@ -22,8 +22,7 @@ eth_rx_packet:
     phvwri      p.app_header_table3_valid, 0
 
     // Packet is larger than Buffer
-    add         r1, r0, k.eth_rx_global_frame_size_sbit0_ebit7
-    add         r1, r1, k.eth_rx_global_frame_size_sbit8_ebit13, 8
+    add         r1, r0, k.eth_rx_global_packet_len
     add         r2, r0, d.len
     blt         r2, r1, eth_rx_drop_oversize_pkt
     nop

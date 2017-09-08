@@ -32,6 +32,12 @@ static uint64_t _host_mem_v2p(void *ptr) {
   return 0;
 }
 
+static void *_host_mem_p2v(uint64_t phys) {
+  if (g_host_mem.get() != nullptr)
+    return g_host_mem->PhysToVirt(phys);
+  return 0;
+}
+
 static void _delete_host_mem() {
   g_host_mem.reset(nullptr);
 }
@@ -52,6 +58,10 @@ void free_host_mem(void *ptr) {
 
 uint64_t host_mem_v2p(void *ptr) {
   return _host_mem_v2p(ptr);
+}
+
+void *host_mem_p2v(uint64_t phys) {
+  return _host_mem_p2v(phys);
 }
 
 void delete_host_mem() {

@@ -85,8 +85,7 @@ header_type eth_rx_desc_d {
 header_type eth_rx_global_k {
     // global k (max 128)
     fields {
-        frame_size : 14;
-        packet_len : 14;
+        packet_len : 16;
     }
 }
 
@@ -102,7 +101,14 @@ metadata eth_rx_desc_d eth_rx_desc;
 /*****************************************************************************
  *  K-vector
  *****************************************************************************/
+
 // Union with Common-RXDMA PHV headers
+
+// App header (Available in STAGE=0)
+@pragma pa_header_union ingress app_header
+metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus;
+@pragma scratch_metadata
+metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus_scratch;
 
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
 @pragma pa_header_union ingress common_global

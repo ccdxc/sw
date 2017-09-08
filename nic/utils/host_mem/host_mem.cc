@@ -55,6 +55,10 @@ uint64_t HostMem::VirtToPhys(void *addr) {
   return (1ull << 63) | ((uint64_t)addr - (uint64_t)shmaddr_);
 }
 
+void *HostMem::PhysToVirt(uint64_t phys) {
+  return (void *)(~(1ull << 63) & ((uint64_t)phys + (uint64_t)shmaddr_));
+}
+
 HostMem::~HostMem() {
   if ((shmaddr_) && (shmaddr_ != (void *)-1))
     shmdt(shmaddr_);

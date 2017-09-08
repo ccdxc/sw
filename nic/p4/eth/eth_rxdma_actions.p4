@@ -35,14 +35,29 @@ action eth_rx_fetch_desc(
     enable, ring_base, ring_size, cq_qstate_addr)
 {
     // For K+I struct generation
+
+    // From Intrinsic & RXDMA headers
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
-    modify_field(eth_rx_global_scratch.frame_size, eth_rx_global.frame_size);
-    modify_field(eth_rx_global_scratch.packet_len, eth_rx_global.packet_len);
+    // From APP header
+    modify_field(p4_to_p4plus_scratch.p4plus_app_id, p4_to_p4plus.p4plus_app_id);
+    modify_field(p4_to_p4plus_scratch.table0_valid, p4_to_p4plus.table0_valid);
+    modify_field(p4_to_p4plus_scratch.table1_valid, p4_to_p4plus.table1_valid);
+    modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
+    modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
+    modify_field(p4_to_p4plus_scratch.flags, p4_to_p4plus.flags);
+    modify_field(p4_to_p4plus_scratch.vlan_pcp, p4_to_p4plus.vlan_pcp);
+    modify_field(p4_to_p4plus_scratch.vlan_dei, p4_to_p4plus.vlan_dei);
+    modify_field(p4_to_p4plus_scratch.vlan_vid, p4_to_p4plus.vlan_vid);
+    modify_field(p4_to_p4plus_scratch.l4_checksum, p4_to_p4plus.l4_checksum);
+    modify_field(p4_to_p4plus_scratch.ip_proto, p4_to_p4plus.ip_proto);
+    modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
+    modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
+    modify_field(p4_to_p4plus_scratch.packet_len, p4_to_p4plus.packet_len);
 
     // For D-struct generation
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
@@ -55,7 +70,6 @@ action eth_rx_fetch_desc(
 action eth_rx_packet(addr, len, rsvd0)
 {
     // For K+I struct generation
-    modify_field(eth_rx_global_scratch.frame_size, eth_rx_global.frame_size);
     modify_field(eth_rx_global_scratch.packet_len, eth_rx_global.packet_len);
 
     // For D-struct generation

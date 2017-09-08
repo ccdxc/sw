@@ -15,6 +15,7 @@ class HostMem {
   void *Alloc(size_t size);
   void Free(void *ptr);
   uint64_t VirtToPhys(void *ptr);
+  void *PhysToVirt(uint64_t);
 
  private:
   HostMem() {}

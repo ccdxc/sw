@@ -165,6 +165,16 @@
        or              r5, r5, r6;\
        addi            r4, r5, DB_ADDR_BASE
 
+#define CAPRI_RING_DOORBELL_ADDR1(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
+       addi            r5, r0, _pid_chk | _idx_upd | _sched_upd;\
+       sll             r5, r5, DB_UPD_SHFT;\
+       sll             r6, _lif, DB_LIF_SHFT;\
+       or              r5, r5, r6;\
+       addi            r6, r0, _type;\
+       sll             r6, r6, DB_TYPE_SHFT;\
+       or              r5, r5, r6;\
+       addi            r4, r5, DB_ADDR_BASE
+
 #define DB_PID_SHFT                    48
 #define DB_QID_SHFT                    24
 #define DB_RING_SHFT                   16

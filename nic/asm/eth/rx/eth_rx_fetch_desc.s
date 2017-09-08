@@ -14,20 +14,13 @@ struct common_p4plus_stage0_app_header_table_eth_rx_fetch_desc_d d;
 .align
 eth_rx_fetch_desc:
   seq             c1, d.enable, 0                                            // Queue is not enabled
-  add             r1, r0, d.p_index0                                         // Queue is full
+  add             r1, r0, d.c_index0                                         // Queue is full
   mincr           r1, d.ring_size, 1
-  seq             c2, r1, d.c_index0
+  seq             c2, r1, d.p_index0
   bcf             [c1 | c2], abort_rx
   nop
 
-  add             r1, r0, k.eth_rx_global_frame_size_sbit0_ebit7
-  add             r1, r1, k.eth_rx_global_frame_size_sbit8_ebit13, 8
-  phvwr           p.eth_rx_global_frame_size, r1
-
-  add             r1, r0, k.eth_rx_global_packet_len_sbit0_ebit1
-  add             r1, r1, k.eth_rx_global_packet_len_sbit2_ebit9, 2
-  add             r1, r1, k.eth_rx_global_packet_len_sbit10_ebit13, 10
-  phvwr           p.eth_rx_global_packet_len, r1
+  phvwr           p.eth_rx_global_packet_len, k.p4_to_p4plus_packet_len
 
   // Setup Descriptor read for next stage
   phvwri          p.app_header_table0_valid, 1

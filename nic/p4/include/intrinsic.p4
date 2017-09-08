@@ -153,6 +153,7 @@ header_type p4_to_p4plus_classic_nic_header_t {
         ip_proto            : 8;
         l4_sport            : 16;
         l4_dport            : 16;
+        packet_len          : 16;
     }
 }
 

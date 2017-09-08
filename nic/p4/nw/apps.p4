@@ -94,6 +94,7 @@ action p4plus_app_classic_nic() {
     }
     bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
            scratch_metadata.classic_nic_flags);
+    modify_field(p4_to_p4plus_classic_nic.packet_len, control_metadata.packet_len);
 
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);

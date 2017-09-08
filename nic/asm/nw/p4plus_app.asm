@@ -65,6 +65,7 @@ p4plus_app_classic_nic_common:
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
   phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwr       p.p4_to_p4plus_classic_nic_packet_len, k.control_metadata_packet_len
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
