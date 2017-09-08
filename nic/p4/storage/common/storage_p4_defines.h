@@ -54,14 +54,15 @@
 
 // Macros for ASM param addresses (hardcoded in P4)
 #define q_state_push_start		0x80000000
-#define pri_q_state_push_start		0x80001000
-#define pri_q_state_incr_start		0x80002000
-#define pri_q_state_decr_start		0x80003000
-#define nvme_be_wqe_prep_start		0x80004000
-#define nvme_be_wqe_save_start		0x80005000
-#define nvme_be_wqe_release_start	0x80006000
-#define nvme_be_wqe_handler_start	0x80007000
-#define nvme_be_cmd_handler_start	0x80008000
+#define seq_q_state_push_start		0x80001000
+#define pri_q_state_push_start		0x80002000
+#define pri_q_state_incr_start		0x80003000
+#define pri_q_state_decr_start		0x80004000
+#define nvme_be_wqe_prep_start		0x80005000
+#define nvme_be_wqe_save_start		0x80006000
+#define nvme_be_wqe_release_start	0x80007000
+#define nvme_be_wqe_handler_start	0x80008000
+#define nvme_be_cmd_handler_start	0x80009000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -570,6 +571,33 @@ header_type storage_doorbell_addr_t {
 header_type storage_doorbell_data_t {
   fields {
     data	: 64;	// 64 bit data
+  }
+}
+
+// Sequencer metadata for PDMA
+header_type seq_pdma_entry_t {
+  fields {
+    next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
+    next_db_data	: 64;	// 64 bit data of the next doorbell to ring
+    src_addr		: 64;	// Source memory address for PDMA (HBM or Host)
+    dst_addr		: 64;	// Destination memory address for PDMA (HBM or Host)
+    data_size		: 32;	// Data size to be transferred 
+    src_lif_override	: 1;	// Override the source LIF in the PDMA
+    src_lif		: 11;	// Source LIF id used to override
+    dst_lif_override	: 1;	// Override the source LIF in the PDMA
+    dst_lif		: 11;	// Destination LIF id used to override
+  }
+}
+
+// Sequencer metadata for pushing R2N WQE
+header_type seq_r2n_entry_t {
+  fields {
+    r2n_wqe_addr	: 64;	// Address of the R2N WQE to push
+    r2n_wqe_size	: 32;	// Size of the R2N WQE to push
+    dst_lif		: 11;	// Destination LIF number
+    dst_qtype		: 3;	// Destination LIF type (within the LIF)
+    dst_qid		: 24;	// Destination queue number (within the LIF)
+    dst_qaddr		: 34;	// Destination queue state address
   }
 }
 

@@ -170,6 +170,24 @@
    seq		c1, r1, 1;						\
    phvwr.c1	p._dma_cmd_X##_dma_cmd_host_addr, 1;			\
 
+#define DMA_MEM2MEM_SETUP(_type, _addr, _size, _use_override_lif,	\
+                          _override_lif, _dma_cmd_X)			\
+   phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;		\
+   phvwri	p._dma_cmd_X##_dma_cmd_mem2mem_type, _type;		\
+   phvwr	p._dma_cmd_X##_dma_cmd_use_override_lif,		\
+		_use_override_lif;					\
+   phvwr	p._dma_cmd_X##_dma_cmd_override_lif, _override_lif;	\
+   phvwr	p._dma_cmd_X##_dma_cmd_size, _size;			\
+   phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
+   srl		r1, _addr, 63;						\
+   seq		c1, r1, 1;						\
+   phvwr.c1	p._dma_cmd_X##_dma_cmd_host_addr, 1;			\
+
+// DMA fence update: Set the fence bit for the PHV2MEM DMA command
+#define DMA_PHV2MEM_FENCE(_dma_cmd_X)					\
+   phvwri	p._dma_cmd_X##_dma_cmd_wr_fence, 1;			\
+
+
 // DMA address update: Specify the destination address for the DMA command
 #define DMA_ADDR_UPDATE(_addr, _dma_cmd_X)				\
    phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
@@ -183,12 +201,6 @@
                 ((CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
                                         sizeof(p._start) - 1))/16);	\
    phvwri	p._dma_cmd_eop, 1;					\
-
-/*
-#define DMA_PTR_SETUP(_start, _dma_cmd_eop, _dma_cmd_ptr)		\
-   phvwri	p._dma_cmd_ptr, 32;					\
-   phvwri	p._dma_cmd_eop, 1;					\
-*/
 
 
 // Setup the doorbell data. Write back the data in little endian format
@@ -238,19 +250,21 @@
                      r7, dma_p2m_0)					\
 
 
-// Setup the lif, type, qid, pindex for the doorbell push
-#define QUEUE_PUSH_DOORBELL_UPDATE					\
+// Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
+// bit for the doorbell 
+#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,		\
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        DOORBELL_SCHED_WR_NONE,				\
                        DOORBELL_UPDATE_P_NDX_INCR)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
-                     r7, dma_p2m_2)					\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
-// priority is used to select the ring.
-#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_p_ndx)				\
+// priority is used to select the ring. Set the fence bit for the doorbell.
+#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx)		\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx,		\
                        STORAGE_KIVEC0_IO_PRIORITY,			\
                        STORAGE_KIVEC0_DST_QID, r0)			\
@@ -258,7 +272,8 @@
                        DOORBELL_SCHED_WR_NONE,				\
                        DOORBELL_UPDATE_P_NDX_INCR)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
-                     r7, dma_p2m_2)					\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 // Queue full check based on an increment value
 #define QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _branch_instr)		\
@@ -346,7 +361,7 @@
    PRI_QUEUE_PUSH_ADDR(_pri_vec, _base_addr, _p_ndx, _num_entries,	\
                        _entry_size)					\
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
-   PRI_QUEUE_PUSH_DOORBELL_UPDATE(_p_ndx)				\
+   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx)			\
 
 
 // Increment the priority running counter and the total running counter.

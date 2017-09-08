@@ -16,11 +16,14 @@
 #define tx_table_s1_t0_action2	r2n_sq_handler
 #define tx_table_s1_t0_action3	nvme_be_sq_handler
 #define tx_table_s1_t0_action4	nvme_be_cq_handler
+#define tx_table_s1_t0_action5	seq_pdma_entry_handler
+#define tx_table_s1_t0_action6	seq_r2n_entry_handler
 
 #define tx_table_s2_t0_action	q_state_push
-#define tx_table_s2_t0_action1	nvme_be_wqe_prep
-#define tx_table_s2_t0_action2	nvme_be_cmd_handler
-#define tx_table_s2_t0_action3	nvme_be_wqe_handler
+#define tx_table_s2_t0_action1	seq_q_state_push
+#define tx_table_s2_t0_action2	nvme_be_wqe_prep
+#define tx_table_s2_t0_action3	nvme_be_cmd_handler
+#define tx_table_s2_t0_action4	nvme_be_wqe_handler
 
 #define tx_table_s3_t0_action	pri_q_state_push
 #define tx_table_s3_t0_action1	pri_q_state_incr
@@ -142,6 +145,12 @@ metadata r2n_wqe_t r2n_wqe_scratch;
 
 @pragma scratch_metadata
 metadata pvm_status_trailer_t pvm_status_trailer;
+
+@pragma scratch_metadata
+metadata seq_pdma_entry_t seq_pdma_entry;
+
+@pragma scratch_metadata
+metadata seq_r2n_entry_t seq_r2n_entry;
 
 /*****************************************************************************
  * exit: Exit action handler needs to be stubbed out for NCC 
@@ -871,3 +880,147 @@ action nvme_be_wqe_release(bitmap) {
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
                         Q_STATE_SIZE, q_state_push_start)
 }
+
+/*****************************************************************************
+ *  seq_pdma_entry_handler: Handle the PDMA entry in sequencer. Issue the DMA
+ *                          command to copy data and ring the next doorbell 
+ *                          with a fence bit to guarantee ordering.
+ *****************************************************************************/
+
+action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
+                              data_size, src_lif_override, src_lif,
+                              dst_lif_override, dst_lif) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(seq_pdma_entry.next_db_addr, next_db_addr);
+  modify_field(seq_pdma_entry.next_db_data, next_db_data);
+  modify_field(seq_pdma_entry.src_addr, src_addr);
+  modify_field(seq_pdma_entry.dst_addr, dst_addr);
+  modify_field(seq_pdma_entry.data_size, data_size);
+  modify_field(seq_pdma_entry.src_lif_override, src_lif_override);
+  modify_field(seq_pdma_entry.src_lif, src_lif);
+  modify_field(seq_pdma_entry.dst_lif_override, dst_lif_override);
+  modify_field(seq_pdma_entry.dst_lif, dst_lif);
+
+  // Form the doorbell and setup the DMA command to pop the entry by writing 
+  // w_ndx to c_ndx
+  QUEUE_POP_DOORBELL_UPDATE
+
+  // Setup the DMA command to move the data from source to destination address
+  // In ASM, set the host, fence bits etc correctly
+  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_pdma_entry.src_addr, 0,
+                           seq_pdma_entry.dst_addr, 0, seq_pdma_entry.data_size,
+                           0, 0, 0)
+
+  // Copy the doorbell data to PHV
+  modify_field(qpush_doorbell_data.data, seq_pdma_entry.next_db_data);
+
+  // Setup the doorbell to be rung based on a fence with the previous mem2mem DMA
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                           0,
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                           0, 0, 0, 0)
+
+  // Exit the pipeline here 
+}
+
+/*****************************************************************************
+ *  seq_r2n_entry_handler: Handle the R2N WQE entry in sequencer. Form the DMA
+ *                         command to copy the R2N WQE as part of the push 
+ *                         operation in the next stage.
+ *****************************************************************************/
+
+action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
+                             dst_qid, dst_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  modify_field(seq_r2n_entry.r2n_wqe_addr, r2n_wqe_addr);
+  modify_field(seq_r2n_entry.r2n_wqe_size, r2n_wqe_size);
+  modify_field(seq_r2n_entry.dst_lif, dst_lif);
+  modify_field(seq_r2n_entry.dst_qtype, dst_qtype);
+  modify_field(seq_r2n_entry.dst_qid, dst_qid);
+  modify_field(seq_r2n_entry.dst_qaddr, dst_qaddr);
+
+  // Form the doorbell and setup the DMA command to pop the entry by writing 
+  // w_ndx to c_ndx
+  QUEUE_POP_DOORBELL_UPDATE
+
+  // Overwrite the K+I vector for the push operation to derive the correct 
+  // destination queue
+  modify_field(storage_kivec0.dst_lif, dst_lif);
+  modify_field(storage_kivec0.dst_qtype, dst_qtype);
+  modify_field(storage_kivec0.dst_qid, dst_qid);
+  modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
+
+  // Setup the DMA command to move the data from source to destination address
+  // In ASM, set the host, fence bits etc correctly
+  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_r2n_entry.r2n_wqe_addr, 0,
+                           0, 0, seq_r2n_entry.r2n_wqe_size, 0, 0, 0)
+
+  // Load the Serivce SQ context for the next stage to push the NVME command
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
+                        Q_STATE_SIZE, seq_q_state_push_start)
+}
+
+/*****************************************************************************
+ *  seq_q_state_push: Push to a sequencer destination queue by issuing the 
+ *                    mem2mem DMA commands and incrementing the p_ndx via 
+ *                    ringing the doorbell. Assumes that data to be pushed has
+ *                    its source in DMA cmd 1 and destination in DMA cmd 2.
+ *****************************************************************************/
+
+action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
+                        total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                        num_entries, base_addr, entry_size, next_pc, dst_qaddr,
+                        dst_lif, dst_qtype, dst_qid, vf_id, sq_id,
+                        ssd_bm_addr, ssd_q_num, ssd_q_size, pad) {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+  STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  Q_STATE_COPY(q_state_scratch)
+
+  // Check for queue full condition before pushing
+  if (QUEUE_FULL(q_state_scratch)) {
+
+    // Exit pipeline here without error handling for now. This event of 
+    // destination queue being full should never happen with constraints 
+    // imposed by the control path programming.
+    exit();
+
+  } else {
+
+    // Modify the DMA command 2 to fill the destination address based on p_ndx 
+    // NOTE: This API in P4 land will not work, but in ASM we can selectively
+    // overwrite the fields
+    DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
+                             q_state_scratch.base_addr +
+                             (q_state_scratch.p_ndx * q_state_scratch.entry_size),
+                             0, 0,
+                             0, 0, 0, 0)
+
+    // Push the entry to the queue.  
+    QUEUE_PUSH(q_state_scratch)
+
+    // Form the doorbell and setup the DMA command to push the entry by
+    // incrementing p_ndx
+    modify_field(doorbell_addr.addr,
+                 STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
+                                          storage_kivec0.dst_lif,
+                                          DOORBELL_SCHED_WR_RESET, 
+                                          DOORBELL_UPDATE_P_NDX_INCR));
+    modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                             0,
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             0, 0, 0, 0)
+
+    // Exit the pipeline here 
+  }
+}
+
