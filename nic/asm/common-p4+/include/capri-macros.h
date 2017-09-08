@@ -204,6 +204,11 @@
 #define TIMER_START_QID_SHIFT          13
 #define TIMER_START_RING_SHIFT         10
 
+#define TM_OPORT_DMA       9 
+#define TM_OPORT_P4INGRESS 10
+#define TM_OPORT_P4EGRESS  11
+
+
 // memwr timer_start[LIF], {type, qid, ring, delta_time}
 #define CAPRI_TIMER_START(_lif, _type, _qid, _ring, _delta_time) \
         addi            r4, r0, TIMER_START_ARRAY_BASE;\
