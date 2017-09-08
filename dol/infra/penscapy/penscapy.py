@@ -48,7 +48,7 @@ class PENDOL(Packet):
         BitField("opcode",      0,      8),
         BitField("step_id",     0,      8),
         BitField("log",         0,      1),
-        BitField("log_on_drop", 0,      1),
+        BitField("logdrop",     0,      1),
         BitField("rsvd",        0,      14),
     ]
 
@@ -259,8 +259,8 @@ def ShowRawPacket(spkt, logger):
 
 def ShowScapyPacket(spkt, logger):
     logger.info("------------------- SCAPY PACKET ---------------------")
-    spkt.show2(indent = 0,
-               label_lvl = logger.GetLogPrefix())
+    spkt.show(indent = 0,
+              label_lvl = logger.GetLogPrefix())
     return
 
 

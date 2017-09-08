@@ -596,8 +596,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     new_packet_ctx = PacketContext(
                         None, penscapy.Parse(packet_ctx.packet), packet_ctx.port)
                     recvd_packets.append(new_packet_ctx)
-                    new_packet_ctx.packet.show2(
-                        indent=0, label_lvl=self._logger.GetLogPrefix())
+                    penscapy.ShowPacket(new_packet_ctx.packet, self._logger)
                 except:
                     extra_pkt = PacketResult()
                     # TODO : Decide how to store this.

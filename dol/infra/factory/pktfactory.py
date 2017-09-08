@@ -3,6 +3,7 @@
 import os
 import pdb
 import copy
+import binascii
 
 import infra.common.defs            as defs
 import infra.common.utils           as utils
@@ -314,13 +315,22 @@ class Packet(objects.FrameworkObject):
             hdr.Build(tc, self)
         return
 
+    def __add_crc(self):
+        #rawbytes = bytes(self.spkt)
+        #self.spkt = self.spkt / bytes(binascii.crc32(rawbytes))
+        return
+
     def Build(self, tc):
         if not self.spkt:
             self.__resolve(tc)
             self.spkt = scapyfactory.main(self)
             self.spkt[penscapy.PENDOL].id = tc.GID()
+            
+            self.__add_crc()
+
             self.rawbytes = bytes(self.spkt)
             self.size = len(self.rawbytes)
+            self.spkt = penscapy.Parse(self.rawbytes)
         return
 
     def __show_raw_pkt(self, logger):
@@ -345,8 +355,8 @@ class Packet(objects.FrameworkObject):
 
     def __show_scapy_pkt(self, logger):
         logger.info("------------------- SCAPY PACKET ---------------------")
-        self.spkt.show2(indent = 0,
-                        label_lvl = logger.GetLogPrefix())
+        self.spkt.show(indent = 0,
+                       label_lvl = logger.GetLogPrefix())
         return
 
     def Show(self, logger):
