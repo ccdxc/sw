@@ -16,14 +16,18 @@ char        key_mem[] = CAPRI_BARCO_KEY_MEM;
 hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    indexer::status     is = indexer::SUCCESS;
+    //indexer::status     is = indexer::SUCCESS;
     uint64_t            key_addr = 0;
 
+#if 0
     is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc((uint32_t*)key_idx);
     if (is != indexer::SUCCESS) {
         HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
         return HAL_RET_NO_RESOURCE;
     }
+#else
+    *key_idx = 0;
+#endif
     /* Setup the key descriptor with the corresponding key memory
     *  Currently statically carved and associated 
     */
@@ -96,6 +100,23 @@ crypto_init_ipsec_pad_table(void)
     return HAL_RET_OK;
 }
 
+hal_ret_t crypto_alloc_one_key(void)
+{
+    int32_t         key_idx = -1;
+    crypto_key_t    key;
+
+    if ((pd_crypto_alloc_key(&key_idx) != HAL_RET_OK) ||
+        (key_idx < 0)) {
+        assert(0);
+    }
+
+    key.key_type = types::CRYPTO_KEY_TYPE_AES128;
+    key.key_size = 16;
+    if (pd_crypto_write_key(key_idx, &key) != HAL_RET_OK) {
+        assert(0);
+    }
+    return HAL_RET_OK;
+}
 
 hal_ret_t crypto_pd_init(void)
 {
@@ -112,7 +133,10 @@ hal_ret_t crypto_pd_init(void)
         return ret;
     }
     ret = crypto_init_ipsec_pad_table();
-
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    ret = crypto_alloc_one_key();
     return ret;
 }
 

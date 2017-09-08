@@ -141,9 +141,9 @@ hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr)
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     memset(&key_desc, 0, sizeof(capri_barco_key_desc_t));
-    key_desc.key_address = htonll(key_addr);
-    if (!capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to write Barco descriptor @ {}", (uint64_t) key_desc_addr); 
+    key_desc.key_address = key_addr;
+    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to write Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -159,8 +159,8 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    if (!capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to read Barco descriptor @ {}", (uint64_t) key_desc_addr); 
+    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to read Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
 
@@ -190,18 +190,18 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
             return HAL_RET_INVALID_ARG;
     }
 
-    key_desc.key_type = htonl(cbkey_type);
-    key_addr = ntohll(key_desc.key_address);
+    key_desc.key_type = cbkey_type;
+    key_addr = key_desc.key_address;
 
     /* Write back key descriptor */
-    if (!capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to write Barco descriptor @ {}", (uint64_t) key_desc_addr); 
+    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to write Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
 
     /* Write key memory */
-    if (!capri_hbm_write_mem(key_addr, key, key_size)) {
-        HAL_TRACE_ERR("Failed to write key @ {}", (uint64_t) key_addr); 
+    if (capri_hbm_write_mem(key_addr, key, key_size)) {
+        HAL_TRACE_ERR("Failed to write key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -216,8 +216,8 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    if (!capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        HAL_TRACE_ERR("Failed to read Barco descriptor @ {}", (uint64_t) key_desc_addr); 
+    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to read Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
 
@@ -259,8 +259,8 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
     }
 
     key_addr = ntohll(key_desc.key_address);
-    if (!capri_hbm_read_mem(key_addr, key, *key_size)) {
-        HAL_TRACE_ERR("Failed to read key @ {}", (uint64_t) key_addr); 
+    if (capri_hbm_read_mem(key_addr, key, *key_size)) {
+        HAL_TRACE_ERR("Failed to read key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;
     }
 

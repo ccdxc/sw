@@ -48,9 +48,10 @@ dma_cmd_descr:
 	addi		r1, r5, NIC_DESC_ENTRY_0_OFFSET
 	phvwr		p.dma_cmd1_dma_cmd_addr, r1
 
-	phvwr		p.aol_A0, k.to_s6_page
-	phvwr		p.aol_O0, r3
-	phvwr		p.aol_L0, k.to_s6_payload_len
+	phvwr		p.aol_A0, k.{to_s6_page}.dx
+    addi        r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
+	phvwr		p.aol_O0, r3.wx
+	phvwr		p.aol_L0, k.{to_s6_payload_len}.wx
 	phvwr		p.aol_A1, r0
 	phvwr		p.aol_O1, r0
 	phvwr		p.aol_L1, r0

@@ -28,6 +28,8 @@
 #define NIC_DESC_DATA_LEN_OFFSET             0x1c       /* &((nic_desc_t *)0)->data_len */
 #define NIC_DESC_ENTRY0_OFFSET               0x20       /* &((nic_desc_t *)0)->entry[0] */
 
+#define PKT_DESC_AOL_OFFSET                  64
+
 #define NIC_DESC_ENTRY_ADDR_OFFSET           8          /* &((nic_desc_entry_t *)0)->addr */
 #define NIC_DESC_ENTRY_OFF_OFFSET            0xc        /* &((nic_desc_entry_t *)0)->offset */
 #define NIC_DESC_ENTRY_LEN_OFFSET            0xe        /* &((nic_desc_entry_t *)0)->len */
@@ -364,5 +366,7 @@
                                               */
 #define TLS_DDOL_SESQ_STOP              2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
 
+#define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
+#define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
 
 #endif /* #ifndef _TLS_CONSTANTS_H_ */

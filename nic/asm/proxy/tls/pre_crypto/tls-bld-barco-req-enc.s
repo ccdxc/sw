@@ -30,34 +30,27 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_output_list_address, k.{to_s4_odesc}.dx
     CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
 
-    phvwr       p.barco_desc_key_desc_index, d.{key_addr}.dx
-    CAPRI_OPERAND_DEBUG(d.key_addr)
+#if 0
+    /* FIXME: read the key index from the CB */
+    phvwr       p.barco_desc_key_desc_index, d.{key_desc_index}.dx
+    CAPRI_OPERAND_DEBUG(d.key_desc_index)
+#else
+    phvwri      p.barco_desc_key_desc_index, 0
+#endif
 
-    phvwr       p.barco_desc_iv_address, d.{iv_addr}.dx
-    CAPRI_OPERAND_DEBUG(d.iv_addr)
-
-    phvwr       p.barco_desc_command_core,  d.command_core
-    CAPRI_OPERAND_DEBUG(d.command_core)
-
-    phvwr       p.barco_desc_command_mode, d.command_mode
-    CAPRI_OPERAND_DEBUG(d.command_mode)
-
-    phvwr       p.barco_desc_command_op, d.command_op
-    CAPRI_OPERAND_DEBUG(d.command_op)
-        
-    phvwr       p.barco_desc_command_param, d.command_param
-    CAPRI_OPERAND_DEBUG(d.command_param)
+    addi        r1, r0, 0x30000000
+    phvwr       p.barco_desc_command, r1.wx
 
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
-    phvwr       p.barco_desc_doorbell_address, r4
-    CAPRI_OPERAND_DEBUG(r4)
+    phvwr       p.barco_desc_doorbell_address, r4.dx
+    CAPRI_OPERAND_DEBUG(r4.dx)
 
     
 	/* data will be in r3 */
 	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
     phvwr       p.barco_desc_doorbell_data, r3.dx
-    CAPRI_OPERAND_DEBUG(r3)
+    CAPRI_OPERAND_DEBUG(r3.dx)
         
     addi        r3, r0, BRQ_QPCB_BASE        
     CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_brq_enc_process,

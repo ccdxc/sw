@@ -20,15 +20,17 @@ header_type tlscb_0_t {
 
         sw_bsq_ci                       : 16;
         dec_flow                        : 8;
-        debug_dol                       : 8;
+        debug_dol                       : 32;
 
-        // TBD: Total used   : 320 bits, pending: 192
-        pad                             : 192;
+        salt                            : 32;
+        explicit_iv                     : 64;
+        // TBD: Total used   : 440 bits, pending: 72
+        pad                             : 72;
     }
 }
 
 #define TLSCB_0_PARAMS                                                                                  \
-rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, fid, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow, debug_dol, pad
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, fid, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow, debug_dol, salt, explicit_iv, pad
 #
 
 #define GENERATE_TLSCB_0_D                                                                               \
@@ -53,6 +55,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, 
     modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
     modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
+    modify_field(tlscb_0_d.salt, salt);                                                                  \
+    modify_field(tlscb_0_d.explicit_iv, explicit_iv);                                                    \
     modify_field(tlscb_0_d.pad, pad);
 
 action read_tls_stg0(TLSCB_0_PARAMS) {
@@ -109,27 +113,24 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
 /* BARCO Descriptor definition */
 header_type barco_desc_t {
     fields {
-        rsvd                                : 374;
-        gcm_new_key_flag                    : 1;
-        gcm_key_buf_index                   : 8;
-        application_tag                     : 16;
-        sector_num                          : 32;
-        sector_size                         : 16;
-        opaque_tage_write_en                : 1;
-        opaque_tag_value                    : 32;
+        input_list_address                  : 64;
+        output_list_address                 : 64;
+        command                             : 32;
+        key_desc_index                      : 32;
+        iv_address                          : 64;
+        auth_tag_addr                       : 64;
         header_size                         : 32;
         status_address                      : 64;
-        doorbell_data                       : 64;
+        opaque_tag_value                    : 32;
+        opaque_tage_write_en                : 1;
+        sector_size                         : 16;
+        sector_num                          : 32;
+        application_tag                     : 16;
         doorbell_address                    : 64;
-        auth_tag_addr                       : 64;
-        iv_address                          : 64;
-        key_desc_index                      : 32;
-        command_param                       : 20;/* Command[19:0] */
-        command_op                          : 4; /* Command[23:20] */
-        command_mode                        : 4; /* Command[27:24] */
-        command_core                        : 4; /* Command[31:28] */
-        output_list_address                 : 64;
-        input_list_address                  : 64;
+        doorbell_data                       : 64;
+        gcm_key_buf_index                   : 8;
+        gcm_new_key_flag                    : 1;
+        rsvd                                : 374;
     }
 }
 
