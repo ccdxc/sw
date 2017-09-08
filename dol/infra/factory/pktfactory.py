@@ -162,8 +162,7 @@ class Packet(objects.FrameworkObject):
         super().__init__()
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
-        self.__build_complete = False
-        self.bytes = None
+        self.rawbytes = None
         self.size = None
         self.LockAttributes()
 
@@ -320,9 +319,8 @@ class Packet(objects.FrameworkObject):
             self.__resolve(tc)
             self.spkt = scapyfactory.main(self)
             self.spkt[penscapy.PENDOL].id = tc.GID()
-            self.bytes = bytes(self.spkt)
-            self.size = len(self.bytes)
-        self.__build_complete = True
+            self.rawbytes = bytes(self.spkt)
+            self.size = len(self.rawbytes)
         return
 
     def __show_raw_pkt(self, logger):
@@ -357,6 +355,3 @@ class Packet(objects.FrameworkObject):
         self.__show_raw_pkt(logger)
         self.__show_scapy_pkt(logger)
         return
-
-
-

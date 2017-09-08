@@ -49,7 +49,7 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor to Memory
         :return:
         """
-        if self.buf_addr == None: return
+        if self._mem == None: return
 
         self.logger.info("Writing EthRxDescriptor:%s" % self.GID())
         self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
@@ -67,7 +67,7 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         desc = EthRxDescriptor(resmgr.HostMemoryAllocator.read(self._mem, 16))
         # self.logger.ShowScapyObject(desc)
         self.buf_addr = desc.addr
-        self.buf_len = desc.len
+        self.buf_len = desc.rsvd0
         self.logger.info("Read EthRxDescriptor:%s" % self.GID())
         self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
 

@@ -64,8 +64,9 @@ class CpuObjectHelper:
         return
 
     def Generate(self, topospec):
-        if topospec.cpu == None: return
-        for cpu in topospec.cpu:
+        cpuspec = getattr(topospec, 'cpu', None)
+        if cpuspec == None: return
+        for cpu in cpuspec:
             obj = CpuObject()
             obj.Init(cpu.entry)
             self.objlist.append(obj)

@@ -736,7 +736,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 cmpresult = TriggerObjectCompareResult()
                 self._logger.info("Comparing Descriptors: %s <--> %s "%\
                                   (adescr.GID(), edescr.GID()))
-                if adescr != edescr.object:
+                if edescr.object != adescr:
                     self._logger.error("Descriptor compare result = MisMatch")
                     result.mismatch.append(cmpresult)
                     result._set_status()
@@ -750,8 +750,8 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 
                 # Next compare the buffers.
                 cmpresult = TriggerObjectCompareResult()
-                ebuf = utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
-                abuf = utils.SafeFnCall(None, self._logger, adescr.object.GetBuffer)
+                ebuf = edescr.buffer #utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
+                abuf = utils.SafeFnCall(None, self._logger, adescr.GetBuffer)
                 if ebuf == None or abuf == None:
                     self._logger.error("Buffer Compare: Expected is %s, Actual is %s" % (type(ebuf), type(abuf)))
                     result.mismatch.append(cmpresult)
@@ -776,7 +776,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 cmpresult = TriggerObjectCompareResult()
                 epktbuf = ebuf.Read()
                 assert(epktbuf != None)
-                epkt = penscapy.Parse(bytes(apktbuf))
+                epkt = penscapy.Parse(bytes(epktbuf))
                 
                 apktbuf = abuf.Read()
                 assert(apktbuf != None)
@@ -785,9 +785,10 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 self._logger.info("Comparing Packets:")
                 self._logger.info("============ RX Packet ============")
                 penscapy.ShowPacket(apkt, self._logger)
-                pktresult = PacketCompare(epkt, apkt)
-                self.print_packet_mismatch(pktresult)
-                if pktresult.matched() == False:
+                #pktresult = PacketCompare(epkt, apkt)
+                #self.print_packet_mismatch(pktresult)
+                #if pktresult.matched() == False:
+                if epkt != apkt:
                     self._logger.error("Packet compare result = Mismatch")
                     result.mismatch.append(cmpresult)
                     result._set_status()

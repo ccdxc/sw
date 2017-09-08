@@ -3,6 +3,7 @@
 import infra.common.objects as objects
 from ctypes import *
 import os
+import pdb
 
 
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
@@ -100,6 +101,7 @@ class HostMemory(object):
         self.init_host_mem()
 
     def get(self, size):
+        assert(isinstance(size, int))
         ptr = self.alloc_host_mem(size)
         #char_ptr = cast(ptr, c_char_p)
         #return char_ptr, self.host_mem_v2p(ptr)

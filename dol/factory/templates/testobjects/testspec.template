@@ -73,8 +73,9 @@ session:
             doorbell:
                 object: None # Instance of Doorbell object.
                 fields:
-                    updbits : None
+                    upd     : None
                     incr    : None
+                    pid     : 0
 
         expect:
             callback: callback://networking/packets/verify_callback

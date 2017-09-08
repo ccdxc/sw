@@ -24,5 +24,8 @@ parser.add_argument('--test', dest='test',
 parser.add_argument('--testcase', dest='tcid',
                     default=None,
                     help='Run single Testcase by ID(E.g. For TC000001 use 1')
+parser.add_argument('--module', dest='module',
+                    default=None,
+                    help='Run all TestSpecs using a given module (from modules.list)')
 
 GlobalOptions = parser.parse_args()

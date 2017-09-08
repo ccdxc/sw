@@ -178,7 +178,7 @@ class ModelConnector(Connector):
         self._eventQueue.set_wait_interval(timeout)
 
     def doorbell(self, doorbell, ring):
-        doorbell.object.write(ring)
+        doorbell.object.Ring(doorbell.spec)
         self._queue_all_model_packets()
 
     def consume_rings(self, rings):

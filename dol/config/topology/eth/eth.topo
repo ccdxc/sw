@@ -26,3 +26,5 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_ETH
         count   : 1
         lifns   : range/101/104
+
+cpu: None

@@ -235,3 +235,37 @@ def Parse(message):
     if VXLAN in pkt:
         pkt[VXLAN].underlayer.sport = 0
     return pkt
+
+def ShowRawPacket(spkt, logger):
+    logger.info("--------------------- RAW PACKET ---------------------")
+    raw = bytes(spkt)
+    size = len(raw)
+    i = 0
+    line = ''
+    while i < size:
+        if i % 16 == 0:
+            if i != 0:
+                logger.info(line)
+                line = ''
+            line += "%04X " % i
+        if i % 8 == 0:
+            line += ' '
+        line += "%02X " % raw[i]
+        i += 1
+    if line != '':
+        logger.info(line)
+    return
+
+
+def ShowScapyPacket(spkt, logger):
+    logger.info("------------------- SCAPY PACKET ---------------------")
+    spkt.show2(indent = 0,
+               label_lvl = logger.GetLogPrefix())
+    return
+
+
+def ShowPacket(spkt, logger):
+    ShowScapyPacket(spkt, logger)
+    ShowRawPacket(spkt, logger)
+    return
+

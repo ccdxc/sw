@@ -21,11 +21,14 @@ def __generate_common(tc, spec, write = True):
     obj = template.CreateObjectInstance()
     obj.Logger(tc)
     obj.GID(spec.id)
-
+    
+    tc.info("Created MemFactoryObject: %s" % obj.GID())
     # Resolve all the references.
     for attr, value in spec.fields.__dict__.items():
         if not objects.IsReference(value): continue
-        spec.fields.__dict__[attr] = value.Get(tc)
+        attrval = value.Get(tc)
+        tc.info("Resolving spec.fields.%s = " % attr, attrval)
+        spec.fields.__dict__[attr] = attrval
 
     obj.Init(spec)
     if write:

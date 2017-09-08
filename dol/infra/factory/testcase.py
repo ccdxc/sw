@@ -64,6 +64,7 @@ class TestCaseSessionStepTriggerExpectReceivedObject:
     def __init__(self):
         self.packets        = []
         self.descriptors    = []
+        self.doorbell       = TestCaseTrigExpDoorbellObject()
         return
 
 class TestCaseSessionStepObject:
@@ -158,7 +159,7 @@ class TestCase(objects.FrameworkObject):
         self.info("Generating Packet Objects")
         for pspec in self.testspec.packets:
             packet = pktfactory.Packet(self, pspec.packet)
-            #packet.Build(self)
+            packet.Build(self)
             self.packets.Add(packet)
         return
 

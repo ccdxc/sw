@@ -53,19 +53,15 @@ class LifObject(objects.FrameworkObject):
         req_spec.mac_addr = self.mac_addr.getnum()
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma
-        '''
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
             for queue in queue_type.queues.GetAll():
                 qstate_spec = req_spec.lif_qstate.add()
                 queue.PrepareHALRequestSpec(qstate_spec)
-        '''
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.lif_handle
-        '''
-        HACK HACK
         self.hw_lif_id = resp_spec.hw_lif_id
         cfglogger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
                        (self.GID(),
@@ -74,7 +70,6 @@ class LifObject(objects.FrameworkObject):
         for qstate in resp_spec.qstate:
             cfglogger.info("- QUEUE_TYPE = %d QSTATE_ADDR = 0x%x" % (qstate.type_num, qstate.addr))
             self.qstate_base[qstate.type_num] = qstate.addr
-        '''
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)

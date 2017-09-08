@@ -1004,13 +1004,55 @@ modules:
             # Tagged Flows
             - segment: filter://native=False
               flow   : filter://label=NETWORKING
+            # Untagged Flows
+            - segment: filter://native=True
+              flow   : filter://label=NETWORKING
+
+    - module:
+        name    : ETH_TX_L2UC_NONIP_GFT_DROP
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx_nonip.testspec
+        ignore  : True
+        args    :
+            maxflows : 1
+        iterate:
+            # Tagged Flows
             - segment: filter://native=False
               flow   : filter://label=GFT_DROP
             # Untagged Flows
             - segment: filter://native=True
               flow   : filter://label=GFT_DROP
-            - segment: filter://native=True
-              flow   : filter://label=NETWORKING
+
+
+    - module:
+        name    : ETH_TX_ARP_RARP
+        enable  : False
+        package : test.eth
+        module  : eth
+        spec    : tx_arp.testspec
+        ignore  : True
+        args    :
+        iterate :
+            # Priority Tag Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+            - type      : ARP_RESP
+              segment   : filter://native=False
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+            - type      : RARP_RESP
+              segment   : filter://native=False
+            # Untagged Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+            - type      : ARP_RESP
+              segment   : filter://native=True
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+            - type      : RARP_RESP
+              segment   : filter://native=True
 
     - module:
         name    : ETH_RX
@@ -1018,4 +1060,4 @@ modules:
         package : test.eth
         module  : eth
         spec    : rx.testspec
-        ignore  : False
+        ignore  : True

@@ -73,15 +73,24 @@ class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
             scapy_options.append(scapy_opt)
         hdr.fields.options = scapy_options
         return
+
+    def __is_native_format(self, flags):
+        flaglist = flags.split(',')
+        for tup in self.flags_map:
+            if tup[0] in flaglist:
+                return True
+        return False
+
     def __translate_flags(self, hdr):
         if hdr.fields.flags == None:
             return
-        hdr.fields.flags = hdr.fields.flags.lower()
-        scapy_tcp_flags = ''
-        for tup in self.flags_map:
-            if tup[0] in hdr.fields.flags:
-                scapy_tcp_flags += tup[1]
-        hdr.fields.flags = scapy_tcp_flags
+        if self.__is_native_format(hdr.fields.flags):
+            hdr.fields.flags = hdr.fields.flags.lower()
+            scapy_tcp_flags = ''
+            for tup in self.flags_map:
+                if tup[0] in hdr.fields.flags:
+                    scapy_tcp_flags += tup[1]
+            hdr.fields.flags = scapy_tcp_flags
         return 
     def build(self, hdr):
         self.__translate_options(hdr)
@@ -125,7 +134,6 @@ class ScapyPacket:
         self.spkt = None
         self.packet = packet
         self.__process()
-        self.spkt.show_indent = 0
         return
 
     def __build_header(self, hdr):

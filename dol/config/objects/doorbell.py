@@ -28,14 +28,14 @@ class Doorbell(base.ConfigObjectBase):
         self.queue_id = ring.queue.id
         self.pid = 0
 
-    def Ring(self, spec, lgh = cfglogger):
+    def Ring(self, test_spec, lgh = cfglogger):
         # Address
-        self.upd = test_spec.upd if 'upd' in test_spec else 0x3
+        self.upd = getattr(test_spec, 'upd', 0x3)
         self.lif_id = self.ring.queue.queue_type.lif.hw_lif_id
 
         # Data
         self.p_index = self.ring.queue.qstate.get_pindex(self.ring_id)
-        self.pid = test_spec.pid if 'pid' in test_spec else 0
+        self.pid = getattr(test_spec, 'pid', 0)
 
         address = 0x400000 + (self.upd << 17) + (self.lif_id << 6) + (self.queue_type << 3)
         data = (self.pid << 48) | (self.queue_id << 24) | (self.ring_id << 16) | self.p_index

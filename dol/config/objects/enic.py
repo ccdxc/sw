@@ -51,6 +51,17 @@ class EnicObject(base.ConfigObjectBase):
         cfglogger.info("  - Lif        = %s" % self.lif.GID())
         return
 
+    def Summary(self):
+        summary = ''
+        summary += '%s' % self.GID()
+        summary += '/%s' % self.tenant.GID()
+        summary += '/%s' % self.ep.GID()
+        summary += '/%s' % self.type
+        summary += '/EncVlan:%s' % self.encap_vlan_id
+        summary += '/%s' % self.lif.GID()
+        return summary
+
+
     def IsSegmentMatch(self, segid):
         return self.segment.GID() == segid
 

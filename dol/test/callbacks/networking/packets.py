@@ -140,3 +140,12 @@ def GetVlanId(testcase, packet):
     if IsPriorityTagged(testcase.pvtdata):
         return 0
     return testcase.config.src.segment.vlan_id
+
+def GetPacketRawBytes(testcase, packet):
+    packet.Build(testcase)
+    return packet.GetPacketRawBytes()
+
+def GetPacketSize(testcase, packet):
+    packet.Build(testcase)
+    return packet.GetPacketSize()
+

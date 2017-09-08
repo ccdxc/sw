@@ -189,7 +189,7 @@ class Module:
     def main(self, infra_data):
         self.infra_data = infra_data
         self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
-                                     name="MOD:%s" % self.name)
+                                     name="%s" % self.name)
                                      #log_file='logs/' + self.name + ".log")
         self.infra_data.Logger = self.logger
         self.__load()
@@ -244,8 +244,17 @@ class ModuleDatabase:
 
         return False
 
+    def __is_module_match(self, module):
+        if GlobalOptions.module == None:
+            return True
+
+        if module in GlobalOptions.module:
+            return True
+
+        return False
+
     def __add(self, pmod):
-        if GlobalOptions.test == pmod.name:
+        if GlobalOptions.test and pmod.name in GlobalOptions.test:
             pmod.enable = True
 
         if pmod.enable == False:
@@ -257,9 +266,14 @@ class ModuleDatabase:
         if 'iterate' not in pmod.__dict__:
             pmod.iterate = [ None ]
 
-        if self.__is_test_match(pmod.name):
-            module = Module(pmod)
-            self.db.append(module)
+        if not self.__is_test_match(pmod.name):
+            return
+
+        if not self.__is_module_match(pmod.module):
+            return
+
+        module = Module(pmod)
+        self.db.append(module)
         return
 
     def __add_all(self):
