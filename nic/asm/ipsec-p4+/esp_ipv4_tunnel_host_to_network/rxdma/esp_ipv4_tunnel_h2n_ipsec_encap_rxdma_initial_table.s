@@ -44,7 +44,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addi r2, r0, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 
-    phvwri p.common_te0_phv_table_raw_table_size, 4
+    phvwri p.common_te0_phv_table_raw_table_size, 3
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
@@ -52,7 +52,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addi r2, r0, esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
     srl r2, r2, 6 
     phvwr p.common_te1_phv_table_pc, r2 
-    phvwri p.common_te1_phv_table_raw_table_size, 4
+    phvwri p.common_te1_phv_table_raw_table_size, 3
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
   
@@ -60,7 +60,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addi r2, r0, esp_ipv4_tunnel_h2n_allocate_input_page_semaphore 
     srl r2, r2, 6 
     phvwr p.common_te2_phv_table_pc, r2 
-    phvwri p.common_te2_phv_table_raw_table_size, 4
+    phvwri p.common_te2_phv_table_raw_table_size, 3
     phvwri p.common_te2_phv_table_lock_en, 0
     phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
 
@@ -68,7 +68,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addi r2, r0, esp_ipv4_tunnel_h2n_allocate_output_page_semaphore 
     srl r2, r2, 6 
     phvwr p.common_te3_phv_table_pc, r2 
-    phvwri p.common_te3_phv_table_raw_table_size, 4
+    phvwri p.common_te3_phv_table_raw_table_size, 3
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
     nop.e
