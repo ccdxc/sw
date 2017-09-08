@@ -78,7 +78,7 @@ hal_free_handle (uint64_t handle)
 static void
 hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 {
-    HAL_TRACE_ERR("HAL received signal {}", sig);
+    HAL_TRACE_DEBUG("HAL received signal {}", sig);
 
     switch (sig) {
     case SIGINT:

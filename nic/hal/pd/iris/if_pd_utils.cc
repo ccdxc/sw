@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "if_pd_utils.hpp"
 #include "lif_pd.hpp"
 #include "enicif_pd.hpp"
@@ -310,7 +312,7 @@ ten_get_nwsec_prof_hw_id(tenant_t *pi_ten)
     pd_nwsec_profile_t  *pd_nwsec = NULL;
     uint32_t            nwsec_hw_id = 0;
 
-    pi_nwsec = find_nwsec_profile_by_handle(pi_ten->nwsec_profile_handle);
+    pi_nwsec = nwsec_profile_lookup_by_handle(pi_ten->nwsec_profile_handle);
     if (!pi_nwsec) {
         goto end;
     }

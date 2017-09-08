@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <hal.hpp>
 #include <hal_state.hpp>
 #include <tenant.hpp>
@@ -19,7 +21,32 @@
  
 namespace hal {
 
+extern thread_local thread *t_curr_thread;
+
+// global instance of all HAL state including config, operational states
 class hal_state    *g_hal_state;
+
+typedef struct cfg_db_dirty_objs_s cfg_db_dirty_objs_t;
+struct cfg_db_dirty_objs_s {
+    void                   *obj;     // object itself (TODO: how do I know what
+                                     // type of object this is to free to right
+                                     // slab) ?? will a base class help ??
+    cfg_version_t          ver;      // version of this object
+    cfg_db_dirty_objs_t    *next;    // next object in the cache
+} __PACK__;
+
+//------------------------------------------------------------------------------
+// HAL config db APIs store some context in the cfg_db_ctxt_t
+// NOTE: this context is per thread, not for the whole process
+//------------------------------------------------------------------------------
+typedef struct cfg_db_ctxt_s {
+    bool                   cfg_db_open_;    // true if cfg db is opened
+    cfg_op_t               cfg_op_;         // cfg operation for which db is opened
+    cfg_version_t          ver_in_use_;     // version we are starting the operation with
+    cfg_version_t          rsvd_ver_;       // version to commit db modifications with
+    cfg_db_dirty_objs_t    *dirty_objs;     // dirty object list to be committed
+} cfg_db_ctxt_t;
+thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
@@ -27,6 +54,10 @@ class hal_state    *g_hal_state;
 bool
 hal_state::init(void)
 {
+    // version 0 indicates, no config received by HAL
+    cfg_db_ver_ = 0;
+    HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+
     // initialize tenant related data structures
     tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
                                  sizeof(hal::tenant_t), 16,
@@ -515,6 +546,8 @@ hal_state::hal_state()
 //------------------------------------------------------------------------------
 hal_state::~hal_state()
 {
+    HAL_SPINLOCK_DESTROY(&slock_);
+
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     tenant_id_ht_ ? delete tenant_id_ht_ : HAL_NOP;
     tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
@@ -598,6 +631,177 @@ hal_state::~hal_state()
     cpucb_id_ht_ ? delete cpucb_id_ht_ : HAL_NOP;
     cpucb_hal_handle_ht_ ? delete cpucb_hal_handle_ht_ : HAL_NOP;
 }
+
+//------------------------------------------------------------------------------
+// helper function to
+// 1. read the current config db version and
+// 2. mark that version as in-use for current thread
+// NOTE: this has to be done atomically, otherwise in between these two steps
+//       config thread can think that current version is not in use while FTE
+//       is done with step 1 and not 2. All threads (config, FTEs etc.) all must
+//       use this API before accessing the config Db
+//------------------------------------------------------------------------------
+cfg_version_t
+hal_state::cfg_db_get_current_version(void)
+{
+    int              free_slot = -1;
+    uint32_t         i;
+    cfg_version_t    ver;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    ver = cfg_db_ver_;
+    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
+        if (!cfg_ver_in_use_[i].valid) {
+            free_slot = i;
+        } else if (cfg_ver_in_use_[i].ver == ver) {
+            // version already in use, just bump up the refcount
+            cfg_ver_in_use_[i].usecnt++;
+            goto end;
+        }
+    }
+
+    // mark this version as "in-use" for the 1st time
+    if (free_slot < 0) {
+        // some thread didn't bother to release versions it was using
+        HAL_ASSERT(FALSE);
+    }
+    cfg_ver_in_use_[free_slot].ver = ver;
+    cfg_ver_in_use_[free_slot].usecnt = 1;
+    cfg_ver_in_use_[free_slot].valid = TRUE;
+
+end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return ver;
+}
+
+//------------------------------------------------------------------------------
+// helper function to release current config db version that was marked as
+// in-use by this thread earlier
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_state::cfg_db_release_version_in_use(cfg_version_t ver)
+{
+    uint32_t         i;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
+        if (cfg_ver_in_use_[i].valid && (cfg_ver_in_use_[i].ver == ver)) {
+            cfg_ver_in_use_[i].usecnt--;
+            if (cfg_ver_in_use_[i].usecnt == 0) {
+                cfg_ver_in_use_[i].valid = FALSE;
+                cfg_ver_in_use_[i].ver = FALSE;
+            }
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&slock_);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// helper function to reserve a version for future config write/commit
+// atomically
+//------------------------------------------------------------------------------
+cfg_version_t
+hal_state::cfg_db_reserve_version(void)
+{
+    uint32_t         i;
+    cfg_version_t    ver = 0;     // 0 ==> invalid, make a macro (TODO) ?
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    ver = HAL_ATOMIC_INC_UINT32(&max_rsvd_ver_, 1);
+    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_rsvd_); i++) {
+        if (!cfg_ver_rsvd_[i].valid) {
+            cfg_ver_rsvd_[i].ver = ver;
+            cfg_ver_rsvd_[i].valid = TRUE;
+            goto end;
+        }
+    }
+    HAL_TRACE_ERR("Failed to reserve cfg version");
+
+end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return ver;
+}
+
+//------------------------------------------------------------------------------
+// API to call before processing any packet by FTE, any operation by config
+// thread or periodic thread etc.
+// NOTE: once opened, cfg db has to be closed properly and reserved version
+//       should be released/committed or else next open will fail
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_state::cfg_db_open(cfg_op_t cfg_op)
+{
+    // if the cfg db was already opened by this thread, error out
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
+                      t_curr_thread->name());
+        return HAL_RET_ERR;
+    }
+
+    // get the current version of the db and mark it as in-use
+    t_cfg_db_ctxt.ver_in_use_ = cfg_db_get_current_version();
+    if (cfg_op == CFG_OP_READ) {
+        // get the current max valid version
+        t_cfg_db_ctxt.rsvd_ver_ = t_cfg_db_ctxt.ver_in_use_;
+    } else {
+        // reserve a db version for later commit
+        t_cfg_db_ctxt.rsvd_ver_ = cfg_db_reserve_version();
+    }
+    t_cfg_db_ctxt.cfg_op_ = cfg_op;
+    t_cfg_db_ctxt.cfg_db_open_ = true;
+    HAL_TRACE_DEBUG("{} opened cfg db, cfg op : {}, rsvd version : {}",
+                    t_curr_thread->name(), cfg_op, t_cfg_db_ctxt.rsvd_ver_);
+
+    return HAL_RET_OK;
+}
+
+#if 0
+//------------------------------------------------------------------------------
+// API to call after processing any packet by FTE, any operation by config
+// thread or periodic thread etc. If successful, this will make the currently
+// reserved (and cached) version of the DB valid. In case of failure, the
+// currently reserved version will not be marked as valid and object updates
+// made with this reserved version are left as they are ... they are either
+// cleaned up when we touch those objects next time, or by periodic thread that
+// will release instances of objects with invalid versions (or versions that
+// slide out of the valid-versions window)
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_state::cfg_db_close(void)
+{
+    hal_ret_t    ret;
+
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
+            // TODO: commit this version
+            ret =
+                g_hal_state->cfg_db_version_commit(t_cfg_db_ctxt.rsvd_ver_);
+            // TODO: commit reserved version and update the DB version to that
+            ret = cfg_db_versions_.validate_version(t_cfg_db_ctxt.rsvd_ver_);
+
+            cfg_db_ver_ = t_cfg_db_ctxt.rsvd_ver_;
+
+            if (ret != HAL_RET_OK) {
+                // TODO: mark t_cfg_db_ctxt.rsvd_ver_ as invalid
+                g_hal_state->cfg_db_version_invalidate(t_cfg_db_ctxt.rsvd_ver_);
+            }
+        } else {
+            // release the version, indicating that we are done using rsvd_ver_
+            g_hal_state->cfg_db_version_release(t_cfg_db_ctxt.rsvd_ver_);
+        }
+
+        // successful or not, close the DB so the app can reopen and retry
+        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
+        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
+        t_cfg_db_ctxt.rsvd_ver_ = 0;
+    }
+    return HAL_RET_OK;
+}
+#endif
 
 //------------------------------------------------------------------------------
 // factory method

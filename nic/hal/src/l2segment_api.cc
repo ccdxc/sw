@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <l2segment.hpp>
 #include <l2segment_api.hpp>
 #include <nwsec.hpp>
@@ -71,7 +73,7 @@ l2seg_get_pi_nwsec(l2seg_t *l2seg)
     // Check if if is enicif
     pi_tenant = find_tenant_by_id(l2seg->tenant_id);
     HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
-    pi_nwsec = find_nwsec_profile_by_handle(pi_tenant->nwsec_profile_handle);
+    pi_nwsec = nwsec_profile_lookup_by_handle(pi_tenant->nwsec_profile_handle);
     if (!pi_nwsec) {
         return NULL;
     }

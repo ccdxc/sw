@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __BASE_H__
 #define __BASE_H__
 
@@ -132,8 +134,10 @@ do {                                                       \
 // TODO: we need atomic increment operations for ARM
 // gnu gcc builin functions aren't availabe for ARM, ARM has its own library
 //------------------------------------------------------------------------------
-#define HAL_ATOMIC_INC_UINT32(ptr, val)    (*(ptr) += (val))
-#define HAL_ATOMIC_DEC_UINT32(ptr, val)    (*(ptr) -= (val))
+#define HAL_ATOMIC_INC_UINT32(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_DEC_UINT32(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
+
+#define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 
 //------------------------------------------------------------------------------
 // HAL return codes

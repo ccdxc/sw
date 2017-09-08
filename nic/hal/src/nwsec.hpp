@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __NWSEC_HPP__
 #define __NWSEC_HPP__
 
@@ -120,6 +122,8 @@ nwsec_profile_free (nwsec_profile_t *sec_prof)
 }
 
 // insert a security profile in all meta data structures
+// NOTE: nwsec profile is single write object, only config thread can update
+//       the spec of this object, not FTE threads
 static inline hal_ret_t
 add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
 {
@@ -131,14 +135,14 @@ add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
 
 // find a security profile instance by its id
 static inline nwsec_profile_t *
-find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
+nwsec_profile_lookup_by_id (nwsec_profile_id_t profile_id)
 {
     return (nwsec_profile_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
 }
 
 // find a security profile instance by its handle
 static inline nwsec_profile_t *
-find_nwsec_profile_by_handle (hal_handle_t handle)
+nwsec_profile_lookup_by_handle (hal_handle_t handle)
 {
     return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
 }

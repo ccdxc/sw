@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_MEM_HPP__
 #define __HAL_MEM_HPP__
 
@@ -8,6 +10,7 @@ namespace hal {
 // HAL memory slabs
 typedef enum hal_slab_e {
     HAL_SLAB_NONE,
+    HAL_SLAB_HANDLE,
     HAL_SLAB_TENANT,
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,

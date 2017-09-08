@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <base.h>
 #include <hal.hpp>
 #include <hal_lock.hpp>
@@ -121,7 +123,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
         HAL_TRACE_DEBUG("Using default security profile");
         sec_prof = NULL;
     } else {
-        sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
+        sec_prof = nwsec_profile_lookup_by_handle(tenant->nwsec_profile_handle);
         if (sec_prof == NULL) {
             HAL_TRACE_ERR("Security profile with handle not found {}",
                           tenant->nwsec_profile_handle);

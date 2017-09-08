@@ -28,7 +28,7 @@ LDFLAGS = -L/usr/local/lib -L../model_sim/build -L../obj/ `pkg-config --libs grp
 LDFLAGS +=	-lhal \
 			-liris \
 			-lfte \
-                        -lnetwork \
+			-lnetwork \
 			-lperiodic \
 			-lp4pdapi \
 			-lp4pd \

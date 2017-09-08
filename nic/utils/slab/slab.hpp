@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __SLAB_HPP__
 #define __SLAB_HPP__
 
@@ -29,14 +31,14 @@ public:
     ~slab();
     void *alloc(void);
     void free(void *elem);
-    friend hal_ret_t hal::free_to_slab(hal_slab_t slab_id, void *elem);
-    friend hal_ret_t hal::pd::free_to_slab(hal_slab_t slab_id, void *elem);
     uint32_t num_in_use(void) const { return num_in_use_; }
     uint32_t num_allocs(void) const { return num_allocs_; }
     uint32_t num_frees(void) const { return num_frees_; }
     uint32_t num_alloc_fails(void) const { return num_alloc_fails_; }
     uint32_t num_blocks(void) const { return num_blocks_; }
 
+    friend hal_ret_t hal::free_to_slab(hal_slab_t slab_id, void *elem);
+    friend hal_ret_t hal::pd::free_to_slab(hal_slab_t slab_id, void *elem);
 private:
     hal_spinlock_t    slock_;
     char              name_[SLAB_NAME_MAX_LEN];

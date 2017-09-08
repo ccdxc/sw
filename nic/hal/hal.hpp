@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_HPP__
 #define __HAL_HPP__
 
@@ -7,6 +9,7 @@
 
 namespace hal {
 
+// TODO_CLEANUP - these don't belong here !!
 class LIFManager;
 extern LIFManager *g_lif_manager;
 

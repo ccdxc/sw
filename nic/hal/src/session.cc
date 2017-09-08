@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <base.h>
 #include <hal.hpp>
 #include <hal_state.hpp>
@@ -1645,7 +1647,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle)
 
     // fetch the security profile, if any
     if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        nwsec_prof = find_nwsec_profile_by_handle(args->tenant->nwsec_profile_handle);
+        nwsec_prof =
+            nwsec_profile_lookup_by_handle(args->tenant->nwsec_profile_handle);
     } else {
         nwsec_prof = NULL;
     }
@@ -1941,7 +1944,8 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
 
     // fetch the security profile, if any
     if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        nwsec_prof = find_nwsec_profile_by_handle(args->tenant->nwsec_profile_handle);
+        nwsec_prof =
+            nwsec_profile_lookup_by_handle(args->tenant->nwsec_profile_handle);
     } else {
         nwsec_prof = NULL;
     }

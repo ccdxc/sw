@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <base.h>
 #include <hal.hpp>
 #include <hal_lock.hpp>
@@ -60,9 +62,9 @@ nwsec_profile_lookup (const nwsec::SecurityProfileKeyHandle& key_or_handle)
 {
     if (key_or_handle.key_or_handle_case() ==
             SecurityProfileKeyHandle::kProfileId) {
-        return find_nwsec_profile_by_id(key_or_handle.profile_id());
+        return nwsec_profile_lookup_by_id(key_or_handle.profile_id());
     } else {
-        return find_nwsec_profile_by_handle(key_or_handle.profile_handle());
+        return nwsec_profile_lookup_by_handle(key_or_handle.profile_handle());
     }
     return NULL;
 }
@@ -129,7 +131,7 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
     pd::pd_nwsec_profile_args_t    pd_nwsec_profile_args;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Create for id {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: Creating nwsec profile, id {}", __FUNCTION__,
                     spec.key_or_handle().profile_id());
 
     // key-handle field must be set
@@ -158,6 +160,11 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
     // consume the config
     nwsec_profile_init_from_spec(sec_prof, spec);
     sec_prof->hal_handle = hal_alloc_handle();
+    if (sec_prof->hal_handle == HAL_HANDLE_INVALID) {
+        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+        ret = HAL_RET_OOM;
+        goto end;
+    }
 
     // allocate PD resources and finish programming, if any
     pd::pd_nwsec_profile_args_init(&pd_nwsec_profile_args);
@@ -179,11 +186,11 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
 
 end:
 
-    if (ret != HAL_RET_OK && sec_prof != NULL) {
+    if ((ret != HAL_RET_OK) && (sec_prof != NULL)) {
         nwsec_profile_free(sec_prof);
     }
-    HAL_TRACE_DEBUG("PI-Nwsec:{}: Nwsec Create for id {} ret{}", __FUNCTION__, 
-                    spec.key_or_handle().profile_id(), ret);
+    HAL_TRACE_DEBUG("{}: Failed to create nwsec profile, id {} ret{}",
+                    __FUNCTION__, spec.key_or_handle().profile_id(), ret);
     HAL_TRACE_DEBUG("--------------------- API End ------------------------");
     return ret;
 }

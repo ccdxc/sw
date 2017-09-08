@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_STATE_HPP__
 #define __HAL_STATE_HPP__
 
@@ -5,6 +7,7 @@
 #include <indexer.hpp>
 #include <ht.hpp>
 #include <bitmap.hpp>
+#include <hal.hpp>
 
 namespace hal {
 
@@ -14,7 +17,15 @@ using hal::utils::ht;
 using hal::utils::bitmap;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
+// TODO: this should be coming from catalogue or platform API
 #define HAL_MAX_TM_PORTS                             12
+
+typedef enum cfg_op_e {
+    CFG_OP_NONE,
+    CFG_OP_READ,
+    CFG_OP_WRITE,
+} cfg_op_t;
+typedef uint32_t cfg_version_t;
 
 //------------------------------------------------------------------------------
 // hal_state class contains all the HAL state (well, most of it) including all
@@ -31,6 +42,25 @@ class hal_state {
 public:
     static hal_state *factory(void);
     ~hal_state();
+
+    // API to call before processing any packet by FTE, any operation by config
+    hal_ret_t cfg_db_open(cfg_op_t cfg_op);
+    // API to call after processing any packet by FTE, any operation by config
+    // thread or periodic thread etc.
+    hal_ret_t cfg_db_close(void);
+
+#if 0
+    // try to make given version valid
+    hal_ret_t cfg_db_version_commit(cfg_version_t version);
+
+    // invalidate a specific version of the cfg db; this api is useful in case a
+    // modify operation failed and we need to mark all updated objects as
+    // invalid in one shot
+    uint32_t cfg_db_version_invalidate(cfg_version_t cfg_db_ver);
+#endif
+
+    // get APIs for HAL handle related state
+    slab *hal_handle_slab(void) const { return hal_handle_slab_; }
 
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return tenant_slab_; }
@@ -142,8 +172,16 @@ public:
 private:
     bool init(void);
     hal_state();
+    cfg_version_t cfg_db_get_current_version(void);
+    cfg_version_t cfg_db_reserve_version(void);
+    hal_ret_t cfg_db_release_version_in_use(cfg_version_t ver);
 
 private:
+    // HAL internal state
+    struct {
+        slab       *hal_handle_slab_;
+    } __PACK__;
+
     // tenant/vrf related state
     struct {
         slab       *tenant_slab_;
@@ -292,6 +330,23 @@ private:
         ht         *cpucb_id_ht_;
         ht         *cpucb_hal_handle_ht_;
     } __PACK__;
+
+    typedef struct cfg_ver_in_use_info_ {
+        cfg_version_t    ver;          // version number
+        uint16_t         usecnt:15;    // number of users of this version
+        uint16_t         valid:1;      // entry valid or not
+    } __PACK__ cfg_ver_in_use_info_t;
+
+    typedef struct cfg_version_rsvd_info_ {
+        cfg_version_t    ver;          // version number
+        uint8_t          valid:1;      // entry valid or not
+    } __PACK__ cfg_version_rsvd_info_t;
+
+    hal_spinlock_t             slock_;                                 // lock to protect cfg db meta
+    cfg_version_t              cfg_db_ver_;                            // cfg db current version
+    cfg_version_t              max_rsvd_ver_;                          // max. reserved version
+    cfg_ver_in_use_info_t      cfg_ver_in_use_[HAL_THREAD_ID_MAX];     // versions in use for read
+    cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
 };
 
 extern class hal_state    *g_hal_state;
