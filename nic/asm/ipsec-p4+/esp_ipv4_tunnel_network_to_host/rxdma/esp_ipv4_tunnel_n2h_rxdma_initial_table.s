@@ -55,7 +55,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     tblwr  d.replay_seq_no_bmp, r3
     nop
 
-    phvwri p.p42p4plus_hdr_table0_valid, 1
+    phvwri p.app_header_table0_valid, 1
     addi r2, r0, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 
@@ -63,7 +63,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
-    phvwri p.p42p4plus_hdr_table1_valid, 1
+    phvwri p.app_header_table1_valid, 1
     addi r2, r0, esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore 
     srl r2, r2, 6
     phvwr p.common_te1_phv_table_pc, r2 
@@ -71,7 +71,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
   
-    phvwri p.p42p4plus_hdr_table2_valid, 1
+    phvwri p.app_header_table2_valid, 1
     addi r2, r0, esp_ipv4_tunnel_n2h_allocate_input_page_semaphore 
     srl r2, r2, 6
     phvwr p.common_te2_phv_table_pc, r2 
@@ -79,7 +79,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwri p.common_te2_phv_table_lock_en, 0
     phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
 
-    phvwri p.p42p4plus_hdr_table3_valid, 1
+    phvwri p.app_header_table3_valid, 1
     addi r2, r0, esp_ipv4_tunnel_n2h_allocate_output_page_semaphore 
     srl r2, r2, 6
     phvwr p.common_te3_phv_table_pc, r2 

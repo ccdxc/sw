@@ -12,7 +12,7 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
-    phvwri p.p42p4plus_hdr_table0_valid, 1
+    phvwri p.app_header_table0_valid, 1
     //revisit when hi-word, low-word comes.
     addi r1, r0, esp_ipv4_tunnel_h2n_allocate_input_desc_index 
     srl r1, r1, 6

@@ -11,7 +11,7 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_n2h_allocate_output_desc_index:
-    phvwri p.p42p4plus_hdr_table1_valid, 1
+    phvwri p.app_header_table1_valid, 1
     addi r2, r0, esp_ipv4_tunnel_n2h_update_output_desc_aol
     srl r2, r2, 6
     phvwr p.common_te1_phv_table_pc, r2 

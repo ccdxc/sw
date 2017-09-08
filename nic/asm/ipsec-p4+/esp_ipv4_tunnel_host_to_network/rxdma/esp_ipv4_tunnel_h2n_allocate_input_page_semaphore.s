@@ -12,7 +12,7 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_h2n_allocate_input_page_semaphore:
-    phvwri p.p42p4plus_hdr_table2_valid, 1
+    phvwri p.app_header_table2_valid, 1
     sll r1, d.in_page_ring_index, 3 
     addi r1, r1, RNMPR_TABLE_BASE 
     phvwr  p.common_te2_phv_table_addr, r1
