@@ -360,11 +360,25 @@ p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                               uint8_t *packed_actiondata_before_matchkey,
                               uint16_t actiondata_before_matchkey_len,
                               uint8_t *packed_actiondata_after_matchkey,
-                              uint16_t actiondata_after_matchkey_len)
+                              uint16_t actiondata_after_matchkey_len,
+                              uint16_t *axi_shift_bytes)
 {
     (void)p4pd_hash_table_entry_prepare;
 
-    uint16_t dest_start_bit = 0;
+    uint16_t dest_start_bit = 0, delta_bits = 0;
+
+    if (action_pc != 0xff) {
+        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
+            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len 
+                                                     + P4PD_ACTIONPC_BITS));
+        }
+    } else {
+        if (match_key_start_bit > actiondata_before_matchkey_len) {
+            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
+        }
+    }
+    *axi_shift_bytes = ((delta_bits >> 4) << 1);
+    dest_start_bit = (*axi_shift_bytes  * 8);
 
     if (action_pc != 0xff) {
         *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
@@ -378,7 +392,7 @@ p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                    actiondata_before_matchkey_len);
     dest_start_bit += actiondata_before_matchkey_len;
 
-    //When actiondata doesn't pack all the way where matchkey starts, set dest_start_bit
+    //For hash tables, match-key-start position has to align.
     dest_start_bit = match_key_start_bit;
 
     p4pd_copy_be_src_to_be_dest(hwentry,
@@ -399,7 +413,8 @@ p4pd_hash_table_entry_prepare(uint8_t *hwentry,
 
     dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
 
-    // When swizzling bytes, 16b unit is used. Hence increase size.
+    /* when computing size of entry, drop axi shift bit len */
+    dest_start_bit -= (*axi_shift_bytes * 8);
     if (dest_start_bit % 16) {
         return (dest_start_bit + 16 - (dest_start_bit % 16));
     } else {
@@ -1809,8 +1824,9 @@ ${table}_entry_write(uint32_t tableid,
     uint8_t  packed_actiondata_after_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  packed_actiondata_before_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
-    uint16_t entry_size, actiondatalen, key_len;
+    uint16_t entry_size, actiondatalen, key_len, axi_shift_len;
     uint16_t actiondata_len_before_key, actiondata_len_after_key;
+    uint8_t  *_hwentry = &hwentry[0];
 
     (void)packed_actiondata_before_key;
     (void)actiondata_len_after_key;
@@ -1849,13 +1865,20 @@ ${table}_entry_write(uint32_t tableid,
                                              packed_actiondata_before_key,
                                              actiondata_len_before_key,
                                              packed_actiondata_after_key,
-                                             actiondata_len_after_key);
+                                             actiondata_len_after_key,
+                                             &axi_shift_len);
+    if (axi_shift_len) {
+        /* Due to leading axi_shift space, actual entry line
+         * does not start at byte zero.
+         */
+        _hwentry += axi_shift_len;
+    }
 
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    capri_hbm_table_entry_write(tableid, hashindex, hwentry, entry_size);
+    capri_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            else:
-    p4pd_swizzle_bytes(hwentry, entry_size);
-    capri_table_entry_write(tableid, hashindex, hwentry, entry_size);
+    p4pd_swizzle_bytes(_hwentry, entry_size);
+    capri_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            #endif
     
     return (P4PD_SUCCESS);

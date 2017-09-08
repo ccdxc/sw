@@ -4759,14 +4759,12 @@ class capri_table_manager:
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
                         if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:
-                            #TODO Entry packing should adhere to those logic
-                            # the shift should be programmed based on gap between data and key_start
-                            # p4pd code should also match this logic.
-                            # Temp HACK - set it to 0 and pad it in p4pd
-                            '''
-                            profile['axishift']['value'] = "0x%x" % (ctable.start_key_off / 16)
-                            '''
-                            profile['axishift']['value'] = "0x%x" % (0)
+                            # For hash tables, match key packing has to align with KM. Hence when packing
+                            # action data, leading space (before match key) is always filled by p4pd.
+                            # If there is more than 16bits of leading space unfilled, then use axi-shift.
+                            # P4PD has to pack actiondata and match key such that unfilled bit space is before
+                            # action-data,actionpc.
+                            profile['axishift']['value'] = "0x%x" % ((ctable.start_key_off - ctable.d_size) >> 4)
                         else:
                             profile['axishift']['value'] = "0x%x" % (0)
                     elif mem_type == 'tcam':

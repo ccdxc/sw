@@ -124,6 +124,11 @@ struct ${table}_k {
 //::            kd_size = 0
 //::            pad_data_bits = 0
 //::            if len(actionfldlist):
+//::                totaladatabits = 0
+//::                for actionfld in actionfldlist:
+//::                    actionfldname, actionfldwidth = actionfld
+//::                    totaladatabits += actionfldwidth
+//::                #endfor
 struct ${table}_${actionname}_d {
 //::                # Action Data before Key bits in case of Hash table.
 //::                adata_bits_before_key = 0
@@ -136,9 +141,18 @@ struct ${table}_${actionname}_d {
 //::                    #endif
 //::                    assert(mat_key_start_bit >= actionpc_bits)
 //::                    adata_bits_before_key = mat_key_start_bit - actionpc_bits
+//::                    axi_pad_bits = 0
+//::                    if adata_bits_before_key > totaladatabits:
+//::                        # Pad axi shift amount of bits
+//::                        axi_pad_bits = ((adata_bits_before_key - totaladatabits) >> 4) << 4
+//::                        if axi_pad_bits:
+    __pad_axi_shift_bits : ${axi_pad_bits};
+//::                        #endif
+//::                    #endif
+    
 //::                    last_actionfld_bits = 0
 //::                    if adata_bits_before_key:
-//::                        totaladatabits = 0
+//::                        total_adatabits_beforekey = 0
 //::                        fill_adata = adata_bits_before_key
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
@@ -146,11 +160,11 @@ struct ${table}_${actionname}_d {
     ${actionfldname} : ${actionfldwidth};
 //::                                fill_adata -= actionfldwidth
 //::                                last_actionfld_bits = actionfldwidth
-//::                                totaladatabits += actionfldwidth
+//::                                total_adatabits_beforekey += actionfldwidth
 //::                            else:
     ${actionfldname}_sbit0_ebit${fill_adata - 1} : ${fill_adata};
 //::                                last_actionfld_bits = fill_adata
-//::                                totaladatabits += fill_adata
+//::                                total_adatabits_beforekey += fill_adata
 //::                                fill_adata = 0
 //::                            #endif
 //::                            if not fill_adata:
@@ -159,8 +173,8 @@ struct ${table}_${actionname}_d {
 //::                            #endif
 //::                        #endfor
 //::                        # Pad when adata size/bits < match-key-start-bit
-//::                        if (totaladatabits + actionpc_bits) < mat_key_start_bit:
-//::                            pad_data_bits = mat_key_start_bit - (totaladatabits + actionpc_bits)
+//::                        if (axi_pad_bits + total_adatabits_beforekey + actionpc_bits) < mat_key_start_bit:
+//::                            pad_data_bits = mat_key_start_bit - (axi_pad_bits + total_adatabits_beforekey + actionpc_bits)
     __pad_adata_key_gap_bits : ${pad_data_bits};
 //::                        #endif
 //::                    #endif

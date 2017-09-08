@@ -2093,6 +2093,12 @@ def capri_te_cfg_output(stage):
         else:
             json_tbl_['axi']['value'] = str(1)
 
+        if ct.is_hash_table() and ct.d_size < ct.start_key_off:
+            # Program APC location. APC location is always first byte 
+            # in the hash table entry. However when axi-shift is programmed,
+            # APC byte location moves right by axi-shift number of bytes.
+            json_tbl_['mpu_pc_loc']['value'] = (((ct.start_key_off - ct.d_size) >> 4) << 1)
+
         # key mask programming - 
         # hw bit numbering is 511:0 - little endian like
         # which is opposite on ncc ordering
