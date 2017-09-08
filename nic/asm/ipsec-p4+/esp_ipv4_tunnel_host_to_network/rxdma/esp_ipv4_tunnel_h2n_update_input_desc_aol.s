@@ -13,7 +13,9 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_h2n_update_input_desc_aol:
-    phvwri p.p42p4plus_hdr_table0_valid, 1
+    phvwri p.app_header_table0_valid, 1
+    phvwri p.app_header_table2_valid, 0
+    phvwri p.app_header_table3_valid, 0
     addi r2, r0, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2 

@@ -13,6 +13,10 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, H2N_RXDMA_IPSEC_DMA_COMMANDS_OFFSET 
+    phvwri p.app_header_table0_valid, 0
+    phvwri p.app_header_table1_valid, 0
+    phvwri p.app_header_table2_valid, 0
+    phvwri p.app_header_table3_valid, 0
 
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
