@@ -14,6 +14,7 @@
 #include <errno.h>
 #include "lib_model_client.h"
 #include <stdint.h>
+#include <mutex>
 
 #define MODEL_ZMQ_SOCK_TIMEOUT_SEC      30
 #define MODEL_ZMQ_BUFF_SIZE             2048
@@ -23,6 +24,7 @@ void *__zmq_sock;
 void *__zmq_context;
 const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
+std::mutex g_zmq_mutex;
 
 int lib_model_connect ()
 {
@@ -79,8 +81,11 @@ int lib_model_connect ()
 
 int lib_model_conn_close ()
 {
+    // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
     if (__lmodel_env)
         return 0;
+    
     zmq_close(__zmq_sock);
     zmq_ctx_destroy(__zmq_context);
     return 0;
@@ -88,6 +93,9 @@ int lib_model_conn_close ()
 
 void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
+    // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     int rc;
     buffer_hdr_t *buff;
@@ -109,6 +117,9 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 
 bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -129,6 +140,9 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 
 bool read_reg (uint64_t addr, uint32_t& data)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -148,6 +162,9 @@ bool read_reg (uint64_t addr, uint32_t& data)
 
 bool write_reg (uint64_t addr, uint32_t data)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -168,6 +185,9 @@ bool write_reg (uint64_t addr, uint32_t data)
 
 bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -189,6 +209,9 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
 bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -216,6 +239,9 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
 void step_doorbell (uint64_t addr, uint64_t data)
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
     int rc;
@@ -236,6 +262,9 @@ void step_doorbell (uint64_t addr, uint64_t data)
 
 bool dump_hbm ()
 {
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
     char buffer[1024] = {0};
     buffer_hdr_t *buff;
     int rc;
