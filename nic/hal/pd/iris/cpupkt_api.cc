@@ -43,10 +43,10 @@ is_valid_slot_value(uint64_t slot_value)
 hal_ret_t
 cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
                        p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                       uint64_t* data_offset, 
-                       uint32_t* data_len)
+                       uint8_t** data, 
+                       size_t* data_len)
 {
-    if(!flow_miss_hdr || !data_offset ||!data_len) {
+    if(!flow_miss_hdr || !data || !data_len) {
         return HAL_RET_INVALID_ARG;    
     }
 
@@ -56,13 +56,23 @@ cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
                      descr.a1, descr.o1, descr.l1);
     HAL_TRACE_DEBUG("Descriptor2: a: {:#x}, o: {}, l: {}", 
                      descr.a2, descr.o2, descr.l2);
- 
-    *flow_miss_hdr = (p4_to_p4plus_cpu_pkt_t*)(descr.a0 + descr.o0);
-    *data_offset = (descr.a0 + descr.o0 + sizeof(p4_to_p4plus_cpu_pkt_t));
+    
+    if(descr.l0 > 9216) {
+        HAL_TRACE_DEBUG("corrupted packet");
+        return HAL_RET_HW_FAIL;
+    }
+    uint8_t* buffer = (uint8_t* ) malloc(descr.l0);
+
+    uint64_t pktaddr = descr.a0 + descr.o0;
+
+    if(!p4plus_hbm_read(pktaddr, buffer, descr.l0)) {
+        HAL_TRACE_ERR("Failed to read hbm page");
+        return HAL_RET_HW_FAIL;
+    }
+
+    *flow_miss_hdr = (p4_to_p4plus_cpu_pkt_t*)buffer;
+    *data = buffer + sizeof(p4_to_p4plus_cpu_pkt_t);
     *data_len = descr.l0 - sizeof(p4_to_p4plus_cpu_pkt_t);
-    uint64_t flow_miss_hdr_offset = (uint64_t)*flow_miss_hdr;
-    HAL_TRACE_DEBUG("flow_miss_hdr {:#x}, data: {:#x}, len: {}",
-                        flow_miss_hdr_offset, *data_offset, *data_len);
     return HAL_RET_OK;
 }
 
@@ -141,8 +151,8 @@ cpupkt_register_rx_queue(cpupkt_rx_ctxt_t* ctxt, types::WRingType type)
 hal_ret_t 
 cpupkt_poll_receive(cpupkt_rx_ctxt_t* ctxt,
                     p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                    uint64_t* data_offset, 
-                    uint32_t* data_len)
+                    uint8_t** data, 
+                    size_t* data_len)
 {
     hal_ret_t   ret = HAL_RET_OK;
     if(!ctxt) {
@@ -172,33 +182,49 @@ cpupkt_poll_receive(cpupkt_rx_ctxt_t* ctxt,
                                 ctxt->queue[i].type, ctxt->queue[i].cindex, ctxt->queue[i].cindex_addr, value);
             // get the descriptor
             pd_descr_aol_t  descr = {0};
-           if(!p4plus_hbm_read(value, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+            if(!p4plus_hbm_read(value, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
                 HAL_TRACE_ERR("Failed to read the descr from hw");
                 return HAL_RET_HW_FAIL;
             }
             
-            cpupkt_descr_to_skbuff(descr, flow_miss_hdr, data_offset, data_len);
+            ret = cpupkt_descr_to_skbuff(descr, flow_miss_hdr, data, data_len);
+            if(ret != HAL_RET_OK) 
+            {
+                HAL_TRACE_ERR("Failed to create skbuff");
+            }
             cpupkt_free_queue_index(ctxt->queue[i]);
+            //return ret;
         }
     }
     return ret;    
 }
 
+hal_ret_t
+cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data)
+{
+    free(flow_miss_hdr);
+    return HAL_RET_OK;
+}
+
 void* cpupkt_test_pkt_receive(void * thread_context) 
 {
-    p4_to_p4plus_cpu_pkt_t* flow_miss_hdr_offset = NULL;
-    uint64_t data_offset = 0;
-    uint32_t data_len = 0;
+    p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = NULL;
+    uint8_t* data = NULL;
+    size_t data_len = 0;
 
     HAL_TRACE_DEBUG("CPU Thread {} initializing ... ");
     cpupkt_rx_ctxt_t* ctxt = cpupkt_rx_ctxt_alloc_init();
 
     cpupkt_register_rx_queue(ctxt, types::WRING_TYPE_ARQRX);
-
-    cpupkt_poll_receive(ctxt, 
-                        &flow_miss_hdr_offset,
-                        &data_offset,
-                        &data_len);
+    
+    while(true) {
+        cpupkt_poll_receive(ctxt, 
+                            &flow_miss_hdr,
+                            &data,
+                            &data_len);
+        HAL_TRACE_DEBUG("Received packet.....");
+        cpupkt_free(flow_miss_hdr, data);
+    }
 
     return NULL;
 }

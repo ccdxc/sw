@@ -27,7 +27,7 @@ struct pd_wring_s {
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 } __PACK__;
 
-typedef struct pd_wring_meta_s {
+struct pd_wring_meta_s {
     bool        is_global;
     char        hbm_reg_name[64];
     uint32_t    num_slots;
@@ -36,7 +36,7 @@ typedef struct pd_wring_meta_s {
     uint32_t    obj_size;
     uint64_t    alloc_semaphore_addr;
     uint64_t    free_semaphore_addr;
-} pd_wring_meta_t;
+} __PACK__;
 
 // initialize a wring pd instance
 static inline pd_wring_t *
