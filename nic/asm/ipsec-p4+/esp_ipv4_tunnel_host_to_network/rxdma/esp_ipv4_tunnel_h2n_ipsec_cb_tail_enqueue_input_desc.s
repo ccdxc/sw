@@ -50,3 +50,4 @@ dma_cmd_ring_doorbell:
         phvwri          p.doorbell_cmd_dma_cmd_eop, 1
         phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
         nop.e
+        nop

@@ -73,3 +73,4 @@ dma_cmd_write_iv_to_in_desc:
     phvwr p.dma_cmd_iv_dst_dma_cmd_addr, r3
     phvwr p.dma_cmd_iv_dst_dma_cmd_size, r1
     nop.e 
+    nop

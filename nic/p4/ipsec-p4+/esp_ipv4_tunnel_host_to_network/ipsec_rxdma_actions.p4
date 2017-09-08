@@ -450,7 +450,7 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     //HLIR promoting block_size to 34 bits - do not want that
     modify_field(ipsec_to_stage3.pad_addr, 0);
     modify_field(ipsec_to_stage3.pad_size, 0);
-
+    modify_field(ipsec_to_stage3.packet_len, p42p4plus_hdr.ipsec_payload_end);
 
 //    modify_field(ipsec_int_header.tailroom, ipsec_int_header.pad_size + 2 + icv_size);
  // modify_field(ipsec_int_header.buf_size, p4_intr.frame_size + ipsec_int_header.headroom+ipsec_int_header.tailroom);

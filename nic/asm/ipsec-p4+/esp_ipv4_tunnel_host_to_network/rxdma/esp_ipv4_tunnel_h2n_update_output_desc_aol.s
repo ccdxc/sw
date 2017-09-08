@@ -17,3 +17,4 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     phvwri p.barco_desc_out_L0, 0 
     phvwri p.barco_desc_out_O0, 0
     nop.e
+    nop
