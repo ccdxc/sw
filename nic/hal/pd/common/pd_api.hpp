@@ -126,6 +126,13 @@ typedef struct pd_cpucb_args_s {
     cpucb_t            *cpucb;
 } __PACK__ pd_cpucb_args_t;
 
+typedef struct pd_rw_entry_args_s {
+    mac_addr_t          mac_sa;
+    mac_addr_t          mac_da;
+    rewrite_actions_en  rw_act;
+} __PACK__ pd_rw_entry_args_t;
+
+
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
 {
@@ -301,6 +308,8 @@ hal_ret_t pd_cpucb_create(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_cpucb_update(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_cpucb_delete(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_cpucb_get(pd_cpucb_args_t *cpucb);
+hal_ret_t pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *rw_key, 
+                                    uint32_t *rw_idx);
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;

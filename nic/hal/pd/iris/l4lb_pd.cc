@@ -137,7 +137,7 @@ l4lb_pd_program_hw(pd_l4lb_t *pd_l4lb)
     hal_ret_t            ret = HAL_RET_OK;
 
     // Program RW Table
-    ret = l4lb_pd_pgm_rw_tbl(pd_l4lb);
+    // ret = l4lb_pd_pgm_rw_tbl(pd_l4lb);
 
     return ret;
 }

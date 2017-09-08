@@ -344,9 +344,7 @@ ctx_t::update_gft()
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
-        // TODO(goli) fix rw_idx lookup
-        iflow_attrs.rw_idx =
-            hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(dep_, iflow_attrs.rw_act);
+        // TODO(goli) fix tnnl_rw_idx lookup
         iflow_attrs.tnnl_rw_idx =
             hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(dep_, iflow_attrs.tnnl_rw_act);
 
@@ -374,9 +372,7 @@ ctx_t::update_gft()
         if (rflow) {
             rflow->to_config(rflow_cfg, rflow_attrs);
             rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
-            // TODO(goli) fix rw_idx lookup
-            rflow_attrs.rw_idx =
-                hal::pd::ep_pd_get_rw_tbl_idx_from_pi_ep(sep_, rflow_attrs.rw_act);
+            // TODO(goli) fix tnnl w_idx lookup
             rflow_attrs.tnnl_rw_idx =
                 hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(sep_, rflow_attrs.tnnl_rw_act);
             
@@ -427,6 +423,8 @@ ctx_t::update_gft()
 hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
+    hal_ret_t ret;
+
     hal::ep_t *dep;
     hal::if_t *dif;
     hal::l2seg_t *dl2seg;
@@ -446,6 +444,15 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
     if (dep == NULL) {
         return HAL_RET_EP_NOT_FOUND;
+    }
+
+    // rewrite dest mac
+    flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
+    HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
+                   *(struct ether_addr *)hal::ep_get_mac_addr(dep));
+    ret = update_flow(role, flowupd);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
 
     dl2seg = hal::find_l2seg_by_handle(dep->l2seg_handle);

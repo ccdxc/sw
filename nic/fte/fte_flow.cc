@@ -2,6 +2,7 @@
 #include "fte_ctx.hpp"
 #include <session.hpp>
 #include <defines.h>
+#include <pd_api.hpp>
 
 namespace fte {
 
@@ -208,10 +209,12 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
 hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
                                        const header_rewrite_info_t &rewrite)
 {
+    hal_ret_t ret = HAL_RET_OK;
     bool snat, dnat;
     session::NatType nat_type;
     ip_addr_t nat_sip{}, nat_dip{};
     uint16_t nat_sport{}, nat_dport{};
+    hal::pd::pd_rw_entry_args_t rw_key{};
 
     attrs.rw_act = REWRITE_NOP_ID;
     attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
@@ -221,9 +224,14 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     attrs.ttl_dec = rewrite.flags.dec_ttl;
 
     // MAC rewrite
-    attrs.mac_sa_rewrite = rewrite.valid_flds.smac;
-    attrs.mac_da_rewrite = rewrite.valid_flds.dmac;
-    // TODO(goli)update rewrite table with sa da
+    if (rewrite.valid_flds.smac) {
+        attrs.mac_sa_rewrite = true;
+        *(struct ether_addr *)rw_key.mac_sa = rewrite.ether.smac;
+    }
+    if (rewrite.valid_flds.dmac) {
+        attrs.mac_da_rewrite = true;
+        *(struct ether_addr *)rw_key.mac_da = rewrite.ether.dmac;
+    }
 
     //VLAN rewrite
     if (rewrite.valid_flds.vlan_id) {
@@ -295,21 +303,25 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     } else {
         nat_type = session::NAT_TYPE_NONE;
     }
-    
-    // rewrite action
+
+    attrs.nat_type = nat_type;
+
+    // rewrite action/index
     attrs.rw_act = nat_rewrite_action(rewrite.valid_hdrs&FTE_L3_HEADERS,
                                       rewrite.valid_hdrs&FTE_L4_HEADERS,
                                       nat_type);
-    attrs.nat_type = nat_type;
+    rw_key.rw_act = attrs.rw_act;
+
+    ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &attrs.rw_idx);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
 
     // tunnel rewrite action
     attrs.tnnl_rw_act = rewrite.valid_flds.vlan_id ? TUNNEL_REWRITE_ENCAP_VLAN_ID :
         TUNNEL_REWRITE_NOP_ID;
 
-  
-    //TODO(goli) need to create rewrite table entry with appropraite
-    //action (l3 or nat_xxx)
-    return HAL_RET_OK;
+    return ret;
 }
 
 hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,

@@ -200,7 +200,7 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
 
 
     // Program RW Table
-    ret = ep_pd_pgm_rw_tbl(pd_ep);
+    //ret = ep_pd_pgm_rw_tbl(pd_ep);
 
     // Program IPSG Table
     ret = ep_pd_pgm_ipsg_tbl(pd_ep);

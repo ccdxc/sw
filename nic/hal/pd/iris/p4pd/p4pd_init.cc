@@ -7,6 +7,7 @@
 #include <common_defines.h>
 #include <rdma_defines.h>
 #include <table_sizes.h>
+#include <rw_pd.hpp>
 
 using hal::pd::utils::Tcam;
 
@@ -794,14 +795,19 @@ p4pd_rewrite_init (void)
     uint32_t              idx = 0, decap_vlan_idx = 1;
     hal_ret_t             ret;
     DirectMap             *dm;
-    rewrite_actiondata    data = { 0 };
+    pd_rw_entry_key_t     rw_key{};
+    pd_rw_entry_info_t    rw_info{};
+
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
     HAL_ASSERT(dm != NULL);
 
+    rw_info.with_id = true;
+
     // "catch-all" nop entry
-    data.actionid = REWRITE_NOP_ID;
-    ret = dm->insert_withid(&data, idx);
+    rw_key.rw_act = REWRITE_NOP_ID;
+    rw_info.rw_idx = idx;
+    ret = rw_entry_alloc(&rw_key, &rw_info, &idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
                       idx, ret);
@@ -810,8 +816,9 @@ p4pd_rewrite_init (void)
 
     // "decap vlan" entry - 
     // - For L2 Mcast packets
-    data.actionid = REWRITE_REWRITE_ID;
-    ret = dm->insert_withid(&data, decap_vlan_idx);
+    rw_key.rw_act = REWRITE_REWRITE_ID;
+    rw_info.rw_idx = decap_vlan_idx;
+    ret = rw_entry_alloc(&rw_key, &rw_info, &decap_vlan_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("rewrite table write failure, idx : {}, err : {}",
                       idx, ret);

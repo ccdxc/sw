@@ -52,3 +52,15 @@ hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(hal::ep_t*,
 {
     return 0;
 }
+
+hal_ret_t
+hal::pd::pd_rw_entry_find_or_alloc(hal::pd::pd_rw_entry_args_t*, unsigned int*)
+{
+    return HAL_RET_OK;
+}
+
+mac_addr_t *
+hal::ep_get_mac_addr(hal::ep_s*)
+{
+    return NULL;
+}

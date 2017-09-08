@@ -33,19 +33,24 @@ update_tunnel_info(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif, hal::l
 }
 
 static inline hal_ret_t
-update_rewrite_info(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif,
-                   hal::l2seg_t *sl2seg, hal::l2seg_t *dl2seg)
+update_rewrite_info(fte::ctx_t&ctx, hal::flow_role_t role,
+                    hal::ep_t *dep, hal::if_t *dif,
+                    hal::l2seg_t *sl2seg, hal::l2seg_t *dl2seg)
 {
     uint8_t vlan_tags;
     uint16_t vlan_id;
+    mac_addr_t *smac, *dmac;
 
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
 
-    // mac rewrite for routed pkts
+    // smac rewrite for routed pkts
     if (sl2seg != dl2seg) {
+        dmac = hal::ep_get_mac_addr(dep);
+        smac = hal::ep_get_rmac(dep, dl2seg);
+
         flowupd.header_rewrite.flags.dec_ttl = true;
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dif->mac_addr);
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, ether_addr{});
+        HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
+        HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
     }
 
     // VLAN rewrite
@@ -75,8 +80,9 @@ update_fwding_info(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif)
 }
 
 static inline hal_ret_t
-update_flow(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif,
-                    hal::l2seg_t *sl2seg, hal::l2seg_t *dl2seg)
+update_flow(fte::ctx_t&ctx, hal::flow_role_t role,
+            hal::ep_t *dep, hal::if_t *dif,
+            hal::l2seg_t *sl2seg, hal::l2seg_t *dl2seg)
 {
     hal_ret_t ret;
 
@@ -90,7 +96,7 @@ update_flow(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif,
         return ret;
     }
 
-    ret = update_rewrite_info(ctx, role, dif, sl2seg, dl2seg);
+    ret = update_rewrite_info(ctx, role, dep, dif, sl2seg, dl2seg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -109,7 +115,7 @@ fwding_exec(fte::ctx_t& ctx)
     hal_ret_t ret;
 
     // Update iflow
-    ret = update_flow(ctx, hal::FLOW_ROLE_INITIATOR, ctx.dif(), ctx.sl2seg(), ctx.dl2seg());
+    ret = update_flow(ctx, hal::FLOW_ROLE_INITIATOR, ctx.dep(), ctx.dif(), ctx.sl2seg(), ctx.dl2seg());
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END; 
@@ -117,7 +123,7 @@ fwding_exec(fte::ctx_t& ctx)
 
     //Update rflow
     if (ctx.valid_rflow()) {
-        ret = update_flow(ctx, hal::FLOW_ROLE_RESPONDER, ctx.sif(), ctx.dl2seg(), ctx.sl2seg());
+        ret = update_flow(ctx, hal::FLOW_ROLE_RESPONDER, ctx.sep(), ctx.sif(), ctx.dl2seg(), ctx.sl2seg());
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);
             return fte::PIPELINE_END; 

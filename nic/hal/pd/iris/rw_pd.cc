@@ -146,7 +146,12 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     // Program HW
     ret = rw_pd_pgm_rw_tbl(rwe);
 
+    if (ret != HAL_RET_OK) {
+        del_rw_entry_pd_from_db(rwe);
+        rw_entry_pd_free(rwe);
+    } else {
 	*rw_idx = tmp_rw_idx;
+    }
 
 end:
 	return ret;
@@ -161,17 +166,17 @@ end:
 hal_ret_t
 rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
 {
-	hal_ret_t 			ret = HAL_RET_OK;
+    hal_ret_t 		ret = HAL_RET_OK;
     pd_rw_entry_t       *rwe = NULL;
     fmt::MemoryWriter   buf;
 
-	if (!rw_key) {
-		ret = HAL_RET_INVALID_ARG;
-		goto end;
-	}
+    if (!rw_key) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
-	ret = rw_entry_find(rw_key, &rwe);
-	if (ret == HAL_RET_OK) {
+    ret = rw_entry_find(rw_key, &rwe);
+    if (ret == HAL_RET_OK) {
         *rw_idx = rwe->rw_idx;
         // Increment the ref count
         rwe->ref_cnt++;
@@ -183,14 +188,27 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
         HAL_TRACE_DEBUG(buf.c_str());
-		goto end;
-	}
+        goto end;
+    }
+    
+    ret = rw_entry_alloc(rw_key, NULL, rw_idx);
+ end:
+    return ret;
+}
 
-    ret = HAL_RET_OK;
-	
-	ret = rw_entry_alloc(rw_key, NULL, rw_idx);
-end:
-	return ret;
+hal_ret_t
+pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *args, uint32_t *rw_idx)
+{
+    pd_rw_entry_key_t   rw_key{};
+    if (!args) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    rw_key.rw_act = args->rw_act;
+    memcpy(rw_key.mac_sa, args->mac_sa, sizeof(args->mac_sa));
+    memcpy(rw_key.mac_da, args->mac_da, sizeof(args->mac_da));
+
+    return rw_entry_find_or_alloc(&rw_key, rw_idx);
 }
 
 //-----------------------------------------------------------------------------

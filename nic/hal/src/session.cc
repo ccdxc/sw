@@ -1891,11 +1891,6 @@ flow_create_fte(const flow_cfg_t *cfg,
 
     flow->session = session;
 
-    // TODO(goli) fix it - we need to get rw-idx using smac, dmac, act
-    if (bridged && cfg->nat_type == NAT_TYPE_SNAT) {
-        flow->pgm_attrs.rw_idx = flow_get_l4lb_rw_idx(flow, flow->pgm_attrs.rw_act);
-    }
-
     // Check if we have to create associated flow
     if (cfg_assoc) {
         assoc_flow = (flow_t *)g_hal_state->flow_slab()->alloc();
@@ -1910,10 +1905,6 @@ flow_create_fte(const flow_cfg_t *cfg,
             assoc_flow->pgm_attrs = *attrs_assoc;            
         }
         assoc_flow->session = session;
-        // TODO(goli) fix it - we need to get rw-idx using smac, dmac, act
-        if (bridged && cfg_assoc->nat_type == NAT_TYPE_SNAT) {
-            assoc_flow->pgm_attrs.rw_idx = flow_get_l4lb_rw_idx(assoc_flow, assoc_flow->pgm_attrs.rw_act);
-        }
 
         // If its an aug flow, goto assoc flow to get all params
         assoc_flow->is_aug_flow = true;
