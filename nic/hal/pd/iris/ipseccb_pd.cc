@@ -55,6 +55,7 @@ p4pd_get_ipsec_rx_stage0_prog_addr(uint64_t* offset)
     if(ret < 0) {
         return HAL_RET_HW_FAIL;
     }
+    *offset >>= MPU_PC_ADDR_SHIFT;
     return HAL_RET_OK;
 }
 
@@ -75,8 +76,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
             HAL_TRACE_ERR("Failed to get pc address");
             ret = HAL_RET_HW_FAIL;
         }
-        HAL_TRACE_DEBUG("Received pc address", pc_offset);
         data.action_id = pc_offset;
+        HAL_TRACE_DEBUG("Received pc address", pc_offset);
         //data.u.ipsec_encap_rxdma_initial_table_d.xxx = FFFF
         data.u.ipsec_encap_rxdma_initial_table_d.iv = ipseccb_pd->ipseccb->iv;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipseccb_pd->ipseccb->iv_salt;
