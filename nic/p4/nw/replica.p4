@@ -13,6 +13,9 @@ action set_replica_rewrites() {
     }
 
     if (tm_replication_data.valid == TRUE) {
+        if (control_metadata.src_lport == tm_replication_data.lport) {
+            modify_field(capri_intrinsic.drop, TRUE);
+        }
         modify_field(control_metadata.dst_lport, tm_replication_data.lport);
         modify_field(capri_rxdma_intrinsic.qtype, tm_replication_data.qtype);
         modify_field(rewrite_metadata.rewrite_index,

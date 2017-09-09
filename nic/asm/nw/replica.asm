@@ -10,12 +10,17 @@ struct phv_      p;
 set_replica_rewrites:
   phvwr       p.control_metadata_flow_miss_egress, k.control_metadata_flow_miss
   phvwr       p.tunnel_metadata_tunnel_originate_egress, k.tunnel_metadata_tunnel_originate
+  phvwr       p.tunnel_metadata_tunnel_terminate_egress, k.tunnel_metadata_tunnel_terminate
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU
   phvwr.c1    p.control_metadata_dst_lport, CPU_LPORT
 
   seq         c1, k.tm_replication_data_valid, TRUE
   nop.!c1.e
-  phvwr       p.tunnel_metadata_tunnel_terminate_egress, k.tunnel_metadata_tunnel_terminate
+  seq         c1, k.control_metadata_src_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
+                                                   tm_replication_data_lport_sbit5_ebit10}
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  phvwr       p.tm_replication_data_valid, FALSE
+
   phvwr       p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                tm_replication_data_lport_sbit5_ebit10}
   phvwr       p.capri_rxdma_intrinsic_qtype, k.tm_replication_data_qtype
@@ -29,4 +34,3 @@ set_replica_rewrites:
   phvwr.e     p.rewrite_metadata_rewrite_index, \
                   k.{tm_replication_data_rewrite_index_sbit0_ebit3, \
                      tm_replication_data_rewrite_index_sbit4_ebit11}
-  phvwr       p.tm_replication_data_valid, FALSE

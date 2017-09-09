@@ -113,6 +113,10 @@ p4plus_app_cpu:
   or.c2       r1, r1, CPU_FLAGS_IPV6_VALID
   or.c3       r1, r1, CPU_FLAGS_INNER_IPV4_VALID
   or.c4       r1, r1, CPU_FLAGS_INNER_IPV6_VALID
+  phvwr.c1    p.p4_to_p4plus_cpu_pkt_ip_proto_outer, k.ipv4_protocol
+  phvwr.c2    p.p4_to_p4plus_cpu_pkt_ip_proto_outer, k.ipv6_nextHdr
+  phvwr.c3    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv4_protocol
+  phvwr.c4    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv6_nextHdr
 
   setcf       c6, [c3|c4|c5]
   bcf         [!c6], p4plus_app_cpu_native

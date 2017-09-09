@@ -121,6 +121,10 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index) {
     mirror_truncate(truncate_len);
 }
 
+action drop_mirror() {
+    modify_field(capri_intrinsic.drop, TRUE);
+}
+
 @pragma stage 0
 table mirror {
     reads {
@@ -131,6 +135,7 @@ table mirror {
         local_span;
         remote_span;
         erspan_mirror;
+        drop_mirror;
     }
     size : MIRROR_SESSION_TABLE_SIZE;
 }
