@@ -19,6 +19,7 @@ ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 
 MODULE_CB_SETUP     = 'Setup'
 MODULE_CB_TEARDOWN  = 'Teardown'
+
 class ModuleStats:
     def __init__(self):
         self.passed     = 0
@@ -196,7 +197,7 @@ class Module:
         self.__load()
         while self.iterator.End() == False:
             self.logger.info("========== Starting Test Module =============")
-            self.logger.info("Iterator @ ", self.iterator.Get())
+            self.logger.info("Starting new Iteration")
             self.__load_spec()
             self.__setup_callback()
             self.__select_config()
