@@ -77,11 +77,13 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
             ret = HAL_RET_HW_FAIL;
         }
         data.action_id = pc_offset;
-        HAL_TRACE_DEBUG("Received pc address", pc_offset);
+        HAL_TRACE_DEBUG("Received pc address {}", pc_offset);
         //data.u.ipsec_encap_rxdma_initial_table_d.xxx = FFFF
         data.u.ipsec_encap_rxdma_initial_table_d.iv = ipseccb_pd->ipseccb->iv;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipseccb_pd->ipseccb->iv_salt;
+        HAL_TRACE_DEBUG("Received salt {}", ipseccb_pd->ipseccb->iv_salt);
         data.u.ipsec_encap_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;
+        HAL_TRACE_DEBUG("Received iv_size {}", ipseccb_pd->ipseccb->iv_size);
         data.u.ipsec_encap_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
         data.u.ipsec_encap_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
         data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
