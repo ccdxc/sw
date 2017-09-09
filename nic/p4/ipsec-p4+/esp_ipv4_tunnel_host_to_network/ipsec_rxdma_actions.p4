@@ -157,8 +157,6 @@ metadata dma_cmd_phv2mem_t dma_cmd_in_desc_aol;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol; 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd_tail_desc_addr; 
-@pragma dont_trim
 metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_src;
 @pragma dont_trim
 metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_dst;
@@ -212,10 +210,6 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 // Enqueue the input-descriptor at the tail of ipsec-cb
-// 1. Read the tail descriptor table from tail_desc_addr+64 bytes.
-// 2. rsvd field should be zero there. 
-// 3. Now table write the rsvd with newly allocated input-descriptor
-// 4. Update the input-descriptor rsvd to zero (it would be anyway be zero - but just to make sure)
 //stage 4 - table 0
 action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,

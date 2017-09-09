@@ -26,14 +26,19 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     addi r3, r3, IPSEC_CB_BASE
     phvwr p.common_te0_phv_table_addr, r3 
 
-    phvwr p.barco_desc_in_A0_addr, k.t0_s2s_in_page_addr 
-    //phvwr p.barco_desc_in_L0, k.ipsec_global_frame_size
-    phvwri p.barco_desc_in_O0, 0
+    phvwr p.barco_desc_in_A0_addr, k.t0_s2s_in_page_addr
+    add r4, r0, k.ipsec_to_stage3_packet_len
+    add r4, r4, k.ipsec_to_stage3_pad_size 
+    phvwr p.barco_desc_in_L0, r4
+    add r4, r0, k.ipsec_to_stage3_iv_size
+    addi r4, r4, IPSEC_SALT_HEADROOM  
+    phvwr p.barco_desc_in_O0, r4 
 
 dma_cmd_to_move_input_pkt_to_mem:
-    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r1, r0, k.ipsec_to_stage3_iv_size
-    addi r1, r1, IPSEC_SALT_HEADROOM
+    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
+    //add r1, r0, k.ipsec_to_stage3_iv_size
+    //addi r1, r1, IPSEC_SALT_HEADROOM
+    addi r1, r0, 64
     add r1, r1, k.t0_s2s_in_page_addr 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len
@@ -63,6 +68,7 @@ dma_cmd_write_iv_to_in_desc:
     add r1, r0, k.ipsec_to_stage3_iv_size
     add r2, r0, k.ipsec_global_ipsec_cb_index
     sll r2, r2, IPSEC_CB_SHIFT_SIZE 
+    addi r2, r2, IPSEC_CB_BASE
     addi r2, r2, IPSEC_CB_IV_OFFSET
     add r3, r0,  k.t0_s2s_in_page_addr
     addi r3, r3, IPSEC_SALT_HEADROOM
