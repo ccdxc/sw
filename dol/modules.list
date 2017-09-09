@@ -947,7 +947,7 @@ modules:
 
     - module:
         name    : ETH_TX # L2UC_IP cases
-        enable  : False
+        enable  : True
         package : test.eth
         module  : eth
         spec    : tx.testspec
