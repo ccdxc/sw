@@ -23,12 +23,12 @@ struct d_struct d;
 %%
 	
 	    .align
-tls_tpage_alloc_start:
+tls_enc_tpage_alloc_process:
 
         CAPRI_CLEAR_TABLE2_VALID
 
 	    phvwr		p.to_s5_opage, d.opage
-
+        phvwri      p.to_s6_tnmpr_alloc, 1
 	    nop.e
 	    nop
 

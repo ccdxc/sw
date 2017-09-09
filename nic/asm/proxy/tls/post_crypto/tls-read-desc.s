@@ -17,8 +17,8 @@ struct tx_table_s2_t0_tls_read_desc_d d	;
 	    
 %%
     .param      tls_bsq_consume_process
-    .param      tls_free_tnmdr
-    .param      tls_free_tnmpr
+    .param      tls_free_rnmdr
+    .param      tls_free_rnmpr
 
 tls_read_desc_process:
 
@@ -31,15 +31,15 @@ table_read_bsq_consume:
                           k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                      TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
-table_read_TNMDR_FREE_IDX:
+table_read_RNMDR_FREE_IDX:
 
-    addi    r3, r0, TNMDR_FREE_IDX
-	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_free_tnmdr,
+    addi    r3, r0, RNMDR_FREE_IDX
+	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_free_rnmdr,
 	                    r3, TABLE_SIZE_16_BITS)
 
-table_read_TNMPR_FREE_IDX:
-	addi 	r3, r0, TNMPR_FREE_IDX
-	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tls_free_tnmpr,
+table_read_RNMPR_FREE_IDX:
+	addi 	r3, r0, RNMPR_FREE_IDX
+	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tls_free_rnmpr,
 	                    r3, TABLE_SIZE_16_BITS)
 
 	

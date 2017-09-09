@@ -21,48 +21,32 @@ struct phv_ p	;
 struct d_struct d	;
 struct tx_table_s1_t0_k k	    ;
 %%
-        .param          tls_rx_serq_enc_process_start
-        .param          tls_rx_serq_dec_process_start
-        .param          tls_alloc_tnmdr_start
-        .param          tls_alloc_tnmpr_start
-        .param          tls_serq_consume_process_start
+        .param          tls_enc_rx_serq_process
+        .param          tls_enc_alloc_tnmdr_process
+        .param          tls_enc_alloc_tnmpr_process
         
         
-tls_read_serq_entry_process_start:
+tls_enc_read_serq_entry_process:
     phvwr   p.to_s2_idesc, d.{idesc}
     phvwr   p.to_s4_idesc, d.{idesc}
     phvwr   p.to_s5_idesc, d.{idesc}
-    phvwr   p.to_s6_idesc, d.{idesc}
     add     r1, r0, d.{idesc}
 
-table_read_rx_serq:
-    seq     c1, r0, k.tls_global_phv_dec_flow
-    bcf     [!c1], table_read_rx_serq_dec
-    nop
 table_read_rx_serq_enc: 
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_rx_serq_enc_process_start,
-	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
-    b table_read_TNMDR_ALLOC_IDX
-    nop
-table_read_rx_serq_dec: 
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_rx_serq_dec_process_start,
+	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_enc_rx_serq_process,
 	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
 
 table_read_TNMDR_ALLOC_IDX:
-
     addi    r3, r0, TNMDR_ALLOC_IDX
-	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_alloc_tnmdr_start,
+	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_enc_alloc_tnmdr_process,
 	                    r3, TABLE_SIZE_16_BITS)
 
 table_read_TNMPR_ALLOC_IDX:
 	addi 	r3, r0, TNMPR_ALLOC_IDX
-	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tls_alloc_tnmpr_start,
+	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tls_enc_alloc_tnmpr_process,
 	                    r3, TABLE_SIZE_16_BITS)
         
-	
-tls_read_desc_process_done:
 	nop.e
-	nop.e
+	nop
 	

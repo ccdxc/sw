@@ -18,7 +18,9 @@ struct tx_table_s5_t0_d d;
 	
 %%
 	.param		BRQ_BASE
-tls_queue_brq_enc_process:
+    .param      tls_enc_pre_crypto_stats_process
+        
+tls_enc_queue_brq_process:
 	CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
 	add		    r4, r5, r0
@@ -216,5 +218,8 @@ dma_cmd_brq_doorbell:
 
 
 tls_queue_brq_process_done:
+	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_enc_pre_crypto_stats_process,
+	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
+	                    TLS_TCB_PRE_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

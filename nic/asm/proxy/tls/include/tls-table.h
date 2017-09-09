@@ -5,8 +5,11 @@
 
 #define TLS_TCB_TABLE_ENTRY_SIZE        512 /* 512B */
 #define TLS_TCB_TABLE_ENTRY_SIZE_SHFT   9  /* 512B */
-#define TLS_TCB_OFFSET                  0
-#define TLS_TCB_CRYPT_OFFSET            64
+
+#define TLS_TCB_OFFSET                   0
+#define TLS_TCB_CRYPT_OFFSET             64
+#define TLS_TCB_PRE_CRYPTO_STATS_OFFSET  128
+#define TLS_TCB_POST_CRYPTO_STATS_OFFSET 320
 
 #define tls_alloc_rnmdr_process        0x00020400
 #define tls_read_header_process        0x00040800

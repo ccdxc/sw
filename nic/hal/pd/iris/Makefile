@@ -21,7 +21,8 @@ LCXXFLAGS = \
 			-I../../../gen/tcp_proxy_txdma/include \
             -I../../../gen/common_rxdma_actions/include \
             -I../../../gen/common_txdma_actions/include \
-			-I../../../gen/tls_txdma_pre_crypto/include \
+			-I../../../gen/tls_txdma_pre_crypto_enc/include \
+			-I../../../gen/tls_txdma_post_crypto/include \
 			-I../../../gen/ipsec_rxdma_actions/include \
 			-I../../../gen/cpu_rxdma/include \
             -I../../../gen/common_rxdma_actions/include \
@@ -59,6 +60,7 @@ SOURCES = \
 		  acl_pd.cc \
 		  if_pd_utils.cc \
 		  tlscb_pd.cc \
+		  tlscb_post_pd.cc \
 		  tcpcb_pd.cc \
 		  wring_pd.cc \
 		  descriptor_aol_pd.cc \

@@ -16,12 +16,12 @@ struct tx_table_s0_t0_k k;
 struct tx_table_s0_t0_d d;
 %%
 
-	.param		tls_read_serq_entry_process_start
+	.param		tls_enc_read_serq_entry_process
 	
-tls_pre_crypto_process:
+tls_enc_pre_crypto_process:
     phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
     CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.debug_dol)
-	phvwr	    p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
+
 	
 	phvwr		p.tls_global_phv_fid, k.p4_txdma_intr_qid
     add         r3, r0, d.u.read_tls_stg0_d.ci_0
@@ -37,6 +37,6 @@ tls_pre_crypto_process:
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
 table_read_DESC:
-    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_read_serq_entry_process_start, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_enc_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)
 	nop.e
     nop

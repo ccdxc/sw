@@ -6,7 +6,7 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 
-PROJ = tls_txdma_pre_crypto
+PROJ = tls_txdma_pre_crypto_dec
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
@@ -24,23 +24,20 @@ all: deps asm
 deps:
 
 SRC_FILES := \
-    $(SRC_DIR)/tls-read-tnmdr-alloc-idx.s \
-    $(SRC_DIR)/tls-read-tnmpr-alloc-idx.s \
-    $(SRC_DIR)/tls-tdesc-alloc.s \
-    $(SRC_DIR)/tls-tpage-alloc.s \
-    $(SRC_DIR)/tls-queue-brq-enc.s \
-    $(SRC_DIR)/tls-queue-brq-dec.s \
-    $(SRC_DIR)/tls-read-header.s \
-    $(SRC_DIR)/tls-rx-serq-enc.s \
-    $(SRC_DIR)/tls-rx-serq-dec.s \
-    $(SRC_DIR)/tls-serq-consume.s \
-    $(SRC_DIR)/tls-read-serq-entry.s \
-    $(SRC_DIR)/tls-bld-barco-req-enc.s \
-    $(SRC_DIR)/tls-bld-barco-req-dec.s \
-    $(SRC_DIR)/tls-bubble.s \
-    $(SRC_DIR)/tls-serq.s \
-    $(SRC_DIR)/tls-alloc-rnmdr-split.s \
-    $(SRC_DIR)/tls-update-page-ctl.s
+    $(SRC_DIR)/tls-dec-read-tnmdr-alloc-idx.s \
+    $(SRC_DIR)/tls-dec-read-tnmpr-alloc-idx.s \
+    $(SRC_DIR)/tls-dec-tdesc-alloc.s \
+    $(SRC_DIR)/tls-dec-tpage-alloc.s \
+    $(SRC_DIR)/tls-dec-queue-brq.s \
+    $(SRC_DIR)/tls-dec-read-header.s \
+    $(SRC_DIR)/tls-dec-rx-serq.s \
+    $(SRC_DIR)/tls-dec-serq-consume.s \
+    $(SRC_DIR)/tls-dec-read-serq-entry.s \
+    $(SRC_DIR)/tls-dec-bld-barco-req.s \
+    $(SRC_DIR)/tls-dec-serq.s \
+    $(SRC_DIR)/tls-dec-alloc-rnmdr-split.s \
+    $(SRC_DIR)/tls-dec-update-page-ctl.s 
+#    $(SRC_DIR)/tls-dec-pre-crypto-stats.s
 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

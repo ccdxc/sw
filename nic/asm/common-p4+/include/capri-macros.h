@@ -133,7 +133,25 @@
         sll             r2, r2, 56; \
         or              r2, r2, _val; \
         memwr.dx        r1, r2
+
+#define CAPRI_ATOMIC_STATS_INCR1_COND(_cx, _addr, _offs, _val)   \
+        add.##_cx       r1, _addr, _offs; \
+        subi.##_cx      r1, r1, 0x80000000; \
+        srl.##_cx       r2, r1, 27; \
+        andi.##_cx      r1, r1, ((1 << 27) - 1); \
+        addi.##_cx      r1, r1, CAPRI_MEM_SEM_ATOMIC_ADD_START; \
+        add.##_cx       r2, 0, r2, 2; \
+        sll.##_cx       r2, r2, 56; \
+        or.##_cx        r2, r2, _val; \
+        memwr.dx.##_cx  r1, r2
         
+#define CAPRI_COUNTER16_INC(_counter16, _atomic_counter_offset, _val)                                             \
+        slt             c1, d.##_counter16, 0xFFFF;                                                               \
+        CAPRI_ATOMIC_STATS_INCR1_COND(!c1, k.tls_global_phv_qstate_addr, _atomic_counter_offset, d.##_counter16); \
+        tblwr.!c1       d.##_counter16, 0;                                                                        \
+        nop.!c1;                                                                                                  \
+        tbladd           d.##_counter16, _val;
+
 
 
 #define DB_ADDR_BASE                   0x68800000

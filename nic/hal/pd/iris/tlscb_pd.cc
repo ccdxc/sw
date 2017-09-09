@@ -8,7 +8,7 @@
 #include <proxy.hpp>
 #include <hal.hpp>
 #include <lif_manager.hpp>
-#include <tls_txdma_pre_crypto_p4plus_ingress.h>
+#include <tls_txdma_pre_crypto_enc_p4plus_ingress.h>
 #include <wring_pd.hpp>
 #include <p4plus_pd_api.h>
 
@@ -89,6 +89,32 @@ p4pd_get_tls_tx_s3_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd)
     return ret;
 }
 
+hal_ret_t 
+p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
+{
+    tx_table_s6_t0_d                   data = {0};
+    hal_ret_t                          ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
+        (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS_U16);
+    
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create tx: s6_t0_pre_crypto_stats_entry for TLS CB");
+        return HAL_RET_HW_FAIL;
+    }
+    tlscb_pd->tlscb->tnmdr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmdr_alloc);
+    tlscb_pd->tlscb->tnmpr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmpr_alloc);
+    tlscb_pd->tlscb->enc_requests = ntohs(data.u.tls_pre_crypto_stats6_d.enc_requests);
+    tlscb_pd->tlscb->dec_requests = ntohs(data.u.tls_pre_crypto_stats6_d.dec_requests);
+    HAL_TRACE_DEBUG("hwid : 0x{0:x}", hwid);    
+    HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{0:x}", tlscb_pd->tlscb->tnmdr_alloc);
+    HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{0:x}", tlscb_pd->tlscb->tnmpr_alloc);
+    HAL_TRACE_DEBUG("Received enc requests: 0x{0:x}", tlscb_pd->tlscb->enc_requests);
+    HAL_TRACE_DEBUG("Received dec requests: 0x{0:x}", tlscb_pd->tlscb->dec_requests);
+    return ret;
+}
+
 
 hal_ret_t 
 p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
@@ -104,8 +130,16 @@ p4pd_get_tlscb_txdma_entry(pd_tlscb_t* tlscb_pd)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
+    ret = p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+    ret = p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(tlscb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
    
-    return HAL_RET_OK;
 cleanup:
     return ret;
 }

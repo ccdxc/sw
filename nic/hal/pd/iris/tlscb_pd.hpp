@@ -17,10 +17,63 @@ namespace pd {
 
 typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,
-    P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7
+    P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7 = 1,
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS_U16 = 2,
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS1_U64 = 3,
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS2_U64 = 4,
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS_U16 = 5,
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS1_U64 = 6,
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS2_U64 = 7,
 } tlscb_hwid_order_t;
 
 typedef uint64_t    tlscb_hw_id_t;
+// Atomic stats for TLS TX pre crypto in TLS CB
+typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats1_t {
+    uint64_t tnmdr_alloc;
+    uint64_t enc_requests;
+    uint64_t stats2;
+    uint64_t stats3;
+    uint64_t stats4;
+    uint64_t stats5;
+    uint64_t stats6;
+    uint64_t stats7;
+} tls_tx_pre_crypto_stats1_t;
+
+// Atomic stats for TLS TX pre crypto in TLS CB
+typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats2_t {
+    uint64_t tnmpr_alloc;
+    uint64_t dec_requests;
+    uint64_t stats2;
+    uint64_t stats3;
+    uint64_t stats4;
+    uint64_t stats5;
+    uint64_t stats6;
+    uint64_t stats7;
+} tls_tx_pre_crypto_stats2_t;
+
+// Atomic stats for TLS TX post crypto in TLS CB
+typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats1_t {
+    uint64_t rnmdr_free;
+    uint64_t enc_completions;
+    uint64_t enc_failures;
+    uint64_t stats3;
+    uint64_t stats4;
+    uint64_t stats5;
+    uint64_t stats6;
+    uint64_t stats7;
+} tls_tx_post_crypto_stats1_t;
+
+// Atomic stats for TLS TX post crypto in TLS CB
+typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats2_t {
+    uint64_t rnmpr_free;
+    uint64_t dec_completions;
+    uint64_t dec_failures;
+    uint64_t stats3;
+    uint64_t stats4;
+    uint64_t stats5;
+    uint64_t stats6;
+    uint64_t stats7;
+} tls_tx_post_crypto_stats2_t;
 
 // tlscb pd state
 struct pd_tlscb_s {
@@ -102,6 +155,7 @@ find_tlscb_by_hwid (tlscb_hw_id_t hwid)
 extern void *tlscb_pd_get_hw_key_func(void *entry);
 extern uint32_t tlscb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
 extern bool tlscb_pd_compare_hw_key_func(void *key1, void *key2);
+extern hal_ret_t p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd);
 
 }   // namespace pd
 }   // namespace hal

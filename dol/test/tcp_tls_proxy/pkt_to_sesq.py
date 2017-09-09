@@ -68,6 +68,27 @@ def TestCaseVerify(tc):
     global tnmdr
     global tnmpr
 
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    tlscb_cur.GetObjValPd()
+    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+
+    # 0. Verify the counters
+    if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdr_free - tlscb.rnmdr_free)):
+        print("tnmdr alloc increment not same as rnmdr free increment")
+        return False
+
+    if ((tlscb_cur.tnmpr_alloc - tlscb.tnmpr_alloc) != (tlscb_cur.rnmpr_free - tlscb.rnmpr_free)):
+        print("tnmpr alloc increment not same as rnmpr free increment")
+        return False
+
+
+    if (tlscb_cur.enc_requests != tlscb_cur.enc_completions):
+        print("enc requests not equal to completions")
+        return False
+
 
     # 1. Verify pi/ci got update got updated for SESQ
     tcb_cur = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]

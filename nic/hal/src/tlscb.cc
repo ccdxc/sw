@@ -219,6 +219,19 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->set_bsq_pi(rtlscb.bsq_pi);
     rsp->mutable_spec()->set_bsq_ci(rtlscb.bsq_ci);
 
+    HAL_TRACE_DEBUG("tnmdr_alloc : 0x{0:x}, tnmpr_alloc : 0x{0:x}, enc_requests : 0x{0:x}",
+                    rtlscb.tnmdr_alloc, rtlscb.tnmpr_alloc, rtlscb.enc_requests);
+    rsp->mutable_spec()->set_tnmdr_alloc(rtlscb.tnmdr_alloc);
+    rsp->mutable_spec()->set_tnmpr_alloc(rtlscb.tnmpr_alloc);
+    rsp->mutable_spec()->set_rnmdr_free(rtlscb.rnmdr_free);
+    rsp->mutable_spec()->set_rnmpr_free(rtlscb.rnmpr_free);
+    rsp->mutable_spec()->set_enc_requests(rtlscb.enc_requests);
+    rsp->mutable_spec()->set_enc_completions(rtlscb.enc_completions);
+    rsp->mutable_spec()->set_enc_failures(rtlscb.enc_failures);
+    rsp->mutable_spec()->set_dec_requests(rtlscb.dec_requests);
+    rsp->mutable_spec()->set_dec_completions(rtlscb.dec_completions);
+    rsp->mutable_spec()->set_dec_failures(rtlscb.dec_failures);
+
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);
 

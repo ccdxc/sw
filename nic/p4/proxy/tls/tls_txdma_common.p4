@@ -142,3 +142,48 @@ header_type barco_result_t {
         pad                                 : 416;
     }
 }
+
+header_type tls_stage_pre_crypto_stats_d_t {
+    fields {
+        tnmdr_alloc                     : 16;
+        tnmpr_alloc                     : 16;
+        enc_requests                    : 16;
+        dec_requests                    : 16;
+        // TBD: Total used   : 64 bits, pending: 448
+        pad                             : 448;
+    }
+}
+#define STG_PRE_CRYPTO_STATS_ACTION_PARAMS                                                          \
+tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, pad
+#
+
+#define GENERATE_STG_PRE_CRYPTO_STATS_D                                                             \
+    modify_field(tls_pre_crypto_stats_d.tnmdr_alloc, tnmdr_alloc);                                  \
+    modify_field(tls_pre_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                  \
+    modify_field(tls_pre_crypto_stats_d.enc_requests, enc_requests);                                \
+    modify_field(tls_pre_crypto_stats_d.dec_requests, dec_requests);                                \
+    modify_field(tls_pre_crypto_stats_d.pad, pad);
+
+
+header_type tls_stage_post_crypto_stats_d_t {
+    fields {
+        rnmdr_free                      : 16;
+        rnmpr_free                      : 16;
+        enc_completions                 : 16;
+        dec_completions                 : 16;
+        // TBD: Total used   : 64 bits, pending: 448
+        pad                             : 448;
+    }
+}
+
+#define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                             \
+rnmdr_free,rnmpr_free, enc_completions, dec_completions, pad
+#
+
+#define GENERATE_STG_POST_CRYPTO_STATS_D                                                                \
+    modify_field(tls_post_crypto_stats_d.rnmdr_free, rnmdr_free);                                       \
+    modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                       \
+    modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                             \
+    modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                             \
+    modify_field(tls_post_crypto_stats_d.pad, pad);
+

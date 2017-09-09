@@ -369,4 +369,40 @@
 #define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
 #define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
 
+/*
+
+TLS CB is split into 8 64B chunks as below.
+PRE_CRYPTO atomic stats start at offset 2*64 and use up 128B
+POST_CRYPTO atomic stats start at offset 5*64 and use up 128B
+
+typedef enum tlscb_hwid_order_ {
+    P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,
+    P4PD_HWID_TLS_TX_S3_T0_READ_TLS_ST1_7 = 1,
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS_U16 = 2,
+
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS1_U64 = 3,           <===  pre-crypto atomic stats start block
+    P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS2_U64 = 4,           <===  pre-crypto atomic stats end block
+
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS_U16 = 5,
+
+
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS1_U64 = 6,           <===  post-crypto atomic stats start block          
+    P4PD_HWID_TLS_TX_POST_CRYPTO_STATS2_U64 = 7,           <===  post-crypto atomic stats end block
+} tlscb_hwid_order_t;
+
+*/
+
+
+#define TLS_PRE_CRYPTO_STAT_OFFSET(_num)            ((64*2) + (_num * 8))
+#define TLS_PRE_CRYPTO_STAT_TNMDR_ALLOC_OFFSET      TLS_PRE_CRYPTO_STAT_OFFSET(0)
+#define TLS_PRE_CRYPTO_STAT_TNMPR_ALLOC_OFFSET      TLS_PRE_CRYPTO_STAT_OFFSET(1)
+#define TLS_PRE_CRYPTO_STAT_ENC_REQUESTS_OFFSET     TLS_PRE_CRYPTO_STAT_OFFSET(2)
+#define TLS_PRE_CRYPTO_STAT_DEC_REQUESTS_OFFSET     TLS_PRE_CRYPTO_STAT_OFFSET(3)
+
+#define TLS_POST_CRYPTO_STAT_OFFSET(_num)           ((64*5) + (_num * 8))
+#define TLS_POST_CRYPTO_STAT_RNMDR_FREE_OFFSET      TLS_POST_CRYPTO_STAT_OFFSET(0)
+#define TLS_POST_CRYPTO_STAT_RNMPR_FREE_OFFSET      TLS_POST_CRYPTO_STAT_OFFSET(1)
+#define TLS_POST_CRYPTO_STAT_ENC_COMPLETIONS_OFFSET TLS_POST_CRYPTO_STAT_OFFSET(2)
+#define TLS_POST_CRYPTO_STAT_DEC_COMPLETIONS_OFFSET TLS_POST_CRYPTO_STAT_OFFSET(3)
+
 #endif /* #ifndef _TLS_CONSTANTS_H_ */

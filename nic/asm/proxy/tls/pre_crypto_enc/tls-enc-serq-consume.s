@@ -20,9 +20,9 @@ struct phv_ p	;
 struct tx_table_s0_t0_d d;
 	
 %%
-	.param      tls_bld_barco_req_enc_process
+	.param      tls_enc_bld_barco_req_process
         
-tls_serq_consume_process_start:
+tls_enc_serq_consume_process:
     CAPRI_CLEAR_TABLE0_VALID
 	/* SERQ_cidx got incremented due to the auto-inc read address used */
 	/* address will be in r4 */
@@ -34,7 +34,7 @@ tls_serq_consume_process_start:
 
 	memwr.dx  	 r4, r3
 table_read_BLD_BARCO_ENC_REQ:
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_bld_barco_req_enc_process,
+    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_enc_bld_barco_req_process,
                            k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
                        	   TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
