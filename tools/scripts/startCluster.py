@@ -1,24 +1,22 @@
 #!/usr/bin/python
 
-# Start pensando agent on all nodes
-
 import time
 import sys
 import os
 import argparse
-import paramiko
-import threading
 import json
 import http
 import exceptions
 from multiprocessing.dummy import Pool as ThreadPool
+
+import paramiko
 
 dryRun = False
 
 # Utility function to run ssh
 def ssh_exec_thread(ssh_object, command):
     print "run: " + command
-    stdin, stdout, stderr = ssh_object.exec_command(command)
+    _, stdout, _ = ssh_object.exec_command(command)
     out = stdout.readlines()
     print out
     print "Program exited: " + command
@@ -28,15 +26,15 @@ def ssh_exec_thread(ssh_object, command):
 
 # This class represents a vagrant node
 class Node:
-    def __init__(self, addr, username='vagrant', password='vagrant', gopath='/import/'):
+    def __init__(self, ipaddr, username='vagrant', password='vagrant', gopath='/import/'):
         self.debug = False
-        self.addr = addr
+        self.addr = ipaddr
         self.username = username
         self.password = password
         self.gopath = gopath
         self.ssh = self.sshConnect(username, password)
         if not dryRun:
-            out, err, ec = self.runCmd("hostname")
+            out, _, _ = self.runCmd("hostname")
             self.hostname = out[0].split('\n')[0]
         else:
             self.hostname = "dryrun " + self.addr
@@ -45,7 +43,7 @@ class Node:
     # Connect to vagrant node
     def sshConnect(self, username, password):
         ssh_object = paramiko.SSHClient()
-        ssh_object.set_missing_host_key_policy( paramiko.AutoAddPolicy() )
+        ssh_object.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         print "Connecting to " + self.addr + " with userid: " + username + " password: " + password
         if dryRun:
             return
@@ -53,7 +51,7 @@ class Node:
             ssh_object.connect(self.addr, username=username, password=password)
             return ssh_object
         except paramiko.ssh_exception.AuthenticationException:
-            tutils.exit("Authentication failed")
+            sys.exit("Authentication failed")
 
     def isConnected(self):
         if dryRun:
@@ -73,7 +71,7 @@ class Node:
                 return
 
             # Execute the command
-            stdin, stdout, stderr = self.ssh.exec_command(cmd, timeout=timeout)
+            _, stdout, stderr = self.ssh.exec_command(cmd, timeout=timeout)
             out = stdout.readlines()
             err = stderr.readlines()
             exitCode = stdout.channel.recv_exit_status()
@@ -88,18 +86,18 @@ class Node:
             return [], [], 0
 
     # Stop pensando cluster services on each node
-    def startCluster(self, args=""):
+    def startCluster(self):
         print "#### Starting pen-base container on " + self.addr
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
         self.runCmd("""bash -c 'for i in /import/bin/tars/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
         self.runCmd("docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando -d pen-base")
 
     # Start pen base container on each node
-    def stopCluster(self, args=""):
+    def stopCluster(self):
         print "#### Stopping pensando services on " + self.addr
 
         # stop all services
-        penSrvs = [ "pen-base", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch" ]
+        penSrvs = ["pen-base", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch"]
         for srv in penSrvs:
             self.runCmd("sudo systemctl stop " + srv)
             self.runCmd("docker stop " + srv)
@@ -107,7 +105,7 @@ class Node:
 
         #stop kubelet
         self.runCmd("sudo systemctl stop pen-kubelet")
-        self.runCmd("bash -c 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done' ")
+        self.runCmd(r"bash -c 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop $(docker ps -qa); docker rm $(docker ps -qa); fi' """)
 
         self.runCmd("sudo rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ")
@@ -123,7 +121,7 @@ def initCluster(nodeAddr):
     jdata = json.dumps({
         "kind": "Cluster",
         "APIVersion" : "v1",
-        "metadata": {
+        "meta" : {
             "name": "testCluster"
         },
         "spec": {
@@ -178,25 +176,25 @@ for addr in addrList:
 
 quorumNames = []
 if quorum == "":
-    for i in range(1,len(nodes)) :
+    for i in range(1, len(nodes)):
         quorumNames.append("node{}".format(i))
 else:
     quorumNames = quorum
 
 pool = ThreadPool(len(addrList))
-pool.map(lambda x: x.stopCluster(),nodes)
+pool.map(lambda x: x.stopCluster(), nodes)
 
 print "################### Waiting for cluster cleanup to complete ###################"
 time.sleep(2)
 
 # When -stop was passed, we are done
 if args.stop:
-    os._exit(0)
+    sys.exit(0)
 
 print "################### Starting all cluster services ###################"
 
 pool = ThreadPool(len(addrList))
-pool.map(lambda x: x.startCluster(),nodes)
+pool.map(lambda x: x.startCluster(), nodes)
 
 
 print "################### Waiting for pen-base container to come up ###################"
@@ -206,4 +204,4 @@ time.sleep(5)
 initCluster(addrList[0])
 
 print "################### Created Pensando Cluster #####################"
-os._exit(0)
+sys.exit(0)
