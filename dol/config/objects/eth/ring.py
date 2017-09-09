@@ -35,10 +35,6 @@ class EthRingObject(ring.RingObject):
             self.queue.qstate.Write()
             self.initialized = True
 
-        # HACK
-        self.queue.qstate.set_pindex(0, 0)
-        self.queue.qstate.set_cindex(0, 0)
-
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.queue.qstate.get_pindex(0)))
         descriptor.Write()

@@ -16,29 +16,33 @@ class EthBufferObject(base.FactoryObjectBase):
         self.logger = cfglogger
 
     def Init(self, spec):
-        self.spec = spec
+        super().Init(spec)
         self.size = spec.fields.size
-        self.hw = getattr(spec.fields, 'hw', False)
-    
-        # Contents of the buffer
         self.data = getattr(spec.fields, 'data', None)
-        if self.data is None and self.hw is True:
-            self.data = bytes([0x0] * spec.fields.size)
+        bind = getattr(spec.fields, 'bind', False)
 
-        if self.hw:
+        # Bind the buffer if required by spec
+        self._mem = None
+        self.addr = None    # Required to fill the 'buf_addr' field of descriptor
+        if bind:
             # Allocate Memory for the buffer
             self._mem = resmgr.HostMemoryAllocator.get(self.size)
             self.addr = self._mem.pa
+            # Set buffer contents
+            if self.data is None:
+                self.data = bytes([0x0] * spec.fields.size)
+
+        if self.data is not None:
+            penscapy.ShowRawPacket(self.data, self.logger)
 
     def Write(self):
         """
         Writes the buffer to Host Memory
         :return:
         """
-        if not self.hw: return
-        self.logger.info("Writing Packet into Buffer")
-        penscapy.ShowRawPacket(self.data, self.logger)
-        self.logger.info("Writing Buffer %s = size: 0x%d crc(data): 0x%x" %
+        if not self._mem: return
+
+        self.logger.info("Writing Buffer %s = size: 0x%x crc(data): 0x%x" %
                          (self._mem, self.size, binascii.crc32(self.data)))
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
 
@@ -47,21 +51,34 @@ class EthBufferObject(base.FactoryObjectBase):
         Reads a Buffer from Host Memory
         :return:
         """
-        if self.hw:
-            self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
-            self.logger.info("Read Buffer %s = size: 0x%d crc(data): 0x%x" %
-                             (self._mem, self.size, binascii.crc32(self.data)))
+        if not self._mem: return self.data
+
+        self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
+        # penscapy.ShowRawPacket(self.data, self.logger)
+        self.logger.info("Read Buffer %s = size: 0x%x crc(data): 0x%x" %
+                         (self._mem, self.size, binascii.crc32(self.data)))
         return self.data
 
+    def Bind(self, mem):
+        assert(isinstance(mem, resmgr.MemHandle))
+        super().Bind(mem)
+        self.addr = mem.pa
+
     def __eq__(self, other):
-        if other is None:
+        if not isinstance(other, self.__class__):
             return False
-        return self.data is not None and other.data is not None and len(self.data) == len(other.data)
+        ret = (self.size == other.size)
+        if self._mem and other._mem:
+            ret = ret and self._mem == other._mem and self.addr == other.addr
+        return ret
 
     def __copy__(self):
         obj = super().__copy__()
         obj.GID('ACTUAL_' + obj.GID())
-        obj.data = bytes([0x0] * obj.size)
+        # obj._mem must point to the original buffer's memory handle
+        # obj.size must be same as original buffer's size
+        # The following fields are filled in by Read()
+        obj.data = None
         return obj
 
     def IsPacket(self):

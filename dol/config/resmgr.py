@@ -71,6 +71,11 @@ class MemHandle(object):
         self.va = va
         self.pa = pa
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.va == other.va and self.pa == other.pa
+
     def __str__(self):
         return '<va=0x%x, pa=0x%x>' % (self.va, self.pa)
 
@@ -94,6 +99,10 @@ class HostMemory(object):
     host_mem_v2p.argtypes = [c_void_p]
     host_mem_v2p.restype = c_uint64
 
+    host_mem_p2v = lib.host_mem_p2v
+    host_mem_p2v.argtypes = [c_uint64]
+    host_mem_p2v.restype = c_void_p
+
     free_host_mem = lib.free_host_mem
     free_host_mem.argtypes = [c_void_p]
 
@@ -103,9 +112,11 @@ class HostMemory(object):
     def get(self, size):
         assert(isinstance(size, int))
         ptr = self.alloc_host_mem(size)
-        #char_ptr = cast(ptr, c_char_p)
-        #return char_ptr, self.host_mem_v2p(ptr)
         return MemHandle(ptr, self.host_mem_v2p(ptr))
+
+    def p2v(self, pa):
+        assert(isinstance(pa, int))
+        return MemHandle(self.host_mem_p2v(pa), pa)
 
     def write(self, memhandle, data):
         assert isinstance(memhandle, MemHandle)

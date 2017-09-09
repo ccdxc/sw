@@ -4,7 +4,7 @@ selectors:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=False
-        interface   : filter://any
+        interface   : filter://label=TXENABLE
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
@@ -78,9 +78,9 @@ buffers:
         id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           hw  : True
-           size: ref://testcase/packets/id=PKT1/size
-           data: ref://testcase/packets/id=PKT1/rawbytes
+           bind : True
+           size : ref://testcase/packets/id=PKT1/size
+           data : ref://testcase/packets/id=PKT1/rawbytes
 
 descriptors:
     - descriptor:

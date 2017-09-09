@@ -10,7 +10,7 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://fwtype=L2,label=NETWORKING,type=IPV4
+    flow            : filter://fwtype=L2
     maxflows        : 1
 
 packets:
@@ -75,24 +75,24 @@ packets:
 
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF1  # Input Descriptor
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           hw   : True
-           size : 1518
-           data : None
+            bind  : True
+            size  : 1518
+            data  : None
 
     - buffer:
-        id      : BUF2
+        id      : BUF2  # Expected Descriptor
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-            hw  : False
-            size: ref://testcase/packets/id=PKT2/size
-            data: ref://testcase/packets/id=PKT2/rawbytes
+            bind  : False
+            size  : ref://testcase/packets/id=PKT2/size
+            data  : ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
-        id      : DESC1
+        id      : DESC1 # Input Buffer
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
@@ -100,7 +100,7 @@ descriptors:
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2
+        id      : DESC2 # Expected Buffer
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF2

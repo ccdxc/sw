@@ -45,10 +45,14 @@ eth_tx_packet:
     phvwri      p.dma_cmd2_dma_pkt_eop, 1                                   // This command will fetch a full packet
     phvwri      p.dma_cmd2_dma_cmd_host_addr, 1                             // The source address is a Host address
     phvwri      p.dma_cmd2_dma_cmd_cache, 0                                 // AXI Uncached Access
+#if 1
+    add         r7, r0, d.{addr}.dx
+    add         r7, r0, d.{len}.hx
+#endif
     phvwr       p.dma_cmd2_dma_cmd_addr, d.{addr}.dx                        // Source address
     phvwr       p.dma_cmd2_dma_cmd_size, d.{len}.hx                         // DMA size
     phvwri      p.dma_cmd2_dma_cmd_use_override_lif, 0                      // Do not override LIF id for AXI address computation
     phvwri      p.dma_cmd2_dma_cmd_override_lif, 0                          // Ignored when use_override_lif is not set
 
-  nop.e
-  nop
+    nop.e
+    nop

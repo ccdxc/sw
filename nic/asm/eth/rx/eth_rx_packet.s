@@ -32,6 +32,11 @@ eth_rx_packet:
     phvwri      p.dma_cmd0_dma_cmd_eop, 1                                   // This is the last DMA command
     phvwri      p.dma_cmd0_dma_cmd_host_addr, 1                             // The source address is a Host address
     phvwri      p.dma_cmd0_dma_cmd_cache, 0                                 // AXI Uncached Access
+#if 1
+    add         r7, r0, d.{addr}.dx
+    add         r7, r0, d.{len}.dx
+    add         r7, r0, k.eth_rx_global_packet_len
+#endif
     phvwr       p.dma_cmd0_dma_cmd_addr, d.{addr}.dx                        // Source address
     phvwr       p.dma_cmd0_dma_cmd_size, r1                                 // DMA size
     tblwr.f     d.rsvd0, r1.hx

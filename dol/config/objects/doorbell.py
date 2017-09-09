@@ -40,6 +40,7 @@ class Doorbell(base.ConfigObjectBase):
         address = 0x400000 + (self.upd << 17) + (self.lif_id << 6) + (self.queue_type << 3)
         data = (self.pid << 48) | (self.queue_id << 24) | (self.ring_id << 16) | self.p_index
 
+        self.ring.queue.qstate.Show()
         lgh.info("Ringing Doorbell: %s" % self.GID())
         lgh.info("- Addr:0x%x (Qtype:%d/LIF:%d/Upd:%d)" %\
                  (address, self.queue_type, self.lif_id, self.upd))
@@ -47,5 +48,4 @@ class Doorbell(base.ConfigObjectBase):
                  (data, self.p_index, self.ring_id, self.queue_id, self.pid))
 
         model_wrap.step_doorbell(address, data)
-
-        self.ring.queue.qstate.Read()
+        self.ring.queue.qstate.Show()

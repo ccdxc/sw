@@ -32,7 +32,8 @@ class EnicObject(base.ConfigObjectBase):
             self.encap_vlan_id = resmgr.EncapVlanAllocator.get()
         else:
             self.encap_vlan_id = segment.vlan_id
-        self.ep      = None
+        self.ep = None
+        self.label = None
         return
 
     def AttachEndpoint(self, ep):
@@ -91,14 +92,18 @@ class EnicObject(base.ConfigObjectBase):
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
         else:
             assert(0)
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- Enic %s = %s (HDL = 0x%x)" %\
+
+        if self.lif.hw_lif_id < 28:
+            self.label = 'TXENABLE'
+        cfglogger.info("- Enic %s = %s (HDL = 0x%x) Label = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
-                        self.hal_handle))
+                        self.hal_handle, self.label))
         return
 
     def IsFilterMatch(self, spec):

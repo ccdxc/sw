@@ -35,11 +35,11 @@ eth_rx_fetch_desc:
   srl             r1, r2, CAPRI_MPU_PC_SHIFT;
   phvwr           p.common_te0_phv_table_pc, r1
 
-  add             r5, d.ring_base, d.c_index0, LG2_RX_DESC_SIZE
-  phvwr           p.common_te0_phv_table_addr, r5.dx
+  add             r5, d.{ring_base}.dx, d.{c_index0}.hx, LG2_RX_DESC_SIZE
+  phvwr           p.common_te0_phv_table_addr, r5
   phvwr           p.common_te0_phv_table_raw_table_size, LG2_RX_DESC_SIZE
 
-  tblmincri.f     d.{c_index0}.hx, d.ring_size, 1
+  tblmincri.f     d.{c_index0}.hx, d.{ring_size}.hx, 1
 
   nop.e
   nop

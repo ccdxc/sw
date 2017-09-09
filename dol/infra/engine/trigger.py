@@ -732,9 +732,9 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             for edescr, adescr in zip(self._exp_rcv_descr[ring].expected,
                                       self._exp_rcv_descr[ring].received):
 
+                # Compare descriptors
                 cmpresult = TriggerObjectCompareResult()
-                self._logger.info("Comparing Descriptors: %s <--> %s "%\
-                                  (adescr.GID(), edescr.GID()))
+                self._logger.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
                 if edescr.object != adescr:
                     self._logger.error("Descriptor compare result = MisMatch")
                     result.mismatch.append(cmpresult)
@@ -742,23 +742,21 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     return result
                 self._logger.info("Descriptor compare result = Match")
                 result.matched.append(cmpresult)
-
-                if edescr.buffer == None:
-                    result._set_status()
-                    return
                 
-                # Next compare the buffers.
+                # Next compare buffers
                 cmpresult = TriggerObjectCompareResult()
-                ebuf = edescr.buffer #utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
+                ebuf = utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
                 abuf = utils.SafeFnCall(None, self._logger, adescr.GetBuffer)
-                if ebuf == None or abuf == None:
-                    self._logger.error("Buffer Compare: Expected is %s, Actual is %s" % (type(ebuf), type(abuf)))
+                if ebuf is None or abuf is None:
+                    self._logger.error("Buffer Compare: Expected type %s, Actual type %s" % (type(ebuf), type(abuf)))
                     result.mismatch.append(cmpresult)
                     result._set_status()
                     return result
 
-                self._logger.info("Comparing Buffers: %s <--> %s "%\
-                                  (ebuf.GID(), abuf.GID()))
+                self._logger.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
+                # Make sure we are not accidentally comparing the same object
+                assert(id(ebuf) != id(abuf))
+
                 if ebuf != abuf:
                     self._logger.error("Buffer compare result = Mismatch")
                     result.mismatch.append(cmpresult)
@@ -767,28 +765,30 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 self._logger.info("Buffer compare result = Match")
                 result.matched.append(cmpresult)
 
-                if edescr.packet == None:
-                    result._set_status()
-                    return
-
                 # Next compare the packets
                 cmpresult = TriggerObjectCompareResult()
                 epktbuf = ebuf.Read()
-                assert(epktbuf != None)
-                epkt = penscapy.Parse(bytes(epktbuf))
-                
                 apktbuf = abuf.Read()
-                assert(apktbuf != None)
-                apkt = penscapy.Parse(bytes(apktbuf))
+                if epktbuf is None or apktbuf is None:
+                    self._logger.error("Packet Compare: Expected type %s, Actual type %s" % (type(epktbuf), type(apktbuf)))
+                    result.mismatch.append(cmpresult)
+                    result._set_status()
+                    return result
 
-                self._logger.info("Comparing Packets:")
-                self._logger.info("============ RX Packet ============")
-                penscapy.ShowPacket(apkt, self._logger)
-                #pktresult = PacketCompare(epkt, apkt)
-                #self.print_packet_mismatch(pktresult)
-                #if pktresult.matched() == False:
-                if epkt != apkt:
+                # Make sure we are not accidentally comparing the same object
+                assert(id(apktbuf) != id(epktbuf))
+
+                self._logger.info("Comparing Packets")
+                epkt = penscapy.Parse(bytes(epktbuf))
+                apkt = penscapy.Parse(bytes(apktbuf))
+                pktresult = PacketCompare(epkt, apkt)
+                self.print_packet_mismatch(pktresult)
+                if pktresult.matched() == False:
                     self._logger.error("Packet compare result = Mismatch")
+                    self._logger.info("============ EXPECTED Packet ============")
+                    penscapy.ShowRawPacket(epkt, self._logger)
+                    self._logger.info("============ ACTUAL Packet ============")
+                    penscapy.ShowRawPacket(apkt, self._logger)
                     result.mismatch.append(cmpresult)
                     result._set_status()
                     return result
@@ -889,10 +889,6 @@ class TriggerTestCase(objects.FrameworkObject):
         return
 
     def needs_serial_run(self):
-        for step in self._test_spec.session:
-            if step.step.trigger.descriptors or step.step.expect.descriptors:
-                return True
-
         return False
 
     def _all_steps_triggered(self):

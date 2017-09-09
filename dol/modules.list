@@ -1066,11 +1066,34 @@ modules:
 
     - module:
         name    : ETH_RX
-        enable  : False
+        enable  : True
         package : test.eth
         module  : eth
         spec    : rx.testspec
-        ignore  : False
+        ignore  : True
+        iterate:
+            # Untagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            # Tagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
 
     - module:
         name    : NVME

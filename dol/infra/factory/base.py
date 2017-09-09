@@ -23,7 +23,7 @@ class FactoryObjectBase(objects.FrameworkObject):
             self.logger = logger
         return self.logger
 
-    def Bind(self, mem=None):
+    def Bind(self, mem):
         self._mem = mem
 
     def Init(self, spec):

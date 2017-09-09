@@ -70,7 +70,7 @@ class EthQstateObject(object):
 
     def Read(self, lgh = cfglogger):
         self.data = EthQstate(model_wrap.read_mem(self.addr, self.size))
-        lgh.ShowScapyObject(self.data)
+        # lgh.ShowScapyObject(self.data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
     def incr_pindex(self, ring):
@@ -113,6 +113,10 @@ class EthQstateObject(object):
         assert(ring < 7)
         self.Read()
         return getattr(self.data[EthQstate], 'c_index%d' % ring)
+
+    def Show(self, lgh = cfglogger):
+        self.Read()
+        lgh.ShowScapyObject(self.data)
 
 
 class EthQueueObject(QueueObject):

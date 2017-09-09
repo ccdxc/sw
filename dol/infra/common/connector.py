@@ -161,6 +161,10 @@ class ModelConnector(Connector):
         opkt, port, cos = model_wrap.get_next_pkt()
         if len(opkt) == 0:
             raise Connector.Timeout
+        from infra.common.logging import cfglogger
+        cfglogger.info("%s RECEIVED PACKET %s" % ("="*30, "="*30))
+        penscapy.ShowRawPacket(opkt, cfglogger)
+        cfglogger.info("%s END RECEIVED PACKET %s" % ("=" * 28, "=" * 28))
         return PacketContext(None, opkt, port)
 
     def recv(self, size=16384):
