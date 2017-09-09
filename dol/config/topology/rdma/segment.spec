@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_REMOTE
+    id: SEGMENT_RDMA
 
 type        : tenant
 native      : False
@@ -12,5 +12,5 @@ endpoints   :
     pvlan   : 1
     direct  : 0
     remote  : 1 # Remote TEPs
-    pd      : ref://store/specs/id=RDMA_PD_DEFAULT
-    slab    : ref://store/specs/id=RDMA_SLAB_DEFAULT
+    pd      : ref://store/specs/id=PD_RDMA
+    slab    : ref://store/specs/id=SLAB_RDMA

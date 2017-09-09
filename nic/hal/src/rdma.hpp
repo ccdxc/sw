@@ -5,10 +5,19 @@
 #include <memory>
 #include <map>
 #include "bm_allocator.hpp"
+#include <interface.hpp>
+#include <rdma.pb.h>
+#include <rdma_svc.hpp>
 
 namespace hal {
 
 extern hal_ret_t rdma_hal_init();
+extern hal_ret_t rdma_lif_init(intf::LifSpec& spec, uint32_t lif_id);
+extern  hal_ret_t rdma_qp_create(RdmaQpSpec& spec, RdmaQpResponse *rsp);
+extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
+
+
+
 
 class RDMAManager {
  public:

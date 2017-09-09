@@ -26,17 +26,40 @@ class LifObject(objects.FrameworkObject):
         self.GID("Lif%d" % self.id)
         self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
-        self.enable_rdma = 0
+        self.enable_rdma = 1
         self.hw_lif_id = 0
         self.qstate_base = {}
+        if getattr(spec, 'rdma'):
+            self.enable_rdma = spec.rdma.enable
+            self.rdma_max_pt_entries = spec.rdma.max_pt_entries
+            self.rdma_max_keys = spec.rdma.max_keys
 
         self.queue_types = objects.ObjectDatabase(cfglogger)
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
         self.obj_helper_q.Generate(self, spec)
         self.queue_types.SetAll(self.obj_helper_q.queue_types)
 
+        # RDMA per LIF allocators
+        self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
+        self.pd_allocator = objects.TemplateFieldObject("range/1/128")
+        self.mr_key_allocator = objects.TemplateFieldObject("range/1/1024")
+
         self.tenant     = tenant
         self.Show()
+
+    def GetQpid(self):
+        return self.qpid_allocator.get()
+
+    def GetPd(self):
+        return self.pd_allocator.get()
+
+    def GetMrKey(self):
+        return self.mr_key_allocator.get()
+
+    def GetQ(self, type, qid):
+        qt = self.queue_types.Get(type)
+        if qt is not None:
+            return qt.queues.Get(str(qid))
 
     def GetQstateAddr(self, type):
         return self.qstate_base[type]
@@ -53,6 +76,8 @@ class LifObject(objects.FrameworkObject):
         req_spec.mac_addr = self.mac_addr.getnum()
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma
+        req_spec.rdma_max_keys = self.rdma_max_keys
+        req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)

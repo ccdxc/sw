@@ -93,6 +93,8 @@ class LIFManagerBase {
       const char *handle, const char *prog_name,
       const char *label, uint8_t *offset) = 0;
 
+  LIFQState *GetLIFQState(uint32_t lif_id);
+
   // Implement later
   // void DestroyLIFToQstate(uint32_t lif_id);
 
@@ -112,7 +114,6 @@ class LIFManagerBase {
  private:
   const uint32_t kNumMaxLIFs = 2048;
 
-  LIFQState *GetLIFQState(uint32_t lif_id);
 
   std::mutex lk_;
   BMAllocator lif_allocator_;

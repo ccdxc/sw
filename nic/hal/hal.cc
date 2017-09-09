@@ -310,10 +310,8 @@ hal_init (hal_cfg_t *hal_cfg)
     // hal_state ??? how it this special compared to other global state ??
     g_lif_manager = new LIFManager();
    
-#if 0
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
-#endif
 
     hal_proxy_svc_init();
     

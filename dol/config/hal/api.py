@@ -28,6 +28,7 @@ import proxy_pb2            as proxy_pb2
 import ipseccb_pb2          as ipseccb_pb2
 import l4lb_pb2             as l4lb_pb2
 import crypto_keys_pb2      as crypto_keys_pb2
+import rdma_pb2             as rdma_pb2
 
 import endpoint_pb2_grpc        as endpoint_pb2_grpc
 import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -46,6 +47,7 @@ import proxy_pb2_grpc           as proxy_pb2_grpc
 import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
 import l4lb_pb2_grpc            as l4lb_pb2_grpc
 import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+import rdma_pb2_grpc            as rdma_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -351,4 +353,18 @@ def UpdateCryptoKeys(objlist):
     stub = crypto_keys_pb2_grpc.CryptoKeyStub(HalChannel)
     __config(objlist, crypto_keys_pb2.CryptoKeyUpdateRequestMsg,
              stub.CryptoKeyUpdate)
+    return
+
+def ConfigureQps(objlist):
+    if IsHalDisabled(): return
+    stub = rdma_pb2_grpc.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaQpRequestMsg,
+             stub.RdmaQpCreate)
+    return
+
+def ConfigureMrs(objlist):
+    if IsHalDisabled(): return
+    stub = rdma_pb2_grpc.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaMemRegRequestMsg,
+             stub.RdmaMemReg)
     return

@@ -1,0 +1,30 @@
+# Topology Specification
+meta:
+    id: TOPO_RDMA
+ 
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+
+acls: None
+
+security_profiles: None
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_RDMA
+        count   : 1
+        lifns   : range/201/210
+
+cpu: None

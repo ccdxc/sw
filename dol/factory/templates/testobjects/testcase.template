@@ -71,10 +71,10 @@ config:
         session1: None
         session2: None
         session3: None
-    rdma:
-        lqpair  : None # Local QPair
-        rqpair  : None # Remote QPair
-        session : None 
+    rdmasession:
+        lqp  : None # Local QPair
+        rqp  : None # Remote QPair
+        #session : None 
 
 packets      : None # Database packet objects for this testcase.
 descriptors  : None # Database

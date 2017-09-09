@@ -338,6 +338,9 @@ class SessionObjectHelper:
     def GetAll(self):
         return self.objlist
 
+    def GetAllMatchingLabel(self, label):
+        return [s for s in self.objlist if s.label == label]
+
     def __get_matching_sessions(self, selectors = None):
         ssns = []
         for ssn in self.objlist:

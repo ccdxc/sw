@@ -27,6 +27,7 @@
 #include <tenant_svc.hpp>
 #include <network_svc.hpp>
 #include <interface_svc.hpp>
+#include <rdma_svc.hpp>
 #include <l2segment_svc.hpp>
 #include <endpoint_svc.hpp>
 #include <session_svc.hpp>
@@ -59,6 +60,7 @@ svc_reg (const std::string& server_addr)
     TenantServiceImpl        tenant_svc;
     NetworkServiceImpl       network_svc;
     InterfaceServiceImpl     if_svc;
+    RdmaServiceImpl          rdma_svc;
     L2SegmentServiceImpl     l2seg_svc;
     SessionServiceImpl       session_svc;
     EndpointServiceImpl      endpoint_svc;
@@ -87,6 +89,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&tenant_svc);
     server_builder.RegisterService(&network_svc);
     server_builder.RegisterService(&if_svc);
+    server_builder.RegisterService(&rdma_svc);
     server_builder.RegisterService(&l2seg_svc);
     server_builder.RegisterService(&session_svc);
     server_builder.RegisterService(&endpoint_svc);

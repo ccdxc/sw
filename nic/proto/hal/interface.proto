@@ -126,8 +126,10 @@ message LifSpec {
                            lif_qstate_map    = 8;   // LIF -> Qstate map.
   bool                     vlan_strip_en     = 9;    // LIF vlan strip enable
   //bool                     allmulti          = 10;   // LIF set all multicast group
-  bool                     enable_rdma       = 11;   // enable RDMA on LIF
-  repeated QStateSetReq    lif_qstate    = 12;   // Initialize Qstate
+  bool                     enable_rdma   = 11;   // RDMA: enable RDMA on LIF
+  uint32                   rdma_max_keys       = 12;   // RDMA: max key entries
+  uint32                   rdma_max_pt_entries = 13;    // RDMA: max pt entries
+  repeated QStateSetReq    lif_qstate          = 14;   // Initialize Qstate
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

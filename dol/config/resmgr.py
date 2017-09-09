@@ -22,6 +22,7 @@ AclIdAllocator          = objects.TemplateFieldObject("range/1/512")
 SpanSessionIdAllocator  = objects.TemplateFieldObject("range/1/8")
 EpIdAllocator           = objects.TemplateFieldObject("range/1/4096")
 SessionIdAllocator      = objects.TemplateFieldObject("range/1/65535")
+RdmaSessionIdAllocator  = objects.TemplateFieldObject("range/1/65535")
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 TcpCbIdAllocator        = objects.TemplateFieldObject("range/0/32768")
 TlsCbIdAllocator        = objects.TemplateFieldObject("range/0/32768")
@@ -143,6 +144,12 @@ class HostMemory(object):
     def zero(self, memhandle, size):
         va = memhandle.va
         memset(va, 0, size)
+    '''
+    def get_va(self, size):
+        return self.alloc_host_mem(size)
+    '''
+    def get_v2p(self, va):
+        return self.host_mem_v2p(va)
 
     def __del__(self):
         self.delete_host_mem()

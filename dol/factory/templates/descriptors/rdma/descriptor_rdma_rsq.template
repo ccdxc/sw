@@ -1,0 +1,21 @@
+# RDMA Remote Send Queue Descriptor Format
+meta:
+    id      : DESC_RDMA_RSQ
+    size    : 64
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaRsqDescriptorObject
+
+op_type         : None # read or atomic
+psn             : None
+
+read:
+    r_key   : None
+    va      : None
+    len     : None
+    offset  : None
+
+atomic:
+    r_key       : None
+    va          : None
+    orig_data   : None

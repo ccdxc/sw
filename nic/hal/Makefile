@@ -70,6 +70,7 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/tenant.pb.o \
 				$(OBJ_DIR)/tenant.o \
 				$(OBJ_DIR)/interface.pb.o \
+				$(OBJ_DIR)/rdma.pb.o \
 				$(OBJ_DIR)/interface.o \
 				$(OBJ_DIR)/network.o \
 				$(OBJ_DIR)/nw.pb.o \

@@ -1,0 +1,314 @@
+#! /usr/bin/python3
+import pdb
+import math
+
+import infra.common.defs        as defs
+import infra.common.objects     as objects
+import config.resmgr            as resmgr
+import config.objects.rdma.ring  as ring
+import config.hal.api           as halapi
+import config.hal.defs          as haldefs
+
+from config.store               import Store
+from infra.common.logging       import cfglogger
+from config.objects.queue       import QueueObject
+
+import model_sim.src.model_wrap as model_wrap
+
+from scapy.all import *
+
+
+class RdmaRQstate(Packet):
+    name = "RdmaRQstate"
+    fields_desc = [
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
+        LEShortField("p_index2", 0),
+        LEShortField("c_index2", 0),
+        LEShortField("p_index3", 0),
+        LEShortField("c_index3", 0),
+        LEShortField("p_index4", 0),
+        LEShortField("c_index4", 0),
+        LEShortField("p_index5", 0),
+        LEShortField("c_index5", 0),
+    
+        LEIntField("pt_base_addr", 0),
+
+        LEIntField("rsq_base_addr", 0),
+
+        ByteField("rsq_size", 0),
+        ByteField("token_id", 0),
+        ByteField("nxt_to_go_token_id", 0),
+        ByteField("rsq_pindex_prime", 0),                                            
+
+        BitField("log_pmtu", 0xa, 5),
+        BitField("log_rq_page_size", 0xc, 5),
+        BitField("log_wqe_size", 6, 5),
+        BitField("log_num_wqes", 0, 5),
+        BitField("serv_type", 0, 3),
+        BitField("srq_enabled", 0, 1),
+        BitField("busy", 0, 1),
+        BitField("in_progress", 0, 1),
+        BitField("rsvd1", 0, 3),
+        BitField("adjust_rsq_c_index_in_progress", 0, 1),
+        BitField("rsq_quiesce", 0, 1),
+        BitField("cache", 0, 1),
+
+        X3BytesField("e_psn", 0),
+        ByteField("adjust_rsq_c_index", 0),
+
+        X3BytesField("msn", 0),
+        ByteField("rsvd2", 0),
+
+        LEIntField("pd", 0),
+
+        ByteField("rsvd3", 0),
+        ByteField("rsvd4", 0),
+        ByteField("rsvd5", 0),
+        ByteField("rsvd6", 0),
+    ]
+
+class RdmaSQstate(Packet):
+    name = "RdmaSQstate"
+    fields_desc = [
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
+        LEShortField("p_index2", 0),
+        LEShortField("c_index2", 0),
+        LEShortField("p_index3", 0),
+        LEShortField("c_index3", 0),
+        LEShortField("p_index4", 0),
+        LEShortField("c_index4", 0),
+        LEShortField("p_index5", 0),
+        LEShortField("c_index5", 0),
+    
+        LEIntField("pt_base_addr", 0),
+        BitField("log_pmtu", 0xa, 5),
+        BitField("log_sq_page_size", 0xc, 5),
+        BitField("log_wqe_size", 6, 5),
+        BitField("log_num_wqes", 0, 5),
+        BitField("serv_type", 0, 4),
+        ByteField("curr_op_type", 0),
+        LELongField("curr_wqe_ptr", 0),
+        LEIntField("current_sge_offset", 0),
+        ByteField("current_sge_id", 0),
+        ByteField("num_sges", 0),
+        BitField("busy", 0, 1),
+        BitField("in_progress", 0, 1),
+        BitField("signalled_completion", 0, 1),
+        BitField("disable_e2e_fc", 0, 1),
+        BitField("fast_reg_enable", 0, 1),
+        BitField("fence", 0, 1),
+        BitField("li_fence", 0, 1),
+        BitField("need_credits", 0, 1),
+        LEIntField("pd", 0),
+        ByteField("rsvd1", 0),
+        ByteField("rsvd2", 0),
+        ByteField("rsvd3", 0),
+        ByteField("rsvd4", 0),
+        ByteField("rsvd5", 0),
+    ]
+
+class RdmaCQstate(Packet):
+    name = "RdmaCQstate"
+    fields_desc = [
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+
+        LEIntField("pt_base_addr", 0),
+        BitField("log_sq_page_size", 0xc, 5),
+        BitField("log_wqe_size", 6, 5),
+        BitField("log_num_wqes", 0, 5),
+        BitField("rsvd1", 0, 1),
+        X3BytesField("cq_id", 0),
+        X3BytesField("eq_id", 0),
+        BitField("arm", 0, 1),
+        BitField("color", 0, 1),
+        BitField("rsvd2", 0, 6),
+    ]
+
+class RdmaEQstate(Packet):
+    name = "RdmaEQstate"
+    fields_desc = [
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+
+        LELongField("base_addr", 0),
+        LEIntField("int_num", 0),
+        LEIntField("eq_id", 0),
+        BitField("log_num_wqes", 0, 5),
+        BitField("log_wqe_size", 6, 5),
+        BitField("int_enabled", 0, 1),
+        BitField("color", 0, 1),
+        BitField("rsvd", 0, 4),
+    ]
+
+qt_params = {
+    #fix the label/program for following entry reflecting txdma params
+    'RDMA_SQ': {'state': RdmaSQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_req_rx_stage0', 'prog': 'rxdma_stage0.bin'},
+    'RDMA_RQ': {'state': RdmaRQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_resp_rx_stage0', 'prog': 'rxdma_stage0.bin'},
+    'RDMA_CQ': {'state': RdmaCQstate, 'hrings': 1, 'trings': 1, 'has_label':0, 'label': '', 'prog': ''},
+    'RDMA_EQ': {'state': RdmaEQstate, 'hrings': 1, 'trings': 1, 'has_label':0, 'label': '', 'prog': ''},
+}
+
+class RdmaQstateObject(object):
+    def __init__(self, queue_type, addr, size):
+        self.queue_type = queue_type
+        self.addr = addr
+        self.size = size
+        self.Read()
+
+    def Write(self):
+        cfglogger.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        self.Read()
+
+    def Read(self):
+        self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
+        self.data.show()
+        cfglogger.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
+
+    def incr_pindex(self, ring):
+        assert(ring < 7)
+        self.set_pindex(ring, self.get_pindex(ring) + 1)
+        self.Write()
+
+    def set_pindex(self, ring, value):
+        assert(ring < 7)
+        setattr(self.data, 'p_index%d' % ring, value)
+        self.Write()
+
+    def set_ring_base(self, value):
+        self.data.ring_base = value
+        self.Write()
+
+    def set_ring_size(self, value):
+        self.data.ring_size = value
+        self.Write()
+
+    def get_pindex(self, ring):
+        assert(ring < 7)
+        self.Read()
+        return getattr(self.data, 'p_index%d' % ring)
+
+    def get_cindex(self, ring):
+        assert(ring < 7)
+        self.Read()
+        return getattr(self.data, 'c_index%d' % ring)
+
+
+class RdmaQueueObject(QueueObject):
+    def __init__(self):
+        super().__init__()
+        self._qstate    = None
+
+    def Init(self, queue_type, spec):
+        self.queue_type = queue_type
+        self.id         = queue_type.GetQid()
+        self.GID(str(self.id))
+
+        self.rings      = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_ring = ring.RdmaRingObjectHelper()
+        self.obj_helper_ring.Generate(self, spec)
+        self.rings.SetAll(self.obj_helper_ring.rings)
+
+        self.Show()
+
+    @property
+    def qstate(self):
+        if self._qstate is None:
+            self._qstate = RdmaQstateObject(queue_type=self.queue_type.GID(), addr=self.GetQstateAddr(), size=self.queue_type.size)
+        return self._qstate
+
+    def PrepareHALRequestSpec(self, req_spec):
+        req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.
+        req_spec.type_num = self.queue_type.type
+        req_spec.qid = self.id
+        qt_params_entry = qt_params[self.queue_type.GID()]
+        qstate = qt_params_entry["state"]()
+        qstate.host = qt_params_entry["hrings"]
+        qstate.total = qt_params_entry["trings"]
+        qstate.show()
+        req_spec.queue_state = bytes(qstate)
+        if qt_params_entry["has_label"]:
+            req_spec.label.handle = "p4plus"
+            req_spec.label.prog_name = qt_params_entry["prog"]
+            req_spec.label.label = qt_params_entry["label"]
+        #print("End of id: %d " % self.id)
+
+    def GetQstateAddr(self):
+        return self.queue_type.GetQstateAddr() + (self.id * self.queue_type.size)
+
+    def ConfigureRings(self):
+        self.obj_helper_ring.Configure()
+
+    def Show(self):
+        cfglogger.info('Queue: %s' % self.GID())
+        cfglogger.info('- type   : %s' % self.queue_type.GID())
+        cfglogger.info('- id     : %s' % self.id)
+
+    def SetRingParams(self, ring_id, host, mem_handle, address, size, desc_size):
+        r = self.rings.Get(ring_id)
+        if r is None:
+            assert(0)
+        r.SetRingParams(host, mem_handle, address, size, desc_size)
+        return
+
+class RdmaQueueObjectHelper:
+    def __init__(self):
+        self.queues = []
+
+    def Generate(self, queue_type, spec):
+        for espec in spec.queues:
+            for qspec in range(espec.queue.count):
+                queue = RdmaQueueObject()
+                queue.Init(queue_type, espec.queue)
+                self.queues.append(queue)
+
+    def Configure(self):
+        for queue in self.queues:
+            queue.ConfigureRings()

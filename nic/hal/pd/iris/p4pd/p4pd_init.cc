@@ -604,6 +604,7 @@ p4pd_p4plus_app_init (void)
                 data.actionid = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
                 break;
             case P4PLUS_APPTYPE_RDMA:
+                data.actionid = P4PLUS_APP_P4PLUS_APP_RDMA_ID;
                 break;
             case P4PLUS_APPTYPE_TCPTLS:
                 data.actionid = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;

@@ -1,0 +1,105 @@
+//------------------------------------------------------------------------------
+// protobuf specification for RDMA HAL APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package rdma;
+
+// Interface service definition
+service Rdma {
+  // Queue Pair related APIs
+  rpc RdmaQpCreate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
+  rpc RdmaQpUpdate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
+  //rpc RdmaQpDelete(RdmaQpDeleteRequestMsg) returns (RdmaQpDeleteResponseMsg) {}
+  //rpc RdmaQpGet(RdmaQpGetRequestMsg) returns (RdmaQpGetResponseMsg) {}
+
+  // Register Memory related APIs
+  rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
+}
+
+// types of interfaces
+enum RdmaServiceType {
+    RDMA_SERV_TYPE_RC          = 0;  // Reliable Connection
+    RDMA_SERV_TYPE_UC          = 1;  // UnReliable Connection
+    RDMA_SERV_TYPE_RD          = 2;  // Reliable Datagram
+    RDMA_SERV_TYPE_UD          = 3;  // UnReliable Datagram
+    RDMA_SERV_TYPE_CNP         = 4;  // Congestion Notification Pkt
+    RDMA_SERV_TYPE_XRC         = 5;  // Extended Reliable Connection
+    RDMA_SERV_TYPE_VEND_1      = 6;  // Vendor-1
+    RDMA_SERV_TYPE_VEND_2      = 7;  // Vendor-2
+}
+
+// RdmaQp object
+message RdmaQpSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint32                   qp_num          = 2;    // SQWQE size
+  uint32                   hw_lif_id       = 3;    // SQWQE size
+  uint32                   sq_wqe_size     = 4;    // SQWQE size
+  uint32                   rq_wqe_size     = 5;    // SQWQE size
+  uint32                   num_sq_wqes     = 6;    // Num SQWQEs
+  uint32                   num_rq_wqes     = 7;    // Num RQWQEs
+  uint32                   num_rsq_wqes    = 8;    // Num RSQWQEs
+  uint32                   num_rrq_wqes    = 9;    // Num RRQWQEs
+  uint32                   pd              = 10;    // Protection domain
+  uint32                   pmtu            = 11;    // Path MTU
+  uint32                   hostmem_pg_size = 12;    // Path MTU
+  RdmaServiceType          svc             = 13;   // RDMA service type
+  bool                     atomic_enabled  = 14;   // LIF vlan strip enable
+  uint32                   sq_lkey         = 15;    // SQ's lkey
+  uint32                   rq_lkey         = 16;    // RQ's lkey
+}
+
+// RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaQpRequestMsg {
+  repeated RdmaQpSpec    request = 1;    // batch of requests
+}
+
+// RdmaQpResponse response to one RdmaQpSpec
+message RdmaQpResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+  //RdmaQpStatus        status           = 2;    // operational status
+  uint32              rsq_base_addr    = 3;    // RSQ base addr
+  uint32              rrq_base_addr    = 4;    // RRQ base addr
+  uint32              header_temp_addr = 5;    // Header template addr
+}
+
+// RdmaQpResponseMsg is response to RdmaQpRequestMsg
+message RdmaQpResponseMsg {
+  repeated RdmaQpResponse    response = 1;    // batch of responses
+}
+
+// RdmaMemReg object
+message RdmaMemRegSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint64                   hw_lif_id       = 2;    // Hardware Lif Id
+  uint32                   pd              = 3;    // Protection domain
+  uint64                   va              = 4;    // Virtual address
+  uint32                   len             = 5;    // Length of memory
+  bool                     ac_local_wr     = 6;    // Acc control/permissions
+  bool                     ac_remote_wr    = 7;    // Acc control/permissions
+  bool                     ac_remote_rd    = 8;    // Acc control/permissions
+  bool                     ac_remote_atomic= 9;    // Acc control/permissions
+  uint32                   lkey            = 10;    // Lkey for this memory
+  uint32                   rkey            = 11;    // Rkey for this memory
+  uint32                   hostmem_pg_size  = 12;  // Rkey for this memory
+  repeated uint64          va_pages_phy_addr = 13;  // Virtual memory pages's phy addr     
+}
+
+// RdmaMemRegRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaMemRegRequestMsg {
+  repeated RdmaMemRegSpec    request = 1;    // batch of requests
+}
+
+// RdmaMemRegResponse response to one RdmaMemRegSpec
+message RdmaMemRegResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+}
+
+// RdmaMemRegResponseMsg is response to RdmaMemRegRequestMsg
+message RdmaMemRegResponseMsg {
+  repeated RdmaMemRegResponse    response = 1;    // batch of responses
+}
+

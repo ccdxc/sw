@@ -14,6 +14,10 @@ import config.hal.defs          as haldefs
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
+#import config.objects.qp        as qp
+import config.objects.pd        as pd
+import config.objects.slab      as slab
+
 class EndpointObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -147,6 +151,32 @@ class EndpointObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def CreatePds(self, spec):
+        self.pds = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_pd = pd.PdObjectHelper()
+        self.obj_helper_pd.Generate(self, spec) 
+        self.pds.SetAll(self.obj_helper_pd.pds)
+
+    def ConfigurePds(self):
+        self.obj_helper_pd.Configure()
+
+    def CreateSlabs(self, spec):
+        self.slab_allocator = objects.TemplateFieldObject("range/0/1024")
+        self.slabs = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_slab = slab.SlabObjectHelper()
+        self.obj_helper_slab.Generate(self, spec)
+        self.slabs.SetAll(self.obj_helper_slab.slabs)
+
+    def AddSlab(self, slab):
+        self.obj_helper_slab.AddSlab(slab)
+        self.slabs.Add(slab)
+
+    def ConfigureSlabs(self):
+        self.obj_helper_slab.Configure() 
+        
+    def GetSlabid(self):
+        return self.slab_allocator.get()
+
 # Helper Class to Generate/Configure/Manage Endpoint Objects.
 class EndpointObjectHelper:
     def __init__(self):
@@ -175,6 +205,10 @@ class EndpointObjectHelper:
         cfglogger.info("Configuring %d Endpoints." % len(self.eps))
         halapi.ConfigureEndpoints(self.eps)
         halapi.ConfigureEndpoints(self.backend_eps)
+        for ep in self.local:
+            ep.ConfigureSlabs()
+        for ep in self.eps:
+            ep.ConfigurePds()
         return
 
     def __create(self, segment, intfs, count,
@@ -266,6 +300,15 @@ class EndpointObjectHelper:
                 self.backend_local += self.backend_useg
         return
 
+    def __create_pds(self, spec):
+        for ep in self.eps:
+            ep.CreatePds(spec)
+    
+    def __create_slabs(self, spec):
+        # create slabs only on local eps
+        for ep in self.local:
+            ep.CreateSlabs(spec)
+    
     def Generate(self, segment, spec):
         self.__create_remote(segment, spec)
         self.__create_local(segment, spec)
@@ -278,4 +321,13 @@ class EndpointObjectHelper:
             Store.objects.SetAll(self.eps)
         if len(self.backend_eps):
             Store.objects.SetAll(self.backend_eps)
+
+        if spec.slab:
+            slab_spec = spec.slab.Get(Store)
+            self.__create_slabs(slab_spec)
+
+        if spec.pd:
+            pd_spec = spec.pd.Get(Store)
+            self.__create_pds(pd_spec)
+
         return
