@@ -125,10 +125,10 @@ do {                                                       \
 //        use them when one off allocation is needed, otherwise use slabs
 //        we can overload new operator later on
 //------------------------------------------------------------------------------
-#define HAL_MALLOC(type, size)        malloc(size)
-#define HAL_CALLOC(type, size)        calloc(1, size)
-#define HAL_MALLOCZ(type, size)       calloc(1, size)
-#define HAL_FREE(type, ptr)           ::free(ptr)
+#define HAL_MALLOC(type_id, size)        malloc(size)
+#define HAL_CALLOC(type_id, size)        calloc(1, size)
+#define HAL_MALLOCZ(type_id, size)       calloc(1, size)
+#define HAL_FREE(type_id, ptr)           ::free(ptr)
 
 //------------------------------------------------------------------------------
 // TODO: we need atomic increment operations for ARM

@@ -69,6 +69,7 @@ typedef enum hal_slab_e {
 
 typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_NONE,
+    HAL_MEM_ALLOC_INFRA,
     HAL_MEM_ALLOC_LIB_HT,
     HAL_MEM_ALLOC_LIB_SLAB,
     HAL_MEM_ALLOC_LIB_BITMAP,

@@ -52,7 +52,7 @@ LDFLAGS +=	-lhal \
 			-lhostmem \
 
 SRC_FILES :=	hal.cc \
-				hal_mem.cc \
+				hal_state.cc \
 				main.cc \
 				$(NULL)
 
@@ -62,7 +62,7 @@ DEPENDS = $(OBJECTS:.o=.d)
 
 SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/hal.o \
-				$(OBJ_DIR)/hal_mem.o \
+				$(OBJ_DIR)/hal_state.o \
 				$(OBJ_DIR)/hal_pd.o \
 				$(OBJ_DIR)/utils.o \
 				$(OBJ_DIR)/if_utils.o \
@@ -135,6 +135,6 @@ all: $(OBJ_FILES)
 	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV) -lgcov
 
 clean:
-	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_mem.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
+	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_state.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
 
 -include $(DEPENDS)
