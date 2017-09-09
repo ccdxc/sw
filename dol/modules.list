@@ -342,6 +342,16 @@ modules:
             - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
 
     - module:
+        name    : L2UC_VXLAN_NONIP
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow   : filter://fwtype=L2,type=MAC,label=NETWORKING
+
+    - module:
         name    : L2UC_VXLAN_V6
         enable  : True
         package : test.networking
