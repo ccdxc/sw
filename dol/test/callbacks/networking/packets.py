@@ -117,9 +117,8 @@ def GetExpectedPacketCos(testcase, packet):
 
     if testcase.config.flow.IsL2():
         return testcase.config.flow.eg_qos.cos.get()
-
-    # L3 Flow and Source segment not native.
-    if testcase.config.src.segment.native == False or\
+    # Source segment native.
+    if testcase.config.src.segment.native == True and\
         IsPriorityTagged(testcase.pvtdata) == False:
         return 0
     

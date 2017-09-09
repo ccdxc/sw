@@ -29,4 +29,10 @@ entries:
             flow_info:
                 action  : drop
 
+    - entry:
+        label: arp
+        initiator:
+            ethertype: 0x806
+        responder:
+            ethertype: 0x806
 

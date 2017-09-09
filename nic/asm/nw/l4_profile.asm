@@ -82,7 +82,9 @@ validate_tunneled_packet2_ipv6:
   seq         c3, r2[63:56], 0xff
   seq         c4, r2, k.inner_ipv6_dstAddr[127:64]
   seq         c5, r3, k.inner_ipv6_dstAddr[63:0]
-  bcf         [c1|c2|c3|c4|c5], malformed_tunneled_packet
+  // check if ipv6_sa == ipv6_da
+  andcf       c4, [c5]
+  bcf         [c1|c2|c3|c4], malformed_tunneled_packet
   nop
   jr          r7
   nop

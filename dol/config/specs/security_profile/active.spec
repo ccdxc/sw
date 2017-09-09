@@ -5,4 +5,6 @@ profiles:
     - id: SEC_PROF_ACTIVE
       fields:
 
+    - id: SEC_PROF_DEFAULT
+      fields:
 

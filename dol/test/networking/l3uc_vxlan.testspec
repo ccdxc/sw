@@ -91,10 +91,10 @@ packets:
                 src     : ref://testcase/config/dst/segment/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                #tos     : ref://testcase/config/flow/eg_qos/dscp
                 ttl     : callback://networking/packets/GetRoutedTtl
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                #tc      : ref://testcase/config/flow/eg_qos/dscp
                 hlim    : callback://networking/packets/GetRoutedTtl
 
 trigger:
