@@ -305,13 +305,11 @@ private:
 //------------------------------------------------------------------------------
 // Whole of HAL state including both config & oper
 // NOTE: any HAL state put outside this is not under warranty
-//
-// TODO: rename hstate back to hal_state once all state is re-organized
 //------------------------------------------------------------------------------
-class hstate {
+class hal_state {
 public:
-    static hstate *factory(void);
-    ~hstate();
+    static hal_state *factory(void);
+    ~hal_state();
 
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }
@@ -424,7 +422,7 @@ public:
 
 private:
     bool init(void);
-    hstate();
+    hal_state();
 
 private:
     hal_cfg_db     *cfg_db_;
@@ -432,6 +430,7 @@ private:
     hal_mem_db     *mem_db_;
 };
 
+#if 0
 //------------------------------------------------------------------------------
 // hal_state class contains all the HAL state (well, most of it) including all
 // the slab memory instances, hash tables, indexers etc. used inside HAL,
@@ -753,6 +752,7 @@ private:
     cfg_ver_in_use_info_t      cfg_ver_in_use_[HAL_THREAD_ID_MAX];     // versions in use for read
     cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
 };
+#endif
 
 extern class hal_state    *g_hal_state;
 

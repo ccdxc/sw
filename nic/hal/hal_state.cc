@@ -786,7 +786,7 @@ hal_mem_db::~hal_mem_db()
 // init() function to instantiate all HAL init state
 //------------------------------------------------------------------------------
 bool
-hstate::init(void)
+hal_state::init(void)
 {
     cfg_db_ = hal_cfg_db::factory();
     oper_db_ = hal_oper_db::factory();
@@ -817,7 +817,7 @@ cleanup:
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-hstate::hstate()
+hal_state::hal_state()
 {
     cfg_db_ = NULL;
     oper_db_ = NULL;
@@ -827,15 +827,15 @@ hstate::hstate()
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
-hstate *
-hstate::factory(void)
+hal_state *
+hal_state::factory(void)
 {
-    void      *mem;
-    hstate    *state;
+    void         *mem;
+    hal_state    *state;
 
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hstate));
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(hal_state));
     HAL_ABORT(mem != NULL);
-    state = new (mem) hstate();
+    state = new (mem) hal_state();
     if (state->init() == false) {
 	    HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
 	    return NULL;
@@ -847,7 +847,7 @@ hstate::factory(void)
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-hstate::~hstate()
+hal_state::~hal_state()
 {
     if (cfg_db_) {
         cfg_db_->~hal_cfg_db();
@@ -865,6 +865,7 @@ hstate::~hstate()
     }
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
 //------------------------------------------------------------------------------
@@ -1574,6 +1575,7 @@ hal_state::cfg_db_open(cfg_op_t cfg_op)
 
     return HAL_RET_OK;
 }
+#endif
 
 #if 0
 //------------------------------------------------------------------------------
@@ -1619,6 +1621,7 @@ hal_state::cfg_db_close(void)
 }
 #endif
 
+#if 0
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
@@ -1635,6 +1638,7 @@ hal_state::factory(void)
     }
     return state;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
