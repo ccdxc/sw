@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
@@ -30,16 +32,33 @@ func veniceCLI(cmdStr string) string {
 }
 
 func TestStartServer(t *testing.T) {
+	var err error
+
 	tserver.Start(":" + testServerPort)
 
 	// initiaize cluster with default cluster
 	cluster := &cmd.Cluster{}
 	cluster.Kind = "cluster"
 	cluster.Name = "dc-az-cluster1"
+
+	count := 5
 	url := "http://localhost:" + testServerPort + "/v1/cmd/cluster"
-	if err := httpPost(url, cluster); err != nil {
-		t.Fatalf("error creating default cluster: %s", err)
+	for {
+		err = httpPost(url, cluster)
+		if err == nil {
+			return
+		}
+		if strings.Contains(err.Error(), "connection refused") {
+			// server may not be ready by now
+			count--
+			if count <= 0 {
+				break
+			}
+			t.Errorf("error - server not ready")
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
+	t.Fatalf("error creating default cluster: %s", err)
 }
 
 func TestClusterCreate(t *testing.T) {
@@ -1487,4 +1506,13 @@ func TestClusterDelete(t *testing.T) {
 	if strings.TrimSpace(out) != "" {
 		t.Fatalf("read object after delete: %s", out)
 	}
+}
+
+func TestGetOpenConnections(t *testing.T) {
+	cmd := exec.Command("netstat", "-l")
+	cout, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("error running netstat output: %s", err)
+	}
+	t.Logf("%s\n", cout)
 }
