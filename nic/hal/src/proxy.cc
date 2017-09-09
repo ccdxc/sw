@@ -8,6 +8,7 @@
 #include <lif_manager.hpp>
 #include <interface.hpp>
 #include <cpucb.hpp>
+#include <session.hpp>
 
 namespace hal {
 
@@ -33,6 +34,29 @@ proxy_meta_init() {
         (proxy_meta_t) {true, SERVICE_LIF_CPU, 0, 1, 1};
 
     return HAL_RET_OK;
+}
+
+void *
+proxy_flow_ht_get_key_func (void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((proxy_flow_info_t *)entry)->flow_key);
+}
+
+uint32_t
+proxy_flow_ht_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size;
+}
+
+bool
+proxy_flow_ht_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if(memcmp(key1, key2, sizeof(flow_key_t) == 0)) {
+        return true;
+    }
+    return false;
 }
 
 void *
@@ -110,57 +134,15 @@ add_proxy_to_db (proxy_t *proxy)
     return HAL_RET_OK;
 }
 
-//-----------------------------------------------------------------------------
-// API to allocate and program QID
-//-----------------------------------------------------------------------------
-
-hal_ret_t
-proxy_allocate_qid(types::ProxyType type,
-                   lif_id_t&        lif,
-                   qtype_t&         qtype,
-                   qid_t&           qid)
+static inline hal_ret_t 
+add_proxy_flow_info_to_db(proxy_flow_info_t* pfi) 
 {
-    proxy_t             *proxy = NULL;
-    indexer::status     rs;
-
-    proxy = find_proxy_by_type(type);
-    if(proxy == NULL) {
-        HAL_TRACE_ERR("Proxy not found for the type, {}", type);
-        return HAL_RET_PROXY_NOT_FOUND;
-    }
-
-    qtype = proxy->qtype;
-    
-    rs = proxy->qid_idxr_->alloc((uint32_t *)&qid);
-    if(rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("Error in qid allocation, err: {}", rs);
-        return HAL_RET_NO_RESOURCE;
-    }
-
-    HAL_TRACE_DEBUG("QID Allocator: qtype: {}, qid: {}", qtype, qid);
+    pfi->proxy->flow_ht_->insert(pfi, &pfi->flow_ht_ctxt);
     return HAL_RET_OK;
 }
-
-hal_ret_t
-proxy_program_qid(types::ProxyType type, lif_id_t lif, qtype_t qtype, qid_t qid)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-proxy_allocate_program_qid(types::ProxyType type,
-                           lif_id_t    lif,
-                           qtype_t& qtype, 
-                           qid_t& qid) 
-{
-    hal_ret_t ret;
-    ret = proxy_allocate_qid(type, lif, qtype, qid);
-    if(ret!= HAL_RET_OK) {
-        return ret;    
-    }
-
-    return proxy_program_qid(type, lif, qtype, qid);
-}
+//-----------------------------------------------------------------------------
+// API to program LIF
+//-----------------------------------------------------------------------------
 
 hal_ret_t 
 proxy_program_lif(proxy_t* proxy)
@@ -237,7 +219,14 @@ proxy_factory(types::ProxyType type)
 
     proxy->type = type;
     proxy->hal_handle = hal_alloc_handle();
-    
+   
+    // Initialize flow info structures 
+    proxy->flow_ht_ = ht::factory(HAL_MAX_PROXY_FLOWS,
+                                  hal::proxy_flow_ht_get_key_func,
+                                  hal::proxy_flow_ht_compute_hash_func,
+                                 hal::proxy_flow_ht_compare_key_func);
+    HAL_ASSERT(proxy->flow_ht_ != NULL);
+
     // Instantiate QID indexer 
     proxy->qid_idxr_ = new hal::utils::indexer(HAL_MAX_QID);
     HAL_ASSERT(NULL != proxy->qid_idxr_);
@@ -424,6 +413,196 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
     // fill stats of this TCP CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
+}
+
+hal_ret_t
+validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
+                                   proxy::ProxyResponse *rsp)
+{
+    tenant_t*       tenant = NULL;
+    tenant_id_t     tid = 0;
+    
+    if(!req.has_meta() ||
+        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+ 
+    tid = req.meta().tenant_id();
+    tenant = find_tenant_by_id(tid); 
+    if(tenant == NULL) {
+        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
+        return HAL_RET_INVALID_ARG;    
+    }
+    
+    if(!req.has_spec() ||
+       req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
+       rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
+       return HAL_RET_INVALID_ARG;   
+    }
+   
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
+                  proxy::ProxyResponse *rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    tenant_id_t         tid = 0;
+    flow_key_t          flow_key = {0};
+    proxy_t*            proxy = NULL;
+    proxy_flow_info_t*  pfi = NULL;
+    indexer::status     rs;
+
+    ret = validate_proxy_flow_config_request(req, rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("proxy: flow config request validation failed: {}", ret);
+        return ret;
+    }
+  
+    proxy = find_proxy_by_type(req.spec().proxy_type()); 
+    if(proxy == NULL) {
+        rsp->set_api_status(types::API_STATUS_PROXY_NOT_ENABLED);
+        HAL_TRACE_ERR("{}: proxy {} not found", __func__, req.spec().proxy_type());
+        return HAL_RET_INVALID_ARG;    
+    }
+   
+    tid = req.meta().tenant_id();
+    extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
+    
+    if(req.proxy_en()) {
+        HAL_TRACE_DEBUG("proxy: enable proxy for the flow");
+        pfi = find_proxy_flow_info(proxy, &flow_key);
+        if(pfi) {
+            HAL_TRACE_DEBUG("Proxy already enabled for the flow");
+            rsp->set_api_status(types::API_STATUS_OK);
+            return HAL_RET_OK;
+        }
+        
+        pfi = proxy_flow_info_alloc_init();
+        if(!pfi) {
+            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+            return HAL_RET_OOM;
+        }
+        
+        pfi->flow_key = flow_key;
+        pfi->proxy = proxy;
+
+        // Allocate QID for this flow
+        rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
+        if(rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
+            rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+            return HAL_RET_NO_RESOURCE;
+        }
+        rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
+        if(rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
+            rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+            return HAL_RET_NO_RESOURCE;
+        }
+
+        HAL_TRACE_DEBUG("Received qid1: {}, qid2: {}", pfi->qid1, pfi->qid2);
+        add_proxy_flow_info_to_db(pfi);
+
+    } else {
+        HAL_TRACE_DEBUG("proxy: disable proxy for the flow");
+        pfi = (proxy_flow_info_t *)proxy->flow_ht_->remove(&flow_key);
+        proxy_flow_info_free(pfi);
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+    return ret;
+}
+
+hal_ret_t
+validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
+                                     proxy::ProxyGetFlowInfoResponse *rsp)
+{
+    tenant_t*       tenant = NULL;
+    tenant_id_t     tid = 0;
+    
+    if(!req.has_meta() ||
+        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+ 
+    tid = req.meta().tenant_id();
+    tenant = find_tenant_by_id(tid); 
+    if(tenant == NULL) {
+        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
+        return HAL_RET_INVALID_ARG;    
+    }
+    
+    if(!req.has_spec() ||
+       req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
+       rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
+       return HAL_RET_INVALID_ARG;   
+    }
+   
+    return HAL_RET_OK;
+}
+
+proxy_flow_info_t*
+proxy_get_flow_info(types::ProxyType proxy_type,
+                    const flow_key_t* flow_key)
+{
+    proxy_t*            proxy = NULL;
+
+    if(proxy_type == types::PROXY_TYPE_NONE || !flow_key) {
+        return NULL;    
+    }
+
+    proxy = find_proxy_by_type(proxy_type); 
+    if(proxy == NULL) {
+        HAL_TRACE_ERR("{}: proxy {} not found", __func__, proxy_type);
+        return NULL;    
+    }
+    
+    return find_proxy_flow_info(proxy, flow_key);
+}
+
+hal_ret_t 
+proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
+                    proxy::ProxyGetFlowInfoResponse* rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    tenant_id_t         tid = 0;
+    flow_key_t          flow_key = {0};
+    proxy_t*            proxy = NULL;
+    proxy_flow_info_t*  pfi = NULL;
+
+    ret = validate_proxy_get_flow_info_request(req, rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("proxy: get flow info requestvalidation failed: {}", ret);
+        return ret;
+    }
+    
+    tid = req.meta().tenant_id();
+    extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
+    
+    pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);
+    if(!pfi) {
+        HAL_TRACE_ERR("proxy: flow info not found for the flow {}", flow_key);
+        rsp->set_api_status(types::API_STATUS_PROXY_FLOW_NOT_FOUND);
+        return HAL_RET_PROXY_NOT_FOUND;
+    }
+    
+    proxy = pfi->proxy;
+
+    *(rsp->mutable_meta()) = req.meta();
+    rsp->set_proxy_type(proxy->type);
+    *(rsp->mutable_flow_key()) = req.flow_key();;
+    rsp->set_lif_id(proxy->lif_id);
+    rsp->set_qtype(proxy->qtype);
+    rsp->set_qid1(pfi->qid1);
+    rsp->set_qid2(pfi->qid2);
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;;
 }
 
 }    // namespace hal

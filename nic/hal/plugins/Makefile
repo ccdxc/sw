@@ -1,5 +1,6 @@
 LIBDIRS = \
 	network \
+	proxy \
 	$(NULL)
 
 PGMDIRS = $(NULL)

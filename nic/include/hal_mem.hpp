@@ -30,6 +30,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_ACL,
     HAL_SLAB_WRING,
     HAL_SLAB_PROXY,
+    HAL_SLAB_PROXY_FLOW_INFO,
     HAL_SLAB_IPSECCB,
     HAL_SLAB_L4LB,
     HAL_SLAB_CPUCB,

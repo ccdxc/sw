@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "session.proto";
 
 package proxy;
 
@@ -14,6 +15,8 @@ service Proxy {
   rpc ProxyUpdate (ProxyRequestMsg) returns (ProxyResponseMsg) {}
   rpc ProxyDisable (ProxyDisableRequestMsg) returns (ProxyDisableResponseMsg) {}
   rpc ProxyGet (ProxyGetRequestMsg) returns (ProxyGetResponseMsg) {}
+  rpc ProxyFlowConfig(ProxyFlowConfigRequestMsg) returns (ProxyResponseMsg){}
+  rpc ProxyGetFlowInfo(ProxyGetFlowInfoRequestMsg) returns(ProxyGetFlowInfoResponseMsg) {}
 }
 
 // ProxyKeyHandle is used to operate on a proxy either by its key or handle
@@ -96,4 +99,40 @@ message ProxyGetResponse {
 // ProxyGetResponseMsg is batched response to ProxyGetRequestMsg
 message ProxyGetResponseMsg {
   repeated ProxyGetResponse    response = 1;    // batch get response
+}
+
+message ProxyFlowConfigRequest {
+    types.ObjectMeta    meta        = 1;    // object meta
+    ProxySpec           spec        = 2;    // Specify the type of proxy service 
+    session.FlowKey     flow_key    = 3;    // Flow key to identify a flow 
+    bool                proxy_en    = 4;    // Enable or disable proxy service for a flow
+}
+
+message ProxyFlowConfigRequestMsg {
+    repeated ProxyFlowConfigRequest request = 1; // batch flow enable request    
+}
+
+message ProxyGetFlowInfoRequest {
+    types.ObjectMeta    meta        = 1;    // object meta
+    ProxySpec           spec        = 2;    // Specify the type of proxy service 
+    session.FlowKey     flow_key    = 3;    // identify a flow 
+}
+
+message ProxyGetFlowInfoRequestMsg {
+    repeated ProxyGetFlowInfoRequest request = 1; // batch message    
+}
+
+message ProxyGetFlowInfoResponse {
+    types.ApiStatus     api_status         = 1;    // API status code
+    types.ObjectMeta    meta               = 2;    // object meta
+    types.ProxyType     proxy_type         = 3;    // type of proxy service
+    session.FlowKey     flow_key           = 4;    // identifies a flow
+    uint32              lif_id             = 5;    // Hardware and software lif id for this flow
+    uint32              qtype              = 6;    // Queue Type (value can be 0-8)
+    uint32              qid1               = 7;    // Allocated QID for flow instance 0 (e.g. h-Flow)
+    uint32              qid2               = 8;    // Allocated QID for flow instance 1 ( e.g. n-Flow)
+}
+
+message ProxyGetFlowInfoResponseMsg {
+    repeated ProxyGetFlowInfoResponse response = 1;  // batched response
 }

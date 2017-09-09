@@ -79,3 +79,47 @@ ProxyServiceImpl::ProxyGet(ServerContext *context,
     }
     return Status::OK;
 }
+
+Status
+ProxyServiceImpl::ProxyFlowConfig(ServerContext *context,
+                                  const ProxyFlowConfigRequestMsg *reqmsg,
+                                  ProxyResponseMsg *rspmsg)
+{
+    uint32_t         i, nreqs = reqmsg->request_size();
+    ProxyResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd Proxy Flow Config Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rspmsg->add_response();
+        auto request = reqmsg->request(i);
+        hal::proxy_flow_config(request, response);
+    }
+    return Status::OK;
+   
+}
+
+Status
+ProxyServiceImpl::ProxyGetFlowInfo(ServerContext *context,
+                                   const ProxyGetFlowInfoRequestMsg *reqmsg,
+                                   ProxyGetFlowInfoResponseMsg *rspmsg)
+{
+    uint32_t                    i, nreqs = reqmsg->request_size();
+    ProxyGetFlowInfoResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd Proxy Flow Info Get Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rspmsg->add_response();
+        auto request = reqmsg->request(i);
+        hal::proxy_get_flow_info(request, response);
+    }
+    return Status::OK;
+   
+}

@@ -22,6 +22,10 @@ using proxy::ProxyGetRequest;
 using proxy::ProxyGetRequestMsg;
 using proxy::ProxyGetResponse;
 using proxy::ProxyGetResponseMsg;
+using proxy::ProxyFlowConfigRequestMsg;
+using proxy::ProxyGetFlowInfoRequestMsg;
+using proxy::ProxyGetFlowInfoResponseMsg;
+using proxy::ProxyGetFlowInfoResponse;
 
 class ProxyServiceImpl final : public Proxy::Service {
 public:
@@ -41,6 +45,15 @@ public:
     Status ProxyGet(ServerContext *context,
                     const ProxyGetRequestMsg *req,
                     ProxyGetResponseMsg *rsp) override;
+
+    Status ProxyFlowConfig(ServerContext *context,
+                           const ProxyFlowConfigRequestMsg *reqmsg,
+                           ProxyResponseMsg *rspmsg) override;
+
+    Status ProxyGetFlowInfo(ServerContext *context,
+                            const ProxyGetFlowInfoRequestMsg *reqmsg,
+                            ProxyGetFlowInfoResponseMsg *rspmsg) override;
+
 };
 
 #endif    // __PROXY_SVC_HPP__

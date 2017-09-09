@@ -340,6 +340,10 @@ bool flow_needs_associate_flow(const flow_key_t *flow_key);
 
 extern hal_ret_t session_release(session_t *session);
 
+hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
+                                      flow_key_t *flow_key, 
+                                      const FlowKey& flow_spec_key);
+
 hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
 hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle);
 

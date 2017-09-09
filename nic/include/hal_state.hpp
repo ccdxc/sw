@@ -100,6 +100,9 @@ public:
     ht *wring_id_ht(void) const { return wring_id_ht_; }
     ht *wring_hal_handle_ht(void) const { return wring_hal_handle_ht_; }
 
+    // get APIs for Proxy state
+    slab *proxy_slab(void) const { return proxy_slab_; }
+    slab *proxy_flow_info_slab(void) const { return proxy_flow_info_slab_; }
     ht *proxy_type_ht(void) const { return proxy_type_ht_; }
     ht *proxy_hal_handle_ht(void) const { return proxy_hal_handle_ht_; }
 
@@ -211,6 +214,8 @@ private:
 
     // Proxy related config
     struct {
+        slab       *proxy_slab_;
+        slab       *proxy_flow_info_slab_; 
         ht         *proxy_type_ht_;
         ht         *proxy_hal_handle_ht_;
     } __PACK__;
@@ -307,7 +312,6 @@ public:
     slab *policer_slab(void) const { return policer_slab_; }
     slab *acl_slab(void) const { return acl_slab_; }
     slab *wring_slab(void) const { return wring_slab_; }
-    slab *proxy_slab(void) const { return proxy_slab_; }
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
     slab *cpucb_slab(void) const { return cpucb_slab_; }
 
@@ -334,7 +338,6 @@ private:
     slab    *queue_slab_;
     slab    *policer_slab_;
     slab    *wring_slab_;
-    slab    *proxy_slab_;
     slab    *acl_slab_;
     slab    *ipseccb_slab_;
     slab    *cpucb_slab_;
@@ -442,7 +445,8 @@ public:
     ht *wring_hal_handle_ht(void) const { return cfg_db_->wring_hal_handle_ht(); }
 
     // get APIs for Proxy state
-    slab *proxy_slab(void) const { return mem_db_->proxy_slab(); }
+    slab *proxy_slab(void) const { return cfg_db_->proxy_slab(); }
+    slab *proxy_flow_info_slab(void) const { return cfg_db_->proxy_flow_info_slab(); }
     ht *proxy_type_ht(void) const { return cfg_db_->proxy_type_ht(); }
     ht *proxy_hal_handle_ht(void) const { return cfg_db_->proxy_hal_handle_ht(); }
 
