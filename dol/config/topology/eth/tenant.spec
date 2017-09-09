@@ -8,6 +8,8 @@ overlay : vlan
 segments:
     - spec  : ref://store/specs/id=SEGMENT_ETH
       count : 1
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_ETH
+      count : 1
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.
@@ -25,6 +27,7 @@ sessions:
         ipv6:
             - ref://store/specs/id=SESSION_UDP_ETH
             - ref://store/specs/id=SESSION_TCP_ETH
+            - ref://store/specs/id=SESSION_ICMPV6_ETH
         mac:
             - ref://store/specs/id=SESSION_MAC_ETH
 

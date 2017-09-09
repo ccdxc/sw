@@ -148,3 +148,9 @@ def GetPacketSize(testcase, packet):
     packet.Build(testcase)
     return packet.GetPacketSize()
 
+def GetEthertypeByFlow(testcase, packet):
+    if testcase.config.flow.IsMac():
+        return testcase.config.flow.ethertype
+    elif testcase.config.flow.IsIPV4():
+        return 0x800
+    return 0x86dd

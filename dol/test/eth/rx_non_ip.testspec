@@ -10,89 +10,61 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://fwtype=L2
+    flow            : filter://any
     maxflows        : 1
+
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT    # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+                type    : ref://testcase/config/flow/ethertype
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+
     - packet:
-        id          : PKT1 # Input Packet
+        id          : PKT1    # Input packet 
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
-            tcp:
-                flags: ack
 
     - packet:
-        id          : PKT2 # Expected Packet
+        id          : PKT2    # Expected packet 
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: ref://testcase/config/flow/eg_qos/cos
-            ipv4:
-                tos : ref://testcase/config/flow/eg_qos/dscp
-            ipv6:
-                tc  : ref://testcase/config/flow/eg_qos/dscp
-            tcp:
-                flags: ack
-
 
 buffers:
     - buffer:
-        id      : BUF1  # Input Descriptor
+        id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-            bind: True
-            size: 1518
-            data: None
+           bind: True
+           size: 1518
+           data: None
 
     - buffer:
-        id      : BUF2  # Expected Descriptor
+        id      : BUF2
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-            bind  : False
-            size  : ref://testcase/packets/id=PKT2/size
-            data  : ref://testcase/packets/id=PKT2/rawbytes
+            bind: False
+            size: ref://testcase/packets/id=PKT2/size
+            data: ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
-        id      : DESC1 # Input Buffer
+        id      : DESC1
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
@@ -100,7 +72,7 @@ descriptors:
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2 # Expected Buffer
+        id      : DESC2
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF2
