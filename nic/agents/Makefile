@@ -15,7 +15,7 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 OBJ_DIR = ../obj
 GEN_DIR = ../gen
 PROTO_DIR = ./proto
-LDFLAGS = -L/usr/local/lib -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl
+LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl
 INCLUDE_DIRS =  -I../gen/ -I../include \
 		-I../include/hal/api/include \
 		-Inetwork/ \

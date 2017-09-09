@@ -32,8 +32,8 @@ LCXXFLAGS = \
 			$(NULL)
 
 SLFLAGS = \
-		  -Wl,--whole-archive $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.a $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.a $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
-		  -Wl,--no-whole-archive -L$(TOPDIR)/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
+		  -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.so \
+		  -L$(TOPDIR)/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
 SOURCES = \
 		  capri_init.cc \
 		  capri_asic_rw.cc \

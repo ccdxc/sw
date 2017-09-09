@@ -8,7 +8,7 @@ LIBS = \
 	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 	   $(GTEST_ROOT)/make/gtest.a \
 	   $(NULL)
-SYSTEM_LIBRARIES = -lpdutils_stub $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpthread -lmodelclient -lzmq -lthread -lcapri -lcapricsr -lp4pd -lp4pluspd_rxdma -lp4pluspd_txdma -lindexer -ltrace -lbitmap
+SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -lpdutils_stub $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpthread -lmodelclient -lzmq -lthread -lcapri -lcapricsr -lp4pd -lp4pluspd_rxdma -lp4pluspd_txdma -lindexer -ltrace -lbitmap
 
 LCXXFLAGS = \
 			-I.. \
@@ -32,5 +32,5 @@ gtest:
 	# LD_LIBRARY_PATH=$(TOPDIR)/obj HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow_test.xml"
 
 reg_test:
-	LD_LIBRARY_PATH=$(TOPDIR)/obj HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow_test.xml"
+	LD_LIBRARY_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow_test.xml"
 
