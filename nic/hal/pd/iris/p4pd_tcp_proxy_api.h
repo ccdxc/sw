@@ -79,4 +79,24 @@ typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
     uint64_t stats15;
 } tcp_rx_stats_t;
 
+// **Note: offsets need to match stats update in tcp-tx-stats.h
+typedef struct __attribute__((__packed__)) __tcp_tx_stats_t {
+    uint64_t bytes_sent;
+    uint64_t pkts_sent;
+    uint64_t debug_num_phv_to_pkt;
+    uint64_t debug_num_mem_to_pkt;
+    uint64_t stats4;
+    uint64_t stats5;
+    uint64_t stats6;
+    uint64_t stats7;
+    uint64_t stats8;
+    uint64_t stats9;
+    uint64_t stats10;
+    uint64_t stats11;
+    uint64_t stats12;
+    uint64_t stats13;
+    uint64_t stats14;
+    uint64_t stats15;
+} tcp_tx_stats_t;
+
 #endif

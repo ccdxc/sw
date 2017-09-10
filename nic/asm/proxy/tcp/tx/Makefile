@@ -38,7 +38,8 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-sesq-descr.s \
     $(SRC_DIR)/tcp-sesq-consume.s \
     $(SRC_DIR)/tcp-tx.s \
-    $(SRC_DIR)/tcp-tso.s
+    $(SRC_DIR)/tcp-tso.s \
+    $(SRC_DIR)/tcp-tx-stats.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

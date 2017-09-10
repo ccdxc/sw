@@ -17,9 +17,9 @@ struct tcp_tx_tso_tso_d d	;
 
 %%
         .align
+        .param          tcp_tx_stats_stage5_start
 	
 tcp_tso_process_start:
-        CAPRI_CLEAR_TABLE_VALID(0)
 	/* check SESQ for pending data to be transmitted */
 	or 		r1, k.to_s4_pending_tso_data, k.to_s4_pending_tso_retx
 	or		r1, r1, k.to_s4_pending_ack_send
@@ -127,6 +127,30 @@ dma_cmd_data:
 	add.c1		r6, k.to_s4_rcv_mss, r0
 	add.!c1		r6, k.to_s4_xmit_cursor_len, r0
 	phvwr		p.dma_cmd3_dma_cmd_size, r6
+bytes_sent_stats_update_start:
+        addi            r6, r0, ETH_IP_TCP_HDR_SIZE
+        CAPRI_STATS_INC(bytes_sent, 16, r6, d.bytes_sent)
+bytes_sent_stats_update:
+        CAPRI_STATS_INC_UPDATE(r1, d.bytes_sent, p.to_s5_bytes_sent)
+bytes_sent_stats_update_end:
+
+pkts_sent_stats_update_start:
+        CAPRI_STATS_INC(pkts_sent, 16, 1, d.pkts_sent)
+pkts_sent_stats_update:
+        CAPRI_STATS_INC_UPDATE(r1, d.pkts_sent, p.to_s5_pkts_sent)
+pkts_sent_stats_update_end:
+
+debug_num_phv_to_pkt_stats_update_start:
+        CAPRI_STATS_INC(debug_num_phv_to_pkt, 16, 2, d.debug_num_phv_to_pkt)
+debug_num_phv_to_pkt_stats_update:
+        CAPRI_STATS_INC_UPDATE(r1, d.debug_num_phv_to_pkt, p.to_s5_debug_num_phv_to_pkt)
+debug_num_phv_to_pkt_stats_update_end:
+
+debug_num_mem_to_pkt_stats_update_start:
+        CAPRI_STATS_INC(debug_num_mem_to_pkt, 16, 2, d.debug_num_mem_to_pkt)
+debug_num_mem_to_pkt_stats_update:
+        CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s5_debug_num_mem_to_pkt)
+debug_num_mem_to_pkt_stats_update_end:
 
 	/*
 	 * if (tcp_in_cwnd_reduction(tp))
@@ -201,6 +225,7 @@ tcp_read_xmit_cursor:
 #endif
 	
 flow_tso_process_done:
+        CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
 	nop.e
 	nop
 
