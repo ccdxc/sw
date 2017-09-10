@@ -1,0 +1,209 @@
+#! /usr/bin/python3
+import pdb
+
+import infra.common.defs        as defs
+import infra.common.objects     as objects
+import infra.config.base        as base
+
+import config.resmgr            as resmgr
+from config.store               import Store
+from infra.common.logging       import cfglogger
+
+import config.hal.api           as halapi
+import config.hal.defs          as haldefs
+import rdma_pb2                 as rdma_pb2
+
+import config.objects.slab      as slab
+import config.objects.mr        as mr
+
+from factory.objects.rdma.descriptor import RdmaSqDescriptorBase
+from factory.objects.rdma.descriptor import RdmaSqDescriptorSend
+from factory.objects.rdma.descriptor import RdmaRqDescriptorBase
+from factory.objects.rdma.descriptor import RdmaRrqDescriptorBase
+from factory.objects.rdma.descriptor import RdmaRrqDescriptorRead
+from factory.objects.rdma.descriptor import RdmaRrqDescriptorAtomic
+from factory.objects.rdma.descriptor import RdmaRsqDescriptorBase
+from factory.objects.rdma.descriptor import RdmaRsqDescriptorRead
+from factory.objects.rdma.descriptor import RdmaRsqDescriptorAtomic
+from factory.objects.rdma.descriptor import RdmaSge
+
+class QpObject(base.ConfigObjectBase):
+    def __init__(self, pd, qp_id, spec):
+        super().__init__()
+        self.pd = pd
+        self.remote = pd.remote
+        self.id = qp_id
+        self.GID("QP%04d" % self.id)
+        self.spec = spec
+
+        self.pd = pd
+        self.svc = rdma_pb2.RDMA_SERV_TYPE_RC
+
+        self.pmtu = spec.pmtu
+        self.hostmem_pg_size = spec.hostmem_pg_size
+        self.atomic_enabled = spec.atomic_enabled
+
+        self.num_sq_sges = spec.num_sq_sges
+        self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
+        self.num_rrq_wqes = self.__roundup_to_pow_2(spec.num_rrq_wqes)
+
+        self.num_rq_sges = spec.num_rq_sges
+        self.num_rq_wqes = self.__roundup_to_pow_2(spec.num_rq_wqes)
+        self.num_rsq_wqes = self.__roundup_to_pow_2(spec.num_rsq_wqes)
+
+        self.sqwqe_size = self.__get_sqwqe_size()
+        self.rqwqe_size = self.__get_rqwqe_size()
+        self.rrqwqe_size = self.__get_rrqwqe_size()
+        self.rsqwqe_size = self.__get_rsqwqe_size()
+
+        self.sq_size = self.num_sq_wqes * self.sqwqe_size
+        self.rq_size = self.num_rq_wqes * self.rqwqe_size
+        self.rrq_size = self.num_rrq_wqes * self.rrqwqe_size
+        self.rsq_size = self.num_rsq_wqes * self.rsqwqe_size
+
+        if not self.remote:
+            self.sq = pd.ep.intf.lif.GetQ('RDMA_SQ', self.id)
+            self.rq = pd.ep.intf.lif.GetQ('RDMA_RQ', self.id)
+    
+            if (self.sq is None or self.rq is None):
+                assert(0)
+
+            # create sq/rq slabs
+            self.sq_slab = slab.SlabObject(self.pd.ep, self.sq_size)
+            self.rq_slab = slab.SlabObject(self.pd.ep, self.rq_size)
+            self.pd.ep.AddSlab(self.sq_slab)
+            self.pd.ep.AddSlab(self.rq_slab)
+
+            # create sq/rq mrs
+            self.sq_mr = mr.MrObject(self.pd, self.sq_slab)
+            self.rq_mr = mr.MrObject(self.pd, self.rq_slab)
+            self.pd.AddMr(self.sq_mr)
+            self.pd.AddMr(self.rq_mr)
+    
+        self.Show()
+
+        return
+
+    def __roundup_to_pow_2(self, x):
+        power = 1
+        while power < x : 
+            power *= 2
+        return power
+ 
+    def __get_sqwqe_size(self):
+        return  self.__roundup_to_pow_2(
+                len(RdmaSqDescriptorBase()) + 
+                len(RdmaSqDescriptorSend()) +
+                (self.num_sq_sges * len(RdmaSge()))) 
+
+    def __get_rqwqe_size(self):
+        return self.__roundup_to_pow_2(
+                len(RdmaRqDescriptorBase()) + 
+                (self.num_rq_sges * len(RdmaSge()))) 
+
+    def __get_rrqwqe_size(self):
+        return self.__roundup_to_pow_2(
+                len(RdmaRrqDescriptorBase()) + 
+                len(RdmaRrqDescriptorRead()))
+
+    def __get_rsqwqe_size(self):
+        return self.__roundup_to_pow_2(
+                len(RdmaRsqDescriptorBase()) + 
+                len(RdmaRsqDescriptorRead()))
+
+    def Show(self):
+        cfglogger.info('QP: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
+        cfglogger.info('SQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_sq_sges, self.num_sq_wqes, self.sqwqe_size)) 
+        cfglogger.info('RQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_rq_sges, self.num_rq_wqes, self.rqwqe_size)) 
+        cfglogger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
+        cfglogger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
+
+    def PrepareHALRequestSpec(self, req_spec):
+        cfglogger.info("QP: %s PD: %s Remote: %s \n" %\
+                        (self.GID(), self.pd.GID(), self.remote))
+        req_spec.qp_num = self.id
+        req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
+        req_spec.sq_wqe_size = self.sqwqe_size
+        req_spec.rq_wqe_size = self.rqwqe_size
+        req_spec.num_sq_wqes = self.num_sq_wqes
+        req_spec.num_rq_wqes = self.num_rq_wqes
+        req_spec.num_rsq_wqes = self.num_rsq_wqes
+        req_spec.num_rrq_wqes = self.num_rrq_wqes
+        req_spec.pd = self.pd.id
+        req_spec.pmtu = self.pmtu
+        req_spec.hostmem_pg_size = self.hostmem_pg_size
+        req_spec.svc = self.svc
+        req_spec.atomic_enabled = self.atomic_enabled
+        req_spec.sq_lkey = self.sq_mr.lkey
+        req_spec.rq_lkey = self.rq_mr.lkey
+
+    def ProcessHALResponse(self, req_spec, resp_spec):
+        self.rsq_base_addr = resp_spec.rsq_base_addr
+        self.rrq_base_addr = resp_spec.rrq_base_addr
+        self.header_temp_addr = resp_spec.header_temp_addr
+        self.sq.SetRingParams('SQ', True, 
+                              self.sq_slab.mem_handle,
+                              self.sq_slab.address, 
+                              self.num_sq_wqes, 
+                              self.sqwqe_size)
+        self.rq.SetRingParams('RQ', True, 
+                              self.rq_slab.mem_handle,
+                              self.rq_slab.address,
+                              self.num_rq_wqes, 
+                              self.rqwqe_size)
+        self.sq.SetRingParams('RRQ', False, 
+                              None,
+                              self.rrq_base_addr,
+                              self.num_rrq_wqes,
+                              self.rrqwqe_size)
+        self.rq.SetRingParams('RSQ', False, 
+                              None,
+                              self.rsq_base_addr,
+                              self.num_rsq_wqes,
+                              self.rsqwqe_size)
+        cfglogger.info("QP: %s PD: %s Remote: %s \n"
+                       "sq_base_addr: 0x%x rq_base_addr: 0x%x "
+                       "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
+                       "header_temp_addr: 0x%x\n" %\
+                        (self.GID(), self.pd.GID(), self.remote,
+                         self.sq_slab.address, self.rq_slab.address,
+                         self.rsq_base_addr, self.rrq_base_addr,
+                         self.header_temp_addr))
+
+    def ShowTestcaseConfig(self, obj, logger):
+        logger.info("Config Objects for %s" % (self.GID()))
+        return
+
+    def ConfigureHeaderTemplate(self, rdma_session, forward):
+        cfglogger.info("rdma_session: %s" % rdma_session.GID())
+        cfglogger.info("session: %s" % rdma_session.session.GID())
+        cfglogger.info("flow_ep1: %s ep1: %s" \
+            %(rdma_session.session.initiator.GID(), rdma_session.session.initiator.ep.GID()))
+        cfglogger.info("flow_ep2: %s ep2: %s" \
+             %(rdma_session.session.responder.GID(), rdma_session.session.responder.ep.GID()))
+        cfglogger.info("src_ip: %s" % rdma_session.session.initiator.addr.get())
+        cfglogger.info("dst_ip: %s" % rdma_session.session.responder.addr.get())
+        cfglogger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
+        cfglogger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+        return
+         
+class QpObjectHelper:
+    def __init__(self):
+        self.qps = []
+
+    def Generate(self, pd, spec):
+        self.pd = pd
+        count = spec.count
+        cfglogger.info("Creating %d Qps. for PD:%s" %\
+                       (count, pd.GID()))
+        for i in range(count):
+            qp_id = i if pd.remote else pd.ep.intf.lif.GetQpid()
+            qp = QpObject(pd, qp_id, spec)
+            self.qps.append(qp)
+
+    def Configure(self):
+        if self.pd.remote:
+            cfglogger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
+            return
+        cfglogger.info("Configuring %d QPs." % len(self.qps)) 
+        halapi.ConfigureQps(self.qps)

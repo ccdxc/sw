@@ -32,6 +32,7 @@ SOURCES = \
 		telemetry_svc.cc \
 		crypto_keys_svc.cc \
 		ipseccb_svc.cc \
+ 		rdma_svc.cc \
 		cpucb_svc.cc \
 		$(NULL)
 

@@ -26,7 +26,7 @@ class FrameworkObject(object):
         return self.GID(gid)
 
     def GID(self, gid=None):
-        if gid:
+        if gid is not None:
             self.__gid = gid
         return self.__gid
 

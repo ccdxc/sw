@@ -16,6 +16,28 @@ def init():
     objlist = template.ParseBufferTemplates()
     FactoryStore.templates.SetAll(objlist)
 
+def __resolve_refs_list(v, tc):
+    for e in v:
+        # List must be of objects with more refs.
+        assert(objects.IsFrameworkTemplateObject(e))
+        __resolve_refs_obj(e, tc)
+    return
+
+def __resolve_refs_obj(obj, tc):
+    for a, v in obj.__dict__.items():
+        if objects.IsReference(v):
+            val = v.Get(tc)
+            tc.info("Resolving spec.fields.%s = " % a, val)
+            obj.__dict__[a] = val
+        elif isinstance(v, list):
+            __resolve_refs_list(v, tc)
+        elif objects.IsFrameworkTemplateObject(v):
+            __resolve_refs_obj(v, tc)
+        else:
+            # Native types
+            continue
+    return
+
 def __generate_common(tc, spec, write = True):
     template = spec.template.Get(FactoryStore)
     obj = template.CreateObjectInstance()
@@ -24,11 +46,7 @@ def __generate_common(tc, spec, write = True):
     
     tc.info("Created MemFactoryObject: %s" % obj.GID())
     # Resolve all the references.
-    for attr, value in spec.fields.__dict__.items():
-        if not objects.IsReference(value): continue
-        attrval = value.Get(tc)
-        tc.info("Resolving spec.fields.%s = " % attr, attrval)
-        spec.fields.__dict__[attr] = attrval
+    __resolve_refs_obj(spec.fields, tc)
 
     obj.Init(spec)
     if write:

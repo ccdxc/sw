@@ -6,13 +6,17 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import config.resmgr            as resmgr
 import config.objects.queue     as queue
-import config.objects.eth.queue as queue
+import config.objects.eth.queue as eth_queue
+import config.objects.rdma.queue as rdma_queue
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+
+eth_queue_type_ids = {'RX', 'TX'}
+rdma_queue_type_ids = {'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
 
 class QueueTypeObject(objects.FrameworkObject):
     def __init__(self):
@@ -30,7 +34,12 @@ class QueueTypeObject(objects.FrameworkObject):
         self.queueid_allocator = objects.TemplateFieldObject("range/0/16384")
 
         self.queues = objects.ObjectDatabase(cfglogger)
-        self.obj_helper_q = queue.EthQueueObjectHelper()
+        if spec.id in eth_queue_type_ids:
+            self.obj_helper_q = eth_queue.EthQueueObjectHelper()
+        elif spec.id in rdma_queue_type_ids:
+            self.obj_helper_q = rdma_queue.RdmaQueueObjectHelper()
+        else:
+            self.assertTrue(0)
         self.obj_helper_q.Generate(self, spec)
         self.queues.SetAll(self.obj_helper_q.queues)
 

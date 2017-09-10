@@ -1,6 +1,10 @@
 # RDMA Event Queue Descriptor Format
 meta:
     id      : DESC_RDMA_EQ
+    size    : 64
     package : factory.objects.rdma
     module  : descriptor
     objname : RdmaEqDescriptorObject
+
+cq_id   : None
+color   : None

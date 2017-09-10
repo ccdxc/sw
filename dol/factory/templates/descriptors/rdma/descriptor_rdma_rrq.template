@@ -1,0 +1,23 @@
+# RDMA Remote Receive Queue Descriptor Format
+meta:
+    id      : DESC_RDMA_RRQ
+    size    : 64
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaRrqDescriptorObject
+
+op_type         : None # read_resp or atomic_resp
+num_sges        : None
+psn             : None
+msn             : None
+
+read:
+    len                 : None
+    wqe_sge_list_ptr    : None
+
+atomic:
+    op_type     : None
+    sge:
+        va      : None
+        len     : None
+        r_key   : None

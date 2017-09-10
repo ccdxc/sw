@@ -1,6 +1,16 @@
 # RDMA Recv Queue Descriptor Format
 meta:
     id      : DESC_RDMA_RQ
+    size    : 64
     package : factory.objects.rdma
     module  : descriptor
     objname : RdmaRqDescriptorObject
+
+wrid            : random/1/65535
+num_sges        : 2
+
+sges:
+    - sge:
+        va      : None
+        len     : None
+        l_key   : None

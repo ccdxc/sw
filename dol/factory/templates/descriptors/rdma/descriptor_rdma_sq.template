@@ -1,0 +1,64 @@
+# RDMA Send Queue Descriptor Format
+meta:
+    id      : DESC_RDMA_SQ
+    size    : 64
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaSqDescriptorObject
+
+wrid            : random/1/65535
+op_type         : None
+complete_notify : False
+fence           : False
+solicited_event : False
+num_sges        : 2
+
+send:
+    imm_data    : None
+    inv_key     : None
+    
+write:
+    imm_data    : None
+    va          : None
+    len         : None
+    r_key       : None
+
+read:
+    va          : None
+    len         : None
+    r_key       : None
+
+atomic:
+    va                  : None
+    r_key               : None
+    cmp_data            : None
+    swap_or_add_data    : None
+
+bind_mw:
+    len             : None
+    va              : None
+    l_key           : None
+    r_key           : None
+    new_r_key_key   : None
+    acc_ctrl        : None
+    zbva            : False
+    
+local_inv:
+    l_key   : None
+    r_key   : None
+
+fast_reg:
+    len             : None
+    va              : None
+    l_key           : None
+    r_key           : None
+    key             : None
+    acc_ctrl        : None
+    num_pages       : None
+    page_table_ptr  : None
+        
+sges:
+    - sge:
+        va      : None
+        len     : None
+        l_key   : None

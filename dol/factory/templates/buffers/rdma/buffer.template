@@ -1,0 +1,11 @@
+# Rdma Buffer Template
+meta:
+    id      : RDMA_BUFFER
+    package : factory.objects.rdma
+    module  : buffer
+    objname : RdmaBufferObject
+
+address : None
+size    : None
+data    : None
+offset  : None

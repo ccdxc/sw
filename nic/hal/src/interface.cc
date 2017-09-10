@@ -9,6 +9,7 @@
 #include <lif_manager.hpp>
 #include <utils.hpp>
 #include <if_utils.hpp>
+#include <rdma.hpp>
 
 using hal::pd::pd_if_args_t;
 
@@ -333,6 +334,17 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
             goto end;
         }
     }
+
+    // For rdma enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
+    if (lif->enable_rdma) {
+        ret = rdma_lif_init(spec, hw_lif_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+    }
+
 
     ret = HAL_RET_OK;
 

@@ -682,6 +682,22 @@ modules:
         ignore  : True
 
     - module:
+        name    : RDMA_TX_SEND_ONLY
+        enable  : False
+        package : test.rdma
+        module  : rdma
+        spec    : tx_send_only.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY
+        enable  : False
+        package : test.rdma
+        module  : rdma
+        spec    : rx_send_only.testspec
+        ignore  : True
+
+    - module:
         name    : NORMALIZATION_IP
         enable  : True
         package : test.normalization

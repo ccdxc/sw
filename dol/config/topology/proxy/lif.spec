@@ -2,8 +2,6 @@
 meta:
     id: LIF_PROXY
 
-rdma: True
-
 queue_types:
     - queue_type:
         id          : TX
