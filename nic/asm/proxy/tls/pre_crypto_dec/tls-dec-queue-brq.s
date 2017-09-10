@@ -16,7 +16,7 @@ struct tx_table_s7_t0_tls_queue_brq7_d d ;
 	
 %%
 	.param		BRQ_BASE
-tls_queue_brq_dec_process:
+tls_dec_queue_brq_process:
 	/*   tlsp->next_tls_hdr_offset = md->next_tls_hdr_offset; */
 	phvwr	    p.tls_global_phv_next_tls_hdr_offset, k.to_s7_next_tls_hdr_offset
 

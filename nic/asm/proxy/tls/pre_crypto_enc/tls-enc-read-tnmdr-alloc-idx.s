@@ -16,10 +16,10 @@ struct tx_table_s2_t1_read_tnmdr_d d ;
 
 %%
 	
-        .param          tls_tdesc_alloc_start
+        .param          tls_enc_tdesc_alloc_process
         .param          TNMDR_TABLE_BASE
 	    .align
-tls_alloc_tnmdr_start:
+tls_enc_alloc_tnmdr_process:
 
         CAPRI_CLEAR_TABLE1_VALID
 
@@ -28,7 +28,7 @@ tls_alloc_tnmdr_start:
 table_read_TNMDR_DESC:
 	    addi		r3, r0, TNMDR_TABLE_BASE
 	    CAPRI_NEXT_TABLE1_READ(d.tnmdr_pidx, TABLE_LOCK_EN,
-                               tls_tdesc_alloc_start,
+                               tls_enc_tdesc_alloc_process,
   	                           r3, TNMDR_TABLE_ENTRY_SIZE_SHFT,
 	                           0, TABLE_SIZE_512_BITS)
 	    nop.e

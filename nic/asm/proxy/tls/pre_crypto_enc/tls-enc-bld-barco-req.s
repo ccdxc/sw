@@ -16,10 +16,10 @@ struct phv_ p	;
 struct tx_table_s4_t0_tls_bld_brq4_d d	;
 	
 %%
-	    .param      tls_queue_brq_enc_process
+	    .param      tls_enc_queue_brq_process
 #	    .param		BRQ_QPCB_BASE
         
-tls_bld_barco_req_enc_process:        
+tls_enc_bld_barco_req_process:        
 
 table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
@@ -37,7 +37,7 @@ table_read_QUEUE_BRQ:
 #else
     phvwri      p.barco_desc_key_desc_index, 0
 #endif
-
+    phvwri      p.to_s6_enc_requests, 1
     addi        r1, r0, 0x30000000
     phvwr       p.barco_desc_command, r1.wx
 
@@ -53,7 +53,7 @@ table_read_QUEUE_BRQ:
     CAPRI_OPERAND_DEBUG(r3.dx)
         
     addi        r3, r0, BRQ_QPCB_BASE        
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_brq_enc_process,
+    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_enc_queue_brq_process,
                            r3, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
                        	   0, TABLE_SIZE_512_BITS)
 	nop.e

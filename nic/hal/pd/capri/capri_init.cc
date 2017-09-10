@@ -5,7 +5,7 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 29
+#define CAPRI_P4PLUS_NUM_SYMBOLS 31
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -147,33 +147,33 @@ capri_p4p_asm_init()
     symbols[1].num_params = 1;
     symbols[1].params[0].name = RNMPR_TABLE_BASE;
     symbols[1].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[2].name = "tls-read-tnmdr-alloc-idx.bin";
+    symbols[2].name = "tls-enc-read-tnmdr-alloc-idx.bin";
     symbols[2].num_params = 1;
     symbols[2].params[0].name = TNMDR_TABLE_BASE;
     symbols[2].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
-    symbols[3].name = "tls-read-tnmpr-alloc-idx.bin";
+    symbols[3].name = "tls-enc-read-tnmpr-alloc-idx.bin";
     symbols[3].num_params = 1;
     symbols[3].params[0].name = TNMPR_TABLE_BASE;
     symbols[3].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
-    symbols[4].name = "tls-queue-brq-enc.bin";
+    symbols[4].name = "tls-enc-queue-brq.bin";
     symbols[4].num_params = 1;
     symbols[4].params[0].name = BRQ_BASE;
     symbols[4].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
 
-    symbols[5].name = "tls-queue-brq-dec.bin";
+    symbols[5].name = "tls-dec-queue-brq.bin";
     symbols[5].num_params = 1;
     symbols[5].params[0].name = BRQ_BASE;
     symbols[5].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
 
-    symbols[6].name = "tls-read-tnmdr-free-idx.bin";
+    symbols[6].name = "tls-read-rnmdr-free-idx.bin";
     symbols[6].num_params = 1;
-    symbols[6].params[0].name = TNMDR_TABLE_BASE;
+    symbols[6].params[0].name = RNMDR_TABLE_BASE;
     symbols[6].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     
-    symbols[7].name = "tls-read-tnmpr-free-idx.bin";
+    symbols[7].name = "tls-read-rnmpr-free-idx.bin";
     symbols[7].num_params = 1;
-    symbols[7].params[0].name = TNMPR_TABLE_BASE;
+    symbols[7].params[0].name = RNMPR_TABLE_BASE;
     symbols[7].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
     symbols[8].name = "esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table.bin";
@@ -273,6 +273,16 @@ capri_p4p_asm_init()
     symbols[28].num_params = 1;
     symbols[28].params[0].name = ARQRX_BASE;
     symbols[28].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
+
+    symbols[29].name = "tls-dec-read-tnmdr-alloc-idx.bin";
+    symbols[29].num_params = 1;
+    symbols[29].params[0].name = TNMDR_TABLE_BASE;
+    symbols[29].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+
+    symbols[30].name = "tls-dec-read-tnmpr-alloc-idx.bin";
+    symbols[30].num_params = 1;
+    symbols[30].params[0].name = TNMPR_TABLE_BASE;
+    symbols[30].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     

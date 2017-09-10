@@ -16,12 +16,12 @@ struct phv_ p	;
 struct tx_table_s2_t0_tls_rx_serq_d d	;
 	
 %%
-    .param      tls_serq_consume_process_start
+    .param      tls_enc_serq_consume_process
         
-tls_rx_serq_enc_process_start:
+tls_enc_rx_serq_process:
 	CAPRI_CLEAR_TABLE0_VALID
 
-tls_rx_serq_enc_process:
+
 	/* ENQ_DESC(*etlsp, enc, md->seqe.desc); */
 	/* if (TAIL_DESC(cb,name) == NULL) { */
 	seq		    c1, d.qtail, r0
@@ -60,7 +60,7 @@ no_dma_cmd_enc:
 
 
 table_read_serq_consume:
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_serq_consume_process_start,
+	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_enc_serq_consume_process,
 	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
         

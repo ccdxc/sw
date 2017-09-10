@@ -44,6 +44,19 @@ class TlsCbObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TlsCbResponse':
             self.serq_pi = resp_spec.spec.serq_pi
+            self.serq_ci = resp_spec.spec.serq_ci
+            self.bsq_pi = resp_spec.spec.bsq_pi
+            self.bsq_ci = resp_spec.spec.bsq_ci
+            self.tnmdr_alloc = resp_spec.spec.tnmdr_alloc
+            self.tnmpr_alloc = resp_spec.spec.tnmpr_alloc
+            self.enc_requests = resp_spec.spec.enc_requests
+            self.dec_requests = resp_spec.spec.dec_requests
+            self.rnmdr_free = resp_spec.spec.rnmdr_free
+            self.rnmpr_free = resp_spec.spec.rnmpr_free
+            self.enc_completions = resp_spec.spec.enc_completions
+            self.dec_completions = resp_spec.spec.dec_completions
+            self.enc_failures = resp_spec.spec.enc_failures
+            self.dec_failures = resp_spec.spec.dec_failures
         return
 
     def IsFilterMatch(self, spec):

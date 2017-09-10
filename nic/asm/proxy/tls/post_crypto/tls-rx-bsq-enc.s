@@ -25,7 +25,8 @@ tls_rx_bsq_enc_process:
 	   RING_FREE(idesc, RNMDR);
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
-	seq		c1, d.qhead, r0
+    phvwri  p.to_s5_enc_completions, 1
+    seq		c1, d.qhead, r0
 	bcf		[c1], tls_rx_bsq_enc_process_done
 	nop
 table_read_desc:	

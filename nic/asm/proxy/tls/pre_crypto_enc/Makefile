@@ -1,5 +1,5 @@
 
-TOPDIR = ../../..
+TOPDIR = ../../../..
 CUSTOM = all
 CUSTOM_CLEAN = clean
 
@@ -12,10 +12,10 @@ GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I./include -I../include -I../../common-p4+/include -I../tcp/include -I$(TOPDIR)/include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I./include -I../include -I../../../common-p4+/include -I../../include -I../../tcp/include -I$(TOPDIR)/include
 SRC_DIR = .
-CAPAS_BIN = ../../../asic/capri/model/capsim-gen/bin/capas
-CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
+CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
@@ -24,8 +24,18 @@ all: deps asm
 deps:
 
 SRC_FILES := \
-    $(SRC_DIR)/tls-stage0.s \
-    $(SRC_DIR)/tls-pre-crypto-stage0.s
+    $(SRC_DIR)/tls-enc-read-tnmdr-alloc-idx.s \
+    $(SRC_DIR)/tls-enc-read-tnmpr-alloc-idx.s \
+    $(SRC_DIR)/tls-enc-tdesc-alloc.s \
+    $(SRC_DIR)/tls-enc-tpage-alloc.s \
+    $(SRC_DIR)/tls-enc-queue-brq.s \
+    $(SRC_DIR)/tls-enc-rx-serq.s \
+    $(SRC_DIR)/tls-enc-serq-consume.s \
+    $(SRC_DIR)/tls-enc-read-serq-entry.s \
+    $(SRC_DIR)/tls-enc-bld-barco-req.s \
+    $(SRC_DIR)/tls-enc-bubble.s \
+    $(SRC_DIR)/tls-enc-serq.s \
+    $(SRC_DIR)/tls-enc-pre-crypto-stats.s
 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

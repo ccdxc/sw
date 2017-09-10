@@ -19,7 +19,7 @@
 
 #define tx_table_s5_t0_action       tls_queue_brq5
 
-#define tx_table_s6_t0_action       tls_bld_brq6
+#define tx_table_s6_t0_action       tls_pre_crypto_stats6
 
 #define tx_table_s7_t0_action       tls_queue_brq7
 
@@ -180,8 +180,10 @@ header_type to_stage_5_phv_t {
 
 header_type to_stage_6_phv_t {
     fields {
-        idesc                           : HBM_ADDRESS_WIDTH;
-        odesc                           : HBM_ADDRESS_WIDTH;
+        tnmdr_alloc                     : 8;
+        tnmpr_alloc                     : 8;
+        enc_requests                    : 8;
+        dec_requests                    : 8;
     }
 }
 
@@ -201,18 +203,6 @@ header_type to_stage_7_phv_t {
         modify_field(s2_s4_t0_scratch.idesc_aol0_offset, s2_s4_t0_phv.idesc_aol0_offset);   \
         modify_field(s2_s4_t0_scratch.idesc_aol0_len, s2_s4_t0_phv.idesc_aol0_len);
 header_type s2_s4_t0_phv_t {
-    fields {
-        idesc_aol0_addr                 : HBM_ADDRESS_WIDTH;
-        idesc_aol0_offset               : HBM_ADDRESS_WIDTH;
-        idesc_aol0_len                  : 16;
-    }
-}
-
-#define GENERATE_S4_S6_T0                                                               \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_addr, s4_s6_t0_phv.idesc_aol0_addr);   \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_offset, s4_s6_t0_phv.idesc_aol0_offset);   \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_len, s4_s6_t0_phv.idesc_aol0_len);
-header_type s4_s6_t0_phv_t {
     fields {
         idesc_aol0_addr                 : HBM_ADDRESS_WIDTH;
         idesc_aol0_offset               : HBM_ADDRESS_WIDTH;
@@ -261,6 +251,9 @@ metadata tls_stage_bld_barco_req_d_t tls_bld_barco_req_d;
 @pragma scratch_metadata
 metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 
+@pragma scratch_metadata
+metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
+
 @pragma pa_header_union ingress to_stage_2
 metadata to_stage_2_phv_t to_s2;
 
@@ -283,9 +276,9 @@ metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
 
-@pragma pa_header_union ingress  common_t0_s2s s4_s6_t0_phv
+@pragma pa_header_union ingress  common_t0_s2s 
 metadata s2_s4_t0_phv_t s2_s4_t0_phv;
-metadata s4_s6_t0_phv_t s4_s6_t0_phv;
+
 
 @pragma pa_header_union ingress common_t1_s2s
 metadata s3_t1_s2s_phv_t s3_t1_s2s;
@@ -338,8 +331,6 @@ metadata to_stage_6_phv_t to_s6_scratch;
 metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s2_s4_t0_phv_t s2_s4_t0_scratch;
-@pragma scratch_metadata
-metadata s4_s6_t0_phv_t s4_s6_t0_scratch;
 
 @pragma scratch_metadata
 metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
@@ -476,7 +467,7 @@ action tls_bld_brq4(STG_BLD_BARCO_REQ_ACTION_PARAMS) {
 }
 
 
-/* Stage 5 action */
+/* Stage 5 table 0 action */
 action tls_queue_brq5(TLSCB_0_PARAMS) {
 
     GENERATE_GLOBAL_K
@@ -494,19 +485,20 @@ action tls_queue_brq5(TLSCB_0_PARAMS) {
     GENERATE_TLSCB_0_D 
 }
 
+
 /* Stage 6 action */
-action tls_bld_brq6(STG_BLD_BARCO_REQ_ACTION_PARAMS) {
+action tls_pre_crypto_stats6(STG_PRE_CRYPTO_STATS_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_S4_S6_T0
 
     /* To Stage 6 fields */
-    modify_field(to_s6_scratch.idesc, to_s6.idesc);
-    modify_field(to_s6_scratch.odesc, to_s6.odesc);
+    modify_field(to_s6_scratch.tnmdr_alloc, to_s6.tnmdr_alloc);
+    modify_field(to_s6_scratch.tnmpr_alloc, to_s6.tnmpr_alloc);
+    modify_field(to_s6_scratch.enc_requests, to_s6.enc_requests);
 
 
-    GENERATE_STG_BLD_BARCO_REQ_D
+    GENERATE_STG_PRE_CRYPTO_STATS_D
 }
 
 /* Stage 7 action */

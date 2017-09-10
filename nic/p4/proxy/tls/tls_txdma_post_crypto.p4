@@ -11,11 +11,12 @@
 
 
 #define tx_table_s3_t0_action       tls_bsq_consume
-#define tx_table_s3_t1_action       read_tnmdr_free_pi
-#define tx_table_s3_t2_action       read_tnmpr_free_pi
+#define tx_table_s3_t1_action       read_rnmdr_free_pi
+#define tx_table_s3_t2_action       read_rnmpr_free_pi
 
 #define tx_table_s4_t0_action       tls_queue_sesq
 
+#define tx_table_s5_t0_action       tls_post_crypto_stats5
 
 #include "../../common-p4+/common_txdma.p4"
 #include "tls_txdma_common.p4"
@@ -23,16 +24,16 @@
 /* Per stage D-vector Definitions */
 
 // d for stage 2 table 1
-header_type read_tnmdr_free_pi_d_t {
+header_type read_rnmdr_free_pi_d_t {
     fields {
-        tnmdr_free_pi              : 16;
+        rnmdr_free_pi              : 16;
     }
 }
 
 // d for stage 2 table 2
-header_type read_tnmpr_free_pi_d_t {
+header_type read_rnmpr_free_pi_d_t {
     fields {
-        tnmpr_free_pi              : 16;
+        rnmpr_free_pi              : 16;
     }
 }
 
@@ -68,6 +69,15 @@ header_type to_stage_4_phv_t {
     }
 }
 
+header_type to_stage_5_phv_t {
+    fields {
+        rnmdr_free                      : 8;
+        rnmpr_free                      : 8;
+        enc_completions                 : 8;
+        dec_completions                 : 8;
+    }
+}
+
 header_type doorbell_data_pad_t {
     fields {
         pad                             : 384;
@@ -87,10 +97,13 @@ metadata barco_result_t read_desc_d;
 metadata tls_global_phv_t tls_global_phv_scratch;
 
 @pragma scratch_metadata
-metadata read_tnmdr_free_pi_d_t read_tnmdr_free_d;
+metadata read_rnmdr_free_pi_d_t read_rnmdr_free_d;
 
 @pragma scratch_metadata
-metadata read_tnmpr_free_pi_d_t read_tnmpr_free_d;
+metadata read_rnmpr_free_pi_d_t read_rnmpr_free_d;
+
+@pragma scratch_metadata
+metadata tls_stage_post_crypto_stats_d_t tls_post_crypto_stats_d;
 
 @pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
@@ -98,12 +111,18 @@ metadata to_stage_3_phv_t to_s3_scratch;
 @pragma scratch_metadata
 metadata to_stage_4_phv_t to_s4_scratch;
 
+@pragma scratch_metadata
+metadata to_stage_5_phv_t to_s5_scratch;
+
 
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
 
 @pragma pa_header_union ingress to_stage_4
 metadata to_stage_4_phv_t to_s4;
+
+@pragma pa_header_union ingress to_stage_5
+metadata to_stage_5_phv_t to_s5;
 
 
 @pragma pa_header_union ingress common_global
@@ -137,6 +156,16 @@ metadata dma_cmd_phv2mem_t dma_cmd6;
 metadata dma_cmd_phv2mem_t dma_cmd7;
 
 
+#define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                         \
+rnmdr_free,rnmpr_free, enc_completions, dec_completions, pad
+#
+
+#define GENERATE_POST_CRYPTO_STATS_D                                                                \
+    modify_field(tls_post_crypto_stats_d.rnmdr_free, rnmdr_free);                                   \
+    modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                   \
+    modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                         \
+    modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                         \
+    modify_field(tls_post_crypto_stats_d.pad, pad);
 
 
 
@@ -179,27 +208,27 @@ action tls_bsq_consume(TLSCB_0_PARAMS) {
 /*
  * Stage 3 table 1 action
  */
-action read_tnmdr_free_pi(tnmdr_free_pi) {
+action read_rnmdr_free_pi(rnmdr_free_pi) {
     GENERATE_GLOBAL_K
 
     /* To Stage 3 fields */
     modify_field(to_s3_scratch.idesc, to_s3.idesc);
 
     // d for stage 3 table 1 
-    modify_field(read_tnmdr_free_d.tnmdr_free_pi, tnmdr_free_pi);
+    modify_field(read_rnmdr_free_d.rnmdr_free_pi, rnmdr_free_pi);
 }
 
 /*
  * Stage 3 table 2 action
  */
-action read_tnmpr_free_pi(tnmpr_free_pi) {
+action read_rnmpr_free_pi(rnmpr_free_pi) {
     GENERATE_GLOBAL_K
 
     /* To Stage 3 fields */
     modify_field(to_s3_scratch.ipage, to_s3.ipage);
 
     // d for stage 2 table 2 
-    modify_field(read_tnmpr_free_d.tnmpr_free_pi, tnmpr_free_pi);
+    modify_field(read_rnmpr_free_d.rnmpr_free_pi, rnmpr_free_pi);
 }
 
 
@@ -216,5 +245,21 @@ action tls_queue_sesq(TLSCB_0_PARAMS) {
 
 
     GENERATE_TLSCB_0_D
+}
+
+/* Stage 5 action */
+action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
+
+    GENERATE_GLOBAL_K
+
+
+    /* To Stage 5 fields */
+    modify_field(to_s5_scratch.rnmdr_free, to_s5.rnmdr_free);
+    modify_field(to_s5_scratch.rnmpr_free, to_s5.rnmpr_free);
+    modify_field(to_s5_scratch.enc_completions, to_s5.enc_completions);
+    modify_field(to_s5_scratch.dec_completions, to_s5.dec_completions);
+
+
+    GENERATE_STG_POST_CRYPTO_STATS_D
 }
 

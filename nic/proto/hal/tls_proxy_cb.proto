@@ -39,6 +39,16 @@ message TlsCbSpec {
   uint32                crypto_key_idx             = 11;
   uint32                serq_base                  = 12;
   uint32                sesq_base                  = 13;
+  fixed64               tnmdr_alloc                = 14;
+  fixed64               tnmpr_alloc                = 15;
+  fixed64               rnmdr_free                 = 16;
+  fixed64               rnmpr_free                 = 17;
+  fixed64               enc_requests               = 18;
+  fixed64               enc_completions            = 19;
+  fixed64               enc_failures               = 20;
+  fixed64               dec_requests               = 21;
+  fixed64               dec_completions            = 22;
+  fixed64               dec_failures               = 23;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

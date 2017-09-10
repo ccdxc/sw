@@ -13,24 +13,25 @@
                 
 struct tx_table_s3_t1_k k                  ;
 struct phv_ p	;
-struct tx_table_s3_t1_read_tnmdr_free_pi_d d ;
+struct tx_table_s3_t1_read_rnmdr_free_pi_d d ;
 
 %%
 	
-        .param          TNMDR_TABLE_BASE
+        .param          RNMDR_TABLE_BASE
 	    .align
-tls_free_tnmdr:
+tls_free_rnmdr:
 
         CAPRI_CLEAR_TABLE1_VALID
 
-	    addi		r3, r0, TNMDR_TABLE_BASE
+	    addi		r3, r0, RNMDR_TABLE_BASE
 
-        add         r4, d.tnmdr_free_pi, r0
-        sll         r4, r4, TNMDR_TABLE_ENTRY_SIZE_SHFT
+        add         r4, d.rnmdr_free_pi, r0
+        sll         r4, r4, RNMDR_TABLE_ENTRY_SIZE_SHFT
         add         r3, r3, r4
         memwr.wx    r3, k.{to_s3_idesc}.wx
 
         /* TBD memwr A.CI */
+        phvwri      p.to_s5_rnmdr_free, 1
 	    nop.e
 	    nop
 

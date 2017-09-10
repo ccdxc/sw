@@ -21,11 +21,11 @@ struct phv_ p	;
 struct d_struct d	;
 	
 %%
-	.param		tls_bld_barco_req_dec_process
+	.param		tls_dec_bld_barco_req_process
+    .param      tls_dec_read_header_process
+        
+tls_dec_rx_serq_process:
 
-tls_rx_serq_dec_process_start:
-
-tls_rx_serq_dec_process:
 	/* ENQ_DESC(*dtlsp, dec, md->seqe.desc); */
 	/* if (TAIL_DESC(cb,name) == NULL) { */
 	seq		c1, d.qtail, r0
@@ -74,8 +74,8 @@ no_dma_cmd:
 	add		    r2, r2, r3
 
 table_read_tls_header:	
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_read_header_process, r2, 0, 0, TABLE_SIZE_8_BITS)
-	b		    tls_rx_serq_dec_process_done
+    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, 0, 0, TABLE_SIZE_8_BITS)
+	b		    tls_dec_rx_serq_process_done
 	nop
 	/* md->next_tls_hdr_offset = dtlsp->next_tls_hdr_offset; */
 	/* tls_read_header_process(&phv); */
@@ -84,16 +84,16 @@ tls_no_read_header:
 	/* if (dtlsp->next_tls_hdr_offset == md->desc.data_len) { */
 	seq		    c1, d.next_tls_hdr_offset, k.s2_s4_t0_phv_idesc_aol0_len
 	
-	bcf 		[!c1], tls_rx_serq_dec_process_done
+	bcf 		[!c1], tls_dec_rx_serq_process_done
 	nop
 
 table_read_BLD_BARCO_DEC_REQ:
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_bld_barco_req_dec_process,
+    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_dec_bld_barco_req_process,
                            k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
                        	   TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
 
 
-tls_rx_serq_dec_process_done:
+tls_dec_rx_serq_process_done:
 	nop.e
 	nop
 
