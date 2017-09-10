@@ -586,8 +586,8 @@ modules:
     - module:
         name    : PKT_TO_SERQ_V4
         enable  : True
-        package : test.tcp-tls-proxy
-        module  : tcp_proxy
+        package : test.tcp_tls_proxy
+        module  : pkt_to_serq
         spec    : tcp_proxy.testspec
         ignore  : False
         iterate :
@@ -596,8 +596,8 @@ modules:
     - module:
         name    : PKT_TO_SERQ_V6
         enable  : True
-        package : test.tcp-tls-proxy
-        module  : tcp_proxy
+        package : test.tcp_tls_proxy
+        module  : pkt_to_serq
         spec    : tcp_proxy.testspec
         ignore  : False
         iterate :
@@ -606,7 +606,7 @@ modules:
     - module:
         name    : MULTIPLE_PKTS_TO_SERQ
         enable  : True
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : multiple_pkts_to_serq
         spec    : multiple_pkts_to_serq.testspec
         ignore  : False
@@ -616,7 +616,7 @@ modules:
     - module:
         name    : PKT_TO_BRQ
         enable  : True
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : pkt_to_brq
         spec    : tcp_proxy.testspec
         ignore  : False
@@ -626,7 +626,7 @@ modules:
     - module:
         name    : PKT_TO_BSQ
         enable  : False
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : pkt_to_bsq
         spec    : tcp_proxy.testspec
         ignore  : True
@@ -636,7 +636,7 @@ modules:
     - module:
         name    : PKT_TCP_TX_TO_P4_BYPASS_BARCO
         enable  : True
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : pkt_tcp_tx_to_p4_bypass_barco
         spec    : tcp_proxy.testspec
         ignore  : False
@@ -646,7 +646,7 @@ modules:
     - module:
         name    : PKT_TO_SESQ
         enable  : True
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : pkt_to_sesq
         spec    : tcp_proxy.testspec
         ignore  : False
@@ -656,7 +656,7 @@ modules:
     - module:
         name    : PKT_TO_ARQ
         enable  : True
-        package : test.tcp-tls-proxy
+        package : test.tcp_tls_proxy
         module  : pkt_to_arq
         spec    : pkt_to_arq.testspec
         ignore  : False

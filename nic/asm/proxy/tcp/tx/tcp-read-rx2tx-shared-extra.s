@@ -21,9 +21,7 @@ struct tcp_tx_read_rx2tx_extra_read_rx2tx_extra_d d;
 tcp_tx_read_rx2tx_shared_extra_stage1_start:
 	/* Write the entire d-vector to p-vector for tx2rx shared state */
     // TODO
-#if 0
-    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tcp_tx_sesq_read_stage2_start,
-                         k.to_s1_sesq_ci_addr, TABLE_SIZE_64_BITS)
-#endif
+    CAPRI_OPERAND_DEBUG(d.rcv_mss)
+    phvwr           p.to_s4_rcv_mss, d.rcv_mss
     nop.e
     nop

@@ -40,9 +40,11 @@ write_phv:
         /* Write the entire d-vector to p-vector for tx2rx shared state */
         phvwr           p.{rx2tx_snd_una...rx2tx_snd_cwnd}, d.{snd_una...snd_cwnd}
 
-        phvwr           p.t0_s2s_snd_cwnd, 1000 // TODO: get from d
-        phvwr           p.t0_s2s_snd_wnd, 1000 // TODO: get from d
-        phvwr           p.to_s4_rcv_mss, 9216 // TODO: get from d
+        CAPRI_OPERAND_DEBUG(d.snd_wnd)
+        CAPRI_OPERAND_DEBUG(d.snd_wl1)
+        CAPRI_OPERAND_DEBUG(d.snd_cwnd)
+        phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
+        phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
 
         // TODO check pi != ci
         phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx

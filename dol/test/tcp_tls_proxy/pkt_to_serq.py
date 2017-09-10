@@ -2,6 +2,7 @@
 
 import pdb
 import copy
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 
 from config.store               import Store
 
@@ -9,6 +10,7 @@ rnmdr = 0
 rnmpr = 0
 serq = 0
 tlscb = 0 
+tcpcb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -25,6 +27,7 @@ def TestCaseSetup(tc):
     global rnmpr
     global serq
     global tlscb 
+    global tcpcb
 
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
@@ -33,7 +36,7 @@ def TestCaseSetup(tc):
     tcb.snd_una = 0xEFEFEFEF
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
-    tcb.debug_dol = 1
+    tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
@@ -41,6 +44,7 @@ def TestCaseSetup(tc):
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"])
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
+    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TcpCb0000"])
     
     return
 
@@ -49,13 +53,14 @@ def TestCaseVerify(tc):
     global rnmpr
     global serq
     global tlscb 
+    global tcpcb
 
     # 1. Verify rcv_nxt got updated
-    tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
-    print("rcv_nxt value pre-sync from HBM 0x%x" % tcb.rcv_nxt)
-    tcb.GetObjValPd()
-    print("rcv_nxt value post-sync from HBM 0x%x" % tcb.rcv_nxt)
-    if tcb.rcv_nxt != 0xebbbaba:
+    tcb_cur = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
+    tcb_cur.GetObjValPd()
+    print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
+    if tcb_cur.rcv_nxt != 0xebbbaba:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
@@ -95,6 +100,30 @@ def TestCaseVerify(tc):
     if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in serq_cur.swdre_list")
         #return False
+
+    # Print stats
+    print("bytes_rcvd = %d:" % tcb_cur.bytes_rcvd)
+    print("pkts_rcvd = %d:" % tcb_cur.pkts_rcvd)
+    print("pages_alloced = %d:" % tcb_cur.pages_alloced)
+    print("desc_alloced = %d:" % tcb_cur.desc_alloced)
+
+    #7 Verify pkt stats
+    if tcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + 1:
+        print("pkt stats not as expected")
+        return False
+
+    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + 84:
+        print("Warning! pkt stats not as expected")
+
+    #8 Verify page stats
+    if tcb_cur.pages_alloced != tcpcb.pages_alloced + 1:
+        print("pages alloced stats not as expected")
+        return False
+    
+    #9 Verify descr stats
+    if tcb_cur.desc_alloced != tcpcb.desc_alloced + 1:
+        print("desc alloced stats not as expected")
+        return False
 
     return True
 

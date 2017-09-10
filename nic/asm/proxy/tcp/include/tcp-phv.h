@@ -43,6 +43,9 @@
 #define TCP_PHV_RX2TX_SHARED_START  CAPRI_PHV_START_OFFSET(rx2tx_snd_una)
 #define TCP_PHV_RX2TX_SHARED_END    CAPRI_PHV_END_OFFSET(rx2tx__padding)
 
+#define TCP_PHV_RX2TX_SHARED_EXTRA_START  CAPRI_PHV_START_OFFSET(rx2tx_extra_ack_blocked)
+#define TCP_PHV_RX2TX_SHARED_EXTRA_END    CAPRI_PHV_END_OFFSET(rx2tx_extra__padding)
+
 
 
 #define TCP_PHV_TX2RX_SHARED_START  CAPRI_PHV_START_OFFSET(tx2rx_prr_out)
@@ -66,7 +69,7 @@
 #define TCP_PHV_INTRINSIC_END  			CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
 
 #define TCP_PHV_TX_APP_HDR_START      	CAPRI_PHV_START_OFFSET(app_header_app_data1)
-#define TCP_PHV_TX_APP_HDR_END  		(CAPRI_PHV_START_OFFSET(app_header_app_data1) + 14) // TODO: end offset not working on unionized struct due to padding issue
+#define TCP_PHV_TX_APP_HDR_END  		(CAPRI_PHV_START_OFFSET(app_header_app_data1) + 13) // TODO: end offset not working on unionized struct due to padding issue
 
 struct p_struct {
         // DMA COMMANDS - END

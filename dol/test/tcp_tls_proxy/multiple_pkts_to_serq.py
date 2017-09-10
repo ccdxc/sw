@@ -72,6 +72,12 @@ def TestCaseVerify(tc):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return false
 
+    # 5. Print stats
+    print("bytes_rcvd = %d:" % tcb.bytes_rcvd)
+    print("pkts_rcvd = %d:" % tcb.pkts_rcvd)
+    print("pages_alloced = %d:" % tcb.pages_alloced)
+    print("desc_alloced = %d:" % tcb.desc_alloced)
+
     return True
 
 def TestCaseTeardown(tc):

@@ -59,11 +59,12 @@ typedef struct __attribute__((__packed__)) __tcp_rx_read_tx2rx_actiondata_d {
 } tcp_rx_read_tx2rx_actiondata_d;
 
 // Atomic stats for TCP RX in TCP CB
+// **Note: offsets need to match stats update in tcp-rx-stats.h
 typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
     uint64_t bytes_rcvd;
-    uint64_t stats1;
-    uint64_t stats2;
-    uint64_t stats3;
+    uint64_t pkts_rcvd;
+    uint64_t pages_alloced;
+    uint64_t desc_alloced;
     uint64_t stats4;
     uint64_t stats5;
     uint64_t stats6;

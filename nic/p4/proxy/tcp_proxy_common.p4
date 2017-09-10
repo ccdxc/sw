@@ -144,12 +144,6 @@ header_type rx2tx_extra_t {
     }
 }
 
-header_type rx2tx_extra_pad_t {
-    fields {
-        rx2tx_extra_pad : 6;
-    }
-}
-
 header_type doorbell_data_pad_t {
     fields {
         db_data_pad : 16;

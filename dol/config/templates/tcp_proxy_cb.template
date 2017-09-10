@@ -25,4 +25,10 @@ debug_dol   : 0
 sesq        : 0
 sesq_pi     : 0
 sesq_ci     : 0
-
+snd_wnd     : 1000
+snd_cwnd    : 1000
+rcv_mss     : 9216
+bytes_rcvd  : 0
+pkts_rcvd   : 0
+pages_alloced   : 0
+desc_alloced    : 0

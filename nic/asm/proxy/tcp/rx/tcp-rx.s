@@ -77,17 +77,12 @@ tcp_queue_rcv:
 tcp_rcv_nxt_update:
 	sub		r1, k.s1_s2s_end_seq, d.u.tcp_rx_d.rcv_nxt
 	tblwr		d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_end_seq
-        add             r2, r1, d.u.tcp_rx_d.bytes_rcvd
-        bgei            r2, 0xffff, tcp_rcv_nxt_stats_update
-        // bgei            r2, 0, tcp_rcv_nxt_stats_update // TODO for debugging remove
-        nop
-	tbladd		d.u.tcp_rx_d.bytes_rcvd, r1
-        b               tcp_event_data_recv
-        nop
-tcp_rcv_nxt_stats_update:
-        phvwr           p.to_s7_bytes_rcvd, d.u.tcp_rx_d.bytes_rcvd
-        // phvwr           p.to_s7_bytes_rcvd, r1 // TODO for debugging REMOVE
-        tblwr           d.u.tcp_rx_d.bytes_rcvd, r1
+
+bytes_rcvd_stats_update_start:
+        CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
+bytes_rcvd_stats_update:
+        CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+bytes_rcvd_stats_update_end:
 	
 tcp_event_data_recv:
 	/* SCHEDULE_ACK(tp) */
@@ -588,6 +583,8 @@ flow_rx_process_done:
 	CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, TCP_SCHED_RING_PENDING, r0)
 table_read_setup_next:
 	phvwr		p.rx2tx_snd_wl1, d.u.tcp_rx_d.snd_wl1
+	phvwr		p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
+	phvwr		p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
 	bcf		[c7], table_read_SACK
 	nop
 table_read_RTT:

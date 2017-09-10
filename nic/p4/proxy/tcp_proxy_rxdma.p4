@@ -134,6 +134,7 @@ header_type tcp_rx_d_t {
         bytes_rcvd              : 16;
         bytes_acked             : 16;
         snd_wnd                 : 16;
+        rcv_mss                 : 16;
         debug_dol               : 8;
         rto                     : 8;
         pred_flags              : 8;
@@ -147,7 +148,7 @@ header_type tcp_rx_d_t {
         pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        pad                     : 75;
+        pad                     : 59;
     }
 }
 
@@ -269,6 +270,11 @@ header_type write_serq_d_t {
         nde_offset              : 16;
         nde_len                 : 16;
         curr_ts                 : 32;
+
+        // stats
+        pkts_rcvd               : 8;
+        pages_alloced           : 8;
+        desc_alloced            : 8;
     }
 }
 
@@ -328,9 +334,9 @@ header_type to_stage_6_phv_t {
     fields {
         page                    : 32;
         descr                   : 32;
-	serq_base		: 32;
+        serq_base               : 32;
         serq_pidx               : 16;
-	payload_len             : 16;
+        payload_len             : 16;
 
     }
 }
@@ -339,9 +345,9 @@ header_type to_stage_7_phv_t {
     // stats
     fields {
         bytes_rcvd              : 16;
-        stats1                  : 16;
-        stats2                  : 16;
-        stats3                  : 16;
+        pkts_rcvd               : 8;
+        pages_alloced           : 8;
+        desc_alloced            : 8;
 
         stats4                  : 16;
         stats5                  : 16;
@@ -504,6 +510,8 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
 @pragma dont_trim
 metadata rx2tx_t rx2tx;
 @pragma dont_trim
+metadata rx2tx_extra_t rx2tx_extra;
+@pragma dont_trim
 metadata rx2tx_pad_t rx2tx_pad;
 @pragma dont_trim
 metadata ring_entry_t ring_entry; 
@@ -511,10 +519,6 @@ metadata ring_entry_t ring_entry;
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_pad_t db_data_pad;
-@pragma dont_trim
-metadata rx2tx_extra_t rx2tx_extra;
-@pragma dont_trim
-metadata rx2tx_extra_pad_t rx2tx_extra_pad;
 @pragma dont_trim
 metadata pkt_descr_t aol; 
 @pragma dont_trim
@@ -605,7 +609,7 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
  */
 action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, snd_una,
         snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
-        bytes_acked, snd_wnd, debug_dol, rto, pred_flags, ecn_flags, ato, quick,
+        bytes_acked, snd_wnd, rcv_mss, debug_dol, rto, pred_flags, ecn_flags, ato, quick,
         snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
         pingpong, pad) {
     // k + i for stage 1
@@ -648,6 +652,7 @@ action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, s
     modify_field(tcp_rx_d.bytes_acked, bytes_acked);
     modify_field(tcp_rx_d.snd_wscale, snd_wscale);
     modify_field(tcp_rx_d.snd_wnd, snd_wnd);
+    modify_field(tcp_rx_d.rcv_mss, rcv_mss);
     modify_field(tcp_rx_d.pred_flags, pred_flags);
     modify_field(tcp_rx_d.ecn_flags, ecn_flags);
     modify_field(tcp_rx_d.ca_flags, ca_flags);
@@ -854,7 +859,8 @@ action tcp_fc(page_cnt) {
 /*
  * Stage 6 table 0 action
  */
-action write_serq(nde_addr, nde_offset, nde_len, curr_ts) {
+action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
+        pkts_rcvd, pages_alloced, desc_alloced) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -874,6 +880,9 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts) {
     modify_field(write_serq_d.nde_offset, nde_offset);
     modify_field(write_serq_d.nde_len, nde_len);
     modify_field(write_serq_d.curr_ts, curr_ts);
+    modify_field(write_serq_d.pkts_rcvd, pkts_rcvd);
+    modify_field(write_serq_d.pages_alloced, pages_alloced);
+    modify_field(write_serq_d.desc_alloced, desc_alloced);
 }
 
 /*
@@ -884,6 +893,9 @@ action stats() {
 
     // from to_stage 7
     modify_field(to_s7_scratch.bytes_rcvd, to_s7.bytes_rcvd);
+    modify_field(to_s7_scratch.pkts_rcvd, to_s7.pkts_rcvd);
+    modify_field(to_s7_scratch.pages_alloced, to_s7.pages_alloced);
+    modify_field(to_s7_scratch.desc_alloced, to_s7.desc_alloced);
 
     // from ki global
     GENERATE_GLOBAL_K
