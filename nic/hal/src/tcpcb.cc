@@ -117,6 +117,9 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     tcpcb->debug_dol = spec.debug_dol();
+    tcpcb->snd_wnd = spec.snd_wnd();
+    tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->rcv_mss = spec.rcv_mss();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -171,6 +174,9 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     tcpcb->debug_dol = spec.debug_dol();
+    tcpcb->snd_wnd = spec.snd_wnd();
+    tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->rcv_mss = spec.rcv_mss();
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
@@ -232,6 +238,10 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
 
     // fill stats of this TCP CB
+    rsp->mutable_stats()->set_bytes_rcvd(rtcpcb.bytes_rcvd);
+    rsp->mutable_stats()->set_pkts_rcvd(rtcpcb.pkts_rcvd);
+    rsp->mutable_stats()->set_pages_alloced(rtcpcb.pages_alloced);
+    rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }

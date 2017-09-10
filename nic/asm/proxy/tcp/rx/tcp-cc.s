@@ -119,6 +119,7 @@ update_sndcnt:
 	add		r5, r5, r6
 	tbladd		d.snd_cwnd, r5
 tcp_cwnd_reduction_done:
+	phvwr		p.rx2tx_snd_cwnd, d.snd_cwnd
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fc_stage5_start,
 	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
@@ -259,6 +260,7 @@ tcp_cong_avoid_ai:
 	slt		c2, d.snd_cwnd_clamp, d.snd_cwnd
 	tblwr.c2	d.snd_cwnd, d.snd_cwnd_clamp
 table_read_FC:
+	phvwr		p.rx2tx_snd_cwnd, d.snd_cwnd
 	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_fc_stage5_start,
 	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
 	                    TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)

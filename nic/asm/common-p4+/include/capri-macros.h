@@ -104,12 +104,26 @@
         phvwri		p.table_addr[63], 1                             ;\
         phvwri	        p.table_size, 8                                 ;
 
+#define CAPRI_STATS_INC(_stats_name, _stats_overflow_width, _inc_val, _d_field) \
+        add             r2, _d_field, _inc_val; \
+        bgei            r2, ((1 << _stats_overflow_width) - 1), _stats_name##_stats_update; \
+        nop; \
+        tbladd          _d_field, _inc_val; \
+        b               _stats_name##_stats_update_end; \
+        nop
+
+#define CAPRI_STATS_INC_UPDATE(_inc_val, _d_field, _p_field) \
+        phvwr           _p_field, _d_field; \
+        tblwr           _d_field, _inc_val; \
+
 // Increment 1 stat (sz = 0)
 // shift by 27, to get upper 6 bits of 33 bit HBM address
 // Note atomic stats region can only reside within 33 bits
 // of HBM space (+ 2G)
 // 0x80000000 (HBM base) is added by asic, so subtract it first
-#define CAPRI_ATOMIC_STATS_INCR1(_addr, _offs, _val) \
+#define CAPRI_ATOMIC_STATS_INCR1(_stats_name, _addr, _offs, _val) \
+        seq             c1, _val, 0; \
+        bcf             [c1], _stats_name##_atomic_stats_update_done; \
         add             r1, _addr, _offs; \
         subi            r1, r1, 0x80000000; \
         srl             r2, r1, 27; \
@@ -279,6 +293,7 @@
 #define CAPRI_QSTATE_HEADER_RING(_x)		\
         pi_##_x                           : 16;\
         ci_##_x                           : 16;\
+
 
 /* Instruction to see the value of _x during execution */
 #define CAPRI_OPERAND_DEBUG(_x)         add r1, r0, _x

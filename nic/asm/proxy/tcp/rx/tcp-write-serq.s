@@ -84,8 +84,6 @@ dma_cmd_serq_slot:
 	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
 dma_cmd_write_rx2tx_shared:
 	/* Set the DMA_WRITE CMD for copying rx2tx shared data from phv to mem */
-#if 0
-        // TODO : dma not happening correctly to non-64 byte aligned memory
 	add		r5, r0, k.common_phv_qstate_addr
 	add		r6, r0, k.common_phv_fid
 	sll		r6, r6, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
@@ -98,14 +96,28 @@ dma_cmd_write_rx2tx_shared:
 	phvwri		p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
         phvwri          p.dma_cmd3_dma_cmd_eop, 0
 	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
-#endif
+
+dma_cmd_write_rx2tx_extra_shared:
+	/* Set the DMA_WRITE CMD for copying rx2tx extra shared data from phv to mem */
+	add		r5, r0, k.common_phv_qstate_addr
+	add		r6, r0, k.common_phv_fid
+	sll		r6, r6, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
+	add		r5, r5, r6
+	add		r6, r0, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET
+	add		r5, r5, r6
+	phvwr		p.dma_cmd4_dma_cmd_addr, r5
+	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_RX2TX_SHARED_EXTRA_START
+	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_RX2TX_SHARED_EXTRA_END
+	phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+        phvwri          p.dma_cmd4_dma_cmd_eop, 0
+	addi		r4, r4, CAPRI_DMA_COMMAND_SIZE
 
 tcp_serq_produce:
 	sne		c1, k.common_phv_debug_dol, r0
 	bcf		[!c1], ring_doorbell
 	nop
-        phvwri          p.dma_cmd3_dma_cmd_eop, 1
-        phvwri          p.dma_cmd3_dma_cmd_wr_fence, 1
+        phvwri          p.dma_cmd4_dma_cmd_eop, 1
+        phvwri          p.dma_cmd4_dma_cmd_wr_fence, 1
         b 		flow_write_serq_process_done
 	nop
 ring_doorbell:
@@ -114,19 +126,39 @@ ring_doorbell:
 	/* data will be in r3 */
 	CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, k.to_s6_serq_pidx)
 	
-	phvwr		p.dma_cmd4_dma_cmd_addr, r4
+	phvwr		p.dma_cmd5_dma_cmd_addr, r4
         phvwr           p.db_data_index, k.to_s6_serq_pidx
 
         phvwr           p.db_data_qid, k.common_phv_fid
 
-	phvwri		p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_START
-	phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_END
-	phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+	phvwri		p.dma_cmd5_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_START
+	phvwri		p.dma_cmd5_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_END
+	phvwri		p.dma_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
-        phvwri          p.dma_cmd4_dma_cmd_eop, 1
-        phvwri          p.dma_cmd4_dma_cmd_wr_fence, 1
+        phvwri          p.dma_cmd5_dma_cmd_eop, 1
+        phvwri          p.dma_cmd5_dma_cmd_wr_fence, 1
 	
 flow_write_serq_process_done:
+stats:
+
+pkts_rcvd_stats_update_start:
+        CAPRI_STATS_INC(pkts_rcvd, 8, 1, d.pkts_rcvd)
+pkts_rcvd_stats_update:
+        CAPRI_STATS_INC_UPDATE(1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
+pkts_rcvd_stats_update_end:
+
+pages_alloced_stats_update_start:
+        CAPRI_STATS_INC(pages_alloced, 8, 1, d.pages_alloced)
+pages_alloced_stats_update:
+        CAPRI_STATS_INC_UPDATE(1, d.pages_alloced, p.to_s7_pages_alloced)
+pages_alloced_stats_update_end:
+
+desc_alloced_stats_update_start:
+        CAPRI_STATS_INC(desc_alloced, 8, 1, d.desc_alloced)
+desc_alloced_stats_update:
+        CAPRI_STATS_INC_UPDATE(1, d.desc_alloced, p.to_s7_desc_alloced)
+desc_alloced_stats_update_end:
+
         CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage7_start)
 	nop.e
 	nop
