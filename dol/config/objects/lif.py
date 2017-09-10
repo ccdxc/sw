@@ -26,13 +26,17 @@ class LifObject(objects.FrameworkObject):
         self.GID("Lif%d" % self.id)
         self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
-        self.enable_rdma = 1
         self.hw_lif_id = 0
         self.qstate_base = {}
-        if getattr(spec, 'rdma'):
+
+        if hasattr(spec, 'rdma'):
             self.enable_rdma = spec.rdma.enable
             self.rdma_max_pt_entries = spec.rdma.max_pt_entries
             self.rdma_max_keys = spec.rdma.max_keys
+        else:
+            self.enable_rdma = False
+            self.rdma_max_pt_entries = 0
+            self.rdma_max_keys = 0
 
         self.queue_types = objects.ObjectDatabase(cfglogger)
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
@@ -40,9 +44,10 @@ class LifObject(objects.FrameworkObject):
         self.queue_types.SetAll(self.obj_helper_q.queue_types)
 
         # RDMA per LIF allocators
-        self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
-        self.pd_allocator = objects.TemplateFieldObject("range/1/128")
-        self.mr_key_allocator = objects.TemplateFieldObject("range/1/1024")
+        if self.enable_rdma:
+            self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
+            self.pd_allocator = objects.TemplateFieldObject("range/1/128")
+            self.mr_key_allocator = objects.TemplateFieldObject("range/1/1024")
 
         self.tenant     = tenant
         self.Show()

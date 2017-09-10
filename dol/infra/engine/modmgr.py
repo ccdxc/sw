@@ -12,7 +12,6 @@ import infra.common.loader      as loader
 import infra.factory.testspec   as testspec
 
 from config.objects.session import SessionHelper
-from config.objects.rdma.session import RdmaSessionHelper
 from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
 
@@ -68,8 +67,7 @@ class Module:
 
     def __select_config(self):
         utils.LogFunctionBegin(self.logger)
-        #objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
-        objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+        objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
         self.testspec.selectors.matching_objects = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)

@@ -12,5 +12,6 @@ endpoints   :
     pvlan   : 1
     direct  : 0
     remote  : 1 # Remote TEPs
-    pd      : ref://store/specs/id=PD_RDMA
-    slab    : ref://store/specs/id=SLAB_RDMA
+    rdma:
+        pd      : ref://store/specs/id=PD_RDMA
+        slab    : ref://store/specs/id=SLAB_RDMA

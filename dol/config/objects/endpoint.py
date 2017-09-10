@@ -205,10 +205,12 @@ class EndpointObjectHelper:
         cfglogger.info("Configuring %d Endpoints." % len(self.eps))
         halapi.ConfigureEndpoints(self.eps)
         halapi.ConfigureEndpoints(self.backend_eps)
-        for ep in self.local:
-            ep.ConfigureSlabs()
-        for ep in self.eps:
-            ep.ConfigurePds()
+
+        if self.rdma:
+            for ep in self.local:
+                ep.ConfigureSlabs()
+            for ep in self.eps:
+                ep.ConfigurePds()
         return
 
     def __create(self, segment, intfs, count,
@@ -322,12 +324,15 @@ class EndpointObjectHelper:
         if len(self.backend_eps):
             Store.objects.SetAll(self.backend_eps)
 
-        if spec.slab:
-            slab_spec = spec.slab.Get(Store)
-            self.__create_slabs(slab_spec)
+        self.rdma = True if hasattr(spec, 'rdma') else False
 
-        if spec.pd:
-            pd_spec = spec.pd.Get(Store)
-            self.__create_pds(pd_spec)
+        if self.rdma:
+            if spec.rdma.slab:
+                slab_spec = spec.rdma.slab.Get(Store)
+                self.__create_slabs(slab_spec)
+
+            if spec.rdma.pd:
+                pd_spec = spec.rdma.pd.Get(Store)
+                self.__create_pds(pd_spec)
 
         return

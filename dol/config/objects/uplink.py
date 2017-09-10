@@ -29,7 +29,6 @@ class UplinkObject(base.ConfigObjectBase):
         self.mode   = spec.mode
         self.ports  = [ spec.port ]
         self.native_segment = None
-        self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
 
         return
     def Show(self):
@@ -43,9 +42,6 @@ class UplinkObject(base.ConfigObjectBase):
         summary += '/ID:%d' % self.id
         summary += '/Ports:' + str(self.ports)
         return summary
-
-    def GetQpid(self):
-        return self.qpid_allocator.get()
 
     def IsTrunkPort(self):
         return self.mode == 'TRUNK'
