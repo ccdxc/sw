@@ -1,24 +1,30 @@
 #! /bin/bash
+export DIR_DOL=`dirname $0`
+cd $DIR_DOL
 
-DOL=${WS_TOP}/hack/dol
-NIC=${WS_TOP}/hack/saratk/nic/
-OBJ=${WS_TOP}/hack/saratk/nic/obj
+function ErrorCheckNExit() {
+    if [ "$1" = "0" ];then
+        return
+    fi
 
-CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$NIC/obj $NIC/obj/hal_stub -c hal.json 2>&1 > hal.log &
-HALPID=$!
-echo "Started HAL @ PID=$HALPID"
+    echo "ERROR: $2 FAILED"
+    exit 1
+}
 
-$DOL/mockmodel/mockmodel &
-MOCKMODELPID=$!
-echo "Started MockModel @PID=$MOCKMODELPID"
+./ut_run.sh; err=$?; cat ut_run.log;
+ErrorCheckNExit $err "utrun"
 
-sleep 30
-$DOL/main.py -m dol_test_modules.list
-status=$?
+# Build the minimum targets required for dryrun.
+cd ../nic/utils/host_mem && make && cd -
+cd ../nic/proto/ && make && cd -
 
-echo "Stopping HAL @PID=$HALPID"
-kill -9 $HALPID
-echo "Stopping MOCKMODEL @PID=$MOCKMODELPID"
-kill -9 $MOCKMODELPID
+#./main.py --dryrun --topo eth --module eth
+#ErrorCheckNExit $? "eth topo"
 
-exit $status
+./main.py --dryrun --topo vxlan --module vxlan
+ErrorCheckNExit $? "vxlan topo"
+
+./main.py --dryrun --topo proxy --module tcp_proxy
+ErrorCheckNExit $? "tcpproxy topo."
+
+exit 0

@@ -306,7 +306,7 @@ modules:
         name    : L2UC_VXLAN_ARP_RARP
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : arp_vxlan.testspec
         ignore  : False
         args    :
@@ -321,7 +321,7 @@ modules:
         name    : L2UC_VXLAN_V4
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : l2uc_vxlan.testspec
         ignore  : False
         iterate :
@@ -333,7 +333,7 @@ modules:
         name    : L3UC_VXLAN_V4
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : l3uc_vxlan.testspec
         ignore  : False
         iterate :
@@ -345,7 +345,7 @@ modules:
         name    : L2UC_VXLAN_NONIP
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : l2uc_nonip_vxlan.testspec
         ignore  : False
         iterate :
@@ -355,7 +355,7 @@ modules:
         name    : L2UC_VXLAN_V6
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : l2uc_vxlan.testspec
         ignore  : True
         iterate :
@@ -366,7 +366,7 @@ modules:
         name    : L3UC_VXLAN_V6
         enable  : True
         package : test.networking
-        module  : networking
+        module  : vxlan
         spec    : l3uc_vxlan.testspec
         ignore  : True
         iterate :

@@ -77,6 +77,8 @@ class MemHandle(object):
         return self.va == other.va and self.pa == other.pa
 
     def __str__(self):
+        if self.va is None or self.pa is None:
+            return '<None>'
         return '<va=0x%x, pa=0x%x>' % (self.va, self.pa)
 
     def __add__(self, other):

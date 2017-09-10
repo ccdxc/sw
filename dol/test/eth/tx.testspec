@@ -4,7 +4,7 @@ selectors:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=False
-        interface   : filter://label=TXENABLE
+        interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any

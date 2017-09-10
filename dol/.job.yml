@@ -1,6 +1,6 @@
 ---
 targets:
-  ut: [ "bash", "-c", "./ut_run.sh; err=$?; cat ut_run.log; exit $err" ]
+  infra: [ "bash", "-c", "./sanity.sh" ]
 image:
   name: "pensando/dol"
   bind_dir: "/sw/dol"

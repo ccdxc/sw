@@ -1,8 +1,6 @@
 #! /bin/bash
 cd `dirname $0`
 
-# Disabling the UT tests till they are updated with the new descriptor logic.
-exit 0
 
 DOL=$PWD
 NIC=$PWD/../nic/
@@ -21,6 +19,9 @@ out=$?
 if [ $out -ne 0 ];then
     exit $out
 fi
+
+# Disabling the UT tests till they are updated with the new descriptor logic.
+exit 0
 
 #Run all the unittest modules.
 for module in "${ut_files[@]}"
