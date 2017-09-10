@@ -9,10 +9,15 @@ GEN_DIR = ../../gen
 NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi 
 #TLS_PROJ = proxy
 RDMA_RXPROJ = rdma_rxdma
+RDMA_TXPROJ = rdma_txdma
 RDMA_RXGEN_FILE = $(GEN_DIR)/$(RDMA_RXPROJ)/asm_out/ingress.h
+RDMA_TXGEN_FILE = $(GEN_DIR)/$(RDMA_TXPROJ)/asm_out/ingress.h
 
-my_all: $(RDMA_RXGEN_FILE) 
+my_all: $(RDMA_RXGEN_FILE) $(RDMA_TXGEN_FILE)
 
 $(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4 rdma_rxdma_headers.p4
 	$(NCC) $(NCC_OPTIONS) $(RDMA_RXPROJ).p4 --gen-dir $(GEN_DIR)
+
+$(RDMA_TXGEN_FILE): $(RDMA_TXPROJ).p4
+	$(NCC) $(NCC_OPTIONS) $(RDMA_TXPROJ).p4 --gen-dir $(GEN_DIR)
 

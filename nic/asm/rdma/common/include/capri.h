@@ -2,11 +2,15 @@
 #define __CAPRI_H
 
 // intrinsic fields
-#define CAPRI_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
-#define CAPRI_INTRINSIC_QTYPE k.p4_rxdma_intr_qtype
-#define CAPRI_INTRINSIC_QID k.p4_rxdma_intr_qid
+#define CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+#define CAPRI_RXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
+#define CAPRI_RXDMA_INTRINSIC_QTYPE k.p4_rxdma_intr_qtype
+#define CAPRI_RXDMA_INTRINSIC_QID k.p4_rxdma_intr_qid
 
-#define CAPRI_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+#define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+#define CAPRI_TXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
+#define CAPRI_TXDMA_INTRINSIC_QTYPE k.p4_txdma_intr_qtype
+#define CAPRI_TXDMA_INTRINSIC_QID k.p4_txdma_intr_qid
 
 // app data fields
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
@@ -212,6 +216,9 @@ _next:;
     add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
     CAPRI_SET_TABLE_3_VALID(1);
 
+#define CAPRI_GET_TABLE_0_OR_1_K(_phv_name, _k_base_r, _cf) \
+    cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr);
+
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data);
 #define CAPRI_GET_TABLE_1_ARG(_phv_name, _arg_base_r) \
@@ -220,6 +227,9 @@ _next:;
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data);
 #define CAPRI_GET_TABLE_3_ARG(_phv_name, _arg_base_r) \
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data);
+
+#define CAPRI_GET_TABLE_0_OR_1_ARG(_phv_name, _arg_base_r, _cf) \
+    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data);
 
 #define CAPRI_GET_TABLE_I_ARG(_phv_name, _tbl_id_r, _arg_base_r) \
     .brbegin; \
@@ -377,7 +387,8 @@ struct capri_dma_cmd_mem2mem_t {
     phvwr       p.common.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT)
 
 #define DMA_CMD_I_BASE_GET(_base_r, _tmp_r, _flit_id, _index) \
-    srl         _base_r, _index, (LOG_NUM_BITS_PER_FLIT - LOG_NUM_DMA_CMDS_PER_FLIT); \
+    srl         _base_r, _index, LOG_NUM_DMA_CMDS_PER_FLIT; \
+    sll         _base_r, _base_r, LOG_NUM_BITS_PER_FLIT; \
     add         _base_r, _base_r, (_flit_id+1), LOG_NUM_BITS_PER_FLIT; \
     add         _tmp_r, r0, _index; \
     mincr       _tmp_r, LOG_NUM_DMA_CMDS_PER_FLIT, r0; \
@@ -401,17 +412,24 @@ struct capri_dma_cmd_mem2mem_t {
 // Phv2Mem DMA: Specify the address of the start and end fields in the PHV
 //              and the destination address
 #define DMA_PHV2MEM_SETUP(_base_r, _cf, _start, _end, _addr)        \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3); \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), (sizeof(p) >> 3) - (offsetof(p, _end) >> 3); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), PHV_FIELD_END_OFFSET(_end) - 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
     seq          _cf, _addr[63], 1;                      \
     phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), DMA_CMD_TYPE_PHV2MEM;
 
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3); \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), (sizeof(p) >> 3) - (offsetof(p, _end) >> 3); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), PHV_FIELD_END_OFFSET(_end) -1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
+
+#if 0
+#define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), (sizeof(p) >> 3) - ((offsetof(p, _end) + sizeof(p._end)) >> 3) - 1; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
+#endif
 
 #define DMA_PKT2MEM_SETUP(_base_r, _cf, _size, _addr) \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
@@ -444,5 +462,56 @@ struct capri_dma_cmd_mem2mem_t {
 
 #define DMA_SET_END_OF_CMDS_C(_cmd_t, _base_r, _cf)                                  \
     phvwrp._cf _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1
+
+#define DMA_SET_END_OF_PKT(_cmd_t, _base_r)                                  \
+    phvwrp     _base_r, offsetof(_cmd_t, pkteop), sizeof(_cmd_t.pkteop), 1
+
+#define DMA_SET_END_OF_PKT_C(_cmd_t, _base_r, _cf)                                  \
+    phvwrp._cf _base_r, offsetof(_cmd_t, pkteop), sizeof(_cmd_t.pkteop), 1
+
+#define DB_ADDR_BASE           0x68800000
+
+#define DB_RING_UPD_SHIFT      2
+#define DB_UPD_SHIFT          17
+#define DB_LIF_SHIFT           6
+#define DB_QTYPE_SHIFT         3
+#define DB_RING_SHIFT         16
+#define DB_QID_SHIFT          24
+
+#define DB_NO_SCHED_WR        0x0
+#define DB_SCHED_WR_EVAL_RING 0x1
+#define DB_SCHED_WR_0         0x2
+#define DB_SCHED_WR_1         0x3 
+
+#define DB_NO_UPDATE          0x0
+#define DB_SET_CINDEX         0x1
+#define DB_SET_PINDEX         0x2
+#define DB_INC_PINDEX         0x3
+
+#define CAPRI_SETUP_DB_ADDR(_addr_prefix, _ring_upd, _sched_wr, _lif, _qtype, _capri_addr)       \
+    add       _capri_addr, _sched_wr, _ring_upd, DB_RING_UPD_SHIFT;                              \
+    sll       _capri_addr, _capri_addr, DB_UPD_SHIFT;                                            \
+    add       _capri_addr, _capri_addr, _lif, DB_LIF_SHIFT;                                      \
+    add       _capri_addr, _capri_addr, _qtype, DB_QTYPE_SHIFT;                                  \
+    addi      _capri_addr, _capri_addr, _addr_prefix;
+     
+#define CAPRI_SETUP_DB_DATA(_qid, _ring, _ring_index, _capri_data)                               \
+    add       _capri_data, _ring_index, _ring, DB_RING_SHIFT;                                    \
+    add       _capri_data, _capri_data, _qid, DB_QID_SHIFT;
+
+#define DOORBELL_WRITE_CINDEX(_lif, _qtype, _qid, _ring_id, _cindex, _addr, _data)                  \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_CINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, _ring_id, _cindex, _data);                                            \
+    memwr.dx   _addr, _data;
+
+#define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, ring_id, _pindex, _addr, _data)                   \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, _ring_id, _pindex, _data);                                            \
+    memwr.dx   _adddr, _data;
+
+#define DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ring_id, _addr, _data)                              \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_INC_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                                 \
+    memwr.dx   _adddr, _data;
 
 #endif //__CAPRI_H

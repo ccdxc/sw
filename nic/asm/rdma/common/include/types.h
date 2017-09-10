@@ -349,7 +349,8 @@ struct ack_info_t {
 #define OP_TYPE_SEND_RCVD          17
 #define OP_TYPE_INVALID            18
 
-#define TXWQE_SGE_OFFSET  256 // 32 * 8
+#define TXWQE_SGE_OFFSET  32 //
+#define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
 
 struct sqwqe_base_t {
     wrid               : 64;
@@ -360,6 +361,15 @@ struct sqwqe_base_t {
     rsvd1              : 1;
     num_sges           : 8;
     rsvd2              : 16;
+    pad                : 416;
+};
+
+// send
+struct sqwqe_send_t {
+    imm_data           : 32;
+    inv_key            : 32;
+    length             : 32;
+    rsvd               : 64;    // for now
 };
 
 #define RQWQE_SGE_OFFSET    256
@@ -470,11 +480,58 @@ struct key_entry_t {
 #endif
 };
 
-#define get_num_pages (_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r) \
-     srl    _scratch_r, _va_r _page_size_imm;                                     \
+#define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \
+     srl    _scratch_r, _va_r, _page_size_imm;                                    \
      add    _num_pages_r, _va_r, _bytes_r;                                        \
      srl    _num_pages_r, _num_pages_r, _page_size_imm;                           \
      sub    _num_pages_r, _num_pages_r, _scratch_r;                               \
      add    _num_pages_r, _num_pages_r, 1;
 
+
+struct udphdr_t {
+    sport   : 16;
+    dport   : 16;
+    length  : 16;
+    csum    : 16;
+};
+
+struct iphdr_t {
+    version     : 4;
+    ihl         : 4;
+    tos         : 8;
+    tot_len     : 16;
+    id          : 16;
+    frag_off    : 16;
+    ttl         : 8;
+    protocol    : 8;
+    check       : 16;
+    saddr       : 32;
+    daddr       : 32;
+/*The options start here. */
+};
+
+struct ethhdr_t {
+    dmac       : 48;
+    sma        : 48;
+    ethertype  : 16;
+};
+
+struct vlanhdr_t {
+    pri            : 3;
+    cfi            : 1;
+    vlan           : 12;
+    ethertype      : 16;
+};
+
+
+struct header_template_t {
+    struct ethhdr_t     eth; 
+    struct vlanhdr_t    vlan;
+    struct iphdr_t      ip;
+    struct udphdr_t     udp;
+};
+
+#define HDR_TEMPLATE_T struct header_template_t
+#define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
+ 
 #endif //__TYPES_H

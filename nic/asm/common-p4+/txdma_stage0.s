@@ -16,13 +16,37 @@
 
 %%
 
+    .param      req_tx_sqcb_process
     .param      storage_tx_q_state_pop_start
     .param      tcp_tx_read_shared_stage0_start
     .param      tls_stage0
     .param      tcp_tx_read_rx2tx_shared_process
     .param      eth_tx_fetch_desc
 
+//Keep offset 0 for none to avoid invoking unrelated program when
+//qstate's pc_offset is not initialized
+.align
+dummy:
+   nop.e
+   nop
 
+//Do not change the order of this entry. 
+//Keep it the first one after dummy
+//This has to align with the txdma_stage0.s program
+.align
+rdma_resp_tx_stage0:
+    nop.e
+    nop
+
+//Do not change the order of this entry. 
+//Keep it the second one after dummy
+//This has to align with the txdma_stage0.s program
+.align
+rdma_req_tx_stage0:
+    j req_tx_sqcb_process
+    nop
+
+.align
 eth_tx_stage0:
    j    eth_tx_fetch_desc
    nop

@@ -35,6 +35,7 @@ struct sqcb0_t {
     current_sge_offset: 32;
     current_sge_id: 8;
     num_sges: 8;
+    rsvd: 7;
     busy: 1;
     in_progress: 1;
     signalled_completion: 1;
@@ -43,8 +44,9 @@ struct sqcb0_t {
     fence: 1;
     li_fence: 1;
     need_credits: 1;
+    bktrack_in_progress: 1;
     pd: 32;
-    rsvd: 40;
+    rsvd1: 32;
 };
 
 struct sqcb1_t {
@@ -61,6 +63,8 @@ struct sqcb1_t {
     credits                        : 5;
     in_progress                    : 1;
     service                        : 4;
+    timer_active                   : 1;
+    local_ack_timeout              : 5;
     rrqwqe_num_sges                : 8;
     rrqwqe_cur_sge_id              : 8;
     rrqwqe_cur_sge_offset          : 32;
@@ -72,8 +76,9 @@ struct sqcb1_t {
     wqe_start_psn                  : 24;
     nak_retry_ctr                  : 3;
     err_retry_ctr                  : 3;
-    timer_active                   : 1;
-    local_ack_timeout              : 5;
+    rsvd1                          : 2;
+    p4plus_to_p4_flags             : 8;
+    rvsd2                          : 64;
 };
 
 struct sqcb_t {

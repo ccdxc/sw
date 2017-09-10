@@ -1,6 +1,7 @@
 LIBDIRS = \
           common \
           resp_rx \
+          req_tx \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

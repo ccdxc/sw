@@ -22,6 +22,30 @@
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table
 
 
+//Keep offset 0 for none to avoid invoking unrelated program when
+//qstate's pc_offset is not initialized
+.align
+dummy:
+    nop.e
+    nop
+
+//Do not change the order of this entry. 
+//Keep it the first one after dummy
+//This has to align with the txdma_stage0.s program
+.align
+rdma_resp_rx_stage0:
+    j resp_rx_rqcb_process
+    nop
+
+//Do not change the order of this entry. 
+//Keep it the second one after dummy
+//This has to align with the txdma_stage0.s program
+.align
+rdma_req_rx_stage0:
+    nop.e
+    nop
+
+.align
 eth_rx_stage0:
     j eth_rx_fetch_desc
     nop
@@ -29,16 +53,6 @@ eth_rx_stage0:
 .align
 tcp_rx_stage0:
     j tcp_rx_read_shared_stage0_start
-    nop
-
-.align
-rdma_resp_rx_stage0:
-    j resp_rx_rqcb_process
-    nop
-
-.align
-rdma_req_rx_stage0:
-    nop.e
     nop
 
 .align
