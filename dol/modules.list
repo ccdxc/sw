@@ -963,7 +963,7 @@ modules:
 
     - module:
         name    : ETH_TX # L2UC_IP cases
-        enable  : True
+        enable  : False
         package : test.eth
         module  : eth
         spec    : tx.testspec
