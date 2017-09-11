@@ -35,11 +35,17 @@ typedef struct tcpcb_s {
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 
-    // stats
+    // rx stats
     uint64_t              bytes_rcvd;
     uint64_t              pkts_rcvd;
     uint64_t              pages_alloced;
     uint64_t              desc_alloced;
+
+    // tx stats
+    uint64_t              bytes_sent;
+    uint64_t              pkts_sent;
+    uint64_t              debug_num_phv_to_pkt;
+    uint64_t              debug_num_mem_to_pkt;
 
     // PD state
     void                  *pd;                     // all PD specific state

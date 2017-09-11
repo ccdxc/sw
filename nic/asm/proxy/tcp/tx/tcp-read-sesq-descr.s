@@ -24,9 +24,9 @@ tcp_tx_sesq_read_descr_stage2_start:
         CAPRI_OPERAND_DEBUG(d.A0)
         CAPRI_OPERAND_DEBUG(d.O0)
         CAPRI_OPERAND_DEBUG(d.L0)
-        phvwr           p.to_s3_addr, d.A0
-        phvwr           p.to_s3_offset, d.O0
-        phvwr           p.to_s3_len, d.L0
+        phvwr           p.to_s3_addr, d.{A0}.dx
+        phvwr           p.to_s3_offset, d.{O0}.wx
+        phvwr           p.to_s3_len, d.{L0}.wx
 
         CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
                             tcp_tx_process_stage3_start,

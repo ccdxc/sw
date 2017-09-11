@@ -109,11 +109,11 @@ def TestCaseVerify(tc):
 
     #7 Verify pkt stats
     if tcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + 1:
-        print("pkt stats not as expected")
+        print("pkt rx stats not as expected")
         return False
 
     if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + 84:
-        print("Warning! pkt stats not as expected")
+        print("Warning! pkt rx byte stats not as expected")
 
     #8 Verify page stats
     if tcb_cur.pages_alloced != tcpcb.pages_alloced + 1:

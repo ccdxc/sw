@@ -96,6 +96,11 @@ message TcpCbStats {
   uint64                pkts_rcvd                  = 2;
   uint64                pages_alloced              = 3;
   uint64                desc_alloced               = 4;
+
+  uint64                bytes_sent                 = 10001;
+  uint64                pkts_sent                  = 10002;
+  uint64                debug_num_phv_to_pkt       = 10003;
+  uint64                debug_num_mem_to_pkt       = 10004;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

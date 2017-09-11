@@ -242,6 +242,12 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_stats()->set_pkts_rcvd(rtcpcb.pkts_rcvd);
     rsp->mutable_stats()->set_pages_alloced(rtcpcb.pages_alloced);
     rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
+
+    rsp->mutable_stats()->set_bytes_sent(rtcpcb.bytes_sent);
+    rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);
+    rsp->mutable_stats()->set_debug_num_phv_to_pkt(rtcpcb.debug_num_phv_to_pkt);
+    rsp->mutable_stats()->set_debug_num_mem_to_pkt(rtcpcb.debug_num_mem_to_pkt);
+
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }

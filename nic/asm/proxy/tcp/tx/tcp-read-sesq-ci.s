@@ -21,11 +21,11 @@ struct tcp_tx_read_sesq_ci_read_sesq_ci_d d;
 tcp_tx_sesq_read_ci_stage1_start:
 
         CAPRI_OPERAND_DEBUG(d.desc_addr)
-        phvwr           p.to_s3_sesq_desc_addr, d.{desc_addr}.dx
+        phvwr           p.to_s3_sesq_desc_addr, d.desc_addr
 
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
 
-        add             r3, d.{desc_addr}.dx, NIC_DESC_ENTRY_0_OFFSET
+        add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
         CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tcp_tx_sesq_read_descr_stage2_start,
 	                r3, TABLE_SIZE_512_BITS)
 

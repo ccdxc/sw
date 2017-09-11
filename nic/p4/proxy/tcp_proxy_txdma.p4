@@ -16,8 +16,10 @@
 #define tx_table_s2_t1 tcp_tx_sesq_consume
 
 #define tx_table_s3_t0 tcp_tx_tcp_tx
-#
+
 #define tx_table_s4_t0 tcp_tx_tso
+
+#define tx_table_s5_t0 tcp_tx_stats
 
 
 /******************************************************************************
@@ -32,8 +34,10 @@
 #define tx_table_s2_t1_action sesq_consume
 
 #define tx_table_s3_t0_action tcp_tx
-#
+
 #define tx_table_s4_t0_action tso
+
+#define tx_table_s5_t0_action stats
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -163,6 +167,15 @@ header_type to_stage_4_phv_t {
     }
 }
 
+header_type to_stage_5_phv_t {
+    // stats
+    fields {
+        bytes_sent              : 16;
+        pkts_sent               : 8;
+        debug_num_mem_to_pkt    : 8;
+        debug_num_phv_to_pkt    : 8;
+    }
+}
 /******************************************************************************
  * Stage to stage PHV definitions
  *****************************************************************************/
@@ -215,6 +228,8 @@ metadata to_stage_2_phv_t to_s2;
 metadata to_stage_3_phv_t to_s3;
 @pragma pa_header_union ingress to_stage_4
 metadata to_stage_4_phv_t to_s4;
+@pragma pa_header_union ingress to_stage_5
+metadata to_stage_5_phv_t to_s5;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata common_t0_s2s_phv_t t0_s2s;
@@ -228,6 +243,8 @@ metadata to_stage_2_phv_t to_s2_scratch;
 metadata to_stage_3_phv_t to_s3_scratch;
 @pragma scratch_metadata
 metadata to_stage_4_phv_t to_s4_scratch;
+@pragma scratch_metadata
+metadata to_stage_5_phv_t to_s5_scratch;
 
 @pragma scratch_metadata
 metadata common_t0_s2s_phv_t t0_s2s_scratch;
@@ -504,4 +521,20 @@ action tso(TX_SHARED_PARAMS) {
 
     // d for stage 4 table 0
     GENERATE_TX_SHARED_D
+}
+
+/*
+ * Stage 5 table 0 action
+ */
+action stats() {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from to_stage 5
+    modify_field(to_s5_scratch.bytes_sent, to_s5.bytes_sent);
+    modify_field(to_s5_scratch.pkts_sent, to_s5.pkts_sent);
+    modify_field(to_s5_scratch.debug_num_phv_to_pkt, to_s5.debug_num_phv_to_pkt);
+    modify_field(to_s5_scratch.debug_num_mem_to_pkt, to_s5.debug_num_mem_to_pkt);
+
+    // d for stage 5 table 0
 }

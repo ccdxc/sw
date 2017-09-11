@@ -83,28 +83,34 @@
         pending                         : 2                     ;\
 
 #define TCB_TX_SHARED_STATE \
-	retx_ci                         : 16                    ;\
-	retx_pi                         : 16                    ;\
+        retx_ci                         : 16                    ;\
+        retx_pi                         : 16                    ;\
         sched_flag                      : 8                     ;\
-	retx_snd_una			: SEQ_NUMBER_WIDTH      ;\
-	retx_snd_nxt			: SEQ_NUMBER_WIDTH      ;\
-	retx_head_desc			: HBM_ADDRESS_WIDTH         ;\
-	retx_snd_una_cursor		: HBM_ADDRESS_WIDTH         ;\
-	retx_tail_desc			: HBM_ADDRESS_WIDTH         ;\
-	retx_snd_nxt_cursor		: HBM_ADDRESS_WIDTH         ;\
-	retx_xmit_cursor		: HBM_ADDRESS_WIDTH         ;\
-	xmit_cursor_addr		: HBM_ADDRESS_WIDTH         ;\
-	rcv_wup				: WINDOW_WIDTH          ;\
+        retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
+        retx_snd_nxt                    : SEQ_NUMBER_WIDTH      ;\
+        retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
+        retx_snd_una_cursor             : HBM_ADDRESS_WIDTH     ;\
+        retx_tail_desc                  : HBM_ADDRESS_WIDTH     ;\
+        retx_snd_nxt_cursor             : HBM_ADDRESS_WIDTH     ;\
+        retx_xmit_cursor                : HBM_ADDRESS_WIDTH     ;\
+        xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
+        rcv_wup                         : WINDOW_WIDTH          ;\
         prr_out                         : 32                    ;\
-	pending_ack_tx			: 1                     ;\
-	pending_delayed_ack_tx		: 1                     ;\
-	pending_tso_data		: 1                     ;
+        pending_ack_tx                  : 1                     ;\
+        pending_delayed_ack_tx          : 1                     ;\
+        pending_tso_data                : 1                     ;\
+        pending_pad                     : 5                     ;\
+        bytes_sent                      : 16                    ;\
+        pkts_sent                       : 8                     ;\
+        debug_num_phv_to_pkt            : 8                     ;\
+        debug_num_mem_to_pkt            : 8                     ;\
 
 #define TX_SHARED_PARAMS                                                                                  \
 retx_ci, retx_pi, sched_flag, retx_snd_una, retx_snd_nxt,\
 retx_head_desc, retx_snd_una_cursor, retx_tail_desc, retx_snd_nxt_cursor,\
 retx_xmit_cursor, xmit_cursor_addr, rcv_wup, prr_out, pending_ack_tx,\
-pending_delayed_ack_tx, pending_tso_data
+pending_delayed_ack_tx, pending_tso_data, pending_pad, bytes_sent,\
+pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
 
 
 #define GENERATE_TX_SHARED_D                                                                               \
@@ -123,7 +129,13 @@ pending_delayed_ack_tx, pending_tso_data
     modify_field(tcp_tx_d.prr_out, prr_out); \
     modify_field(tcp_tx_d.pending_ack_tx, pending_ack_tx); \
     modify_field(tcp_tx_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
-    modify_field(tcp_tx_d.pending_tso_data, pending_tso_data);
+    modify_field(tcp_tx_d.pending_tso_data, pending_tso_data);\
+    modify_field(tcp_tx_d.pending_pad, pending_pad);\
+    modify_field(tcp_tx_d.bytes_sent, bytes_sent);\
+    modify_field(tcp_tx_d.pkts_sent, pkts_sent);\
+    modify_field(tcp_tx_d.debug_num_phv_to_pkt, debug_num_phv_to_pkt);\
+    modify_field(tcp_tx_d.debug_num_mem_to_pkt, debug_num_mem_to_pkt);
+
 
 header_type rx2tx_t {
     fields {

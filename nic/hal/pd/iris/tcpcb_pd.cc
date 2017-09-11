@@ -376,6 +376,42 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
     return HAL_RET_OK;
 }
 
+static hal_ret_t 
+p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
+{
+    tcp_tx_tso_tso_d tso_d = { 0 };
+    tcp_tx_stats_t stats;
+    tcpcb_hw_id_t hwid;
+
+    hwid = tcpcb_pd->hw_id + 
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TX);
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&tso_d, sizeof(tso_d))) {
+        HAL_TRACE_ERR("Failed to get rx: tso entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+     }
+
+    hwid = tcpcb_pd->hw_id + 
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_STATS);
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
+        HAL_TRACE_ERR("Failed to get rx: stats entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+
+    tcpcb_pd->tcpcb->bytes_sent = ntohs(tso_d.bytes_sent) +
+                                    stats.bytes_sent;
+    tcpcb_pd->tcpcb->pkts_sent = tso_d.pkts_sent + stats.pkts_sent;
+    tcpcb_pd->tcpcb->debug_num_phv_to_pkt = tso_d.debug_num_phv_to_pkt +
+                                    stats.debug_num_phv_to_pkt;
+    tcpcb_pd->tcpcb->debug_num_mem_to_pkt = tso_d.debug_num_mem_to_pkt +
+                                    stats.debug_num_mem_to_pkt;
+
+    HAL_TRACE_DEBUG("bytes_sent {} pkts_sent {} debug_num_phv_to_pkt {} debug_num_mem_to_pkt {}",
+            tcpcb_pd->tcpcb->bytes_sent, tcpcb_pd->tcpcb->pkts_sent,
+            tcpcb_pd->tcpcb->debug_num_phv_to_pkt, tcpcb_pd->tcpcb->debug_num_mem_to_pkt);
+
+    return HAL_RET_OK;
+}
+
 /********************************************
  * TxDMA
  * ******************************************/
@@ -641,6 +677,7 @@ p4pd_get_tcpcb_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     ret = p4pd_get_tcpcb_rxdma_stats(tcpcb_pd);
+    ret = p4pd_get_tcpcb_txdma_stats(tcpcb_pd);
    
     ret = p4pd_get_tcpcb_txdma_entry(tcpcb_pd);
     if(ret != HAL_RET_OK) {

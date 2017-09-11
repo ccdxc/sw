@@ -78,7 +78,7 @@ def TestCaseVerify(tc):
     # 3. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        return false
+        return False
 
     # 2. Verify descriptor 
     if rnmdr.ringentries[rnmdr.pi].handle != brq_cur.ringentries[0].handle:
