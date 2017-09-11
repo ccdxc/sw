@@ -4,10 +4,14 @@ package writer
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
+	"github.com/pensando/sw/utils/rpckit"
 )
 
 // Writer is the api provided by writer object
@@ -20,15 +24,17 @@ type Writer interface {
 
 // APISrvWriter is the writer instance
 type APISrvWriter struct {
-	apisrvURL string
-	apicl     apiclient.Services
+	apisrvURL    string
+	resolverURLs string
+	apicl        apiclient.Services
 }
 
 // NewAPISrvWriter returns an API server writer
-func NewAPISrvWriter(apiSrvURL string) (Writer, error) {
+func NewAPISrvWriter(apiSrvURL, resolverURLs string) (Writer, error) {
 	// create apisrv writer instance
 	wr := APISrvWriter{
-		apisrvURL: apiSrvURL,
+		apisrvURL:    apiSrvURL,
+		resolverURLs: resolverURLs,
 	}
 
 	return &wr, nil
@@ -43,7 +49,9 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 
 	// create the api client
 	l := log.WithContext("Pkg", "NpmApiWriter")
-	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l)
+	// create a resolver
+	r := resolver.New(&resolver.Config{Servers: strings.Split(wr.resolverURLs, ",")})
+	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
 		log.Errorf("Failed to connect to gRPC server [%s]\n", wr.apisrvURL)
 		return nil, err

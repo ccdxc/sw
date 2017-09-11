@@ -82,9 +82,9 @@ class Node:
         self.npThread.start()
 
     # Start Naples agent process on the node
-    def startN4sAgent(self, npm, hostif, uplink):
+    def startN4sAgent(self, npm, resolvers, hostif, uplink):
         ssh_object = self.sshConnect(self.username, self.password)
-        command = "sudo " + self.gobin + "/n4sagent -npm " + npm + " -hostif " + hostif + " -uplink " + uplink + " > /tmp/pensando-n4sagent.log 2>&1"
+        command = "sudo " + self.gobin + "/n4sagent -npm " + npm + " -resolver-urls " + resolvers + " -hostif " + hostif + " -uplink " + uplink + " > /tmp/pensando-n4sagent.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)
         self.npThread.start()
@@ -134,7 +134,8 @@ def createNetwork(nodeAddr, name, subnet, gw, vlanId):
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
 parser.add_argument("-nodes", default='', help="list of nodes(comma separated)")
-parser.add_argument("-npm", default='pen-master:9004', help="NPM URL")
+parser.add_argument("-npm", default='pen-npm', help="NPM URL")
+parser.add_argument("-resolvers", default='pen-master:9002', help="Resolver URLs")
 parser.add_argument("-simnodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")
@@ -197,7 +198,7 @@ try:
         snode.runCmd("sudo pkill n4sagent")
         snode.runCmd("sudo pkill k8sagent")
         snode.runCmd("sudo pkill hostsim")
-        snode.runCmd("sudo docker ps -a | grep alpine | awk '{print $1}' | xargs -r -n1 -I{} sudo docker rm -f {}")
+        snode.runCmd("sudo docker ps -a | grep alpine | awk '{print $1}' | xargs -r -n1 -I{} echo sudo docker rm -f {}")
         snode.runCmd("sudo ip link delete strunk0 type veth peer name ntrunk0")
         snode.runCmd("sudo ovs-vsctl del-br SimBridge")
 
@@ -222,7 +223,7 @@ try:
         if args.k8s:
             node.startK8sAgent()
         else:
-            node.startN4sAgent(args.npm, args.hostif, args.uplink)
+            node.startN4sAgent(args.npm, args.resolvers, args.hostif, args.uplink)
 
     print "################### Started Pensando Agent #####################"
 

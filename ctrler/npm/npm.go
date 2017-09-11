@@ -45,8 +45,8 @@ type Netctrler struct {
 }
 
 // NewNetctrler returns a controller instance
-func NewNetctrler(serverURL, apisrvURL, vmmURL string) (*Netctrler, error) {
-	wr, err := writer.NewAPISrvWriter(apisrvURL)
+func NewNetctrler(serverURL, apisrvURL, vmmURL, resolverURLs string) (*Netctrler, error) {
+	wr, err := writer.NewAPISrvWriter(apisrvURL, resolverURLs)
 	if err != nil {
 		log.Errorf("Error creating api server writer. Err: %v", err)
 		return nil, err
@@ -60,7 +60,7 @@ func NewNetctrler(serverURL, apisrvURL, vmmURL string) (*Netctrler, error) {
 	}
 
 	// create watcher on api server
-	watcher, err := watcher.NewWatcher(stateMgr, apisrvURL, vmmURL)
+	watcher, err := watcher.NewWatcher(stateMgr, apisrvURL, vmmURL, resolverURLs)
 	if err != nil {
 		log.Errorf("Error creating api server watcher. Err: %v", err)
 		return nil, err

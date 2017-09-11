@@ -9,16 +9,23 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	. "gopkg.in/check.v1"
+
 	"github.com/pensando/sw/agent"
 	"github.com/pensando/sw/agent/netagent/datapath"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/apigw"
 	apigwpkg "github.com/pensando/sw/apigw/pkg"
 	"github.com/pensando/sw/apiserver"
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
+	"github.com/pensando/sw/cmd/grpc/service"
+	"github.com/pensando/sw/cmd/services/mock"
+	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/ctrler/npm"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/runtime"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -26,7 +33,6 @@ import (
 	_ "github.com/pensando/sw/api/hooks"
 
 	. "github.com/pensando/sw/utils/testutils"
-	. "gopkg.in/check.v1"
 )
 
 // integ test suite parameters
@@ -86,10 +92,32 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiSrv.Run(apisrvConfig)
 	time.Sleep(time.Millisecond * 100)
 
+	// Now create a mock resolver
+	m := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(m)
+	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true))
+	c.Assert(err, IsNil)
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+
+	// populate the mock resolver with apiserver instance.
+	si := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-apiserver-test",
+		},
+		Service: "pen-apiserver",
+		Node:    "localhost",
+		Port:    8082,
+	}
+	m.AddServiceInstance(&si)
+
 	// api gw config
 	apigwConfig := apigw.Config{
-		HTTPAddr: integTestAPIGWURL,
-		Logger:   logger,
+		HTTPAddr:  integTestAPIGWURL,
+		Logger:    logger,
+		Resolvers: []string{resolverServer.GetListenURL()},
 	}
 
 	// create apigw
@@ -97,7 +125,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiGw.Run(apigwConfig)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestApisrvURL, "")
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestApisrvURL, "", "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
@@ -111,7 +139,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL)
+		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "")
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}

@@ -55,7 +55,7 @@ type resolverClient struct {
 }
 
 // New creates a new resolver client.
-func New(c *Config) (Interface, error) {
+func New(c *Config) Interface {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &resolverClient{
 		config:    c,
@@ -65,7 +65,7 @@ func New(c *Config) (Interface, error) {
 		observers: make([]Observer, 0),
 	}
 	go r.runUntilCancel()
-	return r, nil
+	return r
 }
 
 // runUntilCancel implements the business logic of the resolver client.

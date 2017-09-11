@@ -21,10 +21,7 @@ var (
 		"pen-kube-apiserver",
 		"pen-kube-scheduler",
 		"pen-kube-controller-manager",
-		"pen-apiserver",
 		"pen-elasticsearch",
-		"pen-npm",
-		"pen-vchub",
 	}
 )
 

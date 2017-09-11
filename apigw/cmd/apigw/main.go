@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"strings"
 
 	"google.golang.org/grpc/grpclog"
 
@@ -22,6 +23,7 @@ func main() {
 		host            = flag.String("host", "localhost", "host identity")
 		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:port>")
 	)
 
 	flag.Parse()
@@ -58,6 +60,7 @@ func main() {
 		config.HTTPAddr = *httpaddr
 		config.DebugMode = *debugflag
 		config.Logger = pl
+		config.Resolvers = strings.Split(*resolverURLs, ",")
 	}
 	trace.Init("ApiGateway")
 	pl.Log("msg", "Starting Run")

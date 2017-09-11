@@ -72,10 +72,7 @@ func TestResolverClient(t *testing.T) {
 	config := &Config{
 		Servers: []string{server.GetListenURL()},
 	}
-	client, err := New(config)
-	if err != nil {
-		t.Fatalf("Failed to create client, error: %v", err)
-	}
+	client := New(config)
 	mo := &mockServiceInstanceObserver{}
 	client.Register(mo)
 	c2 := func() bool {

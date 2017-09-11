@@ -286,7 +286,7 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string) (*Watcher, error) {
+func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs string) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
@@ -308,8 +308,8 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string) (*Watcher
 	go watcher.runSgPolicyWatcher()
 
 	// handle api watchers
-	go watcher.runApisrvWatcher(watchCtx, apisrvURL)
-	go watcher.runVmmWatcher(watchCtx, vmmURL)
+	go watcher.runApisrvWatcher(watchCtx, apisrvURL, resolverURLs)
+	go watcher.runVmmWatcher(watchCtx, vmmURL, resolverURLs)
 
 	return watcher, nil
 }

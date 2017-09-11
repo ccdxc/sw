@@ -5,14 +5,17 @@ package watcher
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/orch"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 	"github.com/pensando/sw/utils/rpckit"
 )
 
@@ -131,7 +134,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 }
 
 // runApisrvWatcher run API server watcher forever
-func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string) {
+func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolverURLs string) {
 	// if we have no URL, exit
 	if apisrvURL == "" {
 		return
@@ -147,7 +150,10 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string) {
 
 	// loop forever
 	for {
-		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
+		// create a resolver
+		r := resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")})
+		// create a grpc client
+		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
 		} else {
@@ -238,7 +244,7 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 }
 
 // runVmmWatcher runs grpc client to watch VMM events
-func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string) {
+func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL, resolverURLs string) {
 	// if we have no URL, exit
 	if vmmURL == "" {
 		return
@@ -250,8 +256,10 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string) {
 
 	// loop forever
 	for {
+		// create a resolver
+		r := resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")})
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL)
+		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, rpckit.WithBalancer(balancer.New(r)))
 		if err != nil {
 			log.Warnf("Error connecting to grpc server. Err: %v", err)
 		} else {

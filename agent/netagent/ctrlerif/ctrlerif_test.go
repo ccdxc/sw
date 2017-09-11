@@ -275,7 +275,7 @@ func TestNpmclient(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL)
+	cl, err := NewNpmClient(ag, testSrvURL, "")
 	AssertOk(t, err, "Error creating npm client")
 
 	epinfo := netproto.Endpoint{
@@ -347,7 +347,7 @@ func TestNpmClientWatch(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL)
+	cl, err := NewNpmClient(ag, testSrvURL, "")
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 
@@ -405,7 +405,7 @@ func TestSecurityGroupWatch(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL)
+	cl, err := NewNpmClient(ag, testSrvURL, "")
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 

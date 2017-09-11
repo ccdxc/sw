@@ -5,13 +5,16 @@ package ctrlerif
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 	"github.com/pensando/sw/utils/rpckit"
 )
 
@@ -19,6 +22,8 @@ import (
 type NpmClient struct {
 	sync.Mutex                                    // lock the npm client
 	srvURL          string                        // NPM rpc server URL
+	resolverURLs    string                        // Resolver URLs
+	resolverClient  resolver.Interface            // Resolver client
 	waitGrp         sync.WaitGroup                // wait group to wait on all go routines to exit
 	agent           netagent.CtrlerIntf           // net Agent API
 	netGrpcClient   *rpckit.RPCClient             // grpc client
@@ -37,13 +42,15 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewNpmClient creates an NPM client object
-func NewNpmClient(agent netagent.CtrlerIntf, srvURL string) (*NpmClient, error) {
+func NewNpmClient(agent netagent.CtrlerIntf, srvURL, resolverURLs string) (*NpmClient, error) {
 	// watch contexts
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	// create NpmClient object
 	client := NpmClient{
 		srvURL:          srvURL,
+		resolverURLs:    resolverURLs,
+		resolverClient:  resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")}),
 		agent:           agent,
 		watchCtx:        watchCtx,
 		watchCancel:     watchCancel,
@@ -79,7 +86,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -152,7 +159,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 
@@ -238,7 +245,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
 

@@ -8,9 +8,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
-
-	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -118,7 +115,7 @@ func main() {
 
 	// create a rest client to apigw
 	l := log.GetNewLogger(log.GetDefaultConfig("SimCtl"))
-	grpcClient, err := apiclient.NewGrpcAPIClient(*apisrvURL, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	grpcClient, err := apiclient.NewGrpcAPIClient(*apisrvURL, l)
 	if err != nil {
 		log.Fatalf("cannot create REST client. Err: %v", err)
 	}

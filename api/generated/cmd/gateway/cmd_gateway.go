@@ -19,7 +19,9 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/apigw/pkg"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 	"github.com/pensando/sw/utils/rpckit"
 )
 
@@ -142,14 +144,14 @@ func (a adapterCmdV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.ListW
 func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
-	m *http.ServeMux) error {
+	m *http.ServeMux,
+	resolvers []string) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
-
-	grpcaddr := "localhost:8082"
+	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr)
+	cl, err := e.newClient(ctx, grpcaddr, resolvers)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -174,11 +176,15 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string) (cmd.CmdV1Client, error) {
-	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr)
+func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (cmd.CmdV1Client, error) {
+	var opts []rpckit.Option
+	if len(resolvers) > 0 {
+		r := resolver.New(&resolver.Config{Servers: resolvers})
+		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	}
+	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr, opts...)
 	if err != nil {
-		err = errors.Wrap(err, "create rpc client")
-		return nil, err
+		return nil, errors.Wrap(err, "create rpc client")
 	}
 
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)

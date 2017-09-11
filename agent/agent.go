@@ -45,7 +45,7 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL string) (*Agent, error) {
+func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs string) (*Agent, error) {
 
 	// create new network agent
 	nagent, err := netagent.NewNetAgent(dp, dbPath, nodeUUID)
@@ -64,7 +64,7 @@ func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL string) (*
 	}
 
 	// create the NPM client
-	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL)
+	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverURLs)
 	if err != nil {
 		log.Errorf("Error creating NPM client. Err: %v", err)
 		return nil, err

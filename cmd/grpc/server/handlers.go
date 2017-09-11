@@ -105,6 +105,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, err
 		}
 
+		env.QuorumNodes = req.QuorumNodes
 		env.Quorum = quorumIntf
 		env.KVServers = kvServers
 
@@ -157,7 +158,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
-		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, env.LeaderService)
+		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)

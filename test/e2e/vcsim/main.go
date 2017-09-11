@@ -84,7 +84,7 @@ func main() {
 
 	// start a vc simulator
 	vcSim = sim.New()
-	vcURL, err := vcSim.Run("127.0.0.1:"+opts.soapPort, snics, vmsPerHost)
+	vcURL, err := vcSim.Run("0.0.0.0:"+opts.soapPort, snics, vmsPerHost)
 	if err != nil {
 		log.Fatalf("vcSim.Run returned %v", err)
 	}

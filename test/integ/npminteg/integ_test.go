@@ -47,7 +47,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.numAgents = *numAgents
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, "", "")
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, "", "", "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 

@@ -120,8 +120,8 @@ def initCluster(nodeAddr):
     # cluster json parameters
     jdata = json.dumps({
         "kind": "Cluster",
-        "APIVersion" : "v1",
-        "meta" : {
+        "APIVersion": "v1",
+        "meta": {
             "name": "testCluster"
         },
         "spec": {

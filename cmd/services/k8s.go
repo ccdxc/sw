@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/log"
@@ -67,25 +70,26 @@ var filebeatConfigVolume = types.ModuleSpec_Volume{
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]types.Module{
-	"pen-apigw": {
+	globals.APIGw: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "pen-apigw",
+			Name: globals.APIGw,
 		},
 		Spec: &types.ModuleSpec{
 			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
-					Name:  "pen-apigw",
-					Image: "pen-apigw",
+					Name:  globals.APIGw,
+					Image: globals.APIGw,
 					Services: []*types.ModuleSpec_Submodule_Service{
 						{
-							Name: "pen-apigw",
+							Name: globals.APIGw,
 							Port: runtime.MustUint32(globals.APIGwRESTPort),
 						},
 					},
+					Args: []string{"-resolver-urls", "$RESOLVER_URLS"},
 				},
 			},
 			Volumes: []*types.ModuleSpec_Volume{
@@ -94,18 +98,18 @@ var k8sModules = map[string]types.Module{
 			},
 		},
 	},
-	"pen-filebeat": {
+	globals.Filebeat: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "pen-filebeat",
+			Name: globals.Filebeat,
 		},
 		Spec: &types.ModuleSpec{
 			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
-					Name:  "pen-filebeat",
+					Name:  globals.Filebeat,
 					Image: "srv1.pensando.io:5000/beats/filebeat:5.4.1",
 				},
 			},
@@ -115,24 +119,119 @@ var k8sModules = map[string]types.Module{
 			},
 		},
 	},
-	"pen-ntp": {
+	globals.Ntp: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "pen-ntp",
+			Name: globals.Ntp,
 		},
 		Spec: &types.ModuleSpec{
 			Type: types.ModuleSpec_DaemonSet,
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
-					Name:       "pen-ntp",
+					Name:       globals.Ntp,
 					Image:      "srv1.pensando.io:5000/pens-ntp:v0.2",
 					Privileged: true,
 				},
 			},
 			Volumes: []*types.ModuleSpec_Volume{
 				&configVolume,
+			},
+		},
+	},
+	globals.APIServer: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.APIServer,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.APIServer,
+					Image: globals.APIServer,
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.APIServer,
+							Port: runtime.MustUint32(globals.APIServerPort),
+						},
+					},
+					Args: []string{
+						"-kvdest", "$KVSTORE_URL",
+					},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
+	globals.VCHub: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.VCHub,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.VCHub,
+					Image: globals.VCHub,
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.VCHub,
+							Port: runtime.MustUint32(globals.VCHubAPIPort),
+						},
+					},
+					Args: []string{
+						// TODO: This should be removed when VCenter Object is implemented.
+						"-vcenter-list", "http://user:pass@192.168.30.10:8989/sdk",
+						"-resolver-urls", "$RESOLVER_URLS",
+					},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
+	globals.Npm: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Npm,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.Npm,
+					Image: globals.Npm,
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Npm,
+							Port: runtime.MustUint32(globals.NpmRPCPort),
+						},
+					},
+					Args: []string{
+						"-resolver-urls", "$RESOLVER_URLS",
+					},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
 			},
 		},
 	},
@@ -323,6 +422,29 @@ func makeVolumes(module *types.Module) ([]v1.Volume, []v1.VolumeMount) {
 	return volumes, volumeMounts
 }
 
+func populateDynamicArgs(args []string) []string {
+	result := make([]string, 0)
+	for ii := range args {
+		arg := args[ii]
+		switch {
+		case strings.Compare(arg, "$KVSTORE_URL") == 0:
+			arg = strings.Join(env.KVServers, ",")
+		case strings.Compare(arg, "$RESOLVER_URLS") == 0:
+			servers := make([]string, 0)
+			// TODO - Enable resolver service on all Quorum nodes, currently it only runs at master.
+			if env.VipService != nil {
+				vips := env.VipService.GetAllVirtualIPs()
+				for jj := range vips {
+					servers = append(servers, fmt.Sprintf("%s:%s", vips[jj], globals.CMDGRPCPort))
+				}
+				arg = strings.Join(servers, ",")
+			}
+		}
+		result = append(result, arg)
+	}
+	return result
+}
+
 func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Container {
 	containers := make([]v1.Container, 0)
 	for _, sm := range module.Spec.Submodules {
@@ -342,7 +464,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 			SecurityContext: &v1.SecurityContext{
 				Privileged: &sm.Privileged,
 			},
-			Args: sm.Args,
+			Args: populateDynamicArgs(sm.Args),
 		})
 	}
 	return containers

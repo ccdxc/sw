@@ -365,9 +365,6 @@ message PortCondition {
 
 //-------------------------------- R E S T  A P I ----------------------------------------------------
 
-// This should usually be a ServiceDiscovery key like (sd:/apiservers/bookstore). A IP address for now
-option(venice.fileGrpcDest) = "localhost:8082";
-
 service CmdV1 {
     // Prefix for all resources served by this service.
     option (venice.apiPrefix) = "cmd";

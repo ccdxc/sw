@@ -162,11 +162,11 @@ func (a *apiGw) Run(config apigw.Config) {
 	a.runstate.addr = ln.Addr()
 	a.logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
 
-	// Let all the services complete registration. All services serveed by this
+	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
-		err := svc.CompleteRegistration(ctx, config.Logger, s, m)
+		err := svc.CompleteRegistration(ctx, config.Logger, s, m, config.Resolvers)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}

@@ -38,7 +38,7 @@ func CreateAgent(nodeUUID, srvURL string) (*Dpagent, error) {
 	}
 
 	// create new network agent
-	nagent, err := agent.NewAgent(dp, "", nodeUUID, srvURL)
+	nagent, err := agent.NewAgent(dp, "", nodeUUID, srvURL, "")
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err

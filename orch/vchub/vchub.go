@@ -38,6 +38,7 @@ func printUsage(f *flag.FlagSet) {
 func parseOpts(opts *cliOpts) error {
 	var storeArg string
 	var vcList string
+	var resolverURLs string
 
 	flagSet := flag.NewFlagSet("vchub", flag.ContinueOnError)
 	flagSet.StringVar(&opts.listenURL,
@@ -52,6 +53,10 @@ func parseOpts(opts *cliOpts) error {
 		"vcenter-list",
 		"",
 		"Comma separated list of vc URL of the form 'https://user:pass@ip:port'")
+	flagSet.StringVar(&resolverURLs,
+		"resolver-urls",
+		":"+globals.CMDGRPCPort,
+		"Comma separated list of resolver URLs of the form 'ip:port'")
 
 	err := flagSet.Parse(os.Args[1:])
 

@@ -16,11 +16,12 @@ import (
 // Main function
 func main() {
 	var (
-		uplinkIf  = flag.String("uplink", "eth2", "Uplink interface")
-		dbPath    = flag.String("db", "/tmp/n4sagent.db", "Database file")
-		npmURL    = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
-		debugflag = flag.Bool("debug", false, "Enable debug mode")
-		logToFile = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
+		uplinkIf     = flag.String("uplink", "eth2", "Uplink interface")
+		dbPath       = flag.String("db", "/tmp/n4sagent.db", "Database file")
+		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
+		debugflag    = flag.Bool("debug", false, "Enable debug mode")
+		logToFile    = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
+		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
 	)
 	flag.Parse()
 
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	// create the new agent
-	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL)
+	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

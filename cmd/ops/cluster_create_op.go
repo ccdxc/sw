@@ -86,6 +86,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		Name:         o.cluster.Name,
 		Uuid:         o.cluster.UUID,
 		VirtualIp:    o.cluster.Spec.VirtualIP,
+		QuorumNodes:  o.cluster.Spec.QuorumNodes,
 		QuorumConfig: quorumConfig,
 		NTPServers:   o.cluster.Spec.NTPServers,
 	}

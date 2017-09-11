@@ -8,9 +8,6 @@ import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-// This should usually be a ServiceDiscovery key. A IP address for now
-option(venice.fileGrpcDest) = "localhost:8082";
-
 // ----------------------------- Tenant Object -----------------------------
 
 // spec part of tenant object

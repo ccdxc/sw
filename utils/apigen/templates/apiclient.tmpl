@@ -4,8 +4,6 @@ package apiclient
 
 {{$pkgs := (getSvcManifest "generated/apiclient/svcmanifest.json")}}
 import (
-    "google.golang.org/grpc"
-
     "github.com/pensando/sw/utils/log"
     "github.com/pensando/sw/utils/rpckit"{{range $key, $value := $pkgs}}
     {{$key}} "github.com/pensando/sw/api/generated/{{$key}}"
@@ -38,12 +36,12 @@ func (a *apiGrpcServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
 }
 {{end}}{{end}}
 // NewGrpcAPIClient returns a gRPC client
-func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (Services, error) {
-    client, err := rpckit.NewRPCClient("ApiClient", url)
-	if err != nil {
-		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
-		return nil, err
-	}
+func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
+    client, err := rpckit.NewRPCClient("ApiClient", url, opts...)
+    if err != nil {
+	logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
+	return nil, err
+    }
     return &apiGrpcServerClient{
         url: url,
         client: client,

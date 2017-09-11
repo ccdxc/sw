@@ -2,6 +2,7 @@ package apiclient
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,9 +14,11 @@ import (
 	grpcclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/ops"
-	"github.com/pensando/sw/cmd/types"
+	"github.com/pensando/sw/globals"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/utils/kvstore"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 	"github.com/pensando/sw/utils/rpckit"
 )
 
@@ -32,13 +35,16 @@ type CfgWatcherService struct {
 	logger     log.Logger
 	clientConn *grpc.ClientConn
 	apiClient  cmd.CmdV1Interface
-	leaderSvc  types.LeaderService
 }
 
 // apiClientConn creates a gRPC client Connection to API server
 func apiClientConn() (*grpc.ClientConn, error) {
-	// need to integrate with service discovery
-	rpcClient, err := rpckit.NewRPCClient("cmd", "localhost:8082")
+	servers := make([]string, 0)
+	for ii := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDGRPCPort))
+	}
+	r := resolver.New(&resolver.Config{Servers: servers})
+	rpcClient, err := rpckit.NewRPCClient("cmd", globals.APIServer, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
 		log.Errorf("RPC client creation failed with error: %v", err)
 		return nil, errors.NewInternalError(err)
@@ -47,35 +53,15 @@ func apiClientConn() (*grpc.ClientConn, error) {
 }
 
 // NewCfgWatcherService creates a new Config Watcher service.
-func NewCfgWatcherService(logger log.Logger, leaderSvc types.LeaderService) *CfgWatcherService {
+func NewCfgWatcherService(logger log.Logger) *CfgWatcherService {
 	return &CfgWatcherService{
-		logger:    logger.WithContext("submodule", "cfgWatcher"),
-		leaderSvc: leaderSvc,
+		logger: logger.WithContext("submodule", "cfgWatcher"),
 	}
 }
 
 // APIClient returns an interface to APIClient. Allows for sharing of grpc connection between various modules
 func (k *CfgWatcherService) APIClient() cmd.CmdV1Interface {
 	return k.apiClient
-}
-
-// OnNotifyLeaderEvent starts or stops watches on Config
-func (k *CfgWatcherService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
-	switch e.Evt {
-	case types.LeaderEventWon:
-		k.logger.Debugf("Gained leadership. Starting config watcher service")
-		k.Lock()
-		defer k.Unlock()
-		if k.cancel != nil {
-			return nil // already started
-		}
-		k.ctx, k.cancel = context.WithCancel(context.Background())
-		go k.waitForAPIServerOrCancel()
-	case types.LeaderEventLost:
-		k.logger.Debugf("Lost leadership. Stopping config watcher service")
-		k.Stop()
-	}
-	return nil
 }
 
 // Start the ConfigWatcher service.
@@ -86,28 +72,18 @@ func (k *CfgWatcherService) Start() {
 		return
 	}
 	// fill with defaults if nil is passed in constructor
-	if k.leaderSvc == nil {
-		k.leaderSvc = env.LeaderService
-	}
 	if k.logger == nil {
 		k.logger = env.Logger
 	}
 	k.logger.Infof("Starting config watcher service")
-	k.leaderSvc.Register(k)
-
-	// Its possible that leaderservice had already started when leaderservice is provided by caller
-	// In that case we will get callback. Do that work here.
-	if k.leaderSvc.IsLeader() && k.cancel == nil {
-		k.ctx, k.cancel = context.WithCancel(context.Background())
-		go k.waitForAPIServerOrCancel()
-	}
+	k.ctx, k.cancel = context.WithCancel(context.Background())
+	go k.waitForAPIServerOrCancel()
 }
 
 // Stop  the ConfigWatcher service.
 func (k *CfgWatcherService) Stop() {
 	k.Lock()
 	defer k.Unlock()
-	k.leaderSvc.UnRegister(k)
 	if k.cancel == nil {
 		return
 	}
@@ -127,11 +103,11 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 		select {
 		case <-time.After(apiServerWaitTime):
 			c, err := apiClientConn()
-			var cl cmd.CmdV1Interface
-			if err == nil {
-				cl = grpcclient.NewGrpcCrudClientCmdV1(c, k.logger)
-				_, err = cl.Cluster().List(k.ctx, &opts)
+			if err != nil {
+				break
 			}
+			cl := grpcclient.NewGrpcCrudClientCmdV1(c, k.logger)
+			_, err = cl.Cluster().List(k.ctx, &opts)
 			if err == nil {
 				k.clientConn = c
 				k.apiClient = cl

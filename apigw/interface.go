@@ -12,7 +12,7 @@ import (
 // APIGatewayService is the interface satisfied by all all services registering to the API gateway
 type APIGatewayService interface {
 	// CompleteRegistration is a callback invoked after the API Gateway is done initializing.
-	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux) error
+	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, resolvers []string) error
 }
 
 // APIGateway is satisfied by the API Gateway implementation.
@@ -45,4 +45,6 @@ type Config struct {
 	DebugMode bool
 	// Logger to be used for logging.
 	Logger log.Logger
+	// List of resolvers to use
+	Resolvers []string
 }

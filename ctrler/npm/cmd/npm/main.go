@@ -14,12 +14,12 @@ import (
 func main() {
 
 	var (
-		debugflag = flag.Bool("debug", false, "Enable debug mode")
-		logToFile = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
-		listenURL = flag.String("listen", ":"+globals.NpmRPCPort, "Listen URL (eg. :9004)")
-		apisrvURL = flag.String("apisrv", "localhost:"+globals.APIServerPort, "API server URL (eg. localhost:8082)")
-		vmmURL    = flag.String("vmm", "localhost:"+globals.VCHubAPIPort, "Vchub URL (eg. localhost:9003)")
+		debugflag    = flag.Bool("debug", false, "Enable debug mode")
+		logToFile    = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
+		listenURL    = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
+		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
 	)
+	flag.Parse()
 
 	// Fill logger config params
 	logConfig := &log.Config{
@@ -45,7 +45,7 @@ func main() {
 	waitCh := make(chan bool)
 
 	// create the controller
-	ctrler, err := npm.NewNetctrler(*listenURL, *apisrvURL, *vmmURL)
+	ctrler, err := npm.NewNetctrler(*listenURL, globals.APIServer, globals.VCHub, *resolverURLs)
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

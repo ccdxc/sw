@@ -3,8 +3,6 @@
 package apiclient
 
 import (
-	"google.golang.org/grpc"
-
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	bookstoreClient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	cmd "github.com/pensando/sw/api/generated/cmd"
@@ -106,8 +104,8 @@ func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 }
 
 // NewGrpcAPIClient returns a gRPC client
-func NewGrpcAPIClient(url string, logger log.Logger, opts ...grpc.DialOption) (Services, error) {
-	client, err := rpckit.NewRPCClient("ApiClient", url)
+func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
+	client, err := rpckit.NewRPCClient("ApiClient", url, opts...)
 	if err != nil {
 		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
 		return nil, err

@@ -10,6 +10,7 @@ import (
 	_ "github.com/pensando/sw/api/hooks"
 	apisrv "github.com/pensando/sw/apiserver"
 	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
+	"github.com/pensando/sw/globals"
 	"github.com/pensando/sw/utils/kvstore/store"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
@@ -20,7 +21,7 @@ const srvName = "ApiServer"
 
 func main() {
 	var (
-		grpcaddr        = flag.String("grpc-server-port", ":8082", "GRPC Port to listen on")
+		grpcaddr        = flag.String("grpc-server-port", ":"+globals.APIServerPort, "GRPC Port to listen on")
 		kvstore         = flag.String("kvdest", "localhost:2379", "Comma seperated list of etcd servers")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		version         = flag.String("version", "v1", "Version string for native version")

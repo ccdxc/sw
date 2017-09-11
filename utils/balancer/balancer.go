@@ -31,7 +31,7 @@ func New(resolver resolver.Interface) grpc.Balancer {
 		resolver: resolver,
 		upConns:  make([]grpc.Address, 0),
 		upCh:     make(chan struct{}),
-		notifyCh: make(chan []grpc.Address, 1),
+		notifyCh: make(chan []grpc.Address, 128),
 	}
 }
 
@@ -134,9 +134,9 @@ func (b *balancer) Close() error {
 		return nil
 	}
 	b.running = false
+	b.resolver.Deregister(b)
 	close(b.notifyCh)
 	close(b.upCh)
-	b.resolver.Deregister(b)
 	return nil
 }
 

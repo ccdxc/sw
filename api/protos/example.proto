@@ -6,9 +6,6 @@ package bookstore;
 import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
-// This should usually be a ServiceDiscovery key like (sd:/apiservers/bookstore). A IP address for now
-option(venice.fileGrpcDest) = "localhost:8082";
-
 message Publisher {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];

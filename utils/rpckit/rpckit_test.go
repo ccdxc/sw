@@ -495,8 +495,7 @@ func TestRPCBalancing(t *testing.T) {
 	m.AddServiceInstance(&si2)
 
 	// Now create a rpc client with a balancer
-	r, err := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
-	AssertOk(t, err, "Failed to create resolver client")
+	r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
 	b := balancer.New(r)
 	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b))
 	AssertOk(t, err, "Failed to create RPC Client")

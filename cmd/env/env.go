@@ -18,6 +18,7 @@ var (
 	Options           *options.ServerRunOptions
 	Scheme            *runtime.Scheme
 	KVStore           kvstore.Interface
+	QuorumNodes       []string
 	Quorum            quorum.Interface
 	KVServers         []string
 	LeaderService     types.LeaderService // common leader service used by MasterService, NTP Service, VIPService etc

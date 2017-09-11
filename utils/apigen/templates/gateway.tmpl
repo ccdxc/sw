@@ -17,6 +17,8 @@ import (
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/sw/utils/rpckit"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
+	"github.com/pensando/sw/utils/balancer"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/apigw/pkg"
 	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
@@ -27,7 +29,7 @@ import (
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
 
-{{$grpcdest := "localhost:8082"}}
+{{$grpcdest := "pen-apiserver"}}
 {{$cgrpcdest := (getGrpcDestination .)}}
 {{$pkgname := .GoPkg.Name}}{{range $index, $v := .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}
 type s{{.Name}}GwService struct {
@@ -54,14 +56,15 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
-	m *http.ServeMux) error {
+	m *http.ServeMux,
+	resolvers []string) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	{{if strEq $cgrpcdest "" }}grpcaddr := "{{$grpcdest}}"{{else}}
 	grpcaddr := "{{$cgrpcdest}}"{{end}}
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr)
+	cl, err := e.newClient(ctx, grpcaddr, resolvers)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -86,11 +89,15 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string) ({{$pkgname}}.{{.Name}}Client, error) {
-	client, err := rpckit.NewRPCClient("{{.Name}}GwService", grpcAddr)
+func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) ({{$pkgname}}.{{.Name}}Client, error) {
+	var opts []rpckit.Option
+	if len(resolvers) > 0 {
+		r := resolver.New(&resolver.Config{Servers: resolvers})
+		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	}
+	client, err := rpckit.NewRPCClient("{{.Name}}GwService", grpcAddr, opts...)
 	if err != nil {
-		err = errors.Wrap(err, "create rpc client")
-		return nil, err
+		return nil, errors.Wrap(err, "create rpc client")
 	}
 
 	e.logger.Infof("Connected to GRPC Server %s", grpcAddr)

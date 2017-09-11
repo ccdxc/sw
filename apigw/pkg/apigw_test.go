@@ -23,7 +23,7 @@ type testGwService struct {
 }
 
 func (t *testGwService) CompleteRegistration(ctx context.Context,
-	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux) error {
+	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, resolvers []string) error {
 	t.regevents = t.regevents + 1
 	return nil
 }
