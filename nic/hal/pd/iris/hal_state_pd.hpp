@@ -160,9 +160,10 @@ public:
     indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
 
     // get APIs for CPU PKT related state
-    slab *cpupkt_rx_slab(void) const { return cpupkt_rx_slab_; }
-    slab *cpupkt_tx_slab(void) const { return cpupkt_tx_slab_; }
-
+    slab *cpupkt_slab(void) const { return cpupkt_slab_; }
+    indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
+    indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
+    
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
@@ -366,8 +367,9 @@ private:
 
     // cpupkt related state
     struct {
-        slab       *cpupkt_rx_slab_;
-        slab       *cpupkt_tx_slab_;
+        slab       *cpupkt_slab_;
+        indexer    *cpupkt_descr_hwid_idxr_;
+        indexer    *cpupkt_page_hwid_idxr_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

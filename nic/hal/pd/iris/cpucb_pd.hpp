@@ -16,7 +16,8 @@ namespace pd {
 #define P4PD_HBM_CPU_CB_ENTRY_SIZE               128
 
 typedef enum cpucb_hwid_order_ {
-    P4PD_HWID_CPU_RX_STAGE0 = 0,
+    P4PD_HWID_CPU_TX_STAGE0 = 0,
+    P4PD_HWID_CPU_RX_STAGE0,
 } cpucb_hwid_order_t;
 
 typedef uint64_t    cpucb_hw_id_t;

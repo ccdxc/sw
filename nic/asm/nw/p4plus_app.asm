@@ -85,6 +85,7 @@ p4plus_app_tcp_proxy:
   phvwr       p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE
   phvwr       p.p4_to_p4plus_tcp_proxy_payload_len, k.l4_metadata_tcp_data_len
   phvwr       p.p4_to_p4plus_tcp_proxy_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwr       p.p4_to_p4plus_tcp_proxy_table0_valid, TRUE
 
   or          r1, k.tcp_option_one_sack_valid, k.tcp_option_two_sack_valid, 1
   or          r1, r1, k.tcp_option_three_sack_valid, 2
@@ -116,6 +117,7 @@ p4plus_app_cpu:
   phvwr.c2    p.p4_to_p4plus_cpu_pkt_ip_proto_outer, k.ipv6_nextHdr
   phvwr.c3    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv4_protocol
   phvwr.c4    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv6_nextHdr
+  phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
 
   setcf       c6, [c3|c4|c5]
   bcf         [!c6], p4plus_app_cpu_native

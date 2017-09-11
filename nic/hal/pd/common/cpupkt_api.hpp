@@ -3,18 +3,54 @@
 
 #include <base.h>
 #include <pd.hpp>
+#include <cpupkt_headers.hpp>
 
 namespace hal {
 namespace pd {
 
-#define MAX_CPU_PKT_QUEUES   4
+#define MAX_CPU_PKT_QUEUES   3
+
+#define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
+#define CPU_PKT_DESCR_SIZE              128
+#define CPU_PKT_DESCR_OFFSET            64 // offset to take care of descr scratch
+
+#define HAL_MAX_CPU_PKT_PAGE_ENTRIES    1024
+#define CPU_PKT_PAGE_SIZE               9216
+
+#define CPU_ASQ_PID                     0
+#define CPU_ASQ_QID                     0
+#define CPU_SCHED_RING_ASQ              0
+
+#define DB_ADDR_BASE                   0x800000 
+#define DB_ADDR_BASE_HOST              0x68400000
+#define DB_UPD_SHFT                    17
+#define DB_LIF_SHFT                    6
+#define DB_TYPE_SHFT                   3
+
+#define DB_PID_SHFT                    48
+#define DB_QID_SHFT                    24
+#define DB_RING_SHFT                   16
+
+
+
+#define DB_IDX_UPD_NOP                 (0x0 << 2)
+#define DB_IDX_UPD_CIDX_SET            (0x1 << 2)
+#define DB_IDX_UPD_PIDX_SET            (0x2 << 2)
+#define DB_IDX_UPD_PIDX_INC            (0x3 << 2)
+
+#define DB_SCHED_UPD_NOP               (0x0)
+#define DB_SCHED_UPD_EVAL              (0x1)
+#define DB_SCHED_UPD_CLEAR             (0x2)
+#define DB_SCHED_UPD_SET               (0x3)
+
+
 typedef uint64_t  cpupkt_hw_id_t;
 
 typedef struct cpupkt_queue_info_s {
     types::WRingType    type;
     cpupkt_hw_id_t      base_addr;
-    uint32_t            cindex;
-    cpupkt_hw_id_t      cindex_addr;
+    uint32_t            pc_index;
+    cpupkt_hw_id_t      pc_index_addr;
     pd_wring_meta_t*    wring_meta; 
 } cpupkt_queue_info_t;
 
@@ -24,74 +60,43 @@ typedef struct cpupkt_rx_ctxt_s {
 } __PACK__ cpupkt_rx_ctxt_t;
 
 typedef struct cpupkt_tx_ctxt_s {
-    uint32_t    send_queue;
-    uint32_t    pindex;   
+    cpupkt_queue_info_t     queue;
 } __PACK__ cpupkt_tx_ctxt_t;
 
-static inline cpupkt_rx_ctxt_t *
-cpupkt_rx_ctxt_init(cpupkt_rx_ctxt_t* ctxt)
+typedef struct cpupkt_ctxt_s {
+    cpupkt_rx_ctxt_t rx;
+    cpupkt_tx_ctxt_t tx;
+} __PACK__ cpupkt_ctxt_t;
+
+static inline cpupkt_ctxt_t *
+cpupkt_ctxt_init(cpupkt_ctxt_t* ctxt)
 {
     if(!ctxt) {
         return NULL;    
     }
     
-    ctxt->num_queues = 0;
+    memset(ctxt, 0, sizeof(cpupkt_ctxt_t));
     return ctxt;
 }
 
-typedef struct p4_to_p4plus_cpu_pkt_s {
-    uint64_t    pad             : 5;
-    uint64_t    src_lif         : 11;
-    uint64_t    reason          : 8;    
+cpupkt_ctxt_t* cpupkt_ctxt_alloc_init(void);
+hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type);
+hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type);
 
-    uint64_t    lkp_type        : 4;
-    uint64_t    src_iport       : 4;
-    uint64_t    lkp_vrf         : 16;
-    uint64_t    flags           : 24;
-
-    // outer
-    uint64_t    mac_sa_outer    : 48;    
-    uint64_t    mac_da_outer    : 48;    
-    uint64_t    vlan_pcp_outer  : 3;
-    uint64_t    vlan_dei_outer  : 1;
-    uint64_t    vlan_id_outer   : 12;
-    uint8_t     ip_sa_outer[16];
-    uint8_t     ip_da_outer[16];
-    uint64_t    ip_proto_outer  : 8;
-    uint64_t    ip_ttl_outer    : 8;
-    uint64_t    l4_sport_outer  : 16;
-    uint64_t    l4_dport_outer  : 16;
-
-    // inner
-    uint64_t    mac_sa_inner    : 48;    
-    uint64_t    mac_da_inner    : 48;    
-    uint64_t    vlan_pcp_inner  : 3;
-    uint64_t    vlan_dei_inner  : 1;
-    uint64_t    vlan_id_inner   : 28;
-    uint8_t     ip_sa_inner[16];
-    uint8_t     ip_da_inner[16];
-    uint64_t    ip_proto_inner  : 8;
-    uint64_t    ip_ttl_inner    : 8;
-    uint64_t    l4_sport_inner  : 16;
-    uint64_t    l4_dport_inner  : 16;
-
-    // tcp
-    uint64_t    tcp_flags       : 8;
-    uint64_t    tcp_seqNo       : 32;
-    uint64_t    tcp_AckNo       : 32;
-    uint64_t    tcp_window      : 16;
-    uint64_t    tcp_options     : 8;
-    uint64_t    tcp_mss         : 16;
-    uint64_t    tcp_ws          : 8;
-} __attribute__ ((__packed__)) p4_to_p4plus_cpu_pkt_t;
-
-cpupkt_rx_ctxt_t* cpupkt_rx_ctxt_alloc_init(void);
-hal_ret_t cpupkt_register_rx_queue(cpupkt_rx_ctxt_t* ctxt, types::WRingType type);
-hal_ret_t cpupkt_poll_receive(cpupkt_rx_ctxt_t* ctxt,
+// receive
+hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                               p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
                               uint8_t** data, 
                               size_t* data_len);
 hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
+
+// transmit
+hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
+                      p4plus_to_p4_header_t* header,
+                      uint8_t* data,
+                      size_t data_len);
+hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
+hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
 
 } // namespace pd
 } // namespace hal

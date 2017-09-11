@@ -61,8 +61,8 @@ fte_pkt_loop (void *ctxt)
         return NULL;
     }
 
-    hal::pd::cpupkt_rx_ctxt_t* rx_ctx = hal::pd::cpupkt_rx_ctxt_alloc_init();
-    cpupkt_register_rx_queue(rx_ctx, types::WRING_TYPE_ARQRX);
+    hal::pd::cpupkt_ctxt_t* ctx = hal::pd::cpupkt_ctxt_alloc_init();
+    cpupkt_register_rx_queue(ctx, types::WRING_TYPE_ARQRX);
     fte::phv_t rx_phv;
     hal::pd::p4_to_p4plus_cpu_pkt_t *rx_hdr = NULL;
     uint8_t *rx_pkt = NULL;
@@ -77,7 +77,7 @@ fte_pkt_loop (void *ctxt)
         rx_pkt = NULL;
         rx_phv = {};
 
-        ret = cpupkt_poll_receive(rx_ctx, &rx_hdr, &rx_pkt, pkt_len);
+        ret = cpupkt_poll_receive(ctx, &rx_hdr, &rx_pkt, pkt_len);
         if (ret == HAL_RET_OK) {
             bool inner_valid = false; // TODO read flags
             rx_phv.lif = 1;  // TODO
