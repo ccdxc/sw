@@ -172,6 +172,8 @@ class EthQueueObjectHelper:
         self.queues = []
 
     def Generate(self, queue_type, spec):
+        if not hasattr(spec, 'queues'):
+            return
         for espec in spec.queues:
             for qspec in range(espec.queue.count):
                 queue = EthQueueObject()

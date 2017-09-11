@@ -73,6 +73,8 @@ enum LifQPurpose {
   LIF_QUEUE_PURPOSE_RDMA_RECV = 5;    // RDMA receive Queue
   LIF_QUEUE_PURPOSE_CQ        = 6;    // Completion Queue
   LIF_QUEUE_PURPOSE_EQ        = 7;    // Event Queue
+  LIF_QUEUE_PURPOSE_NVME      = 8;    // Both SQ/CQ use this.
+  LIF_QUEUE_PURPOSE_STORAGE   = 9;    // All the PVM queues.
 
   // Add more purposes as needed.
 }

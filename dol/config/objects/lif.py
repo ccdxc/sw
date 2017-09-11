@@ -5,15 +5,23 @@ import infra.common.objects     as objects
 
 import config.resmgr            as resmgr
 import config.objects.queue_type     as queue_type
+import infra.clibs.clibs        as clibs
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-
 import pdb
+
+import ctypes
+
+class QInfoStruct(ctypes.Structure):
+    _fields_ = [("dryrun", ctypes.c_bool),
+                ("lif_id", ctypes.c_uint64),
+                ("q0_addr", ctypes.c_uint64 * 8)]
 
 class LifObject(objects.FrameworkObject):
     def __init__(self, tenant, spec, namespace = None):
@@ -28,6 +36,15 @@ class LifObject(objects.FrameworkObject):
         self.status     = haldefs.interface.IF_STATUS_UP
         self.hw_lif_id = 0
         self.qstate_base = {}
+        self.c_lib_name = getattr(spec, 'c_lib', None)
+        if self.c_lib_name:
+            self.c_lib = clibs.LoadCLib(self.c_lib_name)
+            if self.c_lib:
+                self.c_lib_config = self.c_lib[self.c_lib_name + '_config']
+                self.c_lib_config.argtypes = [ctypes.POINTER(QInfoStruct)]
+                self.c_lib_config.restype = None
+        else:
+            self.c_lib = None
 
         if hasattr(spec, 'rdma'):
             self.enable_rdma = spec.rdma.enable
@@ -92,6 +109,8 @@ class LifObject(objects.FrameworkObject):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.lif_handle
+        if (self.c_lib):
+            self.CLibConfig(resp_spec)
         self.hw_lif_id = resp_spec.hw_lif_id
         cfglogger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
                        (self.GID(),
@@ -103,6 +122,14 @@ class LifObject(objects.FrameworkObject):
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
+
+    def CLibConfig(self, resp_spec):
+       qaddrs_type = ctypes.c_uint64 * 8
+       qaddrs = qaddrs_type()
+       for qstate in resp_spec.qstate:
+           qaddrs[int(qstate.type_num)] = qstate.addr
+       qinfo = QInfoStruct(GlobalOptions.dryrun, resp_spec.hw_lif_id, qaddrs)
+       self.c_lib_config(ctypes.byref(qinfo))
 
 
 class LifObjectHelper:

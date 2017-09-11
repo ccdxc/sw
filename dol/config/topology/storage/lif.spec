@@ -2,43 +2,19 @@
 meta:
     id: LIF_STORAGE
 
+c_lib: storage_test
+
 queue_types:
     - queue_type:
-        id          : TX
-        type        : 1
-        purpose     : LIF_QUEUE_PURPOSE_TX
+        id          : NVME_SQ
+        type        : 0
+        purpose     : LIF_QUEUE_PURPOSE_NVME
         size        : 64
-        count       : 1
-        queues:
-            - queue:
-                id          : Q0
-                count       : 1
-                template    : ref://store/templates/id=ETH_QUEUE_TX
-                rings:
-                    - ring:
-                        id          : R0
-                        pi          : 0
-                        ci          : 0
-                        size        : 1024
-                        template    : ref://store/templates/id=ETH_RING_TX
-                        desc        : ref://factory/templates/id=DESCR_ETH_TX
+        count       : 8
 
     - queue_type:
-        id          : RX
-        type        : 0
-        purpose     : LIF_QUEUE_PURPOSE_RX
+        id          : NVME_CQ
+        type        : 1
+        purpose     : LIF_QUEUE_PURPOSE_NVME
         size        : 64
-        count       : 1
-        queues:
-            - queue:
-                id          : Q0
-                count       : 1
-                template    : ref://store/templates/id=ETH_QUEUE_RX
-                rings:
-                    - ring:
-                        id          : R0
-                        pi          : 0
-                        ci          : 0
-                        size        : 1024
-                        template    : ref://store/templates/id=ETH_RING_RX
-                        desc        : ref://factory/templates/id=DESCR_ETH_RX
+        count       : 8

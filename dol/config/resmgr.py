@@ -1,9 +1,12 @@
 #! /usr/bin/python3
 
 import infra.common.objects as objects
+import infra.clibs.clibs as clibs
 from ctypes import *
 import os
 import pdb
+
+HostMemoryAllocator = None
 
 
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
@@ -88,28 +91,14 @@ class MemHandle(object):
 
 
 class HostMemory(object):
-
-    lib = cdll.LoadLibrary(os.path.join(os.environ['WS_TOP'], 'nic/obj/libhostmem.so'))
-
-    init_host_mem = lib.init_host_mem
-    delete_host_mem = lib.delete_host_mem
-
-    alloc_host_mem = lib.alloc_host_mem
-    alloc_host_mem.argtypes = [c_uint64]
-    alloc_host_mem.restype = c_void_p
-
-    host_mem_v2p = lib.host_mem_v2p
-    host_mem_v2p.argtypes = [c_void_p]
-    host_mem_v2p.restype = c_uint64
-
-    host_mem_p2v = lib.host_mem_p2v
-    host_mem_p2v.argtypes = [c_uint64]
-    host_mem_p2v.restype = c_void_p
-
-    free_host_mem = lib.free_host_mem
-    free_host_mem.argtypes = [c_void_p]
-
     def __init__(self):
+        lib = clibs.libHostMem
+        self.init_host_mem = lib.init_host_mem
+        self.delete_host_mem = lib.delete_host_mem
+        self.alloc_host_mem = lib.alloc_host_mem
+        self.host_mem_v2p = lib.host_mem_v2p
+        self.host_mem_p2v = lib.host_mem_p2v
+        self.free_host_mem = lib.free_host_mem
         self.init_host_mem()
 
     def get(self, size):
@@ -154,4 +143,6 @@ class HostMemory(object):
     def __del__(self):
         self.delete_host_mem()
 
-HostMemoryAllocator = HostMemory()
+def init():
+    global HostMemoryAllocator
+    HostMemoryAllocator = HostMemory()

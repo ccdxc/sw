@@ -19,10 +19,12 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
+import infra.clibs.clibs	as clibs
 import infra.factory.factory    as factory
 import infra.engine.engine      as engine
 import infra.config.config      as config
 import config.generator         as generator
+import config.resmgr            as resmgr
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
@@ -32,6 +34,10 @@ from infra.common.logging import logger
 import sys
 
 def Main():
+    logger.info("Initializing clibs")
+    clibs.init()
+    resmgr.init()
+
     logger.info("Initializing Config Infra")
     config.init()
 

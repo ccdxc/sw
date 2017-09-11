@@ -34,14 +34,17 @@ class QueueTypeObject(objects.FrameworkObject):
         self.queueid_allocator = objects.TemplateFieldObject("range/0/16384")
 
         self.queues = objects.ObjectDatabase(cfglogger)
+        self.need_type_specific_configure = True
         if spec.id in eth_queue_type_ids:
             self.obj_helper_q = eth_queue.EthQueueObjectHelper()
         elif spec.id in rdma_queue_type_ids:
             self.obj_helper_q = rdma_queue.RdmaQueueObjectHelper()
         else:
-            self.assertTrue(0)
+            self.need_type_specific_configure = False
+            return
         self.obj_helper_q.Generate(self, spec)
-        self.queues.SetAll(self.obj_helper_q.queues)
+        if len(self.obj_helper_q.queues) > 0:
+            self.queues.SetAll(self.obj_helper_q.queues)
 
         self.Show()
 
@@ -58,7 +61,8 @@ class QueueTypeObject(objects.FrameworkObject):
         return self.lif.GetQstateAddr(self.type)
 
     def ConfigureQueues(self):
-        self.obj_helper_q.Configure()
+        if self.need_type_specific_configure:
+            self.obj_helper_q.Configure()
 
     def Show(self):
         cfglogger.info('Queue Type: %s' % self.GID())
