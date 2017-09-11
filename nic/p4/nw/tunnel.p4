@@ -41,12 +41,14 @@ action copy_inner_ipv4_other() {
 action copy_inner_ipv6_udp() {
     copy_header(ipv6, inner_ipv6);
     copy_header(udp, inner_udp);
+    remove_header(ipv4);
     remove_header(inner_ipv6);
     remove_header(inner_udp);
 }
 
 action copy_inner_ipv6_other() {
     copy_header(ipv6, inner_ipv6);
+    remove_header(ipv4);
     remove_header(inner_ipv6);
     remove_header(udp);
 }
@@ -74,6 +76,7 @@ action copy_inner_eth_ipv6_udp() {
     copy_header(ethernet, inner_ethernet);
     copy_header(ipv6, inner_ipv6);
     copy_header(udp, inner_udp);
+    remove_header(ipv4);
     remove_header(inner_ethernet);
     remove_header(inner_ipv6);
     remove_header(inner_udp);
@@ -83,6 +86,7 @@ action copy_inner_eth_ipv6_udp() {
 action copy_inner_eth_ipv6_other() {
     copy_header(ethernet, inner_ethernet);
     copy_header(ipv6, inner_ipv6);
+    remove_header(ipv4);
     remove_header(inner_ethernet);
     remove_header(inner_ipv6);
     remove_header(udp);

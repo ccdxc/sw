@@ -67,6 +67,7 @@ copy_inner_ipv6_udp:
 
   phvwr       p.ipv6_valid, TRUE
   phvwr       p.udp_valid, TRUE
+  phvwr       p.ipv4_valid, FALSE
   phvwr.e     p.inner_ipv6_valid, FALSE
   phvwr       p.inner_udp_valid, FALSE
 
@@ -97,6 +98,7 @@ copy_inner_ipv6_other:
   // TODO: End
 
   phvwr       p.ipv6_valid, TRUE
+  phvwr       p.ipv4_valid, FALSE
   phvwr.e     p.inner_ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
 
@@ -182,6 +184,7 @@ copy_inner_eth_ipv6_udp:
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv6_valid, TRUE
   phvwr       p.udp_valid, TRUE
+  phvwr       p.ipv4_valid, FALSE
   phvwr       p.inner_ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr.e     p.inner_ipv6_valid, FALSE
@@ -219,6 +222,7 @@ copy_inner_eth_ipv6_other:
 
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv6_valid, TRUE
+  phvwr       p.ipv4_valid, FALSE
   phvwr       p.inner_ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr.e     p.inner_ipv6_valid, FALSE

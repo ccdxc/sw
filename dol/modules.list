@@ -357,7 +357,7 @@ modules:
         package : test.networking
         module  : vxlan
         spec    : l2uc_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
@@ -368,7 +368,7 @@ modules:
         package : test.networking
         module  : vxlan
         spec    : l3uc_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
