@@ -429,7 +429,7 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     }
  
     tid = req.meta().tenant_id();
-    tenant = find_tenant_by_id(tid); 
+    tenant = tenant_lookup_by_id(tid); 
     if(tenant == NULL) {
         rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
         HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
@@ -530,7 +530,7 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
     }
  
     tid = req.meta().tenant_id();
-    tenant = find_tenant_by_id(tid); 
+    tenant = tenant_lookup_by_id(tid); 
     if(tenant == NULL) {
         rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
         HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
