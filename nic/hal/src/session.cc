@@ -1786,7 +1786,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
     // fetch the tenant information
     tid = spec.meta().tenant_id();
-    args.tenant = find_tenant_by_id(tid);
+    args.tenant = tenant_lookup_by_id(tid);
     if (args.tenant == NULL) {
         rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
         HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);

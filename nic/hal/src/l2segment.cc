@@ -149,7 +149,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     // fetch the tenant
     tid = spec.meta().tenant_id();
-    tenant = find_tenant_by_id(tid);
+    tenant = tenant_lookup_by_id(tid);
     if (tenant == NULL) {
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         ret = HAL_RET_INVALID_ARG;

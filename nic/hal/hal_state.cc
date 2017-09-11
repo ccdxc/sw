@@ -405,6 +405,7 @@ hal_cfg_db::factory(void)
 
     cfg_db = new(mem) hal_cfg_db();
     if (cfg_db->init() == false) {
+        cfg_db->~hal_cfg_db();
         HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
         return NULL;
     }
@@ -607,6 +608,12 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+hal_cfg_db::db_close(void)
+{
+    return HAL_RET_OK;
+}
+
 #if 0
 //------------------------------------------------------------------------------
 // API to call after processing any packet by FTE, any operation by config
@@ -721,6 +728,7 @@ hal_oper_db::factory(void)
 
     oper_db = new(mem) hal_oper_db();
     if (oper_db->init() == false) {
+        oper_db->~hal_oper_db();
         HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
         return NULL;
     }
@@ -757,6 +765,12 @@ hal_oper_db::~hal_oper_db()
 bool
 hal_mem_db::init(void)
 {
+    // initialize slab for HAL handles
+    hal_handle_slab_ = slab::factory("hal-handle",
+                                     HAL_SLAB_HANDLE, sizeof(hal_handle),
+                                     64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_handle_slab_ != NULL), false);
+
     // initialize tenant related data structures
     tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
                                  sizeof(hal::tenant_t), 16,
@@ -887,6 +901,7 @@ hal_mem_db::init(void)
 //------------------------------------------------------------------------------
 hal_mem_db::hal_mem_db()
 {
+    hal_handle_slab_ = NULL;
     tenant_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
@@ -924,6 +939,7 @@ hal_mem_db::factory(void)
 
     mem_db = new(mem) hal_mem_db();
     if (mem_db->init() == false) {
+        mem_db->~hal_mem_db();
         HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
         return NULL;
     }
@@ -936,6 +952,7 @@ hal_mem_db::factory(void)
 //------------------------------------------------------------------------------
 hal_mem_db::~hal_mem_db()
 {
+    hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;

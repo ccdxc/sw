@@ -106,7 +106,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
 
     // fetch the tenant information
     tid = spec.meta().tenant_id();
-    tenant = find_tenant_by_id(tid);
+    tenant = tenant_lookup_by_id(tid);
     if (tenant == NULL) {
         HAL_TRACE_ERR("PI-Network:{}: Unable to retrieve tenant_id:{}",
                 __FUNCTION__, tid);

@@ -222,7 +222,7 @@ if_enicif_get_pi_nwsec(if_t *pi_if)
 
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
-        pi_tenant = find_tenant_by_id(pi_if->tid);
+        pi_tenant = tenant_lookup_by_id(pi_if->tid);
         HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
         pi_nwsec =
             nwsec_profile_lookup_by_handle(pi_tenant->nwsec_profile_handle);

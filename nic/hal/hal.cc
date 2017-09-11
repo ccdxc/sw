@@ -54,6 +54,112 @@ fte_pkt_loop (void *ctxt)
 }
 
 //------------------------------------------------------------------------------
+// constructor
+//------------------------------------------------------------------------------
+hal_handle::hal_handle()
+{
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+bool
+hal_handle::init()
+{
+    HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    for (uint32_t i = 0; i < k_max_objs_; i++) {
+         objs_[i].valid = FALSE;
+         objs_[i].ver = 0;
+         objs_[i].obj = NULL;
+    }
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// factory method to allocate a handle
+//------------------------------------------------------------------------------
+hal_handle *
+hal_handle::factory(void)
+{
+    void          *mem;
+    hal_handle    *handle;
+
+    // allocate from the handle slab
+    mem = g_hal_state->hal_handle_slab()->alloc();
+    HAL_ASSERT_RETURN((mem != NULL), NULL);
+
+    handle = new(mem) hal_handle();
+    // initialize the handle instance
+    if (handle->init() == false) {
+        handle->~hal_handle();
+        g_hal_state->hal_handle_slab()->free(handle);
+        return NULL;
+    }
+
+    return handle;
+}
+
+//------------------------------------------------------------------------------
+// destructor
+//------------------------------------------------------------------------------
+hal_handle::~hal_handle()
+{
+    uint32_t    i;
+
+    HAL_SPINLOCK_DESTROY(&slock_);
+    for (i = 0; i < HAL_ARRAY_SIZE(objs_); i++) {
+        if (objs_[i].valid) {
+            HAL_TRACE_ERR("HAL handle destroy failied, valid object found at "
+                          "idx {}, version {}, obj {}", i, objs_[i].ver,
+                          objs_[i].obj);
+            HAL_ABORT(FALSE);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+// add an object to this handle
+// NOTE: this is written assuming multiple writers a given handle, otherwise
+//       we don't need the per handle lock
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_handle::add_obj(cfg_version_t ver, void *obj)
+{
+    uint32_t     i;
+    int          free_slot = -1;
+    hal_ret_t    ret = HAL_RET_OK;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < k_max_objs_; i++) {
+        if (objs_[i].valid) {
+            if (objs_[i].ver >= ver) {
+                // someone committed a version greater than this version,
+                // backout and retry
+                ret = HAL_RET_RETRY;
+                goto end;
+            } else {
+                free_slot = i;
+            }
+        }
+        // we know that this version is the latest, try to add this object to
+        // the handle
+        if (free_slot < 0) {
+            return HAL_RET_NO_RESOURCE;
+            goto end;
+        }
+
+        // all is well insert object into this handle
+        objs_[i].ver = ver;
+        objs_[i].obj = obj;
+        objs_[i].valid = TRUE;
+    }
+
+end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // allocate a handle for an object instance
 // TODO: if this can be called from FTE, we need atomic increments
 //------------------------------------------------------------------------------

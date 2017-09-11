@@ -71,7 +71,7 @@ l2seg_get_pi_nwsec(l2seg_t *l2seg)
     nwsec_profile_t     *pi_nwsec = NULL;
 
     // Check if if is enicif
-    pi_tenant = find_tenant_by_id(l2seg->tenant_id);
+    pi_tenant = tenant_lookup_by_id(l2seg->tenant_id);
     HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
     pi_nwsec = nwsec_profile_lookup_by_handle(pi_tenant->nwsec_profile_handle);
     if (!pi_nwsec) {

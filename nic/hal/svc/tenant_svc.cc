@@ -4,6 +4,7 @@
 
 #include <base.h>
 #include <trace.hpp>
+#include <hal_cfg.hpp>
 #include <tenant_svc.hpp>
 #include <tenant.hpp>
 
@@ -20,11 +21,14 @@ TenantServiceImpl::TenantCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-       hal::tenant_create(spec, response);
+        hal::tenant_create(spec, response);
     }
+    hal::hal_cfg_db_close(false);
+
     return Status::OK;
 }
 
@@ -41,11 +45,14 @@ TenantServiceImpl::TenantUpdate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-       hal::tenant_update(spec, response);
+        hal::tenant_update(spec, response);
     }
+    hal::hal_cfg_db_close(false);
+
     return Status::OK;
 }
 
@@ -56,6 +63,8 @@ TenantServiceImpl::TenantDelete(ServerContext *context,
                                 TenantDeleteResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd Tenant Delete Request");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal::hal_cfg_db_close(false);
     return Status::OK;
 }
 
@@ -72,10 +81,12 @@ TenantServiceImpl::TenantGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto request = req->request(i);
         hal::tenant_get(request, response);
     }
+    hal::hal_cfg_db_close(false);
     return Status::OK;
 }

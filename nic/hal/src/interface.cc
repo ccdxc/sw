@@ -513,7 +513,7 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if (if_type == intf::IF_TYPE_ENIC) {
         // fetch the tenant information
         tid = spec.meta().tenant_id();
-        tenant = find_tenant_by_id(tid);
+        tenant = tenant_lookup_by_id(tid);
         if (tenant == NULL) {
             HAL_TRACE_ERR("PI-IF:{}: Valid. failed. TenId: {} Err: {} "
                           "ApiStatus: {}", __FUNCTION__, tid,

@@ -111,14 +111,14 @@ add_tenant_to_db (tenant_t *tenant)
  
 // find a tenant instance by its id
 static inline tenant_t *
-find_tenant_by_id (tenant_id_t tid)
+tenant_lookup_by_id (tenant_id_t tid)
 {
     return (tenant_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
 }
 
 // find a tenant instance by its handle
 static inline tenant_t *
-find_tenant_by_handle (hal_handle_t handle)
+tenant_lookup_by_handle (hal_handle_t handle)
 {
     return (tenant_t *)g_hal_state->tenant_hal_handle_ht()->lookup(&handle);
 }

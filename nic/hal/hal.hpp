@@ -6,6 +6,7 @@
 #include <string>
 #include <base.h>
 #include <thread.hpp>
+#include <hal_lock.hpp>
 
 namespace hal {
 
@@ -62,7 +63,29 @@ extern hal_ret_t hal_wait(void);
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_mem_init(void);
 
-extern uint64_t hal_handle;
+class hal_handle {
+public:
+    static hal_handle *factory(void);
+    ~hal_handle();
+    // add an object to this handle .. even if object
+    // is getting deleted add it with right version and NULL object
+    hal_ret_t add_obj(cfg_version_t cfg_db_ver, void *obj);
+
+private:
+    bool init(void);
+    hal_handle();
+
+private:
+    hal_spinlock_t    slock_;
+    // max. number of objects per handle
+    static const uint32_t k_max_objs_ = 4;
+    struct {
+        cfg_version_t    ver;        // version of this object
+        void             *obj;       // object itself
+        uint8_t          valid:1;    // TRUE if valid
+    } __PACK__ objs_[k_max_objs_];
+};
+
 //------------------------------------------------------------------------------
 // HAL internal api to allocate handle for an object
 //------------------------------------------------------------------------------

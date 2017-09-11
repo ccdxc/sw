@@ -7,6 +7,7 @@
 #include <indexer.hpp>
 #include <ht.hpp>
 #include <bitmap.hpp>
+#include <hal_cfg.hpp>
 #include <hal.hpp>
 
 namespace hal {
@@ -20,13 +21,6 @@ using hal::utils::bitmap;
 
 // TODO: this should be coming from catalogue or platform API
 #define HAL_MAX_TM_PORTS                             12
-
-typedef enum cfg_op_e {
-    CFG_OP_NONE,
-    CFG_OP_READ,
-    CFG_OP_WRITE,
-} cfg_op_t;
-typedef uint32_t cfg_version_t;
 
 // HAL config database
 class hal_cfg_db {
@@ -293,6 +287,7 @@ public:
     static hal_mem_db *factory(void);
     ~hal_mem_db();
 
+    slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
@@ -320,6 +315,7 @@ private:
     hal_mem_db();
 
 private:
+    slab    *hal_handle_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
@@ -353,6 +349,14 @@ class hal_state {
 public:
     static hal_state *factory(void);
     ~hal_state();
+
+    // get APIs for various DBs
+    hal_cfg_db *cfg_db(void) const { return cfg_db_; }
+    hal_oper_db *oper_db(void) const { return oper_db_; }
+    hal_mem_db *mem_db(void) const { return mem_db_; }
+
+    // get APIs for HAL handle related state
+    slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
 
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }

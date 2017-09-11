@@ -54,6 +54,10 @@ typedef uint32_t        ifindex_t;
 typedef uint32_t        seg_id_t;
 typedef uint32_t        encap_id_t;
 
+//------------------------------------------------------------------------------
+// HAL config version type
+//------------------------------------------------------------------------------
+typedef uint32_t cfg_version_t;
 
 #define __ASSERT__(x)            assert(x)
 
@@ -143,49 +147,49 @@ do {                                                       \
 // HAL return codes
 // NOTE: please number these enums properly for easier troubleshooting
 //------------------------------------------------------------------------------
-#define HAL_RET_ENTRIES(ENTRY)                                          \
-    ENTRY(HAL_RET_OK,                         0, "ok")                  \
-    ENTRY(HAL_RET_OOM,                        1, "out of memory error")       \
-    ENTRY(HAL_RET_INVALID_ARG,                2, "invalid arg")         \
-    ENTRY(HAL_RET_INVALID_OP,                 3, "invalid operation")   \
-    ENTRY(HAL_RET_ENTRY_NOT_FOUND,            4, "lookup failure")      \
-    ENTRY(HAL_RET_ENTRY_EXISTS,               5, "already present")     \
-    ENTRY(HAL_RET_NO_RESOURCE,                6, "resource exhaustion") \
-    ENTRY(HAL_RET_BATCH_FAIL,                 7, "batch processing failed") \
-    ENTRY(HAL_RET_BATCH_PARTIAL_FAIL,         8, "partial failure in batch processing") \
+#define HAL_RET_ENTRIES(ENTRY)                                                 \
+    ENTRY(HAL_RET_OK,                         0, "ok")                         \
+    ENTRY(HAL_RET_OOM,                        1, "out of memory error")        \
+    ENTRY(HAL_RET_INVALID_ARG,                2, "invalid arg")                \
+    ENTRY(HAL_RET_INVALID_OP,                 3, "invalid operation")          \
+    ENTRY(HAL_RET_ENTRY_NOT_FOUND,            4, "lookup failure")             \
+    ENTRY(HAL_RET_ENTRY_EXISTS,               5, "already present")            \
+    ENTRY(HAL_RET_NO_RESOURCE,                6, "resource exhaustion")        \
+    ENTRY(HAL_RET_BATCH_FAIL,                 7, "batch processing failed")    \
+    ENTRY(HAL_RET_BATCH_PARTIAL_FAIL,         8, "partial batch processing error") \
     ENTRY(HAL_RET_HW_FAIL,                    9, "read/write into hw failure") \
-    ENTRY(HAL_RET_TABLE_FULL,                 10,"hw table full")       \
-    ENTRY(HAL_RET_OTCAM_FULL,                 11,"otcam table full")    \
-    ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail") \
-    ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail") \
-    ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")  \
-    ENTRY(HAL_RET_FLOW_COLL,                  15,"flow collision") \
-    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full") \
+    ENTRY(HAL_RET_TABLE_FULL,                 10,"hw table full")              \
+    ENTRY(HAL_RET_OTCAM_FULL,                 11,"otcam table full")           \
+    ENTRY(HAL_RET_DUP_INS_FAIL,               12,"duplicate insert fail")      \
+    ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,"p4 key builder fail")        \
+    ENTRY(HAL_RET_OOB,                        14,"out-of-bound error")         \
+    ENTRY(HAL_RET_FLOW_COLL,                  15,"flow collision")             \
+    ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,"flow oflow table full")      \
     ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,"allowed flow limit reached") \
-    ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times") \
-    ENTRY(HAL_RET_TENANT_NOT_FOUND,           19,"tenant not found")    \
-    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found") \
-    ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found") \
-    ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")  \
-    ENTRY(HAL_RET_FLOW_NOT_FOUND,             23,"flow not found")      \
-    ENTRY(HAL_RET_SESSION_NOT_FOUND,          24,"session not found")   \
-    ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")  \
-    ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")       \
-    ENTRY(HAL_RET_HW_PROG_ERR,                27,"Error while programming h/w") \
+    ENTRY(HAL_RET_DUP_FREE,                   18,"freeing multiple times")     \
+    ENTRY(HAL_RET_TENANT_NOT_FOUND,           19,"tenant not found")           \
+    ENTRY(HAL_RET_L2SEG_NOT_FOUND,            20,"L2 segment not found")       \
+    ENTRY(HAL_RET_IF_NOT_FOUND,               21,"interface not found")        \
+    ENTRY(HAL_RET_EP_NOT_FOUND,               22,"endpoint not found")         \
+    ENTRY(HAL_RET_FLOW_NOT_FOUND,             23,"flow not found")             \
+    ENTRY(HAL_RET_SESSION_NOT_FOUND,          24,"session not found")          \
+    ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")         \
+    ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")              \
+    ENTRY(HAL_RET_HW_PROG_ERR,                27,"h/w programming error")      \
     ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "qsecurity profile not found") \
-    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found") \
-    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found") \
-    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found") \
-    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found") \
-    ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found") \
-    ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found") \
-    ENTRY(HAL_RET_POLICER_NOT_FOUND,          35, "Policer not found") \
-    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           36, "Output queue not found") \
-    ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         37, "IPSEC CB not found") \
-    ENTRY(HAL_RET_CPU_CB_NOT_FOUND,           38, "CPU CB not found") \
-                                                                            \
+    ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found")          \
+    ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found")          \
+    ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found")        \
+    ENTRY(HAL_RET_NETWORK_NOT_FOUND,          32,"network not found")          \
+    ENTRY(HAL_RET_WRING_NOT_FOUND,            33, "Wring not found")           \
+    ENTRY(HAL_RET_PROXY_NOT_FOUND,            34, "Proxy Service not found")   \
+    ENTRY(HAL_RET_POLICER_NOT_FOUND,          35, "Policer not found")         \
+    ENTRY(HAL_RET_OQUEUE_NOT_FOUND,           36, "Output queue not found")    \
+    ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         37, "IPSEC CB not found")        \
+    ENTRY(HAL_RET_CPU_CB_NOT_FOUND,           38, "CPU CB not found")          \
+    ENTRY(HAL_RET_RETRY,                      39, "retry the operation")       \
+                                                                               \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
-
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 

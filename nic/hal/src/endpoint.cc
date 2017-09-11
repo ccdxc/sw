@@ -152,7 +152,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 
     // fetch the tenant information
     tid = spec.meta().tenant_id();
-    tenant = find_tenant_by_id(tid);
+    tenant = tenant_lookup_by_id(tid);
     if (tenant == NULL) {
         ret = HAL_RET_INVALID_ARG;
         rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);

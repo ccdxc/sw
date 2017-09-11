@@ -95,7 +95,7 @@ hal_ret_t
 tenant_create (TenantSpec& spec, TenantResponse *rsp)
 {
     hal_ret_t               ret;
-    tenant_t                *tenant;
+    tenant_t                *tenant = NULL;
     pd::pd_tenant_args_t    pd_tenant_args;
     nwsec_profile_t         *sec_prof;
 
@@ -105,10 +105,16 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     // validate the request message
     ret = validate_tenant_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        goto end;
+        return ret;
     }
 
-    // instantiate a tenant
+    // check if tenant exists already, and reject if one is found
+    if (tenant_lookup_by_id(spec.key_or_handle().tenant_id())) {
+        rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
+        return HAL_RET_ENTRY_EXISTS;
+    }
+
+    // instantiate a PI tenant object
     tenant = tenant_alloc_init();
     if (tenant == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
@@ -190,9 +196,9 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
 
     auto kh = req.key_or_handle();
     if (kh.key_or_handle_case() == TenantKeyHandle::kTenantId) {
-        tenant = find_tenant_by_id(kh.tenant_id());
+        tenant = tenant_lookup_by_id(kh.tenant_id());
     } else if (kh.key_or_handle_case() == TenantKeyHandle::kTenantHandle) {
-        tenant = find_tenant_by_handle(kh.tenant_handle());
+        tenant = tenant_lookup_by_handle(kh.tenant_handle());
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;

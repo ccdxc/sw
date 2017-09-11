@@ -173,7 +173,7 @@ ctx_t::lookup_flow_objs()
         tid = key_.tenant_id;
     }
 
-    tenant_ = hal::find_tenant_by_id(tid);
+    tenant_ = hal::tenant_lookup_by_id(tid);
     if (tenant_ == NULL) {
         HAL_TRACE_ERR("fte: tenant {} not found, key={}", tid, key_);
         return HAL_RET_TENANT_NOT_FOUND;
