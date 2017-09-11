@@ -72,6 +72,7 @@
   phvwri	p.app_header_table1_valid, 0;				\
   phvwri	p.app_header_table2_valid, 0;				\
   phvwri	p.app_header_table3_valid, 0;				\
+  phvwri	p.common_te0_phv_table_lock_en, 1;			\
   phvwr		p.common_te0_phv_table_pc, _pc;				\
   phvwr		p.common_te0_phv_table_addr, _table_addr;		\
   phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
@@ -101,14 +102,7 @@
   add 		r2, r0, _entry_size;					\
   sllv		r3, _entry_index, r2;					\
   add		r1, r1, r3;						\
-  phvwri	p.app_header_table0_valid, 1;				\
-  phvwri	p.app_header_table1_valid, 0;				\
-  phvwri	p.app_header_table2_valid, 0;				\
-  phvwri	p.app_header_table3_valid, 0;				\
-  phvwr		p.common_te0_phv_table_pc, _pc;				\
-  phvwr		p.common_te0_phv_table_addr, r1;			\
-  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
-  nop;									
+  LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)				\
 
 // Load a table based with a calculation based on index
 // addr = _table_base + (_entry_index * (2 ^_entry_size))
@@ -134,14 +128,7 @@
   add 		r2, r0, _entry_size;					\
   sllv		r3, r3, r2;						\
   add		r1, r1, r3;						\
-  phvwri	p.app_header_table0_valid, 1;				\
-  phvwri	p.app_header_table1_valid, 0;				\
-  phvwri	p.app_header_table2_valid, 0;				\
-  phvwri	p.app_header_table3_valid, 0;				\
-  phvwr		p.common_te0_phv_table_pc, _pc;				\
-  phvwr		p.common_te0_phv_table_addr, r1;			\
-  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
-  nop;									
+  LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)				\
 
 
 // Used in the last stage of a pipeline to clear all table valid bits

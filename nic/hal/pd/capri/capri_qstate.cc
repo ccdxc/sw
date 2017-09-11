@@ -84,9 +84,15 @@ int32_t get_pc_offset(const char *handle, const char *prog_name,
   if (capri_program_label_to_offset(handle, (char *)prog_name,
                                     (char *)label, &off) < 0)
     return -ENOENT;
-  if (off > 0xFF)
+  // 64 byte alignment check
+  if ((off & 0x3F) != 0) {
     return -EIO;
-  *offset = (uint8_t)off;
+  }
+  // offset can be max 14 bits
+  if (off > 0x3FC0) {
+    return -EIO;
+  }
+  *offset = (uint8_t) (off >> 6);
 #endif
   return 0;
 }

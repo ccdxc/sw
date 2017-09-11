@@ -106,8 +106,8 @@ header_type pri_q_state_t {
     cosB	: 4;	// Cos value B
     cos_sel	: 8;	// Cos selector
     eval_last	: 8;	// Evaluator of "work ready" for ring
-    total_rings	: 4;	// Total number of rings used by this qstate
     host_rings	: 4;	// Number of host facing rings used by this qstate
+    total_rings	: 4;	// Total number of rings used by this qstate
     pid		: 16;	// PID value to be compared with that from host
     p_ndx_lo	: 16;	// Producer Index (low priority)
     c_ndx_lo	: 16;	// Consumer Index (low priority)

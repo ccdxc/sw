@@ -981,7 +981,8 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
 
 action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                        num_entries, base_addr, entry_size, next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, vf_id, sq_id,
+                        num_entries, base_addr, entry_size, next_pc, dst_qaddr,
+                        dst_lif, dst_qtype, dst_qid, vf_id, sq_id,
                         ssd_bm_addr, ssd_q_num, ssd_q_size, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
