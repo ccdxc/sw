@@ -271,6 +271,16 @@ hal_cfg_db::init(void)
     HAL_ASSERT_RETURN((wring_hal_handle_ht_ != NULL), false);
 
     // initialize proxy service related data structures
+    proxy_slab_ = slab::factory("proxy", HAL_SLAB_PROXY,
+                                sizeof(hal::proxy_t), HAL_MAX_PROXY,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((proxy_slab_ != NULL), false);
+
+    proxy_flow_info_slab_ = slab::factory("proxy-flow-infi", HAL_SLAB_PROXY_FLOW_INFO,
+                                sizeof(hal::proxy_flow_info_t), HAL_MAX_PROXY_FLOWS,
+                                false, true, true, true);
+    HAL_ASSERT_RETURN((proxy_flow_info_slab_ != NULL), false);
+
     proxy_type_ht_ = ht::factory(HAL_MAX_PROXY,
                                  hal::proxy_get_key_func,
                                  hal::proxy_compute_hash_func,
@@ -369,6 +379,8 @@ hal_cfg_db::hal_cfg_db()
     wring_id_ht_ = NULL;
     wring_hal_handle_ht_ = NULL;
     
+    proxy_slab_ = NULL;
+    proxy_flow_info_slab_ = NULL;
     proxy_type_ht_ = NULL;
     proxy_hal_handle_ht_ = NULL;
 
@@ -452,7 +464,9 @@ hal_cfg_db::~hal_cfg_db()
 
     wring_id_ht_ ? delete wring_id_ht_ : HAL_NOP;
     wring_hal_handle_ht_ ? delete wring_hal_handle_ht_ : HAL_NOP;
-
+    
+    proxy_slab_ ? delete proxy_slab_ : HAL_NOP;
+    proxy_flow_info_slab_ ? delete proxy_flow_info_slab_ : HAL_NOP;
     proxy_type_ht_ ? delete proxy_type_ht_ : HAL_NOP;
     proxy_hal_handle_ht_ ? delete proxy_hal_handle_ht_ : HAL_NOP;
     
@@ -847,12 +861,6 @@ hal_mem_db::init(void)
                                 false, true, true, true);
     HAL_ASSERT_RETURN((wring_slab_ != NULL), false);
 
-    // initialize proxy service related data structures
-    proxy_slab_ = slab::factory("proxy", HAL_SLAB_PROXY,
-                                sizeof(hal::proxy_t), 16,
-                                false, true, true, true);
-    HAL_ASSERT_RETURN((proxy_slab_ != NULL), false);
-
     // initialize Acl related data structures
     acl_slab_ = slab::factory("Acl", HAL_SLAB_ACL,
                               sizeof(hal::acl_t), 8,
@@ -897,7 +905,6 @@ hal_mem_db::hal_mem_db()
     queue_slab_ = NULL;
     policer_slab_ = NULL;
     wring_slab_ = NULL;
-    proxy_slab_ = NULL;
     acl_slab_ = NULL;
     ipseccb_slab_ = NULL;
     cpucb_slab_ = NULL;
@@ -947,7 +954,6 @@ hal_mem_db::~hal_mem_db()
     queue_slab_ ? delete queue_slab_ : HAL_NOP;
     policer_slab_ ? delete policer_slab_ : HAL_NOP;
     wring_slab_ ? delete wring_slab_ : HAL_NOP;
-    proxy_slab_ ? delete proxy_slab_ : HAL_NOP;
     acl_slab_ ? delete acl_slab_ : HAL_NOP;
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
@@ -1144,6 +1150,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PROXY:
         g_hal_state->proxy_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_PROXY_FLOW_INFO:
+        g_hal_state->proxy_flow_info_slab()->free_(elem);
         break;
 
     case HAL_SLAB_IPSECCB:

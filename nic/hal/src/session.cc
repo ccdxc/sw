@@ -218,7 +218,14 @@ extract_flow_key_from_spec (tenant_id_t tid,
                             const FlowSpec& flow_spec)
 {
     const FlowKey&    flow_spec_key = flow_spec.flow_key();
+    return extract_flow_key_from_spec(tid, flow_key, flow_spec_key);
+}
 
+hal_ret_t
+extract_flow_key_from_spec(tenant_id_t tid,
+                           flow_key_t *flow_key,
+                           const FlowKey& flow_spec_key)
+{
     if (flow_spec_key.has_l2_key()) {
         flow_key->flow_type = FLOW_TYPE_L2;
         flow_key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();

@@ -12,6 +12,7 @@ const feature_id_t FTE_FEATURE_NULL      = 0;
 const feature_id_t FTE_FEATURE_FWDING    = 1;
 const feature_id_t FTE_FEATURE_DFW       = 2;
 const feature_id_t FTE_FEATURE_LB        = 3;
+const feature_id_t FTE_FEATURE_TCP_PROXY = 4;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline
