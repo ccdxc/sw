@@ -36,6 +36,8 @@ class TlsCbObject(base.ConfigObjectBase):
         req_spec.key_or_handle.tlscb_id    = self.id
         if req_spec.__class__.__name__ != 'TlsCbGetRequest':
             req_spec.debug_dol                 = self.debug_dol
+            req_spec.salt                      = self.salt
+            req_spec.explicit_iv               = self.explicit_iv
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

@@ -85,7 +85,7 @@ def TestCaseVerify(tc):
         return False
 
 
-    if (tlscb_cur.enc_requests != tlscb_cur.enc_completions):
+    if ((tlscb_cur.enc_requests - tlscb.enc_requests) != tlscb_cur.enc_completions):
         print("enc requests not equal to completions")
         return False
 

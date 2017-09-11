@@ -2,7 +2,8 @@
 // tlscb for stage 0
 header_type tlscb_0_t {
     fields {
-        // 8 Bytes intrinsic header
+        pc                             : 8;
+        // 7 Bytes intrinsic header
         CAPRI_QSTATE_HEADER_COMMON
         // 4 Bytes SERQ ring
         CAPRI_QSTATE_HEADER_RING(0)
@@ -22,16 +23,19 @@ header_type tlscb_0_t {
         dec_flow                        : 8;
         debug_dol                       : 32;
 
+        barco_command                   : 32;
+        barco_key_desc_index            : 32;
+
         salt                            : 32;
         explicit_iv                     : 64;
-        // TBD: Total used   : 440 bits, pending: 72
-        pad                             : 72;
+        // TBD: Total used   : 504 bits, pending: 8
     }
 }
 
 #define TLSCB_0_PARAMS                                                                                  \
-rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, fid, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow, debug_dol, salt, explicit_iv, pad
-#
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, fid, serq_base,         \
+sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow, debug_dol,       \
+barco_command, barco_key_desc_index, salt, explicit_iv
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -53,11 +57,22 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, 
     modify_field(tlscb_0_d.sesq_base, sesq_base);                                                        \
     modify_field(tlscb_0_d.sw_sesq_pi, sw_sesq_pi);                                                      \
     modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
+    modify_field(tlscb_0_d.sw_bsq_ci, sw_bsq_ci);                                                        \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
     modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
+    modify_field(tlscb_0_d.barco_command, barco_command);                                                \
+    modify_field(tlscb_0_d.barco_key_desc_index, barco_key_desc_index);                                  \
     modify_field(tlscb_0_d.salt, salt);                                                                  \
-    modify_field(tlscb_0_d.explicit_iv, explicit_iv);                                                    \
-    modify_field(tlscb_0_d.pad, pad);
+    modify_field(tlscb_0_d.explicit_iv, explicit_iv);
+
+/* The defintion for access in stages other than 0 */
+#define TLSCB_0_PARAMS_NON_STG0                                                                         \
+    pc, TLSCB_0_PARAMS
+
+#define GENERATE_TLSCB_0_D_NON_STG0                                                                     \
+    modify_field(tlscb_0_d.pc, pc);                                                                     \
+    GENERATE_TLSCB_0_D
+
 
 action read_tls_stg0(TLSCB_0_PARAMS) {
 
@@ -66,10 +81,6 @@ action read_tls_stg0(TLSCB_0_PARAMS) {
 
 header_type tlscb_1_t {
     fields {
-        cipher_type                     : 8;
-        ver_major                       : 4;
-        key_addr                        : ADDRESS_WIDTH;
-        iv_addr                         : ADDRESS_WIDTH;
         qhead                           : ADDRESS_WIDTH;
         qtail                           : ADDRESS_WIDTH;
         una_desc                        : ADDRESS_WIDTH;
@@ -82,9 +93,9 @@ header_type tlscb_1_t {
         nxt_data_len                    : 16;
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
-        ofid                            : 16;
 
-        // Total used   : 512 bits, pending: 0
+        // Total used   : 356 bits, pending: 156
+        pad                             : 156;
     }
 }
 
@@ -93,8 +104,6 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
-    modify_field(tlscb_1_d.cipher_type, cipher_type);                                                   \
-    modify_field(tlscb_1_d.ver_major, ver_major);                                                       \
     modify_field(tlscb_1_d.qhead, qhead);                                                               \
     modify_field(tlscb_1_d.qtail, qtail);                                                               \
     modify_field(tlscb_1_d.una_desc, una_desc);                                                         \
@@ -106,8 +115,7 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
     modify_field(tlscb_1_d.nxt_data_offset, nxt_data_offset);                                           \
     modify_field(tlscb_1_d.nxt_data_len, nxt_data_len);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
-    modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
-    modify_field(tlscb_1_d.ofid, ofid);
+    modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);
 
 
 /* BARCO Descriptor definition */

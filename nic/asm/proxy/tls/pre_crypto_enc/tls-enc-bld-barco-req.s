@@ -13,7 +13,7 @@
 	
 struct tx_table_s4_t0_k k                  ;
 struct phv_ p	;
-struct tx_table_s4_t0_tls_bld_brq4_d d	;
+struct tx_table_s4_t0_d d	;
 	
 %%
 	    .param      tls_enc_queue_brq_process
@@ -30,16 +30,20 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_output_list_address, k.{to_s4_odesc}.dx
     CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
 
-#if 0
-    /* FIXME: read the key index from the CB */
-    phvwr       p.barco_desc_key_desc_index, d.{key_desc_index}.dx
-    CAPRI_OPERAND_DEBUG(d.key_desc_index)
-#else
-    phvwri      p.barco_desc_key_desc_index, 0
-#endif
+    phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq4_d.barco_key_desc_index}.wx
+    CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq4_d.barco_key_desc_index}.wx)
+
     phvwri      p.to_s6_enc_requests, 1
-    addi        r1, r0, 0x30000000
-    phvwr       p.barco_desc_command, r1.wx
+
+    phvwr       p.crypto_iv_salt, d.u.tls_bld_brq4_d.salt
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.salt)
+
+    phvwr       p.crypto_iv_explicit_iv, d.u.tls_bld_brq4_d.explicit_iv
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.explicit_iv)
+    tbladd      d.u.tls_bld_brq4_d.explicit_iv, 1
+
+    phvwr       p.barco_desc_command, d.u.tls_bld_brq4_d.barco_command
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)

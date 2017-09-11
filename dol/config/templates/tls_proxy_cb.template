@@ -25,3 +25,5 @@ enc_failures          : 0
 dec_requests          : 0
 dec_completions       : 0
 dec_failures          : 0
+salt                  : 0
+explicit_iv           : 0

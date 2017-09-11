@@ -26,10 +26,6 @@ tls_enc_queue_brq_process:
 	add		    r4, r5, r0
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
 
-    phvwr       p.crypto_iv_salt, d.u.tls_queue_brq5_d.salt
-    phvwr       p.crypto_iv_explicit_iv, d.u.tls_queue_brq5_d.explicit_iv
-    tbladd      d.u.tls_queue_brq5_d.explicit_iv, 1
-
     /*   brq.odesc->data_len = brq.idesc->data_len + sizeof(tls_hdr_t); */
 dma_cmd_enc_data_len:
 	/*   brq.odesc->data_len = tlsp->cur_tls_data_len; */
@@ -168,8 +164,6 @@ dma_cmd_output_list_addr:
 
     addi        r1, r0, TLS_DDOL_BYPASS_BARCO
     seq         c1, r1, k.to_s5_debug_dol
-    /* FIXME: this needs to be removed once debug_dol is setup correctly */
-    seq         c1, r0, r0
     bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
     nop
 
@@ -184,6 +178,7 @@ dma_cmd_ring_bsq_doorbell:
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
 	phvwr		p.dma_cmd7_dma_cmd_addr, r4
+    CAPRI_OPERAND_DEBUG(r4)
 
 	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
     /* HACK Alert: Using crypto_iv_explicit_iv field as the source of the DMA req

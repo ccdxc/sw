@@ -387,7 +387,7 @@ action read_tnmpr(tnmpr_pidx) {
 }
 
 /* Stage 3 table 0 action */
-action tls_serq_consume(TLSCB_0_PARAMS) {
+action tls_serq_consume(TLSCB_0_PARAMS_NON_STG0) {
 
 
     GENERATE_GLOBAL_K
@@ -396,7 +396,7 @@ action tls_serq_consume(TLSCB_0_PARAMS) {
     modify_field(to_s3_scratch.serq_ci, to_s3.serq_ci);
 
     /* D vector */
-    GENERATE_TLSCB_0_D
+    GENERATE_TLSCB_0_D_NON_STG0
 
 }
 
@@ -452,7 +452,7 @@ action tls_stage3(TLSCB_1_PARAMS) {
 }
 
 /* Stage 4 action */
-action tls_bld_brq4(STG_BLD_BARCO_REQ_ACTION_PARAMS) {
+action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
@@ -463,12 +463,13 @@ action tls_bld_brq4(STG_BLD_BARCO_REQ_ACTION_PARAMS) {
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
 
 
-    GENERATE_STG_BLD_BARCO_REQ_D
+    /* D vector */
+    GENERATE_TLSCB_0_D_NON_STG0
 }
 
 
 /* Stage 5 table 0 action */
-action tls_queue_brq5(TLSCB_0_PARAMS) {
+action tls_queue_brq5(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
@@ -482,7 +483,7 @@ action tls_queue_brq5(TLSCB_0_PARAMS) {
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
 
-    GENERATE_TLSCB_0_D 
+    GENERATE_TLSCB_0_D_NON_STG0
 }
 
 
