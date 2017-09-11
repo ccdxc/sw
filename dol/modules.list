@@ -361,6 +361,7 @@ modules:
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
         name    : L3UC_VXLAN_V6
@@ -372,6 +373,7 @@ modules:
         iterate :
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
         name    : L3UC
