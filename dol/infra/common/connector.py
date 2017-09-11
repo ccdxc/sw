@@ -14,7 +14,7 @@ from infra.penscapy import penscapy
 from factory.objects.ut.buffer import InfraUtBufferObject
 
 PacketContext = namedtuple('PacketContext', ['sender_info', 'packet', 'port'])
-RingContext = namedtuple('DescriptorContext', ['ring', 'descriptors'])
+RingContext = namedtuple('DescriptorContext', ['ring', 'descriptors', 'tc_id'])
 
 connector_registry = {}
 
@@ -162,7 +162,7 @@ class ModelConnector(Connector):
         if len(opkt) == 0:
             raise Connector.Timeout
         from infra.common.logging import cfglogger
-        cfglogger.info("%s RECEIVED PACKET %s" % ("="*30, "="*30))
+        cfglogger.info("%s RECEIVED PACKET %s" % ("=" * 30, "=" * 30))
         penscapy.ShowRawPacket(opkt, cfglogger)
         cfglogger.info("%s END RECEIVED PACKET %s" % ("=" * 28, "=" * 28))
         return PacketContext(None, opkt, port)
@@ -193,12 +193,12 @@ class ModelConnector(Connector):
             if descrs:
                 self._eventQueue.enqueueEv(RingContext(ring, descrs))
 
-    def ConsumeDescriptor(self, ring, exp_descr):
+    def ConsumeDescriptor(self, ring, exp_descr, tc_id):
         descrs = []
         actual_descr = copy.copy(exp_descr)
         ring.Consume(actual_descr)
         descrs.append(actual_descr)
-        self._eventQueue.enqueueEv(RingContext(ring, descrs))
+        self._eventQueue.enqueueEv(RingContext(ring, descrs, tc_id))
         return
 
     def close(self):

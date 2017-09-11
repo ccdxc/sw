@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import copy
 import infra.factory.template   as template
 import infra.common.loader      as loader
 import infra.common.objects     as objects
@@ -39,6 +40,7 @@ def __resolve_refs_obj(obj, tc):
     return
 
 def __generate_common(tc, spec, write = True):
+    spec = copy.deepcopy(spec)
     template = spec.template.Get(FactoryStore)
     obj = template.CreateObjectInstance()
     obj.Logger(tc)

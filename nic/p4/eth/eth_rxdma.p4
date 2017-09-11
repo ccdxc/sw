@@ -74,7 +74,8 @@ header_type eth_rx_desc_d {
     fields {
         addr : 64;
         len : 16;
-        rsvd0 : 48;
+        packet_len : 16;
+        rsvd0: 32;
     }
 }
 

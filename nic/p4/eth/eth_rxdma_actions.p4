@@ -67,7 +67,7 @@ action eth_rx_fetch_desc(
     modify_field(eth_rx_qstate.cq_qstate_addr, cq_qstate_addr);
 }
 
-action eth_rx_packet(addr, len, rsvd0)
+action eth_rx_packet(addr, len, packet_len)
 {
     // For K+I struct generation
     modify_field(eth_rx_global_scratch.packet_len, eth_rx_global.packet_len);
@@ -75,7 +75,7 @@ action eth_rx_packet(addr, len, rsvd0)
     // For D-struct generation
     modify_field(eth_rx_desc.addr, addr);
     modify_field(eth_rx_desc.len, len);
-    modify_field(eth_rx_desc.rsvd0, rsvd0);
+    modify_field(eth_rx_desc.packet_len, packet_len);
 }
 
 action eth_rx_cq_create_desc()

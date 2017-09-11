@@ -8,7 +8,7 @@ def error_exit():
     sys.exit(1)
 
 def zmq_connect ():
-    _model_sock_timeo_sec = 30
+    _model_sock_timeo_sec = 60
     context = zmq.Context()
     #  Socket to talk to server
     socket = context.socket(zmq.REQ)

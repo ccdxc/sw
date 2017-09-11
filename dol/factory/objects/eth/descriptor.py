@@ -3,6 +3,7 @@
 import copy
 from scapy.all import *
 import config.resmgr            as resmgr
+import infra.penscapy.penscapy  as penscapy
 from infra.common.logging       import cfglogger
 
 import infra.factory.base as base
@@ -27,8 +28,8 @@ class EthRxDescriptor(Packet):
     fields_desc = [
         LELongField("addr", 0),
         LEShortField("len", 0),
+        LEShortField("packet_len", 0),
         LEIntField("rsvd0", 0),
-        LEShortField("__pad0", 0),
     ]
 
 
@@ -40,18 +41,19 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
     def Init(self, spec):
         super().Init(spec)
         self.buf = spec.fields.buf
-        self.buf_addr = getattr(spec.fields, 'addr', None)    # Buffer Address
+        self.buf_addr = getattr(spec.fields, 'addr', 0)    # Buffer Address
         self.buf_len = spec.fields.len      # Buffer Length
+        self._mem = None
+        self.logger.info("Init %s" % self)
 
     def Write(self):
         """
         Writes a Descriptor to Memory
         :return:
         """
-        if self._mem == None: return
+        if self._mem is None: return
 
-        self.logger.info("Writing EthRxDescriptor:%s" % self.GID())
-        self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
+        self.logger.info("Writing %s" % self)
         desc = EthRxDescriptor(addr=self.buf_addr, len=self.buf_len)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(desc))
 
@@ -60,15 +62,19 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from Memory
         :return:
         """
-        if self._mem == None: return
+        if self._mem is None: return
 
         desc = EthRxDescriptor(resmgr.HostMemoryAllocator.read(self._mem, 16))
-        # self.logger.ShowScapyObject(desc)
+        self.logger.ShowScapyObject(desc)
         self.buf_addr = desc.addr
-        self.buf_len = 130  #desc.rsvd0
+        self.buf_len = desc.packet_len
         self.buf.Bind(resmgr.HostMemoryAllocator.p2v(self.buf_addr))
-        self.logger.info("Read EthRxDescriptor:%s" % self.GID())
-        self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
+        self.logger.info("Read %s" % self)
+
+    def __str__(self):
+        return "%s GID:%s/Id:0x%x/Memory:%s/Buf:%s/Buf.Id:0x%x/Buf_Addr:0x%x/Buf_Len:%d" % (
+                self.__class__.__name__, self.GID(), id(self), self._mem,
+                self.buf.GID(), id(self.buf), self.buf_addr, self.buf_len)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -78,7 +84,7 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         if self.buf_len != other.buf_len:
             self.logger.info("  Buf Len Mismatch: Expected %s Actual %s" %\
                              (str(self.buf_len), str(other.buf_len)))
-            result = False
+            other.buf_len = other.buf.size
         return result
 
     def __copy__(self):
@@ -87,8 +93,8 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         # [obj._mem] must point to the original descriptor's memory handle
         obj.buf = copy.copy(self.buf)
         # The following fields are filled in by Read()
-        obj.buf_addr = None
-        obj.buf_len = None
+        obj.buf_addr = 0
+        obj.buf_len = 0
         return obj
 
     def GetBuffer(self):
@@ -103,18 +109,19 @@ class EthTxDescriptorObject(base.FactoryObjectBase):
     def Init(self, spec):
         super().Init(spec)
         self.buf = spec.fields.buf
-        self.buf_addr = getattr(spec.fields, 'addr', None)    # Buffer Address
+        self.buf_addr = getattr(spec.fields, 'addr', 0)    # Buffer Address
         self.buf_len = spec.fields.len      # Buffer Length
+        self._mem = None
+        self.logger.info("Init %s" % self)
 
     def Write(self):
         """
         Writes a Descriptor to Memory
         :return:
         """
-        if self.buf_addr == None: return
+        if self._mem is None: return
 
-        self.logger.info("Writing EthTxDescriptor:%s" % self.GID())
-        self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
+        self.logger.info("Writing %s" % self)
         desc = EthTxDescriptor(addr=self.buf_addr, len=self.buf_len)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(desc))
         # self.Read()
@@ -124,15 +131,23 @@ class EthTxDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from Memory
         :return:
         """
-        if self._mem == None: return
+        if self._mem is None: return
 
         desc = EthTxDescriptor(resmgr.HostMemoryAllocator.read(self._mem, 16))
-        # self.logger.ShowScapyObject(desc)
+        self.logger.ShowScapyObject(desc)
         self.buf_addr = desc.addr
         self.buf_len = desc.len
         self.buf.Bind(resmgr.HostMemoryAllocator.p2v(self.buf_addr))
-        self.logger.info("Read EthTxDescriptor:%s" % self.GID())
-        self.logger.info("- Memory: %s = addr: 0x%x len: %d" % (self._mem, self.buf_addr, self.buf_len))
+        self.logger.info("Read %s" % self)
+
+    def Bind(self, _mem):
+        assert '_mem' not in self.__dict__ or self._mem is None
+        super().Bind(_mem)
+
+    def __str__(self):
+        return "%s GID:%s/Id:0x%x/Memory:%s/Buf:%s/Buf.Id:0x%x/Buf_Addr:0x%x/Buf_Len:%d" % (
+                self.__class__.__name__, self.GID(), id(self), self._mem,
+                self.buf.GID(), id(self.buf), self.buf_addr, self.buf_len)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -151,8 +166,8 @@ class EthTxDescriptorObject(base.FactoryObjectBase):
         # [obj._mem] must point to the original descriptor's memory handle
         obj.buf = copy.copy(self.buf)
         # The following fields are filled in by Read()
-        obj.buf_addr = None
-        obj.buf_len = None
+        obj.buf_addr = 0
+        obj.buf_len = 0
         return obj
 
     def GetBuffer(self):

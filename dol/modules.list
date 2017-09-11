@@ -975,13 +975,13 @@ modules:
 
     - module:
         name    : ETH_TX # L2UC_IP cases
-        enable  : False
+        enable  : True
         package : test.eth
         module  : eth
         spec    : tx.testspec
-        ignore  : True
+        ignore  : False
         args    :
-            maxflows : 1
+            maxflows : 10
         iterate:
             # Untagged Flows
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -1110,7 +1110,7 @@ modules:
         spec    : rx.testspec
         ignore  : False
         args:
-            maxflows: 4
+            maxflows: 10
         iterate:
             # Tagged Flows
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -1126,41 +1126,41 @@ modules:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
               segment   : filter://native=False
             # Untagged Flows
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-              segment   : filter://native=True
+#            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+#              segment   : filter://native=True
+#            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+#              segment   : filter://native=True
+#            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+#              segment   : filter://native=True
+#            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+#              segment   : filter://native=True
+#            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+#              segment   : filter://native=True
+#            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+#              segment   : filter://native=True
             # Priority Tagged Cases
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-              segment   : filter://native=True
-              priotag   : True
+#            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
+#            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
+#            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
+#            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
+#            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
+#            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+#              segment   : filter://native=True
+#              priotag   : True
 
     - module:
         name    : ETH_RX_L3UC
-        enable  : True
+        enable  : False
         package : test.eth
         module  : eth
         spec    : rx_l3.testspec
@@ -1217,7 +1217,7 @@ modules:
 
     - module:
         name    : ETH_RX_ARP
-        enable  : True
+        enable  : False
         package : test.eth
         module  : eth
         spec    : rx_arp.testspec
@@ -1254,7 +1254,7 @@ modules:
 
     - module:
         name    : ETH_RX_NON_IP
-        enable  : True
+        enable  : False
         package : test.eth
         module  : eth
         spec    : rx_non_ip.testspec

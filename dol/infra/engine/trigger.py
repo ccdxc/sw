@@ -437,8 +437,8 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             ring_set = set()
             for descriptor in self._tc_step.trigger.descriptors:
                 assert descriptor.descriptor and descriptor.descriptor.object and descriptor.descriptor.ring
-                self._logger.info("Posting to ring = %s, descriptor(id=%s) = %s" % (
-                    descriptor.descriptor.ring.GID(), descriptor.descriptor.object.GID(), descriptor.descriptor.object))
+                self._logger.info("Posting to ring = %s, descriptor(id=%s)" % (
+                    descriptor.descriptor.ring.GID(), descriptor.descriptor.object.GID()))
                 descriptor.descriptor.ring.Post(descriptor.descriptor.object)
                 ring_set.add(descriptor.descriptor.ring)
 
@@ -462,13 +462,13 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     self._connector.doorbell(
                         self._tc_step.trigger.doorbell, ring)
 
-            #if self._exp_rcv_descr:
+            # if self._exp_rcv_descr:
             #    self._connector.consume_rings(self._exp_rcv_descr.keys())
             for descriptor in self._tc_step.expect.descriptors:
-                self._logger.info("Starting ConsumeDescriptor() on RING:%s" %\
+                self._logger.info("Starting ConsumeDescriptor() on RING:%s" %
                                   descriptor.descriptor.ring.GID())
                 self._connector.ConsumeDescriptor(descriptor.descriptor.ring,
-                                                  descriptor.descriptor.object)
+                                                  descriptor.descriptor.object, self._tc._test_spec.GID())
 
             self._tc_status = self.STATUS_RUNNING
         return
@@ -486,14 +486,15 @@ class TriggerTestCaseStep(objects.FrameworkObject):
     def recv_descriptors(self, ring, descriptors):
         for descr_obj in descriptors:
             self._logger.info(
-                "Received descriptor on ring = %s, descriptor = %s" %\
+                "Received descriptor on ring = %s, descriptor = %s" %
                 (ring.GID(), descr_obj.GID()))
             self._exp_rcv_descr[ring].received.append(descr_obj)
             # Add to test step received section.
             tc_desc = TestCaseTrigExpDescriptorObject()
             tc_desc.object = descr_obj
             tc_desc.ring = ring
-            self._tc._test_spec.current_step.received.descriptors.append(tc_desc)
+            self._tc._test_spec.current_step.received.descriptors.append(
+                tc_desc)
 
     @classmethod
     def _packets_match(cls, expected, actual, partial_match):
@@ -728,13 +729,18 @@ class TriggerTestCaseStep(objects.FrameworkObject):
 
     def __descriptors_process_result(self):
         result = DescriptorsTestStepResult()
+        self._logger.info("Processing descriptor result",
+                          len(self._exp_rcv_descr))
         for ring in self._exp_rcv_descr.keys():
+            self._logger.info("Processing descriptor result Expected Received", len(
+                self._exp_rcv_descr[ring].expected), len(self._exp_rcv_descr[ring].received))
             for edescr, adescr in zip(self._exp_rcv_descr[ring].expected,
                                       self._exp_rcv_descr[ring].received):
 
                 # Compare descriptors
                 cmpresult = TriggerObjectCompareResult()
-                self._logger.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
+                self._logger.info("Comparing Descriptors: %s <--> %s " %
+                                  (edescr.GID(), adescr.GID()))
                 if edescr.object != adescr:
                     self._logger.error("Descriptor compare result = MisMatch")
                     result.mismatch.append(cmpresult)
@@ -742,18 +748,21 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     return result
                 self._logger.info("Descriptor compare result = Match")
                 result.matched.append(cmpresult)
-                
+
                 # Next compare buffers
                 cmpresult = TriggerObjectCompareResult()
-                ebuf = utils.SafeFnCall(None, self._logger, edescr.object.GetBuffer)
+                ebuf = utils.SafeFnCall(
+                    None, self._logger, edescr.object.GetBuffer)
                 abuf = utils.SafeFnCall(None, self._logger, adescr.GetBuffer)
                 if ebuf is None or abuf is None:
-                    self._logger.error("Buffer Compare: Expected type %s, Actual type %s" % (type(ebuf), type(abuf)))
+                    self._logger.error(
+                        "Buffer Compare: Expected type %s, Actual type %s" % (type(ebuf), type(abuf)))
                     result.mismatch.append(cmpresult)
                     result._set_status()
                     return result
 
-                self._logger.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
+                self._logger.info("Comparing Buffers: %s <--> %s " %
+                                  (ebuf.GID(), abuf.GID()))
                 # Make sure we are not accidentally comparing the same object
                 assert(id(ebuf) != id(abuf))
 
@@ -770,24 +779,34 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 epktbuf = ebuf.Read()
                 apktbuf = abuf.Read()
                 if epktbuf is None or apktbuf is None:
-                    self._logger.error("Packet Compare: Expected type %s, Actual type %s" % (type(epktbuf), type(apktbuf)))
+                    self._logger.error("Packet Compare: Expected type %s, Actual type %s" % (
+                        type(epktbuf), type(apktbuf)))
                     result.mismatch.append(cmpresult)
                     result._set_status()
                     return result
 
                 # Make sure we are not accidentally comparing the same object
                 assert(id(apktbuf) != id(epktbuf))
+                ignore_pkt_cmp = objects.PacketComparePartial()
+                hdr_ignore_result = objects.HeaderComparePartial()
+                hdr_ignore_result.ignore_fields = ["chksum"]
+                ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
+                hdr_ignore_result = objects.HeaderComparePartial()
+                hdr_ignore_result.ignore_fields = ["chksum"]
+                ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
 
                 self._logger.info("Comparing Packets")
                 epkt = penscapy.Parse(bytes(epktbuf))
                 apkt = penscapy.Parse(bytes(apktbuf))
-                pktresult = PacketCompare(epkt, apkt)
+                pktresult = PacketCompare(epkt, apkt, ignore_pkt_cmp)
                 self.print_packet_mismatch(pktresult)
                 if pktresult.matched() == False:
                     self._logger.error("Packet compare result = Mismatch")
-                    self._logger.info("============ EXPECTED Packet ============")
+                    self._logger.info(
+                        "============ EXPECTED Packet ============")
                     penscapy.ShowRawPacket(epkt, self._logger)
-                    self._logger.info("============ ACTUAL Packet ============")
+                    self._logger.info(
+                        "============ ACTUAL Packet ============")
                     penscapy.ShowRawPacket(apkt, self._logger)
                     result.mismatch.append(cmpresult)
                     result._set_status()
@@ -802,7 +821,7 @@ class TriggerTestCaseStep(objects.FrameworkObject):
         pass
 
     def __process_result(self):
-        self._logger.verbose("Processing test step result")
+        self._logger.info("Processing test step result")
         result = TestStepResult()
         result.packets = self.__packets_process_result()
         result.descriptors = self.__descriptors_process_result()
@@ -974,7 +993,6 @@ class Trigger(InfraThreadHandler):
         self._receiver = Receiver(self, self._connector)
         self.__db_inits()
         self._descriptor_test_case_queue = []
-        self._current_descriptor_test_case = None
         self._connector_started = False
         self._run_test_steps_serially = run_test_steps_serially
 
@@ -1000,14 +1018,6 @@ class Trigger(InfraThreadHandler):
             #print (test_case.input.spkt.show2())
             if not len(test_case.session):
                 assert 0
-            if trigger_tc.needs_serial_run():
-                test_case.logger.debug("Test case need a serial run")
-                if self._current_descriptor_test_case or self.pending_test_case_count():
-                    # Current serial test case running or there are pending
-                    # test cases still.
-                    self._descriptor_test_case_queue.append(trigger_tc)
-                    return
-                self._current_descriptor_test_case = trigger_tc
             self._tc_db[test_case.GID()] = trigger_tc
             logger.debug("Test case ID ", test_case.GID())
             self._connector_start()
@@ -1025,10 +1035,6 @@ class Trigger(InfraThreadHandler):
                 test_case._test_spec.GID(), "rsvd"))
 
     def execute(self, event):
-
-        def __send_to_current_step(data):
-            if self._current_descriptor_test_case:
-                self._current_descriptor_test_case.recv_packet(pkt_ctx)
 
         if event:
             if not self._step_timeout_enabled and isinstance(event, TestCaseContext):
@@ -1049,24 +1055,20 @@ class Trigger(InfraThreadHandler):
                         else:
                             logger.critical(
                                 "Received packet with unknown test case ID :", tc_id)
-                            if self._current_descriptor_test_case:
-                                self._current_descriptor_test_case.recv_packet(
-                                    pkt_ctx)
-                            else:
-                                self._junk_packets.append(pkt_ctx)
+                            self._junk_packets.append(pkt_ctx)
                 except:
-                    if self._current_descriptor_test_case:
-                        self._current_descriptor_test_case.recv_packet(
-                            pkt_ctx, 0)
-                    else:
-                        logger.critical(
-                            "No Pensando header found in the packet")
-                        self._junk_packets.append(pkt_ctx)
+                    logger.critical(
+                        "No Pensando header found in the packet")
+                    self._junk_packets.append(pkt_ctx)
             elif isinstance(event, RingContext):
-                if self._current_descriptor_test_case:
-                    ring_ctx = event
-                    self._current_descriptor_test_case.recv_descriptors(
-                        ring_ctx.ring, ring_ctx.descriptors)
+                ring_ctx = event
+                with self._tc_db_lock:
+                    test_case = self._tc_db.get(ring_ctx.tc_id)
+                    if test_case:
+                        test_case.recv_descriptors(
+                            ring_ctx.ring, ring_ctx.descriptors)
+                    else:
+                        assert 0
             else:
                 pdb.set_trace()
                 assert 0
@@ -1141,22 +1143,12 @@ class Trigger(InfraThreadHandler):
             test_case._test_steps.pop(0)
             self._run_trigger_test_case(test_case)
         else:
-            if self._tc_db[tc_id] == self._current_descriptor_test_case:
-                self._current_descriptor_test_case = None
-
             # Test case failed or all steps done, move it complete.
             self._tc_done_db[tc_id] = test_case
             del self._tc_db[tc_id]
             if self.pending_test_case_count() == 0:
-                if not self._current_descriptor_test_case and self._descriptor_test_case_queue:
-                    self._current_descriptor_test_case = self._descriptor_test_case_queue.pop(
-                        0)
-                    self._tc_db[self._current_descriptor_test_case._test_spec.GID(
-                    )] = self._current_descriptor_test_case
-                    self._current_descriptor_test_case.run_test_case()
-                else:
-                    # All test cases completed, stop the connector.
-                    self._connector_stop()
+                # All test cases completed, stop the connector.
+                self._connector_stop()
 
     def get_result(self, tc_id):
         if tc_id in self._tc_db:

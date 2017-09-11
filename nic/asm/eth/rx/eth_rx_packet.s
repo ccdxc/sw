@@ -23,7 +23,7 @@ eth_rx_packet:
 
     // Packet is larger than Buffer
     add         r1, r0, k.eth_rx_global_packet_len
-    add         r2, r0, d.len
+    add         r2, r0, d.{len}.hx
     blt         r2, r1, eth_rx_drop_oversize_pkt
     nop
 
@@ -39,7 +39,7 @@ eth_rx_packet:
 #endif
     phvwr       p.dma_cmd0_dma_cmd_addr, d.{addr}.dx                        // Source address
     phvwr       p.dma_cmd0_dma_cmd_size, r1                                 // DMA size
-    tblwr.f     d.rsvd0, r1.hx
+    tblwr.f     d.{packet_len}.hx, r1
     phvwri      p.dma_cmd0_dma_cmd_use_override_lif, 0                      // Do not override LIF id for AXI address computation
     phvwri      p.dma_cmd0_dma_cmd_override_lif, 0
 

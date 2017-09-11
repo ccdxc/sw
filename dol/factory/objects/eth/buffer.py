@@ -32,8 +32,7 @@ class EthBufferObject(base.FactoryObjectBase):
             if self.data is None:
                 self.data = bytes([0x0] * spec.fields.size)
 
-        if self.data is not None:
-            penscapy.ShowRawPacket(self.data, self.logger)
+        self.logger.info("Init %s" % self)
 
     def Write(self):
         """
@@ -42,9 +41,12 @@ class EthBufferObject(base.FactoryObjectBase):
         """
         if not self._mem: return
 
-        self.logger.info("Writing Buffer %s = size: 0x%x crc(data): 0x%x" %
-                         (self._mem, self.size, binascii.crc32(self.data)))
+        self.logger.info("Writing %s" % self)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
+
+        self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
+        penscapy.ShowRawPacket(self.data, self.logger)
+        self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
         """
@@ -53,16 +55,24 @@ class EthBufferObject(base.FactoryObjectBase):
         """
         if not self._mem: return self.data
 
+        self.logger.info("Read %s" % self)
         self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
-        # penscapy.ShowRawPacket(self.data, self.logger)
-        self.logger.info("Read Buffer %s = size: 0x%x crc(data): 0x%x" %
-                         (self._mem, self.size, binascii.crc32(self.data)))
+
+        self.logger.info("=" * 30, "READ BUFFER", "=" * 30)
+        penscapy.ShowRawPacket(self.data, self.logger)
+        self.logger.info("=" * 30, "END READ BUFFER", "=" * 30)
+
         return self.data
 
     def Bind(self, mem):
         assert(isinstance(mem, resmgr.MemHandle))
         super().Bind(mem)
         self.addr = mem.pa
+
+    def __str__(self):
+        return "%s GID:%s/Id:0x%x/Memory:%s/Size:0x%x/crc(data):0x%x" % (
+                self.__class__.__name__, self.GID(), id(self), self._mem, self.size,
+                binascii.crc32(self.data) if self.data is not None else 0x0)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

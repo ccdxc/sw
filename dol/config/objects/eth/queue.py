@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import math
+import ctypes
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -61,61 +62,64 @@ class EthQstateObject(object):
     def __init__(self, addr, size):
         self.addr = addr
         self.size = size
-        self.Read()
+        self.data = EthQstate(model_wrap.read_mem(self.addr, self.size))
 
     def Write(self, lgh = cfglogger):
-        lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
-        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
-        self.Read(lgh)
+       lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+       model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+       self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
-        self.data = EthQstate(model_wrap.read_mem(self.addr, self.size))
-        # lgh.ShowScapyObject(self.data)
+        data = EthQstate(model_wrap.read_mem(self.addr, self.size))
+        lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
 
     def incr_pindex(self, ring):
         assert(ring < 7)
-        self.set_pindex(ring, (self.get_pindex(ring) + 1) % self.get_ring_size(ring))
-        self.Write()
-
-    def set_pindex(self, ring, value):
-        assert(ring < 7)
+        value = (self.get_pindex(0) + 1) & (self.get_ring_size() - 1)
         setattr(self.data[EthQstate], 'p_index%d' % ring, value)
-        self.Write()
+        model_wrap.write_mem(self.addr + 8, bytes(ctypes.c_uint16(value)), 2)
 
-    def set_cindex(self, ring, value):
+    def incr_cindex(self, ring):
         assert(ring < 7)
-        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
-        self.Write()
-
-    def set_enable(self, value):
-        self.data[EthQstate].enable = value
-        self.Write()
-
-    def set_ring_base(self, value):
-        self.data[EthQstate].ring_base = value
-        self.Write()
-
-    def set_ring_size(self, value):
-        self.data[EthQstate].ring_size = value
-        self.Write()
-
-    def get_ring_size(self, ring):
-        self.Read()
-        return self.data[EthQstate].ring_size
+        idx = self.get_cindex(0)
+        setattr(self.data[EthQstate], 'c_index%d' % ring, (idx + 1) & (self.get_ring_size() - 1))
 
     def get_pindex(self, ring):
         assert(ring < 7)
-        self.Read()
         return getattr(self.data[EthQstate], 'p_index%d' % ring)
+
+    def set_pindex(self, ring, value):
+        assert(ring < 7)
+        assert(value < self.get_ring_size())
+        setattr(self.data[EthQstate], 'p_index%d' % ring, value)
 
     def get_cindex(self, ring):
         assert(ring < 7)
-        self.Read()
         return getattr(self.data[EthQstate], 'c_index%d' % ring)
 
+    def set_cindex(self, ring, value):
+        assert(ring < 7)
+        assert(value < self.get_ring_size())
+        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
+
+    def set_enable(self, value):
+        self.data[EthQstate].enable = value
+        model_wrap.write_mem(self.addr + 40, bytes(ctypes.c_uint8(value)), 1)
+
+    def set_ring_base(self, value):
+        self.data[EthQstate].ring_base = value
+        model_wrap.write_mem(self.addr + 41, bytes(ctypes.c_uint64(value)), 8)
+
+    def set_ring_size(self, value):
+        value = int(math.log(value, 2))
+        self.data[EthQstate].ring_size = value
+        model_wrap.write_mem(self.addr + 49, bytes(ctypes.c_uint16(value)), 2)
+
+    def get_ring_size(self):
+        return int(math.pow(2, self.data[EthQstate].ring_size))
+
     def Show(self, lgh = cfglogger):
-        self.Read()
         lgh.ShowScapyObject(self.data)
 
 
