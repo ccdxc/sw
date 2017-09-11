@@ -233,8 +233,24 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     // fill config spec of this IPSEC CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_ipseccb_id(ripseccb.cb_id);
 
-    rsp->mutable_spec()->set_pi(ripseccb.pi);
-    rsp->mutable_spec()->set_ci(ripseccb.ci);
+    //rsp->mutable_spec()->set_pi(ripseccb.pi);
+    //rsp->mutable_spec()->set_ci(ripseccb.ci);
+
+
+    rsp->mutable_spec()->set_iv_size(ripseccb.iv_size);
+    rsp->mutable_spec()->set_icv_size(ripseccb.icv_size);
+    rsp->mutable_spec()->set_block_size(ripseccb.block_size);
+    rsp->mutable_spec()->set_iv_salt(ripseccb.iv_salt);
+    rsp->mutable_spec()->set_iv(ripseccb.iv);
+    rsp->mutable_spec()->set_key_index(ripseccb.key_index);
+    rsp->mutable_spec()->set_esn_hi(ripseccb.esn_hi);
+    rsp->mutable_spec()->set_esn_lo(ripseccb.esn_lo);
+    rsp->mutable_spec()->set_spi(ripseccb.spi);
+    rsp->mutable_spec()->set_barco_enc_cmd(ripseccb.barco_enc_cmd);
+    
+    rsp->mutable_spec()->set_tunnel_sip4(ripseccb.tunnel_sip4);
+    rsp->mutable_spec()->set_tunnel_dip4(ripseccb.tunnel_dip4);
+
 
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);

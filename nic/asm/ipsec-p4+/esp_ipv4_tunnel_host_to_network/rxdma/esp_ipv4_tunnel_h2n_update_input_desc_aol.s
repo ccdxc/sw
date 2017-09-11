@@ -36,15 +36,16 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
 
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
-    //add r1, r0, k.ipsec_to_stage3_iv_size
-    //addi r1, r1, IPSEC_SALT_HEADROOM
-    addi r1, r0, 64
+    add r1, r0, k.ipsec_to_stage3_iv_size
+    addi r1, r1, IPSEC_SALT_HEADROOM
+    //addi r1, r0, 64
     add r1, r1, k.t0_s2s_in_page_addr 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len
 
 dma_cmd_to_write_pad_bytes:
-    add r2, r0, k.t0_s2s_in_page_addr
+    add r2, r1, k.ipsec_to_stage3_packet_len
+
     //source - from fixed hbm pad table data structure.
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_MEM
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC

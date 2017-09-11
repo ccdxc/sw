@@ -81,7 +81,8 @@ header_type ipsec_rxdma_global_t {
         qid            : 24;
         frame_size     : 16; 
         ipsec_cb_index : 16;
-        rxdma_pad22    : 56; 
+        ipsec_cb_pindex : 16;
+        rxdma_pad22    : 40; 
     }
 }
 
