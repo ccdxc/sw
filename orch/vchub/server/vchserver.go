@@ -59,11 +59,18 @@ func (as *VchServer) WatchSmartNICs(ws *orch.WatchSpec, stream orch.OrchApi_Watc
 
 	session:
 		for {
+			var event *kvstore.WatchEvent
+			var active bool
 			wc := watcher.EventChan()
-			event, active := <-wc
-			if !active {
-				as.stats.WatchCloseCount++
-				return fmt.Errorf("Watch session closed")
+
+			select {
+			case event, active = <-wc:
+				if !active {
+					as.stats.WatchCloseCount++
+					return fmt.Errorf("Watch session closed")
+				}
+			case <-stream.Context().Done():
+				return fmt.Errorf("Context canceled")
 			}
 
 			e := &orch.SmartNICEvent{}

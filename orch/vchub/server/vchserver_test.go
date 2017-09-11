@@ -193,7 +193,7 @@ func (ts *TestSuite) w4Channel(t *testing.T, prefix string, active bool) {
 	}
 	if suite.testStore.IsWatchActive(prefix) != active {
 		debug.PrintStack()
-		t.Fatalf("Watch channel not in expected state after 10 sec")
+		t.Errorf("Watch channel not in %v state after 10 sec", active)
 	}
 }
 
@@ -444,6 +444,7 @@ func TestSmartNICInspect(t *testing.T) {
 		}
 	}
 	wCancel()
+	suite.w4Channel(t, "/vchub/smartnics/", false)
 	suite.testStore.SetErrorState(false)
 
 	// Generate errors from store.
@@ -486,6 +487,8 @@ func TestSmartNICInspect(t *testing.T) {
 	// Cause a close
 	suite.testStore.CloseWatch("/vchub/smartnics/")
 	<-doneCh
+	time.Sleep(100 * time.Millisecond)
+	suite.w4Channel(t, "/vchub/smartnics/", false)
 
 	// Generate send error
 	wCtx, wCancel = context.WithCancel(context.Background())
@@ -764,6 +767,7 @@ func TestNwIFInspect(t *testing.T) {
 		}
 	}
 	wCancel()
+	suite.w4Channel(t, "/vchub/nwifs/", false)
 	suite.testStore.SetErrorState(false)
 
 	// Generate errors from store.
@@ -812,13 +816,11 @@ func TestNwIFInspect(t *testing.T) {
 	// Cause a close
 	suite.testStore.CloseWatch("/vchub/nwifs/")
 	<-doneCh
+	time.Sleep(100 * time.Millisecond)
+	suite.w4Channel(t, "/vchub/nwifs/", false)
 
 	// Generate send error
 	wCtx, wCancel = context.WithCancel(context.Background())
-	stream, err = suite.vcHubClient.WatchNwIFs(wCtx, ws)
-	if err != nil {
-		t.Fatalf("Watch failed -- %v", err)
-	}
 	doneCh = make(chan bool)
 	go watcherFunc("canceled")
 	suite.w4Channel(t, "/vchub/nwifs/", true)
