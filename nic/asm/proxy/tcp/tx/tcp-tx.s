@@ -84,9 +84,8 @@ flow_read_xmit_cursor_start:
 	bcf		[c1], table_read_xmit_cursor
 	nop
 table_read_TSO:	
-        CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
-                            tcp_tso_process_start,
-	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+        CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_tso_process_start, k.common_phv_qstate_addr,
 	                    TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
         nop.e
         nop
@@ -251,9 +250,8 @@ nic_desc_entry_write:
 	jr.c4		r7
 	add		r7, r0, r0
 
-        CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
-                            tcp_tso_process_start,
-	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+        CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_tso_process_start, k.common_phv_qstate_addr,
 	                    TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
 
 

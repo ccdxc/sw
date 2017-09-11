@@ -242,6 +242,9 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_stats()->set_pkts_rcvd(rtcpcb.pkts_rcvd);
     rsp->mutable_stats()->set_pages_alloced(rtcpcb.pages_alloced);
     rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
+    rsp->mutable_stats()->set_debug_num_pkt_to_mem(rtcpcb.debug_num_pkt_to_mem);
+    rsp->mutable_stats()->set_debug_num_phv_to_mem(rtcpcb.debug_num_phv_to_mem);
+    rsp->mutable_stats()->set_debug_stage0_7_thread(rtcpcb.debug_stage0_7_thread);
 
     rsp->mutable_stats()->set_bytes_sent(rtcpcb.bytes_sent);
     rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);

@@ -23,12 +23,11 @@ cpu_rx_read_desc_pindex_start:
 table_read_desc_alloc:
     addi    r3, r0, RNMDR_TABLE_BASE
     //addi    r3, r0, 0xa5532000 
- 	CAPRI_NEXT_TABLE1_READ(d.u.read_cpu_desc_d.desc_pindex, 
+ 	CAPRI_NEXT_TABLE_READ_INDEX(1, d.u.read_cpu_desc_d.desc_pindex, 
                            TABLE_LOCK_EN,
                            cpu_rx_desc_alloc_start,
 	                       r3, 
                            RNMDR_TABLE_ENTRY_SIZE_SHFT,
-	                       0,
                            TABLE_SIZE_512_BITS)
 	nop.e
 	nop   

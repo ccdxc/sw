@@ -20,12 +20,11 @@ cpu_rx_read_page_pindex_start:
 table_read_page_alloc:
     addi    r3, r0, RNMPR_TABLE_BASE
     //addi    r3, r0, 0xa55b2000 
- 	CAPRI_NEXT_TABLE2_READ(d.u.read_cpu_page_d.page_pindex, 
+ 	CAPRI_NEXT_TABLE_READ_INDEX(2, d.u.read_cpu_page_d.page_pindex, 
                            TABLE_LOCK_EN,
                            cpu_rx_page_alloc_start,
 	                       r3, 
                            RNMPR_TABLE_ENTRY_SIZE_SHFT,
-	                       0,
                            TABLE_SIZE_512_BITS)
 	nop.e
 	nop   

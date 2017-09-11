@@ -38,7 +38,7 @@ tls_dec_read_header_process:
 table_read_alloc_tnmdr:
 	phvwri		p.tls_global_phv_split, 1
 	addi 		r3, r0, TNMDR_ALLOC_IDX
-	CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_dec_alloc_tnmdr_process,
+	CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_alloc_tnmdr_process,
 	                    r3, TABLE_SIZE_16_BITS)
 
 tls_read_desc_process_done:

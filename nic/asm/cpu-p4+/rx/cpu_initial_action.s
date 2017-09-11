@@ -26,13 +26,13 @@ cpu_rx_read_shared_stage0_start:
 
 table_read_DESC_SEMAPHORE:
     addi    r3, r0, CPUDR_ALLOC_IDX
-    CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, 
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, 
                          cpu_rx_read_desc_pindex_start,
                          r3,
                          TABLE_SIZE_16_BITS)
 table_read_PAGE_SEMAPHORE:
     addi    r3, r0, RNMPR_ALLOC_IDX
-    CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, 
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, 
                          cpu_rx_read_page_pindex_start,
                          r3,
                          TABLE_SIZE_16_BITS)

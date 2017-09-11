@@ -35,15 +35,13 @@ table_read_rx_bsq:
     bcf         [!c1], table_read_rx_bsq_dec
     nop
 table_read_rx_bsq_enc: 
-	CAPRI_NEXT_TABLE0_READ(k.p4_txdma_intr_qid, TABLE_LOCK_EN, tls_rx_bsq_enc_process,
-	                       r3, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                       TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_rx_bsq_enc_process,
+	                      r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
     b tls_post_crypto_process_done
     nop
 table_read_rx_bsq_dec: 
-	CAPRI_NEXT_TABLE0_READ(k.p4_txdma_intr_qid,TABLE_LOCK_EN, tls_rx_bsq_dec_process,
-	                       r3, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                       TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_rx_bsq_dec_process,
+	                       r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
 tls_post_crypto_process_done:   
 	nop.e
     nop

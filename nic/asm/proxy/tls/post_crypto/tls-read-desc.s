@@ -27,19 +27,19 @@ tls_read_desc_process:
     phvwr       p.to_s4_odesc, d.output_list_address
     CAPRI_OPERAND_DEBUG(d.output_list_address)
 table_read_bsq_consume:
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_bsq_consume_process,
-                          k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_bsq_consume_process,
+                          k.tls_global_phv_qstate_addr,
 	                      TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 
 table_read_RNMDR_FREE_IDX:
 
     addi    r3, r0, RNMDR_FREE_IDX
-	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tls_free_rnmdr,
+	CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tls_free_rnmdr,
 	                    r3, TABLE_SIZE_16_BITS)
 
 table_read_RNMPR_FREE_IDX:
 	addi 	r3, r0, RNMPR_FREE_IDX
-	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tls_free_rnmpr,
+	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_free_rnmpr,
 	                    r3, TABLE_SIZE_16_BITS)
 
 	

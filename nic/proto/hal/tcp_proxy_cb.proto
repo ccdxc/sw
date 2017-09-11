@@ -96,6 +96,9 @@ message TcpCbStats {
   uint64                pkts_rcvd                  = 2;
   uint64                pages_alloced              = 3;
   uint64                desc_alloced               = 4;
+  uint64                debug_num_pkt_to_mem       = 5;
+  uint64                debug_num_phv_to_mem       = 6;
+  uint32                debug_stage0_7_thread      = 7;
 
   uint64                bytes_sent                 = 10001;
   uint64                pkts_sent                  = 10002;

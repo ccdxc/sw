@@ -51,12 +51,11 @@ write_phv:
         add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
         phvwr           p.to_s1_sesq_ci_addr, r3
 
-        CAPRI_NEXT_TABLE0_READ(k.p4_txdma_intr_qid, TABLE_LOCK_EN,
+        CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                             tcp_tx_read_rx2tx_shared_extra_stage1_start,
                             k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33},
-                            TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET,
-                            TABLE_SIZE_512_BITS)
-        CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                            TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+        CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                          r3, TABLE_SIZE_64_BITS)
         nop.e
         nop

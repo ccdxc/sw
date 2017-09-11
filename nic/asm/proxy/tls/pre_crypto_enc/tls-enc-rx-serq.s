@@ -60,9 +60,9 @@ no_dma_cmd_enc:
 
 
 table_read_serq_consume:
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_enc_serq_consume_process,
-	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_serq_consume_process,
+	                    k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
+                        TABLE_SIZE_512_BITS)
         
 
 

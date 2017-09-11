@@ -57,8 +57,7 @@ table_read_QUEUE_BRQ:
     CAPRI_OPERAND_DEBUG(r3.dx)
         
     addi        r3, r0, BRQ_QPCB_BASE        
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_enc_queue_brq_process,
-                           r3, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-                       	   0, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process,
+                           r3, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

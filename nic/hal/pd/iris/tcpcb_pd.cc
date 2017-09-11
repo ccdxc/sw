@@ -367,10 +367,21 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
                                     stats.pages_alloced;
     tcpcb_pd->tcpcb->desc_alloced = write_serq_d.desc_alloced +
                                     stats.desc_alloced;
+    tcpcb_pd->tcpcb->debug_num_pkt_to_mem = write_serq_d.debug_num_pkt_to_mem +
+                                    stats.debug_num_pkt_to_mem;
+    tcpcb_pd->tcpcb->debug_num_phv_to_mem = write_serq_d.debug_num_phv_to_mem +
+                                    stats.debug_num_phv_to_mem;
 
-    HAL_TRACE_DEBUG("bytes_rcvd {} pkts_rcvd {} pages_alloced {} desc_alloced {}",
-            tcpcb_pd->tcpcb->bytes_rcvd, tcpcb_pd->tcpcb->pkts_rcvd,
-            tcpcb_pd->tcpcb->pages_alloced, tcpcb_pd->tcpcb->desc_alloced);
+    HAL_TRACE_DEBUG("bytes_rcvd {} pkts_rcvd {} pages_alloced {} desc_alloced {}"
+            " pkt2mem {} phv2mem {}", tcpcb_pd->tcpcb->bytes_rcvd,
+            tcpcb_pd->tcpcb->pkts_rcvd, tcpcb_pd->tcpcb->pages_alloced,
+            tcpcb_pd->tcpcb->desc_alloced, tcpcb_pd->tcpcb->debug_num_pkt_to_mem,
+            tcpcb_pd->tcpcb->debug_num_phv_to_mem);
+
+    tcpcb_pd->tcpcb->debug_stage0_7_thread = (write_serq_d.debug_stage4_7_thread << 16) |
+            write_serq_d.debug_stage0_3_thread;
+    HAL_TRACE_DEBUG("debug_stage0_7_thread 0x{0:x}",
+            tcpcb_pd->tcpcb->debug_stage0_7_thread);
 
     return HAL_RET_OK;
 }

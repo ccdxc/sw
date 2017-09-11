@@ -22,7 +22,8 @@ struct tcp_rx_tcp_rx_d d;
         .param          tcp_rx_sack_stage2_start
 	.align
 tcp_rx_process_stage1_start:
-        add		r7,r0, r0
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+    add		r7,r0, r0
 	phvwr		p.common_phv_debug_dol, d.u.tcp_rx_d.debug_dol
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	add		r6, r4,r0
@@ -588,16 +589,16 @@ table_read_setup_next:
 	bcf		[c7], table_read_SACK
 	nop
 table_read_RTT:
-	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
-	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
+	                    k.common_phv_qstate_addr, TCP_TCB_RTT_OFFSET,
+                        TABLE_SIZE_512_BITS)
 table_read_RNMDR_ALLOC_IDX:
-	addi 		r3, r0, RNMDR_ALLOC_IDX
-	CAPRI_NEXT_IDX1_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
+    addi        r3, r0, RNMDR_ALLOC_IDX
+	CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
 	                    r3, TABLE_SIZE_64_BITS)
 table_read_RNMPR_ALLOC_IDX:
-	addi 		r3, r0, RNMPR_ALLOC_IDX
-	CAPRI_NEXT_IDX2_READ(TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
+    addi        r3, r0, RNMPR_ALLOC_IDX
+	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
 	                    r3, TABLE_SIZE_64_BITS)
 table_read_SERQ_PRODUCER_IDX:
 	phvwri		p.common_phv_write_serq, 1
@@ -606,9 +607,9 @@ table_read_SERQ_PRODUCER_IDX:
 	nop
 table_read_SACK:	
 #if 0
-	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN, tcp_rx_sack_stage2_start,
-	                    k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_SACK_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_sack_stage2_start,
+	                    k.common_phv_qstate_addr, TCP_TCB_SACK_OFFSET,
+                        TABLE_SIZE_512_BITS)
 #endif
 	nop.e
 	nop

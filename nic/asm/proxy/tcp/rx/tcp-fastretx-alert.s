@@ -101,9 +101,10 @@ struct tcp_rx_tcp_fra_k k;
 struct tcp_rx_tcp_fra_tcp_fra_d d;
 
 %%
-        .param          tcp_rx_cc_stage4_start
+    .param          tcp_rx_cc_stage4_start
 	.align
 tcp_rx_fra_stage3_start:
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
 	/* r4 is loaded at the beginning of the stage with current timestamp value */
 	tblwr		d.curr_ts, r4
 
@@ -374,10 +375,9 @@ flow_fra_process_done:
 	phvwr		p.to_s4_snd_ssthresh, d.snd_ssthresh
 	
 table_read_CC:
-	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                     tcp_rx_cc_stage4_start, k.common_phv_qstate_addr,
-                    TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_CC_OFFSET,
-                    TABLE_SIZE_512_BITS)
+                    TCP_TCB_CC_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 

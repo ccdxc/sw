@@ -73,8 +73,8 @@ tls_sesq_produce_skip:
     phvwri      p.dma_cmd0_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
-	CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_post_crypto_stats_process,
-	                    k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_post_crypto_stats_process,
+	                    k.tls_global_phv_qstate_addr,
 	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
