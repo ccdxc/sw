@@ -363,6 +363,7 @@ header_type common_global_phv_t {
         qstate_addr             : 32;
         snd_una                 : 32;
         pkts_acked              : 8;
+        debug_dol               : 8;
         quick                   : 4;
         ca_event                : 4;
         ecn_flags               : 2;
@@ -376,7 +377,6 @@ header_type common_global_phv_t {
         pending_txdma           : 1;
         pending_sync_mss        : 1;
         pingpong                : 1;
-        debug_dol               : 1;
         rnmdr_full              : 1;
         rnmpr_full              : 1;
     }
