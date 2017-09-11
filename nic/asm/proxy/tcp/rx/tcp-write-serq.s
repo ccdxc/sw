@@ -141,6 +141,19 @@ ring_doorbell:
 flow_write_serq_process_done:
 stats:
 
+        smeqb           c1, k.common_phv_debug_dol, TCP_DDOL_TEST_ATOMIC_STATS, TCP_DDOL_TEST_ATOMIC_STATS
+        bcf             [!c1], pkts_rcvd_stats_update_start
+        nop
+        // Debug: Force increment of atomic stats
+debug_pkts_rcvd_stats_update_start:
+        phvwr           p.to_s7_pkts_rcvd, 1
+        phvwr           p.to_s7_pages_alloced, 1
+        phvwr           p.to_s7_desc_alloced, 1
+        // End debug stats increment, skip regular stats update
+        b               desc_alloced_stats_update_end
+        nop
+
+        // Non-debug stats increment
 pkts_rcvd_stats_update_start:
         CAPRI_STATS_INC(pkts_rcvd, 8, 1, d.pkts_rcvd)
 pkts_rcvd_stats_update:
