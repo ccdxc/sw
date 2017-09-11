@@ -6,6 +6,7 @@ import argparse
 import socket
 import re
 import time
+import signal
 
 from subprocess import Popen, PIPE
 
@@ -23,6 +24,7 @@ if nic_dir is None:
     sys.exit(1)
 
 pid = os.getpid()
+hal_process = None
 
 build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
@@ -32,12 +34,13 @@ sample_client_log = nic_dir + "/sample_client.log"
 
 lock_file = nic_dir + "/.run.pid"
 
-# Environment 
+# Environment
 
 os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib"
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 # build
+
 
 def build():
     print "* Starting build"
@@ -61,6 +64,7 @@ def build():
 
 # ASIC model
 
+
 def run_model(args):
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64"
 
@@ -69,8 +73,9 @@ def run_model(args):
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
-    if args.modellogs: 
-        p = Popen(["./cap_model", "+plog=info", "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
+    if args.modellogs:
+        p = Popen(["./cap_model", "+plog=info",
+                   "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
     else:
         p = Popen(["./cap_model"], stdout=log, stderr=log)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
@@ -95,6 +100,7 @@ def run_model(args):
 
 # HAL
 
+
 def run_hal():
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib"
@@ -104,6 +110,8 @@ def run_hal():
 
     log = open(hal_log, "w")
     p = Popen(["./obj/hal", "--config", "hal.json"], stdout=log, stderr=log)
+    global hal_process
+    hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
     print "- Log file: " + hal_log + "\n"
 
@@ -113,6 +121,8 @@ def run_hal():
 
     log2 = open(hal_log, "r")
     loop = 1
+    time.sleep(10)
+    return
 
     # Wait until gRPC is listening on port
 
@@ -122,9 +132,15 @@ def run_hal():
                 loop = 0
     log2.close()
 
+
 #    log.close()
 
+def dump_coverage_data():
+    hal_process.send_signal(signal.SIGUSR1)
+    time.sleep(5)
+
 # DOL
+
 
 def run_dol():
     dol_dir = nic_dir + "/../dol"
@@ -144,9 +160,10 @@ def run_dol():
     log.close()
 
     print "* DOL exit code " + str(p.returncode)
-    return p.returncode 
+    return p.returncode
 
 #    log.close()
+
 
 # Sample Client
 '''
@@ -173,6 +190,7 @@ def run_sample_client():
 
 # find_port()
 
+
 def find_port():
     s = socket.socket()
     s.bind(('', 0))
@@ -183,6 +201,7 @@ def find_port():
 
 # is_running()
 
+
 def is_running(pid):
     try:
         os.kill(pid, 0)
@@ -192,21 +211,22 @@ def is_running(pid):
 
 # cleanup()
 
-def cleanup(keep_logs = True):
-    #print "* Killing running processes:"
 
-    lock = open(lock_file, "r")    
+def cleanup(keep_logs=True):
+    # print "* Killing running processes:"
+
+    lock = open(lock_file, "r")
     for pid in lock:
         if is_running(int(pid)):
-            #print "- pid (" + pid.rstrip() + ")"
+            # print "- pid (" + pid.rstrip() + ")"
             os.kill(int(pid), 9)
-        #else:
-            #print "- pid (" + pid.rstrip() + ") - process isn't running"
+        # else:
+            # print "- pid (" + pid.rstrip() + ") - process isn't running"
     lock.close()
     os.remove(lock_file)
 
-    #print "\n* Removing log files:"
-    
+    # print "\n* Removing log files:"
+
     if keep_logs:
         return
 
@@ -219,16 +239,21 @@ def cleanup(keep_logs = True):
 
 # main()
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--build", action="store_true", help="run build")
-    parser.add_argument("-c", "--cleanup", action="store_true", help="cleanup running process")
-    parser.add_argument("--modellogs", action="store_true", help="run with model logs enabled")
+    parser.add_argument("-c", "--cleanup", action="store_true",
+                        help="cleanup running process")
+    parser.add_argument("--modellogs", action="store_true",
+                        help="run with model logs enabled")
+    parser.add_argument("--coveragerun", action="store_true",
+                        help="run with model logs enabled")
     args = parser.parse_args()
-    
+
     if args.cleanup:
         if os.path.isfile(lock_file):
-            cleanup(keep_logs = False)
+            cleanup(keep_logs=False)
         else:
             print "Nothing to cleanup"
 
@@ -247,11 +272,14 @@ def main():
         run_model(args)
         run_hal()
         status = run_dol()
-        cleanup(keep_logs = True)
+        if args.coveragerun:
+            dump_coverage_data()
+        cleanup(keep_logs=True)
         sys.exit(status)
     else:
         print "- build failed!"
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

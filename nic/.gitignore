@@ -1,5 +1,6 @@
 gen/*
 obj/*
+coverage/*
 core*
 model_sim/build/cap_model
 model_sim/build/model_cli

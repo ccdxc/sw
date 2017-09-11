@@ -1,0 +1,24 @@
+{
+  "make_cmd": "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8",
+  "nic_dirs": [
+    "hal",
+    "fte",
+    "utils",
+    "proto",
+    "agents"
+  ],
+  "remove_files": [
+    "/usr/include/*",
+    "/usr/local/*"
+  ],
+  "file_patterns": [
+    ".c",
+    ".cc"
+  ],
+  "cov_tests": [
+    {
+      "cmd": "./run.py --coveragerun",
+      "output_dir_name": "dol_cov"
+    }
+  ]
+}
