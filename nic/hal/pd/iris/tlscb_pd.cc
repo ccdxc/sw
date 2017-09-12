@@ -172,7 +172,6 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
     
     if(!del) {
-        data.u.read_tls_stg0_d.debug_dol = tlscb_pd->tlscb->debug_dol;
         HAL_TRACE_DEBUG("TLS TXDMA Stage0 Received debug_dol 0x{0:x}", tlscb_pd->tlscb->debug_dol);
 
         uint64_t pc_offset;
@@ -210,8 +209,22 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
             HAL_TRACE_DEBUG("Sesq base: 0x{0:x}", sesq_base);
             data.u.read_tls_stg0_d.sesq_base = htonl(sesq_base);    
         }
-        data.u.read_tls_stg0_d.debug_dol = tlscb_pd->tlscb->debug_dol;
-        HAL_TRACE_DEBUG("debug_dol = {}", data.u.read_tls_stg0_d.debug_dol);
+        data.u.read_tls_stg0_d.debug_dol = htonl(tlscb_pd->tlscb->debug_dol);
+        HAL_TRACE_DEBUG("debug_dol = 0x{0:x}", data.u.read_tls_stg0_d.debug_dol);
+
+        /* FIXME : */
+        data.u.read_tls_stg0_d.barco_command = (0x30000000);
+        HAL_TRACE_DEBUG("Barco Command = 0x{0:x}", data.u.read_tls_stg0_d.barco_command);
+
+        /* FIXME : */
+        data.u.read_tls_stg0_d.barco_key_desc_index = 0;
+        HAL_TRACE_DEBUG("Barco Key Desc Index = 0x{0:x}", data.u.read_tls_stg0_d.barco_key_desc_index);
+
+        data.u.read_tls_stg0_d.salt = htonl(tlscb_pd->tlscb->salt);
+        HAL_TRACE_DEBUG("Salt = 0x{0:x}", data.u.read_tls_stg0_d.salt);
+
+        data.u.read_tls_stg0_d.explicit_iv = tlscb_pd->tlscb->explicit_iv;
+        HAL_TRACE_DEBUG("Explicit IV = 0x{0:x}", data.u.read_tls_stg0_d.salt);
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);

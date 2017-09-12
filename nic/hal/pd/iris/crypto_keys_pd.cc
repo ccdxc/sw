@@ -16,18 +16,15 @@ char        key_mem[] = CAPRI_BARCO_KEY_MEM;
 hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    //indexer::status     is = indexer::SUCCESS;
+    indexer::status     is = indexer::SUCCESS;
     uint64_t            key_addr = 0;
 
-#if 0
     is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc((uint32_t*)key_idx);
     if (is != indexer::SUCCESS) {
         HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
+        *key_idx = -1;
         return HAL_RET_NO_RESOURCE;
     }
-#else
-    *key_idx = 0;
-#endif
     /* Setup the key descriptor with the corresponding key memory
     *  Currently statically carved and associated 
     */

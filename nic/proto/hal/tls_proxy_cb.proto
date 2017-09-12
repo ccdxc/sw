@@ -49,6 +49,8 @@ message TlsCbSpec {
   fixed64               dec_requests               = 21;
   fixed64               dec_completions            = 22;
   fixed64               dec_failures               = 23;
+  uint32                salt                       = 24;
+  uint64                explicit_iv                = 25;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request
