@@ -21,8 +21,8 @@ cpu_rx_read_desc_pindex_start:
     phvwr   p.s2_t1_s2s_desc_pindex, d.u.read_cpu_desc_d.desc_pindex
 
 table_read_desc_alloc:
-    addi    r3, r0, RNMDR_TABLE_BASE
-    //addi    r3, r0, 0xa5532000 
+    addui   r3, r0, hiword(RNMDR_TABLE_BASE)
+    addi    r3, r0, loword(RNMDR_TABLE_BASE)
  	CAPRI_NEXT_TABLE_READ_INDEX(1, d.u.read_cpu_desc_d.desc_pindex, 
                            TABLE_LOCK_EN,
                            cpu_rx_desc_alloc_start,

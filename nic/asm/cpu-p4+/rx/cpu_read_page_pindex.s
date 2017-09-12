@@ -18,7 +18,8 @@ cpu_rx_read_page_pindex_start:
     phvwr   p.s2_t2_s2s_page_pindex, d.u.read_cpu_page_d.page_pindex
 
 table_read_page_alloc:
-    addi    r3, r0, RNMPR_TABLE_BASE
+    addui   r3, r0, hiword(RNMPR_TABLE_BASE)
+    addi    r3, r0, loword(RNMPR_TABLE_BASE)
     //addi    r3, r0, 0xa55b2000 
  	CAPRI_NEXT_TABLE_READ_INDEX(2, d.u.read_cpu_page_d.page_pindex, 
                            TABLE_LOCK_EN,
