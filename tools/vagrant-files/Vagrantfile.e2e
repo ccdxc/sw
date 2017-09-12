@@ -135,7 +135,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_addr = ip_prefix + "#{n+11}"
     venice_ips = num_venice_nodes.times.collect { |n| ip_prefix + "#{n+11}" }
     naples_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+21}" }
-    hostsim_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+121}" }
+    hostsim_ips = num_naples_nodes.times.collect { |n| ip_prefix + "#{n+131}" }
     venice_node_names = num_venice_nodes.times.collect { |n| "node#{n+1}" }
 
     config.vm.define node_name do |node|
@@ -143,6 +143,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.box_version = "0.2"
       # Control Interface
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
+
+      # SSH port forwarding
+      node.vm.network :forwarded_port, guest: 22, host: 2222+n, id: "ssh", auto_correct: true
 
       # configure VM
       provider_cfg(node, 4, 4096, 2)
@@ -175,7 +178,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_addr = ip_prefix + "#{n+21}"
     host_net  = "host_net#{n+1}"
     dc_net    = "dc_net"
-    wired_mac = "02020202020" + "#{n+1}"
+    wired_mac = "0202020202" + (n+1).to_s(16).rjust(2, '0')
 
     config.vm.define node_name do |node|
       node.vm.box = "Dalee/alpine"
@@ -185,6 +188,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
       # Uplink Interface
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: get_user_specific_nw(dc_net), auto_config: false
+
+      # SSH port forwarding
+      node.vm.network :forwarded_port, guest: 22, host: 2232+n, id: "ssh", auto_correct: true
 
       # configure VM
       provider_cfg(node, 2, 2048, 4)
@@ -198,9 +204,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Host VMs
   num_naples_nodes.times do |n|
     node_name = "host#{n+1}"
-    node_addr = ip_prefix + "#{n+121}"
+    node_addr = ip_prefix + "#{n+131}"
     host_net  = "host_net#{n+1}"
-    wired_mac = "02020202020" + "#{n+1}"
+    wired_mac = "0202020202" + (n+1).to_s(16).rjust(2, '0')
 
     config.vm.define node_name do |node|
       node.vm.box = "jojimt/alpine_host"
@@ -210,6 +216,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet: get_user_specific_nw("control")
       # Hots Interface
       node.vm.network :private_network, ip: "0.0.0.0", mac: wired_mac, virtualbox__intnet: get_user_specific_nw(host_net), auto_config: false
+
+      # SSH port forwarding
+      node.vm.network :forwarded_port, guest: 22, host: 2342+n, id: "ssh", auto_correct: true
 
       # configure VM
       provider_cfg(node, 2, 2048, 3)

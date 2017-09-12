@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -27,6 +28,7 @@ const (
 var vcSim simapi.OrchSim
 var hostSims map[string]string
 var nwIFs map[string]string
+var lock sync.Mutex
 
 type cliOpts struct {
 	listenURL string
@@ -131,7 +133,9 @@ func createNwIF(r *http.Request) (interface{}, error) {
 		return resp, err
 	}
 
+	lock.Lock()
 	u1, ok := hostSims[req.SmartNIC]
+	lock.Unlock()
 	if !ok {
 		resp.ErrorMsg = "req.SmartNIC is unrecognized"
 		return resp, fmt.Errorf("snic not recognized")
@@ -143,7 +147,9 @@ func createNwIF(r *http.Request) (interface{}, error) {
 		return resp, err
 	}
 
+	lock.Lock()
 	nwIFs[rr.UUID] = u1
+	lock.Unlock()
 
 	return rr, nil
 }
@@ -152,7 +158,9 @@ func deleteNwIF(r *http.Request) (interface{}, error) {
 	resp := simapi.NwIFDelResp{}
 	kvs := mux.Vars(r)
 	nwif := kvs["id"]
+	lock.Lock()
 	u1, ok := nwIFs[nwif]
+	lock.Unlock()
 	if !ok {
 		resp.ErrorMsg = "nwif-id is unrecognized"
 		return resp, fmt.Errorf("nwif-id not recognized")

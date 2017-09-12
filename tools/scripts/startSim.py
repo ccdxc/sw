@@ -214,8 +214,8 @@ try:
     for idx, node in enumerate(nodes):
         # creat the veth pair for ovs
         node.runCmd("sudo ip link add strunk0 type veth peer name ntrunk0")
-        node.runCmd("sudo ifconfig ntrunk0 hw ether 02:02:02:02:02:0" + str(idx+1) + " promisc up")
-        node.runCmd("sudo ifconfig strunk0 hw ether 02:02:02:02:02:0" + str(idx+1) + " promisc up")
+        node.runCmd("sudo ifconfig ntrunk0 hw ether 02:02:02:02:02:" + '{:02x}'.format(idx+1) + " promisc up")
+        node.runCmd("sudo ifconfig strunk0 hw ether 02:02:02:02:02:" + '{:02x}'.format(idx+1) + " promisc up")
         node.runCmd("sudo ifconfig " + args.hostif + " promisc up")
         node.runCmd("sudo ifconfig " + args.uplink + " promisc up")
 
@@ -237,7 +237,7 @@ try:
     snics = []
     for idx, addr in enumerate(simAddrList):
         hsims.append("http://" + addr + ":5050")
-        snics.append("02:02:02:02:02:0" + str(idx+1))
+        snics.append("02:02:02:02:02:" + '{:02x}'.format(idx+1))
 
     # start vcsim
     vcsim = Node("pen-master", args.user, args.password, args.simbin)
@@ -247,7 +247,7 @@ try:
     print "################### Started Simulation agents #####################"
 
     # Create a network
-    createNetwork("pen-master", "default", "10.1.1.0/24", "10.1.1.254", 2)
+    createNetwork("pen-master", "default", "10.1.0.0/16", "10.1.254.254", 2)
     print "################### Created default network #####################"
 except Exception, err:
     print "ERROR while running the script: "
