@@ -115,14 +115,12 @@ def GetExpectedPacketCos(testcase, packet):
     if testcase.config.flow.eg_qos.cos_rw.get():
         return testcase.config.flow.eg_qos.cos.get()
 
-    if testcase.config.flow.IsL2():
-        return testcase.config.flow.eg_qos.cos.get()
-    # Source segment native.
-    if testcase.config.src.segment.native == True and\
-        IsPriorityTagged(testcase.pvtdata) == False:
-        return 0
-    
-    return testcase.config.flow.eg_qos.cos.get() 
+    # If we sent pkt with a tag, we should receive with same cos we sent with
+    if testcase.config.src.segment.native == False or \
+            IsPriorityTagged(testcase.pvtdata) == True:
+        return testcase.config.flow.eg_qos.cos.get() 
+
+    return 0
 
 def __get_expected_packet(testcase):
     if testcase.config.flow.IsDrop():
