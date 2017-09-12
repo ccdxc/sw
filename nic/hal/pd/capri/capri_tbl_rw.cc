@@ -306,14 +306,11 @@ static int capri_stats_region_init()
     return CAPRI_OK;
 }
 
-#define CAPRI_P4PLUS_RX_STAGE0_QSTATE_TBL_ID              1
-#define CAPRI_P4PLUS_RX_STAGE0_QSTATE_TBL_ID_OFFSET_64    2
-#define CAPRI_P4PLUS_TX_STAGE0_QSTATE_TBL_ID              1
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0            0
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
-static void capri_program_p4plus_table_mpu_pc_for_stage0(int tbl_id, cap_te_csr_t *te_csr, 
-                                                         uint32_t pc, uint32_t offset)
+static void capri_program_p4plus_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr, 
+                                              uint32_t pc, uint32_t offset)
 {
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -326,8 +323,8 @@ static void capri_program_p4plus_table_mpu_pc_for_stage0(int tbl_id, cap_te_csr_
 #define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 
-static void capri_program_p4plus_sram_table_mpu_pc_for_stage0(int tbl_id, cap_te_csr_t *te_csr, 
-                                                              uint32_t pc)
+static void capri_program_p4plus_sram_table_mpu_pc(int tbl_id, cap_te_csr_t *te_csr, 
+                                                   uint32_t pc)
 {
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -339,14 +336,12 @@ static void capri_program_p4plus_sram_table_mpu_pc_for_stage0(int tbl_id, cap_te
 #define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG    "rx_stage0_load_rdma_params.bin"
 #define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG    "tx_stage0_load_rdma_params.bin"
 
-#define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_TBLID 2
-#define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_TBLID 4
-
 static int capri_table_p4plus_init()
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
+    p4pd_table_properties_t tbl_ctx;
     
     // Resolve the p4plus rxdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -362,19 +357,24 @@ static int capri_table_p4plus_init()
                     (char *) CAPRI_P4PLUS_RXDMA_PROG,
                     capri_action_p4plus_asm_base);
 
-    // Program table config 0 with the PC
-    te_csr = &cap0.pcr.te[0];
-    capri_program_p4plus_table_mpu_pc_for_stage0(
-            CAPRI_P4PLUS_RX_STAGE0_QSTATE_TBL_ID, te_csr, 
+    // Program app-header table config @(stage, stage_tableid) with the PC
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE, 
+                                     &tbl_ctx);
+    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+    capri_program_p4plus_table_mpu_pc(
+            tbl_ctx.stage_tableid, te_csr, 
             (uint32_t) capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
-    capri_program_p4plus_table_mpu_pc_for_stage0(
-            CAPRI_P4PLUS_RX_STAGE0_QSTATE_TBL_ID_OFFSET_64, te_csr, 
+
+    // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64, 
+                                     &tbl_ctx);
+    capri_program_p4plus_table_mpu_pc(
+            tbl_ctx.stage_tableid, te_csr, 
             (uint32_t) capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
-  
     
-    // Resolve the p4plus rxdma stage 0 RDMA params SRAM table 
+    // Resolve the p4plus rxdma RDMA params SRAM table 
     // program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
@@ -389,10 +389,12 @@ static int capri_table_p4plus_init()
                     (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
                     capri_action_p4plus_asm_base);
 
-    // Program table config 3 with the PC
-    te_csr = &cap0.pcr.te[0 /*stage-id*/];
-    capri_program_p4plus_sram_table_mpu_pc_for_stage0(
-                       CAPRI_P4PLUS_RXDMA_RDMA_SRAM_TBLID,
+    // Program table config @(stage, stage_tableid) with the PC
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_RDMA_PARAMS_TABLE, 
+                                     &tbl_ctx);
+    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+    capri_program_p4plus_sram_table_mpu_pc(
+                       tbl_ctx.stage_tableid,
                        te_csr, 
                        (uint32_t) capri_action_p4plus_asm_base);
  
@@ -411,10 +413,12 @@ static int capri_table_p4plus_init()
                     (char *) CAPRI_P4PLUS_TXDMA_PROG,
                     capri_action_p4plus_asm_base);
 
-    // Program table config 0 with the PC
-    te_csr = &cap0.pct.te[0];
-    capri_program_p4plus_table_mpu_pc_for_stage0(
-            CAPRI_P4PLUS_TX_STAGE0_QSTATE_TBL_ID, te_csr, 
+    // Program table config @(stage, stage_tableid) with the PC
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0, 
+                                     &tbl_ctx);
+    te_csr = &cap0.pct.te[tbl_ctx.stage];
+    capri_program_p4plus_table_mpu_pc(
+            tbl_ctx.stage_tableid, te_csr, 
             (uint32_t) capri_action_p4plus_asm_base, 0);
 
     // Resolve the p4plus txdma stage 0 RDMA params SRAM table 
@@ -432,14 +436,16 @@ static int capri_table_p4plus_init()
                     (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG,
                     capri_action_p4plus_asm_base);
 
-    // Program table config 3 with the PC
-    te_csr = &cap0.pct.te[0 /*stage-id*/];
-    capri_program_p4plus_sram_table_mpu_pc_for_stage0(
-                       CAPRI_P4PLUS_TXDMA_RDMA_SRAM_TBLID,
+    // Program table config @(stage, stage_tableid) with the PC
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_RDMA_PARAMS_TABLE, 
+                                     &tbl_ctx);
+    te_csr = &cap0.pct.te[tbl_ctx.stage];
+    capri_program_p4plus_sram_table_mpu_pc(
+                       tbl_ctx.stage_tableid,
                        te_csr, 
                        (uint32_t) capri_action_p4plus_asm_base);
 
-    return CAPRI_OK;
+    return CAPRI_OK ;
 }
 
 int capri_table_rw_init()
