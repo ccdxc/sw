@@ -703,7 +703,7 @@ modules:
 
     - module:
         name    : RDMA_RX_SEND_ONLY
-        enable  : True
+        enable  : False
         package : test.rdma
         module  : rdma
         spec    : rx_send_only.testspec
