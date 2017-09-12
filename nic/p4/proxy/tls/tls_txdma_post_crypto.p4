@@ -75,6 +75,8 @@ header_type to_stage_5_phv_t {
         rnmpr_free                      : 8;
         enc_completions                 : 8;
         dec_completions                 : 8;
+        debug_stage0_3_thread           : 16;
+        debug_stage4_7_thread           : 16;
     }
 }
 
@@ -154,19 +156,6 @@ metadata dma_cmd_phv2mem_t dma_cmd5;
 metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
-
-
-#define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                         \
-rnmdr_free,rnmpr_free, enc_completions, dec_completions, pad
-#
-
-#define GENERATE_POST_CRYPTO_STATS_D                                                                \
-    modify_field(tls_post_crypto_stats_d.rnmdr_free, rnmdr_free);                                   \
-    modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                   \
-    modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                         \
-    modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                         \
-    modify_field(tls_post_crypto_stats_d.pad, pad);
-
 
 
 
@@ -258,6 +247,8 @@ action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
     modify_field(to_s5_scratch.rnmpr_free, to_s5.rnmpr_free);
     modify_field(to_s5_scratch.enc_completions, to_s5.enc_completions);
     modify_field(to_s5_scratch.dec_completions, to_s5.dec_completions);
+    modify_field(to_s5_scratch.debug_stage0_3_thread, to_s5.debug_stage0_3_thread);
+    modify_field(to_s5_scratch.debug_stage4_7_thread, to_s5.debug_stage4_7_thread);
 
 
     GENERATE_STG_POST_CRYPTO_STATS_D

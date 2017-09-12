@@ -22,7 +22,7 @@ struct tx_table_s2_t2_read_tnmpr_d d ;
 	    .align
 
 tls_enc_alloc_tnmpr_process:
-
+        CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 
 	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.tnmpr_pidx

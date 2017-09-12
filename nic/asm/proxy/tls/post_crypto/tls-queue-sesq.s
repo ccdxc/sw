@@ -23,6 +23,7 @@ struct tx_table_s0_t0_d d;
     .param      tls_post_crypto_stats_process
 
 tls_queue_sesq_process:
+    CAPRI_SET_DEBUG_STAGE4_7(p.to_s5_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
 	add		    r4, r5, r0

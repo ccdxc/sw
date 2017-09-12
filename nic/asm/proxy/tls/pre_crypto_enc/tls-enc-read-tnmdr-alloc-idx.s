@@ -20,7 +20,7 @@ struct tx_table_s2_t1_read_tnmdr_d d ;
         .param          TNMDR_TABLE_BASE
 	    .align
 tls_enc_alloc_tnmdr_process:
-
+        CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_1)
         CAPRI_CLEAR_TABLE1_VALID
 
 	    phvwr		p.s3_t1_s2s_tnmdr_pidx, d.tnmdr_pidx

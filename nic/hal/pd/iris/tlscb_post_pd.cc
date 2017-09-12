@@ -33,11 +33,15 @@ p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->rnmpr_free = ntohs(data.u.tls_post_crypto_stats5_d.rnmpr_free);
     tlscb_pd->tlscb->enc_completions = ntohs(data.u.tls_post_crypto_stats5_d.enc_completions);
     tlscb_pd->tlscb->dec_completions = ntohs(data.u.tls_post_crypto_stats5_d.dec_completions);
+    tlscb_pd->tlscb->post_debug_stage0_7_thread = 
+      (ntohs(data.u.tls_post_crypto_stats5_d.debug_stage4_7_thread) << 16) |
+      ntohs(data.u.tls_post_crypto_stats5_d.debug_stage0_3_thread);
     HAL_TRACE_DEBUG("hwid : 0x{0:x}", hwid);    
     HAL_TRACE_DEBUG("Received rnmdr free: 0x{0:x}", tlscb_pd->tlscb->rnmdr_free);
     HAL_TRACE_DEBUG("Received rnmpr free: 0x{0:x}", tlscb_pd->tlscb->rnmpr_free);
     HAL_TRACE_DEBUG("Received enc completions: 0x{0:x}", tlscb_pd->tlscb->enc_completions);
     HAL_TRACE_DEBUG("Received dec completions: 0x{0:x}", tlscb_pd->tlscb->dec_completions);
+    HAL_TRACE_DEBUG("Received post debug stage0_7 thread: 0x{0:x}", tlscb_pd->tlscb->post_debug_stage0_7_thread);
     return ret;
 }
 

@@ -22,6 +22,7 @@ struct tx_table_s4_t0_d d	;
 tls_enc_bld_barco_req_process:        
 
 table_read_QUEUE_BRQ:
+    CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_status_address, k.{to_s4_idesc}.dx
     phvwr       p.barco_desc_input_list_address, k.{to_s4_idesc}.dx

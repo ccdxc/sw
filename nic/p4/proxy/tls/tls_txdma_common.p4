@@ -157,12 +157,14 @@ header_type tls_stage_pre_crypto_stats_d_t {
         tnmpr_alloc                     : 16;
         enc_requests                    : 16;
         dec_requests                    : 16;
-        // TBD: Total used   : 64 bits, pending: 448
-        pad                             : 448;
+        debug_stage0_3_thread           : 16;
+        debug_stage4_7_thread           : 16;
+        // TBD: Total used   : 96 bits, pending: 416
+        pad                             : 416;
     }
 }
 #define STG_PRE_CRYPTO_STATS_ACTION_PARAMS                                                          \
-tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, pad
+tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_PRE_CRYPTO_STATS_D                                                             \
@@ -170,6 +172,8 @@ tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, pad
     modify_field(tls_pre_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                  \
     modify_field(tls_pre_crypto_stats_d.enc_requests, enc_requests);                                \
     modify_field(tls_pre_crypto_stats_d.dec_requests, dec_requests);                                \
+    modify_field(tls_pre_crypto_stats_d.debug_stage0_3_thread, debug_stage0_3_thread);              \
+    modify_field(tls_pre_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);              \
     modify_field(tls_pre_crypto_stats_d.pad, pad);
 
 
@@ -179,13 +183,15 @@ header_type tls_stage_post_crypto_stats_d_t {
         rnmpr_free                      : 16;
         enc_completions                 : 16;
         dec_completions                 : 16;
-        // TBD: Total used   : 64 bits, pending: 448
-        pad                             : 448;
+        debug_stage0_3_thread           : 16;
+        debug_stage4_7_thread           : 16;
+        // TBD: Total used   : 96 bits, pending: 416
+        pad                             : 416;
     }
 }
 
 #define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                             \
-rnmdr_free,rnmpr_free, enc_completions, dec_completions, pad
+rnmdr_free,rnmpr_free, enc_completions, dec_completions, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_POST_CRYPTO_STATS_D                                                                \
@@ -193,5 +199,7 @@ rnmdr_free,rnmpr_free, enc_completions, dec_completions, pad
     modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                       \
     modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                             \
     modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                             \
+    modify_field(tls_post_crypto_stats_d.debug_stage0_3_thread, debug_stage0_3_thread);                 \
+    modify_field(tls_post_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);                 \
     modify_field(tls_post_crypto_stats_d.pad, pad);
 

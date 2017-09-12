@@ -51,6 +51,8 @@ message TlsCbSpec {
   fixed64               dec_failures               = 23;
   uint32                salt                       = 24;
   uint64                explicit_iv                = 25;
+  uint32                pre_debug_stage0_7_thread  = 26;
+  uint32                post_debug_stage0_7_thread = 27;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

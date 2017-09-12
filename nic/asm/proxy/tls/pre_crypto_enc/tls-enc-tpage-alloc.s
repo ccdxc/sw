@@ -16,7 +16,7 @@ struct d_struct {
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct tx_table_s2_t3_k k             ;
+
 struct phv_ p;
 struct d_struct d;
 
@@ -24,7 +24,7 @@ struct d_struct d;
 	
 	    .align
 tls_enc_tpage_alloc_process:
-
+        CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 
 	    phvwr		p.to_s5_opage, d.opage

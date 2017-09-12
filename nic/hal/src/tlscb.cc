@@ -231,6 +231,8 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->set_dec_requests(rtlscb.dec_requests);
     rsp->mutable_spec()->set_dec_completions(rtlscb.dec_completions);
     rsp->mutable_spec()->set_dec_failures(rtlscb.dec_failures);
+    rsp->mutable_spec()->set_pre_debug_stage0_7_thread(rtlscb.pre_debug_stage0_7_thread);
+    rsp->mutable_spec()->set_post_debug_stage0_7_thread(rtlscb.post_debug_stage0_7_thread);
 
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);
