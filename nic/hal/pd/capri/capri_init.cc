@@ -5,7 +5,7 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 31
+#define CAPRI_P4PLUS_NUM_SYMBOLS 32
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -283,6 +283,11 @@ capri_p4p_asm_init()
     symbols[30].num_params = 1;
     symbols[30].params[0].name = TNMPR_TABLE_BASE;
     symbols[30].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[31].name = "esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.bin";
+    symbols[31].num_params = 1;
+    symbols[31].params[0].name = IPSEC_CB_BASE;
+    symbols[31].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     
