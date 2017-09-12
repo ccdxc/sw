@@ -64,7 +64,7 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/eg_qos/cos
+                prio: callback://networking/packets/GetExpectedPacketCos
             ipv4:
                 tos : ref://testcase/config/flow/eg_qos/dscp
             ipv6:

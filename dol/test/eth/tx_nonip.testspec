@@ -47,7 +47,7 @@ buffers:
         id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           hw   : True
+           bind : True
            size : ref://testcase/packets/id=IN_PKT/size
            data : ref://testcase/packets/id=IN_PKT/rawbytes
 
@@ -69,7 +69,7 @@ trigger:
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
         fields:
-            upd : 1
+            upd : 3
 
 expect:
     packets:

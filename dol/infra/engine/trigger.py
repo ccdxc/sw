@@ -800,6 +800,10 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     epkt = penscapy.Parse(bytes(epktbuf))
                     apkt = penscapy.Parse(bytes(apktbuf))
                     pktresult = PacketCompare(epkt, apkt, ignore_pkt_cmp)
+                    self._logger.info("============ EXPECTED Packet ============")
+                    penscapy.ShowPacket(epkt, self._logger)
+                    self._logger.info("============ ACTUAL Packet ==============")
+                    penscapy.ShowPacket(apkt, self._logger)
                     self.print_packet_mismatch(pktresult)
                     if pktresult.matched() == False:
                         self._logger.error("Packet compare result = Mismatch")

@@ -80,6 +80,9 @@ def __get_packet_encap_vlan(testcase, cfg):
     return None
 
 def __get_packet_encap_vxlan(testcase, cfg):
+    if testcase.config.flow.IsNat() == False and\
+        cfg.endpoint.remote == False:
+        return None
     if cfg.tenant.IsOverlayVxlan():
         return __get_template('ENCAP_VXLAN')
     return None

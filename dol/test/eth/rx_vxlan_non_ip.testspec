@@ -1,22 +1,21 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://overlay=VXLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://overlay=VXLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://any
+    flow            : filter://fwtype=L2
     maxflows        : 1
-
 
 packets:
     - packet:
-        id          : BASE_PKT    # Base Packet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH
         headers     :
@@ -29,15 +28,25 @@ packets:
 
 
     - packet:
-        id          : PKT1    # Input packet 
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
 
     - packet:
-        id          : PKT2    # Expected packet 
+        id          : PKT2 # Expected Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
@@ -47,15 +56,15 @@ packets:
 
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           bind: True
-           size: 1518
-           data: None
+            bind: True
+            size: 1518
+            data: None
 
     - buffer:
-        id      : BUF2
+        id      : BUF2 # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: False
@@ -64,7 +73,7 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
@@ -72,7 +81,7 @@ descriptors:
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2
+        id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF2

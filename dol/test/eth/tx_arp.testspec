@@ -54,7 +54,7 @@ buffers:
         id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           hw  : True
+           bind: True
            size: ref://testcase/packets/id=PKT1/size
            data: ref://testcase/packets/id=PKT1/rawbytes
 
