@@ -178,8 +178,91 @@ struct ${table}_${actionname}_d {
     __pad_adata_key_gap_bits : ${pad_data_bits};
 //::                        #endif
 //::                    #endif
-//::                    # Table Key bits -- Pad it here
+//::                    if pddict['tables'][table]['include_k_in_d']:
+//::                        startindex = 0
+//::                        endindex = len(pddict['tables'][table]['asm_ki_fields'])
+//::                        keyencountered = False
+//::                        for fields in pddict['tables'][table]['asm_ki_fields']:
+//::                            (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                            flit, flitoffset, typestr, hdrname) = fields
+//::                            if not keyencountered:
+//::                                if typestr != 'K':
+//::                                    startindex += 1
+//::                                else:
+//::                                    keyencountered = True
+//::                                #endif
+//::                            #endif
+//::                        #endfor
+//::                        keyencountered = False
+//::                        for fields in reversed(pddict['tables'][table]['asm_ki_fields']):
+//::                            (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                            flit, flitoffset, typestr, hdrname) = fields
+//::                            if not keyencountered:
+//::                                if typestr != 'K':
+//::                                    endindex -= 1
+//::                                else:
+//::                                    keyencountered = True
+//::                                    break
+//::                                #endif
+//::                            #endif
+//::                        #endfor
+//::                        for fields in pddict['tables'][table]['asm_ki_fields'][startindex:endindex]:
+//::                            if fields[0] == 'unionized':
+//::                                ustr, uflds = fields
+//::                                all_fields_of_header_in_same_byte = {}
+//::                                for fields in uflds:
+//::                                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                     flit, flitoffset, typestr, hdrname) = fields
+//::                                    if hdrname in all_fields_of_header_in_same_byte.keys():
+//::                                        all_fields_of_header_in_same_byte[hdrname] += p4fldwidth 
+//::                                    else:
+//::                                        all_fields_of_header_in_same_byte[hdrname] = p4fldwidth 
+//::                                    #endif
+//::                                #endfor
+//::                                max_fld_union_key_len = max(x for x in all_fields_of_header_in_same_byte.values())
+    union { /* Sourced from field/hdr union */
+//::                                all_fields_of_header_in_same_byte = []
+//::                                for fields in uflds:
+//::                                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                     flit, flitoffset, typestr, hdrname) = fields
+//::                                    if p4fldwidth == max_fld_union_key_len:
+        /* Field Type = ${typestr} */
+        ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                                    else:
+//::                                        if hdrname not in all_fields_of_header_in_same_byte:
+        struct {            
+//::                                            all_fields_of_header_in_same_byte.append(hdrname)
+//::                                            _total_p4fldwidth = 0
+//::                                            for _fields in uflds:
+//::                                                (_multip4fldname, _p4fldname, _p4fldwidth, _phvbit, \
+//::                                                _flit, _flitoffset, _typestr, _hdrname) = _fields
+//::                                                if _hdrname == hdrname:
+            /* K/I = ${_typestr} */
+            ${_multip4fldname} : ${_p4fldwidth}; /* phvbit[${_phvbit}], Flit[${_flit}], FlitOffset[${_flitoffset}] */
+//::                                                    _total_p4fldwidth += _p4fldwidth
+//::                                                #endif
+//::                                            #endfor
+//::                                            padlen = max_fld_union_key_len - _total_p4fldwidth
+//::                                            if padlen:
+            /* Padded to align with unionized p4field */
+            _pad_${p4fldname} : ${padlen};
+//::                                            #endif
+        };
+//::                                        #endif
+//::                                    #endif
+//::                                #endfor
+    };
+//::                            else:
+//::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                flit, flitoffset, typestr, hdrname) = fields
+    /* FieldType= ${typestr} */
+    ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                            #endif
+//::                        #endfor
+//::                    else:
+//::                        # Table Key bits -- Pad it here
     __pad_key_bits : ${pddict['tables'][table]['match_key_bit_length']}; /* Entire Contiguous Keybits */
+//::                    #endif
 //::                    kd_size = mat_key_start_bit + pddict['tables'][table]['match_key_bit_length']
 //::                #endif
 //::                if adata_bits_before_key:

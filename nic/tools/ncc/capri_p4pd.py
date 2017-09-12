@@ -1100,6 +1100,7 @@ class capri_p4pd:
         alltables = OrderedDict()
         for table_name, ctable in self.alltables.items():
             tdict = {}
+            tdict['include_k_in_d'] = True if 'include_k_in_d' in ctable.p4_table._parsed_pragmas else False
             # Build input field list needed to generate 
             # MPU ASM structures. For ASM KI / K , K will
             # be built using tdict[keys/not_my_key_bytes/bits]

@@ -278,6 +278,7 @@ action flow_hash_info(entry_valid, export_en,
 @pragma stage 1
 @pragma hbm_table
 @pragma hash_type 0
+@pragma include_k_in_d
 table flow_hash {
     reads {
         flow_lkp_metadata.lkp_inst  : exact;
