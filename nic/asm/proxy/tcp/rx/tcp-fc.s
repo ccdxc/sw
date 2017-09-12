@@ -15,13 +15,13 @@ struct tcp_rx_tcp_cc_k k;              // TODO : define own k for s5
 struct tcp_rx_tcp_cc_tcp_cc_d d;       // TODO : define own k for s5
 	
 %%
-        .param          tcp_rx_write_serq_stage6_start
+    .param          tcp_rx_write_serq_stage6_start
 	.align	
 tcp_rx_fc_stage5_start:
+    CAPRI_SET_DEBUG_STAGE4_7(p.s6_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
         // TODO : FC stage has to be implemented
-	CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_write_serq_stage6_start, k.common_phv_qstate_addr,
-                TCP_TCB_TABLE_ENTRY_SIZE_SHFT, TCP_TCB_WRITE_SERQ_OFFSET,
-                TABLE_SIZE_512_BITS)
+                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

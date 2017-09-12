@@ -74,7 +74,7 @@ no_dma_cmd:
 	add		    r2, r2, r3
 
 table_read_tls_header:	
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, 0, 0, TABLE_SIZE_8_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_8_BITS)
 	b		    tls_dec_rx_serq_process_done
 	nop
 	/* md->next_tls_hdr_offset = dtlsp->next_tls_hdr_offset; */
@@ -88,9 +88,9 @@ tls_no_read_header:
 	nop
 
 table_read_BLD_BARCO_DEC_REQ:
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_dec_bld_barco_req_process,
-                           k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
-                       	   TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_bld_barco_req_process,
+                           k.tls_global_phv_qstate_addr, TLS_TCB_CRYPT_OFFSET,
+                           TABLE_SIZE_512_BITS)
 
 
 tls_dec_rx_serq_process_done:

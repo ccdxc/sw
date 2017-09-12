@@ -33,8 +33,8 @@ tls_bsq_consume_process:
 
 	memwr.dx  	 r4, r3
 table_read_QUEUE_SESQ:
-    CAPRI_NEXT_TABLE0_READ(k.tls_global_phv_fid, TABLE_LOCK_EN, tls_queue_sesq_process,
-                           k.tls_global_phv_qstate_addr, TLS_TCB_TABLE_ENTRY_SIZE_SHFT,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_queue_sesq_process,
+                           k.tls_global_phv_qstate_addr,
                        	   TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e
 	nop

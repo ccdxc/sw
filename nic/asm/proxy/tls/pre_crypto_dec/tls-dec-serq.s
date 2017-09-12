@@ -37,6 +37,6 @@ tls_dec_pre_crypto_process:
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
 table_read_DESC:
-    CAPRI_NEXT_IDX0_READ(TABLE_LOCK_DIS, tls_dec_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)
 	nop.e
     nop

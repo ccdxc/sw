@@ -281,5 +281,6 @@
 /* debug_dol encodings - need to match defines in tcp_proxy.py */
 #define TCP_DDOL_PKT_TO_SERQ            1
 #define TCP_DDOL_TEST_ATOMIC_STATS      2
+#define TCP_DDOL_DONT_QUEUE_TO_SERQ     4
 
 #endif /* #ifndef CONSTANTS_H */

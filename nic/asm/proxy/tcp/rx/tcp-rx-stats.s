@@ -41,6 +41,16 @@ desc_alloced_atomic_stats_update_start:
                 TCP_TCB_RX_STATS_OFFSET + 3 * 8, k.to_s7_desc_alloced)
 desc_alloced_atomic_stats_update_done:
 
+debug_num_phv_to_mem_atomic_stats_update_start:
+        CAPRI_ATOMIC_STATS_INCR1(debug_num_phv_to_mem, k.common_phv_qstate_addr,
+                TCP_TCB_RX_STATS_OFFSET + 4 * 8, k.to_s7_debug_num_phv_to_mem)
+debug_num_phv_to_mem_atomic_stats_update_done:
+
+debug_num_pkt_to_mem_atomic_stats_update_start:
+        CAPRI_ATOMIC_STATS_INCR1(debug_num_pkt_to_mem, k.common_phv_qstate_addr,
+                TCP_TCB_RX_STATS_OFFSET + 5 * 8, k.to_s7_debug_num_pkt_to_mem)
+debug_num_pkt_to_mem_atomic_stats_update_done:
+
 tcp_rx_stats_stage7_done:
 	nop.e
 	nop

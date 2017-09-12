@@ -17,9 +17,9 @@ cpu_rx_desc_alloc_start:
 
 desc_alloc_done:
     add r3, r0, k.common_phv_qstate_addr 
-    CAPRI_NEXT_TABLE0_READ(0, TABLE_LOCK_EN,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                            cpu_rx_write_arq_start, k.common_phv_qstate_addr,
-                           CPU_CB_TABLE_ENTRY_SIZE_SHFT, CPU_CB_WRITE_ARQRX_OFFSET,
+                           CPU_CB_WRITE_ARQRX_OFFSET,
                            TABLE_SIZE_512_BITS)
     nop.e
     nop

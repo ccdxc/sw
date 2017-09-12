@@ -65,8 +65,8 @@ typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
     uint64_t pkts_rcvd;
     uint64_t pages_alloced;
     uint64_t desc_alloced;
-    uint64_t stats4;
-    uint64_t stats5;
+    uint64_t debug_num_phv_to_mem;
+    uint64_t debug_num_pkt_to_mem;
     uint64_t stats6;
     uint64_t stats7;
     uint64_t stats8;

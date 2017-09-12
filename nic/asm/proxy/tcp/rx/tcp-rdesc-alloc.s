@@ -28,7 +28,8 @@ struct tcp_rx_rdesc_alloc_rdesc_alloc_d d;
 %%
 	.align
 tcp_rx_rdesc_alloc_stage_3_start:
-        CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
 
 	phvwr		p.to_s6_descr, d.desc
 	add		r3, r0, d.desc	// TODO debug instruction
@@ -39,9 +40,8 @@ tcp_rx_rdesc_alloc_stage_3_start:
 
 table_read_SACK4:
 	addi		r3, r0, TCP_TCB_TABLE_BASE
-	CAPRI_NEXT_TABLE1_READ(k.common_phv_fid, TABLE_LOCK_EN, flow_sack4_process,
-	                    r3, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
-	                    TCP_TCB_SACK_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, flow_sack4_process,
+	                    r3, TCP_TCB_SACK_OFFSET, TABLE_SIZE_512_BITS)
 
 flow_rdesc_alloc_process_done:	
 	nop.e

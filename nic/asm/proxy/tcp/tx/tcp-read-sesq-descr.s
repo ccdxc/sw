@@ -28,9 +28,9 @@ tcp_tx_sesq_read_descr_stage2_start:
         phvwr           p.to_s3_offset, d.{O0}.wx
         phvwr           p.to_s3_len, d.{L0}.wx
 
-        CAPRI_NEXT_TABLE0_READ(k.common_phv_fid, TABLE_LOCK_EN,
+        CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                             tcp_tx_process_stage3_start,
-                            k.common_phv_qstate_addr, TCP_TCB_TABLE_ENTRY_SIZE_SHFT,
+                            k.common_phv_qstate_addr,
                             TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
         nop.e
         nop

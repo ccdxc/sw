@@ -36,10 +36,13 @@ typedef struct tcpcb_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
 
     // rx stats
+    uint32_t              debug_stage0_7_thread;
     uint64_t              bytes_rcvd;
     uint64_t              pkts_rcvd;
     uint64_t              pages_alloced;
     uint64_t              desc_alloced;
+    uint64_t              debug_num_phv_to_mem;
+    uint64_t              debug_num_pkt_to_mem;
 
     // tx stats
     uint64_t              bytes_sent;

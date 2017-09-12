@@ -270,11 +270,15 @@ header_type write_serq_d_t {
         nde_offset              : 16;
         nde_len                 : 16;
         curr_ts                 : 32;
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
 
         // stats
         pkts_rcvd               : 8;
         pages_alloced           : 8;
         desc_alloced            : 8;
+        debug_num_pkt_to_mem    : 8;
+        debug_num_phv_to_mem    : 8;
     }
 }
 
@@ -337,7 +341,6 @@ header_type to_stage_6_phv_t {
         serq_base               : 32;
         serq_pidx               : 16;
         payload_len             : 16;
-
     }
 }
 
@@ -348,6 +351,8 @@ header_type to_stage_7_phv_t {
         pkts_rcvd               : 8;
         pages_alloced           : 8;
         desc_alloced            : 8;
+        debug_num_pkt_to_mem    : 8;
+        debug_num_phv_to_mem    : 8;
 
         stats4                  : 16;
         stats5                  : 16;
@@ -387,6 +392,8 @@ header_type common_global_phv_t {
  *****************************************************************************/
 header_type s1_s2s_phv_t {
     fields {
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
         end_seq                 : 32;
         rcv_tstamp              : 32;
         packets_out             : 16;
@@ -398,21 +405,34 @@ header_type s1_s2s_phv_t {
 
 header_type s3_t1_s2s_phv_t {
     fields {
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
         rnmdr_pidx              : 16;
     }
 }
 
 header_type s3_t2_s2s_phv_t {
     fields {
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
         rnmpr_pidx              : 16;
     }
 }
 
 header_type s4_s2s_phv_t {
     fields {
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
         packets_out             : 32;
         sacked_out              : 16;
         lost_out                : 8;
+    }
+}
+
+header_type s6_s2s_phv_t {
+    fields {
+        debug_stage0_3_thread   : 16;
+        debug_stage4_7_thread   : 16;
     }
 }
 
@@ -492,11 +512,14 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
 @pragma scratch_metadata
 metadata s4_s2s_phv_t s4_s2s_scratch;
 @pragma scratch_metadata
+metadata s6_s2s_phv_t s6_s2s_scratch;
+@pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
-@pragma pa_header_union ingress common_t0_s2s s4_s2s
+@pragma pa_header_union ingress common_t0_s2s s4_s2s s6_s2s
 metadata s1_s2s_phv_t s1_s2s;
 metadata s4_s2s_phv_t s4_s2s;
+metadata s6_s2s_phv_t s6_s2s;
 
 @pragma pa_header_union ingress common_t1_s2s
 metadata s3_t1_s2s_phv_t s3_t1_s2s;
@@ -860,7 +883,9 @@ action tcp_fc(page_cnt) {
  * Stage 6 table 0 action
  */
 action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
-        pkts_rcvd, pages_alloced, desc_alloced) {
+        debug_stage0_3_thread, debug_stage4_7_thread,
+        pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
+        debug_num_phv_to_mem) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -873,16 +898,22 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     // from ki global
     GENERATE_GLOBAL_K
 
-    // from stage 5 to stage 6
+    // from stage to stage
+    modify_field(s6_s2s_scratch.debug_stage0_3_thread, s6_s2s.debug_stage0_3_thread);
+    modify_field(s6_s2s_scratch.debug_stage4_7_thread, s6_s2s.debug_stage4_7_thread);
 
     // d for stage 6 table 0
     modify_field(write_serq_d.nde_addr, nde_addr);
     modify_field(write_serq_d.nde_offset, nde_offset);
     modify_field(write_serq_d.nde_len, nde_len);
     modify_field(write_serq_d.curr_ts, curr_ts);
+    modify_field(write_serq_d.debug_stage0_3_thread, debug_stage0_3_thread);
+    modify_field(write_serq_d.debug_stage4_7_thread, debug_stage4_7_thread);
     modify_field(write_serq_d.pkts_rcvd, pkts_rcvd);
     modify_field(write_serq_d.pages_alloced, pages_alloced);
     modify_field(write_serq_d.desc_alloced, desc_alloced);
+    modify_field(write_serq_d.debug_num_pkt_to_mem, debug_num_pkt_to_mem);
+    modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
 }
 
 /*
@@ -896,6 +927,8 @@ action stats() {
     modify_field(to_s7_scratch.pkts_rcvd, to_s7.pkts_rcvd);
     modify_field(to_s7_scratch.pages_alloced, to_s7.pages_alloced);
     modify_field(to_s7_scratch.desc_alloced, to_s7.desc_alloced);
+    modify_field(to_s7_scratch.debug_num_pkt_to_mem, to_s7.debug_num_pkt_to_mem);
+    modify_field(to_s7_scratch.debug_num_phv_to_mem, to_s7.debug_num_phv_to_mem);
 
     // from ki global
     GENERATE_GLOBAL_K

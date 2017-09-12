@@ -27,10 +27,10 @@ tls_dec_alloc_tnmdr_process:
 
 table_read_TNMDR_DESC:
 	    addi		r3, r0, TNMDR_TABLE_BASE
-	    CAPRI_NEXT_TABLE1_READ(d.tnmdr_pidx, TABLE_LOCK_EN,
+	    CAPRI_NEXT_TABLE_READ_INDEX(1, d.tnmdr_pidx, TABLE_LOCK_EN,
                                tls_dec_tdesc_alloc_process,
   	                           r3, TNMDR_TABLE_ENTRY_SIZE_SHFT,
-	                           0, TABLE_SIZE_512_BITS)
+	                           TABLE_SIZE_512_BITS)
 	    nop.e
 	    nop
 
