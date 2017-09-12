@@ -15,6 +15,9 @@ span_sessions:
     - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL
     - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
     - spec  : ref://store/specs/id=SPAN_TYPE_ERSPAN
+    - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL
+    - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
+    - spec  : ref://store/specs/id=SPAN_TYPE_ERSPAN
 
 sessions: None
 

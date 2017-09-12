@@ -8,6 +8,7 @@
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
 using telemetry::MirrorSession;
+using telemetry::MirrorSessionId;
 
 namespace hal {
 
@@ -44,6 +45,7 @@ typedef struct mirror_session_s {
 } __PACK__ mirror_session_t;
 
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
+hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
 }
 
 #endif // __TELEMETRY_HPP__

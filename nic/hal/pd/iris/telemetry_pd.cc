@@ -21,7 +21,7 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
     session = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
     HAL_ASSERT_RETURN((session != NULL), HAL_RET_ERR);
 
-    ret = session->insert_withid(action_data, id);
+    ret = session->update(id, action_data);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-MIRROR-SESSION::{}: programming sesion {} failed ({})", 
                 __FUNCTION__, id, ret);
@@ -55,10 +55,10 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
 
     switch (args->session->dest_if.if_type) {
         case intf::IF_TYPE_ENIC:
-        case intf::IF_TYPE_UPLINK_PC:
         case intf::IF_TYPE_TUNNEL:
             // Not supported yet.
             return HAL_RET_INVALID_OP;
+        case intf::IF_TYPE_UPLINK_PC:
         case intf::IF_TYPE_UPLINK:
             dst_lport = if_get_lport_id(&(args->session->dest_if));
             break;
@@ -73,8 +73,12 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
             action_data.mirror_action_u.mirror_local_span.dst_lport = dst_lport;
             break;
         case MIRROR_DEST_RSPAN:
-            HAL_TRACE_ERR("PD-MIRROR-SESSION:: session type is RSPAN (not supported yet)");
-            return HAL_RET_INVALID_OP;
+            action_data.actionid = MIRROR_REMOTE_SPAN_ID;
+            action_data.mirror_action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
+            action_data.mirror_action_u.mirror_remote_span.dst_lport = dst_lport;
+            action_data.mirror_action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
+            action_data.mirror_action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+            break;
         case MIRROR_DEST_ERSPAN:
             HAL_TRACE_ERR("PD-MIRROR-SESSION:: session type is ERSPAN (not supported yet)");
             return HAL_RET_INVALID_OP;
@@ -97,7 +101,7 @@ pd_mirror_session_delete(pd_mirror_session_args_t *args)
     }
     memset(&action_data, 0, sizeof(mirror_actiondata));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
-    action_data.actionid = MIRROR_NOP_ID;
+    action_data.actionid = MIRROR_DROP_MIRROR_ID;
 
     return pd_mirror_update_hw(args->session->id, &action_data);
 }

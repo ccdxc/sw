@@ -1018,6 +1018,30 @@ p4pd_tunnel_rewrite_init (void)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+p4pd_mirror_table_init (void)
+{
+    uint32_t                     idx = 0;
+    hal_ret_t                    ret;
+    DirectMap                    *dm;
+    mirror_actiondata            data = { 0 };
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
+    HAL_ASSERT(dm != NULL);
+
+    // Initialize for usable span session.
+    data.actionid = MIRROR_DROP_MIRROR_ID;
+    for (idx = 0; idx < 8; idx++) {
+        ret = dm->insert_withid(&data, idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
+                          idx, ret);
+            return ret;
+        }
+    }
+    return HAL_RET_OK;
+}
+
 typedef struct roce_opcode_info_t {
     uint32_t valid:1;
     uint32_t roce_hdr_length: 8; //in bytes
@@ -1134,6 +1158,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
 
     return HAL_RET_OK;
 }

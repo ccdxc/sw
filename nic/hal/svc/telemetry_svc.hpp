@@ -19,6 +19,7 @@ using telemetry::ExportControlResponseMsg;
 using telemetry::FlowMonitorRuleConfigMsg;
 using telemetry::FlowMonitorRuleResponseMsg;
 using telemetry::MirrorSessionConfigMsg;
+using telemetry::MirrorSessionDeleteMsg;
 using telemetry::MirrorSessionResponseMsg;
 using telemetry::MirrorSessionId;
 using telemetry::MirrorSession;
@@ -98,7 +99,7 @@ class TelemetryServiceImpl final : public Telemetry::Service {
                             MirrorSessionResponseMsg* response) override;
 
     Status MirrorSessionDelete(ServerContext* context,
-                                const MirrorSessionId* request,
+                                const MirrorSessionDeleteMsg* request,
                                 MirrorSessionResponseMsg* response) override;
 };
 

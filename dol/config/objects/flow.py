@@ -39,12 +39,12 @@ class FlowObject(base.ConfigObjectBase):
         if span:
             if 'ingress' in span.__dict__:
                 for s in span.ingress:
-                    span   = s.Get(Store)
-                    self.ing_mirror_sessions.append(span)
+                    ispan   = s.Get(Store)
+                    self.ing_mirror_sessions.append(ispan)
             if 'egress' in span.__dict__:
                 for s in span.egress:
-                    span   = s.Get(Store)
-                    self.egr_mirror_sessions.append(span)
+                    espan   = s.Get(Store)
+                    self.egr_mirror_sessions.append(espan)
 
         # Initialize Externally Visible Fields
         # Attributes available for Filters

@@ -32,7 +32,9 @@ entries:
             code: const/0
             id  : const/2
             span: 
-                ingress: 
+                ingress:
+                    - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
         responder:
             type: const/129   # Echo Reply
@@ -40,6 +42,8 @@ entries:
             id  : const/2
             span: 
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
 
     - entry:

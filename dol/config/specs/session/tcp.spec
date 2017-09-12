@@ -40,12 +40,16 @@ entries:
             port : const/81
             span :
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
         initiator: 
             port : const/41000
             span :
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
 
     - entry:
         label: tcp-proxy

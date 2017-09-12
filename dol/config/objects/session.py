@@ -88,6 +88,20 @@ class SessionObject(base.ConfigObjectBase):
             cfglogger.info("  -   Eggress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
                            (self.rflow.eg_qos.cos_rw.get(), self.rflow.eg_qos.cos.get(),
                             self.rflow.eg_qos.dscp_rw.get(), self.rflow.eg_qos.dscp.get()))
+        ingspanlen = 0
+        egspanlen = 0
+        if self.spec.initiator.span != None and 'ingress' in self.spec.initiator.span.__dict__:
+            ingspanlen = len(self.spec.initiator.span.ingress)
+        if self.spec.initiator.span != None and 'egress' in self.spec.initiator.span.__dict__:
+            espanlen = len(self.spec.initiator.span.egress)
+        cfglogger.info(" Initatior SPAN sessions : %d/%d" % (ingspanlen, egspanlen))
+        ingspanlen = 0
+        egspanlen = 0
+        if self.spec.responder.span != None and 'ingress' in self.spec.responder.span.__dict__:
+            ingspanlen = len(self.spec.responder.span.ingress)
+        if self.spec.responder.span != None and 'egress' in self.spec.responder.span.__dict__:
+            espanlen = len(self.spec.responder.span.egress)
+        cfglogger.info(" Responder SPAN sessions : %d/%d" % (ingspanlen, egspanlen))
         return
 
     def IsTCP(self):

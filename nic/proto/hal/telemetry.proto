@@ -183,7 +183,7 @@ message FlowMonitorRuleResponseMsg {
 
 // RspanSpec is the configuration specification for RSPAN.
 message RSpanSpec {
-  intf.InterfaceKeyHandle 	if 		= 1; // Interface handle
+  intf.InterfaceKeyHandle 	intf 		= 1; // Interface handle
   types.EncapInfo		rspan_encap 	= 2; // VLAN encapsulation
 }
 
@@ -236,10 +236,15 @@ message  MirrorSessionConfigMsg {
   repeated MirrorSessionSpec request = 1;
 }
 
+// MirrorSessionConfigMsg is a batchable message used for request messages for mirror session configuration.
+message  MirrorSessionDeleteMsg {
+  repeated MirrorSessionId request = 1;
+}
+
 // MirrorSessionResponseMsg is used as responses to the MirrorSession configuration APIs
 message MirrorSessionResponseMsg {
   types.ApiStatus               status    = 1; // Response status of the API
-  repeated MirrorSession	response  = 2; // Operational status of the mirror session
+  repeated MirrorSession    	response  = 2; // Operational status of the mirror session
 }
 
 message Empty {
@@ -270,5 +275,5 @@ service Telemetry {
   rpc MirrorSessionUpdate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionGet(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionList(Empty) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionDelete(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
+  rpc MirrorSessionDelete(MirrorSessionDeleteMsg) returns (MirrorSessionResponseMsg) {}
 }

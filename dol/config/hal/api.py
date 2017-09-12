@@ -284,6 +284,13 @@ def ConfigureSpanSessions(objlist):
              stub.MirrorSessionCreate)
     return
 
+def DeleteSpanSessions(objlist):
+    if IsHalDisabled(): return
+    stub = telemetry_pb2_grpc.TelemetryStub(HalChannel)
+    __config(objlist, telemetry_pb2.MirrorSessionDeleteMsg,
+             stub.MirrorSessionDelete)
+    return
+
 def ConfigureNetworks(objlist):
     if IsHalDisabled(): return
     stub = nw_pb2_grpc.NetworkStub(HalChannel)

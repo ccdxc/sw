@@ -63,6 +63,16 @@ packets:
             #qtag:
             #    vlan: ref://testcase/config/ingress_mirror/session1/segment/vlan_id
 
+    - packet:
+        id          : RSPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        #encaps      : None
+            #- ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            ipv4:
+            qtag:
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+
 
 trigger:
     packets:
@@ -77,5 +87,25 @@ expect:
             port    : ref://testcase/config/dst/endpoint/intf/ports
 
         - packet:
-            object  : ref://testcase/packets/id=SPAN_PKT1
-            port    : ref://testcase/config/ingress_mirror/session1/intf/ports
+            object  : callback://telemetry/callbacks/GetExpectedPacket1
+            port    : callback://telemetry/callbacks/GetExpectedPort1
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket2
+            port    : callback://telemetry/callbacks/GetExpectedPort2
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket3
+            port    : callback://telemetry/callbacks/GetExpectedPort3
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket4
+            port    : callback://telemetry/callbacks/GetExpectedPort4
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket5
+            port    : callback://telemetry/callbacks/GetExpectedPort5
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket6
+            port    : callback://telemetry/callbacks/GetExpectedPort6

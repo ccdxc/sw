@@ -955,7 +955,19 @@ modules:
         package : test.telemetry
         module  : telemetry
         spec    : firstpacket.testspec
-        ignore  : True
+        ignore  : false
+        iterate:
+            - SPAN_LOCAL_INGRESS_UPLINK
+            - SPAN_LOCAL_IGRESS_PC
+            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - RSPAN_LOCAL_INGRESS_UPLINK
+            - RSPAN_LOCAL_IGRESS_PC
+            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - SPAN_RSPAN_LOCAL_INGRESS_UPLINK
+            - SPAN_RSPAN_LOCAL_IGRESS_PC
+            - RSPAN_SPAN_LOCAL_IGRESS_PC
 
     - module:
         name    : L4LB_BRIDGED_FLOWS

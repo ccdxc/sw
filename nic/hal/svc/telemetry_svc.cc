@@ -171,9 +171,20 @@ TelemetryServiceImpl::MirrorSessionList(ServerContext* context,
 
 Status
 TelemetryServiceImpl::MirrorSessionDelete(ServerContext* context,
-                            const MirrorSessionId* request,
+                            const MirrorSessionDeleteMsg* request,
                             MirrorSessionResponseMsg* response)
 {
     HAL_TRACE_DEBUG("Rcvd MirrorSession Delete Request");
+    MirrorSession *resp;
+    uint32_t                i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::mirror_session_delete(&spec, resp);
+    }
     return Status::OK;
 }

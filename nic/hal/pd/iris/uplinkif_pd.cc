@@ -203,6 +203,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     om_tmoport.nports = 1;
     om_tmoport.egress_port1 = tm_oport;
     om_tmoport.dst_lif = pd_upif->hw_lif_id;
+
     
     // Program OutputMapping table
     //  - Get tmoport from PI

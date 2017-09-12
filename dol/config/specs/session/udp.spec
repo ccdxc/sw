@@ -30,11 +30,15 @@ entries:
             span : 
                 ingress:
                     - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
         initiator: 
             port : const/47275
             span : 
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
 
     - entry:
         label: recirc

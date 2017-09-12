@@ -106,7 +106,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
         case MirrorSessionSpec::kRspanSpec: {
             HAL_TRACE_DEBUG("PI-MirrorSession:{}: RSpan IF is true", __FUNCTION__);
             auto rspan = spec->rspan_spec();
-            ifid = rspan.if_();
+            ifid = rspan.intf();
             session.dest_if = *(get_if_from_key_or_handle(ifid));
             auto encap = rspan.rspan_encap();
             if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
@@ -139,7 +139,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
     }
     rsp->mutable_spec()->CopyFrom(*spec);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
-    return HAL_RET_OK;
+    return ret;
 }
 
 hal_ret_t
@@ -153,6 +153,7 @@ mirror_session_get(MirrorSessionId *id, MirrorSession *rsp)
     HAL_TRACE_DEBUG("PI-MirrorSession:{}: Mirror Session ID {}", __FUNCTION__,
             id->session_id());
     memset(&session, 0, sizeof(session));
+    session.id = id->session_id();
     args.session = &session;
     ret = pd_mirror_session_get(&args);
     if (ret != HAL_RET_OK) {
@@ -183,6 +184,29 @@ mirror_session_get(MirrorSessionId *id, MirrorSession *rsp)
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
+}
+
+hal_ret_t
+mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp)
+{
+    pd_mirror_session_args_t args;
+    mirror_session_t session;
+    hal_ret_t ret;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-MirrorSession:{}: Delete Mirror Session ID {}", __FUNCTION__,
+            id->session_id());
+    memset(&session, 0, sizeof(session));
+    session.id = id->session_id();
+    args.session = &session;
+    ret = pd_mirror_session_delete(&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-MirrorSession:{}: PD API failed {}", __FUNCTION__, ret);
+        rsp->mutable_status()->set_code(MirrorSessionStatus::PERM_FAILURE);
+        rsp->mutable_status()->set_status("pd action failed");
+    }
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
 }
 
 } // namespace hal

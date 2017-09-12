@@ -42,10 +42,14 @@ entries:
             ethertype: 0xCC55
             span: 
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
         responder:
             ethertype: 0xCC55
             span: 
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
 

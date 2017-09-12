@@ -15,6 +15,7 @@ from infra.common.logging       import cfglogger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
+import telemetry_pb2            as telemetry_pb2
 
 class SpanSessionObject(base.ConfigObjectBase):
     def __init__(self):
@@ -73,10 +74,40 @@ class SpanSessionObject(base.ConfigObjectBase):
     def IsErspan(self):
         return self.type == 'ERSPAN'
 
+    def Update(self, snaplen, spantype, intf):
+        self.snaplen = snaplen
+        self.type = spantype
+        self.intf = intf
+        objlist = []
+        objlist.append(self)
+        halapi.ConfigureSpanSessions(objlist)
+
+    def Clear(self):
+        self.type = 'INACTIVE'
+        objlist = []
+        objlist.append(self)
+        halapi.DeleteSpanSessions(objlist)
+
     def PrepareHALRequestSpec(self, reqspec):
-        reqspec.id.session_id = self.id
-        reqspec.snaplen = self.snaplen
-        reqspec.local_span_if.if_handle = self.intf.hal_handle
+        #pdb.set_trace()
+        if isinstance(reqspec, telemetry_pb2.MirrorSessionSpec):
+            reqspec.id.session_id = self.id
+            reqspec.snaplen = self.snaplen
+            if self.IsLocal():
+                reqspec.local_span_if.if_handle = self.intf.hal_handle
+            if self.IsRspan():
+                reqspec.rspan_spec.intf.if_handle = self.intf.hal_handle
+                if self.tenant.IsOverlayVxlan():
+                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_VXLAN 
+                    reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vxlan_id
+                else:
+                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q 
+                    reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vlan_id
+            if self.IsErspan():
+                reqspec.local_span_if.if_handle = self.intf.hal_handle
+        else:
+            reqspec.session_id = self.id
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

@@ -32,13 +32,17 @@ entries:
             span:
                 ingress:
                     - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
         responder:
             type: const/0   # Echo Reply
             code: const/0
             id  : const/2
             span: 
                 ingress:
+                    - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
 
     - entry:
         label: gft_drop
