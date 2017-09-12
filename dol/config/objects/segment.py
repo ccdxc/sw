@@ -25,14 +25,20 @@ class SegmentObject(base.ConfigObjectBase):
         self.id = resmgr.SegIdAllocator.get()
         self.GID("Seg%04d" % self.id)
 
-        self.spec   = spec
-        self.tenant = tenant
-        self.type   = spec.type.upper()
-        self.native = spec.native
-        self.l4lb   = spec.l4lb
+        self.spec       = spec
+        self.tenant     = tenant
+        self.type       = spec.type.upper()
+        self.native     = spec.native
+        self.l4lb       = getattr(spec, 'l4lb', False)
+        self.blackhole  = getattr(spec, 'blackhole', False)
 
-        self.vlan_id    = resmgr.SegVlanAllocator.get()
-        self.vxlan_id   = resmgr.SegVxlanAllocator.get()
+        if self.blackhole:
+            self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
+            self.vxlan_id   = resmgr.BlackHoleSegVxlanAllocator.get()
+        else:
+            self.vlan_id    = resmgr.SegVlanAllocator.get()
+            self.vxlan_id   = resmgr.SegVxlanAllocator.get()
+
         self.macaddr    = resmgr.RouterMacAllocator.get()
         if self.IsInfraSegment():
             self.subnet     = resmgr.TepIpSubnetAllocator.get()
@@ -91,9 +97,12 @@ class SegmentObject(base.ConfigObjectBase):
     def Show(self, detail = False):
         cfglogger.info("- Segment = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("  - VLAN       = %d" % self.vlan_id)
+
         if not self.IsInfraSegment():
             cfglogger.info("  - VXLAN      = %s" % self.vxlan_id)
         cfglogger.info("  - Native     = %s" % self.native)
+        if self.blackhole:
+            cfglogger.info("  - BlackHole  = %s" % self.blackhole)
         cfglogger.info("  - MAC        = %s" % self.macaddr.get())
         cfglogger.info("  - Subnet     = %s" % self.subnet.get())
         cfglogger.info("  - Subnet6    = %s" % self.subnet6.get())
@@ -195,6 +204,7 @@ class SegmentObject(base.ConfigObjectBase):
 class SegmentObjectHelper:
     def __init__(self):
         self.segs = []
+        self.bhseg = None
         self.backend_eps = None
         self.backend_remote_eps = None
         return
@@ -218,6 +228,9 @@ class SegmentObjectHelper:
             seg = SegmentObject()
             seg.Init(tenant, spec)
             self.segs.append(seg)
+            if seg.blackhole:
+                assert(self.bhseg is None)
+                self.bhseg = seg
         return
 
     def AddToStore(self):
@@ -264,5 +277,7 @@ class SegmentObjectHelper:
 
         obj = eplist[0]
         del eplist[0]
-
         return obj
+
+    def GetBlackholeSegment(self):
+        return self.bhseg

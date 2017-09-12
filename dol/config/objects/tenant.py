@@ -34,6 +34,7 @@ class TenantObject(base.ConfigObjectBase):
         
         self.overlay = spec.overlay.upper()
         self.security_profile = None
+        self.bhseg = None
         if spec.security_profile:
             self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
@@ -110,6 +111,7 @@ class TenantObject(base.ConfigObjectBase):
             spec = entry.spec.Get(Store)
             self.obj_helper_segment.Generate(self, spec, entry.count)
         self.obj_helper_segment.AddToStore()
+        self.bhseg = self.obj_helper_segment.GetBlackholeSegment()
         return
 
     def __create_lifs(self):

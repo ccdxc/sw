@@ -17,9 +17,13 @@ LifIdAllocator          = objects.TemplateFieldObject("range/1025/2047")
 QueueIdAllocator        = objects.TemplateFieldObject("range/0/16384")
 TenIdAllocator          = objects.TemplateFieldObject("range/1/1000")
 SegIdAllocator          = objects.TemplateFieldObject("range/1/8192")
-SegVlanAllocator        = objects.TemplateFieldObject("range/2/4095")
+
+SegVlanAllocator        = objects.TemplateFieldObject("range/2/1000")
 EncapVlanAllocator      = objects.TemplateFieldObject("range/3001/4000")
 SegVxlanAllocator       = objects.TemplateFieldObject("range/0xFF0000/0xFFFFFF")
+
+BlackHoleSegVlanAllocator   = objects.TemplateFieldObject("range/4090/4095")
+BlackHoleSegVxlanAllocator  = objects.TemplateFieldObject("range/0xDDDDD0/0xDDDDDF")
 
 AclIdAllocator          = objects.TemplateFieldObject("range/1/512")
 SpanSessionIdAllocator  = objects.TemplateFieldObject("range/1/8")

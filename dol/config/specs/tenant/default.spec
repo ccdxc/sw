@@ -12,6 +12,8 @@ segments:
       count : 1
     - spec  : ref://store/specs/id=SEGMENT_MULTIDEST_DROP
       count : 1
+    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
+      count : 1
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.
