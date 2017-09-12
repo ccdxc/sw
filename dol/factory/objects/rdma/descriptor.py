@@ -9,7 +9,7 @@ from infra.common.logging   import cfglogger
 
 import model_sim.src.model_wrap as model_wrap
 
-from factory.objects.rdma import buffer as buffer
+from factory.objects.rdma import buffer as rdmabuffer
 
 class RdmaSqDescriptorBase(Packet):
     fields_desc = [
@@ -242,15 +242,21 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         #if hasattr(self.spec.fields, 'buff'):
         if not hasattr(self, 'address'):
             return self.spec.fields.buff
-            
-        buff = buffer.RdmaBufferObject()
-        #print("wrid: %d num_sges: %d len: %d, type: %s\n", self.wrid, self.num_sges, len(self.sges), type(self.sges));
-        sge = self.sges[0]
-        buff.address = sge.va
-        buff.size = sge.len
-        buff.mem_handle = resmgr.MemHandle(buff.address, 
-                                    resmgr.HostMemoryAllocator.get_v2p(buff.address))
-        cfglogger.info("setting buffer address : 0x%x  size: %d" %(buff.address, buff.size))
-        buff.Read()
-        cfglogger.info("buffer read: %s" % bytes(buff.data))
-        return buff
+
+        rdmabuff = rdmabuffer.RdmaBufferObject()
+        cfglogger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
+        total_data = bytearray()
+        total_size = 0 
+        for idx in range(self.num_sges):
+            sge = self.sges[idx]
+            cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
+            mem_handle = resmgr.MemHandle(sge.va,
+                                    resmgr.HostMemoryAllocator.get_v2p(sge.va))
+            sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
+            cfglogger.info("     sge data: %s" % bytes(sge_data))
+            total_data.extend(sge_data)
+            total_size += sge.len
+        rdmabuff.data = bytes(total_data)
+        rdmabuff.size = total_size
+        cfglogger.info("Total data: %s" % bytes(total_data))
+        return rdmabuff
