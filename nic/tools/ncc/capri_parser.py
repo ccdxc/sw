@@ -1596,13 +1596,13 @@ class capri_parser:
                 cs.lkp_regs[rid].first_pkt_fld = sf
             lkp_fld.reg_id = rid
             cs.lkp_flds[sf.hfname] = lkp_fld
-            if cf.is_meta:
-                roff = cs.lkp_regs[rid].size - cf.width
+            if sf.is_meta:
+                roff = cs.lkp_regs[rid].size - sf.width
                 self.logger.debug("%s:roff for REG fld %s is set to %d" % \
-                    (cs.name, cf.hfname, roff))
+                    (cs.name, sf.hfname, roff))
             else:
-                roff = (cf.p4_fld.offset % 8)
-            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, cf.width)
+                roff = (sf.p4_fld.offset % 8)
+            cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, sf.width)
                 
     def process_state_set_ops(self, cs):
         # assign lkp registers to set_metadata operations

@@ -110,7 +110,7 @@ header tcp_option_three_sack_t tcp_option_three_sack;
 header tcp_option_four_sack_t tcp_option_four_sack;
 header tcp_option_timestamp_t tcp_option_timestamp;
 
-// IPV4 Options
+// IPv4 Options
 header ipv4_option_EOL_t ipv4_option_EOL;
 header ipv4_option_NOP_t ipv4_option_NOP;
 header ipv4_option_security_t ipv4_option_security;
@@ -119,7 +119,7 @@ header ipv4_option_lsr_t ipv4_option_lsr;
 header ipv4_option_ssr_t ipv4_option_ssr;
 header ipv4_option_rr_t ipv4_option_rr;
 
-// Inner IPV4 Options
+// Inner IPv4 Options
 header ipv4_option_EOL_t inner_ipv4_option_EOL;
 header ipv4_option_NOP_t inner_ipv4_option_NOP;
 header ipv4_option_security_t inner_ipv4_option_security;
@@ -224,10 +224,27 @@ parser start {
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
-    return select(capri_intrinsic.tm_replicate_en) {
-        0x0 mask 0x1 : parse_i2e_metadata1;
-        0x1 mask 0x1 : parse_tm_replication_data1;
+    return select(current(0, 4)) {
+        TM_PORT_INGRESS : parse_ingress_to_egress;
+        TM_PORT_EGRESS : parse_egress_to_egress;
+        default : ingress;
         0x1 mask 0x0 : deparse_rxdma;
+    }
+}
+
+@pragma xgress egress
+parser parse_ingress_to_egress {
+    return select(capri_intrinsic.tm_instance_type) {
+        TM_INSTANCE_TYPE_MULTICAST : parse_tm_replication_data1;
+        default : parse_i2e_metadata1;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_to_egress {
+    return select(capri_intrinsic.tm_instance_type) {
+        TM_INSTANCE_TYPE_SPAN : parse_span_copy;
+        default : parse_ethernet;
     }
 }
 
@@ -241,7 +258,16 @@ parser parse_i2e_metadata1 {
 @pragma xgress egress
 parser parse_i2e_metadata {
     extract(capri_i2e_metadata);
-    return parse_ethernet;
+    return select(capri_intrinsic.tm_instance_type) {
+        TM_INSTANCE_TYPE_SPAN : parse_span_copy;
+        default : parse_ethernet;
+    }
+}
+
+@pragma xgress egress
+parser parse_span_copy {
+    extract(ethernet);
+    return ingress;
 }
 
 @pragma deparse_only

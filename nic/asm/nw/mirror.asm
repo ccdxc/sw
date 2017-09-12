@@ -42,4 +42,4 @@ erspan_mirror:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 drop_mirror:
   phvwr.e     p.capri_intrinsic_drop, TRUE
-  nop
+  phvwr       p.capri_intrinsic_tm_span_session, 0
