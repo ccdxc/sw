@@ -15,7 +15,7 @@ INC_DIRS = -I. -I$(GEN_DIR) -I$(GEN_DIR)/protobuf -I$(GEN_DIR)/iris/include -I$(
 LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lhostmem -lzmq
 
 # Fix this
-LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/uplinkpc_test $(OBJ_DIR)/enicif_test \
+LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/internal_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/uplinkpc_test $(OBJ_DIR)/enicif_test \
 			  $(OBJ_DIR)/cpuif_test $(OBJ_DIR)/buf_pool_test $(OBJ_DIR)/queue_test $(OBJ_DIR)/policer_test \
 			  $(OBJ_DIR)/session_test $(OBJ_DIR)/acl_test $(OBJ_DIR)/bm_allocator_test $(OBJ_DIR)/lif_manager_test \
 			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test
@@ -37,6 +37,7 @@ LD_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib
 GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
 gtest:
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/lif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_test.xml"
+	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/internal_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/internal_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/uplinkif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/uplinkpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkpc_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/enicif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/enicif_test.xml"
