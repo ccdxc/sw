@@ -1738,7 +1738,60 @@ class capri_table:
             return True
             
     def _fix_tcam_table_km_profile(self):
-        # XXX make it a generic optimization
+        def _fix_bit_loc(fix_km_prof, max_kmB, right_justify):
+            # Internally called from this function (at the end)
+            # since this km_prof is not shared with anyone, arrange the bytes and bits
+            # as needed, fix the bit_loc and start/end_key_off
+            # after removing duplicates the km structure is -
+            # | i1_bytes | k_bytes | ki_bits | i2_bytes |
+            # right justify the bytes
+            # arrange it as -
+            # | ...[pad]....i1_bytes | k_bytes | ki_bits | i2_bytes |
+            num_bytes = 0
+            if len(fix_km_prof.bit_sel):
+                num_bytes = (len(fix_km_prof.bit_sel) + 7) / 8
+                if len(fix_km_prof.k_byte_sel):
+                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.k_byte_sel[-1]) + 1
+                elif len(fix_km_prof.i1_byte_sel):
+                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.i1_byte_sel[-1]) + 1
+                elif len(fix_km_prof.i2_byte_sel):
+                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.i2_byte_sel[0])
+                else:
+                    if right_justify:
+                        bit_loc = max_kmB-1
+                    else:
+                        bit_loc = 0
+
+                fix_km_prof.bit_loc = bit_loc
+                if num_bytes > 1:
+                    if bit_loc == max_kmB-1:
+                        fix_km_prof.bit_loc1 = bit_loc
+                        fix_km_prof.bit_loc = bit_loc - 1
+                    else:
+                        fix_km_prof.bit_loc1 = bit_loc + 1
+                else:
+                    fix_km_prof.bit_loc1 = -1
+
+                fix_km_prof.byte_sel.insert(fix_km_prof.bit_loc, -1)
+
+                if fix_km_prof.bit_loc1 != -1:
+                    fix_km_prof.byte_sel.insert(fix_km_prof.bit_loc1, -1)
+
+            else:
+                fix_km_prof.bit_loc = -1
+                fix_km_prof.bit_loc1 = -1
+
+            if right_justify:
+                for _ in range(len(fix_km_prof.byte_sel), max_kmB):
+                    fix_km_prof.byte_sel.insert(0, -1)
+                    # move bit_locs as we insert un-used bytes
+                    if fix_km_prof.bit_loc > 0:
+                        fix_km_prof.bit_loc += 1
+                    if fix_km_prof.bit_loc1 > 0:
+                        fix_km_prof.bit_loc1 += 1
+            return
+
+        #####
         # This function is written to handle a specific case seen while compiling nic.p4
         # where a tcam table needs two key makers and one of the key-maker is shared with another
         # tcam table. In this case a lot of fields were common between two key makers,
@@ -1809,53 +1862,6 @@ class capri_table:
             else:
                 fix_km_prof.i_bit_sel.remove(b)
 
-        def _fix_bit_loc(fix_km_prof, max_kmB, right_justify):
-            # Internally called from just below the definition
-            # since this km_prof is not shared with anyone, arrange the bytes and bits
-            # as needed, fix the bit_loc and start/end_key_off
-            # after removing duplicates the km structure is -
-            # | i1_bytes | k_bytes | ki_bits | i2_bytes |
-            # right justify the bytes
-            # arrange it as -
-            # | ...[pad]....i1_bytes | k_bytes | ki_bits | i2_bytes |
-            num_bytes = 0
-            if len(fix_km_prof.bit_sel):
-                num_byte = (len(fix_km_prof.bit_sel) + 7) / 8
-                if len(fix_km_prof.k_byte_sel):
-                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.k_byte_sel[-1]) + 1
-                elif len(fix_km_prof.i1_byte_sel):
-                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.i1_byte_sel[-1]) + 1
-                elif len(fix_km_prof.i2_byte_sel):
-                    bit_loc = fix_km_prof.byte_sel.index(fix_km_prof.i2_byte_sel[0])
-                else:
-                    if right_justify:
-                        bit_loc = max_kmB-1
-                    else:
-                        bit_loc = 0
-
-                fix_km_prof.bit_loc = bit_loc
-                if num_byte > 1:
-                    if bit_loc == max_kmB-1:
-                        fix_km_prof.bit_loc1 = bit_loc
-                        fix_km_prof.bit_loc = bit_loc - 1
-                    else:
-                        fix_km_prof.bit_loc1 = bit_loc + 1
-                else:
-                    fix_km_prof.bit_loc1 = -1
-
-                fix_km_prof.byte_sel.insert(fix_km_prof.bit_loc, -1)
-
-                if fix_km_prof.bit_loc1 != -1:
-                    fix_km_prof.byte_sel.insert(fix_km_prof.bit_loc1, -1)
-
-            else:
-                fix_km_prof.bit_loc = -1
-                fix_km_prof.bit_loc1 = -1
-
-            if right_justify:
-                for _ in range(len(fix_km_prof.byte_sel), max_kmB-num_bytes):
-                    fix_km_prof.byte_sel.insert(0, -1)
-            
         if not km0_shared:
             _fix_bit_loc(fix_km_prof, max_kmB, True)
         else:
