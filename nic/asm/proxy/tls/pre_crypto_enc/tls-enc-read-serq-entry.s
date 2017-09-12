@@ -27,6 +27,7 @@ struct tx_table_s1_t0_k k	    ;
         
         
 tls_enc_read_serq_entry_process:
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     phvwr   p.to_s2_idesc, d.{idesc}
     phvwr   p.to_s4_idesc, d.{idesc}
     phvwr   p.to_s5_idesc, d.{idesc}

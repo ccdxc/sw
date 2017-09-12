@@ -21,7 +21,7 @@ struct tx_table_s2_t0_tls_read_desc_d d	;
     .param      tls_free_rnmpr
 
 tls_read_desc_process:
-
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
     phvwr       p.read_desc_status, d.status
     phvwr       p.read_desc_output_list_address, d.output_list_address
     phvwr       p.to_s4_odesc, d.output_list_address

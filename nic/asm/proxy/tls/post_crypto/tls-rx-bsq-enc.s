@@ -19,7 +19,8 @@ struct tx_table_s1_t0_tls_rx_bsq_d d	;
 	.param		tls_read_desc_process
 	
 tls_rx_bsq_enc_process:	
-	/* Release the descriptor from the tls cb decrypt queue */
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+    /* Release the descriptor from the tls cb decrypt queue */
 	/*
 	   DEQ_DESC(*dtlsp, dec, idesc);
 	   RING_FREE(idesc, RNMDR);

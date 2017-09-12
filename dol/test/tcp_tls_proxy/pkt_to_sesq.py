@@ -71,9 +71,11 @@ def TestCaseVerify(tc):
     tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
     print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
     print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
     tlscb_cur.GetObjValPd()
     print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
     print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
     # 0. Verify the counters
     if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdr_free - tlscb.rnmdr_free)):
@@ -89,8 +91,18 @@ def TestCaseVerify(tc):
         print("enc requests not equal to completions")
         return False
 
+    # 1. Verify threading
+    if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
+        printf("pre crypto pipeline threading was not ok")
+        return False
 
-    # 1. Verify pi/ci got update got updated for SESQ
+    if (tlscb_cur.post_debug_stage0_7_thread != 0x17111):
+        printf("post crypto pipeline threading was not ok")
+        return False
+
+        
+
+    # 2. Verify pi/ci got update got updated for SESQ
     tcb_cur = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
     print("pre-sync: tcb_cur.sesq_pi %d tcb_cur.sesq_ci %d" % (tcb_cur.sesq_pi, tcb_cur.sesq_ci))
     tcb_cur.GetObjValPd()
@@ -101,7 +113,7 @@ def TestCaseVerify(tc):
         #return False
 
 
-    # 2. Fetch current values from Platform
+    # 3. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
@@ -112,13 +124,13 @@ def TestCaseVerify(tc):
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
 
-    # 3. Verify PI for RNMDR got incremented by 1
+    # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         #return false
 
     
-    # 4. Verify PI for TNMDR got incremented by 1
+    # 5. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         #return false
@@ -126,7 +138,7 @@ def TestCaseVerify(tc):
     sesq_cur = tc.infra_data.ConfigStore.objects.db["TCPCB0000_SESQ"]
     sesq_cur.Configure()
 
-    # 5. Verify descriptor 
+    # 6. Verify descriptor 
     if rnmdr.ringentries[rnmdr_cur.pi-1].handle != sesq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, sesq_cur.ringentries[0].handle)) 
         return False

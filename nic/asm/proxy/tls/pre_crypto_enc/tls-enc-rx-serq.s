@@ -19,6 +19,7 @@ struct tx_table_s2_t0_tls_rx_serq_d d	;
     .param      tls_enc_serq_consume_process
         
 tls_enc_rx_serq_process:
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
 	CAPRI_CLEAR_TABLE0_VALID
 
 

@@ -40,6 +40,8 @@ typedef struct tlscb_s {
     uint64_t              dec_failures;
     uint32_t              salt;
     uint64_t              explicit_iv;
+    uint32_t              pre_debug_stage0_7_thread;
+    uint32_t              post_debug_stage0_7_thread;
     // operational state of TLS Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

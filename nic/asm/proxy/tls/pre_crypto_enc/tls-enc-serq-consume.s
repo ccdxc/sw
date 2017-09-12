@@ -23,6 +23,7 @@ struct tx_table_s3_t0_d d;
 	.param      tls_enc_bld_barco_req_process
         
 tls_enc_serq_consume_process:
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	/* SERQ_cidx got incremented due to the auto-inc read address used */
 	/* address will be in r4 */

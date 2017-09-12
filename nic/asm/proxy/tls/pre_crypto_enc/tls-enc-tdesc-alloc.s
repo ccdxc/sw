@@ -16,7 +16,6 @@ struct d_struct {
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct tx_table_s2_t2_k                 k;
 
 struct phv_ p;
 struct d_struct d;
@@ -26,7 +25,7 @@ struct d_struct d;
         .param          TNMDR_TABLE_BASE
 	    .align
 tls_enc_tdesc_alloc_process:
-
+        CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
         CAPRI_CLEAR_TABLE1_VALID
 
 	    phvwr		p.to_s5_odesc, d.odesc

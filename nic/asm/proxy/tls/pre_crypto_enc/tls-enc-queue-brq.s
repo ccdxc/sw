@@ -21,7 +21,8 @@ struct tx_table_s5_t0_d d;
     .param      tls_enc_pre_crypto_stats_process
         
 tls_enc_queue_brq_process:
-	CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
+    CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
 	add		    r4, r5, r0
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4

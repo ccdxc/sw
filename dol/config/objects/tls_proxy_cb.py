@@ -59,6 +59,8 @@ class TlsCbObject(base.ConfigObjectBase):
             self.dec_completions = resp_spec.spec.dec_completions
             self.enc_failures = resp_spec.spec.enc_failures
             self.dec_failures = resp_spec.spec.dec_failures
+            self.pre_debug_stage0_7_thread = resp_spec.spec.pre_debug_stage0_7_thread
+            self.post_debug_stage0_7_thread = resp_spec.spec.post_debug_stage0_7_thread
         return
 
     def IsFilterMatch(self, spec):

@@ -22,6 +22,7 @@ struct tx_table_s3_t0_tls_bsq_consume_d d;
 	.param      tls_queue_sesq_process
         
 tls_bsq_consume_process:
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 
 	/* address will be in r4 */
