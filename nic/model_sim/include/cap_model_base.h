@@ -38,6 +38,7 @@ public:
     virtual void load_cfg(void) = 0;
     virtual void load_prog(void) = 0;
     virtual void load_debug(void) = 0;
+    virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime) = 0;
 
     virtual ~cap_model_base() {}
 

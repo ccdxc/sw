@@ -45,7 +45,11 @@ protected:
     // by the caller.
     virtual bool read_mem(uint64_t addr, uint8_t * data, uint32_t size);
     virtual bool write_mem(uint64_t addr, uint8_t * data, uint32_t size);
+    // Doorbell
     virtual void step_doorbell(uint64_t addr, uint64_t data);
+    // Timer update
+    virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime);
+
     virtual void init(void);
     virtual int get_chip_id(void)
     {
