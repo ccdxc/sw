@@ -112,7 +112,8 @@ class RdmaSessionObjectHelper:
     def main(self):
         self.Generate()
         self.Configure()
-        Store.objects.SetAll(self.rdma_sessions) 
+        if len(self.rdma_sessions):
+            Store.objects.SetAll(self.rdma_sessions) 
 
     def GetMatchingConfigObjects(self, config_filter = None):
         return self.rdma_sessions

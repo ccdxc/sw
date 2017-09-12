@@ -28,6 +28,7 @@ class SlabObject(base.ConfigObjectBase):
     def Configure(self):
         self.mem_handle = resmgr.HostMemoryAllocator.get(self.size)
         self.address = self.mem_handle.va
+        assert(self.address % self.page_size == 0)
 
         self.phy_address = []
         for i in range(0, self.size, self.page_size):
@@ -39,6 +40,10 @@ class SlabObject(base.ConfigObjectBase):
     def Show(self):
         cfglogger.info('SLAB: %s EP: %s' %(self.GID(), self.ep.GID()))
         cfglogger.info('size: %d address: 0x%x' %(self.size, self.address))
+        i = 0
+        for phy_addr in self.phy_address:
+            i += 1
+        
 
 class SlabObjectHelper:
     def __init__(self):

@@ -775,44 +775,45 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 result.matched.append(cmpresult)
 
                 # Next compare the packets
-                cmpresult = TriggerObjectCompareResult()
-                epktbuf = ebuf.Read()
-                apktbuf = abuf.Read()
-                if epktbuf is None or apktbuf is None:
-                    self._logger.error("Packet Compare: Expected type %s, Actual type %s" % (
-                        type(epktbuf), type(apktbuf)))
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
-
-                # Make sure we are not accidentally comparing the same object
-                assert(id(apktbuf) != id(epktbuf))
-                ignore_pkt_cmp = objects.PacketComparePartial()
-                hdr_ignore_result = objects.HeaderComparePartial()
-                hdr_ignore_result.ignore_fields = ["chksum"]
-                ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
-                hdr_ignore_result = objects.HeaderComparePartial()
-                hdr_ignore_result.ignore_fields = ["chksum"]
-                ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
-
-                self._logger.info("Comparing Packets")
-                epkt = penscapy.Parse(bytes(epktbuf))
-                apkt = penscapy.Parse(bytes(apktbuf))
-                pktresult = PacketCompare(epkt, apkt, ignore_pkt_cmp)
-                self.print_packet_mismatch(pktresult)
-                if pktresult.matched() == False:
-                    self._logger.error("Packet compare result = Mismatch")
-                    self._logger.info(
-                        "============ EXPECTED Packet ============")
-                    penscapy.ShowRawPacket(epkt, self._logger)
-                    self._logger.info(
-                        "============ ACTUAL Packet ============")
-                    penscapy.ShowRawPacket(apkt, self._logger)
-                    result.mismatch.append(cmpresult)
-                    result._set_status()
-                    return result
-                self._logger.info("Packet compare result = Match")
-                result.matched.append(cmpresult)
+                if ebuf.IsPacket():
+                    cmpresult = TriggerObjectCompareResult()
+                    epktbuf = ebuf.Read()
+                    apktbuf = abuf.Read()
+                    if epktbuf is None or apktbuf is None:
+                        self._logger.error("Packet Compare: Expected type %s, Actual type %s" % (
+                            type(epktbuf), type(apktbuf)))
+                        result.mismatch.append(cmpresult)
+                        result._set_status()
+                        return result
+    
+                    # Make sure we are not accidentally comparing the same object
+                    assert(id(apktbuf) != id(epktbuf))
+                    ignore_pkt_cmp = objects.PacketComparePartial()
+                    hdr_ignore_result = objects.HeaderComparePartial()
+                    hdr_ignore_result.ignore_fields = ["chksum"]
+                    ignore_pkt_cmp.ignore_hdrs["IP"] = hdr_ignore_result
+                    hdr_ignore_result = objects.HeaderComparePartial()
+                    hdr_ignore_result.ignore_fields = ["chksum"]
+                    ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
+    
+                    self._logger.info("Comparing Packets")
+                    epkt = penscapy.Parse(bytes(epktbuf))
+                    apkt = penscapy.Parse(bytes(apktbuf))
+                    pktresult = PacketCompare(epkt, apkt, ignore_pkt_cmp)
+                    self.print_packet_mismatch(pktresult)
+                    if pktresult.matched() == False:
+                        self._logger.error("Packet compare result = Mismatch")
+                        self._logger.info(
+                            "============ EXPECTED Packet ============")
+                        penscapy.ShowRawPacket(epkt, self._logger)
+                        self._logger.info(
+                            "============ ACTUAL Packet ============")
+                        penscapy.ShowRawPacket(apkt, self._logger)
+                        result.mismatch.append(cmpresult)
+                        result._set_status()
+                        return result
+                    self._logger.info("Packet compare result = Match")
+                    result.matched.append(cmpresult)
 
         result._set_status()
         return result

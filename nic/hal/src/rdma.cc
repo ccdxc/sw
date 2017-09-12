@@ -65,6 +65,8 @@ roundup_to_pow_2(uint32_t x)
     return power;
 }
 
+static sram_lif_entry_t g_sram_lif_entry[MAX_LIFS];
+
 hal_ret_t
 rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 {
@@ -100,12 +102,16 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         return ret;
     }
 
+    memcpy(&g_sram_lif_entry[lif], entry_p, sizeof(sram_lif_entry_t));
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
 rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
 {
+    memcpy(entry_p, &g_sram_lif_entry[lif], sizeof(sram_lif_entry_t));
+#if 0
     hal_ret_t                    ret;
     rx_stage0_rdma_params_table_actiondata data = {0};
 
@@ -122,6 +128,7 @@ rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
     entry_p->log_num_cq_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_cq_entries;
     entry_p->prefetch_pool_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
     entry_p->log_num_prefetch_pool_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
+#endif
 
     return HAL_RET_OK;
 }
@@ -130,6 +137,8 @@ rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
 hal_ret_t
 rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
 {
+    memcpy(entry_p, &g_sram_lif_entry[lif], sizeof(sram_lif_entry_t));
+#if 0
     hal_ret_t                    ret;
     tx_stage0_rdma_params_table_actiondata data = {0};
 
@@ -146,6 +155,7 @@ rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
     entry_p->log_num_cq_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_cq_entries;
     entry_p->prefetch_pool_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
     entry_p->log_num_prefetch_pool_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
+#endif
 
     return HAL_RET_OK;
 }
@@ -318,6 +328,9 @@ rdma_pt_addr_get (uint16_t lif, uint32_t offset)
     rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     pt_table_base_addr = (uint32_t)(sram_lif_entry.pt_base_addr_page_id << HBM_PAGE_SIZE_SHIFT);
 
+    HAL_TRACE_DEBUG("{}: pt_table_base_addr: {} offset: {}\n",
+                    __FUNCTION__, pt_table_base_addr, offset);
+
     return ((uint32_t)(pt_table_base_addr + (offset * sizeof(uint64_t))));
 }
 
@@ -383,7 +396,14 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     uint32_t         transfer_bytes, pt_page_offset2;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-LIF:{}: RdmaMemReg for id {}", __FUNCTION__, lif);
+    HAL_TRACE_DEBUG("{}: RdmaMemReg for HW LIF {} PD {} LKEY {} RKEY {} VA {} LEN {}", 
+                    __FUNCTION__, 
+                    spec.hw_lif_id(),
+                    spec.pd(),
+                    spec.lkey(),
+                    spec.rkey(),
+                    spec.va(),
+                    spec.len());
 
     if (spec.ac_remote_wr() && !spec.ac_local_wr()) {
         HAL_TRACE_DEBUG("requesting remote write without requesting "

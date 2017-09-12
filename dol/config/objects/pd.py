@@ -29,7 +29,7 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_mr = mr.MrObjectHelper()
         mr_spec = spec.mr.Get(Store)
         self.obj_helper_mr.Generate(self, mr_spec)
-        if len(self.mrs):
+        if len(self.obj_helper_mr.mrs):
             self.mrs.SetAll(self.obj_helper_mr.mrs)
 
         self.qps = objects.ObjectDatabase(cfglogger)

@@ -63,8 +63,8 @@ class LifObject(objects.FrameworkObject):
         # RDMA per LIF allocators
         if self.enable_rdma:
             self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
-            self.pd_allocator = objects.TemplateFieldObject("range/1/128")
-            self.mr_key_allocator = objects.TemplateFieldObject("range/1/1024")
+            self.pd_allocator = objects.TemplateFieldObject("range/0/128")
+            self.mr_key_allocator = objects.TemplateFieldObject("range/0/1024")
 
         self.tenant     = tenant
         self.Show()

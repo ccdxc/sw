@@ -53,6 +53,11 @@ class RdmaRingObject(ring.RingObject):
         if self.queue.queue_type.purpose == "rdma_sq":
             self.doorbell.Ring({})  # HACK
 
+    def Consume(self, descriptor):
+        self.queue.qstate.Read()
+        descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_cindex(0)))
+        descriptor.Read()
+
     def Read(self):
         raise NotImplementedError
 

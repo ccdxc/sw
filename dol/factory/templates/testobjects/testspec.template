@@ -17,6 +17,8 @@ selectors:
     maxflows: 0
     session: None
     maxsessions: 0
+    rdmasession: None
+    maxrdmasessions: 0
     rdma:
         lqpair  : filter://any # Local QPair
         rqpair  : filter://any # Remote QPair

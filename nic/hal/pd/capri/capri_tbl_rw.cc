@@ -137,8 +137,36 @@ typedef struct capri_tcam_shadow_mem_ {
 } capri_tcam_shadow_mem_t;
 
 
-static capri_sram_shadow_mem_t *g_shadow_sram;
+static capri_sram_shadow_mem_t *g_shadow_sram_p4;
+static capri_sram_shadow_mem_t *g_shadow_sram_rxdma;
+static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
 static capri_tcam_shadow_mem_t *g_shadow_tcam;
+
+static capri_sram_shadow_mem_t* 
+get_sram_shadow_for_table (uint32_t tableid) {
+
+    if ((tableid >= P4TBL_ID_TBLMIN) &&
+        (tableid <= P4TBL_ID_TBLMAX)) {
+        HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
+                        __FUNCTION__, tableid);
+        return (g_shadow_sram_p4);
+    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        HAL_TRACE_DEBUG("{} Working with rxdma shadow for tableid {}\n",
+                        __FUNCTION__, tableid);
+        return (g_shadow_sram_rxdma);
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        HAL_TRACE_DEBUG("{} Working with txdma shadow for tableid {}\n",
+                        __FUNCTION__, tableid);
+        return (g_shadow_sram_txdma);
+    } else {
+        HAL_ASSERT(0);
+    }
+    return NULL;
+
+}
+
 
 /* HBM base address in System memory map; Cached once at the init time */
 static uint64_t hbm_mem_base_addr;
@@ -312,7 +340,7 @@ static void capri_program_p4plus_sram_table_mpu_pc_for_stage0(int tbl_id, cap_te
 #define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG    "tx_stage0_load_rdma_params.bin"
 
 #define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_TBLID 2
-#define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_TBLID 3
+#define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_TBLID 4
 
 static int capri_table_p4plus_init()
 {
@@ -425,11 +453,15 @@ int capri_table_rw_init()
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
-    g_shadow_sram = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+    g_shadow_sram_p4 = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_sram_shadow_mem_t));
     g_shadow_tcam = (capri_tcam_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_tcam_shadow_mem_t));
-    if (!g_shadow_sram || !g_shadow_tcam) {
+    g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                sizeof(capri_sram_shadow_mem_t));
+    g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                sizeof(capri_sram_shadow_mem_t));
+    if (!g_shadow_sram_p4 || !g_shadow_tcam || !g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
         // TODO: Log erorr/trace
         capri_table_rw_cleanup();
         return CAPRI_FAIL;
@@ -480,13 +512,21 @@ int capri_table_rw_init()
 
 void capri_table_rw_cleanup()
 {
-    if (g_shadow_sram) {
-        CAPRI_FREE(g_shadow_sram);
+    if (g_shadow_sram_p4) {
+        CAPRI_FREE(g_shadow_sram_p4);
+    }
+    if (g_shadow_sram_rxdma) {
+        CAPRI_FREE(g_shadow_sram_rxdma);
+    }
+    if (g_shadow_sram_txdma) {
+        CAPRI_FREE(g_shadow_sram_txdma);
     }
     if (g_shadow_tcam) {
         CAPRI_FREE(g_shadow_tcam);
     }
-    g_shadow_sram = NULL;
+    g_shadow_sram_p4 = NULL;
+    g_shadow_sram_rxdma = NULL;
+    g_shadow_sram_txdma = NULL;
     g_shadow_tcam = NULL;
 
 }
@@ -590,6 +630,9 @@ int capri_table_entry_write(uint32_t tableid,
     p4pd_table_properties_t tbl_ctx;
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
+    capri_sram_shadow_mem_t *shadow_sram;
+
+    shadow_sram = get_sram_shadow_for_table(tableid);
 
     // In case of overflow TCAM, SRAM associated with the table
     // is folded along with its parent's hash table.
@@ -613,7 +656,7 @@ int capri_table_entry_write(uint32_t tableid,
     uint16_t *_hwentry = (uint16_t*)hwentry;
     for (int j = 0; j < tbl_ctx.sram_layout.entry_width; j++) {
         if (copy_bits >= 16) {
-            g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
+            shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
             _hwentry++;
             copy_bits -= 16;
         } else if (copy_bits) {
@@ -634,8 +677,8 @@ int capri_table_entry_write(uint32_t tableid,
     pu_cpp_int<128> sram_block_data;
     uint8_t temp[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_SRAM_ROWS, blk++) {
-        //all g_shadow_sram->mem[sram_row][i] to be pushed to capri..
-        uint8_t *s = (uint8_t*)(g_shadow_sram->mem[sram_row][blk]);
+        //all shadow_sram->mem[sram_row][i] to be pushed to capri..
+        uint8_t *s = (uint8_t*)(shadow_sram->mem[sram_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp[p] = *s; s++;
         }
@@ -643,7 +686,7 @@ int capri_table_entry_write(uint32_t tableid,
             cap_pics_csr_t *pics_csr = p4pd_global_pics_get(tableid);
             sram_block_data = 0;
             pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-                                   // (uint8_t*)(g_shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
+                                   // (uint8_t*)(shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
             pics_csr->dhs_sram.entry[i]
                         .data((pu_cpp_int<128>)sram_block_data);
             pics_csr->dhs_sram.entry[i].write();
@@ -651,7 +694,7 @@ int capri_table_entry_write(uint32_t tableid,
             cap_pics_csr_t & pics_csr = cap0.sse.pics;
             sram_block_data = 0;
             pics_csr.hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-                                    //(uint8_t*)(g_shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
+                                    //(uint8_t*)(shadow_sram->mem[sram_row][i % CAPRI_SRAM_BLOCK_COUNT]));
             pics_csr.dhs_sram.entry[i]
                         .data((pu_cpp_int<128>)sram_block_data);
             pics_csr.dhs_sram.entry[i].write();
@@ -725,17 +768,21 @@ int capri_table_entry_read(uint32_t tableid,
     int copy_bits = tbl_ctx.sram_layout.entry_width_bits;
     uint16_t *_hwentry = (uint16_t*)hwentry;
 
+    capri_sram_shadow_mem_t *shadow_sram;
+
+    shadow_sram = get_sram_shadow_for_table(tableid);
+
     while(copy_bits) {
         if (copy_bits >= 16) {
-            *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
+            *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
             _hwentry++;
             copy_bits -= 16;
         } else {
             if (copy_bits > 8) {
-                *_hwentry = g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
+                *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
             } else {
                 *(uint8_t*)_hwentry =
-                    g_shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] >> 8;
+                    shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] >> 8;
             }
             copy_bits = 0;
         }
