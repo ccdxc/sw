@@ -1,16 +1,16 @@
 # Test Spec
-config_filter:
-    src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=True
-        interface   : filter://any
-    dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False
-        interface   : filter://any
-    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :   
         base        : filter://any
         lqp         : filter://any
@@ -19,8 +19,16 @@ config_filter:
     maxrdmasessions     : 1 
 
 packets:
-    - packet:
-        id          : PKT1 # Base packet
+   - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
@@ -56,8 +64,19 @@ buffers:
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
-           size    : ref://testcase/packets/id=PKT1/size
-           data    : ref://testcase/packets/id=PKT1/rawbytes
+           #check with Vikas on why hardcoded 4096 is not working
+           #size    : 4096
+           size    : ref://testcase/packets/id=IN_PKT/size
+           data    : None
+           offset  : 0
+
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           size    : ref://testcase/packets/id=BASE_PKT/size
+           data    : ref://testcase/packets/id=BASE_PKT/rawbytes
            offset  : 0
 
 descriptors:
@@ -71,7 +90,20 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address
                   len : ref://testcase/buffers/id=BUF1/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR0005/lkey
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+    - descriptor:
+        id      : DESC2
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            buff: ref://testcase/buffers/id=BUF2
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=BUF1/address
+                  len : ref://testcase/buffers/id=BUF1/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
 trigger:
     descriptors:
@@ -82,11 +114,13 @@ trigger:
 
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : ref://testcase/packets/id=IN_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1
-            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_RQ/queues/id=0/rings/id=RQ
+            # Expected Buffer on this descriptor
+            buffer  : ref://testcase/buffers/id=BUF2

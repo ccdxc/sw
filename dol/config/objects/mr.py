@@ -21,9 +21,9 @@ class MrObject(base.ConfigObjectBase):
         self.pd = pd
         self.slab = slab
         self.lkey = pd.ep.intf.lif.GetMrKey()
-        self.rkey = pd.ep.intf.lif.GetMrKey()
-        self.id = self.lkey
-        self.GID("MR%04d" % self.id)
+        self.rkey = self.lkey+512
+        self.id = slab.id
+        self.GID("MR-%s" % self.slab.GID())
         self.local_wr = local_wr
         self.remote_wr = remote_wr
         self.remote_rd = remote_rd
@@ -31,7 +31,6 @@ class MrObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        self.Show()
         cfglogger.info("MR: %s PD: %s SLAB: %s LIF: %s\n" %\
                         (self.GID(), self.pd.GID(), self.slab.GID(),
                          self.pd.ep.intf.lif.hw_lif_id))

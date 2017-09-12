@@ -21,6 +21,9 @@ class TestSpecConfigFilter(objects.FrameworkObject):
     def IsSessionBased(self):
         return self.Valid() and self.session != None
 
+    def IsRdmaSessionBased(self):
+        return self.Valid() and self.rdmasession != None
+
     def Valid(self):
         if self.flow and self.session:
             return False
