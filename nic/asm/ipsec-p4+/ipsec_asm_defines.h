@@ -6,7 +6,7 @@
 #define IPV4_HDR_SIZE 20
 #define IPV6_HDR_SIZE 40
 
-#define IPSEC_CB_IV_OFFSET 14
+#define IPSEC_CB_IV_OFFSET 30 
 #define IPSEC_IP_HDR_OFFSET 64
 
 #define IPSEC_CB_BASE ipsec_cb_base

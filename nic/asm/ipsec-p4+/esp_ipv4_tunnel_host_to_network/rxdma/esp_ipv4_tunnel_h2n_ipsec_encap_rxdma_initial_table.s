@@ -41,7 +41,9 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_packet_len, k.p42p4plus_hdr_ipsec_payload_end
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
-    
+
+    phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+ 
     phvwri p.app_header_table0_valid, 1
     addi r2, r0, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
     srl r2, r2, 6

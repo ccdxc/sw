@@ -21,9 +21,7 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     phvwr p.common_te0_phv_table_pc, r2 
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 0
-    add r3, r0, k.ipsec_global_ipsec_cb_index
-    sll r3, r3, IPSEC_CB_SHIFT_SIZE 
-    addi r3, r3, IPSEC_CB_BASE
+    add r3, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
     phvwr p.common_te0_phv_table_addr, r3 
 
     phvwr p.barco_desc_in_A0_addr, k.t0_s2s_in_page_addr
@@ -67,9 +65,7 @@ dma_cmd_write_salt_to_in_desc:
 
 dma_cmd_write_iv_to_in_desc:
     add r1, r0, k.ipsec_to_stage3_iv_size
-    add r2, r0, k.ipsec_global_ipsec_cb_index
-    sll r2, r2, IPSEC_CB_SHIFT_SIZE 
-    addi r2, r2, IPSEC_CB_BASE
+    add r2, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
     addi r2, r2, IPSEC_CB_IV_OFFSET
     add r3, r0,  k.t0_s2s_in_page_addr
     addi r3, r3, IPSEC_SALT_HEADROOM

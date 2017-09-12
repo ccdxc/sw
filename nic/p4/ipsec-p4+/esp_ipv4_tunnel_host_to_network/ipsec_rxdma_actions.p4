@@ -82,7 +82,8 @@ header_type ipsec_rxdma_global_t {
         frame_size     : 16; 
         ipsec_cb_index : 16;
         ipsec_cb_pindex : 16;
-        rxdma_pad22    : 40; 
+        ipsec_cb_addr : 34;
+        ipsec_global_pad : 6;
     }
 }
 
@@ -205,9 +206,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
     modify_field(ipsec_global_scratch.qtype, ipsec_global.qtype); \
     modify_field(ipsec_global_scratch.qid, ipsec_global.qid); \
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
-//modify_field(ipsec_global_scratch.frame_size, ipsec_global.frame_size);
-
-
+    modify_field(ipsec_global_scratch.ipsec_cb_addr, ipsec_global.ipsec_cb_addr); \
 
 
 // Enqueue the input-descriptor at the tail of ipsec-cb
@@ -290,7 +289,7 @@ action update_input_desc_aol (addr0, offset0, length0,
     modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 
     // DMA IV to beginning of INPUT DESC 
-    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_iv_src, dma_cmd_iv_dst, ((ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE)+IPSEC_CB_BASE+IPSEC_CB_IV_OFFSET), 0, addr0+IPSEC_SALT_HEADROOM, 0, ipsec_to_stage3.iv_size, 0, 0, 0)
+    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_iv_src, dma_cmd_iv_dst, ipsec_global.ipsec_cb_addr+IPSEC_CB_IV_OFFSET, 0, addr0+IPSEC_SALT_HEADROOM, 0, ipsec_to_stage3.iv_size, 0, 0, 0)
   
 }
 
@@ -422,6 +421,7 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
+    modify_field(ipsec_global.ipsec_cb_addr, p4_rxdma_intr.qstate_addr);
 
     // we do not need the other IPSec-CB content right now - we need it in txdma1
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);

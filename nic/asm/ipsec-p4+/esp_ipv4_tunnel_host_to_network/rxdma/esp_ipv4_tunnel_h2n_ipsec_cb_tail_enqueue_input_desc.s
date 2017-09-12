@@ -45,9 +45,7 @@ dma_cmd_incr_pindex:
     add r2, r0, d.cb_pindex
     addi r2, r2, 1
     phvwr p.ipsec_global_ipsec_cb_pindex, r2
-    add r3, r0, k.ipsec_global_ipsec_cb_index
-    sll r3, r3, IPSEC_CB_SHIFT_SIZE
-    addi r3, r3, IPSEC_CB_BASE
+    add r3, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
     addi r3, r3, IPSEC_CB_CB_PINDEX_OFFSET
     phvwri p.dma_cmd_incr_pindex_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_incr_pindex_dma_cmd_addr, r3
