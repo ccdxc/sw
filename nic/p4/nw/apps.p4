@@ -60,8 +60,8 @@ action p4plus_app_classic_nic() {
         bit_or(scratch_metadata.classic_nic_flags,
                scratch_metadata.classic_nic_flags, CLASSIC_NIC_FLAGS_TUNNELED);
     } else {
+        add_header(p4_to_p4plus_classic_nic_ip);
         if ((ipv4.valid == TRUE) or (ipv6.valid == TRUE)) {
-            add_header(p4_to_p4plus_classic_nic_ip);
             if (ipv4.valid == TRUE) {
                 modify_field(p4_to_p4plus_classic_nic.ip_proto, ipv4.protocol);
                 bit_or(scratch_metadata.classic_nic_flags,

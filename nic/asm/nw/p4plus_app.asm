@@ -29,14 +29,13 @@ p4plus_app_classic_nic:
   or.c3       r1, r1, CLASSIC_NIC_FLAGS_TUNNELED
 
 p4plus_app_classic_nic_native:
+  phvwr       p.p4_to_p4plus_classic_nic_ip_valid, TRUE
   seq         c1, k.ipv4_valid, TRUE
   seq         c2, k.ipv6_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_classic_nic_ip_proto, k.ipv4_protocol
   or.c1       r1, r1, CLASSIC_NIC_FLAGS_IPV4_VALID
   phvwr.c2    p.p4_to_p4plus_classic_nic_ip_proto, k.ipv6_nextHdr
   or.c2       r1, r1, CLASSIC_NIC_FLAGS_IPV6_VALID
-  orcf        c1, [c2]
-  phvwr.c1    p.p4_to_p4plus_classic_nic_ip_valid, TRUE
 
 p4plus_app_classic_nic_l4:
   seq         c1, k.tcp_valid, TRUE
