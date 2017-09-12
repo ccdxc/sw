@@ -710,6 +710,14 @@ modules:
         ignore  : True
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_2SGES
+        enable  : False
+        package : test.rdma
+        module  : rdma
+        spec    : rx_send_only_2sges.testspec
+        ignore  : True
+
+    - module:
         name    : NORMALIZATION_IP
         enable  : True
         package : test.normalization

@@ -145,7 +145,7 @@ loop:
     // DANGER: Do not move the instruction above.
     // tblrdp above should be reading l_key from old sge_p
     //sge_p++;
-    add.c2      SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
+    sub.c2      SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
 
     //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));

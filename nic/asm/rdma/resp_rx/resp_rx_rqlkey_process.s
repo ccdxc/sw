@@ -127,15 +127,16 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.sge_index)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, LOG_PAGE_SIZE)
-    //skipping completion for now.
-    //TODO
-    //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1)
-    nop.e
-    nop
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
     
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], exit
+    nop
+    //skipping completion for now.
+    //TODO
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1)
+    nop.e
+    nop
     add         r6, r0, k.global.flags // BD Slot
 
     IS_ANY_FLAG_SET(c2, r6, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
