@@ -167,66 +167,6 @@ ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
                            HAL_RET_ERR);
     }
     return HAL_RET_OK;
-
-#if 0
-    void           *key;
-    uint32_t       hash_val;
-    ht_bucket_t    *ht_bucket;
-    ht_ctxt_t      *curr_ctxt, *prev_ctxt;
-    bool           match = false;
-
-    HAL_ASSERT_RETURN(((entry != NULL) && (ht_ctxt != NULL)),
-                      HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(((ht_ctxt->prev == NULL) && (ht_ctxt->next == NULL)),
-                      HAL_RET_INVALID_ARG);
-    key = get_key_func_(entry);
-    HAL_ASSERT_RETURN(key != NULL, HAL_RET_ERR);
-    hash_val = hash_func_(key, num_buckets_);
-    HAL_ASSERT_RETURN((hash_val < num_buckets_), HAL_RET_ERR);
-
-    HAL_ATOMIC_INC_UINT32(&this->num_inserts_, 1);
-    ht_bucket = &this->ht_buckets_[hash_val];
-    if (thread_safe_) {
-        HAL_ASSERT_RETURN((HAL_SPINLOCK_LOCK(&ht_bucket->slock_) == 0),
-                          HAL_RET_ERR);
-    }
-    prev_ctxt = curr_ctxt = ht_bucket->ht_ctxt;
-    if (curr_ctxt == NULL) {
-        // this is the first entry in this bucket
-        this->ht_buckets_[hash_val].ht_ctxt = ht_ctxt;
-        goto insert_done;
-    }
-
-    do {
-        match = compare_key_func_(key, get_key_func_(curr_ctxt->entry));
-        HAL_ASSERT_GOTO((match == false), entry_found);
-        prev_ctxt = curr_ctxt;
-        curr_ctxt = curr_ctxt->next;
-    } while (curr_ctxt != NULL);
-
-    // entry not found in the bucket, insert it at the end
-    prev_ctxt->next = ht_ctxt;
-    ht_ctxt->prev = prev_ctxt;
-    HAL_ATOMIC_INC_UINT32(&this->num_collisions_, 1);
-    goto insert_done;
-
-entry_found:
-    HAL_ATOMIC_INC_UINT32(&this->num_insert_err_, 1);
-    if (thread_safe_) {
-        HAL_ASSERT_RETURN((HAL_SPINLOCK_UNLOCK(&ht_bucket->slock_) == 0),
-                           HAL_RET_ERR);
-    }
-    return HAL_RET_ENTRY_EXISTS;
-
-insert_done:
-    ht_ctxt->entry = entry;
-    ht_bucket->num_entries++;
-    if (thread_safe_) {
-        HAL_ASSERT_RETURN((HAL_SPINLOCK_UNLOCK(&ht_bucket->slock_) == 0),
-                           HAL_RET_ERR);
-    }
-    return HAL_RET_OK;
-#endif
 }
 
 void *

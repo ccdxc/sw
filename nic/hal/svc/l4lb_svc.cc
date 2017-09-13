@@ -13,8 +13,9 @@ L4LbServiceImpl::L4LbServiceCreate(ServerContext *context,
                                    const L4LbServiceRequestMsg *req,
                                    L4LbServiceResponseMsg *rsp)
 {
-    uint32_t             i, nreqs = req->request_size();
-    l4lb::L4LbServiceResponse  *response;
+    uint32_t                     i, nreqs = req->request_size();
+    l4lb::L4LbServiceResponse    *response;
+    hal_ret_t                    ret;
 
     HAL_TRACE_DEBUG("Rcvd L2Segment Create Request");
     if (nreqs == 0) {
@@ -22,9 +23,15 @@ L4LbServiceImpl::L4LbServiceCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::l4lbservice_create(spec, response);
+        ret = hal::l4lbservice_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }

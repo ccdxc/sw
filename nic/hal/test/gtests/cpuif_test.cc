@@ -114,14 +114,18 @@ TEST_F(cpuif_test, test1)
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
     ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
@@ -130,20 +134,26 @@ TEST_F(cpuif_test, test1)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
     lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create a lif
     lif_spec.set_port_num(11);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create cpuif
@@ -152,7 +162,9 @@ TEST_F(cpuif_test, test1)
     cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(cpuif_spec, &cpuif_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 

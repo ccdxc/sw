@@ -127,7 +127,7 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
                          nwsec::SecurityProfileResponse *rsp)
 {
     hal_ret_t                      ret;
-    nwsec_profile_t                *sec_prof;
+    nwsec_profile_t                *sec_prof = NULL;
     pd::pd_nwsec_profile_args_t    pd_nwsec_profile_args;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -187,10 +187,10 @@ security_profile_create (nwsec::SecurityProfileSpec& spec,
 end:
 
     if ((ret != HAL_RET_OK) && (sec_prof != NULL)) {
+        HAL_TRACE_DEBUG("Failed to create nwsec profile, id {} ret{}",
+                        spec.key_or_handle().profile_id(), ret);
         nwsec_profile_free(sec_prof);
     }
-    HAL_TRACE_DEBUG("{}: Failed to create nwsec profile, id {} ret{}",
-                    __FUNCTION__, spec.key_or_handle().profile_id(), ret);
     HAL_TRACE_DEBUG("--------------------- API End ------------------------");
     return ret;
 }

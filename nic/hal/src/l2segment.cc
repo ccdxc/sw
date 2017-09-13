@@ -127,7 +127,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t              ret;
     tenant_t               *tenant;
-    l2seg_t                *l2seg;
+    l2seg_t                *l2seg = NULL;
     tenant_id_t            tid;
     pd::pd_l2seg_args_t    pd_l2seg_args;
     hal_handle_t           nw_handle;

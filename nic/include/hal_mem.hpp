@@ -11,6 +11,7 @@ namespace hal {
 typedef enum hal_slab_e {
     HAL_SLAB_NONE,
     HAL_SLAB_HANDLE,
+    HAL_SLAB_HANDLE_HT_ENTRY,
     HAL_SLAB_TENANT,
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,

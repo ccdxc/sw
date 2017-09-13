@@ -14,6 +14,7 @@ NwSecurityServiceImpl::SecurityProfileCreate(ServerContext *context,
 {
     uint32_t                   i, nreqs = req->request_size();
     SecurityProfileResponse    *response;
+    hal_ret_t                   ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Create Request");
     if (nreqs == 0) {
@@ -21,9 +22,15 @@ NwSecurityServiceImpl::SecurityProfileCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::security_profile_create(spec, response);
+        ret = hal::security_profile_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -35,6 +42,7 @@ NwSecurityServiceImpl::SecurityProfileUpdate(ServerContext *context,
 {
     uint32_t                   i, nreqs = req->request_size();
     SecurityProfileResponse    *response;
+    hal_ret_t                  ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Update Request");
     if (nreqs == 0) {
@@ -42,9 +50,15 @@ NwSecurityServiceImpl::SecurityProfileUpdate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::security_profile_update(spec, response);
+        ret = hal::security_profile_update(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -72,10 +86,12 @@ NwSecurityServiceImpl::SecurityProfileGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto request = req->request(i);
         hal::security_profile_get(request, response);
     }
+    hal::hal_cfg_db_close(true);
     return Status::OK;
 }

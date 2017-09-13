@@ -112,6 +112,7 @@ private:
 
     cfg_version_t db_get_current_version(void);
     cfg_version_t db_reserve_version(void);
+    hal_ret_t db_update_version(cfg_version_t ver);
     hal_ret_t db_release_version_in_use(cfg_version_t ver);
 
 private:
@@ -288,6 +289,7 @@ public:
     ~hal_mem_db();
 
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
+    slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
@@ -316,6 +318,7 @@ private:
 
 private:
     slab    *hal_handle_slab_;
+    slab    *hal_handle_ht_entry_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
@@ -357,6 +360,7 @@ public:
 
     // get APIs for HAL handle related state
     slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
+    slab *hal_handle_ht_entry_slab(void) const { return mem_db_->hal_handle_ht_entry_slab(); }
 
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }

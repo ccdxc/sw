@@ -64,3 +64,9 @@ hal::ep_get_mac_addr(hal::ep_s*)
 {
     return NULL;
 }
+
+void *
+hal::hal_handle::get_obj(void)
+{
+    return NULL;
+}

@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include <iostream>
 #include <stdio.h>
 #include <string>
@@ -39,9 +40,13 @@ LIFManager *g_lif_manager = nullptr;
 
 // thread local variables
 thread_local thread *t_curr_thread;
+thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 using boost::property_tree::ptree;
 
+//------------------------------------------------------------------------------
+// TODO - dummy for now !!
+//------------------------------------------------------------------------------
 static void *
 fte_pkt_loop (void *ctxt)
 {
@@ -141,6 +146,16 @@ fte_pkt_loop (void *ctxt)
 }
 
 //------------------------------------------------------------------------------
+// return current thread pointer, for gRPC threads t_curr_thread is not set,
+// however, they are considered as cfg threads
+//------------------------------------------------------------------------------
+thread *
+hal_get_current_thread (void)
+{
+    return t_curr_thread ? t_curr_thread : g_hal_threads[HAL_THREAD_ID_CFG];
+}
+
+//------------------------------------------------------------------------------
 // constructor
 //------------------------------------------------------------------------------
 hal_handle::hal_handle()
@@ -209,36 +224,38 @@ hal_handle::~hal_handle()
 //       we don't need the per handle lock
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_handle::add_obj(cfg_version_t ver, void *obj)
+hal_handle::add_obj(void *obj)
 {
     uint32_t     i;
     int          free_slot = -1;
     hal_ret_t    ret = HAL_RET_OK;
 
+    HAL_ASSERT_RETURN((t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE), HAL_RET_ERR);
     HAL_SPINLOCK_LOCK(&slock_);
     for (i = 0; i < k_max_objs_; i++) {
         if (objs_[i].valid) {
-            if (objs_[i].ver >= ver) {
-                // someone committed a version greater than this version,
-                // backout and retry
+            if (objs_[i].ver >= t_cfg_db_ctxt.rsvd_ver_) {
+                // TODO: someone committed a version greater than this version,
+                // backout and retry ?? or still go ahead ??
                 ret = HAL_RET_RETRY;
                 goto end;
-            } else {
-                free_slot = i;
             }
+        } else {
+            free_slot = i;
         }
-        // we know that this version is the latest, try to add this object to
-        // the handle
-        if (free_slot < 0) {
-            return HAL_RET_NO_RESOURCE;
-            goto end;
-        }
-
-        // all is well insert object into this handle
-        objs_[i].ver = ver;
-        objs_[i].obj = obj;
-        objs_[i].valid = TRUE;
     }
+
+    // we know that this version is the latest, try to add this object to
+    // the handle
+    if (free_slot < 0) {
+        return HAL_RET_NO_RESOURCE;
+        goto end;
+    }
+
+    // all is well insert object into this handle
+    objs_[free_slot].ver = t_cfg_db_ctxt.rsvd_ver_;
+    objs_[free_slot].obj = obj;
+    objs_[free_slot].valid = TRUE;
 
 end:
 
@@ -246,6 +263,56 @@ end:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+// get an object that has the highest version that is <= read-version
+// acquired by this thread
+//------------------------------------------------------------------------------
+void *
+hal_handle::get_obj(void)
+{
+    void             *obj = NULL;
+    cfg_version_t    max_ver = 0;
+    uint32_t         i, loc;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < k_max_objs_; i++) {
+        if (objs_[i].valid && (objs_[i].ver <= t_cfg_db_ctxt.ver_in_use_)) {
+            max_ver = objs_[i].ver;
+            loc = i;
+        }
+    }
+
+    // check if an valid returnable object is found and return that
+    if (max_ver) {
+        obj = objs_[loc].obj;
+    }
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return obj;
+}
+
+//------------------------------------------------------------------------------
+// get any valid object that is non-NULL from this handle (note that there could
+// be a valid entry but obj is NULL for objects that are deleted)
+//------------------------------------------------------------------------------
+void *
+hal_handle::get_any_obj(void)
+{
+    void             *obj = NULL;
+    uint32_t         i;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < k_max_objs_; i++) {
+        if (objs_[i].valid && (objs_[i].obj != NULL)) {
+            obj = objs_[i].obj;
+            break;
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return obj;
+}
+
+// TODO: cleanup these two APIs once all objects move to new APIs
 //------------------------------------------------------------------------------
 // allocate a handle for an object instance
 // TODO: if this can be called from FTE, we need atomic increments
@@ -266,6 +333,32 @@ hal_free_handle (uint64_t handle)
 }
 
 //------------------------------------------------------------------------------
+// allocate a handle for an object instance
+//------------------------------------------------------------------------------
+hal_handle_t
+hal_handle_alloc (void)
+{
+    hal_handle    *handle;
+
+    handle = hal_handle::factory();
+    return reinterpret_cast<hal_handle_t>(handle);
+}
+
+//------------------------------------------------------------------------------
+// return a hal handle back so it can be reallocated for another object
+//------------------------------------------------------------------------------
+void
+hal_handle_free (uint64_t handle)
+{
+    hal_handle    *hndl;
+
+    hndl = reinterpret_cast<hal_handle *>(handle);
+    hndl->~hal_handle();
+    g_hal_state->hal_handle_slab()->free(hndl);
+    return;
+}
+
+//------------------------------------------------------------------------------
 // initialize all the signal handlers
 //------------------------------------------------------------------------------
 static void
@@ -275,7 +368,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 
     switch (sig) {
     case SIGINT:
-    case SIGKILL:
         HAL_GCOV_FLUSH();
         utils::hal_logger().flush();
         exit(0);
@@ -289,7 +381,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 
     case SIGHUP:
     case SIGQUIT:
-    case SIGSEGV:
     case SIGCHLD:
     case SIGURG:
     case SIGTERM:
@@ -315,7 +406,6 @@ hal_sig_init (void)
     sigaction(SIGQUIT, &act, NULL);
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGSEGV, &act, NULL);
     sigaction(SIGCHLD, &act, NULL);
     sigaction(SIGURG, &act, NULL);
     sigaction(SIGUSR2, &act, NULL);

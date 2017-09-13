@@ -12,6 +12,9 @@ using tenant::TenantSpec;
 using tenant::TenantRequestMsg;
 using tenant::TenantResponse;
 using tenant::TenantResponseMsg;
+using tenant::TenantGetRequestMsg;
+using tenant::TenantGetRequest;
+using tenant::TenantGetResponseMsg;
 
 using l2segment::L2Segment;
 using l2segment::L2SegmentSpec;
@@ -19,7 +22,7 @@ using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
 
-const std::string&    hal_svc_endpoint_("localhost:50052");
+const std::string&    hal_svc_endpoint_("localhost:50054");
 
 class hal_client {
 public:
@@ -29,7 +32,6 @@ public:
     uint64_t tenant_create(uint32_t tenant_id) {
         TenantSpec           *spec;
         TenantRequestMsg     req_msg;
-        TenantResponse       *rsp;
         TenantResponseMsg    rsp_msg;
         ClientContext        context;
         Status               status;
@@ -51,12 +53,55 @@ public:
         return 0;
     }
 
+    uint64_t tenant_get_by_id(uint32_t id) {
+        TenantGetRequestMsg     req_msg;
+        TenantGetRequest        *req;
+        TenantGetResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_tenant_id(id);
+        status = tenant_stub_->TenantGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Tenant get succeeded, handle = "
+                      << rsp_msg.response(0).status().tenant_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().tenant_handle();
+        }
+        std::cout << "Tenant get failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
+    uint64_t tenant_get_by_handle(uint32_t hal_handle) {
+        TenantGetRequestMsg     req_msg;
+        TenantGetRequest        *req;
+        TenantGetResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_tenant_handle(hal_handle);
+        status = tenant_stub_->TenantGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Tenant get succeeded, handle = "
+                      << rsp_msg.response(0).status().tenant_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().tenant_handle();
+        }
+        std::cout << "Tenant get failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
     uint64_t l2segment_create(uint32_t tenant_id,
                               uint64_t l2segment_id,
                               uint64_t l4_profile_handle) {
         L2SegmentSpec           *spec;
         L2SegmentRequestMsg     req_msg;
-        L2SegmentResponse       *rsp;
         L2SegmentResponseMsg    rsp_msg;
         ClientContext           context;
         Status                  status;
@@ -90,11 +135,15 @@ private:
 int
 main (int argc, char** argv)
 {
+    uint64_t    hal_handle;
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
     // create a tenant
-    assert(hclient.tenant_create(1) != 0);
+    hal_handle = hclient.tenant_create(1);
+    assert(hal_handle != 0);
+    assert(hclient.tenant_get_by_handle(hal_handle) != 0);
+    assert(hclient.tenant_get_by_id(1) != 0);
     assert(hclient.l2segment_create(1, 1, 1) != 0);
 
     return 0;

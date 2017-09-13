@@ -14,6 +14,7 @@ EndpointServiceImpl::EndpointCreate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     EndpointResponse     *response;
+    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Endpoint Create Request");
     if (nreqs == 0) {
@@ -21,9 +22,15 @@ EndpointServiceImpl::EndpointCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::endpoint_create(spec, response);
+        ret = hal::endpoint_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -35,6 +42,7 @@ EndpointServiceImpl::EndpointUpdate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     EndpointResponse     *response;
+    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Endpoint Update Request");
     if (nreqs == 0) {
@@ -42,9 +50,15 @@ EndpointServiceImpl::EndpointUpdate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::endpoint_update(spec, response);
+        ret = hal::endpoint_update(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -70,9 +84,11 @@ EndpointServiceImpl::EndpointGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
         hal::endpoint_get(request, rsp);
     }
+    hal::hal_cfg_db_close(true);
     return Status::OK;
 }

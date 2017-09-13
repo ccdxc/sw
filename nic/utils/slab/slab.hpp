@@ -69,7 +69,6 @@ private:
     void delay_delete_cb(uint32_t timer_id, void *ctxt);
     void free_(void *elem);
     slab_block_t *alloc_block_(void);
-
 };
 
 }    // namespace hal

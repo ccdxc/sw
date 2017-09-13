@@ -6,6 +6,7 @@
 #include <string>
 #include <base.h>
 #include <thread.hpp>
+#include <ht.hpp>
 #include <hal_lock.hpp>
 
 namespace hal {
@@ -15,6 +16,7 @@ class LIFManager;
 extern LIFManager *g_lif_manager;
 
 using utils::thread;
+using hal::utils::ht_ctxt_t;
 
 //------------------------------------------------------------------------------
 // TODO - following should come from cfg file or should be derived from platform
@@ -33,6 +35,7 @@ enum {
 #define HAL_CONTROL_CORE_ID                          0
 
 extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
+thread *hal_get_current_thread(void);
 
 #define HAL_MAX_NAME_STR         16
 typedef struct hal_cfg_s {
@@ -69,7 +72,15 @@ public:
     ~hal_handle();
     // add an object to this handle .. even if object
     // is getting deleted add it with right version and NULL object
-    hal_ret_t add_obj(cfg_version_t cfg_db_ver, void *obj);
+    hal_ret_t add_obj(void *obj);
+
+    // get an object that has the highes version that is <= read-version
+    // acquired by this thread
+    void *get_obj(void);
+
+    // get any valid object that is non-NULL from this handle (note that there
+    // could be a valid entry but obj is NULL for objects that are deleted)
+    void *get_any_obj(void);
 
 private:
     bool init(void);
@@ -85,6 +96,19 @@ private:
         uint8_t          valid:1;    // TRUE if valid
     } __PACK__ objs_[k_max_objs_];
 };
+extern hal_handle_t hal_handle_alloc(void);
+extern void hal_handle_free(uint64_t handle);
+
+//------------------------------------------------------------------------------
+// A HAL object can be indexed by several keys (e.g., like L2 key, L3 keys for
+// endpoint), however all those lookups must give corresponding object's HAL
+// handle as result (and never the object itself directly). The following
+// structure is meant to be result of all such hash tables
+//------------------------------------------------------------------------------
+typedef struct hal_handle_ht_entry_s {
+    hal_handle    *handle;
+    ht_ctxt_t     ht_ctxt;
+} __PACK__ hal_handle_ht_entry_t;
 
 //------------------------------------------------------------------------------
 // HAL internal api to allocate handle for an object

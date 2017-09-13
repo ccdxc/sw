@@ -109,6 +109,36 @@ add_tenant_to_db (tenant_t *tenant)
     return HAL_RET_OK;
 }
  
+//------------------------------------------------------------------------------
+// find a tenant instance by its id
+//------------------------------------------------------------------------------
+static inline tenant_t *
+tenant_lookup_by_id (tenant_id_t tid)
+{
+    hal_handle_ht_entry_t    *entry;
+    tenant_t                 *tenant;
+
+    entry = (hal_handle_ht_entry_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
+    if (entry) {
+        tenant = (tenant_t *)entry->handle->get_obj();
+        return tenant;
+    }
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+// find a tenant instance by its handle
+//------------------------------------------------------------------------------
+static inline tenant_t *
+tenant_lookup_by_handle (hal_handle_t handle)
+{
+    hal_handle    *hndl;
+    
+    hndl = reinterpret_cast<hal_handle *>(handle);
+    return (tenant_t *)hndl->get_obj();
+}
+
+#if 0
 // find a tenant instance by its id
 static inline tenant_t *
 tenant_lookup_by_id (tenant_id_t tid)
@@ -122,23 +152,41 @@ tenant_lookup_by_handle (hal_handle_t handle)
 {
     return (tenant_t *)g_hal_state->tenant_hal_handle_ht()->lookup(&handle);
 }
+#endif
 
+extern void *tenant_id_get_key_func(void *entry);
+extern uint32_t tenant_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tenant_id_compare_key_func(void *key1, void *key2);
+
+#if 0
 extern void *tenant_get_key_func(void *entry);
 extern uint32_t tenant_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tenant_compare_key_func(void *key1, void *key2);
+#endif
 
+// TODO: these may not be needed as hal_handle is direct ptr unless
+//       we want to introduce one more indirection for HAL stateful restart
+//       cases without invalidating the handles given to agent(s)
 extern void *tenant_get_handle_key_func(void *entry);
 extern uint32_t tenant_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool tenant_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t tenant_create(tenant::TenantSpec& spec,
                         tenant::TenantResponse *rsp);
+#if 0
+hal_ret_t tenant_create_v2(tenant::TenantSpec& spec,
+                           tenant::TenantResponse *rsp);
+#endif
 hal_ret_t tenant_update(tenant::TenantSpec& spec,
                         tenant::TenantResponse *rsp);
 hal_ret_t tenant_delete(tenant::TenantDeleteRequest& req,
                         tenant::TenantDeleteResponseMsg *rsp);
 hal_ret_t tenant_get(tenant::TenantGetRequest& req,
                      tenant::TenantGetResponse *rsp);
+#if 0
+hal_ret_t tenant_get_v2(tenant::TenantGetRequest& req,
+                        tenant::TenantGetResponse *rsp);
+#endif
 
 }    // namespace hal
 

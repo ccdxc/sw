@@ -99,7 +99,9 @@ TEST_F(buf_pool_test, test1)
     spec.add_tcs()->set_cos(2);
     spec.add_tcs()->set_cos(3);
     
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::buf_pool_create(spec, &rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
@@ -128,7 +130,9 @@ TEST_F(buf_pool_test, test2)
         spec.add_tcs()->set_cos(2);
         spec.add_tcs()->set_cos(3);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::buf_pool_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 }
@@ -159,7 +163,9 @@ TEST_F(buf_pool_test, test3)
         spec.add_tcs()->set_cos(i + 2);
         spec.add_tcs()->set_cos(i + 3);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::buf_pool_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         if (i == 0) {
             ASSERT_TRUE(ret == HAL_RET_OK);
         } else {
@@ -191,7 +197,9 @@ TEST_F(buf_pool_test, test4)
 
         spec.add_tcs()->set_cos(i);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::buf_pool_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         if (i == 8) {
             EXPECT_TRUE(ret != HAL_RET_OK);
         } else {
@@ -214,7 +222,9 @@ TEST_F(buf_pool_test, test4)
 
         spec.add_tcs()->set_cos(i);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::buf_pool_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         if (i == 16) {
             EXPECT_TRUE(ret != HAL_RET_OK);
         } else {

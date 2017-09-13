@@ -102,7 +102,9 @@ TEST_F(acl_test, test1)
     spec.mutable_key_or_handle()->set_acl_id(1);
     spec.set_priority(100);
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::acl_create(spec, &rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     spec.Clear();
 }
@@ -129,7 +131,9 @@ TEST_F(acl_test, test2)
         spec.mutable_key_or_handle()->set_acl_id(1);
         spec.set_priority(100);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         ASSERT_TRUE(ret == HAL_RET_OK);
         spec.Clear();
     }
@@ -162,7 +166,9 @@ TEST_F(acl_test, test3)
         spec.mutable_key_or_handle()->set_acl_id(1);
         spec.set_priority(100);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         ASSERT_TRUE(ret == HAL_RET_OK);
 
         entries.push_back(rsp.status().acl_handle().handle());
@@ -172,7 +178,9 @@ TEST_F(acl_test, test3)
 
     for (auto &entry : entries) {
         del_req.mutable_key_or_handle()->mutable_acl_handle()->set_handle(entry);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_delete(del_req, &del_rsp);
+        hal::hal_cfg_db_close(false);
         ASSERT_EQ(ret, HAL_RET_OK);
         ASSERT_EQ(del_rsp.api_status(), types::API_STATUS_OK);
         del_req.Clear();

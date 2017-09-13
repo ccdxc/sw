@@ -158,14 +158,18 @@ TEST_F(uplinkif_test, test3)
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
     ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
@@ -174,7 +178,9 @@ TEST_F(uplinkif_test, test3)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
@@ -183,7 +189,9 @@ TEST_F(uplinkif_test, test3)
     if_spec.mutable_key_or_handle()->set_interface_id(1);
     if_spec.mutable_if_uplink_info()->set_port_num(1);
     // if_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     // Create l2segment
@@ -191,16 +199,20 @@ TEST_F(uplinkif_test, test3)
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close(false);
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Adding L2segment on Uplink
     if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(1);
     if_l2seg_spec.mutable_if_key_handle()->set_interface_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
     printf("ret: %d api_status: %d\n", ret, if_l2seg_rsp.api_status());
     ASSERT_TRUE(ret == HAL_RET_OK);
+    hal::hal_cfg_db_close(false);
 
     // Release if_uplink_info
     // free spec.release_if_uplink_info();

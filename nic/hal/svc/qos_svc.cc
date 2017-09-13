@@ -15,6 +15,7 @@ QOSServiceImpl::BufPoolCreate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     BufPoolResponse      *response;
+    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd BufPool Create Request");
     if (nreqs == 0) {
@@ -22,9 +23,15 @@ QOSServiceImpl::BufPoolCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::buf_pool_create(spec, response);
+        ret = hal::buf_pool_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -63,6 +70,7 @@ QOSServiceImpl::QueueCreate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     QueueResponse      *response;
+    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Queue Create Request");
     if (nreqs == 0) {
@@ -70,9 +78,15 @@ QOSServiceImpl::QueueCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::queue_create(spec, response);
+        ret = hal::queue_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }
@@ -111,6 +125,7 @@ QOSServiceImpl::PolicerCreate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     PolicerResponse    *response;
+    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Policer Create Request");
     if (nreqs == 0) {
@@ -118,9 +133,15 @@ QOSServiceImpl::PolicerCreate(ServerContext *context,
     }
 
     for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::policer_create(spec, response);
+        ret = hal::policer_create(spec, response);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
     }
     return Status::OK;
 }

@@ -21,8 +21,6 @@
  
 namespace hal {
 
-extern thread_local thread *t_curr_thread;
-
 // global instance of all HAL state including config, operational states
 class hal_state    *g_hal_state;
 
@@ -36,19 +34,6 @@ struct cfg_db_dirty_objs_s {
 } __PACK__;
 
 //------------------------------------------------------------------------------
-// HAL config db APIs store some context in the cfg_db_ctxt_t
-// NOTE: this context is per thread, not for the whole process
-//------------------------------------------------------------------------------
-typedef struct cfg_db_ctxt_s {
-    bool                   cfg_db_open_;    // true if cfg db is opened
-    cfg_op_t               cfg_op_;         // cfg operation for which db is opened
-    cfg_version_t          ver_in_use_;     // version we are starting the operation with
-    cfg_version_t          rsvd_ver_;       // version to commit db modifications with
-    cfg_db_dirty_objs_t    *dirty_objs;     // dirty object list to be committed
-} cfg_db_ctxt_t;
-thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
-
-//------------------------------------------------------------------------------
 // init() function to instantiate all the config db init state
 //------------------------------------------------------------------------------
 bool
@@ -58,9 +43,9 @@ hal_cfg_db::init(void)
 
     // initialize tenant related data structures
     tenant_id_ht_ = ht::factory(HAL_MAX_VRFS,
-                                hal::tenant_get_key_func,
-                                hal::tenant_compute_hash_func,
-                                hal::tenant_compare_key_func);
+                                hal::tenant_id_get_key_func,
+                                hal::tenant_id_compute_hash_func,
+                                hal::tenant_id_compare_key_func);
     HAL_ASSERT_RETURN((tenant_id_ht_ != NULL), false);
 
     tenant_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
@@ -538,8 +523,8 @@ hal_cfg_db::db_release_version_in_use(cfg_version_t ver)
         if (cfg_ver_in_use_[i].valid && (cfg_ver_in_use_[i].ver == ver)) {
             cfg_ver_in_use_[i].usecnt--;
             if (cfg_ver_in_use_[i].usecnt == 0) {
+                cfg_ver_in_use_[i].ver = 0;
                 cfg_ver_in_use_[i].valid = FALSE;
-                cfg_ver_in_use_[i].ver = FALSE;
             }
         }
     }
@@ -576,6 +561,16 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// update the current version of the db to the given version
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::db_update_version(cfg_version_t ver)
+{
+    HAL_ATOMIC_STORE_UINT32(&cfg_db_ver_, &ver);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // API to call before processing any packet by FTE, any operation by config
 // thread or periodic thread etc.
 // NOTE: once opened, cfg db has to be closed properly and reserved version
@@ -587,7 +582,7 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     // if the cfg db was already opened by this thread, error out
     if (t_cfg_db_ctxt.cfg_db_open_) {
         HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
-                      t_curr_thread->name());
+                      hal_get_current_thread()->name());
         return HAL_RET_ERR;
     }
 
@@ -603,18 +598,12 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     t_cfg_db_ctxt.cfg_op_ = cfg_op;
     t_cfg_db_ctxt.cfg_db_open_ = true;
     HAL_TRACE_DEBUG("{} opened cfg db, cfg op : {}, rsvd version : {}",
-                    t_curr_thread->name(), cfg_op, t_cfg_db_ctxt.rsvd_ver_);
+                    hal_get_current_thread()->name(), cfg_op,
+                    t_cfg_db_ctxt.rsvd_ver_);
 
     return HAL_RET_OK;
 }
 
-hal_ret_t
-hal_cfg_db::db_close(void)
-{
-    return HAL_RET_OK;
-}
-
-#if 0
 //------------------------------------------------------------------------------
 // API to call after processing any packet by FTE, any operation by config
 // thread or periodic thread etc. If successful, this will make the currently
@@ -628,8 +617,20 @@ hal_cfg_db::db_close(void)
 hal_ret_t
 hal_cfg_db::db_close(void)
 {
-    hal_ret_t    ret;
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        db_release_version_in_use(t_cfg_db_ctxt.ver_in_use_);
+        if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
+            // additionally update the write version
+            db_update_version(t_cfg_db_ctxt.rsvd_ver_);
+        }
+        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
+        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
+        t_cfg_db_ctxt.ver_in_use_ = 0;
+        t_cfg_db_ctxt.rsvd_ver_ = 0;
+    }
+    return HAL_RET_OK;
 
+#if 0
     if (t_cfg_db_ctxt.cfg_db_open_) {
         if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
             // TODO: commit this version
@@ -645,18 +646,19 @@ hal_cfg_db::db_close(void)
                 g_hal_state->cfg_db_version_invalidate(t_cfg_db_ctxt.rsvd_ver_);
             }
         } else {
-            // release the version, indicating that we are done using rsvd_ver_
-            g_hal_state->cfg_db_version_release(t_cfg_db_ctxt.rsvd_ver_);
+            // release the read version, indicating that we are done using it
+            g_hal_state->db_release_version_in_use(t_cfg_db_ctxt.ver_in_use_);
         }
 
         // successful or not, close the DB so the app can reopen and retry
         t_cfg_db_ctxt.cfg_db_open_ = FALSE;
         t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
+        t_cfg_db_ctxt.ver_in_use_ = 0;
         t_cfg_db_ctxt.rsvd_ver_ = 0;
     }
     return HAL_RET_OK;
-}
 #endif
+}
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the oper db init state
@@ -770,6 +772,12 @@ hal_mem_db::init(void)
                                      HAL_SLAB_HANDLE, sizeof(hal_handle),
                                      64, true, true, true, true);
     HAL_ASSERT_RETURN((hal_handle_slab_ != NULL), false);
+
+    hal_handle_ht_entry_slab_ = slab::factory("hal-handle-ht-entry",
+                                              HAL_SLAB_HANDLE_HT_ENTRY,
+                                              sizeof(hal_handle_ht_entry_t),
+                                              64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_handle_ht_entry_slab_ != NULL), false);
 
     // initialize tenant related data structures
     tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
@@ -902,6 +910,7 @@ hal_mem_db::init(void)
 hal_mem_db::hal_mem_db()
 {
     hal_handle_slab_ = NULL;
+    hal_handle_ht_entry_slab_ = NULL;
     tenant_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
@@ -953,6 +962,7 @@ hal_mem_db::factory(void)
 hal_mem_db::~hal_mem_db()
 {
     hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
+    hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
@@ -1031,7 +1041,8 @@ hal_state::factory(void)
     HAL_ABORT(mem != NULL);
     state = new (mem) hal_state();
     if (state->init() == false) {
-	    HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
+        state->~hal_state();
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
 	    return NULL;
     }
 
@@ -1059,25 +1070,6 @@ hal_state::~hal_state()
     }
 }
 
-#if 0
-//------------------------------------------------------------------------------
-// factory method
-//------------------------------------------------------------------------------
-hal_state *
-hal_state::factory(void)
-{
-    hal_state *state;
-
-    state = new hal_state();
-    HAL_ASSERT_RETURN((state != NULL), NULL);
-    if (state->init() == false) {
-        delete state;
-        return NULL;
-    }
-    return state;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
@@ -1097,6 +1089,14 @@ hal_ret_t
 free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
+    case HAL_SLAB_HANDLE:
+        g_hal_state->hal_handle_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_HANDLE_HT_ENTRY:
+        g_hal_state->hal_handle_ht_entry_slab()->free(elem);
+        break;
+
     case HAL_SLAB_TENANT:
         g_hal_state->tenant_slab()->free_(elem);
         break;
