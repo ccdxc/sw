@@ -39,8 +39,9 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     srl r2, r2, 6 
     phvwr p.common_te1_phv_table_pc, r2 
     phvwri p.common_te1_phv_table_raw_table_size, 2
-    //phvwr p.common_te1_phv_table_addr, BRQ_REQ_SEMAPHORE_ADDR
-
+    phvwri p.common_te1_phv_table_addr, BRQ_REQ_SEMAPHORE_ADDR
+    nop.e
+    nop
 
     
 

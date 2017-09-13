@@ -19,4 +19,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex:
     srl r2, r2, 6
     phvwr p.common_te0_phv_table_pc, r2
     phvwr p.common_te0_phv_table_addr, d.in_desc_addr
+    nop.e
+    nop
     

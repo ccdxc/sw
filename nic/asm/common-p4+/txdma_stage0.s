@@ -22,6 +22,7 @@
     .param      tls_stage0
     .param      tcp_tx_read_rx2tx_shared_process
     .param      eth_tx_fetch_desc
+    .param      esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -57,6 +58,11 @@ tcp_tx_stage0:
     nop
 
 .align
+ipsec_tx_stage0:
+    j esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table
+    nop
+
+.align
 tls_tx_stage0:
     j   tls_stage0
     nop
@@ -65,5 +71,4 @@ tls_tx_stage0:
 storage_tx_stage0:
    j    storage_tx_q_state_pop_start
    nop
-
 

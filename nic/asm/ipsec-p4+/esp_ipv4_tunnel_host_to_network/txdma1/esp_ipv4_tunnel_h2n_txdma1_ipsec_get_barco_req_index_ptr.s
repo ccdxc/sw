@@ -18,4 +18,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr:
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwr  p.common_te0_phv_table_addr, d.barco_req_index_address
     phvwri p.app_header_table2_valid, 0
+    nop.e
+    nop
     
