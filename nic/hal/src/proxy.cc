@@ -445,9 +445,9 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     tid = req.meta().tenant_id();
     tenant = tenant_lookup_by_id(tid); 
     if(tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        //rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
         HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
-        return HAL_RET_INVALID_ARG;    
+        //return HAL_RET_INVALID_ARG;    
     }
     
     if(!req.has_spec() ||
