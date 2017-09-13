@@ -1,0 +1,24 @@
+feature:
+    # Feature ID: Report will be generated against this.
+    # NOTE: module names will not be used anymore.
+    id      : Sample
+    
+    # Global Knob to Enable/Disable feature
+    # NOTE: Per-module 'enable' will override this.
+    enable  : True
+
+    # Package Name for this feature.
+    # NOTE: All modules below must be in the same package.
+    package : test.firewall
+
+    # Global Knob to Ignore failures for this feature.
+    # NOTE: Per-module 'ignore' will override this.
+    ignore  : False
+
+modules:
+    - module:
+        name    : SAMPLE_TEST1
+        enable  : False
+        module  : sample
+        spec    : sample.testspec
+        ignore  : True

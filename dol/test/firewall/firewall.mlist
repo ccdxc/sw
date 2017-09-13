@@ -1,0 +1,18 @@
+# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+feature:
+    id      : None
+    enable  : None
+    package : None
+    module  : None
+    ignore  : None
+
+modules:
+    - module
+        name    : None
+        enable  : None
+        package : None
+        module  : None
+        spec    : None
+        args    : None
+        iterate : None
+
