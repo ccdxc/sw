@@ -237,7 +237,7 @@ class AclObject(base.ConfigObjectBase):
         return
 
     def PrepareHALDeleteRequestSpec(self, reqspec):
-        reqspec.key_or_handle.acl_id = self.id
+        reqspec.key_or_handle.acl_handle.handle = self.hal_handle
         return
 
     def ProcessHALDeleteResponse(self, req_spec, resp_spec):

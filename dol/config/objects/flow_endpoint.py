@@ -60,9 +60,6 @@ class FlowEndpointObject(base.ConfigObjectBase):
         else:
             self.port = entry.port.get()
 
-        if 'flow_info' in entry.__dict__:
-            self.flow_info = objects.MergeObjects(entry.flow_info,
-                                                  self.flow_info)
         if 'tracking_info' in entry.__dict__:
             self.tracking_info = objects.MergeObjects(entry.tracking_info,
                                                       self.tracking_info)
@@ -88,6 +85,16 @@ class FlowEndpointObject(base.ConfigObjectBase):
             self.__set_mac_info(entry)
         else:
             assert(0)
+
+        if 'flow_info' in entry.__dict__:
+            self.flow_info = objects.MergeObjects(entry.flow_info,
+                                                  self.flow_info)
+        if not self.GetTenant().IsQOSEnable():
+            self.flow_info.in_qos = None
+            self.flow_info.eg_qos.cos_rw = objects.TemplateFieldObject("const/0")
+            self.flow_info.eg_qos.cos = objects.TemplateFieldObject("const/7")
+            self.flow_info.eg_qos.dscp_rw = objects.TemplateFieldObject("const/0")
+            self.flow_info.eg_qos.dscp = objects.TemplateFieldObject("const/7")
         return
 
     def SetInfo(self, entry):
@@ -148,6 +155,11 @@ class FlowEndpointObject(base.ConfigObjectBase):
         if self.IsL4LbServiceFlowEp():
             return self.l4lb_service.proto == proto
         return True
+
+    def GetTenant(self):
+        if self.IsL4LbServiceFlowEp():
+            return self.l4lb_service.tenant
+        return self.ep.tenant
 
     def GetTenantId(self):
         if self.IsL4LbServiceFlowEp():

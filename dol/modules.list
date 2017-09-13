@@ -1396,7 +1396,8 @@ modules:
 
     - module:
         name    : VMOTION
-        enable  : True
+        # Disabling till step callback support is available
+        enable  : False
         package : test.vmotion
         module  : vmotion 
         spec    : vmotion.testspec

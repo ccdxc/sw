@@ -31,7 +31,8 @@ class TenantObject(base.ConfigObjectBase):
 
         self.spec = spec
         self.type = spec.type.upper()
-        
+        self.qos_enable = getattr(spec, 'qos_enable', True) 
+
         self.overlay = spec.overlay.upper()
         self.security_profile = None
         self.bhseg = None
@@ -168,6 +169,9 @@ class TenantObject(base.ConfigObjectBase):
 
     def GetLocalEps(self, backend = False):
         return self.obj_helper_segment.GetLocalEps(backend)
+
+    def IsQOSEnable(self):
+        return self.qos_enable
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id
