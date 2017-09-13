@@ -8,15 +8,16 @@ import infra.common.objects         as objects
 import infra.common.utils           as utils
 import infra.config.base            as base
 
-import config.resmgr                as resmgr
-import config.objects.flow          as flow
-import config.objects.flow_endpoint as flowep
-import config.objects.endpoint      as endpoint
-import config.objects.tenant        as tenant
-import config.objects.l4lb          as l4lb
+import config.resmgr                  as resmgr
+import config.objects.flow            as flow
+import config.objects.flow_endpoint   as flowep
+import config.objects.endpoint        as endpoint
+import config.objects.tenant          as tenant
+import config.objects.l4lb            as l4lb
 
-from config.store               import Store
-from infra.common.logging       import cfglogger
+from config.store                      import Store
+from infra.common.logging              import cfglogger
+from config.objects.proxycb_service    import ProxyCbServiceHelper
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -345,6 +346,7 @@ class SessionObjectHelper:
 
     def main(self):
         self.Generate()
+        ProxyCbServiceHelper.main(self.objlist)
         self.Configure()
         Store.objects.SetAll(self.objlist)
         return

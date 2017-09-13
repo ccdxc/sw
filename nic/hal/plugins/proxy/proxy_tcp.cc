@@ -11,7 +11,7 @@ update_fwding_info(fte::ctx_t&ctx, hal::flow_role_t role, proxy_flow_info_t* pfi
 
     // update fwding info
     // FIXME: Update LPort oncce getLport for TCP LIF API is available
-    //flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
+    flowupd.fwding.lport = pfi->proxy->lport_id;
     flowupd.fwding.qid_en = true;
     flowupd.fwding.qtype = pfi->proxy->qtype;
     flowupd.fwding.qid = pfi->qid1;
@@ -24,10 +24,14 @@ tcp_exec(fte::ctx_t& ctx)
 {
     hal_ret_t               ret = HAL_RET_OK;
     proxy_flow_info_t*      pfi = NULL;
+    flow_key_t              flow_key = ctx.key();
+
+    // Ignore direction. Always set it to 0
+    flow_key.dir = 0;
 
     // get the flow info for the tcp proxy service 
     pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP,
-                              &ctx.key());
+                              &flow_key);
 
     if(!pfi) {
         HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());

@@ -1,0 +1,6 @@
+# Service Proxy Object Template File.
+meta:
+    id: PROXYCB
+
+qid            : 0
+session        : 0

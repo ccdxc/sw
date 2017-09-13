@@ -6,7 +6,7 @@ LIBS = \
        $(NULL)
 LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lhostmem -lzmq
 SYSTEM_LIBRARIES = $(LIBS) $(LDFLAGS) -lpthread -lhal -liris -lhal -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr \
-				   -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -lfte -lnetwork
+				   -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -lfte -lnetwork -lproxyplugin
 
 LCXXFLAGS = \
             -I.. \

@@ -5,6 +5,8 @@ import copy
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 
 from config.store               import Store
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.tcp_proxy_cb        import TcpCbHelper
 
 rnmdr = 0
 rnmpr = 0
@@ -29,8 +31,11 @@ def TestCaseSetup(tc):
     global tlscb 
     global tcpcb
 
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    TcpCbHelper.main(id)
+    tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
-    tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcb.rcv_nxt = 0xBABABABA
     tcb.snd_nxt = 0xEFEFEFF0
     tcb.snd_una = 0xEFEFEFEF
@@ -44,9 +49,11 @@ def TestCaseSetup(tc):
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"])
-    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
-    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TcpCb0000"])
+    serqid = "TLSCB%04d_SERQ" % id
+    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
+    tlscbid = "TlsCb%04d" % id
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
+    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
     
     return
 
@@ -57,8 +64,10 @@ def TestCaseVerify(tc):
     global tlscb 
     global tcpcb
 
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    tcbid = "TcpCb%04d" % id
     # 1. Verify rcv_nxt got updated
-    tcb_cur = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    tcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
@@ -68,7 +77,8 @@ def TestCaseVerify(tc):
     print("rcv_nxt as expected")
 
     # 2. Verify pi/ci got update got updated
-    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    tlscbid = "TlsCb%04d" % id
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     tlscb_cur.GetObjValPd()
     print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
@@ -81,7 +91,8 @@ def TestCaseVerify(tc):
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
-    serq_cur = tc.infra_data.ConfigStore.objects.db["TLSCB0000_SERQ"]
+    serqid = "TLSCB%04d_SERQ" % id
+    serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
     serq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1

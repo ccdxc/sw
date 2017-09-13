@@ -2,7 +2,7 @@
 meta:
     id: TLSCB
 
-id                          : None # TLS CB Local ID
+id                          : 0 # TLS CB Local ID
 spec                        : None # (REF) TLS CB Spec from Base Config.
 nic_dec_head                : None
 nic_dec_tail                : None

@@ -12,7 +12,7 @@ meta:
                 name                  : TcpCbGet
                 message               : TcpCbGetRequestMsg
 
-id          : None # TCP Proxy CB Local ID
+id          : 0 # TCP Proxy CB Local ID
 spec        : None # (REF) TCP Proxy CB Spec from Base Config.
 rcv_nxt     : 0
 snd_nxt     : 0

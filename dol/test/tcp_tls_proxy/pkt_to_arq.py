@@ -4,6 +4,8 @@ import pdb
 import copy
 
 from config.store               import Store
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.tcp_proxy_cb        import TcpCbHelper
 
 rnmdr = 0
 rnmpr = 0
@@ -22,8 +24,11 @@ def TestCaseSetup(tc):
     global rnmpr
     global arq
 
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    TcpCbHelper.main(id)
+    tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
-    tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcb.rcv_nxt = 0xBABABABA
     tcb.snd_nxt = 0xEFEFEFF0
     tcb.snd_una = 0xEFEFEFEF

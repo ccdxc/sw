@@ -3,11 +3,13 @@
 #include <base.h>
 #include <fte.hpp>
 #include "network/net_plugin.hpp"
+#include "proxy/proxy_plugin.hpp"
 
 namespace hal {
 
 inline hal_ret_t init_plugins() {
     hal::net::init();
+    hal::proxy::init();
 
     // register pipelines
     // flow-miss pipeline
@@ -15,6 +17,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_DFW,
         fte::FTE_FEATURE_LB,
         fte::FTE_FEATURE_FWDING,
+        fte::FTE_FEATURE_TCP_PROXY,
     };
 
     register_pipeline("flow-miss", fte::FLOW_MISS_LIFQ,

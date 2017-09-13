@@ -241,7 +241,6 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     timespec_t               ts;
     flow_pgm_attrs_t         *flow_attrs = NULL;
     flow_cfg_t               *flow_cfg = NULL;
-    bool                     is_tcp_proxy_flow = false;
     bool                     is_ipsec_proxy_flow = false;
     pd_session_t             *sess_pd = NULL;
 
@@ -268,12 +267,7 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     } else {
         d.actionid = FLOW_INFO_FLOW_INFO_ID;
     }
-    if (((flow_cfg->key.sport == 80) && (flow_cfg->key.dport == 47273)) ||
-         ((flow_cfg->key.sport == 47273) && (flow_cfg->key.dport == 80))) {
-        is_tcp_proxy_flow = true;
-        HAL_TRACE_DEBUG("TCP Proxy flow_cfg {}", flow_cfg->key);
-    }
-
+    
     if (((flow_cfg->key.sport == 44445) && (flow_cfg->key.dport == 44444)) ||
          ((flow_cfg->key.sport == 44444) && (flow_cfg->key.dport == 44445))) {
         is_ipsec_proxy_flow = true;
@@ -373,15 +367,12 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
-#if 0
-    if (is_tcp_proxy_flow) {
-        // HACK DO NOT COMMIT
-        d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
-    }
-#endif
     if (flow_attrs->qid_en) {
         d.flow_info_action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
+    } else {
+        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
+        d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
     }
 
     // TBD: check analytics policy and set this
@@ -400,9 +391,6 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
                 flow_attrs->rw_act);
 #endif
     }
-    d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
-    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
-
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
@@ -412,13 +400,7 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 
-     if (is_tcp_proxy_flow) {
-         d.flow_info_action_u.flow_info_flow_info.dst_lport = 1001;
-         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
-         d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
-     }
-
-     if (is_ipsec_proxy_flow) {
+    if (is_ipsec_proxy_flow) {
          d.flow_info_action_u.flow_info_flow_info.dst_lport = 1004;
          d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = 0;
          d.flow_info_action_u.flow_info_flow_info.qid_en = 1;
