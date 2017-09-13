@@ -54,7 +54,7 @@ func TestStartServer(t *testing.T) {
 			if count <= 0 {
 				break
 			}
-			t.Errorf("error - server not ready")
+			t.Logf("error - server not ready")
 			time.Sleep(10 * time.Millisecond)
 		}
 	}
