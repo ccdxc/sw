@@ -195,11 +195,6 @@ exit:
     // set dma_cmdeop for the last table (could be T0 or T1)
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
 
-    // TODO: for now skip wb0/wb1 stages
-    nop.e
-    nop
-
-
     add         r7, r0, k.global.flags
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
 
