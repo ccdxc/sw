@@ -41,7 +41,7 @@ func editCmd(c *cli.Context) {
 
 		obj, _ := getObj(ctx)
 		url := getURL(ctx, objName)
-		err := restGet(url, obj)
+		err := restGet(url, ctx.tenant, obj)
 		if err != nil {
 			log.Fatalf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
 		}
@@ -119,7 +119,7 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 	obj, _ := getObj(ctx)
 	if rmw {
 		url := getURL(ctx, objName)
-		err := restGet(url, obj)
+		err := restGet(url, ctx.tenant, obj)
 		if err != nil {
 			fmt.Printf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
 			return
@@ -156,7 +156,7 @@ func readCmd(c *cli.Context) {
 
 	if len(ctx.names) == 1 {
 		url := getURL(ctx, ctx.names[0])
-		err := restGet(url, obj)
+		err := restGet(url, ctx.tenant, obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %v", ctx.subcmd, ctx.names[0], err)
 		} else {
@@ -166,7 +166,7 @@ func readCmd(c *cli.Context) {
 	}
 
 	url := getURL(ctx, "")
-	err := restGet(url, objList)
+	err := restGet(url, ctx.tenant, objList)
 	if err != nil {
 		log.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return
@@ -252,7 +252,7 @@ func deleteCmd(c *cli.Context) {
 
 	for _, name := range names {
 		url := getURL(ctx, name)
-		err := restDelete(c.Command.Name, url)
+		err := restDelete(c.Command.Name, url, ctx.tenant)
 		if err != nil {
 			fmt.Printf("Error deleting %s '%s': %v\n", c.Command.Name, name, err)
 			return
@@ -297,7 +297,7 @@ func labelCmd(c *cli.Context) {
 	}
 	if len(ctx.names) == 1 {
 		url := getURL(ctx, ctx.names[0])
-		err := restGet(url, obj)
+		err := restGet(url, ctx.tenant, obj)
 		if err != nil {
 			log.Printf("Error getting %s '%s': %s", ctx.subcmd, ctx.names[0], err)
 		} else {
@@ -314,7 +314,7 @@ func labelCmd(c *cli.Context) {
 	}
 
 	url := getURL(ctx, "")
-	err = restGet(url, objList)
+	err = restGet(url, ctx.tenant, objList)
 	if err != nil {
 		log.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return
@@ -403,7 +403,7 @@ func treeCmd(c *cli.Context) {
 		}
 
 		url := getURL(newCtx, "")
-		err := restGet(url, objList)
+		err := restGet(url, ctx.tenant, objList)
 		if err != nil {
 			fmt.Printf("Error getting %ss: %v", newCtx.subcmd, err)
 			return
@@ -547,7 +547,7 @@ func snapshotCmd(c *cli.Context) {
 		}
 
 		url := getURL(newCtx, "")
-		err := restGet(url, objList)
+		err := restGet(url, ctx.tenant, objList)
 		if err != nil {
 			log.Fatalf("Error getting %ss: %v", newCtx.subcmd, err)
 		}
@@ -683,11 +683,9 @@ func getURL(ctx *context, objName string) string {
 		fmt.Printf("Unable to find base URL for cmd '%s'", ctx.cmd)
 		return "/invalid"
 	}
-	objURL := api.Objs[ctx.subcmd].URL
+	objURL := strings.Replace(api.Objs[ctx.subcmd].URL, ":tenant", ctx.tenant, 1)
+
 	url := ctx.cli.GlobalString("server")
-	if ctx.tenant != defaultTenant {
-		url += "/" + ctx.tenant
-	}
 	if ctx.cli.Bool("dry-run") {
 		url += "/test"
 	}
@@ -767,6 +765,7 @@ func processGlobalFlags(ctx *context, cmd string) error {
 	c := ctx.cli
 	if c.GlobalBool("debug") {
 		log.SetLevel(log.DebugLevel)
+		ctx.debug = true
 	}
 
 	ctx.labelStrs = c.StringSlice("label")
@@ -881,7 +880,7 @@ func getFilteredNames(ctx *context) []string {
 	names := []string{}
 	objs := &api.ListHeader{}
 	url := getURL(ctx, "")
-	err := restGet(url, objs)
+	err := restGet(url, ctx.tenant, objs)
 	if err != nil {
 		fmt.Printf("Error getting %ss: %v", ctx.subcmd, err)
 		return names
@@ -911,9 +910,9 @@ func postObj(ctx *context, obj interface{}, update bool) error {
 	}
 
 	if update {
-		err = restPut(url, obj)
+		err = restPut(url, ctx.tenant, obj)
 	} else {
-		err = restPost(url, obj)
+		err = restPost(url, ctx.tenant, obj)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating %s '%s': %v", ctx.subcmd, hdr.ObjectMeta.Name, err)

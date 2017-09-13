@@ -40,7 +40,7 @@ import (
 // - auth (user login, etc.)
 
 const (
-	defaultServer = "http://localhost:9001"
+	defaultServer = "http://localhost:19001"
 )
 
 type byName []cli.Command
@@ -62,6 +62,7 @@ type context struct {
 	dumpYml    bool
 	names      []string
 	quiet      bool
+	debug      bool
 	re         *regexp.Regexp
 }
 

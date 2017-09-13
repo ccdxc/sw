@@ -365,6 +365,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
@@ -536,7 +537,9 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 	return fmt.Errorf("unknown object")
 }
 
-func restGet(url string, obj interface{}) error {
+func restGet(url, tenant string, obj interface{}) error {
+	log.Debugf("get url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
@@ -550,6 +553,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -558,7 +562,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}List); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -570,7 +574,9 @@ func restGet(url string, obj interface{}) error {
 	return httpGet(url, obj)
 }
 
-func restDelete(objKind, url string) error {
+func restDelete(objKind, url, tenant string) error {
+	log.Debugf("delete url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
@@ -584,6 +590,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "{{$obj.Name}}" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -600,7 +607,9 @@ func restDelete(objKind, url string) error {
 	return httpDelete(url)
 }
 
-func restPost(url string, obj interface{}) error {
+func restPost(url, tenant string, obj interface{}) error {
+	log.Debugf("post url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -611,7 +620,7 @@ func restPost(url string, obj interface{}) error {
 	ctx := contxt.Background()
 {{ range $obj := . }}{{ if ne $obj.Package "api" }}
 	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
-		v.Tenant = ""
+		v.Tenant = tenant 
 		_, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Create(ctx, v)
 		if err != nil {
 			return err
@@ -622,7 +631,9 @@ func restPost(url string, obj interface{}) error {
 	return httpPost(url, obj)
 }
 
-func restPut(url string, obj interface{}) error {
+func restPut(url, tenant string, obj interface{}) error {
+	log.Debugf("put url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -633,7 +644,7 @@ func restPut(url string, obj interface{}) error {
 	ctx := contxt.Background()
 {{ range $obj := . }}{{ if ne $obj.Package "api" }}
 	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Update(ctx, v)
 		if err != nil {
 			return err

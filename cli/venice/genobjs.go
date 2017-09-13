@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
@@ -1129,7 +1130,9 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 	return fmt.Errorf("unknown object")
 }
 
-func restGet(url string, obj interface{}) error {
+func restGet(url, tenant string, obj interface{}) error {
+	log.Debugf("get url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
@@ -1143,6 +1146,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*cmd.Cluster); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.CmdV1().Cluster().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1151,7 +1155,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*cmd.ClusterList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.CmdV1().Cluster().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1163,6 +1167,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.Endpoint); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.EndpointV1().Endpoint().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1171,7 +1176,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.EndpointList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.EndpointV1().Endpoint().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1183,6 +1188,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.LbPolicy); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.LbPolicyV1().LbPolicy().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1191,7 +1197,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.LbPolicyList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.LbPolicyV1().LbPolicy().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1203,6 +1209,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.Network); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.NetworkV1().Network().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1211,7 +1218,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.NetworkList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.NetworkV1().Network().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1223,6 +1230,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*cmd.Node); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.CmdV1().Node().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1231,7 +1239,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*cmd.NodeList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.CmdV1().Node().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1243,6 +1251,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.SecurityGroup); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.SecurityGroupV1().SecurityGroup().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1251,7 +1260,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.SecurityGroupList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.SecurityGroupV1().SecurityGroup().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1263,6 +1272,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.Service); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.ServiceV1().Service().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1271,7 +1281,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.ServiceList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.ServiceV1().Service().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1283,6 +1293,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.Sgpolicy); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.SgpolicyV1().Sgpolicy().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1291,7 +1302,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.SgpolicyList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.SgpolicyV1().Sgpolicy().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1303,6 +1314,7 @@ func restGet(url string, obj interface{}) error {
 	if v, ok := obj.(*network.Tenant); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
+		objm.Tenant = tenant
 		nv, err := restcl.TenantV1().Tenant().Get(ctx, &objm)
 		if err != nil {
 			return err
@@ -1311,7 +1323,7 @@ func restGet(url string, obj interface{}) error {
 		return nil
 	}
 	if v, ok := obj.(*network.TenantList); ok {
-		opts := swapi.ListWatchOptions{}
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
 		nlist, err := restcl.TenantV1().Tenant().List(ctx, &opts)
 		if err != nil {
 			return err
@@ -1323,7 +1335,9 @@ func restGet(url string, obj interface{}) error {
 	return httpGet(url, obj)
 }
 
-func restDelete(objKind, url string) error {
+func restDelete(objKind, url, tenant string) error {
+	log.Debugf("delete url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
@@ -1337,6 +1351,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "cluster" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.CmdV1().Cluster().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1353,6 +1368,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "endpoint" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.EndpointV1().Endpoint().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1369,6 +1385,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "lbPolicy" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.LbPolicyV1().LbPolicy().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1385,6 +1402,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "network" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.NetworkV1().Network().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1401,6 +1419,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "node" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.CmdV1().Node().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1417,6 +1436,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "securityGroup" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.SecurityGroupV1().SecurityGroup().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1433,6 +1453,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "service" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.ServiceV1().Service().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1449,6 +1470,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "sgpolicy" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.SgpolicyV1().Sgpolicy().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1465,6 +1487,7 @@ func restDelete(objKind, url string) error {
 	if objKind == "tenant" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
+		objm.Tenant = tenant
 		obj, err := restcl.TenantV1().Tenant().Delete(ctx, &objm)
 		if err != nil {
 			return err
@@ -1481,7 +1504,9 @@ func restDelete(objKind, url string) error {
 	return httpDelete(url)
 }
 
-func restPost(url string, obj interface{}) error {
+func restPost(url, tenant string, obj interface{}) error {
+	log.Debugf("post url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -1492,7 +1517,7 @@ func restPost(url string, obj interface{}) error {
 	ctx := contxt.Background()
 
 	if v, ok := obj.(*cmd.Cluster); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.CmdV1().Cluster().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1501,7 +1526,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Endpoint); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.EndpointV1().Endpoint().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1510,7 +1535,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.LbPolicy); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.LbPolicyV1().LbPolicy().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1519,7 +1544,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Network); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.NetworkV1().Network().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1528,7 +1553,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*cmd.Node); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.CmdV1().Node().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1537,7 +1562,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.SecurityGroup); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.SecurityGroupV1().SecurityGroup().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1546,7 +1571,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Service); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.ServiceV1().Service().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1555,7 +1580,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Sgpolicy); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.SgpolicyV1().Sgpolicy().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1564,7 +1589,7 @@ func restPost(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Tenant); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.TenantV1().Tenant().Create(ctx, v)
 		if err != nil {
 			return err
@@ -1575,7 +1600,9 @@ func restPost(url string, obj interface{}) error {
 	return httpPost(url, obj)
 }
 
-func restPut(url string, obj interface{}) error {
+func restPut(url, tenant string, obj interface{}) error {
+	log.Debugf("put url: %s", url)
+
 	urlStrs := strings.Split(url, "/")
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -1586,7 +1613,7 @@ func restPut(url string, obj interface{}) error {
 	ctx := contxt.Background()
 
 	if v, ok := obj.(*cmd.Cluster); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.CmdV1().Cluster().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1595,7 +1622,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Endpoint); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.EndpointV1().Endpoint().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1604,7 +1631,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.LbPolicy); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.LbPolicyV1().LbPolicy().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1613,7 +1640,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Network); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.NetworkV1().Network().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1622,7 +1649,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*cmd.Node); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.CmdV1().Node().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1631,7 +1658,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.SecurityGroup); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.SecurityGroupV1().SecurityGroup().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1640,7 +1667,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Service); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.ServiceV1().Service().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1649,7 +1676,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Sgpolicy); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.SgpolicyV1().Sgpolicy().Update(ctx, v)
 		if err != nil {
 			return err
@@ -1658,7 +1685,7 @@ func restPut(url string, obj interface{}) error {
 	}
 
 	if v, ok := obj.(*network.Tenant); ok {
-		v.Tenant = ""
+		v.Tenant = tenant
 		_, err := restcl.TenantV1().Tenant().Update(ctx, v)
 		if err != nil {
 			return err

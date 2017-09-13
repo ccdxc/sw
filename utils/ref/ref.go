@@ -358,7 +358,8 @@ func getKv(kvCtx *kvContext, v reflect.Value) (string, string, bool) {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Struct, reflect.Slice, reflect.Array, reflect.Map:
 		return typeStr, valueStr, false
-	case reflect.Bool, reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint32, reflect.Uint64, reflect.String:
+	case reflect.Bool, reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8,
+		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.String:
 		valueStr += fmt.Sprintf("%v", v)
 		isLeaf = true
 	default:
@@ -598,10 +599,10 @@ func writeKv(new, orig reflect.Value, kvString string, kvCtx *kvContext) reflect
 	}
 
 	switch orig.Kind() {
-	case reflect.Int, reflect.Int32, reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		intVal, _ := strconv.ParseInt(valueString, 10, 64)
 		new.SetInt(intVal)
-	case reflect.Uint64, reflect.Uint32:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint64, reflect.Uint32:
 		var uintVal uint64
 		if strings.HasPrefix(valueString, "0x") {
 			uintVal, _ = strconv.ParseUint(strings.TrimPrefix(valueString, "0x"), 16, 64)
