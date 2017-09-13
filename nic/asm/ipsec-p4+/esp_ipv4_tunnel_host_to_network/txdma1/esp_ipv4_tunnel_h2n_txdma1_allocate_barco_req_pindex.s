@@ -20,5 +20,6 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex:
     add r1, r0, d.barco_pindex
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     addi r1, r1, BRQ_BASE 
-    phvwr p.common_te0_phv_table_addr, r1 
+    phvwr.e p.common_te0_phv_table_addr, r1 
+    nop
     

@@ -15,6 +15,8 @@
 namespace hal {
 namespace pd {
 
+hal_ret_t p4pd_get_ipsec_tx_stage0_prog_addr(uint64_t* offset);
+
 void *
 ipseccb_pd_get_hw_key_func (void *entry)
 {
@@ -78,7 +80,11 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
         }
         data.action_id = pc_offset;
         HAL_TRACE_DEBUG("Received pc address {}", pc_offset);
-        //data.u.ipsec_encap_rxdma_initial_table_d.xxx = FFFF
+        if (p4pd_get_ipsec_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+        }
+        HAL_TRACE_DEBUG("Received TX pc address {}", pc_offset);
+        data.u.ipsec_encap_rxdma_initial_table_d.total = 2;
         data.u.ipsec_encap_rxdma_initial_table_d.iv = ipseccb_pd->ipseccb->iv;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipseccb_pd->ipseccb->iv_salt;
         HAL_TRACE_DEBUG("Received salt {}", ipseccb_pd->ipseccb->iv_salt);
@@ -190,6 +196,22 @@ cleanup:
 /********************************************
  * TxDMA
  * ******************************************/
+hal_ret_t
+p4pd_get_ipsec_tx_stage0_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "ipsec_tx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret < 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    *offset >>= MPU_PC_ADDR_SHIFT;
+    return HAL_RET_OK;
+}
 
 hal_ret_t 
 p4pd_add_or_del_ipseccb_txdma_entry(pd_ipseccb_t* ipseccb_pd, bool del)
