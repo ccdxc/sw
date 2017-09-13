@@ -910,6 +910,10 @@ class ObjectDatabase(FrameworkObject):
         self.Set(obj.ID(), obj)
         return
 
+    def IsKeyIn(self, key):
+        if key in self.db:
+            return True
+        return False
 
 class PacketComparePartial(FrameworkObject):
     def __init__(self):

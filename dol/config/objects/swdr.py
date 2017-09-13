@@ -217,9 +217,10 @@ class SwDscrRingObjectHelper:
         self.swdr_list = []
         return
 
-    def Configure(self):
-        for swdr in self.swdr_list:
-            swdr.Configure()
+    def Configure(self, lst = None):
+        if lst != None:
+            for swdr in lst:
+                swdr.Configure()
         return
 
     def Generate(self, type, parent = None, ringidx = None):
@@ -229,6 +230,9 @@ class SwDscrRingObjectHelper:
             swdr.Init()
             self.swdr_list.append(swdr)
             Store.objects.Add(swdr)
+            lst = []
+            lst.append(swdr)
+            self.Configure(lst)
         return
 
     def Show(self):
@@ -238,7 +242,7 @@ class SwDscrRingObjectHelper:
 
     def main(self, type, parent = None, ringidx = None):
         self.Generate(type, parent, ringidx)
-        self.Configure()
+        #self.Configure()
         self.Show()
 
 

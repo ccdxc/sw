@@ -4,6 +4,8 @@ import pdb
 import copy
 
 from config.store                   import Store
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.tcp_proxy_cb        import TcpCbHelper
 
 rnmdr = 0
 rnmpr = 0
@@ -24,8 +26,11 @@ def TestCaseSetup(tc):
     global brq
     global tlscb
 
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    TcpCbHelper.main(id)
+    tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
-    tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcb.rcv_nxt = 0xBABABABA
     tcb.snd_nxt = 0xEFEFEFF0
     tcb.snd_una = 0xEFEFEFEF
@@ -38,7 +43,8 @@ def TestCaseSetup(tc):
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ"])
-    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TlsCb0000"])
+    tlscbid = "TlsCb%04d" % id
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
     return
 
@@ -48,9 +54,10 @@ def TestCaseVerify(tc):
     global brq
     global tlscb
 
-
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     # 1. Verify pi/ci got update got updated for SERQ
-    tlscb_cur = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    tlscbid = "TlsCb%04d" % id
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     tlscb_cur.GetObjValPd()
     print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))

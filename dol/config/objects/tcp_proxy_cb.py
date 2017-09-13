@@ -21,9 +21,10 @@ class TcpCbObject(base.ConfigObjectBase):
         return
         
     #def Init(self, spec_obj):
-    def Init(self, ):
-        self.id = resmgr.TcpCbIdAllocator.get()
-        gid = "TcpCb%04d" % self.id
+    def Init(self, qid):
+        if halapi.IsHalDisabled(): qid = resmgr.TcpCbIdAllocator.get()
+        self.id = qid
+        gid = "TcpCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
         # cfglogger.info("  - %s" % self)
@@ -122,20 +123,26 @@ class TcpCbObjectHelper:
         halapi.ConfigureTcpCbs(objlist)
         return
         
-    def __gen_one(self, ):
+    def __gen_one(self, qid):
         cfglogger.info("Creating TcpCb")
         tcpcb_obj = TcpCbObject()
-        tcpcb_obj.Init()
+        tcpcb_obj.Init(qid)
         Store.objects.Add(tcpcb_obj)
         return tcpcb_obj
 
-    def Generate(self, ):
-        self.objlist.append(self.__gen_one())
-        return self.objlist 
+    def Generate(self, qid):
+        obj = self.__gen_one(qid)
+        self.objlist.append(obj)
+        lst = []
+        lst.append(obj)
+        self.Configure(lst)
+        return self.objlist
 
-    def main(self):
-        objlist = self.Generate()
-        self.Configure(self.objlist)
+    def main(self, qid):
+        gid = "TcpCb%04d" % qid
+        if Store.objects.IsKeyIn(gid):
+            return Store.objects.Get(gid)
+        objlist = self.Generate(qid)
         return objlist
 
 TcpCbHelper = TcpCbObjectHelper()

@@ -22,7 +22,7 @@ class TlsCbObject(base.ConfigObjectBase):
         
     # def Init(self, spec_obj):
     def Init(self ,tcpcb):
-        self.id = resmgr.TlsCbIdAllocator.get()
+        self.id = tcpcb.id
         gid = "TlsCb%04d" % self.id
         self.GID(gid)
         cfglogger.info("  - %s" % self)
@@ -112,12 +112,15 @@ class TlsCbObjectHelper:
         return tlscb_obj
 
     def Generate(self, tcpcb):
-        self.objlist.append(self.__gen_one(tcpcb))
+        obj = self.__gen_one(tcpcb)
+        self.objlist.append(obj)
+        lst = []
+        lst.append(obj)
+        self.Configure(lst)
         return self.objlist
 
     def main(self, tcpcb):
         objlist = self.Generate(tcpcb)
-        self.Configure(self.objlist)
         return objlist
 
 TlsCbHelper = TlsCbObjectHelper()

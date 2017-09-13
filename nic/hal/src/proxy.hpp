@@ -43,6 +43,7 @@ typedef struct proxy_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     types::ProxyType      type;                    // Proxy Type
     lif_id_t              lif_id;                  // LIF for this service
+    uint32_t              lport_id;                // lport-id for the proxy lif
     qtype_t               qtype;                   // Default QType
     uint8_t               qstate_size;             // Size of each qstate
     uint8_t               qstate_entries;          // # of entries in the qstate

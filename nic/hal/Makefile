@@ -50,6 +50,8 @@ LDFLAGS +=	-lhal \
 			-lsvc \
 			-lpdcommon \
 			-lhostmem \
+			-lproxyplugin \
+
 
 SRC_FILES :=	hal.cc \
 				hal_state.cc \

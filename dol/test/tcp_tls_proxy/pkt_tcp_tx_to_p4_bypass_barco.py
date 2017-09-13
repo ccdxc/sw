@@ -4,6 +4,8 @@ import pdb
 import copy
 
 from config.store               import Store
+from config.objects.proxycb_service    import ProxyCbServiceHelper
+from config.objects.tcp_proxy_cb        import TcpCbHelper
 
 tcpcb = 0
 
@@ -18,8 +20,11 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     global tcpcb
 
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    TcpCbHelper.main(id)
+    tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
-    tcb = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcb.rcv_nxt = 0xBABABABA
     tcb.snd_nxt = 0xEFEFEFF0
     tcb.snd_una = 0xEFEFEFEF
@@ -32,19 +37,21 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Configure TLS CB in HBM before packet injection
-    tlscb = tc.infra_data.ConfigStore.objects.db["TlsCb0000"]
+    tlscbid = "TlsCb%04d" % id
+    tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb.debug_dol = 1
     tlscb.SetObjValPd()
 
     # 3. Clone objects that are needed for verification
-    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TcpCb0000"])
-
+    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
     return
 
 def TestCaseVerify(tc):
     global tcpcb
 
-    tcpcb_cur = tc.infra_data.ConfigStore.objects.db["TcpCb0000"]
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    tcbid = "TcpCb%04d" % id
+    tcpcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcpcb_cur.GetObjValPd()
 
     # Print stats

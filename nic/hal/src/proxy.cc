@@ -9,6 +9,7 @@
 #include <interface.hpp>
 #include <cpucb.hpp>
 #include <session.hpp>
+#include <if_pd_utils.hpp>
 
 namespace hal {
 
@@ -22,7 +23,7 @@ proxy_meta_init() {
      */
 
     g_meta[types::PROXY_TYPE_TCP] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 4, 10};
+        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 5, 10};
  
     g_meta[types::PROXY_TYPE_TLS] = 
         (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 3, 10};
@@ -53,7 +54,7 @@ bool
 proxy_flow_ht_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if(memcmp(key1, key2, sizeof(flow_key_t) == 0)) {
+    if(memcmp(key1, key2, sizeof(flow_key_t)) == 0) {
         return true;
     }
     return false;
@@ -177,6 +178,13 @@ proxy_program_lif(proxy_t* proxy)
 
     // Get the base address based on QID of '0'
     proxy->base_addr = g_lif_manager->GetLIFQStateAddr(proxy->lif_id, proxy->qtype, 0);
+
+    // get lport-id for this lif
+    lif_t* lif = find_lif_by_id(proxy->lif_id);
+    HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
+
+    proxy->lport_id = pd::lif_get_lport_id(lif);
+    HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}", proxy->lport_id, proxy->lif_id);
 
     return HAL_RET_OK;
 }
@@ -422,12 +430,18 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     tenant_t*       tenant = NULL;
     tenant_id_t     tid = 0;
     
-    if(!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+    if(!req.has_meta()){
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        HAL_TRACE_ERR("no meta found");
         return HAL_RET_INVALID_ARG;
     }
  
+    if (req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        HAL_TRACE_ERR("tenant {}", req.meta().tenant_id());
+        return HAL_RET_INVALID_ARG;
+    }
+
     tid = req.meta().tenant_id();
     tenant = tenant_lookup_by_id(tid); 
     if(tenant == NULL) {
@@ -439,6 +453,7 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     if(!req.has_spec() ||
        req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
        rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
+        HAL_TRACE_ERR("no proxy_type found");
        return HAL_RET_INVALID_ARG;   
     }
    
@@ -471,7 +486,10 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
    
     tid = req.meta().tenant_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
-    
+   
+    // ignore direction for the flow.
+    flow_key.dir = 0;
+
     if(req.proxy_en()) {
         HAL_TRACE_DEBUG("proxy: enable proxy for the flow");
         pfi = find_proxy_flow_info(proxy, &flow_key);

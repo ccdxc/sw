@@ -11,7 +11,6 @@ from config.objects.tenant              import TenantHelper
 from config.objects.session             import SessionHelper
 from config.objects.rdma.session        import RdmaSessionHelper
 from config.objects.security_profile    import SecurityProfileHelper
-from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.acl                 import AclHelper
 from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
@@ -38,12 +37,6 @@ def process(topospec):
     # Phase2 Tenant config - EPs and ENICs
     TenantHelper.ConfigurePhase2()
 
-    # Generate all sessions
-    SessionHelper.main()
-   
-    # Generate all sessions
-    RdmaSessionHelper.main()
-   
     proxy = getattr(topospec, 'proxy', False)
     if proxy == True:
         # Global descriptors and page rings
@@ -53,7 +46,11 @@ def process(topospec):
         SwDscrRingHelper.main("BRQ")
         SwDscrRingHelper.main("ARQ")
 
-        TcpCbHelper.main()    
+    # Generate all sessions
+    SessionHelper.main()
+   
+    # Generate all sessions
+    RdmaSessionHelper.main()
 
     ipsec = getattr(topospec, 'ipsec', False)
     if ipsec:

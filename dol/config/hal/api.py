@@ -375,3 +375,18 @@ def ConfigureMrs(objlist):
     __config(objlist, rdma_pb2.RdmaMemRegRequestMsg,
              stub.RdmaMemReg)
     return
+
+def ConfigureProxyCbService(objlist):
+    if IsHalDisabled(): return
+    stub = proxy_pb2_grpc.ProxyStub(HalChannel)
+    __config(objlist, proxy_pb2.ProxyFlowConfigRequestMsg,
+             stub.ProxyFlowConfig)
+    return
+
+def GetQidProxycbGetFlowInfo(objlist):
+    if IsHalDisabled(): return
+    stub = proxy_pb2_grpc.ProxyStub(HalChannel)
+    __config(objlist, proxy_pb2.ProxyGetFlowInfoRequestMsg,
+             stub.ProxyGetFlowInfo)
+    return
+

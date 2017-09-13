@@ -106,6 +106,7 @@ message ProxyFlowConfigRequest {
     ProxySpec           spec        = 2;    // Specify the type of proxy service 
     session.FlowKey     flow_key    = 3;    // Flow key to identify a flow 
     bool                proxy_en    = 4;    // Enable or disable proxy service for a flow
+    session.FlowData    flow_data   = 5;
 }
 
 message ProxyFlowConfigRequestMsg {
@@ -116,6 +117,7 @@ message ProxyGetFlowInfoRequest {
     types.ObjectMeta    meta        = 1;    // object meta
     ProxySpec           spec        = 2;    // Specify the type of proxy service 
     session.FlowKey     flow_key    = 3;    // identify a flow 
+    session.FlowData    flow_data   = 5;
 }
 
 message ProxyGetFlowInfoRequestMsg {

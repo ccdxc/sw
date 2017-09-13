@@ -74,6 +74,5 @@ class ProxyServiceObjectHelper:
         self.Configure()
         self.Show()
 
-
 ProxyServiceHelper = ProxyServiceObjectHelper()
 
