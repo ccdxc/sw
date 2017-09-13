@@ -13,6 +13,8 @@ namespace pd {
 
 static pd_wring_meta_t g_meta[types::WRingType_MAX];
 
+hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
+
 hal_ret_t  
 wring_pd_meta_init() {
     /*
@@ -22,52 +24,52 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
-                           CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR};
+                           CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
-                           CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR};
+                           CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR, NULL};
     
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
-                           CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR};
+                           CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
-                           CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR};
+                           CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
-                           CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR};
+                           CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 16384, DEFAULT_WRING_SLOT_SIZE,
                                         CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
-                           CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR};
+                           CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,NULL};
 
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
 
     g_meta[types::WRING_TYPE_BRQ] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser};
 
     g_meta[types::WRING_TYPE_SESQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB, 64, DEFAULT_WRING_SLOT_SIZE,
-                                  "", 0, 0};
+                                  "", 0, 0, 0, NULL};
     g_meta[types::WRING_TYPE_ARQRX] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
 
     return HAL_RET_OK;
 }
@@ -231,6 +233,39 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
     return HAL_RET_OK;
 }
 
+/* Partial descriptor for now due to bit fields in the middle */
+typedef struct barco_desc_s {
+    uint64_t            input_list_address;
+    uint64_t            output_list_address;
+    uint32_t            command;
+    uint32_t            key_desc_index;
+    uint64_t            iv_address;
+    uint64_t            auth_tag_addr;
+    uint32_t            header_size;
+    uint64_t            status_address;
+    uint32_t            opaque_tag_value;
+} __PACK__ barco_desc_t;
+
+hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
+{
+    barco_desc_t        *gcm_desc;
+
+    gcm_desc = (barco_desc_t*) slot;
+
+    /* Fields already in Little-endian */
+    wring->slot_info.gcm_desc.ilist_addr = gcm_desc->input_list_address;
+    wring->slot_info.gcm_desc.olist_addr = gcm_desc->output_list_address;
+    wring->slot_info.gcm_desc.command = gcm_desc->command;
+    wring->slot_info.gcm_desc.key_desc_index = gcm_desc->key_desc_index;
+    wring->slot_info.gcm_desc.iv_addr = gcm_desc->iv_address;
+    wring->slot_info.gcm_desc.status_addr = gcm_desc->status_address;
+    // FIXME: Enable the following once we have the descriptor fixed
+    wring->slot_info.gcm_desc.doorbell_addr = 0;
+    wring->slot_info.gcm_desc.doorbell_data = 0;
+
+    return HAL_RET_OK;
+}
+
 static
 hal_ret_t
 p4pd_wring_get_entry(pd_wring_t* wring_pd) 
@@ -263,8 +298,13 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
     if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
         wring->slot_value = ntohll(*(uint64_t *)value);
     } else {
-        // TODO: Handle swizzle for arbiterary size
-        memcpy(&wring->slot_value, value, sizeof(wring->slot_value));
+        if (meta->slot_parser) {
+            meta->slot_parser(meta, wring, value);
+        }
+        else {
+            /* All non basic types need to be supported with a parser */
+            assert(0);
+        }
     }
     return ret;
 }

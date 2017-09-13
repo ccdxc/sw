@@ -3,7 +3,7 @@ meta:
     id: CRYPTO_KEY
 
 id                    : None # Crypto Key local Id 
-idx                   : 0
-type                  : 0
-keySize               : 0
+keyindex              : 0
+key_type              : 0
+key_size              : 0
 key                   : 0

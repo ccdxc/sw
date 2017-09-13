@@ -349,6 +349,8 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 @pragma scratch_metadata
 metadata tpage_alloc_d_t tpage_alloc_d;
 
+@pragma scratch_metadata
+metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
 
 action read_tls_stg1_7(TLSCB_1_PARAMS) {
@@ -471,7 +473,7 @@ action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
 
 
 /* Stage 5 table 0 action */
-action tls_queue_brq5(TLSCB_0_PARAMS_NON_STG0) {
+action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {
 
     GENERATE_GLOBAL_K
 
@@ -485,7 +487,7 @@ action tls_queue_brq5(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
 
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_BARCO_CHANNEL_D
 }
 
 

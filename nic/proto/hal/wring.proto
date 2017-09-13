@@ -85,15 +85,30 @@ message WRingGetEntriesRequestMsg {
 message WRingStats {
 }
 
+message WRingBarcoGCMDescMsg {
+  fixed64           ilist_addr          = 1;
+  fixed64           olist_addr          = 2;
+  uint32            command             = 3;
+  uint32            key_desc_index      = 4;
+  fixed64           iv_addr             = 5;
+  fixed64           status_addr         = 6;
+  fixed64           doorbell_addr       = 7;
+  fixed64           doorbell_data       = 8;
+}
+
 // WRingGetResponse captures all the information about a wring
 // only if api_status indicates success, other fields are valid
 message WRingGetEntriesResponse {
   types.ApiStatus    api_status = 1;    // API status code
   WRingSpec         spec        = 2;    // wring configuration
   uint32            index       = 3;
-  fixed64           value       = 4;
-  WRingStatus       status      = 5;    // operational state 
-  WRingStats        stats       = 6;    // stats 
+  WRingStatus       status      = 4;    // operational state 
+  WRingStats        stats       = 5;    // stats 
+  oneof WRingSlotInfo {
+    fixed64                 value           = 6;
+    WRingBarcoGCMDescMsg    barco_gcm_desc  = 7;
+    bytes                   raw             = 8; 
+  }
 }
 
 // WRingGetEntriesResponseMsg is batched response to WRingGetEntriesRequestMsg

@@ -348,7 +348,7 @@ def ConfigureL4LbServices(objlist):
              stub.L4LbServiceCreate)
     return
 
-def ConfigureCryptoKeys(objlist):
+def GetCryptoKey(objlist):
     if IsHalDisabled(): return
     stub = crypto_keys_pb2_grpc.CryptoKeyStub(HalChannel)
     __config(objlist, crypto_keys_pb2.CryptoKeyCreateRequestMsg,

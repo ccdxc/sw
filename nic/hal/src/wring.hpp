@@ -16,6 +16,21 @@ namespace hal {
 
 typedef uint32_t wring_id_t;
 
+typedef struct barco_gcm_desc_s {
+    uint64_t                ilist_addr;
+    uint64_t                olist_addr;
+    uint32_t                command;
+    uint32_t                key_desc_index;
+    uint64_t                iv_addr;
+    uint64_t                status_addr;
+    uint64_t                doorbell_addr;
+    uint64_t                doorbell_data;
+} barco_gcm_desc_t;
+
+typedef union wring_slot_info_u {
+    barco_gcm_desc_t        gcm_desc;
+} wring_slot_info_t;
+
 typedef struct wring_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     wring_id_t            wring_id;                // WRing id
@@ -32,6 +47,7 @@ typedef struct wring_s {
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
     uint32_t              pi;
     uint32_t              ci;
+    wring_slot_info_t     slot_info;
 } __PACK__ wring_t;
 
 // max. number of WRING supported  (TODO: we can take this from cfg file)

@@ -50,7 +50,7 @@ def TestCaseSetup(tc):
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ"])
+    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
     tlscbid = "TlsCb%04d" % id

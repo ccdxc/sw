@@ -18,6 +18,7 @@ from config.objects.cpu                 import CpuHelper
 
 from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
+from config.objects.brq                 import BRQHelper
 
 def process(topospec):
     # Security Profiles
@@ -43,7 +44,7 @@ def process(topospec):
         ProxyServiceHelper.main()
         SwDscrRingHelper.main("NMDR")
         SwDscrRingHelper.main("NMPR")
-        SwDscrRingHelper.main("BRQ")
+        BRQHelper.main()
         SwDscrRingHelper.main("ARQ")
 
     # Generate all sessions

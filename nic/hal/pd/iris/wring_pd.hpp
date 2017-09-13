@@ -27,6 +27,7 @@ struct pd_wring_s {
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 } __PACK__;
 
+typedef hal_ret_t (*wring_slot_parser)(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 struct pd_wring_meta_s {
     bool        is_global;
     char        hbm_reg_name[64];
@@ -36,6 +37,7 @@ struct pd_wring_meta_s {
     uint32_t    obj_size;
     uint64_t    alloc_semaphore_addr;
     uint64_t    free_semaphore_addr;
+    wring_slot_parser   slot_parser;
 } __PACK__;
 
 // initialize a wring pd instance
