@@ -93,11 +93,11 @@ def TestCaseVerify(tc):
 
     # 1. Verify threading
     if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
-        printf("pre crypto pipeline threading was not ok")
+        print("pre crypto pipeline threading was not ok")
         return False
 
     if (tlscb_cur.post_debug_stage0_7_thread != 0x17111):
-        printf("post crypto pipeline threading was not ok")
+        print("post crypto pipeline threading was not ok")
         return False
 
         
