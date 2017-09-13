@@ -150,9 +150,7 @@ class Module:
             cb_handle = getattr(self.module_hdl, cb)
             assert(cb_handle != None)
             return cb_handle(*args)
-        return
-
-
+        return defs.status.SUCCESS
 
     def __setup_callback(self):
         utils.LogFunctionBegin(self.logger)

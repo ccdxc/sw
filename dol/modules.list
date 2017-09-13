@@ -508,7 +508,7 @@ modules:
         name    : RECIRC_L2UC
         enable  : True
         package : test.networking
-        module  : networking
+        module  : recirc
         spec    : l2uc.testspec
         ignore  : False
         args    :
@@ -541,7 +541,7 @@ modules:
         name    : RECIRC_L2UC_NONIP
         enable  : False
         package : test.networking
-        module  : networking
+        module  : recirc
         spec    : l2uc_nonip.testspec
         ignore  : True
         args    :
@@ -556,7 +556,7 @@ modules:
         name    : RECIRC_L3UC
         enable  : True
         package : test.networking
-        module  : networking
+        module  : recirc
         spec    : l3uc.testspec
         ignore  : False
         args    :

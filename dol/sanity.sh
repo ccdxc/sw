@@ -27,4 +27,7 @@ ErrorCheckNExit $? "vxlan topo"
 ./main.py --dryrun --topo proxy --module tcp_proxy
 ErrorCheckNExit $? "tcpproxy topo."
 
+./main.py --dryrun --topo up2up --module networking
+ErrorCheckNExit $? "up2up topo."
+
 exit 0

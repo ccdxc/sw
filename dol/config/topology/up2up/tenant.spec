@@ -7,6 +7,8 @@ overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_UP2UP
+      count : 2
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_UP2UP
       count : 1
 
 # NFV Endpoints:

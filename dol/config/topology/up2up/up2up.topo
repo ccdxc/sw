@@ -55,6 +55,6 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 tenants:
     -   spec    : ref://store/specs/id=TENANT_UP2UP
         count   : 1
-        lifns   : range/101/104
+        lifns   : range/101/101
 
 cpu: None
