@@ -1086,8 +1086,8 @@ action ip_normalization_checks() {
 
 action icmp_normalization_checks() {
 
-    modify_field(scratch_metadata.icmp_code, flow_lkp_metadata.lkp_sport);
-    modify_field(scratch_metadata.icmp_type, flow_lkp_metadata.lkp_sport);
+    modify_field(scratch_metadata.icmp_code, icmp.typeCode & 0xff);
+    modify_field(scratch_metadata.icmp_type, (icmp.typeCode >> 8) & 0xff);
 
     if (icmp.valid == FALSE or
         l4_metadata.icmp_normalization_en == FALSE) {

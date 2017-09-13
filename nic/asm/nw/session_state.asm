@@ -33,7 +33,6 @@ nop:
 // C6 - tcp_rcvr_win_sz != 0
 // C7 - tcp_seq_num_hi <= rflow_tcp_ack_num + tco_rcvr_win_sz
 
-
 // Pick the initator or responder values to use.
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
@@ -48,7 +47,7 @@ lb_tcp_session_state_initiator:
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_mss, r4
   bal.c1       r3, f_tcp_session_normalization
   add          r7, k.tcp_ackNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_ack_num
-  add          r5, k.tcp_seqNo, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
+  add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, r6 // rflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq          c2, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
@@ -59,11 +58,11 @@ lb_tcp_session_state_initiator:
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
   scwle        c7, r5, r4 // tcp_seq_num_hi <= rflow_tcp_ack_num + rcvr_win_sz
   setcf        c1, [c1 & c2 & c3 & c6]
-  seq          c2, k.tcp_seqNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
+  seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1 // rflow_tcp_ack_num - 1
-  scwle        c3, r1, k.tcp_seqNo   // rflow_tcp_ack_num -1 <= tcp.seqNo
-  scwlt        c4, k.tcp_seqNo, r4
+  scwle        c3, r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}   // rflow_tcp_ack_num -1 <= tcp.seqNo
+  scwlt        c4, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
   setcf        c3, [!c5 & c3 & c4]
   setcf        c2, [c2 | c3]
   bcf          ![c1 & c2], lb_tcp_session_state_initiator_non_best
@@ -89,18 +88,18 @@ lb_tcp_session_state_initiator_non_best:
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, 0
   add.!c1      r5, r5, 1
   bcf          ![c5 & c6], lb_tss_i_1
-  seq          c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
+  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   bcf          [c1 & c7], lb_tss_i_tcp_state_transition
-  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_seqNo
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}
   setcf        c1, [c1 & c7]
   b.c1         lb_tss_i_tcp_state_transition
   ori.c1       r2, r2, TCP_PACKET_REORDER
-  scwlt        c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  scwlt        c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   scwle        c2, r5, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_i_tcp_session_update
   ori.c1       r2, r2, TCP_FULL_REXMIT
-  scwlt        c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  scwlt        c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   setcf        c1, [c1 & c7]
   b.c1         lb_tss_i_tcp_state_transition
   ori.c1       r2, r2, TCP_PARTIAL_OVERLAP
@@ -114,7 +113,7 @@ lb_tss_i_1:
   // SYN Retransmit
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   smeqb        c2, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN
-  add          r1, k.tcp_seqNo, 1
+  add          r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, 1
   seq          c3, r1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c1, [c1 & c2 & c3]
   b.c1         lb_tss_i_exit
@@ -122,8 +121,8 @@ lb_tss_i_1:
   sle          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   b.c1         lb_tss_i_tcp_state_transition
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1
-  scwle        c1, r1, k.tcp_seqNo
-  scwlt        c2, k.tcp_seqNo, r4
+  scwle        c1, r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}
+  scwlt        c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_i_tcp_state_transition
   ori.!c1      r2, r2, TCP_OUT_OF_WINDOW
@@ -141,9 +140,9 @@ lb_tss_i_2:
 
 lb_tss_i_3:
   // Only case we will be here is if tcp_data_len == 0 and tcp_rcvr_win_sz == 0
-  seq          c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1
-  seq          c2, k.tcp_seqNo, r1
+  seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r1
   setcf        c1, [c1 | c2]
   b.c1         lb_tss_i_tcp_state_transition
   ori.!c1      r2, r2, TCP_OUT_OF_WINDOW
@@ -294,7 +293,7 @@ lb_tcp_session_state_responder:
   sllv         r6, d.u.tcp_session_state_info_d.iflow_tcp_win_sz, r1   // r6 = rcvr_win_sz
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_mss, r4
   bal.c1       r3, f_tcp_session_normalization
-  sub          r7, k.tcp_seqNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
+  sub          r7, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
   add          r5, r7, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, r6 // iflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
@@ -337,7 +336,7 @@ lb_tcp_session_state_responder_non_best:
   add.!c1      r5, r5, 1
   bcf          ![c5 & c6], lb_tss_r_1
   seq          c1, r7, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
-  bcf          [c1 & c7], lb_tss_i_tcp_state_transition
+  bcf          [c1 & c7], lb_tss_r_tcp_state_transition
   scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, r7
   setcf        c1, [c1 & c7]
   b.c1         lb_tss_r_tcp_state_transition
@@ -433,7 +432,7 @@ lb_tss_r_4:
 // TBD
 lb_tss_r_5:
   smeqb        c2, k.tcp_flags, TCP_FLAG_FIN, TCP_FLAG_FIN
-  bcf          ![c1 & c2], lb_tss_i_6
+  bcf          ![c1 & c2], lb_tss_r_6
   add          r1, r0, d.u.tcp_session_state_info_d.rflow_tcp_state
   nop.e
   nop

@@ -154,7 +154,7 @@ f_p4plus_to_p4_apps:
   phvwr.c2    p.udp_len, k.p4plus_to_p4_udp_len
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO
-  add         r1, k.tcp_seqNo, k.p4plus_to_p4_tcp_seq_delta
+  add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, k.p4plus_to_p4_tcp_seq_delta
   phvwr.c2    p.tcp_seqNo, r1
   jr          r7
   phvwr       p.p4plus_to_p4_valid, FALSE

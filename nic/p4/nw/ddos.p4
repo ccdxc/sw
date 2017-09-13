@@ -71,6 +71,10 @@ action ddos_src_vf_hit(ddos_src_vf_base_policer_idx) {
 
 action ddos_service_hit(ddos_service_base_policer_idx) {
 
+    if (control_metadata.flow_miss_ingress == FALSE) {
+        // return
+    }
+
     // Sample write so that compiler knows the size of this field.
     modify_field(scratch_metadata.ddos_service_base_policer_idx,
                  ddos_service_base_policer_idx);
@@ -125,6 +129,15 @@ action ddos_service_hit(ddos_service_base_policer_idx) {
 }
 
 action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
+
+    if (icmp.valid == TRUE or
+        l4_metadata.icmp_normalization_en == TRUE) {
+        icmp_normalization_checks ();
+    }
+
+    if (control_metadata.flow_miss_ingress == FALSE) {
+        //return;
+    }
 
     // Sample write so that compiler knows the size of this field.
     modify_field(scratch_metadata.ddos_src_dst_base_policer_idx,
