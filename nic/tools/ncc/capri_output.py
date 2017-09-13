@@ -770,7 +770,7 @@ def capri_asm_output_table(be, ctable):
                 new_cfs.append(cf)
                 _add_cf_to_fld_map(km_off, cf, t, active_cfs, fld_map)
             #}
-            #_close_active_cfs(new_cfs, active_cfs, fld_map)
+            _close_active_cfs(new_cfs, active_cfs, fld_map)
             km_off += 8
         #}
 
@@ -787,7 +787,6 @@ def capri_asm_output_table(be, ctable):
 
     #}
                     
-    #if ctable.p4_table.name == 'copp_action': pdb.set_trace()
     if len(active_cfs):
         new_cfs = []
         _close_active_cfs(new_cfs, active_cfs, fld_map)

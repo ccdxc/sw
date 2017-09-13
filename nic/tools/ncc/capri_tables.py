@@ -1999,7 +1999,7 @@ class capri_table:
                     (self.gtm.d.name, self.p4_table.name, self.start_key_off, self.end_key_off))
                 return
             # key maker is full, if there are i-bits we can move it around to align the key
-            # if not, need to conver byte to bit_sel and move a byte using it
+            # if not, need to convert byte to bit_sel and move a byte using it
             if is_shared_idx_table:
                 k_byte_start_idx = km_prof.byte_sel.index(self.combined_profile.k_byte_sel[0])
                 k_byte_end_idx = km_prof.byte_sel.index(self.combined_profile.k_byte_sel[-1])
@@ -2012,100 +2012,81 @@ class capri_table:
                 # as i1 or i2 based on their relative location to k-bytes of the base table
                 # pick i1 or i2 byte of this table.. need to check if that is not k byte for other
                 # tables sharing this km_profile
-                i1_byte = None
-                i2_byte = None
-
+                # if tables are shared, when aligning the idx of the second table, make sure not
+                # to disturb the first table.. to avoid it use only i bytes *after* the current
+                # k_byte_end_idx
                 shared_k_bytes = []
                 for t in shared_idx_tables:
                     shared_k_bytes += t.combined_profile.k_byte_sel
+                # add k bytes of this table
+                shared_k_bytes += self.combined_profile.k_byte_sel
                     
-                for b in self.combined_profile.i1_byte_sel:
+                i_byte_chunks = [] #(byte, num_contiguous_bytes before it)
+
+                for i in range(k_byte_end_idx+1, max_kmB):
+                    b = km_prof.byte_sel[i]
                     if b < 0:
                         continue
                     if b not in shared_k_bytes:
-                        i1_byte = b
-                        break
-
-                if i1_byte != None:
-                    byte_to_bit = i1_byte
-                    km_prof.byte_sel.remove(byte_to_bit)
-                    if is_shared_idx_table:
-                        self.combined_profile.byte_sel.remove(byte_to_bit)
-                    self.combined_profile.i1_byte_sel.remove(byte_to_bit)
-
-                    if km_prof.bit_loc < 0:
-                        km_prof.bit_loc = k_byte_end_idx
-                    else:
-                        km_prof.bit_loc1 = k_byte_end_idx
-
-                    km_prof.byte_sel.insert(k_byte_end_idx, -1)
-                    # remove i1 and move it to after the key so key shifts to the left by 1 byte
-                    # and align on 2B boundary
-                    for i in range(8):
-                        km_prof.bit_sel.append((byte_to_bit * 8) + i)
-                        km_prof.i_bit_sel.append((byte_to_bit * 8) + i)
-                        if is_shared_idx_table:
-                            self.combined_profile.bit_sel.append((byte_to_bit * 8) + i)
-                            self.combined_profile.i_bit_sel.append((byte_to_bit * 8) + i)
-
-                    if byte_to_bit in km_prof.i1_byte_sel:
-                        km_prof.i1_byte_sel.remove(byte_to_bit)
-                    if byte_to_bit in km_prof.i2_byte_sel:
-                        km_prof.i2_byte_sel.remove(byte_to_bit)
-
-                    self.start_key_off -= 8
-                    self.end_key_off -= 8
-                    self.gtm.tm.logger.debug( \
-                        "%s:Converted i1 byte %d to bits and located at %d in km after K" % \
-                        (self.p4_table.name, byte_to_bit, km_prof.bit_loc))
-                else:
-                    i2_byte = None
-
-                    for b in self.combined_profile.i2_byte_sel:
-                        if b < 0:
-                            continue
-                        if b not in shared_k_bytes:
-                            i2_byte = b
-                            break
-                    if i2_byte != None: 
-                        byte_to_bit = i2_byte
-                        km_prof.byte_sel.remove(byte_to_bit)
-                        if is_shared_idx_table:
-                            self.combined_profile.byte_sel.remove(byte_to_bit)
-                        self.combined_profile.i2_byte_sel.remove(byte_to_bit)
-                        if km_prof.bit_loc < 0:
-                            km_prof.bit_loc = k_byte_start_idx
+                        if len(i_byte_chunks) and b == i_byte_chunks[-1][0]+1:
+                            i_byte_chunks[-1] = (b, i_byte_chunks[-1][1]+1)
                         else:
-                            km_prof.bit_loc1 = k_byte_start_idx
-                        km_prof.byte_sel.insert(k_byte_start_idx, -1)
-                        for i in range(8):
-                            km_prof.bit_sel.append((byte_to_bit * 8) + i)
-                            km_prof.i_bit_sel.append((byte_to_bit * 8) + i)
-                            if is_shared_idx_table:
-                                self.combined_profile.bit_sel.append((byte_to_bit * 8) + i)
-                                self.combined_profile.i_bit_sel.append((byte_to_bit * 8) + i)
+                            i_byte_chunks.append((b, 1))
 
-                        if byte_to_bit in km_prof.i1_byte_sel:
-                            km_prof.i1_byte_sel.remove(byte_to_bit)
-                        if byte_to_bit in km_prof.i2_byte_sel:
-                            km_prof.i2_byte_sel.remove(byte_to_bit)
-                        self.start_key_off += 8
-                        self.end_key_off += 8
-                        self.gtm.tm.logger.debug( \
-                            "%s:Converted i2 byte %d to bits and located at %d in km before K" % \
-                            (self.p4_table.name, byte_to_bit, km_prof.bit_loc))
-                    else:
-                        self.gtm.tm.logger.critical( \
-                            "Cannot align the index table key to 16b boundary")
-                        self.gtm.tm.logger.critical( \
-                            "Need to implement more sophisticated algo to align key for %s" % \
-                            (self.p4_table.name))
-                        assert 0, pdb.set_trace()
+                if len(i_byte_chunks) == 0:
+                    self.gtm.tm.logger.critical( \
+                        "Cannot align the index table key to 16b boundary")
+                    self.gtm.tm.logger.critical( \
+                        "Need to implement more sophisticated algo to align key for %s" % \
+                        (self.p4_table.name))
+                    assert 0, pdb.set_trace()
+
+                # sort based on num contiguous bytes
+                i_byte_chunks = sorted(i_byte_chunks, key=lambda t: t[1]) 
+                byte_to_bit = i_byte_chunks[0][0]
+
+                if km_prof.bit_loc < 0:
+                    km_prof.bit_loc = k_byte_start_idx
+                else:
+                    km_prof.bit_loc1 = k_byte_start_idx
+                km_prof.byte_sel.insert(k_byte_start_idx, -1)
+                for i in range(8):
+                    km_prof.bit_sel.append((byte_to_bit * 8) + i)
+                    km_prof.i_bit_sel.append((byte_to_bit * 8) + i)
+
+                self.start_key_off += 8
+                self.end_key_off += 8
+                self.gtm.tm.logger.debug( \
+                    "%s:Converted i2 byte %d to bits and located at %d in km before K" % \
+                    (self.p4_table.name, byte_to_bit, km_prof.bit_loc))
+
+                # remove the byte converted to bit from various byte_sels
+                km_prof.byte_sel.remove(byte_to_bit)
+                if byte_to_bit in km_prof.i1_byte_sel:
+                    km_prof.i1_byte_sel.remove(byte_to_bit)
+                elif byte_to_bit in km_prof.i2_byte_sel:
+                    km_prof.i2_byte_sel.remove(byte_to_bit)
+                else:
+                    assert 0, pdb.set_trace() # Bug
+                    pass
+
+                if self not in shared_idx_tables:
+                    shared_idx_tables.append(self)
+
+                for ct in shared_idx_tables:
+                    if byte_to_bit in ct.combined_profile.byte_sel:
+                        ct.combined_profile.byte_sel.remove(byte_to_bit)
+                    if byte_to_bit in ct.combined_profile.i1_byte_sel:
+                        ct.combined_profile.i1_byte_sel.remove(byte_to_bit)
+                    elif byte_to_bit in ct.combined_profile.i2_byte_sel:
+                        ct.combined_profile.i2_byte_sel.remove(byte_to_bit)
 
                 return
 
             # more than 8 bits extractions are used and km_profile is full
             # move the i-bits around to shift k by 1 byte
+            # XXX - when this is used for shared table, can mis-align first table
+            # need to check
             assert km_prof.bit_loc != -1, pdb.set_trace()
             if km_prof.bit_loc1 != -1:
                 if km_prof.bit_loc1 < k_byte_start_idx:
