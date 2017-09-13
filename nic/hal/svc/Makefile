@@ -17,6 +17,7 @@ SOURCES = \
 		tenant_svc.cc \
 		network_svc.cc \
 		interface_svc.cc \
+		internal_svc.cc \
 		l2segment_svc.cc \
 		endpoint_svc.cc \
 		session_svc.cc \
