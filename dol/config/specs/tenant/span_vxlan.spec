@@ -6,7 +6,7 @@ type    : span
 overlay : vxlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_SPAN
+    - spec  : ref://store/specs/id=SEGMENT_SPAN_VXLAN
       count : 1
 
 security_profile: ref://store/objects/id=SEC_PROF_DEFAULT

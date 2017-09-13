@@ -13,8 +13,7 @@ d = {
 
 k = {
   vlan_tag_valid = 1;
-  vlan_tag_etherType_sbit0_ebit7 = 0x08;
-  vlan_tag_etherType_sbit8_ebit15 = 0x00;
+  vlan_tag_etherType = 0x0800;
   rewrite_metadata_flags = REWRITE_FLAGS_TTL_DEC;
   nat_metadata_nat_ip = 0xac640101;
   nat_metadata_nat_l4_port = 0xbaba;

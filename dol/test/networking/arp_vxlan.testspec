@@ -2,11 +2,11 @@
 selectors:
     src:
         tenant  : filter://overlay=VXLAN,type=TENANT
-        segment : filter://any
+        segment : filter://fabencap=VXLAN
         endpoint: filter://remote=True
     dst:
         tenant  : filter://overlay=VXLAN,type=TENANT
-        segment : filter://any
+        segment : filter://fabencap=VXLAN
         endpoint: filter://remote=True
     flow        : filter://fwtype=L2,type=MAC,label=ARP
     maxflows    : 4

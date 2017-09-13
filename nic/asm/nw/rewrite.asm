@@ -15,9 +15,10 @@ nop:
 .align
 rewrite:
   seq         c1, k.vlan_tag_valid, 1
-  phvwr.c1    p.ethernet_etherType[15:8], k.vlan_tag_etherType_sbit0_ebit7
-  phvwr.c1    p.ethernet_etherType[7:0], k.vlan_tag_etherType_sbit8_ebit15
+  phvwr.c1    p.ethernet_etherType, k.vlan_tag_etherType
   phvwr.c1    p.vlan_tag_valid, 0
+  sub.c1      r1, k.control_metadata_packet_len, 4
+  phvwr.c1    p.control_metadata_packet_len, r1
 
   smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_MAC_SA, REWRITE_FLAGS_MAC_SA
   phvwr.c1    p.ethernet_srcAddr, d.u.rewrite_d.mac_sa

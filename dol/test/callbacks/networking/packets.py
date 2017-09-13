@@ -83,7 +83,7 @@ def __get_packet_encap_vxlan(testcase, cfg):
     if testcase.config.flow.IsNat() == False and\
         cfg.endpoint.remote == False:
         return None
-    if cfg.tenant.IsOverlayVxlan():
+    if cfg.segment.IsFabEncapVxlan():
         return __get_template('ENCAP_VXLAN')
     return None
 
@@ -139,7 +139,14 @@ def GetL3UcExpectedPacket(testcase):
 def GetVlanId(testcase, packet):
     if IsPriorityTagged(testcase.pvtdata):
         return 0
+    elif testcase.config.src.segment.IsFabEncapVxlan():
+        return testcase.config.src.endpoint.intf.vlan_id
     return testcase.config.src.segment.vlan_id
+
+def GetExpectedVlanId(testcase, packet):
+    if testcase.config.dst.segment.IsFabEncapVxlan():
+        return testcase.config.dst.endpoint.intf.vlan_id
+    return testcase.config.dst.segment.vlan_id
 
 def GetPacketRawBytes(testcase, packet):
     packet.Build(testcase)

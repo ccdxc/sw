@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_MULTIDEST_DROP
 
 type        : tenant
+fabencap    : vlan
 native      : False
 broadcast   : drop
 multicast   : drop

@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_REMOTE
 
 type        : tenant
+fabencap    : vlan
 native      : False
 broadcast   : drop
 multicast   : drop

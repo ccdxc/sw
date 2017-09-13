@@ -31,6 +31,8 @@ class SegmentObject(base.ConfigObjectBase):
         self.native     = spec.native
         self.l4lb       = getattr(spec, 'l4lb', False)
         self.blackhole  = getattr(spec, 'blackhole', False)
+        self.fabencap   = getattr(spec, 'fabencap', 'vlan')
+        self.fabencap   = self.fabencap.upper()
 
         if self.blackhole:
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
@@ -94,8 +96,14 @@ class SegmentObject(base.ConfigObjectBase):
     def IsSpanSegment(self):
         return self.type == 'SPAN'
 
+    def IsFabEncapVlan(self):
+        return self.fabencap == 'VLAN'
+    def IsFabEncapVxlan(self):
+        return self.fabencap == 'VXLAN'
+
     def Show(self, detail = False):
         cfglogger.info("- Segment = %s(%d)" % (self.GID(), self.id))
+        cfglogger.info("  - FabEncap   = %s" % self.fabencap)
         cfglogger.info("  - VLAN       = %d" % self.vlan_id)
 
         if not self.IsInfraSegment():
@@ -121,7 +129,7 @@ class SegmentObject(base.ConfigObjectBase):
         summary += '/Native:%s' % (self.native)
         summary += '/Rmac:%s' % (self.macaddr.get())
         summary += '/AccEnc:%d' % (self.vlan_id)
-        if self.tenant.IsOverlayVxlan():
+        if self.IsFabEncapVxlan():
             summary += '/FabEnc:0x%x' % self.vxlan_id
         else:
             summary += '/FabEnc:%d' % self.vlan_id
@@ -177,7 +185,7 @@ class SegmentObject(base.ConfigObjectBase):
             assert(0)
         req_spec.access_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
         req_spec.access_encap.encap_value   = self.vlan_id
-        if self.tenant.IsOverlayVxlan():
+        if self.IsFabEncapVxlan():
             req_spec.fabric_encap.encap_type    = haldefs.common.ENCAP_TYPE_VXLAN
             req_spec.fabric_encap.encap_value   = self.vxlan_id
         else:

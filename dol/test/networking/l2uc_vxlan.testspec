@@ -2,12 +2,12 @@
 selectors:
     src:
         tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://fwtype=L2
@@ -33,7 +33,6 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
-                tc      : 0
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -84,13 +83,17 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/intf/rtep
                 tos     : 0
                 id      : 0
-            vxlan       :
-                vni     : ref://testcase/config/dst/segment/vxlan_id
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
                 prio    : ref://testcase/config/flow/eg_qos/cos
             outerudp:
                 chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
 
 trigger:
     packets:

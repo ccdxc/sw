@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_INFRA
 
 type        : infra
+fabencap    : vlan
 native      : False
 broadcast   : drop
 multicast   : drop

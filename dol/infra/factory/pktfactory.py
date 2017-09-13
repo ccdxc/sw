@@ -310,7 +310,8 @@ class Packet(objects.FrameworkObject):
         return
 
     def __resolve(self, tc):
-        for key,hdr in self.headers.__dict__.items():
+        for h in self.headers_order:
+            hdr = self.headers.__dict__[h]
             if not IsPacketHeader(hdr): continue
             hdr.Build(tc, self)
         return

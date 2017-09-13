@@ -235,9 +235,9 @@ class EndpointObjectHelper:
         if spec.remote:
             cfglogger.info("Creating %d REMOTE EPs in Segment = %s" %\
                            (spec.remote, segment.GID()))
-            if segment.tenant.IsOverlayVlan():
+            if segment.IsFabEncapVlan():
                 remote_intfs = Store.GetTrunkingUplinks()
-            elif segment.tenant.IsOverlayVxlan():
+            elif segment.IsFabEncapVxlan():
                 remote_intfs = Store.GetTunnelsVxlan()
             self.remote = self.__create(segment, remote_intfs,
                                         spec.remote,

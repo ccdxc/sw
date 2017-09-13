@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_DEFAULT
 
 type        : tenant
+fabencap    : vlan
 native      : False
 broadcast   : flood
 multicast   : replicate

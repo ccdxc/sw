@@ -244,15 +244,9 @@ class FlowObject(base.ConfigObjectBase):
 
         #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
         # QOS stuff
-        # HACK - TEMP FOR TUNNEL CASES
-        eg_qos_dscp_rw = self.eg_qos.dscp_rw.get()
-        if self.__dten.IsOverlayVxlan():
-            eg_qos_dscp_rw = 0
-        # HACK - TEMP FOR TUNNEL CASES
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = self.eg_qos.cos_rw.get()
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.eg_qos.cos.get()
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = self.eg_qos.dscp_rw.get()
-        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = eg_qos_dscp_rw
         req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.eg_qos.dscp.get()
 
         for ssn in self.ing_mirror_sessions:

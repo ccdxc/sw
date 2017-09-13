@@ -3,6 +3,7 @@ meta:
     id: SEGMENT_VXLAN
 
 type        : tenant
+fabencap    : vxlan
 native      : False
 broadcast   : flood
 multicast   : replicate

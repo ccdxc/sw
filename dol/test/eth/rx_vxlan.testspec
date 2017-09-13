@@ -2,7 +2,7 @@
 selectors:
     src:
         tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
@@ -76,9 +76,9 @@ packets:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio: ref://testcase/config/flow/eg_qos/cos
             ipv4:
-                #tos : ref://testcase/config/flow/eg_qos/dscp
+                tos : ref://testcase/config/flow/eg_qos/dscp
             ipv6:
-                #tc  : ref://testcase/config/flow/eg_qos/dscp
+                tc  : ref://testcase/config/flow/eg_qos/dscp
             tcp:
                 flags: ack
 

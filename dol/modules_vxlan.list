@@ -1,0 +1,57 @@
+# This file contains the list of DOL test modules.
+modules:
+    - module:
+        name    : L2UC_VXLAN_ARP_RARP
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : arp_vxlan.testspec
+        ignore  : False
+        args    :
+            segment: filter://native=False
+        iterate :
+            - type      : ARP_REQ_UC
+            - type      : ARP_RESP
+            - type      : RARP_REQ_UC
+            - type      : RARP_RESP
+
+    - module:
+        name    : L2UC_VXLAN
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l2uc_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+
+    - module:
+        name    : L3UC_VXLAN
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l3uc_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+
+    - module:
+        name    : L2UC_VXLAN_NONIP
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l2uc_nonip_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow   : filter://fwtype=L2,type=MAC,label=NETWORKING
+

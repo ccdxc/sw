@@ -1,0 +1,48 @@
+# This file contains the list of DOL test for VXLAN edge cases
+modules:
+    - module:
+        name    : L3UC_EDGE_VXLAN
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l3uc_edge_vxlan.testspec
+        ignore  : False
+        iterate :
+            # Encap Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            # Decap Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN

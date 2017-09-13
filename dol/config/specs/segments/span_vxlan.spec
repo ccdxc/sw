@@ -1,9 +1,9 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_SPAN
+    id: SEGMENT_SPAN_VXLAN
 
 type        : span
-fabencap    : vlan
+fabencap    : vxlan
 native      : False
 broadcast   : drop
 multicast   : drop

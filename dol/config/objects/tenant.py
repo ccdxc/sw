@@ -87,10 +87,11 @@ class TenantObject(base.ConfigObjectBase):
     def IsTenant(self):
         return self.type == 'TENANT'
 
-    def IsOverlayVxlan(self):
-        return self.overlay == 'VXLAN'
-    def IsOverlayVlan(self):
-        return self.overlay == 'VLAN'
+    # Comment this before removing. Vxlan or Vlan is a segment level prop.
+    #def IsOverlayVxlan(self):
+    #    return self.overlay == 'VXLAN'
+    #def IsOverlayVlan(self):
+    #    return self.overlay == 'VLAN'
 
     def IsL4LbEnabled(self):
         return self.l4lb_enable == True

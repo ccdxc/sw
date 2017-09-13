@@ -56,7 +56,7 @@ class SpanSessionObject(base.ConfigObjectBase):
             cfglogger.info("- Interface : %s" % self.intf.GID())
         elif self.IsRspan():
             cfglogger.info("- Interface : %s" % self.intf.GID())
-            if self.tenant.IsOverlayVxlan():
+            if self.segment.IsFabEncapVxlan():
                 cfglogger.info("- EncapType : VXLAN")
                 cfglogger.info("- EncapVal  : %s" % self.segment.vxlan_id)
             else:
@@ -97,7 +97,7 @@ class SpanSessionObject(base.ConfigObjectBase):
                 reqspec.local_span_if.if_handle = self.intf.hal_handle
             if self.IsRspan():
                 reqspec.rspan_spec.intf.if_handle = self.intf.hal_handle
-                if self.tenant.IsOverlayVxlan():
+                if self.segment.IsFabEncapVxlan():
                     reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_VXLAN 
                     reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vxlan_id
                 else:

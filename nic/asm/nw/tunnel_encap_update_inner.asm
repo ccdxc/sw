@@ -18,6 +18,8 @@ encap_inner_ipv4_udp_rewrite:
   // TODO: Start
   // TTL and protocol had to be copied over individually since it is not being copied over
   // using the ellipses above even though they are contiguous in the K vector
+  phvwr       p.inner_ipv4_version, k.ipv4_version
+  phvwr       p.inner_ipv4_ihl, k.ipv4_ihl
   phvwr       p.inner_ipv4_diffserv, k.ipv4_diffserv
   phvwr       p.inner_ipv4_ttl, k.ipv4_ttl
   phvwr       p.inner_ipv4_protocol, k.ipv4_protocol

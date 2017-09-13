@@ -318,7 +318,7 @@ modules:
             - type      : RARP_RESP
 
     - module:
-        name    : L2UC_VXLAN_V4
+        name    : L2UC_VXLAN
         enable  : True
         package : test.networking
         module  : vxlan
@@ -328,9 +328,12 @@ modules:
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
             - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
-        name    : L3UC_VXLAN_V4
+        name    : L3UC_VXLAN
         enable  : True
         package : test.networking
         module  : vxlan
@@ -340,6 +343,9 @@ modules:
             - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
             - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
         name    : L2UC_VXLAN_NONIP
@@ -350,30 +356,6 @@ modules:
         ignore  : False
         iterate :
             - flow   : filter://fwtype=L2,type=MAC,label=NETWORKING
-
-    - module:
-        name    : L2UC_VXLAN_V6
-        enable  : True
-        package : test.networking
-        module  : vxlan
-        spec    : l2uc_vxlan.testspec
-        ignore  : False
-        iterate :
-            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
-            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-
-    - module:
-        name    : L3UC_VXLAN_V6
-        enable  : True
-        package : test.networking
-        module  : vxlan
-        spec    : l3uc_vxlan.testspec
-        ignore  : False
-        iterate :
-            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
-            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
-            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
         name    : L3UC
@@ -1267,29 +1249,29 @@ modules:
               srcseg    : filter://native=True
               priotag   : True
 
-    - module:
-        name    : ETH_RX_VXLAN_L3UC
-        enable  : True
-        package : test.eth
-        module  : eth
-        spec    : rx_l3.testspec
-        ignore  : False
-        args:
-            maxflows: 4
-        iterate:
-            # Tagged Flows
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-              srcseg    : filter://native=False
+#    - module:
+#        name    : ETH_RX_VXLAN_L3UC
+#        enable  : True
+#        package : test.eth
+#        module  : eth
+#        spec    : rx_l3.testspec
+#        ignore  : False
+#        args:
+#            maxflows: 4
+#        iterate:
+#            # Tagged Flows
+#            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+#              srcseg    : filter://native=False
+#            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+#              srcseg    : filter://native=False
+#            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+#              srcseg    : filter://native=False
+#            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+#              srcseg    : filter://native=False
+#            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+#              srcseg    : filter://native=False
+#            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+#              srcseg    : filter://native=False
 
 
     - module:
@@ -1441,3 +1423,49 @@ modules:
             - step    : FLOW_VM_TUNNEL
               flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
+    - module:
+        name    : L3UC_EDGE_VXLAN
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l3uc_edge_vxlan.testspec
+        ignore  : False
+        iterate :
+            # Encap Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://fabencap=VLAN
+              dstseg  : filter://fabencap=VXLAN
+            # Decap Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg  : filter://fabencap=VXLAN
+              dstseg  : filter://fabencap=VLAN

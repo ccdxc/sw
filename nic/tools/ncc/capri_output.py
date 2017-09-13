@@ -389,7 +389,20 @@ def capri_asm_output_pa(gress_pa):
                     if break_header_union:
                         pstr += indent+'union { /* Header Union */\n'
                         # Collect all fields that are in this flit and unionize them
-                        max_size_in_first_union = 0
+                        max_size_in_union = 0
+                        for uh in uh_list:
+                            total_field_size_in_this_flit = 0
+                            for f in uh.fields:
+                                ucf = gress_pa.get_field(get_hfname(f))
+                                if ucf.is_ohi:
+                                    continue
+                                if (ucf.phv_bit + ucf.width) > (flit_inst+1) * flit_sz:
+                                    continue
+                                total_field_size_in_this_flit += ucf.width
+                    
+                            if total_field_size_in_this_flit > max_size_in_union: 
+                                max_size_in_union = total_field_size_in_this_flit 
+
                         for uh in uh_list:
                             if gress_pa.get_header_phv_size(uh) == 0:
                                 pstr += indent2 + '// skip header %s - ' \
@@ -399,9 +412,10 @@ def capri_asm_output_pa(gress_pa):
                             last_ucf_width = 0
                             this_hdr_broken_size = 0
                             uhfields_str = ''
+                            last_ucf = gress_pa.get_field(get_hfname(uh.fields[0]))
+                            last_ucf_width = last_ucf.width
                             for f in uh.fields:
                                 ucf = gress_pa.get_field(get_hfname(f))
-                                last_ucf = ucf
                                 if ucf.is_ohi:
                                     continue
                                 if (ucf.phv_bit + ucf.width) > (flit_inst+1) * flit_sz:
@@ -423,8 +437,11 @@ def capri_asm_output_pa(gress_pa):
 
                                 last_ucf = ucf
                                 last_ucf_width = ucf.width
-                            if this_hdr_broken_size > max_size_in_first_union:
-                                max_size_in_first_union = this_hdr_broken_size
+                            if this_hdr_broken_size < max_size_in_union:
+                                uhfields_str += indent3+'%s : %d; //\n' % \
+                                  ('_pad_' + uh.name + '_' + \
+                                  str(last_ucf.phv_bit),\
+                                  max_size_in_union - this_hdr_broken_size)
 
                             if len(uhfields_str) > 0:
                                 pstr += indent2+'struct {\n'
@@ -442,7 +459,7 @@ def capri_asm_output_pa(gress_pa):
                                 continue
                             add_pad = 0
                             last_ucf_width = 0
-                            pad_size = (max_unioned_hdr_size * 8) - max_size_in_first_union
+                            pad_size = (max_unioned_hdr_size * 8) - max_size_in_union
                             field_pad = 0
                             fields_nextflit_pstr = ''
                             for f in uh.fields:

@@ -59,7 +59,6 @@ class FlowEndpointObject(base.ConfigObjectBase):
             self.port = self.l4lb_service.port.get()
         else:
             self.port = entry.port.get()
-
         if 'tracking_info' in entry.__dict__:
             self.tracking_info = objects.MergeObjects(entry.tracking_info,
                                                       self.tracking_info)
@@ -85,7 +84,6 @@ class FlowEndpointObject(base.ConfigObjectBase):
             self.__set_mac_info(entry)
         else:
             assert(0)
-
         if 'flow_info' in entry.__dict__:
             self.flow_info = objects.MergeObjects(entry.flow_info,
                                                   self.flow_info)
