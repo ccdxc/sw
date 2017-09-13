@@ -75,13 +75,13 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -106,11 +106,10 @@ func (e *sEndpointV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.EndpointV1Client, error) {
+func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.EndpointV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("EndpointV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -178,13 +177,13 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -209,11 +208,10 @@ func (e *sLbPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.LbPolicyV1Client, error) {
+func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.LbPolicyV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("LbPolicyV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -281,13 +279,13 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -312,11 +310,10 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.NetworkV1Client, error) {
+func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.NetworkV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("NetworkV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -384,13 +381,13 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -415,11 +412,10 @@ func (e *sSecurityGroupV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.SecurityGroupV1Client, error) {
+func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.SecurityGroupV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("SecurityGroupV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -487,13 +483,13 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -518,11 +514,10 @@ func (e *sServiceV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.ServiceV1Client, error) {
+func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.ServiceV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("ServiceV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -590,13 +585,13 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -621,11 +616,10 @@ func (e *sSgpolicyV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.SgpolicyV1Client, error) {
+func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.SgpolicyV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("SgpolicyV1GwService", grpcAddr, opts...)
 	if err != nil {
@@ -693,13 +687,13 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -724,11 +718,10 @@ func (e *sTenantV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (network.TenantV1Client, error) {
+func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (network.TenantV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("TenantV1GwService", grpcAddr, opts...)
 	if err != nil {

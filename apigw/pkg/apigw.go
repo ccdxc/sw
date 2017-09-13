@@ -16,6 +16,7 @@ import (
 	otext "github.com/opentracing/opentracing-go/ext"
 	"github.com/pensando/sw/apigw"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 )
 
 type apiGw struct {
@@ -161,12 +162,18 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 	a.runstate.addr = ln.Addr()
 	a.logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
-
+	var rslvr resolver.Interface
+	{
+		if len(config.Resolvers) > 0 {
+			rslvr = resolver.New(&resolver.Config{Servers: config.Resolvers})
+		}
+	}
+	a.logger.Infof("Resolving via %v", config.Resolvers)
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
-		err := svc.CompleteRegistration(ctx, config.Logger, s, m, config.Resolvers)
+		err := svc.CompleteRegistration(ctx, config.Logger, s, m, rslvr)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}

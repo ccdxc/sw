@@ -46,6 +46,8 @@ func (b *balancer) Start(target string, config grpc.BalancerConfig) error {
 	b.running = true
 	b.service = target
 	b.resolver.Register(b)
+	// Send the current state
+	go b.notifyServiceInstances()
 	return nil
 }
 
@@ -140,13 +142,8 @@ func (b *balancer) Close() error {
 	return nil
 }
 
-// OnNotifyResolver implements the resolver callbacks and informs grpc.
-func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
-	b.Lock()
-	defer b.Unlock()
-	if !b.running {
-		return nil
-	}
+// notifyServiceInstances looks up instances of the service and updates the  notify channel
+func (b *balancer) notifyServiceInstances() {
 	// gRPC wants the whole list, not incrementals.
 	siList := b.resolver.Lookup(b.service)
 	nodes := make([]grpc.Address, 0)
@@ -156,5 +153,16 @@ func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
 	if len(nodes) != 0 {
 		b.notifyCh <- nodes
 	}
+}
+
+// OnNotifyResolver implements the resolver callbacks and informs grpc.
+func (b *balancer) OnNotifyResolver(event types.ServiceInstanceEvent) error {
+	b.Lock()
+	if !b.running {
+		b.Unlock()
+		return nil
+	}
+	b.Unlock()
+	b.notifyServiceInstances()
 	return nil
 }

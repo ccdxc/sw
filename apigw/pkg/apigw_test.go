@@ -16,6 +16,7 @@ import (
 
 	"github.com/pensando/sw/apigw"
 	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/utils/resolver"
 )
 
 type testGwService struct {
@@ -23,7 +24,7 @@ type testGwService struct {
 }
 
 func (t *testGwService) CompleteRegistration(ctx context.Context,
-	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, resolvers []string) error {
+	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface) error {
 	t.regevents = t.regevents + 1
 	return nil
 }

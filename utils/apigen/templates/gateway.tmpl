@@ -57,14 +57,14 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	{{if strEq $cgrpcdest "" }}grpcaddr := "{{$grpcdest}}"{{else}}
 	grpcaddr := "{{$cgrpcdest}}"{{end}}
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -89,11 +89,10 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) ({{$pkgname}}.{{.Name}}Client, error) {
+func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) ({{$pkgname}}.{{.Name}}Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("{{.Name}}GwService", grpcAddr, opts...)
 	if err != nil {

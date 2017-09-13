@@ -75,13 +75,13 @@ func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.C
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	resolvers []string) error {
+	rslvr resolver.Interface) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, resolvers)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr)
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -106,11 +106,10 @@ func (e *sTrafficEncryptionPolicyV1GwService) CompleteRegistration(ctx context.C
 	return err
 }
 
-func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, resolvers []string) (networkencryption.TrafficEncryptionPolicyV1Client, error) {
+func (e *sTrafficEncryptionPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (networkencryption.TrafficEncryptionPolicyV1Client, error) {
 	var opts []rpckit.Option
-	if len(resolvers) > 0 {
-		r := resolver.New(&resolver.Config{Servers: resolvers})
-		opts = append(opts, rpckit.WithBalancer(balancer.New(r)))
+	if rslvr != nil {
+		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
 	client, err := rpckit.NewRPCClient("TrafficEncryptionPolicyV1GwService", grpcAddr, opts...)
 	if err != nil {
