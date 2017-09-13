@@ -50,8 +50,9 @@ void unregister_features_and_pipelines();
 hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 
 // FTE pkt loop (infinite loop)
-void pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
-              hal_ret_t (*tx)(phv_t *phv, uint8_t *pkt, size_t pkt_len));
+typedef std::function<hal_ret_t(phv_t **phv, uint8_t **pkt, size_t *pkt_len)> arm_rx_t; 
+typedef std::function<hal_ret_t(const phv_t *phv, const uint8_t *pkt, size_t pkt_len)> arm_tx_t; 
+void pkt_loop(arm_rx_t rx, arm_tx_t tx);
 
 
 } // namespace fte

@@ -305,8 +305,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
 // FTE main pkt loop
 void
-pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
-         hal_ret_t (*tx)(const phv_t *phv, const uint8_t *pkt, size_t pkt_len))
+pkt_loop(arm_rx_t rx, arm_tx_t tx)
 {
     hal_ret_t ret;
     phv_t *phv;
@@ -346,7 +345,11 @@ pkt_loop(hal_ret_t (*rx)(phv_t **phv, uint8_t **pkt, size_t *pkt_len),
 
         // write the packet
         if (ctx.pkt()) {
-            tx(ctx.phv(), ctx.pkt(), ctx.pkt_len());
+            ret = tx(ctx.phv(), ctx.pkt(), ctx.pkt_len());
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failied to transmit pkt, ret={}", ret);
+                continue;
+            }
         }
     }
 }

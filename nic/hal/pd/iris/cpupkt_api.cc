@@ -193,7 +193,7 @@ cpupkt_poll_receive(cpupkt_rx_ctxt_t* ctxt,
                 HAL_TRACE_ERR("Failed to create skbuff");
             }
             cpupkt_free_queue_index(ctxt->queue[i]);
-            //return ret;
+            return ret;
         }
     }
     return ret;    

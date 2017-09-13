@@ -51,7 +51,7 @@ conn_tracking_configured(fte::ctx_t &ctx)
     }
 
     // TODO(goli) check Security profile
-    return true;
+    return false;
 }
 
 fte::pipeline_action_t

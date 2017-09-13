@@ -15,6 +15,8 @@
 #include <tcpcb.hpp>
 #include <proxy.hpp>
 #include <fte.hpp>
+#include <defines.h>
+#include <cpupkt_api.hpp>
 #include <plugins/plugins.hpp>
 
 extern "C" void __gcov_flush(void);
@@ -39,17 +41,102 @@ LIFManager *g_lif_manager = nullptr;
 thread_local thread *t_curr_thread;
 
 using boost::property_tree::ptree;
-//------------------------------------------------------------------------------
-// TODO - dummy for now !!
-//------------------------------------------------------------------------------
+
 static void *
 fte_pkt_loop (void *ctxt)
 {
     t_curr_thread = (thread *)ctxt;
     HAL_TRACE_DEBUG("Thread {} initializing ...", t_curr_thread->name());
-
     HAL_THREAD_INIT();
-    while (1);
+
+    uint8_t fte_id = HAL_THREAD_ID_FTE_MIN - t_curr_thread->thread_id();
+
+    // only one FTE for now
+    if (fte_id != 0) {
+        return NULL;
+    }
+
+    hal::pd::cpupkt_rx_ctxt_t* rx_ctx = hal::pd::cpupkt_rx_ctxt_alloc_init();
+    cpupkt_register_rx_queue(rx_ctx, types::WRING_TYPE_ARQRX);
+    fte::phv_t rx_phv;
+    hal::pd::p4_to_p4plus_cpu_pkt_t *rx_hdr = NULL;
+    uint8_t *rx_pkt = NULL;
+
+    fte::arm_rx_t arm_rx = [&](fte::phv_t **phv, uint8_t **pkt, size_t *pkt_len) {
+        hal_ret_t ret;
+        if (rx_hdr != NULL) {
+            cpupkt_free(rx_hdr, rx_pkt);
+        }
+
+        rx_hdr = NULL;
+        rx_pkt = NULL;
+        rx_phv = {};
+
+        ret = cpupkt_poll_receive(rx_ctx, &rx_hdr, &rx_pkt, pkt_len);
+        if (ret == HAL_RET_OK) {
+            bool inner_valid = false; // TODO read flags
+            rx_phv.lif = 1;  // TODO
+            rx_phv.qtype = 0;
+            rx_phv.qid = 0; 
+            rx_phv.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4; //rx_hdr->lkp_type;
+            rx_phv.lkp_dir = 1; // TODO
+            rx_phv.lkp_vrf = 4097; //rx_hdr->lkp_vrf;
+
+            // extarct src/dst
+            switch (rx_phv.lkp_type) {
+            case FLOW_KEY_LOOKUP_TYPE_MAC:
+                // TODO(goli)
+            case FLOW_KEY_LOOKUP_TYPE_IPV4:
+                if (inner_valid) {
+                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner+4, 4);
+                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_sa_inner+8, 4);
+                } else {
+                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer+4, 4);
+                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_sa_outer+8, 4);
+                }
+                *(ipv4_addr_t*)rx_phv.lkp_src = ntohl(*(ipv4_addr_t*)rx_phv.lkp_src);
+                *(ipv4_addr_t*)rx_phv.lkp_dst = ntohl(*(ipv4_addr_t*)rx_phv.lkp_dst);
+
+                break;
+            case FLOW_KEY_LOOKUP_TYPE_IPV6:
+                if (inner_valid) {
+                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer, sizeof(rx_phv.lkp_src));
+                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_outer, sizeof(rx_phv.lkp_dst));
+                } else {
+                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner, sizeof(rx_phv.lkp_src));
+                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_inner, sizeof(rx_phv.lkp_dst));
+                }
+                break;
+            }
+
+            // extract proto
+            if (inner_valid) {
+                rx_phv.lkp_proto = IP_PROTO_TCP; //rx_hdr->ip_proto_outer;
+            } else {
+                rx_phv.lkp_proto = IP_PROTO_TCP; // rx_hdr->ip_proto_inner;
+            }
+
+            // extract l4
+            if (rx_phv.lkp_proto == IP_PROTO_UDP && !inner_valid) {
+                rx_phv.lkp_sport = ntohs(rx_hdr->l4_sport_outer);
+                rx_phv.lkp_dport = ntohs(rx_hdr->l4_dport_outer);
+            } else {
+                rx_phv.lkp_sport = ntohs(rx_hdr->l4_sport_inner);
+                rx_phv.lkp_dport = ntohs(rx_hdr->l4_dport_inner);
+            }
+
+            *phv = &rx_phv;
+            *pkt = rx_pkt;
+        }
+        return ret;
+    };
+
+    fte::arm_tx_t arm_tx = [&](const fte::phv_t *phv, const uint8_t *pkt, size_t pkt_len) {
+        return HAL_RET_OK;
+    };
+
+    fte::pkt_loop(arm_rx, arm_tx);
+
     return NULL;
 }
 
@@ -254,7 +341,7 @@ hal_thread_init (void)
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     assert(thread_prio >= 0);
     for (tid = HAL_THREAD_ID_FTE_MIN, core_id = 1;
-         FALSE && tid <= HAL_THREAD_ID_FTE_MAX;       // TODO: fix the env !!
+         tid <= HAL_THREAD_ID_FTE_MAX;       // TODO: fix the env !!
          tid++, core_id++) {
         HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
         snprintf(thread_name, sizeof(thread_name), "fte-core-%u", core_id);
@@ -263,7 +350,6 @@ hal_thread_init (void)
                             core_id, fte_pkt_loop,
                             thread_prio, SCHED_FIFO, false);
         HAL_ABORT(g_hal_threads[tid] != NULL);
-        g_hal_threads[tid]->start(g_hal_threads[tid]);
     }
 
     // spawn periodic thread that does background tasks
@@ -418,6 +504,12 @@ hal_init (hal_cfg_t *hal_cfg)
    
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
+
+    // start fte threads
+    for (int tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
+        // TODO(goii) uncomment once ARM driver API is ready
+        //g_hal_threads[tid]->start(g_hal_threads[tid]);
+    }
 
     hal_proxy_svc_init();
     
