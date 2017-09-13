@@ -8,6 +8,8 @@ overlay : vlan
 segments:
     - spec  : ref://store/specs/id=SEGMENT_ETH
       count : 1
+    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
+      count : 1
     - spec  : ref://store/specs/id=SEGMENT_NATIVE_ETH
       count : 1
 
@@ -16,7 +18,7 @@ segments:
 # - All the segments will be enabled on these Enics              
 nfveps: 0
 
-security_profile: None
+security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 
 sessions:
     unidest:

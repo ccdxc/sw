@@ -1050,6 +1050,82 @@ modules:
               segment : filter://native=False
 
     - module:
+        name    : ETH_TX_L3UC # L3UC_IP cases
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : tx_l3.testspec
+        ignore  : False
+        args    :
+            maxflows : 4
+        iterate:
+            # Untagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=False
+            # Tagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=True
+
+    - module:
+        name    : ETH_TX_L3UC_GFT_DROP # L3UC_IP cases
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : tx_l3.testspec
+        ignore  : False
+        args    :
+            maxflows : 4
+        iterate:
+            # Untagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg: filter://native=False
+            # Tagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg: filter://native=True
+
+
+
+    - module:
         name    : ETH_TX_L2UC_NONIP
         enable  : True
         package : test.eth
@@ -1173,11 +1249,11 @@ modules:
         name    : ETH_RX_VXLAN
         enable  : True
         package : test.eth
-        module  : eth
+        module  : ethvxlan
         spec    : rx_vxlan.testspec
         ignore  : False
         args:
-            maxflows: 1
+            maxflows: 4
         iterate:
             # Tagged Flows
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -1249,30 +1325,29 @@ modules:
               srcseg    : filter://native=True
               priotag   : True
 
-#    - module:
-#        name    : ETH_RX_VXLAN_L3UC
-#        enable  : True
-#        package : test.eth
-#        module  : eth
-#        spec    : rx_l3.testspec
-#        ignore  : False
-#        args:
-#            maxflows: 4
-#        iterate:
-#            # Tagged Flows
-#            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-#              srcseg    : filter://native=False
-#            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-#              srcseg    : filter://native=False
-#            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
-#              srcseg    : filter://native=False
-#            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
-#              srcseg    : filter://native=False
-#            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-#              srcseg    : filter://native=False
-#            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-#              srcseg    : filter://native=False
-
+    - module:
+        name    : ETH_RX_VXLAN_L3UC
+        enable  : False
+        package : test.eth
+        module  : ethvxlan
+        spec    : rx_vxlan_l3.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            # Tagged Flows
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=False
 
     - module:
         name    : ETH_RX_ARP
@@ -1280,7 +1355,7 @@ modules:
         package : test.eth
         module  : eth
         spec    : rx_arp.testspec
-        ignore  : True
+        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -1315,11 +1390,11 @@ modules:
         name    : ETH_RX_VXLAN_ARP
         enable  : True
         package : test.eth
-        module  : eth
+        module  : ethvxlan
         spec    : rx_vxlan_arp.testspec
-        ignore  : True
+        ignore  : False
         args:
-            maxflows: 1
+            maxflows: 4
         iterate:
             # Tagged Flows
             - flow      : filter://type=MAC,label=ARP
@@ -1342,7 +1417,7 @@ modules:
         package : test.eth
         module  : eth
         spec    : rx_non_ip.testspec
-        ignore  : True
+        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -1355,11 +1430,11 @@ modules:
         name    : ETH_RX_VXLAN_NON_IP
         enable  : True
         package : test.eth
-        module  : eth
+        module  : ethvxlan
         spec    : rx_vxlan_non_ip.testspec
-        ignore  : True
+        ignore  : False
         args:
-            maxflows: 1
+            maxflows: 4
         iterate:
             - flow      : filter://type=MAC,label=NETWORKING
               segment   : filter://native=False

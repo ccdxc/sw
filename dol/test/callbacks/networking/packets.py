@@ -120,8 +120,13 @@ def GetExpectedPacketCos(testcase, packet):
 
     # If we sent pkt with a tag, we should receive with same cos we sent with
     if testcase.config.src.segment.native == False or \
-            IsPriorityTagged(testcase.pvtdata) == True:
-        return testcase.config.flow.eg_qos.cos.get() 
+        IsPriorityTagged(testcase.pvtdata) == True:
+        return testcase.config.flow.eg_qos.cos.get()
+
+    # For Host TX cases they have a qtag
+    if testcase.config.src.endpoint and\
+        testcase.config.src.endpoint.remote == False:
+        return testcase.config.flow.eg_qos.cos.get()
 
     return 0
 

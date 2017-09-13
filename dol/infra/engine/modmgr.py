@@ -236,6 +236,8 @@ class ModuleDatabase:
         self.parser = ModuleListParser(module_list_file)
         if GlobalOptions.test != None:
             GlobalOptions.test = GlobalOptions.test.split(',')
+        if GlobalOptions.module != None:
+            GlobalOptions.module = GlobalOptions.module.split(',')
         self.__add_all()
         return
 
