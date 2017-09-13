@@ -81,6 +81,18 @@ hal_initialize()
 }
 
 
+void
+hal_uninitialize(void)
+{
+    // uninitialize HAL
+    if (hal::hal_destroy() != HAL_RET_OK) {
+        fprintf(stderr, "HAL initialization failed, quitting ...\n");
+        exit(1);
+    }
+    printf("HAL UnInitialized \n");
+}
+
+
 class session_test : public ::testing::Test {
 protected:
   session_test() {
@@ -104,6 +116,7 @@ protected:
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
+    hal_uninitialize();
   }
 };
 

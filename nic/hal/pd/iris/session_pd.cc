@@ -526,7 +526,7 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
 {
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
-    p4pd_flow_hash_data_t    flow_data;
+    p4pd_flow_hash_data_t    flow_data = { 0 };
     fmt::MemoryWriter src_buf, dst_buf;
 
     // initialize all the key fields of flow

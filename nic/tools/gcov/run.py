@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import json
+from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Coverage generator')
 parser.add_argument('--config', dest='conf_file',
@@ -40,7 +41,6 @@ nic_dir = os.path.abspath(nic_dir)
 
 top_dir = os.getcwd()
 gcov_out_name = "gcov_out"
-gcov_out_dir = coverage_output_path + gcov_out_name
 FNULL = open(os.devnull, 'w')
 
 
@@ -51,9 +51,8 @@ def is_valid_coverage_info_file(file):
     return False
 
 
-def gen_html(lcov_info_files, lcov_html_out):
-    cmd = ["genhtml", "-o", lcov_html_out]
-    cmd.extend(lcov_info_files)
+def gen_html(lcov_info_file, cov_output_dir):
+    cmd = ["genhtml", "-o", cov_output_dir, lcov_info_file]
     subprocess.call(cmd)
 
 
@@ -78,7 +77,8 @@ def lcov_remove(lcov_out_file, remove_files):
         subprocess.call(cmd)
 
 
-def generate_coverage(data, lcov_html_out):
+def generate_coverage(data, test_name,  cov_output_dir):
+    gcov_out_dir = cov_output_dir + "/" + gcov_out_name
     subprocess.call(["mkdir", "-p", gcov_out_dir])
     lcov_info_files = []
     for dir in data.get("nic_dirs", []):
@@ -114,9 +114,24 @@ def generate_coverage(data, lcov_html_out):
                     subprocess.call(["rm", lcov_out_file])
             subprocess.call(["rm -f *.gcov *.gcno *.gcda"], shell=True)
             os.chdir(top_dir)
-    gen_html(lcov_info_files, lcov_html_out)
+
+    # Merge all into one.
+    output_file = cov_output_dir + "/" + test_name + ".info"
+    merge_lcov_files(test_name, lcov_info_files, output_file)
+    gen_html(output_file, cov_output_dir)
+    return output_file
+    # for file in lcov_info_files:
+    #    subprocess.call(["rm", file])
+
+
+def merge_lcov_files(test_name, lcov_info_files, output_file):
+    cmd = ["lcov", "-t", test_name]
     for file in lcov_info_files:
-        subprocess.call(["rm", file])
+        cmd.append("--add-tracefile")
+        cmd.append(file)
+    cmd.append("--output-file")
+    cmd.append(output_file)
+    subprocess.call(cmd)
 
 
 def run_test(cmd):
@@ -153,9 +168,18 @@ if __name__ == '__main__':
     # First do a build.
     build(data["make_cmd"])
 
+    lcov_info_files = []
     for test in data["cov_tests"]:
         run_test(test["cmd"])
-        generate_coverage(data, coverage_output_path + test["output_dir_name"])
+        lcov_info_files.append(generate_coverage(
+            data,  test["name"], coverage_output_path + test["output_dir_name"]))
         os.chdir(obj_dir_path)
         subprocess.call(["rm -f *.gcda"], shell=True)
         os.chdir(top_dir)
+
+    # Finally generate lcov combined output as well.
+    cov_output_dir = coverage_output_path + "/" + "total_cov"
+    subprocess.call(["mkdir", "-p", cov_output_dir])
+    output_file = cov_output_dir + "/total.info"
+    merge_lcov_files("Total", lcov_info_files, output_file)
+    gen_html(output_file, cov_output_dir)

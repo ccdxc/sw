@@ -493,6 +493,19 @@ hal_thread_init (void)
     return HAL_RET_OK;
 }
 
+
+//------------------------------------------------------------------------------
+//  uninit all  the HAL threads - both config and packet loop threads.
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_thread_destroy (void)
+{
+    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
+    g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
+    return HAL_RET_OK;
+}
+
+
 //------------------------------------------------------------------------------
 // wait for all the HAL threads to be terminated and any other background
 // activities
@@ -605,5 +618,21 @@ hal_init (hal_cfg_t *hal_cfg)
     
     return HAL_RET_OK;
 }
+
+
+//------------------------------------------------------------------------------
+// un init function for HAL
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_destroy (void)
+{
+    // cancel  all necessary PI threads
+    HAL_ABORT(hal_thread_destroy() == HAL_RET_OK);
+    HAL_TRACE_DEBUG("Cancelled  all HAL threads");
+
+    return HAL_RET_OK;
+
+}
+
 
 }    // namespace hal

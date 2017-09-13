@@ -9,7 +9,8 @@
   ],
   "remove_files": [
     "/usr/include/*",
-    "/usr/local/*"
+    "/usr/local/*",
+    "third-party/*"
   ],
   "file_patterns": [
     ".c",
@@ -17,6 +18,12 @@
   ],
   "cov_tests": [
     {
+      "name": "gtest",
+      "cmd": "make gtest",
+      "output_dir_name": "gtest_cov"
+    },
+    {
+      "name": "dol",
       "cmd": "./run.py --coveragerun",
       "output_dir_name": "dol_cov"
     }

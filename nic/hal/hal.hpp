@@ -57,6 +57,11 @@ extern hal_ret_t hal_parse_cfg(const char *cfgfile __IN__,
 extern hal_ret_t hal_init(hal_cfg_t *cfg __IN__);
 
 //------------------------------------------------------------------------------
+// hal uninitialization main routine
+//------------------------------------------------------------------------------
+extern hal_ret_t hal_destroy(void);
+
+//------------------------------------------------------------------------------
 // hal wait-for-cleanup API
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_wait(void);
