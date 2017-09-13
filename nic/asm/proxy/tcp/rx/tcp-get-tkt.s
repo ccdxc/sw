@@ -50,7 +50,8 @@ flow_get_tkt_start:
 	phvwr		p.page_idx, d.page_idx
 	phvwr		p.descr_idx, d.descr_idx
 rnmdr_read:	
-	addi		r1, r0, RNMDR_TABLE_BASE
+	addui		r1, r0, hiword(RNMDR_TABLE_BASE)
+	addi		r1, r0, loword(RNMDR_TABLE_BASE)
 	add 		r2, d.descr_idx, r0
 	sll		r2, r2, RNMDR_TABLE_ENTRY_SIZE_SHFT
 	add		r1, r1, r2
@@ -60,7 +61,8 @@ rnmdr_read:
 	phvwr		p.table_addr, r1
 
 rnmpr_read:	
-	addi		r1, r0, RNMPR_TABLE_BASE
+	addui		r1, r0, hiword(RNMPR_TABLE_BASE)
+	addi		r1, r0, loword(RNMPR_TABLE_BASE)
 	add 		r2, d.page_idx, r0
 	sll		r2, r2, RNMPR_TABLE_ENTRY_SIZE_SHFT
 	add		r1, r1, r2

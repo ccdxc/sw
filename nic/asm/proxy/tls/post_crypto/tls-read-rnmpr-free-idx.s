@@ -23,7 +23,8 @@ tls_free_rnmpr:
         CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 
-	    addi		r3, r0, RNMPR_TABLE_BASE
+	    addui		r3, r0, hiword(RNMPR_TABLE_BASE)
+	    addi		r3, r0, loword(RNMPR_TABLE_BASE)
 
         add         r4, d.rnmpr_free_pi, r0
         sll         r4, r4, RNMPR_TABLE_ENTRY_SIZE_SHFT
