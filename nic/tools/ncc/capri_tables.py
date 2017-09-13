@@ -3515,8 +3515,8 @@ class capri_stage:
                 launch_seq[cycle].fid = fid
                 cycle += 1
             else:
-                #launch_seq[cycle-1].adv_flit = True
-                # keep adv_flit = False, it is updated at the end
+                if fid < last_flit_used:
+                    launch_seq[cycle-1].adv_flit = True
                 pass
             
         if len(launch_any_time):
