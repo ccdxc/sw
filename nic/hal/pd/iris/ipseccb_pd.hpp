@@ -15,6 +15,8 @@ namespace pd {
 #define P4PD_IPSECCB_STAGE_ENTRY_OFFSET            64
 #define P4PD_HBM_IPSEC_CB_ENTRY_SIZE               128
 
+#define IPSEC_CB_RING_ENTRY_SIZE                   8
+
 typedef enum ipseccb_hwid_order_ {
     P4PD_HWID_IPSEC_RX_STAGE0 = 0,
     P4PD_HWID_IPSEC_IP_HDR = 1,

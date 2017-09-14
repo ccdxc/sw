@@ -17,5 +17,9 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
 
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
-    phvwri.e p.app_header_table0_valid, 0
+    phvwri p.app_header_table0_valid, 0
+    phvwri p.app_header_table1_valid, 0
+    phvwri p.app_header_table2_valid, 0
+    phvwri p.app_header_table3_valid, 0
+    nop.e
     nop

@@ -238,6 +238,7 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
     modify_field(barco_req.brq_out_addr, out_desc);
     modify_field(barco_req.brq_auth_tag_addr, out_page+tailroom_offset+pad_size+2);
     modify_field(barco_req.brq_hdr_size, payload_start);
+    modify_field(barco_req.brq_iv_addr, in_page);
 
     //modify_field(txdma1_global.out_desc_addr, out_desc);
     modify_field(p4plus2p4_hdr.table0_valid, 1);
@@ -287,8 +288,12 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
     //IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     //IPSEC_TXDMA1_S2S0_SCRATCH_INIT
 
-    //IPSEC_CB_SCRATCH
-   
+    IPSEC_CB_SCRATCH
+  
+    //modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr);
+    //modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex);
+
+ 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
@@ -296,10 +301,10 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
  
 
-    modify_field(txdma1_global.ipsec_cb_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index));
+    //modify_field(txdma1_global.ipsec_cb_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index));
 
     modify_field(barco_req.brq_barco_enc_cmd, barco_enc_cmd);
-    modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
+    //modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
     modify_field(barco_req.brq_key_index, key_index);
 
  
@@ -307,7 +312,7 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(common_te0_phv.table_pc, 0); //ipsec_get_in_desc_from_cb_cindex
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, cb_ring_base_addr+cb_cindex*64);
+    //modify_field(common_te0_phv.table_addr, cb_ring_base_addr+cb_cindex*64);
 
     modify_field(p4plus2p4_hdr.table1_valid, 1);
     modify_field(common_te1_phv.table_pc, 0);
