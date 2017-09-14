@@ -258,6 +258,7 @@ metadata rx2tx_t rx2tx;
 metadata rx2tx_extra_t rx2tx_extra;
 @pragma dont_trim
 metadata tx2rx_t tx2rx;
+#if 0
 header_type txdma_phv_pad1_t {
     fields {
         txdma_phv_pad1 : 152;
@@ -265,26 +266,39 @@ header_type txdma_phv_pad1_t {
 }
 @pragma dont_trim
 metadata txdma_phv_pad1_t phv_pad1;
+#endif
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t dma_cmd0;
+metadata tcp_header_t tcp_header;
+header_type txdma_max_options_t {
+    fields {
+        pad            : 320;
+    }
+}
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t dma_cmd1;
+metadata txdma_max_options_t tcp_header_options;
+header_type txdma_pad_before_dma_t {
+    fields {
+        pad            : 64;
+    }
+}
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd2;
+metadata txdma_pad_before_dma_t dma_pad;
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd3;
+metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 0
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd4;
+metadata dma_cmd_phv2pkt_t app_header_dma;   // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd5;
+metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
+metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
+metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd8;
+metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd9;
+metadata dma_cmd_phv2mem_t dma_cmd7_dma;     // dma cmd 6
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd8_dma;     // dma cmd 7
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -518,6 +532,15 @@ action tso(TX_SHARED_PARAMS) {
     modify_field(to_s4_scratch.pending_tso_data, to_s4.pending_tso_data);
     modify_field(to_s4_scratch.pending_tso_probe_data, to_s4.pending_tso_probe_data);
     modify_field(to_s4_scratch.pending_tso_retx, to_s4.pending_tso_retx);
+
+    // from stage to stage
+    modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);
+    modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);
+    modify_field(t0_s2s_scratch.snd_cwnd, t0_s2s.snd_cwnd);
+    modify_field(t0_s2s_scratch.packets_out, t0_s2s.packets_out);
+    modify_field(t0_s2s_scratch.sacked_out, t0_s2s.sacked_out);
+    modify_field(t0_s2s_scratch.lost_out, t0_s2s.lost_out);
+    modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 
     // d for stage 4 table 0
     GENERATE_TX_SHARED_D

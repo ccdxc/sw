@@ -108,7 +108,7 @@ flow_sack4_process_start:
 	//bcf		[!c1], flow_sack4_process_done TODO
 	nop
 
-	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
+	addi		r5, r0, TCP_PHV_RXDMA_COMMANDS_START
 	add		r4, r5, r0
 	phvwr		p.p4_rxdma_intr_dma_cmd_ptr, r4
 

@@ -83,6 +83,8 @@
         pending                         : 2                     ;\
 
 #define TCB_TX_SHARED_STATE \
+        source_port                     : 16                    ;\
+        dest_port                       : 16                    ;\
         retx_ci                         : 16                    ;\
         retx_pi                         : 16                    ;\
         sched_flag                      : 8                     ;\
@@ -105,8 +107,8 @@
         debug_num_phv_to_pkt            : 8                     ;\
         debug_num_mem_to_pkt            : 8                     ;\
 
-#define TX_SHARED_PARAMS                                                                                  \
-retx_ci, retx_pi, sched_flag, retx_snd_una, retx_snd_nxt,\
+#define TX_SHARED_PARAMS                                                        \
+source_port, dest_port, retx_ci, retx_pi, sched_flag, retx_snd_una, retx_snd_nxt,\
 retx_head_desc, retx_snd_una_cursor, retx_tail_desc, retx_snd_nxt_cursor,\
 retx_xmit_cursor, xmit_cursor_addr, rcv_wup, prr_out, pending_ack_tx,\
 pending_delayed_ack_tx, pending_tso_data, pending_pad, bytes_sent,\
@@ -114,6 +116,8 @@ pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
 
 
 #define GENERATE_TX_SHARED_D                                                                               \
+    modify_field(tcp_tx_d.source_port, source_port); \
+    modify_field(tcp_tx_d.dest_port, dest_port); \
     modify_field(tcp_tx_d.retx_ci, retx_ci); \
     modify_field(tcp_tx_d.retx_pi, retx_pi); \
     modify_field(tcp_tx_d.sched_flag, sched_flag); \
