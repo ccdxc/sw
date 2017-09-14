@@ -1,6 +1,6 @@
 # LIF Configuration Template
 meta:
-    id: LIF_RDMA
+    id: LIF_ETH_RDMA
 
 rdma:
     enable: True
@@ -77,8 +77,29 @@ queue_types:
                         desc        : ref://factory/templates/id=DESCR_ETH_TX
 
     - queue_type:
-        id          : RX
+        id          : ADMIN
         type        : 3
+        purpose     : LIF_QUEUE_PURPOSE_ADMIN
+        size        : 64
+        count       : 1
+        queues:
+            - queue:
+                id          : Q0
+                count       : 1
+                #for now treat this queue same as rx
+                template    : ref://store/templates/id=ETH_QUEUE_RX
+                rings:
+                    - ring:
+                        id          : R0
+                        pi          : 0
+                        ci          : 0
+                        size        : 1024
+                        template    : ref://store/templates/id=ETH_RING_RX
+                        desc        : ref://factory/templates/id=DESCR_ETH_RX
+
+    - queue_type:
+        id          : RX
+        type        : 4
         purpose     : LIF_QUEUE_PURPOSE_RX
         size        : 64
         count       : 1
@@ -98,7 +119,7 @@ queue_types:
 
     - queue_type:
         id          : RDMA_CQ
-        type        : 4
+        type        : 5
         purpose     : LIF_QUEUE_PURPOSE_CQ
         size        : 32
         count       : 32
@@ -116,7 +137,7 @@ queue_types:
 
     - queue_type:
         id          : RDMA_EQ
-        type        : 5
+        type        : 6
         purpose     : LIF_QUEUE_PURPOSE_EQ
         size        : 32
         count       : 32

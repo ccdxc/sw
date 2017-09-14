@@ -16,6 +16,6 @@ entries:
     - entry:
         label: rdma
         responder:
-            port : const/0
-        initiator: 
             port : const/4791
+        initiator: 
+            port : const/0

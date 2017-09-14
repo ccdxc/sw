@@ -372,8 +372,8 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
     } else {
         d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
-        d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
     }
+    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
 
     // TBD: check analytics policy and set this
     d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;

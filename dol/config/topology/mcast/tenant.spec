@@ -24,4 +24,4 @@ sessions:
         mac:
 
 
-lif: ref://store/specs/id=LIF_ETH
+lif: ref://store/specs/id=LIF_ETH_RDMA

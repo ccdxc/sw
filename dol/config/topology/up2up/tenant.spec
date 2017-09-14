@@ -30,4 +30,4 @@ sessions:
         mac:
             - ref://store/specs/id=SESSION_MAC_UP2UP
 
-lif: ref://store/specs/id=LIF_DEFAULT
+lif: ref://store/specs/id=LIF_ETH_RDMA

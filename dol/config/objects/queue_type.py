@@ -15,7 +15,7 @@ import config.hal.defs          as haldefs
 from config.store               import Store
 from infra.common.logging       import cfglogger
 
-eth_queue_type_ids = {'RX', 'TX'}
+eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
 rdma_queue_type_ids = {'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
 
 class QueueTypeObject(objects.FrameworkObject):

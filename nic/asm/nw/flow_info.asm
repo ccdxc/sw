@@ -25,6 +25,7 @@ flow_info:
   /* qid */
   seq         c1, d.u.flow_info_d.qid_en, 1
   phvwr.c1    p.control_metadata_qid, d.u.flow_info_d.tunnel_vnid
+  phvwr.c1    p.control_metadata_qtype, d.u.flow_info_d.qtype
 
   /* mirror session id */
   phvwr       p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id

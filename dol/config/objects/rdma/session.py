@@ -72,10 +72,13 @@ class RdmaSessionObjectHelper:
         return
 
     def __get_qps_for_ep(self, ep):
-        pds = ep.pds.GetAll()
-        for pd in pds:
-            qps = pd.qps.GetAll()
-            return qps
+        if hasattr(ep, 'pds'):
+            pds = ep.pds.GetAll()
+            for pd in pds:
+                qps = pd.qps.GetAll()
+                return qps
+        else:
+            return []
 
     def Generate(self):
         self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')

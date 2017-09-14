@@ -12,6 +12,7 @@ from infra.common.logging       import cfglogger
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 import rdma_pb2                 as rdma_pb2
+from infra.common.glopts import GlobalOptions
 
 class SlabObject(base.ConfigObjectBase):
     def __init__(self, ep, size):
@@ -26,7 +27,9 @@ class SlabObject(base.ConfigObjectBase):
         return
 
     def Configure(self):
+        if (GlobalOptions.dryrun): return
         self.mem_handle = resmgr.HostMemoryAllocator.get(self.size)
+        assert(self.mem_handle != None)
         self.address = self.mem_handle.va
         assert(self.address % self.page_size == 0)
 
@@ -38,6 +41,7 @@ class SlabObject(base.ConfigObjectBase):
         self.Show()
 
     def Show(self):
+        if (GlobalOptions.dryrun): return
         cfglogger.info('SLAB: %s EP: %s' %(self.GID(), self.ep.GID()))
         cfglogger.info('size: %d address: 0x%x' %(self.size, self.address))
         i = 0

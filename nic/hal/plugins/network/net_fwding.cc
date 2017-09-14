@@ -2,6 +2,7 @@
 #include <interface_api.hpp>
 #include <pd_api.hpp>
 #include <net/ethernet.h>
+#include <common_defines.h>
 
 namespace hal {
 namespace net {
@@ -74,6 +75,9 @@ update_fwding_info(fte::ctx_t&ctx, hal::flow_role_t role, hal::if_t *dif)
 
     // TODO(goli) Update qid for enic
     if (dif->if_type == intf::IF_TYPE_ENIC) {
+        flowupd.fwding.qtype = Q_TYPE_RXQ;
+        flowupd.fwding.qid_en = 1;
+        flowupd.fwding.qid = 0;
     }
 
     return ctx.update_flow(role, flowupd);

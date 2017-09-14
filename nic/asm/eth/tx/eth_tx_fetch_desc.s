@@ -3,6 +3,7 @@
 #include "ingress.h"
 #include "defines.h"
 #include "capri-macros.h"
+#include "common_defines.h"
 
 struct phv_ p;
 struct tx_table_s0_t0_k k;
@@ -37,7 +38,7 @@ eth_tx_fetch_desc:
   phvwr           p.common_te0_phv_table_raw_table_size, LG2_TX_DESC_SIZE
 
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
-  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, 1, r1)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, Q_TYPE_TXQ, r1)   // R4 = ADDR
 
   tblmincri.f     d.{c_index0}.hx, d.{ring_size}.hx, 1
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA

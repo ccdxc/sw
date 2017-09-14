@@ -13,3 +13,6 @@ endpoints   :
     pvlan   : 2
     direct  : 0
     remote  : 4 # 1 EP per uplink
+    rdma:
+        pd      : ref://store/specs/id=PD_RDMA
+        slab    : ref://store/specs/id=SLAB_RDMA

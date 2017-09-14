@@ -27,6 +27,8 @@ from factory.objects.rdma.descriptor import RdmaRsqDescriptorRead
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorAtomic
 from factory.objects.rdma.descriptor import RdmaSge
 
+from infra.common.glopts import GlobalOptions
+
 class QpObject(base.ConfigObjectBase):
     def __init__(self, pd, qp_id, spec):
         super().__init__()
@@ -121,6 +123,7 @@ class QpObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         cfglogger.info("QP: %s PD: %s Remote: %s \n" %\
                         (self.GID(), self.pd.GID(), self.remote))
+        if (GlobalOptions.dryrun): return
         req_spec.qp_num = self.id
         req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
         req_spec.sq_wqe_size = self.sqwqe_size

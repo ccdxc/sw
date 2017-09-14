@@ -155,6 +155,10 @@ class EthQueueObject(QueueObject):
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
+        #treat admin same as rx for now
+        elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
+            req_spec.label.prog_name = "rxdma_stage0.bin"
+            req_spec.label.label = "eth_rx_stage0"
         else:
             cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError

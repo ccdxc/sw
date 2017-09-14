@@ -12,6 +12,7 @@ from infra.common.logging       import cfglogger
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 import rdma_pb2                 as rdma_pb2
+from infra.common.glopts import GlobalOptions
 
 class MrObject(base.ConfigObjectBase):
     def __init__(self, pd, slab,    
@@ -34,6 +35,8 @@ class MrObject(base.ConfigObjectBase):
         cfglogger.info("MR: %s PD: %s SLAB: %s LIF: %s\n" %\
                         (self.GID(), self.pd.GID(), self.slab.GID(),
                          self.pd.ep.intf.lif.hw_lif_id))
+
+        if (GlobalOptions.dryrun): return
 
         req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
         req_spec.pd = self.pd.id
@@ -86,6 +89,8 @@ class MrObjectHelper:
         if self.pd.remote:
             cfglogger.info("skipping MR configuration for remote PD: %s" %(self.pd.GID()))
             return
+
+        if (GlobalOptions.dryrun): return
 
         cfglogger.info("Configuring %d Mrs." % len(self.mrs))
         halapi.ConfigureMrs(self.mrs)
