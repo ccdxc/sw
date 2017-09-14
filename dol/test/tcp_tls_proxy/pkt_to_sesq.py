@@ -131,13 +131,13 @@ def TestCaseVerify(tc):
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        #return false
+        #return False
 
     
     # 5. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        #return false
+        #return False
 
     sesqid = "TCPCB%04d_SESQ" % id
     sesq_cur = tc.infra_data.ConfigStore.objects.db[sesqid]

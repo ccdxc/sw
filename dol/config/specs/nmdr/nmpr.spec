@@ -10,6 +10,6 @@ entries:
         count       : 16
     - entry:
         name        : RNMPR
-        haltype     : 5
+        haltype     : 7
         type        : PAGE_VIA_REF
         count       : 16

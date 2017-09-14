@@ -2,15 +2,14 @@
 
 import pdb
 import copy
-
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 from config.store               import Store
-from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+from config.objects.proxycb_service    import ProxyCbServiceHelper
 
 rnmdr = 0
 rnmpr = 0
-serq = 0
-tlscb = 0 
+tlscb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -25,7 +24,6 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
-    global serq
     global tlscb 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
@@ -38,54 +36,58 @@ def TestCaseSetup(tc):
     tcb.snd_una = 0xEFEFEFEF
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
-    tcb.debug_dol = 1
+    tcb.debug_dol = tcp_proxy.tcp_debug_dol_dont_queue_to_serq 
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    serqid = "TLSCB%04d_SERQ" % id
-    serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
-    
     return
 
 def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
-    global serq
     global tlscb 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id
     # 1. Verify rcv_nxt got updated
-    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    print("rcv_nxt value pre-sync from HBM 0x%x" % tcb.rcv_nxt)
-    tcb.GetObjValPd()
-    print("rcv_nxt value post-sync from HBM 0x%x" % tcb.rcv_nxt)
-    if tcb.rcv_nxt != 0x62bbbaba:
+    tcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
+    print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
+    tcb_cur.GetObjValPd()
+    print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
+    if tcb_cur.rcv_nxt != 0xebbbaba:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
 
-
-    # 3. Fetch current values from Platform
+    # 2. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
 
-    # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+2):
+    # offset. Verify PI for RNMDR got incremented by tc.testspec.selectors.maxflows
+    if (rnmdr_cur.pi != rnmdr.pi+tc.testspec.selectors.maxflows):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 5. Print stats
-    print("bytes_rcvd = %d:" % tcb.bytes_rcvd)
-    print("pkts_rcvd = %d:" % tcb.pkts_rcvd)
-    print("pages_alloced = %d:" % tcb.pages_alloced)
-    print("desc_alloced = %d:" % tcb.desc_alloced)
+    # 4. Verify PI for RNMPR got incremented by tc.testspec.selectors.maxflows
+    if (rnmpr_cur.pi != rnmpr.pi+tc.testspec.selectors.maxflows):
+        print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
+        return False
+
+    tlscbid = "TlsCb%04d" % id
+    # 5. Verify pi/ci did not get updated
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    tlscb_cur.GetObjValPd()
+    print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+    if (tlscb_cur.serq_pi != tlscb.serq_pi or tlscb_cur.serq_ci != tlscb.serq_ci):
+        print("serq pi/ci not as expected")
+        return False
 
     return True
 

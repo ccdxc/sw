@@ -568,11 +568,81 @@ modules:
               srcseg    : filter://native=True
 
     - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order
+        spec    : one_pkt.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order_flows
+        spec    : two_flows.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V6
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order
+        spec    : one_pkt.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order_flows
+        spec    : two_flows.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order_flows
+        spec    : two_flows.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_VXLAN
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : in_order
+        spec    : one_pkt_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_VXLAN
+        enable  : False
+        package : test.tcp_tls_proxy
+        module  : in_order_flows
+        spec    : two_flows_vxlan.testspec
+        ignore  : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_SERQ_V4
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_serq
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec 
         ignore  : False
         iterate :
             - flow: filter://type=IPV4
@@ -582,7 +652,7 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_serq
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : False
         iterate :
             - flow: filter://type=IPV6
@@ -602,7 +672,7 @@ modules:
         enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_serq_atomic_stats
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : False
         iterate :
             - flow: filter://type=IPV4
@@ -612,7 +682,7 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -622,7 +692,7 @@ modules:
         enable  : False
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -632,7 +702,7 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_tcp_tx_to_p4_bypass_barco
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -642,7 +712,7 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_sesq
-        spec    : tcp_proxy.testspec
+        spec    : one_pkt.testspec
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
