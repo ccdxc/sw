@@ -826,7 +826,7 @@ spec:
   attach-groups:
   - sg10
   in-rules:
-  - acion: permit
+  - action: permit
     peer-group: sg20
     ports: tcp/8440
 
@@ -863,7 +863,7 @@ spec:
 	      ],
 	    "in-rules": [
 	      {
-	        "acion": "permit,log",
+	        "action": "permit,log",
 	        "peer-group": "sg20",
 	        "ports" : "tcp/8440"
 	      }
@@ -914,7 +914,7 @@ spec:
 	      ],
 	    "in-rules": [
 	      {
-	        "acion": "permit,log",
+	        "action": "permit,log",
 	        "peer-group": "sg20",
 	        "ports" : "tcp/8440"
 	      }
@@ -957,7 +957,7 @@ spec:
   attach-groups:
   - sg10
   in-rules:
-  - acion: permit
+  - action: permit
     peer-group: sg20
     ports: tcp/8440
 

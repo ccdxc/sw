@@ -1,0 +1,126 @@
+syntax = "proto3";
+// Service name
+package app;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- App Object -----------------------------
+
+// AppSpec - spec part of App object
+message AppSpec {
+  // Empty spec for now as this is a read-only object
+}
+
+// AppStatus - status part of App object
+message AppStatus {
+  // Name is already part of meta
+  // Description of app - example “mongo https://www.mongodb.com/”
+  string Description = 1 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// App - Read-only objects auto-created by Venice
+// One object per App that can be identified by Naples
+message App {
+  option (venice.objectPrefix) = "apps";
+  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+  AppSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  AppStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// ----------------------------- App-User Object -----------------------------
+
+// AppUserSpec - spec part of AppUser object
+message AppUserSpec {
+  // Name is part of the meta
+  // Description of the AppUser - example "cassandra user"
+  string Description = 1 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// AppUserStatus - status part of AppUser object
+message AppUserStatus {
+}
+
+// AppUser is derived from application payload such as database login or
+// other application authentication mechanisms. 
+// Created by Venice Admin or Tenant Admin
+message AppUser {
+  option (venice.objectPrefix) = "app-users";
+  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+  AppUserSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  AppUserStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// AppUserGrpSpec - spec part of AppUserGrp object
+message AppUserGrpSpec {
+  // List of appusers - example [“john”, “george”]
+  repeated string AppUsers = 1 [(gogoproto.jsontag) = "app-user,omitempty"];
+  // Description of the AppUserGrp - example "SQL Users"
+  string Description = 2 [(gogoproto.jsontag) = "description,omitempty"];
+}
+
+// AppUserGrpStatus - status part of AppUserGrp object
+message AppUserGrpStatus {
+}
+
+// AppUserGrp - Object representing group of AppUsers
+// Created by Venice Admin or Tenant Admin
+message AppUserGrp {
+  option (venice.objectPrefix) = "app-user-groups";
+  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+  AppUserGrpSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  AppUserGrpStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// App, AppUser and AppUserGrp REST API
+service AppV1 {
+  // Prefix for all resources served by this service.
+  option (venice.apiPrefix) = "app";
+  // API Version.
+  option (venice.apiVersion) = "v1";
+
+  option (venice.apiGrpcCrudService) = "App";
+  option (venice.apiRestService) = {
+    Object: "App"
+    Method: [ "get" ]
+    Pattern: "/apps/{O.Name}"
+  };
+  option (venice.apiRestService) = {
+    Object: "App"
+    Method: [ "list" ]
+    Pattern: "/apps"
+  };
+
+  option (venice.apiGrpcCrudService) = "AppUser";
+  option (venice.apiRestService) = {
+    Object: "AppUser"
+    Method: [ "get", "put", "delete" ]
+    Pattern: "/{O.Tenant}/app-users/{O.Name}"
+  };
+  option (venice.apiRestService) = {
+    Object: "AppUser"
+    Method: [ "post", "list" ]
+    Pattern: "/{O.Tenant}/app-users"
+  };
+
+  option (venice.apiGrpcCrudService) = "AppUserGrp";
+  option (venice.apiRestService) = {
+    Object: "AppUserGrp"
+    Method: [ "get", "put", "delete" ]
+    Pattern: "/{O.Tenant}/app-user-groups/{O.Name}"
+  };
+  option (venice.apiRestService) = {
+    Object: "AppUserGrp"
+    Method: [ "post", "list" ]
+    Pattern: "/{O.Tenant}/app-users-groups"
+  };
+}

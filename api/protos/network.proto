@@ -182,11 +182,21 @@ service SecurityGroupV1 {
 
 message SGRule {
     // match ports for the rule
-    string Ports     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ports,omitempty"];
+    string Ports     = 1 [(gogoproto.jsontag) = "ports,omitempty"];
     // Rule action (allow/deny/log/train)
-    string Action    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "acion,omitempty"];
+    string Action    = 2 [(gogoproto.jsontag) = "action,omitempty"];
     // Peer group for the rule (from/to group depending on direction)
-    string PeerGroup = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "peer-group,omitempty"];
+    string PeerGroup = 3 [(gogoproto.jsontag) = "peer-group,omitempty"];
+    // List of Apps to match for the rule
+    repeated string Apps = 4 [(gogoproto.jsontag) = "apps,omitempty"];
+    // AppUser or AppUserGroup to match for the rule
+    // AppUser is derived from application payload such as database login or
+    // other application authentication mechanisms
+    // FIXME: oneof does not translate well in golang - will enforce via validation
+    // Used when policy is applied on a single user
+    string AppUser = 5 [(gogoproto.jsontag) = "app-user,omitempty"];
+    // Used when policy is applied on a group of users
+    string AppUserGrp = 6 [(gogoproto.jsontag) = "app-user-group,omitempty"];
 }
 
 message SgpolicySpec {

@@ -24,6 +24,9 @@ message SecurityRule {
     repeated Service Services = 4[(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
     string  Action            = 5;  // action allow/deny/reject
     bool    Log               = 6;  // logging enabled/disabled
+    // FIXME: Move these match fields before action?
+    repeated string Apps = 7; //List of apps
+    repeated string AppUsers = 8; // List of users
 }
 
 // security group spec

@@ -1,4 +1,19 @@
 {
+  "app": {
+    "Svcs": {
+      "AppV1": {
+        "Version": "v1",
+        "Messages": [
+          "App",
+          "AppUser",
+          "AppUserGrp"
+        ]
+      }
+    },
+    "Files": [
+      "protos/app.proto"
+    ]
+  },
   "bookstore": {
     "Svcs": {
       "BookstoreV1": {

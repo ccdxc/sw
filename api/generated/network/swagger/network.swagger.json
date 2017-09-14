@@ -2449,6 +2449,18 @@
         },
         "PeerGroup": {
           "type": "string"
+        },
+        "Apps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "AppUser": {
+          "type": "string"
+        },
+        "AppUserGrp": {
+          "type": "string"
         }
       },
       "title": "spec part of Endpoint object"

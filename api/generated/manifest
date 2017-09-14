@@ -1,4 +1,5 @@
 
+app.proto app
 cmd.proto cmd
 example.proto bookstore
 network.proto network
