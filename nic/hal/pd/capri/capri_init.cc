@@ -274,9 +274,11 @@ capri_p4p_asm_init()
     symbols[27].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
 
     symbols[28].name = "cpu_initial_action.bin";
-    symbols[28].num_params = 1;
+    symbols[28].num_params = 2;
     symbols[28].params[0].name = ARQRX_BASE;
     symbols[28].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
+    symbols[28].params[1].name = ARQRX_QIDXR_BASE;
+    symbols[28].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
     symbols[29].name = "tls-dec-read-tnmdr-alloc-idx.bin";
     symbols[29].num_params = 1;
@@ -292,6 +294,7 @@ capri_p4p_asm_init()
     symbols[31].num_params = 1;
     symbols[31].params[0].name = IPSEC_CB_BASE;
     symbols[31].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     
