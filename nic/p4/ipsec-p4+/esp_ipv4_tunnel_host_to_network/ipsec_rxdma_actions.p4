@@ -175,9 +175,6 @@ metadata dma_cmd_mem2mem_t dma_cmd_iv_dst;
 metadata dma_cmd_phv2mem_t dma_cmd_post_cb_ring;
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
-
-@pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_cmd; 
 
 @pragma scratch_metadata
@@ -214,7 +211,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 // Enqueue the input-descriptor at the tail of ipsec-cb
 //stage 4 - table 0
-action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
+action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
                                        barco_ring_pindex, barco_ring_cindex,
@@ -223,7 +220,7 @@ action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
-    IPSEC_CB_SCRATCH
+    IPSEC_CB_SCRATCH_WITH_PC
 
     // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
@@ -239,7 +236,6 @@ action ipsec_cb_tail_enqueue_input_desc(rsvd, cosA, cosB, cos_sel,
     // Need to change to out_desc_addr
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
-    DMA_COMMAND_PHV2MEM_FILL(dma_cmd_incr_pindex, (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE + IPSEC_CB_CB_PINDEX_OFFSET, IPSEC_CB_PINDEX_START, IPSEC_CB_PINDEX_END, 0, 0, 0, 0) 
     //DMA_COMMAND_PHV2MEM_FILL(dma_cmd_post_cb_ring, cb_ring_base_addr + (cb_pindex * 8), IPSEC_CB_RING_IN_DESC_START, IPSEC_CB_RING_IN_DESC_END, 0, 0, 0, 0)
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))

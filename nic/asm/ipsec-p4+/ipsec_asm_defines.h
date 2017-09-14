@@ -23,7 +23,6 @@
 #define INPAGE_SEMAPHORE_ADDR   RNMPR_ALLOC_IDX 
 #define OUTPAGE_SEMAPHORE_ADDR  TNMPR_ALLOC_IDX
 
-#define IPSEC_CB_CB_PINDEX_OFFSET 49 
 #define RING_INDEX_WIDTH 16
 
 
@@ -61,10 +60,6 @@
 #define IPSEC_IN_DESC_IV_SALT_START CAPRI_PHV_START_OFFSET(ipsec_to_stage3_iv_salt)
 #define IPSEC_IN_DESC_IV_SALT_END   CAPRI_PHV_END_OFFSET(ipsec_to_stage3_iv_salt)
 
-#define IPSEC_CB_PINDEX_START CAPRI_PHV_START_OFFSET(ipsec_global_ipsec_cb_pindex)
-//#define IPSEC_CB_PINDEX_END   CAPRI_PHV_END_OFFSET(ipsec_global_ipsec_cb_pindex)
-#define IPSEC_CB_PINDEX_END   CAPRI_PHV_START_OFFSET(ipsec_global_ipsec_cb_pindex)
-
 #define IPSEC_CB_RING_IN_DESC_START CAPRI_PHV_START_OFFSET(t0_s2s_in_desc_addr)
 #define IPSEC_CB_RING_IN_DESC_END CAPRI_PHV_END_OFFSET(t0_s2s_in_desc_addr)
 
@@ -82,7 +77,7 @@
 
 #define ESP_BASE_OFFSET 18  
 
-#define BRQ_RING_ENTRY_SIZE_SHIFT 3
+#define BRQ_RING_ENTRY_SIZE_SHIFT 7
 
 
 #define IPSEC_WIN_REPLAY_MAX_DIFF 63
