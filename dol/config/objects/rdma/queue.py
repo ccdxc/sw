@@ -29,24 +29,24 @@ class RdmaRQstate(Packet):
         ByteField("eval_last", 0),
         BitField("host", 0, 4),
         BitField("total", 0, 4),
-        LEShortField("pid", 0),
+        ShortField("pid", 0),
 
-        LEShortField("p_index0", 0),
-        LEShortField("c_index0", 0),
-        LEShortField("p_index1", 0),
-        LEShortField("c_index1", 0),
-        LEShortField("p_index2", 0),
-        LEShortField("c_index2", 0),
-        LEShortField("p_index3", 0),
-        LEShortField("c_index3", 0),
-        LEShortField("p_index4", 0),
-        LEShortField("c_index4", 0),
-        LEShortField("p_index5", 0),
-        LEShortField("c_index5", 0),
+        ShortField("p_index0", 0),
+        ShortField("c_index0", 0),
+        ShortField("p_index1", 0),
+        ShortField("c_index1", 0),
+        ShortField("p_index2", 0),
+        ShortField("c_index2", 0),
+        ShortField("p_index3", 0),
+        ShortField("c_index3", 0),
+        ShortField("p_index4", 0),
+        ShortField("c_index4", 0),
+        ShortField("p_index5", 0),
+        ShortField("c_index5", 0),
     
-        LEIntField("pt_base_addr", 0),
+        IntField("pt_base_addr", 0),
 
-        LEIntField("rsq_base_addr", 0),
+        IntField("rsq_base_addr", 0),
 
         ByteField("rsq_size", 0),
         ByteField("token_id", 0),
@@ -72,7 +72,7 @@ class RdmaRQstate(Packet):
         X3BytesField("msn", 0),
         ByteField("rsvd2", 0),
 
-        LEIntField("pd", 0),
+        IntField("pd", 0),
 
         ByteField("rsvd3", 0),
         ByteField("rsvd4", 0),
@@ -91,30 +91,30 @@ class RdmaSQstate(Packet):
         ByteField("eval_last", 0),
         BitField("host", 0, 4),
         BitField("total", 0, 4),
-        LEShortField("pid", 0),
+        ShortField("pid", 0),
 
-        LEShortField("p_index0", 0),
-        LEShortField("c_index0", 0),
-        LEShortField("p_index1", 0),
-        LEShortField("c_index1", 0),
-        LEShortField("p_index2", 0),
-        LEShortField("c_index2", 0),
-        LEShortField("p_index3", 0),
-        LEShortField("c_index3", 0),
-        LEShortField("p_index4", 0),
-        LEShortField("c_index4", 0),
-        LEShortField("p_index5", 0),
-        LEShortField("c_index5", 0),
+        ShortField("p_index0", 0),
+        ShortField("c_index0", 0),
+        ShortField("p_index1", 0),
+        ShortField("c_index1", 0),
+        ShortField("p_index2", 0),
+        ShortField("c_index2", 0),
+        ShortField("p_index3", 0),
+        ShortField("c_index3", 0),
+        ShortField("p_index4", 0),
+        ShortField("c_index4", 0),
+        ShortField("p_index5", 0),
+        ShortField("c_index5", 0),
     
-        LEIntField("pt_base_addr", 0),
+        IntField("pt_base_addr", 0),
         BitField("log_pmtu", 0xa, 5),
         BitField("log_sq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("serv_type", 0, 4),
         ByteField("curr_op_type", 0),
-        LELongField("curr_wqe_ptr", 0),
-        LEIntField("current_sge_offset", 0),
+        LongField("curr_wqe_ptr", 0),
+        IntField("current_sge_offset", 0),
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
         BitField("busy", 0, 1),
@@ -125,7 +125,7 @@ class RdmaSQstate(Packet):
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("need_credits", 0, 1),
-        LEIntField("pd", 0),
+        IntField("pd", 0),
         ByteField("rsvd1", 0),
         ByteField("rsvd2", 0),
         ByteField("rsvd3", 0),
@@ -144,12 +144,12 @@ class RdmaCQstate(Packet):
         ByteField("eval_last", 0),
         BitField("host", 0, 4),
         BitField("total", 0, 4),
-        LEShortField("pid", 0),
+        ShortField("pid", 0),
 
-        LEShortField("p_index0", 0),
-        LEShortField("c_index0", 0),
+        ShortField("p_index0", 0),
+        ShortField("c_index0", 0),
 
-        LEIntField("pt_base_addr", 0),
+        IntField("pt_base_addr", 0),
         BitField("log_sq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
@@ -172,14 +172,14 @@ class RdmaEQstate(Packet):
         ByteField("eval_last", 0),
         BitField("host", 0, 4),
         BitField("total", 0, 4),
-        LEShortField("pid", 0),
+        ShortField("pid", 0),
 
-        LEShortField("p_index0", 0),
-        LEShortField("c_index0", 0),
+        ShortField("p_index0", 0),
+        ShortField("c_index0", 0),
 
-        LELongField("base_addr", 0),
-        LEIntField("int_num", 0),
-        LEIntField("eq_id", 0),
+        LongField("base_addr", 0),
+        IntField("int_num", 0),
+        IntField("eq_id", 0),
         BitField("log_num_wqes", 0, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("int_enabled", 0, 1),
@@ -232,12 +232,10 @@ class RdmaQstateObject(object):
 
     def get_pindex(self, ring):
         assert(ring < 7)
-        self.Read()
         return getattr(self.data, 'p_index%d' % ring)
 
     def get_cindex(self, ring):
         assert(ring < 7)
-        self.Read()
         return getattr(self.data, 'c_index%d' % ring)
 
 
