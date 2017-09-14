@@ -25,6 +25,7 @@ private:
     uint32_t        size_;              // size of indexer
     uint32_t        num_words_;         // number of workds
     uint64_t        *bits_;             // bit representation
+    bool            skip_zero_;         // skipping 0th entry
     bool            thread_safe_;       // enable/disable thread safety
     hal_spinlock_t  slock_;             // lock for thread safety
     uint64_t        debruijn64_ = 0x022FDD63CC95386D;
@@ -47,7 +48,7 @@ private:
     }
 
 public:
-    indexer(uint32_t size, bool thread_safe = true);
+    indexer(uint32_t size, bool thread_safe = true, bool skip_zero = false);
     ~indexer();
     indexer::status alloc(uint32_t *index, bool lowest = TRUE, uint32_t block_size = 1);
     indexer::status alloc_withid(uint32_t index, uint32_t block_size = 1);

@@ -47,7 +47,7 @@ def __get_packet_template_impl(flow):
     else:
         assert(0)
     return infra_api.GetPacketTemplate(template)
-   
+
 def GetPacketTemplateByFlow(testcase, packet):
     return __get_packet_template_impl(testcase.config.flow)
 
@@ -69,9 +69,9 @@ def __get_template(tid):
 def __get_packet_encap_vlan(testcase, cfg):
     if cfg.segment.native == False or IsPriorityTagged(testcase.pvtdata):
         return __get_template('ENCAP_QTAG')
-    
+
     if cfg.endpoint:
-        if cfg.endpoint.remote == True: 
+        if cfg.endpoint.remote == True:
             return None
 
         if cfg.endpoint.intf.IsUseg() or\
@@ -99,7 +99,7 @@ def __get_packet_encaps(testcase, cfg):
     encap = __get_packet_encap_vxlan(testcase, cfg)
     if encap:
         encaps.append(encap)
-    
+
     if len(encaps):
         return encaps
     return None
@@ -167,3 +167,14 @@ def GetEthertypeByFlow(testcase, packet):
     elif testcase.config.flow.IsIPV4():
         return 0x800
     return 0x86dd
+
+def GetIngressPortIPSGDrop(testcase):
+    sif = testcase.config.src.endpoint.GetInterface()
+    # Only for Uplinks change the port
+    if sif.type == 'UPLINK' or \
+            sif.type == 'UPLINK_PC':
+        sport = set([1, 2, 3, 4]) - set(sif.ports)
+
+    return list(sport)[:1]
+
+

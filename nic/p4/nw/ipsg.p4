@@ -34,7 +34,16 @@ action ipsg_miss() {
     }
 }
 
-action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
+// We are doing the IPSG check against the src_lif instead of src_lport
+// because we dervie lport from mac_vlan table with mac and vlan as a key
+// and comparing that with HAL programmed lport will only catch the bugs
+// of HAL but not really test the spoofing cases. So we will validate
+// against the LIF that comes in capri_intrinsic. HAL programming will
+// pick the LIF associated with the lport when programming this table.
+// This way when multiple LIFs are used towards the workloads we can 
+// prevent spoofing of (mac, ip) from workloads which are mapped to a 
+// different LIF.
+action ipsg_hit(src_lif, mac, vlan_valid, vlan_id) {
 
     if (tcp.valid == TRUE and
         l4_metadata.tcp_normalization_en == TRUE) {
@@ -46,7 +55,7 @@ action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
         // Return.
     }
 
-    if ((control_metadata.src_lport != src_lport) or
+    if ((control_metadata.src_lif != src_lif) or
         (ethernet.srcAddr != mac) or
         (vlan_tag.valid != vlan_valid) or
         (vlan_tag.vid != vlan_id)) {
@@ -55,7 +64,7 @@ action ipsg_hit(src_lport, mac, vlan_valid, vlan_id) {
     }
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.ipsg_lport, src_lport);
+    modify_field(scratch_metadata.ipsg_src_lif, src_lif);
     modify_field(scratch_metadata.mac, mac);
     modify_field(scratch_metadata.vlan_valid, vlan_valid);
     modify_field(scratch_metadata.vlan_id, vlan_id);

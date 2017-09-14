@@ -589,6 +589,51 @@ p4pd_flow_stats_init (void)
 }
 
 static hal_ret_t
+p4pd_drop_stats_init (void)
+{
+    hal_ret_t                ret;
+    Tcam                     *tcam;
+    drop_stats_swkey         key = { 0 };
+    drop_stats_swkey_mask    key_mask = { 0 };
+    drop_stats_actiondata    data = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    /* 
+     * Drop stats entry points to an atomic region. When the drop_stats entry
+     * overflows the atomic region entry will be incremented by the max of 
+     * drop_stats entry. 
+     * To get the drop stats:
+     *  - (1)Read atomic region.
+     *  - (2)Read drop_stats entry.
+     *  - (3)Read atomic region.
+     *  if (3) = (1) + 1:
+     *      return (3) + (2)
+     *  else:
+     *      return (1) + (2)
+     */
+    for (int i = DROP_MIN; i <= DROP_MAX; i++) {
+    
+        key.entry_status_inactive = 0;
+        key.control_metadata_drop_reason = 1 << i;
+        key_mask.entry_status_inactive_mask = 1;
+        key_mask.control_metadata_drop_reason_mask = 1 << i;
+
+        data.actionid = DROP_STATS_DROP_STATS_ID;
+        data.drop_stats_action_u.drop_stats_drop_stats.stats_idx = i;
+        ret = tcam->insert_withid(&key, &key_mask, &data, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
+                    i, ret);
+            return ret;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
 p4pd_p4plus_app_init (void)
 {
     hal_ret_t                ret = HAL_RET_OK;
@@ -1149,6 +1194,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);

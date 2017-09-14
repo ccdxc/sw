@@ -1,0 +1,188 @@
+# This file contains the list of DOL test modules.
+modules:
+
+    - module:
+        name    : L2UC_IP_IPSG_MISS_DROP
+        enable  : True
+        package : test.ipsg
+        module  : ipsg
+        spec    : l2uc_ipsg_miss_drop.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=False
+            # Untagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=True
+
+    - module:
+        name    : L2UC_IP_PTAG_IPSG_MISS_DROP
+        enable  : True
+        package : test.ipsg
+        module  : ipsg
+        spec    : l2uc_ipsg_miss_drop.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Priority Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : L3UC_IPSG_MISS_DROP
+        enable  : True
+        package : test.ipsg
+        module  : ipsg
+        spec    : l3uc_ipsg_miss_drop.testspec
+        ignore  : False
+        iterate :
+            # Tagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=False
+            # Untagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+
+
+    - module:
+        name    : L3UC_PTAG_IPSG_MISS_DROP
+        enable  : True
+        package : test.ipsg
+        module  : ipsg
+        spec    : l3uc_ipsg_miss_drop.testspec
+        ignore  : False
+        iterate :
+            # Priority Tag Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+
+
+    - module:
+        name    : ETH_RX_IPSG_MISS_DROP
+        enable  : True
+        package : test.ipsg
+        module  : ipsg
+        spec    : rx_ipsg_miss_drop.testspec
+        ignore  : False
+        args:
+            maxflows: 1
+        iterate:
+            # Tagged Flows
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=False
+            # Untagged Flows
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=True
+            # Priority Tagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True

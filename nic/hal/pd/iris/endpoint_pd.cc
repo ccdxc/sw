@@ -367,7 +367,8 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
 
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
     data.actionid = IPSG_IPSG_HIT_ID;
-    data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
+    // data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
+    data.ipsg_action_u.ipsg_ipsg_hit.src_lif = if_get_hw_lif_id(pi_if);
     mac = ep_get_mac_addr(pi_ep);
     // mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
     memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, *mac, 6);
@@ -390,7 +391,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
                          key.flow_lkp_metadata_lkp_vrf,
                          ipaddr2str(&(pi_ip_entry->ip_addr)),
                          data.actionid, 
-                         data.ipsg_action_u.ipsg_ipsg_hit.src_lport,
+                         data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
                          data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
                          macaddr2str(*mac));

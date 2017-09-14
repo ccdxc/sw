@@ -28,7 +28,7 @@ ipsg_hit:
   balcf       r7, [c1 & c2], f_tcp_stateless_normalization
   seq         c1, k.control_metadata_ipsg_enable, FALSE
   nop.c1.e
-  sne         c1, k.control_metadata_src_lport, d.u.ipsg_hit_d.src_lport
+  sne         c1, k.control_metadata_src_lif, d.u.ipsg_hit_d.src_lif
   sne         c2, k.ethernet_srcAddr, d.u.ipsg_hit_d.mac
   // sne         c3, k.vlan_tag_valid, d.u.ipsg_hit_d.vlan_valid
   sne         c4, k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}, d.u.ipsg_hit_d.vlan_id
