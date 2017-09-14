@@ -1246,6 +1246,14 @@ action tcp_stateless_normalization_checks() {
 
 action tcp_session_normalization() {
 
+   // For now we will do session normalization checks only if both sides
+   // are in established state. The reason being most of the negotiated
+   // values like window_scale, mss and timestamp negotiated are only 
+   // valid in these states
+   if (scratch_metadata.iflow_tcp_state != FLOW_STATE_ESTABLISHED or
+       scratch_metadata.rflow_tcp_state != FLOW_STATE_ESTABLISHED) {
+       // return;
+   }
 
    // tcp segment length more than negotiated MSS
     // Need to move this after flow table lookup
