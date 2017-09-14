@@ -120,6 +120,10 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
     tcpcb->rcv_mss = spec.rcv_mss();
+    tcpcb->source_port = spec.source_port();
+    tcpcb->dest_port = spec.dest_port();
+    memcpy(tcpcb->header_template, spec.header_template().c_str(),
+            std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -177,6 +181,10 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
     tcpcb->rcv_mss = spec.rcv_mss();
+    tcpcb->source_port = spec.source_port();
+    tcpcb->dest_port = spec.dest_port();
+    memcpy(tcpcb->header_template, spec.header_template().c_str(),
+            std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);

@@ -27,6 +27,8 @@
 #define NIC_DESC_NUM_ENTRIES_OFFSET          0x40       /* &((nic_desc_t *)0)->num_entries */
 #define NIC_DESC_ENTRY_OFFSET(_i)            &((nic_desc_t *)0)->entry[(_i)]
 #define NIC_DESC_SCRATCH_OFFSET              0          /* &((nic_desc_t *)0)->scratch[0] */
+#define ETH_IP_HDR_SIZE                      34         /* (sizeof(struct ethhdr) + sizeof(struct iphdr) */
+#define ETH_IP_VLAN_HDR_SIZE                 38         /* (sizeof(struct ethhdr) + sizeof(struct iphdr) */
 #define ETH_IP_TCP_HDR_SIZE                  54         /* (sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct tcphdr))*/
 #define TCPIP_HDR_SIZE                       40         /* (sizeof(struct iphdr) + sizeof(struct tcphdr)) */
 #define TCP_HDR_SIZE                         20

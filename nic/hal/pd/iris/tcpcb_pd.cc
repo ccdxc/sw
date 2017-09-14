@@ -516,9 +516,14 @@ p4pd_add_or_del_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TX);
     
     if(!del) {
+        data.u.tcp_tx_d.source_port = htons(tcpcb_pd->tcpcb->source_port);
+        data.u.tcp_tx_d.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
+        HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
+            data.u.tcp_tx_d.source_port, data.u.tcp_tx_d.dest_port);
     }
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
-        HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
+    
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
     return ret;
@@ -537,31 +542,7 @@ p4pd_add_or_del_tcp_tx_header_template_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_HEADER_TEMPLATE);
     
     if(!del) {
-#if 1
-		// TODO UNHACK this
-//INFO:     16:     eeff00000300
-//INFO:     24: eeff0000028100e0
-//INFO:     32: 0208004507007c00
-//INFO:     40: 0100004006fa7140
-//INFO:     48: 00000140000002b8
-//INFO:     56: a90050babababaef
-//INFO:     64: efefef50002000d3
-//INFO:     72: a00000da1a004001
-		uint8_t hdr[] = {
-			0x00, 0xee, 0xff, 0x00, 0x00, 0x03,  // dmac
-			0x00, 0xee, 0xff, 0x00, 0x00, 0x02, // smac
-			0x81, 0x00, 0xe0, 0x02, 0x08, 0x00,
-			// ip header
-			0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00,
-			0x40, 0x06, 0xfa, 0x71, 0x40, 0x00, 0x00, 0x01,
-			0x40, 0x00, 0x00, 0x02,
-			// tcp header
-			0xb8, 0xa9, 0x00, 0x50, 0xba, 0xba, 0xba, 0xba,
-			0xef, 0xef, 0xef, 0xef, 0x50, 0x00, 0x20, 0x00,
-			0xd3, 0xa0, 0x00, 0x00,
-		};
-		memcpy(data, hdr, MAX(sizeof(data), sizeof(hdr)));
-#endif
+		memcpy(data, tcpcb_pd->tcpcb->header_template, sizeof(data));
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");

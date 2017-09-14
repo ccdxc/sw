@@ -57,6 +57,10 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.snd_wnd                   = self.snd_wnd
            req_spec.snd_cwnd                  = self.snd_cwnd
            req_spec.rcv_mss                   = self.rcv_mss
+           req_spec.source_port               = self.source_port
+           req_spec.dest_port                 = self.dest_port
+           if hasattr(self, 'header_template'):
+               req_spec.header_template           = self.header_template
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -75,6 +79,8 @@ class TcpCbObject(base.ConfigObjectBase):
             self.snd_wnd = resp_spec.spec.snd_wnd
             self.snd_cwnd = resp_spec.spec.snd_cwnd
             self.rcv_mss = resp_spec.spec.rcv_mss
+            self.source_port = resp_spec.spec.source_port
+            self.dest_port = resp_spec.spec.dest_port
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd

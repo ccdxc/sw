@@ -31,7 +31,7 @@ tcp_rx_write_serq_stage6_start:
     nop
 
 dma_cmd_data:
-    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_DMA_COMMANDS_START
+    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
     /* Set the DMA_WRITE CMD for data */
     add         r1, r0, k.to_s6_page

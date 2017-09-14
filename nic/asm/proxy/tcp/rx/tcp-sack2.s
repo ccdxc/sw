@@ -168,7 +168,7 @@ flow_sack2_process_start:
 	tblwr		d.aol_scratch, r5
 
 dma_cmd_ooo_data:	
-	addi		r5, r0, TCP_PHV_DMA_COMMANDS_START
+	addi		r5, r0, TCP_PHV_RXDMA_COMMANDS_START
 	add		r1, r0, r5
 	phvwr		p.p4_rxdma_intr_dma_cmd_ptr, r1
 

@@ -483,3 +483,40 @@ header_type rdma_scratch_metadata_t {
     }
 }
 
+header_type tcp_header_t {
+    fields {
+        source_port : 16;
+        dest_port : 16;
+        seq_no : 32;
+        ack_no : 32;
+        data_ofs : 4;
+        rsvd : 3;
+        flags : 9;
+        window : 16;
+        cksum : 16;
+        urg : 16;
+    }
+}
+
+header_type tcp_header_option_t {
+    fields {
+        kind : 8;       // set to 8
+        len : 8;        // set to 10
+        ts_val : 32;
+        ts_ecr : 32;
+    }
+}
+
+header_type tcp_sack_perm_option_t {
+    fields {
+        kind : 8;       // set to 4
+        len : 8;        // set to 2
+    }
+}
+
+header_type tcp_sack_option_t {
+    fields {
+        kind : 8;       // set to 5
+        len : 8;        // variable (8*n + 2)
+    }
+}

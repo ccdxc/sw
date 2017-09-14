@@ -53,7 +53,8 @@
 #define TCP_PHV_TX2RX_SHARED_END    CAPRI_PHV_END_OFFSET(tx2rx_pad2_tx2rx)
 
 //#define TCP_PHV_HEADERS_END      3088
-#define TCP_PHV_DMA_COMMANDS_START      (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
+#define TCP_PHV_TXDMA_COMMANDS_START    (CAPRI_PHV_START_OFFSET(intrinsic_dma_dma_cmd_type) / 16)
+#define TCP_PHV_RXDMA_COMMANDS_START    (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
 #define TCP_PHV_DMA_COMMANDS_END        6144
 #define TCP_PHV_DMA_COMMAND_ADDR_OFFSET 0
 #define TCP_PHV_DMA_COMMAND_ADDR_LEN    64
@@ -65,11 +66,14 @@
 #define TCP_PHV_DMA_COMMAND_CMD_LEN     8
 #define TCP_PHV_DMA_COMMAND_TOTAL_LEN   (TCP_PHV_DMA_COMMAND_CMD_OFFESET+TCP_PHV_DMA_COMMAND_CMD_LEN)
 
-#define TCP_PHV_INTRINSIC_START			CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-#define TCP_PHV_INTRINSIC_END  			CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+#define TCP_PHV_INTRINSIC_START         CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
+#define TCP_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
 
-#define TCP_PHV_TX_APP_HDR_START      	CAPRI_PHV_START_OFFSET(app_header_app_data1)
-#define TCP_PHV_TX_APP_HDR_END  		(CAPRI_PHV_START_OFFSET(app_header_app_data1) + 13) // TODO: end offset not working on unionized struct due to padding issue
+#define TCP_PHV_TX_APP_HDR_START        CAPRI_PHV_START_OFFSET(app_header_app_data1)
+#define TCP_PHV_TX_APP_HDR_END          (CAPRI_PHV_START_OFFSET(app_header_app_data1) + 13) // TODO: end offset not working on unionized struct due to padding issue
+
+#define TCP_PHV_TX_TCP_HDR_START        CAPRI_PHV_START_OFFSET(tcp_header_source_port)
+#define TCP_PHV_TX_TCP_HDR_END          CAPRI_PHV_END_OFFSET(tcp_header_urg)
 
 struct p_struct {
         // DMA COMMANDS - END
