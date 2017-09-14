@@ -12,6 +12,10 @@ input_properties_mac_vlan:
   seq         c2, k.recirc_header_valid, TRUE
   phvwr.c2    p.control_metadata_recirc_reason, k.recirc_header_reason
 
+  seq         c2, k.p4plus_to_p4_valid, TRUE
+  phvwr.c2    p.flow_lkp_metadata_lkp_inst, \
+                  k.p4plus_to_p4_flags[P4PLUS_TO_P4_FLAGS_LKP_INST_BIT_POS]
+
   seq         c2, k.capri_intrinsic_tm_iport, TM_PORT_DMA
   cmov        r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                        CAPRI_TXDMA_INTRINSIC_HDR_SZ + \

@@ -57,9 +57,10 @@ validate_tunneled_packet2:
   seq         c1, k.inner_ipv4_srcAddr[31:24], 0x7f
   seq         c2, k.inner_ipv4_srcAddr[31:28], 0xe
   seq         c3, k.inner_ipv4_srcAddr, r6
-  seq         c4, k.inner_ipv4_dstAddr, 0
-  seq         c5, k.inner_ipv4_dstAddr[31:24], 0x7f
-  seq         c6, k.inner_ipv4_srcAddr, k.inner_ipv4_dstAddr
+  or          r5, k.inner_ipv4_dstAddr_sbit16_ebit31, k.inner_ipv4_dstAddr_sbit0_ebit15, 16
+  seq         c4, r5, 0
+  seq         c5, r5[31:24], 0x7f
+  seq         c6, k.inner_ipv4_srcAddr, r5[31:0]
   bcf         [c1|c2|c3|c4|c5|c6], malformed_tunneled_packet
   nop
   jr          r7
@@ -74,7 +75,9 @@ validate_tunneled_packet2_ipv6:
   seq         c3, k.inner_ipv6_dstAddr[63:0], r1
   andcf       c1, [c2|c3]
   // inner_srcAddr => r2(hi) r3(lo)
-  add         r2, r0, k.{inner_ipv6_srcAddr_sbit0_ebit31,inner_ipv6_srcAddr_sbit32_ebit63}
+  or          r2, k.inner_ipv6_srcAddr_sbit48_ebit63, \
+                  k.{inner_ipv6_srcAddr_sbit0_ebit31, \
+                     inner_ipv6_srcAddr_sbit32_ebit47}, 16
   or          r3, k.inner_ipv6_srcAddr_sbit64_ebit127, r0
   seq         c2, r2, r0
   seq         c3, r3, r1
@@ -154,8 +157,15 @@ f_p4plus_to_p4_apps:
   phvwr.c2    p.udp_len, k.p4plus_to_p4_udp_len
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO
-  add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, k.p4plus_to_p4_tcp_seq_delta
+  add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, \
+                  k.p4plus_to_p4_tcp_seq_delta
   phvwr.c2    p.tcp_seqNo, r1
+  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG, \
+                  P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG
+  phvwr.c2    p.vlan_tag_valid, TRUE
+  phvwr.c2    p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag
+  phvwr.c2    p.vlan_tag_etherType, k.ethernet_etherType
+  phvwr.c2    p.ethernet_etherType, ETHERTYPE_VLAN
   jr          r7
   phvwr       p.p4plus_to_p4_valid, FALSE
 

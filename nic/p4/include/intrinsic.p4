@@ -252,7 +252,7 @@ header_type p4_to_p4plus_cpu_pkt_t {
  *  4 : insert vlan header
  *  5 : computer outer checksums
  *  6 : computer inner checksums
- *  7 : services applied
+ *  7 : lkp_inst
  */
 header_type p4plus_to_p4_header_t {
     fields {
@@ -263,9 +263,7 @@ header_type p4plus_to_p4_header_t {
         ip_len              : 16;
         udp_len             : 16;
         tcp_seq_delta       : 32;
-        vlan_pcp            : 3;
-        vlan_dei            : 1;
-        vlan_id             : 12;
+        vlan_tag            : 16;
     }
 }
 

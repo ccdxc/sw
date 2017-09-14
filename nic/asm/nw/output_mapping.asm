@@ -28,22 +28,18 @@ set_tm_oport:
   phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id
   phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
   phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
-  seq         c1, d.u.set_tm_oport_d.vlan_tag_in_skb, TRUE
+  seq         c1, d.u.set_tm_oport_d.vlan_strip, TRUE
   nop.!c1.e
-  seq         c1, r6[2:0], TM_PORT_DMA
-  seq         c2, k.vlan_tag_valid, TRUE
-  andcf       c2, [c1]
-  phvwr.c2    p.p4_to_p4plus_classic_nic_vlan_pcp, k.vlan_tag_pcp
-  phvwr.c2    p.p4_to_p4plus_classic_nic_vlan_dei, k.vlan_tag_dei
-  phvwr.c2    p.p4_to_p4plus_classic_nic_vlan_vid, \
-                  k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}
+  seq         c1, k.vlan_tag_valid, TRUE
+  nop.!c1.e
   or          r1, k.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
-  phvwr.c2    p.p4_to_p4plus_classic_nic_flags, r1
-  phvwr.c2.e  p.ethernet_etherType, k.vlan_tag_etherType
-  phvwr.c2    p.vlan_tag_valid, FALSE
-  phvwr.!c1   p.vlan_tag_valid, TRUE
-  phvwr.!c1.e p.vlan_tag_etherType, k.ethernet_etherType
-  phvwr.!c1   p.ethernet_etherType, 0x8100
+  phvwr       p.ethernet_etherType, k.vlan_tag_etherType
+  phvwr       p.p4_to_p4plus_classic_nic_vlan_pcp, k.vlan_tag_pcp
+  phvwr       p.p4_to_p4plus_classic_nic_vlan_dei, k.vlan_tag_dei
+  phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, \
+                  k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}
+  phvwr.e     p.vlan_tag_valid, FALSE
+  phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 
 .align
 redirect_to_cpu:

@@ -254,7 +254,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  vrf, dir, flow_miss_action,flow_miss_idx,
                                  ipsg_enable, dscp, l4_profile_idx, src_lport,
                                  filter, flow_miss_tm_oqueue) {
-    adjust_recirc_header();
+    adjust_lkp_fields();
 
     // update packet length based on tm_iport
     if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
@@ -301,9 +301,13 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
 }
 
-action adjust_recirc_header() {
+action adjust_lkp_fields() {
     if (recirc_header.valid == TRUE) {
         modify_field(control_metadata.recirc_reason, recirc_header.reason);
+    }
+    if ((p4plus_to_p4.valid == TRUE) and
+        ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_LKP_INST) != 0)) {
+        modify_field(flow_lkp_metadata.lkp_inst, 1);
     }
 }
 

@@ -11,11 +11,7 @@ struct phv_             p;
 nop:
   seq         c1, k.icmp_valid, TRUE
   seq         c2, k.l4_metadata_icmp_normalization_en, TRUE
-  // if we have bal instructin which takes cExpr then below two
-  // instructions can be merged into one.
-  // David is looking into it.
-  setcf       c1, [c1 & c2]
-  bal.c1      r7, f_icmp_stateless_normalization
+  balcf       r7, [c1& c2], f_icmp_stateless_normalization
   nop
   nop.e
   nop
@@ -23,14 +19,10 @@ nop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 ddos_src_dst_hit:
-  seq         c1, k.icmp_valid, TRUE
-  seq         c2, k.l4_metadata_icmp_normalization_en, TRUE
-  // if we have bal instructin which takes cExpr then below two
-  // instructions can be merged into one.
-  // David is looking into it.
-  setcf       c1, [c1 & c2]
-  bal.c1      r7, f_icmp_stateless_normalization
-  seq         c1, k.control_metadata_flow_miss_ingress, FALSE
+  seq       c1, k.icmp_valid, TRUE
+  seq       c2, k.l4_metadata_icmp_normalization_en, TRUE
+  balcf     r7, [c1 & c2], f_icmp_stateless_normalization
+  seq       c1, k.control_metadata_flow_miss_ingress, FALSE
   nop.c1.e
 
   smeqb     c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN

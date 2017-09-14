@@ -16,7 +16,7 @@ d = {
   u.set_tm_oport_d.egress_port6 = TM_PORT_UPLINK_4;
   u.set_tm_oport_d.egress_port7 = TM_PORT_UPLINK_5;
   u.set_tm_oport_d.egress_port8 = TM_PORT_UPLINK_6;
-  u.set_tm_oport_d.vlan_tag_in_skb = 1;
+  u.set_tm_oport_d.vlan_strip = 1;
 };
 
 k = {

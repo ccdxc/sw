@@ -31,7 +31,7 @@ action redirect_to_cpu(dst_lif, egress_mirror_en, tm_oqueue) {
     modify_field(scratch_metadata.flag, egress_mirror_en);
 }
 
-action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
+action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     p4plus_app_id, rdma_enabled, dst_lif,
                     encap_vlan_id, encap_vlan_id_valid,
                     egress_port1, egress_port2, egress_port3, egress_port4,
@@ -46,22 +46,16 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
                      rewrite_metadata.entropy_hash);
     }
 
-    if (vlan_tag_in_skb == TRUE) {
-        if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
-            if (vlan_tag.valid == TRUE) {
-                modify_field(ethernet.etherType, vlan_tag.etherType);
-                modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
-                modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
-                modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
-                bit_or(p4_to_p4plus_classic_nic.flags,
-                       p4_to_p4plus_classic_nic.flags,
-                       CLASSIC_NIC_FLAGS_VLAN_VALID);
-                remove_header(vlan_tag);
-            }
-        } else {
-            add_header(vlan_tag);
-            modify_field(vlan_tag.etherType, ethernet.etherType);
-            modify_field(ethernet.etherType, ETHERTYPE_VLAN);
+    if (vlan_strip == TRUE) {
+        if (vlan_tag.valid == TRUE) {
+            modify_field(ethernet.etherType, vlan_tag.etherType);
+            modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
+            modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
+            modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
+            bit_or(p4_to_p4plus_classic_nic.flags,
+                   p4_to_p4plus_classic_nic.flags,
+                   CLASSIC_NIC_FLAGS_VLAN_VALID);
+            remove_header(vlan_tag);
         }
     }
 
@@ -78,7 +72,7 @@ action set_tm_oport(vlan_tag_in_skb, nports, egress_mirror_en,
     modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.vlan_tag_in_skb, vlan_tag_in_skb);
+    modify_field(scratch_metadata.vlan_strip, vlan_strip);
     modify_field(scratch_metadata.egress_port, egress_port1);
     modify_field(scratch_metadata.egress_port, egress_port2);
     modify_field(scratch_metadata.egress_port, egress_port3);

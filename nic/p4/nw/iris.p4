@@ -108,7 +108,7 @@ header_type scratch_metadata_t {
         flow_agg_index             : 16;
 
         src_lif_check_en           : 1;
-        vlan_tag_in_skb            : 1;
+        vlan_strip                 : 1;
 
         // flow hash metadata
         flow_hash1                 : 11;

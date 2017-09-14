@@ -130,8 +130,8 @@ action ddos_service_hit(ddos_service_base_policer_idx) {
 
 action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
 
-    if (icmp.valid == TRUE or
-        l4_metadata.icmp_normalization_en == TRUE) {
+    if ((icmp.valid == TRUE) and
+        (l4_metadata.icmp_normalization_en == TRUE)) {
         icmp_normalization_checks ();
     }
 

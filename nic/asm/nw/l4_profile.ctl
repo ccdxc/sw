@@ -8,7 +8,8 @@ struct phv_         p;
 
 k = {
   inner_ipv4_srcAddr = 192.168.1.1;
-  inner_ipv4_dstAddr = 192.168.1.2;
+  inner_ipv4_dstAddr_sbit0_ebit15 = 0xc0a8;
+  inner_ipv4_dstAddr_sbit16_ebit31 = 0x0102;
   flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
   tunnel_metadata_tunnel_terminate = 1;
   flow_lkp_metadata_ipv4_flags = 2;

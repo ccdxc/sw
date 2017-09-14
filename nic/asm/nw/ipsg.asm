@@ -11,11 +11,7 @@ struct phv_   p;
 ipsg_miss:
   seq         c1, k.tcp_valid, TRUE
   seq         c2, k.l4_metadata_tcp_normalization_en, TRUE
-  // if we have bal instructin which takes cExpr then below two
-  // instructions can be merged into one.
-  // David is looking into it.
-  setcf       c1, [c1 & c2]
-  bal.c1      r7, f_tcp_stateless_normalization
+  balcf       r7, [c1 & c2], f_tcp_stateless_normalization
   seq         c1, k.control_metadata_ipsg_enable, FALSE
   nop.c1.e
   seq         c2, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
@@ -29,11 +25,7 @@ ipsg_miss:
 ipsg_hit:
   seq         c1, k.tcp_valid, TRUE
   seq         c2, k.l4_metadata_tcp_normalization_en, TRUE
-  // if we have bal instructin which takes cExpr then below two
-  // instructions can be merged into one.
-  // David is looking into it.
-  setcf       c1, [c1 & c2]
-  bal.c1      r7, f_tcp_stateless_normalization
+  balcf       r7, [c1 & c2], f_tcp_stateless_normalization
   seq         c1, k.control_metadata_ipsg_enable, FALSE
   nop.c1.e
   sne         c1, k.control_metadata_src_lport, d.u.ipsg_hit_d.src_lport

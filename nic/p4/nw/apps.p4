@@ -244,6 +244,14 @@ action f_p4plus_to_p4() {
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
     }
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG) != 0) {
+        add_header(vlan_tag);
+        modify_field(vlan_tag.pcp, p4plus_to_p4.vlan_tag >> 13);
+        modify_field(vlan_tag.dei, p4plus_to_p4.vlan_tag >> 12);
+        modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
+        modify_field(vlan_tag.etherType, ethernet.etherType);
+        modify_field(ethernet.etherType, ETHERTYPE_VLAN);
+    }
     remove_header(p4plus_to_p4);
 }
 
