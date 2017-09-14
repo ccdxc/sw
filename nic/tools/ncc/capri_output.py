@@ -1993,10 +1993,22 @@ def capri_te_cfg_output(stage):
         fid = 0
         prev_fid = -1
         cyc_done = False
+        num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
+        prev_km_prof = [(-1,-1) for _ in range(num_km)] # preserve the profile_id on unused flits
         for cyc in range(num_cycles):
             # fill control_sram entry
             sidx = sidx_base + cyc
             se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+
+            # init km_prof with vales from previous cyc, these will be over-written
+            # if kms are used/changed, if not just retain the old values
+            # table's flits_used are set contiguously from first flits used until the last flit
+            # but key makers' flits_used is specific to flits (done for P4+ and sharing)
+            for kmid, (prof_id,prof_mode) in enumerate(prev_km_prof):
+                if prof_id < 0:
+                    continue
+                se['km_profile%d' % kmid]['value'] = str(prof_id)
+                se['km_mode%d' % kmid]['value'] = str(prof_mode)
 
             if not stage.table_sequencer[prof_val][cyc].is_used:
                 # no need to do much, key-maker values can be modified as they are not used anymore
@@ -2009,9 +2021,10 @@ def capri_te_cfg_output(stage):
                     kmid = km.hw_id
                     if not km_prof:
                         continue # key-less tables
-                    assert se['km_mode%d' % kmid]['value'] == '-1', pdb.set_trace()
                     se['km_mode%d' % kmid]['value'] = str(km_prof.mode)
                     se['km_profile%d' % kmid]['value'] = str(km_prof.hw_id)
+                    # save the values for init of next cycle
+                    prev_km_prof[kmid] = (km_prof.hw_id, km_prof.mode)
                     if fid == km.flits_used[0] and fid != prev_fid:
                         # asic loads km only on accepting new flit, if flit is not
                         # advanced, km can get reset if new_key is set
