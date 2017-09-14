@@ -19,13 +19,13 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
 
-dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
+esp_ipv4_tunnel_h2n_dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.t0_s2s_in_desc_addr
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_start_addr, IPSEC_INT_START_OFFSET
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr, IPSEC_INT_END_OFFSET
 
-dma_cmd_to_write_input_desc_aol:
+esp_ipv4_tunnel_h2n_dma_cmd_to_write_input_desc_aol:
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     add r1, r0, k.t0_s2s_in_desc_addr
     addi r1, r1, 64
@@ -33,7 +33,7 @@ dma_cmd_to_write_input_desc_aol:
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
     
-dma_cmd_to_write_output_desc_aol:
+esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     add r1, r0, k.ipsec_to_stage4_out_desc_addr 
     addi r1, r1, 64
@@ -41,7 +41,7 @@ dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
 
-dma_cmd_incr_pindex:
+esp_ipv4_tunnel_h2n_dma_cmd_incr_pindex:
     add r2, r0, d.cb_pindex
     addi r2, r2, 1
     phvwr p.ipsec_global_ipsec_cb_pindex, r2
@@ -52,7 +52,20 @@ dma_cmd_incr_pindex:
     phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_start_addr, IPSEC_CB_PINDEX_START
     phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_end_addr, IPSEC_CB_PINDEX_END  
 
-dma_cmd_ring_doorbell:
+esp_ipv4_tunnel_h2n_post_to_cb_ring:
+    add r2, r0, k.ipsec_global_ipsec_cb_index 
+    sll r2, r2, IPSEC_CB_RING_BASE_SHIFT_SIZE 
+    addi r2, r2, IPSEC_CB_BASE
+    add r3, r0, d.cb_pindex
+    sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
+    andi r3, r3, IPSEC_CB_RING_INDEX_MASK
+    add r3, r3, r2
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END 
+
+esp_ipv4_tunnel_h2n_rxdma_dma_cmd_ring_doorbell:
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
         /* data will be in r3 */
@@ -69,3 +82,4 @@ dma_cmd_ring_doorbell:
         phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
         nop.e
         nop
+

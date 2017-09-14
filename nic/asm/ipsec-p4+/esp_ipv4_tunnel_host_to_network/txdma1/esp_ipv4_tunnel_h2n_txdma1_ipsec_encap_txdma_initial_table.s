@@ -8,7 +8,7 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex 
-        .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr
+        .param esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex 
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.p4_intr_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -18,8 +18,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.p4_txdma_intr_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     phvwr p.barco_req_brq_barco_enc_cmd, d.barco_enc_cmd
-    addi r2, r1, IPSEC_CB_IV_OFFSET
-    phvwr p.barco_req_brq_iv_addr, r2
     phvwr p.barco_req_brq_key_index, d.key_index
     
     phvwri p.app_header_table0_valid, 1 
@@ -35,7 +33,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
 
     phvwri p.app_header_table1_valid, 1 
     phvwri p.common_te1_phv_table_lock_en, 1 
-    addi r2, r0, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr 
+    addi r2, r0, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex 
     srl r2, r2, 6 
     phvwr p.common_te1_phv_table_pc, r2 
     phvwri p.common_te1_phv_table_raw_table_size, 2

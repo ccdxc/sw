@@ -11,6 +11,7 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwr p.barco_req_brq_in_addr, d.in_desc
     phvwr p.barco_req_brq_out_addr, d.out_desc
+    phvwr p.barco_req_brq_iv_addr, d.in_page
     add r1, r0, d.pad_size
     add r1, r1, d.tailroom_offset
     addi r1, r1, 2

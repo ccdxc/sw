@@ -67,6 +67,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
     common_p4plus_stage0_app_header_table_d     data = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
     uint64_t                                    pc_offset = 0;
+    uint64_t                                    ipsec_cb_ring_base;
+    uint64_t                                    ipsec_cb_ring_addr;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -97,6 +99,15 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
         data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = ipseccb_pd->ipseccb->esn_lo;
         data.u.ipsec_encap_rxdma_initial_table_d.spi = ipseccb_pd->ipseccb->spi;
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
+   
+        ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+        ipsec_cb_ring_addr = ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE);
+        HAL_TRACE_DEBUG("Ring base 0x{0:x} CB Ring Addr 0x{0:x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+
+        data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonll(ipsec_cb_ring_addr);
+        data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
+        data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
+         
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){

@@ -83,6 +83,18 @@
 #define BRQ_REQ_RING_ENTRY_SIZE 8
 #define BRQ_RING_ENTRY_SIZE_SHIFT 3
 
+// do not bother about values in this file - its just for p4 to compile
+// Right values come from ipsec_asm_defines.h for assembly code.
+#define IPSEC_CB_CB_PINDEX_OFFSET 0
+#define IPSEC_CB_PINDEX_START 0
+#define IPSEC_CB_PINDEX_END 0
+#define IPSEC_CB_PER_CB_RING_SIZE 512
+#define IPSEC_CB_RING_BASE 0xaaaaaaaa
+
+#define IPSEC_CB_RING_IN_DESC_START 0
+#define IPSEC_CB_RING_IN_DESC_END 0
+
+
 #define TXDMA2_DECRYPT_DMA_COMMANDS_OFFSET 29
 
 #define IPSEC_WIN_REPLAY_MAX_DIFF 63
