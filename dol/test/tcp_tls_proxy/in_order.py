@@ -10,6 +10,7 @@ from config.objects.proxycb_service    import ProxyCbServiceHelper
 rnmdr = 0
 rnmpr = 0
 tlscb = 0
+tcpcb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -25,6 +26,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
     global tlscb 
+    global tcpcb 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
@@ -44,13 +46,15 @@ def TestCaseSetup(tc):
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
-    
+    tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
+
     return
 
 def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
     global tlscb 
+    global tcpcb 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id
@@ -88,6 +92,16 @@ def TestCaseVerify(tc):
     print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     if (tlscb_cur.serq_pi != tlscb.serq_pi or tlscb_cur.serq_ci != tlscb.serq_ci):
         print("serq pi/ci not as expected")
+        return False
+
+    # 6. Verify pkt2mem counter
+    if (tcb.debug_num_pkt_to_mem != tcpcb.debug_num_pkt_to_mem+1):
+        print("pkt2mem counter verification failed")
+        return False
+
+    # 7. Verify parallel counter
+    if (tcb.debug_stage0_7_thread != 0x11001177):
+        print("parallel counter verification failed")
         return False
 
     return True

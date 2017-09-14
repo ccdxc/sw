@@ -85,6 +85,9 @@ class TcpCbObject(base.ConfigObjectBase):
             self.pkts_sent = resp_spec.stats.pkts_sent
             self.debug_num_phv_to_pkt = resp_spec.stats.debug_num_phv_to_pkt
             self.debug_num_mem_to_pkt = resp_spec.stats.debug_num_mem_to_pkt
+            self.debug_num_pkt_to_mem = resp_spec.stats.debug_num_pkt_to_mem
+            self.debug_num_phv_to_mem = resp_spec.stats.debug_num_phv_to_mem
+            self.debug_stage0_7_thread = resp_spec.stats.debug_stage0_7_thread
         return
 
     def GetObjValPd(self):
