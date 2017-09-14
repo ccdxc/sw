@@ -73,33 +73,31 @@ def FakeModelSockAddr():
     sockaddr = ('127.0.0.1', defs.FAKE_MODEL_PORT)
     return sockaddr
 
-# def PrintPacket(pkt):
-    # penscapy.hexdump(pkt)
-    #i = 0
-    # while i < len(pkt):
-    #    if i % 16
-    #    print("%04x " % i, end='')
-    #    i++
-
-
 DECDIGITS = '0123456789'
 HEXDIGITS = '0123456789abcdefABCDEF'
 
+def IsInDigitSet(string, digitset):
+    for s in string:
+        if s not in digitset:
+            return False
+    return True
+
+def IsDecInteger(string):
+    return IsInDigitSet(string, DECDIGITS)
+
+def IsHexInteger(string):
+    if string.startswith('0x'): return True
+    return IsInDigitSet(string, HEXDIGITS)
+
+def IsInteger(string):
+    return IsDecInteger(string) or IsHexInteger(string)
 
 def ParseInteger(string):
-    def __is_in_digitset(string, digitset):
-        for s in string:
-            if s not in digitset:
-                return False
-        return True
-    if string.startswith('0x'):
-        return int(string, 16)
-    elif __is_in_digitset(string, DECDIGITS):
+    if IsDecInteger(string):
         return int(string)
-    elif __is_in_digitset(string, HEXDIGITS):
+    elif IsHexInteger(string):
         return int(string, 16)
     assert(0)
-
 
 def ParseIntegerList(string):
     string = str(string)
@@ -112,20 +110,16 @@ def ParseIntegerList(string):
         nums.append(num)
     return nums
 
-
 def GetFunctionName():
     return inspect.stack()[1][3]
-
 
 def LogFunctionBegin(lg):
     lg.debug("BEG: %s()" % inspect.stack()[1][3])
     return
 
-
 def LogFunctionEnd(lg, status=0):
     lg.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
     return
-
 
 def log_exception(lg):
     exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -133,7 +127,6 @@ def log_exception(lg):
     lg.info('-' * 60)
     lg.info("%s" % pprint.pformat(traceback.format_tb(exc_traceback)))
     lg.info('-' * 60)
-
 
 def convert_scapy_out_to_dict(spkt):
     capture = StringIO()

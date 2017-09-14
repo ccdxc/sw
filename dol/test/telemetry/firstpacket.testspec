@@ -87,25 +87,25 @@ expect:
             port    : ref://testcase/config/dst/endpoint/intf/ports
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket1
-            port    : callback://telemetry/callbacks/GetExpectedPort1
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=1
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=1
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket2
-            port    : callback://telemetry/callbacks/GetExpectedPort2
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=2
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=2
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket3
-            port    : callback://telemetry/callbacks/GetExpectedPort3
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort3/sessionid=3
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket4
-            port    : callback://telemetry/callbacks/GetExpectedPort4
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=4
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket5
-            port    : callback://telemetry/callbacks/GetExpectedPort5
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=5
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=5
 
         - packet:
-            object  : callback://telemetry/callbacks/GetExpectedPacket6
-            port    : callback://telemetry/callbacks/GetExpectedPort6
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=6
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=6

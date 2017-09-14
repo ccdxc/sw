@@ -67,41 +67,11 @@ class spanCbData:
             return testcase.config.egress_mirror.__dict__[ssn].intf.ports
         return None
 
-def GetExpectedPacket1(testcase):
-    return spanCbData.getPacket(testcase, 1)
+def GetExpectedPacket(testcase, args):
+    return spanCbData.getPacket(testcase, args.sessionid)
 
-def GetExpectedPacket2(testcase):
-    return spanCbData.getPacket(testcase, 2)
-
-def GetExpectedPacket3(testcase):
-    return spanCbData.getPacket(testcase, 3)
-
-def GetExpectedPacket4(testcase):
-    return spanCbData.getPacket(testcase, 4)
-
-def GetExpectedPacket5(testcase):
-    return spanCbData.getPacket(testcase, 5)
-
-def GetExpectedPacket6(testcase):
-    return spanCbData.getPacket(testcase, 6)
-
-def GetExpectedPort1(testcase):
-    return spanCbData.getPort(testcase, 1)
-
-def GetExpectedPort2(testcase):
-    return spanCbData.getPort(testcase, 2)
-
-def GetExpectedPort3(testcase):
-    return spanCbData.getPort(testcase, 3)
-
-def GetExpectedPort4(testcase):
-    return spanCbData.getPort(testcase, 4)
-
-def GetExpectedPort5(testcase):
-    return spanCbData.getPort(testcase, 5)
-
-def GetExpectedPort6(testcase):
-    return spanCbData.getPort(testcase, 6)
+def GetExpectedPort(testcase, args):
+    return spanCbData.getPort(testcase, args.sessionid)
 
 def GetRspanVlan(testcase, packet):
     return testcase.config.ingress_mirror.__dict__["session2"].segment.vlan_id

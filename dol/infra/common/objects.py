@@ -455,21 +455,62 @@ class ConfigField(FrameworkFieldObject):
     def key(self):
         return self.keyval
 
+class CallbackArgsObject:
+    def __init__(self, argstr):
+        arglist = argstr.split(',')
+        for arg in arglist:
+            nv = arg.split('=')
+            value = utils.ParseInteger(nv[1]) if utils.IsInteger(nv[1]) else nv[1]
+            self.__dict__[nv[0]] = value
+        return
 
 class CallbackField(FrameworkFieldObject):
     def __init__(self, valobj):
         super().__init__()
-        self.callback = valobj.params[-1]
-        self.module = valobj.params[-2]
-        pkg_str_list = valobj.params[:-2]
+        self.pidx       = -1
+        self.args       = None
+        self.callback   = None
+        self.module     = None
+        self.pkg        = None
+        self.valobj     = valobj
+
+        self.__process_args()
+        self.__process_callback()
+        self.__process_module()
+        self.__process_package()
+        return
+
+    def __process_args(self):
+        argstr = self.valobj.params[self.pidx]
+        if '=' not in argstr:
+            return
+        self.pidx -= 1
+        self.args = CallbackArgsObject(argstr)
+        return
+
+    def __process_callback(self):
+        self.callback = self.valobj.params[self.pidx]
+        self.pidx -= 1
+        return
+
+    def __process_module(self):
+        self.module = self.valobj.params[self.pidx]
+        self.pidx -= 1
+        return
+
+    def __process_package(self):
+        pkg_str_list = self.valobj.params[:self.pidx+1]
         self.pkg = 'test.callbacks'
         for s in pkg_str_list:
             self.pkg += ".%s" % s
+        self.pidx = None # All params are consumed.
         return
 
     def call(self, *args):
         cb = loader.GetModuleAttr(self.pkg, self.module, self.callback)
-        return cb(*args)
+        if self.args is None:
+            return cb(*args)
+        return cb(*args, self.args)
 
 
 class PercentField(FrameworkFieldObject):

@@ -80,7 +80,6 @@ session:
                     pid     : 0
 
         expect:
-            callback: callback://networking/packets/verify_callback
             packets:
                 - packet:
                     object        : None
@@ -97,4 +96,3 @@ session:
             buffers:
                 - buffer:
                     object      : None  # Expected BUFFER object
-                    rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc

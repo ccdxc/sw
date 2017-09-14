@@ -30,4 +30,7 @@ ErrorCheckNExit $? "tcpproxy topo."
 ./main.py --dryrun --topo up2up --module networking
 ErrorCheckNExit $? "up2up topo."
 
+./main.py --module telemetry --topo telemetry --dryrun
+ErrorCheckNExit $? "telemetry topo."
+
 exit 0

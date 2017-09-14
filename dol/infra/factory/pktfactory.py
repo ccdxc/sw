@@ -328,7 +328,6 @@ class Packet(objects.FrameworkObject):
             self.spkt[penscapy.PENDOL].id = tc.GID()
             
             self.__add_crc()
-
             self.rawbytes = bytes(self.spkt)
             self.size = len(self.rawbytes)
             self.spkt = penscapy.Parse(self.rawbytes)
