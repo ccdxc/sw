@@ -82,6 +82,13 @@ header_type ipsec_to_stage3_t {
     }
 }
 
+header_type ipsec_to_stage4_t {
+    fields {
+        ipsec_cb_addr : ADDRESS_WIDTH;
+        stage3_pad1     : ADDRESS_WIDTH;
+    }
+}
+
 
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_ipsec_header_t p4plus2p4_hdr;
@@ -98,6 +105,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2;
 
 @pragma pa_header_union ingress to_stage_3
 metadata ipsec_to_stage3_t ipsec_to_stage3;
+
+@pragma pa_header_union ingress to_stage_4
+metadata ipsec_to_stage4_t ipsec_to_stage4;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipsec_table0_s2s t0_s2s;
@@ -145,7 +155,7 @@ action ipsec_build_encap_packet()
     DMA_COMMAND_MEM2PKT_FILL(ip_hdr, t0_s2s.in_page_addr+t0_s2s.headroom_offset, IPV4_HEADER_SIZE, 0, 0, 0) 
 
     // Add ESP header from IPSec-CB by adding spi,esn_lo,iv which are all contiguous in IPSec-CB
-    DMA_COMMAND_MEM2PKT_FILL(esp_iv_hdr, (txdma2_global.ipsec_cb_index*IPSEC_CB_SIZE)+IPSEC_CB_BASE+ESP_BASE_OFFSET, 8+txdma2_global.iv_size, 0, 0, 0)
+    DMA_COMMAND_MEM2PKT_FILL(esp_iv_hdr, ipsec_to_stage4.ipsec_cb_addr+ESP_BASE_OFFSET, 8+txdma2_global.iv_size, 0, 0, 0)
 
     // Add encrypted payload from output page size is payload_size+pad
     DMA_COMMAND_MEM2PKT_FILL(enc_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size + txdma2_global.pad_size), 0, 0, 0)
@@ -259,7 +269,11 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
                                        cb_pindex, cb_cindex, cb_ring_base_addr, 
                                        iv_salt, ipsec_cb_pad)
 {
-   //IPSEC_CB_SCRATCH
+    IPSEC_CB_SCRATCH
+
+    modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+    //Below line commented out because qstate_addr getting promoted to 64 bit
+    //modify_field(ipsec_to_stage4.ipsec_cb_addr, p4_txdma_intr.qstate_addr);
 
     modify_field(txdma2_global.ipsec_cb_index, ipsec_cb_index);
     modify_field(txdma2_global.iv_size, iv_size);
@@ -269,7 +283,7 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
+//    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
    
 }
 

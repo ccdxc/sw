@@ -27,7 +27,8 @@ header_type ipsec_table0_s2s {
     fields {
         in_desc_addr : ADDRESS_WIDTH;
         in_page_addr : ADDRESS_WIDTH;
-        s2s0_pad     : 32;
+        iv_size : 8;
+        s2s0_pad     : 24;
     }
 }
 
@@ -153,13 +154,13 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 #define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
-    modify_field(txdma1_global_scratch.ipsec_cb_index, txdma1_global.ipsec_cb_index); \
+    modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr); \
     modify_field(txdma1_global_scratch.in_desc_addr, txdma1_global.in_desc_addr); \
-    modify_field(txdma1_global_scratch.ipsec_global_pad, txdma1_global.ipsec_global_pad); 
 
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
     modify_field(scratch_t0_s2s.in_page_addr, t0_s2s.in_page_addr); \
+    modify_field(scratch_t0_s2s.iv_size, t0_s2s.iv_size); \
     modify_field(scratch_t0_s2s.s2s0_pad, t0_s2s.s2s0_pad);
 
 #define IPSEC_TXDMA1_S2S1_SCRATCH_INIT \
@@ -194,7 +195,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 
 //stage 3 table 0
-action ipsec_write_barco_req(rsvd, cosA, cosB, cos_sel,
+action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              eval_last, host, total, pid,
                              rxdma_ring_pindex, rxdma_ring_cindex,
                              barco_ring_pindex, barco_ring_cindex,
@@ -204,9 +205,10 @@ action ipsec_write_barco_req(rsvd, cosA, cosB, cos_sel,
                              cb_pindex, cb_cindex, cb_ring_base_addr, 
                              iv_salt, ipsec_cb_pad)
 {
-    IPSEC_CB_SCRATCH
+    IPSEC_CB_SCRATCH_WITH_PC
     //table write cb_cindex++
     // memwr to increment hw-cindex (cb_base + offset)
+    IPSEC_TXDMA1_S2S0_SCRATCH_INIT
 
     DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage3.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
@@ -215,8 +217,8 @@ action ipsec_write_barco_req(rsvd, cosA, cosB, cos_sel,
 //stage 2 table 1
 action ipsec_get_barco_req_index_ptr(barco_req_index_address)
 {
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     modify_field(ipsec_to_stage3.barco_req_addr, barco_req_index_address);
-
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
@@ -234,6 +236,7 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
                                                    payload_start, buf_size,
                                                    payload_size)
 {
+    IPSEC_TXDMA1_S2S0_SCRATCH_INIT
     modify_field(barco_req.brq_in_addr, in_desc);
     modify_field(barco_req.brq_out_addr, out_desc);
     modify_field(barco_req.brq_auth_tag_addr, out_page+tailroom_offset+pad_size+2);
@@ -290,8 +293,6 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
 
     IPSEC_CB_SCRATCH
   
-    //modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr);
-    //modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex);
 
  
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -301,12 +302,11 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
  
 
-    //modify_field(txdma1_global.ipsec_cb_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index));
 
     modify_field(barco_req.brq_barco_enc_cmd, barco_enc_cmd);
     //modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
     modify_field(barco_req.brq_key_index, key_index);
-
+    modify_field(t0_s2s.iv_size, iv_size);
  
     modify_field(p4plus2p4_hdr.table1_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); //ipsec_get_in_desc_from_cb_cindex
