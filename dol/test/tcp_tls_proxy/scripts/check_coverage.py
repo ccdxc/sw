@@ -2,117 +2,28 @@
 import os
 import pdb
 import glob
-import ruamel.yaml as yaml
-import collections
-import objects as objects
+import sys
 
 total = 0
 
-class ModuleListParser:
-    def __init__(self, module_list_file):
-        self.module_list_file = module_list_file
-        self.parsed_module_list = []
-        self.parse()
-        return
+paths = [
+    '/dol',
+    '/nic/gen/protobuf/',
+    '/dol/third_party/',
+    '/nic'
+]
+ws_top = os.path.dirname(sys.argv[0]) + '/../../../../'
+ws_top = os.path.abspath(ws_top)
+sys.path.insert(0, ws_top)
+os.environ['WS_TOP'] = ws_top
+os.environ['MODEL_SOCK_PATH'] = ws_top + '/nic/'
+for path in paths:
+    fullpath = ws_top + path
+    print("Adding Path: %s" % fullpath)
+    sys.path.insert(0, fullpath)
 
-    def __parse(self, ydata, depth):
-        if isinstance(ydata, dict):
-            return self.__parse_dict(ydata, depth)
-        elif isinstance(ydata, list):
-            return self.__parse_list(ydata, depth)
-        elif ydata == 'None':
-            return None
-        return ydata
-
-    def __parse_dict(self, ydata, depth):
-        obj = objects.FrameworkObject()
-        for key in ydata:
-            obj.__dict__[key] = self.__parse(ydata[key], depth + 1)
-        return obj
-
-    # List of objects or List of values.
-    def __parse_list(self, ydata, depth):
-        objlist = []
-        for elem in ydata:
-            obj = self.__parse(elem, depth + 1)
-            objlist.append(obj)
-        return objlist
-
-    def parse(self):
-        with open(self.module_list_file, 'r') as f:
-            ydata = yaml.load(f, Loader=yaml.RoundTripLoader)
-            genobj = self.__parse(ydata, 0)
-
-        for elem in genobj.modules:
-            self.parsed_module_list.append(elem.module)
-            elem.show()
-        return
-
-
-class Module:
-    def __init__(self, parsedata):
-        self.parsedata = parsedata
-
-        self.name       = parsedata.name
-        self.package    = parsedata.package
-        self.module     = parsedata.module
-        self.spec       = parsedata.spec
-        self.path       = self.package.replace(".", "/")
-        self.ignore     = parsedata.ignore
-        return
-
-class ModuleDatabase:
-    def __init__(self, module_list_file):
-        self.db = []
-        self.parser = ModuleListParser(module_list_file)
-        self.__add_all()
-        return
-
-    def __is_test_match(self, name):
-        return True
-
-    def __is_module_match(self, module):
-        return True
-
-    def __add(self, pmod):
-        pmod.enable = True
-
-        if pmod.enable == False:
-            return
-
-        if 'ignore' not in pmod.__dict__:
-            pmod.ignore = False
-
-        if 'iterate' not in pmod.__dict__:
-            pmod.iterate = [ None ]
-
-        if not self.__is_test_match(pmod.name):
-            return
-
-        if not self.__is_module_match(pmod.module):
-            return
-
-        module = Module(pmod)
-        self.db.append(module)
-        return
-
-    def __add_all(self):
-        for pmod in self.parser.parsed_module_list:
-            self.__add(pmod)
-        return
-
-    def getnext(self):
-        if self.iter == len(self.db):
-            return None
-        mod = self.db[self.iter]
-        self.iter += 1
-        return mod
-
-    def getfirst(self):
-        self.iter = 0
-        return self.getnext()
-
-ModuleDatabaseObj = ModuleDatabase('../../../modules.list')
+import infra.engine.modmgr as modmgr
+ModuleDatabaseObj = modmgr.ModuleDatabase('modules.list')
 
 ProxyModulesDB = {}
 

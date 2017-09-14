@@ -581,7 +581,7 @@ modules:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
         enable  : True
         package : test.tcp_tls_proxy
-        module  : in_order_flows
+        module  : in_order
         spec    : two_flows.testspec
         ignore  : False
         iterate :
@@ -601,17 +601,7 @@ modules:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
         enable  : True
         package : test.tcp_tls_proxy
-        module  : in_order_flows
-        spec    : two_flows.testspec
-        ignore  : False
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
-        enable  : True
-        package : test.tcp_tls_proxy
-        module  : in_order_flows
+        module  : in_order
         spec    : two_flows.testspec
         ignore  : False
         iterate :
@@ -631,7 +621,7 @@ modules:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_VXLAN
         enable  : False
         package : test.tcp_tls_proxy
-        module  : in_order_flows
+        module  : in_order
         spec    : two_flows_vxlan.testspec
         ignore  : True
         iterate :
