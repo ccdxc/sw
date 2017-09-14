@@ -9,7 +9,18 @@ echo "ASIC_GEN = $ASIC_GEN"
 export PATH=$ASIC_SRC/common/tools/bin/:$PATH
 echo $PATH
 cd $ASIC_SRC/capri/model/cap_top
-gen_rtl -n -v -j$(grep -c processor /proc/cpuinfo)
-
+if [ $# -eq 0 ]; then
+    echo "Starting ASIC build"
+    gen_rtl -n -v -j$(grep -c processor /proc/cpuinfo)
+elif [ $1 == "--coverage" ]; then
+    echo "Starting ASIC build with coverage"
+    gen_rtl -n -v -- --coverage=1 -j$(grep -c processor /proc/cpuinfo)
+elif [ $1 == "--clean" ]; then
+    echo "Starting ASIC clean build"
+    gen_rtl -n -v -c
+else
+    echo "Invalid args. Use --coverage or --clean"
+    exit
+fi
 $NIC_DIR/model_sim/cp_asic_bins.sh
 

@@ -14,11 +14,18 @@
 #include <cstdlib>
 #include <assert.h>
 #include <vector>
-
+#include <signal.h>
 #include "../../utils/host_mem/params.hpp"
 
 #define MODEL_ZMQ_BUFF_SIZE             12288
+#ifdef COVERAGE
+#define HAL_GCOV_FLUSH()     { ::__gcov_flush(); }
+#else
+#define HAL_GCOV_FLUSH()     { }
+#endif
 
+cap_env_base *g_env;
+extern "C" void __gcov_flush();
 namespace utils {
 
 class HostMem : public pen_mem_base {
@@ -199,12 +206,80 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
     return;
 }
 
-int main (int argc, char ** argv)
-{
+static void wait_loop() {
+    int rc;
+    buffer_hdr_t *buff;
     char zmqsockstr[200];
     char recv_buff[MODEL_ZMQ_BUFF_SIZE];
-    buffer_hdr_t *buff;
+    
+    const char* user_str = std::getenv("PWD");
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
+    //  ZMQ Socket to talk to clients
+    void *context = zmq_ctx_new ();
+    void *responder = zmq_socket (context, ZMQ_REP);
+    rc = zmq_bind(responder, zmqsockstr);
+    assert (rc == 0);
+    std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
+    while (1) {
+        rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        buff = (buffer_hdr_t *) recv_buff;
+        process_buff(buff, g_env);
+        rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+    }
+    return;
+}
+
+static void
+model_sig_handler (int sig, siginfo_t *info, void *ptr)
+{
+    printf("Rcvd signal %u\n", sig);
+
+    switch (sig) {
+    case SIGKILL:
+    case SIGINT:
+        std::cout << "Rcvd SIGKILL/SIGINT, flushing code coverage data ..." << std::endl;
+        printf("Rcvd SIGKILL/SIGINT, flushing code coverage data ...\n");
+        fflush(stdout);
+        HAL_GCOV_FLUSH();
+        exit(0);
+        break;
+
+    case SIGUSR1:
+    case SIGUSR2:
+        std::cout << "Rcvd SIGUSR1/SIGUSR2, flushing code coverage data ..." << std::endl;
+        printf("Rcvd SIGUSR1/SIGUSR2, flushing code coverage data ...\n");
+        fflush(stdout);
+        HAL_GCOV_FLUSH();
+        wait_loop();
+        break;
+
+    default:
+        printf("Not handling signal\n");
+        break;
+    }
+    return;
+}
+
+static void
+model_sig_init (void)
+{
+    struct sigaction    act;
+
+    memset(&act, 0, sizeof(act));
+    act.sa_sigaction = model_sig_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGKILL, &act, NULL);
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGUSR2, &act, NULL);
+    return;
+}
+
+int main (int argc, char ** argv)
+{
     int rc;
+
+    model_sig_init();
 
     utils::HostMem host_mem;
     HOST_MEM::access(&host_mem);
@@ -213,21 +288,8 @@ int main (int argc, char ** argv)
     auto env = new cap_env_base(0);
     env->init();
     env->load_debug();
+    g_env = env;
+    wait_loop();
 
-    const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
-    //  ZMQ Socket to talk to clients
-    void *context = zmq_ctx_new ();
-    void *responder = zmq_socket (context, ZMQ_REP);
-    rc = zmq_bind(responder, zmqsockstr);
-    assert (rc == 0);
-
-    std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
-    while (1) {
-        rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
-        buff = (buffer_hdr_t *) recv_buff;
-        process_buff(buff, env);
-        rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
-    }
     return 0;
 }
