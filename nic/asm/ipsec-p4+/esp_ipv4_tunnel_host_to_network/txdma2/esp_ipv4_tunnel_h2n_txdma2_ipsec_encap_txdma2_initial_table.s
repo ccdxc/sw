@@ -27,5 +27,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     addi r1, r1, BRQ_BASE 
     phvwr  p.common_te0_phv_table_addr, r1
+    phvwr p.ipsec_to_stage4_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    nop.e
+    nop
 
 

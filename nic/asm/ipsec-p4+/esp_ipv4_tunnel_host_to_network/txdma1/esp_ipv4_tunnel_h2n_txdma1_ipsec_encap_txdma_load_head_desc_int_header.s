@@ -18,7 +18,10 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     addi r1, r1, 2
     add r1, r1, d.out_page
     phvwr p.barco_req_brq_auth_tag_addr, r1
-    phvwr p.barco_req_brq_hdr_size, d.payload_start
+    add r3, r0, d.payload_start
+    add r3, r3, k.t0_s2s_iv_size
+    addi r3, r3, IPSEC_SALT_HEADROOM
+    phvwr p.barco_req_brq_hdr_size, r3 
 
     addi r2, r0, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req
     srl r2, r2, 6
