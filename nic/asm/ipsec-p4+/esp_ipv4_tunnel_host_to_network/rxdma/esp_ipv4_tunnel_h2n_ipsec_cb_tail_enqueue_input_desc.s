@@ -44,13 +44,8 @@ esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
 esp_ipv4_tunnel_h2n_dma_cmd_incr_pindex:
     add r2, r0, d.cb_pindex
     addi r2, r2, 1
-    phvwr p.ipsec_global_ipsec_cb_pindex, r2
-    add r3, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
-    addi r3, r3, IPSEC_CB_CB_PINDEX_OFFSET
-    phvwri p.dma_cmd_incr_pindex_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr p.dma_cmd_incr_pindex_dma_cmd_addr, r3
-    phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_start_addr, IPSEC_CB_PINDEX_START
-    phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_end_addr, IPSEC_CB_PINDEX_END  
+    andi r2, r2, 0x3F
+    tblwr d.cb_pindex, r2
 
 esp_ipv4_tunnel_h2n_post_to_cb_ring:
     add r2, r0, k.ipsec_global_ipsec_cb_index 

@@ -22,6 +22,7 @@ header_type ipsec_int_header_t {
 
 header_type ipsec_cb_metadata_t {
     fields {
+        pc                      : 8;
         rsvd                    : 8;
         cosA                    : 4;
         cosB                    : 4;
@@ -127,4 +128,8 @@ header_type p4plus_to_p4_ipsec_header_t {
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
     modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
-    modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad); \           
+    modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad); \          
+
+#define IPSEC_CB_SCRATCH_WITH_PC \
+    modify_field(ipsec_cb_scratch.pc, pc); \
+    IPSEC_CB_SCRATCH 

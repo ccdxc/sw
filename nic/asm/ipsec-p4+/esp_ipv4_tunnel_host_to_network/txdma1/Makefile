@@ -21,7 +21,6 @@ SRC_FILES := \
      esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex.s \
      esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header.s \
      esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex.s \
-     esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr.s \
      esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req.s \
      esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.s
 
