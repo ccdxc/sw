@@ -111,8 +111,11 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     }
 
     tlscb->cb_id = spec.key_or_handle().tlscb_id();
-    tlscb->cipher_type = spec.cipher_type(); 
+    tlscb->command = spec.command(); 
+    tlscb->crypto_key_idx = spec.crypto_key_idx();
     tlscb->debug_dol = spec.debug_dol();
+    tlscb->salt = spec.salt();
+    tlscb->explicit_iv = spec.explicit_iv();
 
     tlscb->hal_handle = hal_alloc_handle();
 
@@ -159,9 +162,11 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
         return HAL_RET_TLS_CB_NOT_FOUND;
     }
     
-    tlscb->cipher_type = spec.cipher_type();
+    tlscb->command = spec.command();
     tlscb->crypto_key_idx = spec.crypto_key_idx();
     tlscb->debug_dol = spec.debug_dol();
+    tlscb->salt = spec.salt();
+    tlscb->explicit_iv = spec.explicit_iv();
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
@@ -213,7 +218,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     // fill config spec of this TLS CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_tlscb_id(rtlscb.cb_id);
     
-    rsp->mutable_spec()->set_cipher_type(rtlscb.cipher_type);
+    rsp->mutable_spec()->set_command(rtlscb.command);
     rsp->mutable_spec()->set_serq_pi(rtlscb.serq_pi);
     rsp->mutable_spec()->set_serq_ci(rtlscb.serq_ci);
     rsp->mutable_spec()->set_bsq_pi(rtlscb.bsq_pi);
@@ -233,6 +238,12 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->set_dec_failures(rtlscb.dec_failures);
     rsp->mutable_spec()->set_pre_debug_stage0_7_thread(rtlscb.pre_debug_stage0_7_thread);
     rsp->mutable_spec()->set_post_debug_stage0_7_thread(rtlscb.post_debug_stage0_7_thread);
+
+    rsp->mutable_spec()->set_command(rtlscb.command);
+    rsp->mutable_spec()->set_crypto_key_idx(rtlscb.crypto_key_idx);
+    rsp->mutable_spec()->set_debug_dol(rtlscb.debug_dol);
+    rsp->mutable_spec()->set_salt(rtlscb.salt);
+    rsp->mutable_spec()->set_explicit_iv(rtlscb.explicit_iv);
 
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);

@@ -29,7 +29,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.tcpcb = tcpcb 
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
-        self.crypto_obj = CryptoKeyHelper.main() 
+        self.crypto_key = CryptoKeyHelper.main() 
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -38,6 +38,8 @@ class TlsCbObject(base.ConfigObjectBase):
             req_spec.debug_dol                 = self.debug_dol
             req_spec.salt                      = self.salt
             req_spec.explicit_iv               = self.explicit_iv
+            req_spec.command                   = self.command
+            req_spec.crypto_key_idx            = self.crypto_key_idx
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -71,12 +73,6 @@ class TlsCbObject(base.ConfigObjectBase):
         lst.append(self)
         halapi.GetTlsCbs(lst)
         return
-    def SetObjValPd(self):
-        lst = []
-        lst.append(self)
-        halapi.UpdateTlsCbs(lst)
-        return
-
     def SetObjValPd(self):
         lst = []
         lst.append(self)

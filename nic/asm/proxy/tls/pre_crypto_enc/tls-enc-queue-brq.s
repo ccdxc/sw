@@ -118,13 +118,9 @@ dma_cmd_iv:
     phvwri      p.dma_cmd3_dma_cmd_eop, 0
 
 dma_cmd_enc_brq_slot1:
-#   TBD : Comment this once BRQ QPCB is setup
-    tblwr       d.u.tls_queue_brq5_d.pi_0, 0
-    nop
-	add		    r5, r0, d.u.tls_queue_brq5_d.pi_0
-	tbladd		d.u.tls_queue_brq5_d.pi_0, 1
+    add         r7, r0, d.u.tls_queue_brq5_d.pi
 
-    sll		    r5, r5, NIC_BRQ_ENTRY_SIZE_SHIFT
+    sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
 	addi		r1, r0, BRQ_BASE
 	add		    r1, r1, r5
@@ -201,9 +197,9 @@ dma_cmd_ring_bsq_doorbell_skip:
 
 dma_cmd_brq_doorbell:
 
-    /* FIXME: */
-    addi        r1, r0, 1
-    phvwr       p.barco_dbell_pi, r1.wx
+    /* Barco DMA Channel PI in r7 */
+    addi        r7, r7, 1
+    phvwr       p.barco_dbell_pi, r7.wx
     phvwri      p.dma_cmd7_dma_cmd_addr, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX
     phvwri      p.dma_cmd7_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_dbell_pi)
     phvwri		p.dma_cmd7_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_dbell_pi)

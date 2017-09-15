@@ -19,7 +19,7 @@ typedef uint32_t tlscb_id_t;
 typedef struct tlscb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tlscb_id_t            cb_id;                   // TLS CB id
-    uint8_t               cipher_type;
+    uint32_t              command;
     uint64_t              sesq_base;
     uint64_t              serq_base;    
     uint16_t              serq_pi;

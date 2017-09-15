@@ -1,0 +1,11 @@
+meta:
+    id: BRQ_GCM_ENTRY
+
+ilist_addr      : 0
+olist_addr      : 0
+command         : 0
+key_desc_index  : 0
+iv_addr         : 0
+status_addr     : 0
+doorbell_addr   : 0
+doorbell_data   : 0

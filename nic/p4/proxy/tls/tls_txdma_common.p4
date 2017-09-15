@@ -142,6 +142,22 @@ header_type barco_desc_t {
     }
 }
 
+ 
+/* BARCO DMA Channel PI/CI */
+header_type barco_channel_pi_ci_t {
+    fields {
+        pi                                  : 32;
+        ci                                  : 32;
+    }
+}
+
+#define BARCO_CHANNEL_PARAMS        pi, ci
+
+#define GENERATE_BARCO_CHANNEL_D                                                                    \
+    modify_field(tls_enc_queue_brq_d.pi, pi);                                                           \
+    modify_field(tls_enc_queue_brq_d.ci, ci);
+
+
 /* BARCO cached Descriptor definition */
 header_type barco_result_t {
     fields {

@@ -26,27 +26,36 @@ class CryptoKeyObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, reqspec):
+        if reqspec.__class__.__name__ == 'CryptoKeyCreateRequest':
+            cfglogger.info("CryptoKeyCreateRequest: do nothing")
+        if reqspec.__class__.__name__ == 'CryptoKeyUpdateRequest':
+            reqspec.key.keyindex = self.keyindex
+            reqspec.key.key_type = self.key_type
+            reqspec.key.key_size = self.key_size
+            reqspec.key.key = self.key
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         if req_spec.__class__.__name__ == 'CryptoKeyCreateResponse':
-            self.idx = resp_spec.keyindex
-
-        cfglogger.info("  - CRYPTO_KEY %s = %s" %\
-                       (self.id, \
+            self.keyindex = resp_spec.keyindex
+            cfglogger.info("CRYPTO_KEY Get %s = %s" %\
+                       (self.keyindex, \
+                        haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        if req_spec.__class__.__name__ == 'CryptoKeyUpdateResponse':
+            assert(req_spec.key.keyindex == resp_spec.keyindex)
+            cfglogger.info("CRYPTO_KEY Update %s = %s" %\
+                       (self.keyindex, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
 
-    def CryptoKeyUpdate(self, type):
-        obj = CryptoKeyObject()
-        obj.Clone(Store.templates.Get(type))
-        self.type = obj.type
-        self.keySize = obj.keySize
-        self.key = obj.key
+    def Update(self, key_type, key_size, key):
+        self.key_type = key_type
+        self.key_size = key_size
+        self.key = key
         lst = []
         lst.append(self)
-        pdb.set_trace()
         halapi.UpdateCryptoKeys(lst) 
+        return 
 
 # Helper Class to Generate/Configure/Manage CryptoKeyObject Objects
 class CryptoKeyObjectHelper:
@@ -56,8 +65,8 @@ class CryptoKeyObjectHelper:
     def Configure(self, obj):
         lst = []
         lst.append(obj)
-        cfglogger.info("Configuring CryptoKeys")
-        #halapi.ConfigureCryptoKeys(lst)
+        cfglogger.info("Creating CryptoKey")
+        halapi.GetCryptoKey(lst)
         return
         
     def __gen_one(self):

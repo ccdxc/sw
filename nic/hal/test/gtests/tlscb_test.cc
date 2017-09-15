@@ -94,7 +94,7 @@ TEST_F(tlscb_test, test1)
     ret = hal::tlscb_create(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    spec.set_cipher_type(1);
+    spec.set_command(1);
     ret = hal::tlscb_update(spec, &rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
 

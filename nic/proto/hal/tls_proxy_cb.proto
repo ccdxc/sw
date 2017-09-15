@@ -30,7 +30,7 @@ message TlsCbSpec {
   TlsCbKeyHandle   key_or_handle              = 2;    // tlscb being created/updated
   uint32                nic_dec_head               = 3;
   uint32                nic_dec_tail               = 4;
-  uint32                cipher_type                = 5;
+  uint32                command                    = 5;
   uint32                debug_dol                  = 6;
   uint32                serq_pi                    = 7;
   uint32                serq_ci                    = 8;

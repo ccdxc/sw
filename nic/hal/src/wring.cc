@@ -188,7 +188,23 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     rsp->mutable_spec()->set_type(wring.wring_type);
     rsp->mutable_spec()->mutable_key_or_handle()->set_wring_id(wring.wring_id);
     rsp->set_index(wring.slot_index);
-    rsp->set_value(wring.slot_value);
+    switch (wring.wring_type) {
+        case types::WRING_TYPE_BRQ:
+            rsp->clear_value();
+            rsp->mutable_barco_gcm_desc()->set_ilist_addr(wring.slot_info.gcm_desc.ilist_addr);
+            rsp->mutable_barco_gcm_desc()->set_olist_addr(wring.slot_info.gcm_desc.olist_addr);
+            rsp->mutable_barco_gcm_desc()->set_command(wring.slot_info.gcm_desc.command);
+            rsp->mutable_barco_gcm_desc()->set_command(wring.slot_info.gcm_desc.command);
+            rsp->mutable_barco_gcm_desc()->set_key_desc_index(wring.slot_info.gcm_desc.key_desc_index);
+            rsp->mutable_barco_gcm_desc()->set_iv_addr(wring.slot_info.gcm_desc.iv_addr);
+            rsp->mutable_barco_gcm_desc()->set_status_addr(wring.slot_info.gcm_desc.status_addr);
+            rsp->mutable_barco_gcm_desc()->set_doorbell_addr(wring.slot_info.gcm_desc.doorbell_addr);
+            rsp->mutable_barco_gcm_desc()->set_doorbell_data(wring.slot_info.gcm_desc.doorbell_data);
+            break;
+        default:
+            rsp->set_value(wring.slot_value);
+            break;
+    }
     
     HAL_TRACE_DEBUG("Ring slot_index: {}", wring.slot_index);
     // fill operational state of this WRING
