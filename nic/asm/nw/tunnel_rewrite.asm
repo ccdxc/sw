@@ -15,13 +15,7 @@ nop:
 .align
 encap_vxlan:
   phvwr       p.inner_ethernet_dstAddr[47:32], k.ethernet_dstAddr_sbit0_ebit15
-  // TODO: Start
-  // Ellipses not working. Needs to be fixed
-  // phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
-  phvwr       p.inner_ethernet_dstAddr[31:0], k.ethernet_dstAddr_sbit16_ebit47
-  phvwr       p.inner_ethernet_srcAddr, k.ethernet_srcAddr
-  phvwr       p.inner_ethernet_etherType, k.ethernet_etherType
-  // TODO: End
+  phvwr       p.{inner_ethernet_dstAddr[31:0]...inner_ethernet_etherType}, k.{ethernet_dstAddr_sbit16_ebit47...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
