@@ -98,84 +98,83 @@ type UserList struct {
 
 func TestWalkStruct(t *testing.T) {
 	expectedStr := `{
-  TypeMeta:   {
+  TypeMeta: {
     Kind: string
     APIVersion: string
-    }
-  ObjectMeta:   {
+  }
+  ObjectMeta: {
     Tenant: string
     Name: string
     Namespace: string
     ResourceVersion: string
     UUID: string
     Labels: map[string]string
-    }
-  Spec:   {
+  }
+  Spec: {
     Aliases: string
     Roles: []string
     DummyRoles: []string
     MatchLabels: map[string]string
     AttachGroup: string
-    InRules: []      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
-    OutRules: []      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
+    InRules: []{
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
+    OutRules: []{
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
     Interval: int
     SkippedField: string
-    *Perms:     {
+    *Perms: {
       ToObj: string
       RWX: string
-      }
-    Policies: map[string]struct
-      {
-        ToGroup: string
-        FromGroup: string
-        }
+    }
+    Policies: map[string]struct{
+      ToGroup: string
+      FromGroup: string
+    }
     UserHandle: uint64
     Uint32Field: uint32
     Int32Field: int32
     *SIPAddress: string
     MacAddrs: []*string
-    IPOpts: []*      {
-        Version: string
-        Protocol: string
-        }
-    InRulesR: []*      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
-    OutRulesR: []*      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
-    FixedRules: []      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
-      {
-        Ports: string
-        Action: string
-        PeerGroup: string
-        }
+    IPOpts: []*{
+      Version: string
+      Protocol: string
+    }
+    InRulesR: []*{
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
+    OutRulesR: []*{
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
+    FixedRules: [2]{
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
+    {
+      Ports: string
+      Action: string
+      PeerGroup: string
+    }
     NodeRoles: []int32
-    Conditions: []*      {
-        Type: int32
-        Status: int32
-        LastTransitionTime: int64
-        Reason: string
-        Message: string
-        }
+    Conditions: []*{
+      Type: int32
+      Status: int32
+      LastTransitionTime: int64
+      Reason: string
+      Message: string
     }
   }
+}
 `
 	refCtx := &RfCtx{GetSubObj: subObj}
 	outStr := WalkStruct(User{}, refCtx)
