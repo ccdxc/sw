@@ -1,17 +1,13 @@
 
 TOPDIR = ../../../..
-BUILDOBJS = xx
+SHAREDLIBRARY = libp4pd_mock.so
 
 LCXXFLAGS = \
-			-I.. \
 			-I../../../../include \
-			-I../../../../hal/pd \
-			-I../../../../gen/iris/include \
 			-I../../../../third-party/spdlog/include
 
 SOURCES = \
-	hash.cc \
-	hash_entry.cc \
+	p4pd_mock.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

@@ -5,8 +5,8 @@ LIBS = \
        $(GTEST_ROOT)/make/gtest.a \
        $(NULL)
 LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lhostmem -lzmq
-SYSTEM_LIBRARIES = $(LIBS) $(LDFLAGS) -lpthread -lhal -liris -lhal -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr \
-				   -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -lfte -lnetwork -lproxyplugin
+SYSTEM_LIBRARIES = $(LIBS) $(LDFLAGS) -lpthread -lhal -liris -lhalproto -lhal -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr \
+				   -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils -lhostmem -lfte -lnetwork -lproxyplugin
 
 LCXXFLAGS = \
             -I.. \
@@ -30,4 +30,4 @@ include $(TOPDIR)/make/Makefile.inc
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
 gtest:
-	LD_LIBRARY_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/rw_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_lib_test.xml"
+	LD_PRELOAD=$(TOPDIR)/obj/libp4pd_mock.so LD_LIBRARY_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/rw_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_lib_test.xml"

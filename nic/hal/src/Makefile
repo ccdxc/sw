@@ -56,6 +56,7 @@ SOURCES = \
 		  crypto_keys.cc \
 		  ipseccb.cc \
 		  l4lb.cc \
+		  system.cc \
 		  $(NULL)
 
 

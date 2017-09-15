@@ -18,7 +18,7 @@ LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib 
 LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/internal_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/uplinkpc_test $(OBJ_DIR)/enicif_test \
 			  $(OBJ_DIR)/cpuif_test $(OBJ_DIR)/buf_pool_test $(OBJ_DIR)/queue_test $(OBJ_DIR)/policer_test \
 			  $(OBJ_DIR)/session_test $(OBJ_DIR)/acl_test $(OBJ_DIR)/bm_allocator_test $(OBJ_DIR)/lif_manager_test \
-			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test
+			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test $(OBJ_DIR)/system_test
 
 CUS_SOURCES = $(wildcard *.cc)
 CUS_PFXES := $(basename $(CUS_SOURCES))
@@ -27,7 +27,7 @@ CUS_BINARIES := $(CUS_PFXES:%=$(OBJ_DIR)/%)
 all: $(CUS_BINARIES)
 
 quiet_cmd_cuslink = LINK	$(basename $<)
-cmd_cuslink = $(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $< $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils_stub -lhostmem -lfte -lnetwork -lproxyplugin -o $@ $(GCOV)
+cmd_cuslink = $(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $< $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lhalproto -lperiodic -lp4pdapi -lp4pd -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma -lcapricsr -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils -lhostmem -lfte -lnetwork -lproxyplugin -o $@ $(GCOV)
 
 $(OBJ_DIR)/%: %.cc
 	$(call cmd,cuslink)

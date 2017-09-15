@@ -3,12 +3,9 @@ TOPDIR = ../../../../..
 PROGRAM = hash_test
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
 LIBS = \
-	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.a \
-	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.a \
-	   $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.a \
 	   $(GTEST_ROOT)/make/gtest.a \
 	   $(NULL)
-SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpdutils_stub -lpthread -lmodelclient -lzmq -lthread -lcapri -lhalmock -lcapricsr -lp4pd -lp4pluspd_rxdma -lp4pluspd_txdma -lindexer -ltrace -lbitmap
+SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib $(LIBS) -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj -lpdutils -lpthread -lmodelclient -lzmq -lthread -lcapri -lhalmock -lcapricsr -lp4pd -lp4pluspd_rxdma -lp4pluspd_txdma -lindexer -ltrace -lbitmap
 
 LCXXFLAGS = \
 			-I.. \
@@ -29,4 +26,4 @@ include $(TOPDIR)/make/Makefile.inc
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
 gtest:
-	LD_LIBRARY_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/hash_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/hash_test.xml"
+	LD_PRELOAD=$(TOPDIR)/obj/libp4pd_mock.so LD_LIBRARY_PATH=$(TOPDIR)/obj:$(TOPDIR)/asic/capri/model/capsim-gen/lib HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/hash_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/hash_test.xml"

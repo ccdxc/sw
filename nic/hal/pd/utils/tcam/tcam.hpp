@@ -72,6 +72,9 @@ public:
         STATS_RETR_SUCCESS,
         STATS_RETR_FAIL_OOB,
         STATS_RETR_FAIL_ENTRY_NOT_FOUND,
+        STATS_RETR_FROM_HW_SUCCESS,
+        STATS_RETR_FROM_HW_FAIL_OOB,
+        STATS_RETR_FROM_HW_FAIL,
         STATS_MAX
     };
 
@@ -108,6 +111,7 @@ private:
         UPDATE,
         REMOVE,
         RETRIEVE,
+        RETRIEVE_FROM_HW,
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs); 
@@ -125,6 +129,8 @@ public:
     hal_ret_t remove(uint32_t index);
     hal_ret_t retrieve(uint32_t index, void *key, void *key_mask, 
                        void *data);
+    hal_ret_t retrieve_from_hw(uint32_t index, void *key, void *key_mask, 
+                               void *data);
     hal_ret_t iterate(tcam_iterate_func_t func, const void *cb_data);
 
 

@@ -72,6 +72,7 @@ SOURCES = \
 		  rw_pd.cc \
 		  cpucb_pd.cc \
 		  cpupkt_api.cc \
+		  system_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

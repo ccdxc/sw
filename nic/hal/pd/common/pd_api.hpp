@@ -18,6 +18,7 @@
 #include <ipseccb.hpp>
 #include <l4lb.hpp>
 #include <cpucb.hpp>
+#include <system.hpp>
 
 namespace hal {
 namespace pd {
@@ -132,6 +133,16 @@ typedef struct pd_rw_entry_args_s {
     rewrite_actions_en  rw_act;
 } __PACK__ pd_rw_entry_args_t;
 
+
+typedef struct pd_system_args_s {
+    SystemResponse *rsp;
+} __PACK__ pd_system_args_t;
+
+static inline void
+pd_system_args_init(pd_system_args_t *args)
+{
+    args->rsp = NULL;
+}
 
 static inline void
 pd_tenant_args_init (pd_tenant_args_t *args)
@@ -405,6 +416,8 @@ hal_ret_t pd_crypto_alloc_key(int32_t *key_idx);
 hal_ret_t pd_crypto_free_key(int32_t key_idx);
 hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key);
 hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key);
+
+hal_ret_t pd_drop_stats_get(pd_system_args_t *pd_sys_args);
 
 }    // namespace pd
 }    // namespace hal

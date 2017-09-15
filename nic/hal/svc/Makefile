@@ -35,6 +35,7 @@ SOURCES = \
 		ipseccb_svc.cc \
  		rdma_svc.cc \
 		cpucb_svc.cc \
+		system_svc.cc \
 		$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

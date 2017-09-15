@@ -122,6 +122,7 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/l4lb.o \
 				$(OBJ_DIR)/cpucb.pb.o \
 				$(OBJ_DIR)/cpucb.o \
+				$(OBJ_DIR)/system.o \
 
 
 HAL_OBJS := $(OBJ_DIR)/main.o 
@@ -139,9 +140,9 @@ all: $(OBJ_FILES)
 	@#$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
 	$(CXX) -g -shared -o $(SHARED_OBJS) $(GCOV)
 	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal $(GCOV) -lgcov
-	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV) -lgcov
+	#$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils_stub -o $(OBJ_DIR)/hal_stub $(GCOV) -lgcov
 
 clean:
-	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_state.* $(OBJ_DIR)/hal_cfg.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
+	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_state.* $(OBJ_DIR)/hal_cfg.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal
 
 -include $(DEPENDS)

@@ -1,0 +1,74 @@
+//------------------------------------------------------------------------------
+// protobuf specification for system level information.
+//  - Status
+//  - Stats
+//      - Drop Stats
+//      - Proxy Stats
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package sys;
+
+// System service definition
+service System {
+  // System related APIs
+  rpc SystemGet(Empty) returns (SystemResponse) {}
+}
+
+message Empty {}
+
+// Global system object
+message SystemResponse {
+  types.ApiStatus    api_status      = 1;                       // API status code
+  Stats              stats           = 2;                       // Statistics
+}
+
+// Stats object
+message Stats {
+  DropStats     drop_stats          = 1;                        // Drop Statistics
+}
+
+// Drop Stats object
+message DropStats {
+  repeated DropStatsEntry drop_entries  = 1;                    // list of drop statistics
+}
+
+// Please revisit. May be we can make this as enum and put an instance of 
+// that enum in this.
+message DropStatsEntry {
+  bool      drop_input_mapping                      = 1;        // input mapping table miss
+  bool      drop_input_mapping_dejavu               = 2;        // deja-vu drop
+  bool      drop_flow_hit                           = 3;        // flow hit drop
+  bool      drop_flow_miss                          = 4;        // flow miss drop
+  bool      drop_ipsg                               = 5;        // ipsg drop
+  bool      drop_ingress_policer                    = 6;        // ingress pol. drop    
+  bool      drop_egress_policer                     = 7;        // egress pol. drop
+  bool      drop_nacl                               = 8;        // nacl drop
+  bool      drop_malformed_pkt                      = 9;        // malformed pkt drop
+  bool      drop_ping_of_death                      = 10;       // ping of death drop
+  bool      drop_fragment_too_small                 = 11;       // fragement is too small
+  bool      drop_ip_normalization                   = 12;       // ip norm. drop
+  bool      drop_tcp_normalization                  = 13;       // tcp norm. drop
+  bool      drop_tcp_xmas_tree_pkt                  = 14;       // xmas tree pkt 
+  bool      drop_tcp_non_syn_first_pkt              = 15;       // non-syn first pkt
+  bool      drop_icmp_normalization                 = 16;       // icmp norm. drop
+  bool      drop_icmp_src_quench_msg                = 17;       // src quench drop
+  bool      drop_icmp_redirect_msg                  = 18;       // icmp redirect drop
+  bool      drop_icmp_info_req_msg                  = 19;       // icmp req drop
+  bool      drop_icmp_addr_req_msg                  = 20;       // icmp addr req drop
+  bool      drop_icmp_traceroute_msg                = 21;       // icmp traceroute drop
+  bool      drop_icmp_rsvd_type_msg                 = 22;       // icmp rsvd. type 
+  bool      drop_input_properties_miss              = 23;       // input properties miss
+  bool      drop_tcp_out_of_window                  = 24;       // tcp OOW drop
+  bool      drop_tcp_split_handshake                = 25;       // split handshake drop
+  bool      drop_tcp_win_zero_drop                  = 26;       // tcp win. zero
+  bool      drop_tcp_ack_err                        = 27;       // tcp ack err
+  bool      drop_tcp_data_after_fin                 = 28;       // tcp data after fin
+  bool      drop_tcp_non_rst_pkt_after_rst          = 29;       // tcp non rst
+  bool      drop_tcp_invalid_responder_first_pkt    = 30;       // tcp invalid resp.
+  bool      drop_tcp_unexpected_syn                 = 31;       // tcp unexpected syn
+  uint64    drop_count                              = 32;       // drop count for multiple drop reasons
+}

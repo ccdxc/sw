@@ -270,20 +270,38 @@ Tcam::retrieve(uint32_t tcam_idx, void *key, void *key_mask, void *data)
         memcpy(data, te->get_data(), te->get_data_len());
     }
 
-
-#if 0
-    if (key) *key           = te->get_key();
-    if (key_mask) *key_mask = te->get_key_mask();
-    // if (key_len) *key_len   = te->get_key_len();
-    if (data) *data         = te->get_data();
-    // if (data_len) *data_len = te->get_data_len();
-#endif
-
 end:
     stats_update(RETRIEVE, rs);
     return rs;
 }
 
+// ---------------------------------------------------------------------------
+// Tcam Retrieve from HW
+// ---------------------------------------------------------------------------
+hal_ret_t
+Tcam::retrieve_from_hw(uint32_t tcam_idx, void *key, 
+                       void *key_mask, void *data)
+{
+    hal_ret_t rs = HAL_RET_OK;
+    p4pd_error_t pd_err = P4PD_SUCCESS;
+
+    // check if idx is OOB
+    if (tcam_idx >= tcam_capacity_) {
+        rs = HAL_RET_OOB;
+        goto end;
+    }
+
+    pd_err = p4pd_entry_read(table_id_, tcam_idx,
+                             key, key_mask, data);
+    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    if (pd_err != P4PD_SUCCESS) {
+        rs = HAL_RET_HW_FAIL;
+    }
+
+end:
+    stats_update(RETRIEVE_FROM_HW, rs);
+    return rs;
+}
 // ---------------------------------------------------------------------------
 // Tcam Iterate
 // ---------------------------------------------------------------------------
@@ -531,8 +549,16 @@ Tcam::stats_update(Tcam::api ap, hal_ret_t rs)
             break;
         case RETRIEVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_SUCCESS);
+            else if (rs == HAL_RET_OOB)
+                stats_incr(STATS_RETR_FAIL_OOB);
             else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
                 stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
+            break;
+        case RETRIEVE_FROM_HW:
+            if (rs == HAL_RET_OK) stats_incr(STATS_RETR_FROM_HW_SUCCESS);
+            else if (rs == HAL_RET_OOB) 
+                stats_incr(STATS_RETR_FROM_HW_FAIL_OOB);
+            else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_RETR_FROM_HW_FAIL);
             break;
         default:
             HAL_ASSERT(0);

@@ -235,7 +235,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     pd_tenant_args.nwsec_profile = sec_prof;
     ret = pd::pd_tenant_create(&pd_tenant_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to create tenant pd, err : {}");
+        HAL_TRACE_ERR("Failed to create tenant pd, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto end;
     }
