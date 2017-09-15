@@ -152,7 +152,7 @@ class LifObjectHelper:
             lif.ConfigureQueueTypes()
 
     def Alloc(self):
-        if self.aidx == (len(self.lifs) - 1):
+        if self.aidx >= len(self.lifs):
             assert(0)
         lif = self.lifs[self.aidx]
         self.aidx += 1

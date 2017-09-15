@@ -57,19 +57,19 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 tenants:
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
         count   : 1
-        lifns   : range/101/110
+        lifns   : range/101/101
     #-   spec    : ref://store/specs/id=TENANT_SPAN_VXLAN
     #    count   : 1
     #    lifns   : range/111/120
     -   spec    : ref://store/specs/id=TENANT_INFRA
         count   : 1
-        lifns   : range/121/130
+        lifns   : range/121/121
     -   spec    : ref://store/specs/id=TENANT_OVERLAY_VLAN
         count   : 1
-        lifns   : range/201/300
+        lifns   : range/201/224
     -   spec    : ref://store/specs/id=TENANT_OVERLAY_VXLAN
         count   : 1
-        lifns   : range/301/400
+        lifns   : range/301/324
 
 cpu:
     - entry:
