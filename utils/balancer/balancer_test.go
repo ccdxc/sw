@@ -15,6 +15,10 @@ import (
 	. "github.com/pensando/sw/utils/testutils"
 )
 
+const (
+	url = "node1:8888"
+)
+
 func TestBalancer(t *testing.T) {
 	rc := mock.New()
 	b := New(rc)
@@ -43,14 +47,14 @@ func TestBalancer(t *testing.T) {
 		},
 		Service: "testService",
 		Node:    "node1",
-		Port:    8888,
+		URL:     url,
 	}
 	// Add instance1.
 	rc.AddServiceInstance(&si1)
 	select {
 	case addrs := <-notifyCh:
 		AssertEquals(t, len(addrs), 1, fmt.Sprintf("Expected 1 addr, got %v", len(addrs)))
-		AssertEquals(t, "node1:8888", addrs[0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[0].Addr))
+		AssertEquals(t, url, addrs[0].Addr, fmt.Sprintf("Expected %v, got %v", url, addrs[0].Addr))
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}
@@ -64,7 +68,7 @@ func TestBalancer(t *testing.T) {
 	select {
 	case addrs := <-b1.Notify():
 		AssertEquals(t, 1, len(addrs), fmt.Sprintf("Expected 1 addr, got %v", len(addrs)))
-		AssertEquals(t, "node1:8888", addrs[0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[0].Addr))
+		AssertEquals(t, url, addrs[0].Addr, fmt.Sprintf("Expected %v, got %v", url, addrs[0].Addr))
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}

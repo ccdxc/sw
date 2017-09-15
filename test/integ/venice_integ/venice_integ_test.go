@@ -109,7 +109,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		},
 		Service: "pen-apiserver",
 		Node:    "localhost",
-		Port:    8082,
+		URL:     "localhost:8082",
 	}
 	m.AddServiceInstance(&si)
 

@@ -23,6 +23,9 @@ type Interface interface {
 	// Lookup resolves a service to its instances.
 	Lookup(name string) *types.ServiceInstanceList
 
+	// GetURLs gets the URLs for a service.
+	GetURLs(name string) []string
+
 	// Stop stops the resolver client.
 	Stop()
 
@@ -174,6 +177,26 @@ func (r *resolverClient) Lookup(name string) *types.ServiceInstanceList {
 	}
 	for _, v := range svcMap {
 		result.Items = append(result.Items, v)
+	}
+	return result
+}
+
+// GetURLs gets the URLs for a service.
+func (r *resolverClient) GetURLs(name string) []string {
+	r.Lock()
+	defer r.Unlock()
+	result := []string{}
+	if r.svcsMap == nil {
+		return result
+	}
+	svcMap, ok := r.svcsMap[name]
+	if !ok {
+		return result
+	}
+	for _, v := range svcMap {
+		if v.URL != "" {
+			result = append(result, v.URL)
+		}
 	}
 	return result
 }
