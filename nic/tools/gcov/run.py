@@ -24,12 +24,6 @@ if not coverage_output_path:
     sys.exit(1)
 coverage_output_path = os.path.abspath(coverage_output_path) + "/"
 
-obj_dir_path = os.environ.get("OBJ_DIR")
-if not obj_dir_path:
-    print "Obj dir not set, please set OBJ_DIR"
-    sys.exit(1)
-obj_dir_path = os.path.abspath(obj_dir_path) + "/"
-
 
 nic_dir = os.environ.get("DIR_NIC")
 if not nic_dir:
@@ -56,7 +50,7 @@ def gen_html(lcov_info_file, cov_output_dir):
     subprocess.call(cmd)
 
 
-def gcov_create(file, dest_dir=None):
+def gcov_create(file,  obj_dir_path, dest_dir):
     subprocess.call(["gcov", file, "-o", obj_dir_path],
                     stdout=FNULL, stderr=FNULL)
     gcov_out_file = file + ".gcov"
@@ -77,31 +71,42 @@ def lcov_remove(lcov_out_file, remove_files):
         subprocess.call(cmd)
 
 
-def generate_coverage(data, test_name,  cov_output_dir):
+def generate_coverage(data, name, cov_output_dir):
     gcov_out_dir = cov_output_dir + "/" + gcov_out_name
+    assert data.get("gcno_dir") or data.get("obj_dir")
     subprocess.call(["mkdir", "-p", gcov_out_dir])
     lcov_info_files = []
-    for dir in data.get("nic_dirs", []):
-        for root, dirs, files in os.walk(nic_dir + "/" + dir):
+    os.chdir(nic_dir)
+    for dir in data.get("dirs", []):
+        for root, dirs, files in os.walk(dir):
             output_dir = gcov_out_dir + "/" + root
             subprocess.call(["mkdir", "-p", output_dir])
+            cur_dir = os.getcwd()
             os.chdir(root)
             atleast_one_file_present = False
+            if data.get("obj_dir"):
+                obj_dir_path = data["obj_dir"] + "/" + \
+                    "/".join(root.split("/")[1:]) + "/"
+            else:
+                obj_dir_path = data["gcno_dir"] + "/"
             for file in files:
                 if file.endswith(tuple(data.get("file_patterns", [".c", ".cc"]))):
                     gcno_file = file.rsplit(".", 1)[0] + ".gcno"
-                    if not os.path.isfile(obj_dir_path + gcno_file):
+                    gcno_file = cur_dir + "/" + obj_dir_path + gcno_file
+                    if not os.path.isfile(gcno_file):
                         # File not compiled at all, ignore.
                         continue
                     gcda_file = file.rsplit(".", 1)[0] + ".gcda"
-                    # File compiled but not gcda, not executed.
-                    if not os.path.isfile(obj_dir_path + gcda_file):
-                        # continue
-                        subprocess.call(["touch", obj_dir_path + gcda_file])
+                    gcda_file = cur_dir + "/" + obj_dir_path + gcda_file
+                    # File compiled but no gcda, not executed.
+                    if not os.path.isfile(gcda_file):
+                        # TODO Log ERROR for this.
+                        continue
+                        #subprocess.call(["touch", gcda_file])
                     atleast_one_file_present = True
-                    subprocess.call(["cp", obj_dir_path + gcda_file, "."])
-                    subprocess.call(["cp", obj_dir_path + gcno_file, "."])
-                    gcov_create(file,  output_dir)
+                    subprocess.call(["cp", gcda_file, "."])
+                    subprocess.call(["cp", gcno_file, "."])
+                    gcov_create(file,  obj_dir_path, output_dir)
 
             if atleast_one_file_present:
                 lcov_out_file = output_dir + "/" + \
@@ -113,15 +118,14 @@ def generate_coverage(data, test_name,  cov_output_dir):
                 else:
                     subprocess.call(["rm", lcov_out_file])
             subprocess.call(["rm -f *.gcov *.gcno *.gcda"], shell=True)
-            os.chdir(top_dir)
+            os.chdir(cur_dir)
 
     # Merge all into one.
-    output_file = cov_output_dir + "/" + test_name + ".info"
-    merge_lcov_files(test_name, lcov_info_files, output_file)
+    output_file = cov_output_dir + "/" + name + ".info"
+    merge_lcov_files(name, lcov_info_files, output_file)
     gen_html(output_file, cov_output_dir)
+    os.chdir(top_dir)
     return output_file
-    # for file in lcov_info_files:
-    #    subprocess.call(["rm", file])
 
 
 def merge_lcov_files(test_name, lcov_info_files, output_file):
@@ -134,24 +138,11 @@ def merge_lcov_files(test_name, lcov_info_files, output_file):
     subprocess.call(cmd)
 
 
-def run_test(cmd):
+def run(cmd):
     os.chdir(nic_dir)
     ret = subprocess.call(cmd, shell=True)
     if ret:
-        print cmd, " failed."
-        sys.exit(1)
-    os.chdir(top_dir)
-
-
-def build(cmd):
-    os.chdir(nic_dir)
-    ret = subprocess.call("make clean", shell=True)
-    if ret:
-        print("Clean failed.")
-        sys.exit(1)
-    ret = subprocess.call(cmd, shell=True)
-    if ret:
-        print("Build failed.")
+        print("Cmd failed.: ", cmd)
         sys.exit(1)
     os.chdir(top_dir)
 
@@ -165,21 +156,31 @@ if __name__ == '__main__':
     with open(config_file) as data_file:
         data = json.load(data_file)
 
-    # First do a build.
-    build(data["make_cmd"])
+    # build all modules.
+    for module_name in data["modules"]:
+        print "Building module: ", module_name
+        run(data["modules"][module_name]["clean_cmd"])
+        run(data["modules"][module_name]["build_cmd"])
+        module = data["modules"][module_name]
 
     lcov_info_files = []
-    for test in data["cov_tests"]:
-        run_test(test["cmd"])
-        lcov_info_files.append(generate_coverage(
-            data,  test["name"], coverage_output_path + test["output_dir_name"]))
-        os.chdir(obj_dir_path)
-        subprocess.call(["rm -f *.gcda"], shell=True)
-        os.chdir(top_dir)
+    module_infos = defaultdict(lambda: [])
+    for run_name in data["run"]:
+        run(data["run"][run_name]["cmd"])
+        for module_name in data["run"][run_name]["modules"]:
+            module = data["modules"][module_name]
+            module_infos[module_name].append(generate_coverage(
+                module, module_name, coverage_output_path + run_name + "/" + module_name))
+            if module.get("gcno_dir"):
+                os.chdir(module["gcno_dir"])
+                subprocess.call(["rm -f *.gcda"], shell=True)
+                os.chdir(top_dir)
 
     # Finally generate lcov combined output as well.
-    cov_output_dir = coverage_output_path + "/" + "total_cov"
-    subprocess.call(["mkdir", "-p", cov_output_dir])
-    output_file = cov_output_dir + "/total.info"
-    merge_lcov_files("Total", lcov_info_files, output_file)
-    gen_html(output_file, cov_output_dir)
+    for module_name in module_infos:
+        cov_output_dir = coverage_output_path + "/" + "total_cov" + "/" + module_name
+        subprocess.call(["mkdir", "-p", cov_output_dir])
+        output_file = cov_output_dir + "/total.info"
+        merge_lcov_files("Total " + module_name,
+                         module_infos[module_name], output_file)
+        gen_html(output_file, cov_output_dir)

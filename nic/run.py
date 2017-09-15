@@ -25,6 +25,7 @@ if nic_dir is None:
 
 pid = os.getpid()
 hal_process = None
+model_process = None
 
 build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
@@ -81,6 +82,8 @@ def run_model(args):
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 
+    global model_process
+    model_process = p
     lock = open(lock_file, "a+")
     lock.write(str(p.pid) + "\n")
     lock.close()
@@ -137,6 +140,7 @@ def run_hal():
 
 def dump_coverage_data():
     hal_process.send_signal(signal.SIGUSR1)
+    model_process.send_signal(signal.SIGUSR1)
     time.sleep(5)
 
 # DOL

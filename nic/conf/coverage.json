@@ -1,31 +1,55 @@
 {
-  "make_cmd": "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8",
-  "nic_dirs": [
-    "hal",
-    "fte",
-    "utils",
-    "proto",
-    "agents"
-  ],
-  "remove_files": [
-    "/usr/include/*",
-    "/usr/local/*",
-    "third-party/*"
-  ],
-  "file_patterns": [
-    ".c",
-    ".cc"
-  ],
-  "cov_tests": [
-    {
-      "name": "gtest",
-      "cmd": "make gtest",
-      "output_dir_name": "gtest_cov"
+    "modules": {
+        "hal": {
+            "dirs": [
+                "hal",
+                "fte",
+                "utils",
+                "proto",
+                "agents"
+            ],
+            "file_patterns": [
+                ".c",
+                ".cc"
+            ],
+            "build_cmd": "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8",
+            "clean_cmd" : "make clean",
+            "remove_files": [
+                "/usr/include/*",
+                "/usr/local/*",
+                "third-party/*"
+            ],
+            "gcno_dir" : "obj"
+        },
+        "model": {
+            "dirs": [
+                "asic/capri/model"
+            ],
+            "file_patterns": [
+                ".c",
+                ".cc"
+            ],
+            "build_cmd": "./build_model.sh --coverage && cd model_sim/build && make coverage",
+            "clean_cmd": "./build_model.sh --clean && cd modek_sim/build  && make clean",
+            "remove_files": [
+                "/usr/include/*",
+                "/usr/local/*"
+            ],
+            "obj_dir" : "asic_gen"
+        }
     },
-    {
-      "name": "dol",
-      "cmd": "./run.py --coveragerun",
-      "output_dir_name": "dol_cov"
+    "run": {
+        "gtests": {
+            "cmd": "make gtest",
+            "modules": [
+                "hal"
+            ]
+        },
+        "dol": {
+            "cmd": "./run.py --coveragerun",
+            "modules": [
+                "hal", "model"
+            ]
+        }
     }
-  ]
 }
