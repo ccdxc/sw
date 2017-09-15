@@ -258,9 +258,10 @@ struct phv_t {
     uint64_t lif : 11;
     uint64_t qtype: 3;
     uint64_t qid: 24;
+    uint64_t lkp_dir:1;
+    uint64_t src_lif:11;
 
     uint8_t lkp_type;
-    uint8_t lkp_dir;
 
     uint16_t lkp_vrf;
     uint8_t  lkp_proto;

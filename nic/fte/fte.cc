@@ -356,26 +356,38 @@ pkt_loop(arm_rx_t rx, arm_tx_t tx)
             continue;
         }
 
-        // Init ctx_t
-        ret = ctx.init(phv, pkt, pkt_len, iflow, rflow);
+        // Process pkt with db open
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        do {
+            // Init ctx_t
+            ret = ctx.init(phv, pkt, pkt_len, iflow, rflow);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+                break;;
+            }
+            
+            // execute the pipeline
+            ret = execute_pipeline(ctx);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
+                break;
+            }
+            
+            // update GFT
+            ret = ctx.update_gft();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
+                break;
+            }
+        } while(false);
+
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+            hal::hal_cfg_db_close(true);
             continue;
         }
 
-        // execute the pipeline
-        ret = execute_pipeline(ctx);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
-            continue;
-        }
-
-        // update GFT
-        ret = ctx.update_gft();
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
-            continue;
-        }
+        // Update and send the packet
+        hal::hal_cfg_db_close(false);
 
         // write the packet
         if (ctx.pkt()) {

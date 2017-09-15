@@ -433,6 +433,7 @@
 #define CPU_FLAGS_INNER_VLAN_VALID             0x000400
 #define CPU_FLAGS_INNER_IPV4_VALID             0x000800
 #define CPU_FLAGS_INNER_IPV6_VALID             0x001000
+#define CPU_FLAGS_LKP_DIR                      0x040000
 
 /*****************************************************************************/
 /* ROCE flags                                                                */

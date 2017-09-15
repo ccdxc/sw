@@ -70,3 +70,15 @@ hal::hal_handle::get_obj(void)
 {
     return NULL;
 }
+
+hal_ret_t
+hal::hal_cfg_db_open(hal::cfg_op_e)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal::hal_cfg_db_close(bool)
+{
+    return HAL_RET_OK;
+}

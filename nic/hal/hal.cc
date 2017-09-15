@@ -62,8 +62,10 @@ fte_pkt_loop (void *ctxt)
         return NULL;
     }
 
-    hal::pd::cpupkt_ctxt_t* ctx = hal::pd::cpupkt_ctxt_alloc_init();
-    cpupkt_register_rx_queue(ctx, types::WRING_TYPE_ARQRX);
+    hal::pd::cpupkt_ctxt_t* arm_ctx = hal::pd::cpupkt_ctxt_alloc_init();
+    cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQRX);
+    cpupkt_register_tx_queue(arm_ctx, types::WRING_TYPE_ASQ);
+
     fte::phv_t rx_phv;
     hal::pd::p4_to_p4plus_cpu_pkt_t *rx_hdr = NULL;
     uint8_t *rx_pkt = NULL;
@@ -78,21 +80,32 @@ fte_pkt_loop (void *ctxt)
         rx_pkt = NULL;
         rx_phv = {};
 
-        ret = cpupkt_poll_receive(ctx, &rx_hdr, &rx_pkt, pkt_len);
+        ret = cpupkt_poll_receive(arm_ctx, &rx_hdr, &rx_pkt, pkt_len);
         if (ret == HAL_RET_OK) {
-            bool inner_valid = false; // TODO read flags
+            bool inner_valid = false; 
+            rx_phv.src_lif = rx_hdr->src_lif;
             rx_phv.lif = 1;  // TODO
             rx_phv.qtype = 0;
             rx_phv.qid = 0; 
-            rx_phv.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4; //rx_hdr->lkp_type;
-            rx_phv.lkp_dir = 1; // TODO
-            rx_phv.lkp_vrf = 4097; //rx_hdr->lkp_vrf;
+            rx_phv.lkp_type = rx_hdr->lkp_type;
+            if (rx_hdr->flags & CPU_FLAGS_LKP_DIR) {
+                rx_phv.lkp_dir = 1;
+            }
+            rx_phv.lkp_vrf = rx_hdr->lkp_vrf;
 
-            // extarct src/dst
+            // extract src/dst
             switch (rx_phv.lkp_type) {
             case FLOW_KEY_LOOKUP_TYPE_MAC:
+                if (rx_hdr->flags & CPU_FLAGS_TUNNEL_TERMINATE) {
+                    MAC_UINT64_TO_ADDR(rx_phv.lkp_src, rx_hdr->mac_sa_inner);
+                    MAC_UINT64_TO_ADDR(rx_phv.lkp_dst, rx_hdr->mac_da_inner);
+                } else {
+                    MAC_UINT64_TO_ADDR(rx_phv.lkp_src, rx_hdr->mac_sa_outer);
+                    MAC_UINT64_TO_ADDR(rx_phv.lkp_dst, rx_hdr->mac_da_outer);
+                }
                 // TODO(goli)
             case FLOW_KEY_LOOKUP_TYPE_IPV4:
+                inner_valid  = (rx_hdr->flags & CPU_FLAGS_INNER_IPV4_VALID);
                 if (inner_valid) {
                     memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner+4, 4);
                     memcpy(rx_phv.lkp_dst, rx_hdr->ip_sa_inner+8, 4);
@@ -105,22 +118,19 @@ fte_pkt_loop (void *ctxt)
 
                 break;
             case FLOW_KEY_LOOKUP_TYPE_IPV6:
+                inner_valid  = (rx_hdr->flags & CPU_FLAGS_INNER_IPV6_VALID);
                 if (inner_valid) {
-                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer, sizeof(rx_phv.lkp_src));
-                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_outer, sizeof(rx_phv.lkp_dst));
-                } else {
                     memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner, sizeof(rx_phv.lkp_src));
                     memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_inner, sizeof(rx_phv.lkp_dst));
+                } else {
+                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer, sizeof(rx_phv.lkp_src));
+                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_outer, sizeof(rx_phv.lkp_dst));
                 }
                 break;
             }
 
             // extract proto
-            if (inner_valid) {
-                rx_phv.lkp_proto = IP_PROTO_TCP; //rx_hdr->ip_proto_outer;
-            } else {
-                rx_phv.lkp_proto = IP_PROTO_TCP; // rx_hdr->ip_proto_inner;
-            }
+            rx_phv.lkp_proto = inner_valid ? rx_hdr->ip_proto_inner : rx_hdr->ip_proto_outer;
 
             // extract l4
             if (rx_phv.lkp_proto == IP_PROTO_UDP && !inner_valid) {
@@ -138,7 +148,9 @@ fte_pkt_loop (void *ctxt)
     };
 
     fte::arm_tx_t arm_tx = [&](const fte::phv_t *phv, const uint8_t *pkt, size_t pkt_len) {
-        return HAL_RET_OK;
+        hal::pd::p4plus_to_p4_header_t header = {};
+        HAL_TRACE_DEBUG("writing pkt to arq");
+        return cpupkt_send(arm_ctx, &header, (uint8_t *)pkt, pkt_len);
     };
 
     fte::pkt_loop(arm_rx, arm_tx);
@@ -694,7 +706,6 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // start fte threads
     for (int tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
-        // TODO(goii) uncomment once ARM driver API is ready
         //g_hal_threads[tid]->start(g_hal_threads[tid]);
     }
 

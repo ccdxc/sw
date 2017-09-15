@@ -209,10 +209,9 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
 
     while(true) {
-        sleep(10);
+        sleep(1);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
             uint64_t value = 0;
-            HAL_TRACE_DEBUG("Checking queue: {} at address: {:#x}", i, ctxt->rx.queue[i].pc_index_addr);
             if(!p4plus_hbm_read(ctxt->rx.queue[i].pc_index_addr,
                                 (uint8_t *)&value, 
                                 sizeof(uint64_t))) {
