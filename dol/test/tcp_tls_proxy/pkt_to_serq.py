@@ -136,6 +136,11 @@ def TestCaseVerify(tc):
         print("desc alloced stats not as expected")
         return False
 
+    # 10. Verify phv2mem counter
+    if (tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4):
+        print("pkt2mem counter verification failed")
+        return False
+
     return True
 
 def TestCaseTeardown(tc):

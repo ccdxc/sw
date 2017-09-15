@@ -39,3 +39,6 @@ bytes_sent  : 0
 pkts_sent   : 0
 debug_num_phv_to_pkt    : 0
 debug_num_mem_to_pkt    : 0
+debug_num_pkt_to_mem    : 0
+debug_num_phv_to_mem    : 0
+debug_stage0_7_thread   : 0
