@@ -1106,7 +1106,7 @@ table common_p4plus_stage0_app_header_table_offset_64 {
     }
 }
 control common_p4plus_stage0 {
-    if (app_header.app_type == P4PLUS_APPTYPE_TCPTLS) {
+    if (app_header.table0_valid == 1) {
         apply(common_p4plus_stage0_app_header_table_offset_64);
     } else {
         apply(common_p4plus_stage0_app_header_table);

@@ -279,14 +279,14 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((cpucb_hwid_ht_ != NULL), false);
 
     // initialize CPUPKT related data structures
-    cpupkt_rx_slab_ = slab::factory("CPUPKT RX PD", HAL_SLAB_CPUPKT_RX_PD,
-                                 sizeof(hal::pd::cpupkt_rx_ctxt_t), 4,
+    cpupkt_slab_ = slab::factory("CPUPKT PD", HAL_SLAB_CPUPKT_PD,
+                                 sizeof(hal::pd::cpupkt_ctxt_t), MAX_CPU_PKT_QUEUES,
                                  true, true, true, true);
-    HAL_ASSERT_RETURN((cpupkt_rx_slab_ != NULL), false);
-    cpupkt_tx_slab_ = slab::factory("CPUPKT TX PD", HAL_SLAB_CPUPKT_TX_PD,
-                                 sizeof(hal::pd::cpupkt_tx_ctxt_t), 4,
-                                 true, true, true, true);
-    HAL_ASSERT_RETURN((cpupkt_tx_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((cpupkt_slab_ != NULL), false);
+    cpupkt_descr_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
+    HAL_ASSERT_RETURN((cpupkt_descr_hwid_idxr_ != NULL), false);
+    cpupkt_page_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
+    HAL_ASSERT_RETURN((cpupkt_page_hwid_idxr_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -378,8 +378,9 @@ hal_state_pd::hal_state_pd()
     cpucb_slab_ = NULL;
     cpucb_hwid_ht_ = NULL;
 
-    cpupkt_rx_slab_ = NULL;
-    cpupkt_tx_slab_ = NULL;
+    cpupkt_slab_ = NULL;
+    cpupkt_descr_hwid_idxr_ = NULL;
+    cpupkt_page_hwid_idxr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -449,8 +450,9 @@ hal_state_pd::~hal_state_pd()
     rw_table_ht_ ? delete rw_table_ht_ : HAL_NOP;
     rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
     
-    cpupkt_rx_slab_ ? delete cpupkt_rx_slab_ : HAL_NOP;
-    cpupkt_tx_slab_ ? delete cpupkt_tx_slab_ : HAL_NOP;
+    cpupkt_slab_ ? delete cpupkt_slab_ : HAL_NOP;
+    cpupkt_descr_hwid_idxr_ ? delete  cpupkt_descr_hwid_idxr_ : HAL_NOP;
+    cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -1073,12 +1075,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->rw_entry_slab()->free_(elem);
         break;
 
-    case HAL_SLAB_CPUPKT_RX_PD:
-        g_hal_state_pd->cpupkt_rx_slab()->free_(elem);
-        break;
-
-    case HAL_SLAB_CPUPKT_TX_PD:
-        g_hal_state_pd->cpupkt_tx_slab()->free_(elem);
+    case HAL_SLAB_CPUPKT_PD:
+        g_hal_state_pd->cpupkt_slab()->free_(elem);
         break;
 
     default:

@@ -1,5 +1,6 @@
 LIBDIRS = \
 		  rx \
+		  tx \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

@@ -69,6 +69,9 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ARQRX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0};
 
+    g_meta[types::WRING_TYPE_ASQ] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0};
+
     return HAL_RET_OK;
 }
 

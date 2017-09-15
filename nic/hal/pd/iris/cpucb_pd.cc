@@ -10,6 +10,7 @@
 #include <hal.hpp>
 #include <lif_manager.hpp>
 #include <cpu_rxdma_p4plus_ingress.h>
+#include <cpu_txdma_p4plus_ingress.h>
 #include <p4plus_pd_api.h>
 
 namespace hal {
@@ -130,9 +131,7 @@ p4pd_get_cpucb_rxdma_entry(pd_cpucb_t* cpucb_pd)
         HAL_TRACE_ERR("Failed to get cpu_rx entry");
         goto cleanup;
     }
-    return HAL_RET_OK;
 cleanup:
-    /* TODO: CLEANUP */
     return ret;
 }
 
@@ -140,17 +139,109 @@ cleanup:
  * TxDMA
  * ******************************************/
 
+hal_ret_t
+p4pd_get_cpu_tx_stage0_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "cpu_tx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret < 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("Received offset for stage0 program: {:#x}", *offset);
+    return HAL_RET_OK;
+}
+
+static hal_ret_t 
+p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
+{
+    cpu_tx_initial_action_d                     data = {0};
+    hal_ret_t                                   ret = HAL_RET_OK;
+    uint64_t                                    pc_offset = 0;
+
+    // hardware index for this entry
+    cpucb_hw_id_t hwid = cpucb_pd->hw_id + 
+        (P4PD_CPUCB_STAGE_ENTRY_OFFSET * P4PD_HWID_CPU_TX_STAGE0);
+
+    if(!del) {
+        // get pc address
+        if(p4pd_get_cpu_tx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+            ret = HAL_RET_HW_FAIL;
+        }
+        pc_offset = (pc_offset >> 6);
+        HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
+        data.action_id = pc_offset;
+        data.u.cpu_tx_initial_action_d.total = 1;
+        
+        // get asq address
+        wring_hw_id_t   asq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASQ, 0, &asq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive asq base, ret: {}", ret);
+        } else {
+            HAL_TRACE_DEBUG("asq base: {:#x}", asq_base);
+            data.u.cpu_tx_initial_action_d.asq_base = asq_base;
+        }
+    }
+    
+    HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: 0x{0:x}", hwid); 
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to create tx: stage0 entry for CPUCB");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
+hal_ret_t 
+p4pd_get_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd)
+{
+    cpu_tx_initial_action_d data = {0};
+
+    // hardware index for this entry
+    cpucb_hw_id_t hwid = cpucb_pd->hw_id + 
+        (P4PD_CPUCB_STAGE_ENTRY_OFFSET * P4PD_HWID_CPU_TX_STAGE0);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: stage0 entry for CPU CB");
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+
 hal_ret_t 
 p4pd_add_or_del_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd, bool del)
 {
+    hal_ret_t   ret = HAL_RET_OK;
+
+    ret = p4pd_add_or_del_cpu_tx_stage0_entry(cpucb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
     return HAL_RET_OK;
+cleanup:
+    /* TODO: CLEANUP */
+    return ret;
 }
 
 hal_ret_t 
 p4pd_get_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd)
 {
-    /* TODO */
-    return HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+    
+    ret = p4pd_get_cpu_tx_stage0_entry(cpucb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get cpu_rx entry");
+        goto cleanup;
+    }
+cleanup:
+    return ret;
 }
 
 /**************************/

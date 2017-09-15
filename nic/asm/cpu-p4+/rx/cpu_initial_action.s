@@ -14,6 +14,7 @@ struct common_p4plus_stage0_app_header_table_d d;
     .param          ARQRX_BASE
     .align
 cpu_rx_read_shared_stage0_start:
+    CAPRI_CLEAR_TABLE0_VALID
     addi    r4, r0, 0x1
     add     r6, r4, r0
 	

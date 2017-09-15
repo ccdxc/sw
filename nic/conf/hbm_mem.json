@@ -81,6 +81,18 @@
             "size_kb": 64
         },
         {
+            "name": "asq",
+            "size_kb": 64
+        },
+        {
+            "name": "cpu-descriptor",
+            "size_kb": 2048
+        },
+        {
+            "name": "cpu-page",
+            "size_kb": 32768
+        },
+        {
             "name": "descriptor-tx",
             "size_kb": 2048
         },

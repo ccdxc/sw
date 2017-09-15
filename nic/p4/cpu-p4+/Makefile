@@ -14,11 +14,11 @@ CPU_TX_PROJ = cpu_txdma
 
 all: 
 	$(NCC) $(NCC_OPTIONS) $(CPU_RX_PROJ).p4 
-	#$(NCC) $(NCC_OPTIONS) $(CPU_TX_PROJ).p4 
+	$(NCC) $(NCC_OPTIONS) $(CPU_TX_PROJ).p4 
 
 clean:
 	rm -rf $(GEN_DIR)/$(CPU_RX_PROJ)
-	#rm -rf $(GEN_DIR)/$(CPU_TX_PROJ)
+	rm -rf $(GEN_DIR)/$(CPU_TX_PROJ)
 
 default:
 	all

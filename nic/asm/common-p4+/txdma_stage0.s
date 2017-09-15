@@ -23,6 +23,7 @@
     .param      tcp_tx_read_rx2tx_shared_process
     .param      eth_tx_fetch_desc
     .param      esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table
+    .param      cpu_tx_stage0_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -72,3 +73,7 @@ storage_tx_stage0:
    j    storage_tx_q_state_pop_start
    nop
 
+.align
+cpu_tx_stage0:
+    j   cpu_tx_stage0_start
+    nop
