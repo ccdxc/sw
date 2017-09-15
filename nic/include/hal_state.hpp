@@ -270,6 +270,7 @@ private:
     cfg_ver_in_use_info_t      cfg_ver_in_use_[HAL_THREAD_ID_MAX];     // versions in use for read
     cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
     dllist_ctxt_t              del_cache_list_head_;                   // delete obj cache
+    hal_spinlock_t             del_cache_slock_;                       // lock to protect the delete cache
 };
 
 // HAL operational database

@@ -314,8 +314,7 @@ hal_handle::del_obj(void *obj, hal_cfg_del_cb_t del_cb)
                               "obj with ver {} >= {} exists already",
                               objs_[i].ver, t_cfg_db_ctxt.wversion_);
                 ret = HAL_RET_ERR;
-                HAL_ASSERT_GOTO((ret == HAL_RET_OK), error);
-                goto error;
+                HAL_ASSERT_GOTO((ret == HAL_RET_OK), end);
             } else if ((objs_[i].obj != NULL) &&
                        (objs_[i].ver == t_cfg_db_ctxt.wversion_)) {
                 // we just added this object and trying to delete from the
@@ -326,7 +325,7 @@ hal_handle::del_obj(void *obj, hal_cfg_del_cb_t del_cb)
                 objs_[i].ver = HAL_CFG_VER_NONE;
                 objs_[i].obj = NULL;
                 // we still need to free the handle eventually
-                goto done;
+                goto end;
             }
         } else {
             // in single-writer scheme we can "break" here but to support
@@ -346,14 +345,15 @@ hal_handle::del_obj(void *obj, hal_cfg_del_cb_t del_cb)
         objs_[free_slot].valid = TRUE;
     }
 
-done:
+end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
 
     // add an entry into cfg db's delete object cache
     g_hal_state->cfg_db()->add_obj_to_del_cache(this, obj, del_cb);
-
-error:
-
-    HAL_SPINLOCK_UNLOCK(&slock_);
     return ret;
 }
 

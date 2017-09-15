@@ -13,7 +13,7 @@ typedef struct dllist_ctxt_s dllist_ctxt_t;
 struct dllist_ctxt_s {
     dllist_ctxt_t    *prev;
     dllist_ctxt_t    *next;
-    dllist_ctxt_s(): prev(this), next(this){}
+    dllist_ctxt_s() : prev(this), next(this) {}
 } __PACK__;
 
 // reset the link information

@@ -1,4 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_CFG_HPP__
 #define __HAL_CFG_HPP__
 
@@ -48,6 +49,24 @@ enum {
     HAL_THREAD_ID_FTE_MAX    = 4,
     HAL_THREAD_ID_ASIC_RW    = 5,
     HAL_THREAD_ID_MAX        = 6,
+};
+
+//------------------------------------------------------------------------------
+// HAL config object identifiers
+//------------------------------------------------------------------------------
+enum {
+    HAL_OBJ_ID_NONE,
+    HAL_OBJ_ID_TENANT,
+    HAL_OBJ_ID_SECURITY_PROFILE,
+    HAL_OBJ_ID_L2SEG,
+    HAL_OBJ_ID_NETWORK,
+    HAL_OBJ_ID_INTERFACE,
+    HAL_OBJ_ID_LIF,
+    HAL_OBJ_ID_ENDPOINT,
+    HAL_OBJ_ID_SESSION,
+    HAL_OBJ_ID_ACL,
+
+    HAL_OBJ_ID_MAX
 };
 
 }    // namespace hal

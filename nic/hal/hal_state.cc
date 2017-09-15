@@ -40,6 +40,7 @@ bool
 hal_cfg_db::init(void)
 {
     HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    HAL_SPINLOCK_INIT(&del_cache_slock_, PTHREAD_PROCESS_PRIVATE);
 
     // initialize tenant related data structures
     tenant_id_ht_ = ht::factory(HAL_MAX_VRFS,
@@ -404,6 +405,7 @@ hal_cfg_db::factory(void)
 hal_cfg_db::~hal_cfg_db()
 {
     HAL_SPINLOCK_DESTROY(&slock_);
+    HAL_SPINLOCK_DESTROY(&del_cache_slock_);
 
     tenant_id_ht_ ? delete tenant_id_ht_ : HAL_NOP;
     tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
@@ -609,18 +611,27 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
 // mainly for debugging and is not intended to make any decisions. For proper
 // use of this API, make sure cfg db is locked so there are no synchronization
 // issues
-// TODO: it looks like this is fundamentally flawed !!!
 //------------------------------------------------------------------------------
 bool
 hal_cfg_db::is_cfg_ver_in_use(cfg_version_t ver)
 {
-    uint32_t    i;
+    uint32_t         i;
+    cfg_version_t    min_ver = HAL_CFG_VER_NONE;
 
     for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
-        if (cfg_ver_in_use_[i].valid && (ver <= cfg_ver_in_use_[i].ver)) {
-            return true;
+        if (cfg_ver_in_use_[i].valid) {
+            if (min_ver != HAL_CFG_VER_NONE) {
+                min_ver = cfg_ver_in_use_[i].ver;
+            } else if (cfg_ver_in_use_[i].ver < min_ver) {
+                min_ver = cfg_ver_in_use_[i].ver;
+            }
         }
     }
+
+    if (ver < min_ver) {
+        return true;
+    }
+
     return false;
 }
 
@@ -634,15 +645,15 @@ hal_cfg_db::add_obj_to_del_cache(hal_handle *handle, void *obj,
 {
     del_cache_entry_t    *entry;
 
-    HAL_SPINLOCK_LOCK(&slock_);
     entry = (del_cache_entry_t *)
         g_hal_state->hal_del_cache_entry_slab()->alloc();
     HAL_ASSERT_RETURN((entry != NULL), HAL_RET_OOM);
     entry->handle = handle;
     entry->obj = obj;
     entry->del_cb = del_cb;
+    HAL_SPINLOCK_LOCK(&del_cache_slock_);
     utils::dllist_add(&del_cache_list_head_, &entry->dllist_ctxt);
-    HAL_SPINLOCK_UNLOCK(&slock_);
+    HAL_SPINLOCK_UNLOCK(&del_cache_slock_);
 
     return HAL_RET_OK;
 }
@@ -739,11 +750,19 @@ end:
 
 //------------------------------------------------------------------------------
 // walk the delete object cache and purge any objects that can be purged
-// TODO: will add this later
 //------------------------------------------------------------------------------
 void
 hal_cfg_db::process_del_cache(void)
 {
+    dllist_ctxt_t        *curr, *next;
+    del_cache_entry_t    *entry;
+
+    HAL_SPINLOCK_LOCK(&del_cache_slock_);
+    dllist_for_each_safe(curr, next, &del_cache_list_head_) {
+        entry = dllist_entry(curr, del_cache_entry_t, dllist_ctxt);
+        process_del_cache_entry(entry);
+    }
+    HAL_SPINLOCK_UNLOCK(&del_cache_slock_);
 }
 
 //------------------------------------------------------------------------------
