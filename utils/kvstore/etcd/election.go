@@ -95,16 +95,20 @@ func (e *etcdStore) newElection(ctx context.Context, name string, id string, ttl
 
 // run starts the election and handles failures and restarts.
 func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
+	defer close(el.outCh)
 	for {
 		el.Lock()
 		if !el.enabled {
 			el.Unlock()
 			return
 		}
+
 		// This code handles ctx.cancel() before creation of session.
 		select {
 		case <-ctx.Done():
 			log.Infof("Election(%v:%v): canceled", el.id, el.name)
+			el.Unlock()
+			el.Stop()
 			return
 		default:
 		}
@@ -144,7 +148,6 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 		obsCh := el.election.Observe(el.ctx)
 
 		foundErr := false
-		stopped := false
 
 		go el.attempt(errCh)
 
@@ -153,7 +156,9 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 			case <-ctx.Done():
 				// User called ctx.cancel().
 				log.Infof("Election(%v:%v): canceled", el.id, el.name)
-				stopped = true
+				// User invoked cancel on supplied context.
+				el.Stop()
+				return
 			case <-errCh:
 				// Campaign returned an error.
 				foundErr = true
@@ -165,6 +170,12 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 				if !ok {
 					log.Errorf("Election(%v:%v): observe with lease %v failed with error (restarting)", el.id, el.name, el.leaseID)
 					foundErr = true
+					el.Lock()
+					if el.session != nil {
+						el.session.Close()
+						el.session = nil
+					}
+					el.Unlock()
 					break
 				}
 
@@ -193,8 +204,11 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 					el.sendEvent(kvstore.Elected, leader)
 				}
 			}
-			if foundErr || stopped {
-				el.Stop()
+			if !el.enabled {
+				// User invoked Stop on election. cleanup already happened in Stop.
+				return
+			}
+			if foundErr {
 				el.Lock()
 				wasLeader := el.leader == el.id
 				el.leader = ""
@@ -206,9 +220,6 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 				}
 				break
 			}
-		}
-		if stopped {
-			return
 		}
 		leaseID = clientv3.NoLease
 	}
