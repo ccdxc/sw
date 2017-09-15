@@ -30,7 +30,7 @@
                 ".cc"
             ],
             "build_cmd": "./build_model.sh --coverage && cd model_sim/build && make coverage",
-            "clean_cmd": "./build_model.sh --clean && cd modek_sim/build  && make clean",
+            "clean_cmd": "./build_model.sh --clean && cd model_sim/build  && make clean",
             "remove_files": [
                 "/usr/include/*",
                 "/usr/local/*"
