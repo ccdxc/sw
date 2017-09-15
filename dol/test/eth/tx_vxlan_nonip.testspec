@@ -1,0 +1,91 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://type=TENANT
+        segment : filter://fabencap=VXLAN
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://type=TENANT
+        segment : filter://fabencap=VXLAN
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=MAC
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE_PKT    # Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+                type    : ref://testcase/config/flow/ethertype
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+
+    - packet:
+        id          : IN_PKT    # Input packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+
+    - packet:
+        id          : EXP_PKT    # Expected packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            outereth    :
+                src     : ref://testcase/config/dst/endpoint/intf/macaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/dst/endpoint/intf/ltep
+                dst     : ref://testcase/config/dst/endpoint/intf/rtep
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : ref://testcase/config/flow/eg_qos/cos
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=IN_PKT/size
+           data : ref://testcase/packets/id=IN_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        fields:
+            upd : 3
+
+expect:
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetL2UcExpectedPacket
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+

@@ -1651,3 +1651,58 @@ modules:
             - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
               srcseg  : filter://fabencap=VXLAN
               dstseg  : filter://fabencap=VLAN
+
+
+    - module:
+        name    : ETH_TX_VXLAN # L2UC_IP VXLAN cases
+        enable  : True
+        package : test.eth
+        module  : ethvxlan
+        spec    : tx_vxlan.testspec
+        ignore  : False
+        iterate:
+            # Tagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+
+    - module:
+        name    : ETH_TX_VXLAN_ARP_RARP
+        enable  : True
+        package : test.eth
+        module  : ethvxlan
+        spec    : tx_vxlan_arp.testspec
+        ignore  : False
+        iterate :
+            - type      : ARP_REQ_UC
+            - type      : ARP_RESP
+            - type      : RARP_REQ_UC
+            - type      : RARP_RESP
+
+    - module:
+        name    : ETH_TX_VXLAN_L2UC_NONIP
+        enable  : True
+        package : test.eth
+        module  : ethvxlan
+        spec    : tx_vxlan_nonip.testspec
+        ignore  : False
+
+    - module:
+        name    : ETH_TX_VXLAN_L3UC # L3UC_IP cases
+        enable  : True
+        package : test.eth
+        module  : ethvxlan
+        spec    : tx_vxlan_l3.testspec
+        ignore  : False
+        iterate:
+            # Tagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+

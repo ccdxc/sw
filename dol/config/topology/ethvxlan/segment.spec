@@ -4,6 +4,7 @@ meta:
 
 type        : tenant
 native      : False
+fabencap    : vxlan
 broadcast   : drop
 multicast   : drop
 l4lb        : False

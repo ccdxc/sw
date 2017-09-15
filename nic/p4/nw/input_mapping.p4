@@ -259,8 +259,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     // update packet length based on tm_iport
     if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
-                  P4PLUS_TO_P4_HDR_SZ));
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ));
     } else {
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
                  CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
