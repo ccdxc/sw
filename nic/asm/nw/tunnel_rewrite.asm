@@ -227,6 +227,8 @@ encap_mpls:
 
 .align
 encap_vlan:
+  add         r7, k.control_metadata_packet_len, 4
+  phvwr       p.control_metadata_packet_len, r7
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
   phvwr       p.vlan_tag_vid, k.rewrite_metadata_tunnel_vnid
   phvwr       p.vlan_tag_valid, 1

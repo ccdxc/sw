@@ -176,6 +176,7 @@ action f_encap_vlan(vlan_id, ethertype) {
 
 action encap_vlan() {
     f_encap_vlan(rewrite_metadata.tunnel_vnid, ethernet.etherType);
+    add(control_metadata.packet_len, control_metadata.packet_len, 4);
 }
 
 /*****************************************************************************/
