@@ -30,9 +30,9 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req:
     addi r2, r0, esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_out_desc 
     srl r2, r2, 6
     phvwr p.common_te1_phv_table_pc, r2 
-    add r1, r0, d.brq_in_addr
+    add r1, r0, d.brq_out_addr
     addi r1, r1, 64
-    phvwr  p.common_te1_phv_table_addr, d.brq_out_addr
+    phvwr  p.common_te1_phv_table_addr, r1 
 
     phvwri p.app_header_table2_valid, 1
     phvwri p.common_te2_phv_table_lock_en, 1
