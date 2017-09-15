@@ -265,6 +265,10 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
                  CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
     }
+    if (recirc_header.valid == TRUE) {
+        subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
+                 P4_RECIRC_HDR_SZ);
+    }
     modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 

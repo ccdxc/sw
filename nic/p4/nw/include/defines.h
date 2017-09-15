@@ -386,6 +386,7 @@
 #define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_CPU
 
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+#define P4_RECIRC_HDR_SZ               5
 
 /*****************************************************************************/
 /* P4 to P4+ header size constants (in bytes)                                */

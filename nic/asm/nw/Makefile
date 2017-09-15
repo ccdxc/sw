@@ -1,7 +1,6 @@
-
 TOPDIR = ../..
-CUSTOM = all
-CUSTOM_CLEAN = clean
+CUSTOM = asm_all
+CUSTOM_CLEAN = asm_clean
 
 include $(TOPDIR)/make/Makefile.inc
 
@@ -13,7 +12,7 @@ SRC_DIR = .
 CAPAS_BIN = ../../asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
-all: deps asm
+asm_all: deps asm
 
 deps:
 
@@ -103,6 +102,5 @@ $(TMP_FILES): %.x: %.ctl
 
 gtest: $(TMP_FILES)
 
-clean:
+asm_clean:
 	@rm -fR $(OBJ_DIR)/*.bin
-

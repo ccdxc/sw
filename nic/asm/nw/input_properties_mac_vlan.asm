@@ -9,8 +9,8 @@ struct phv_                        p;
 %%
 
 input_properties_mac_vlan:
-  seq         c2, k.recirc_header_valid, TRUE
-  phvwr.c2    p.control_metadata_recirc_reason, k.recirc_header_reason
+  seq         c3, k.recirc_header_valid, TRUE
+  phvwr.c3    p.control_metadata_recirc_reason, k.recirc_header_reason
 
   seq         c2, k.p4plus_to_p4_valid, TRUE
   phvwr.c2    p.flow_lkp_metadata_lkp_inst, \
@@ -22,6 +22,7 @@ input_properties_mac_vlan:
                        P4PLUS_TO_P4_HDR_SZ), CAPRI_GLOBAL_INTRINSIC_HDR_SZ
   sub         r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
                      capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
+  sub.c3      r1, r1, P4_RECIRC_HDR_SZ
   phvwr       p.control_metadata_packet_len, r1
   phvwr       p.capri_p4_intrinsic_packet_len, r1
 

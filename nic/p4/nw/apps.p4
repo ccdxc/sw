@@ -147,7 +147,6 @@ action p4plus_app_cpu() {
     add_header(p4_to_p4plus_cpu_pkt);
     modify_field(p4_to_p4plus_cpu.p4plus_app_id,
                  control_metadata.p4plus_app_id);
-    
     modify_field(p4_to_p4plus_cpu.table0_valid, TRUE);
 
     modify_field(scratch_metadata.cpu_flags, 0);
@@ -183,7 +182,7 @@ action p4plus_app_cpu() {
         bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
                CPU_FLAGS_INNER_IPV6_VALID);
     }
-    
+
     if (inner_udp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.l4_sport, inner_udp.srcPort);
         modify_field(p4_to_p4plus_cpu.l4_dport, inner_udp.dstPort);
