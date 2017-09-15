@@ -53,21 +53,22 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
   bzero(q_state, sizeof(q_state));
 
-  if (!pgm_bin) {
-    printf("Input error\n");
-    return -1;
-  }
-
   if (hal_if::get_lif_qstate_addr(dst_lif, dst_qtype, dst_qid, &dst_qaddr) < 0) {
     printf("Failed to get lif_qstate addr \n");
     return -1;
   }
 
-  if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
-    printf("Failed to get base addr of %s\n", pgm_bin);
-    return -1;
+  // If no program binary name supplied => no need to set next_pc as 
+  // it is a host queue
+  if (pgm_bin) {
+    if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
+      printf("Failed to get base addr of %s\n", pgm_bin);
+      return -1;
+    }
+    next_pc = next_pc >> 6;
+  } else {
+    next_pc = 0;
   }
-  next_pc = next_pc >> 6;
 
   if (hal_if::get_pgm_label_offset("txdma_stage0.bin", "storage_tx_stage0", &pc_offset) < 0) {
     printf("Failed to get pc offset for storage tx stage0\n");

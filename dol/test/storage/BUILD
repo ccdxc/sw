@@ -29,6 +29,8 @@ cc_library(
     srcs = [
         "tests.cc",
         "tests.hpp",
+        "queues.cc",
+        "queues.hpp",
         "nvme.hpp",
     ],
     deps = [

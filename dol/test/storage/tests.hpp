@@ -11,6 +11,8 @@ int test_run_nvme_pvm_admin_cmd();
 
 int test_run_nvme_pvm_read_cmd();
 
+int test_run_nvme_pvm_write_cmd();
+
 }  // namespace tests
 
 #endif

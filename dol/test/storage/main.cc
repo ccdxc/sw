@@ -13,7 +13,8 @@ struct {
   bool test_succeded;
 } test_suite[] = {
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
-  {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false}
+  {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false},
+  {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
 
   // Always last entry
   {0}
