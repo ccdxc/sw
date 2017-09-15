@@ -23,9 +23,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     addi r3, r3, IPSEC_SALT_HEADROOM
     phvwr p.barco_req_brq_hdr_size, r3 
 
-    addi r2, r0, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req[33:6] 
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage2_barco_req_addr 

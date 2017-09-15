@@ -12,9 +12,7 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_allocate_input_desc_index:
     phvwri p.app_header_table0_valid, 1
-    addi r1, r0, esp_ipv4_tunnel_h2n_update_input_desc_aol 
-    srl r1, r1, 6
-    phvwr p.common_te0_phv_table_pc, r1 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_update_input_desc_aol[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 1
     //sll r1, d.in_desc_index, DESC_SHIFT_WIDTH

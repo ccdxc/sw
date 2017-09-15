@@ -13,10 +13,7 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
     phvwri p.app_header_table0_valid, 1
-    //revisit when hi-word, low-word comes.
-    addi r1, r0, esp_ipv4_tunnel_h2n_allocate_input_desc_index 
-    srl r1, r1, 6
-    phvwr p.common_te0_phv_table_pc, r1 
+    phvwr p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_desc_index[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
     phvwri p.common_te0_phv_table_lock_en, 0
     sll r1, d.in_desc_ring_index, 3 

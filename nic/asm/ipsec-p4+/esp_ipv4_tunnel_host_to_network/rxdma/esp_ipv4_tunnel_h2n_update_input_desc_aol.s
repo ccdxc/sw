@@ -16,9 +16,7 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     phvwri p.app_header_table0_valid, 1
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
-    addi r2, r0, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 0
     add r3, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
