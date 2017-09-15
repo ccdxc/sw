@@ -129,7 +129,7 @@ dma_cmd_enc_brq_slot1:
 	/* Fill the barco request */
 
     phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_input_list_address)
-    phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_application_tag_1)
+    phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_application_tag)
 
     phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd4_dma_cmd_eop, 0
@@ -140,8 +140,8 @@ dma_cmd_enc_brq_slot2:
     addi        r1, r1, 64
 	phvwr		p.dma_cmd5_dma_cmd_addr,r1
 
-    phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_application_tag_0)
-    phvwri		p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_rsvd)
+    phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_sector_num)
+    phvwri		p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_doorbell_data)
 
     phvwri		p.dma_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd5_dma_cmd_eop, 0
