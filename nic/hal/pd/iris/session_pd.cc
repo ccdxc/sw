@@ -503,8 +503,8 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
-                                pd_flow_t *flow_pd)
+p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
+                                pd_l2seg_t *l2seg_pd, pd_flow_t *flow_pd)
 {
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
@@ -512,53 +512,54 @@ p4pd_add_flow_hash_table_entry (flow_cfg_t *flow, pd_l2seg_t *l2seg_pd,
     fmt::MemoryWriter src_buf, dst_buf;
 
     // initialize all the key fields of flow
-    if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {
-        memcpy(key.flow_lkp_metadata_lkp_src, flow->key.sip.v6_addr.addr8,
+    if (flow_key->flow_type == FLOW_TYPE_V4 || flow_key->flow_type == FLOW_TYPE_V6) {
+        memcpy(key.flow_lkp_metadata_lkp_src, flow_key->sip.v6_addr.addr8,
                 IP6_ADDR8_LEN);
-        memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dip.v6_addr.addr8,
+        memcpy(key.flow_lkp_metadata_lkp_dst, flow_key->dip.v6_addr.addr8,
                 IP6_ADDR8_LEN);
     } else {
-        memcpy(key.flow_lkp_metadata_lkp_src, flow->key.smac, sizeof(flow->key.smac)); 
-        memcpy(key.flow_lkp_metadata_lkp_dst, flow->key.dmac, sizeof(flow->key.dmac)); 
+        memcpy(key.flow_lkp_metadata_lkp_src, flow_key->smac, sizeof(flow_key->smac)); 
+        memcpy(key.flow_lkp_metadata_lkp_dst, flow_key->dmac, sizeof(flow_key->dmac)); 
     }
 
-    if (flow->key.flow_type == FLOW_TYPE_V6) {
+    if (flow_key->flow_type == FLOW_TYPE_V6) {
         memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
         memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
-    } else if (flow->key.flow_type == FLOW_TYPE_L2) {
+    } else if (flow_key->flow_type == FLOW_TYPE_L2) {
         memrev(key.flow_lkp_metadata_lkp_src, 6);
         memrev(key.flow_lkp_metadata_lkp_dst, 6);
     }
 
-    if (flow->key.flow_type == FLOW_TYPE_V4 || flow->key.flow_type == FLOW_TYPE_V6) {
-        if ((flow->key.proto == IP_PROTO_TCP) || (flow->key.proto == IP_PROTO_UDP)) {
-            key.flow_lkp_metadata_lkp_sport = flow->key.sport;
-            key.flow_lkp_metadata_lkp_dport = flow->key.dport;
-        } else if ((flow->key.proto == IP_PROTO_ICMP) ||
-                (flow->key.proto == IP_PROTO_ICMPV6)) {
+    if (flow_key->flow_type == FLOW_TYPE_V4 || flow_key->flow_type == FLOW_TYPE_V6) {
+        if ((flow_key->proto == IP_PROTO_TCP) || (flow_key->proto == IP_PROTO_UDP)) {
+            key.flow_lkp_metadata_lkp_sport = flow_key->sport;
+            key.flow_lkp_metadata_lkp_dport = flow_key->dport;
+        } else if ((flow_key->proto == IP_PROTO_ICMP) ||
+                (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Revisit: Swapped sport and dport. This is what matches what 
             //          is coded in P4. 
-            key.flow_lkp_metadata_lkp_dport = flow->key.icmp_id;
+            key.flow_lkp_metadata_lkp_dport = flow_key->icmp_id;
             key.flow_lkp_metadata_lkp_sport =
-                ((flow->key.icmp_type << 8) | flow->key.icmp_code);
+                ((flow_key->icmp_type << 8) | flow_key->icmp_code);
         }
     } else {
         // For FLOW_TYPE_L2
-        key.flow_lkp_metadata_lkp_sport = flow->key.ether_type;
+        key.flow_lkp_metadata_lkp_sport = flow_key->ether_type;
     }
-    if (flow->key.flow_type == FLOW_TYPE_L2) {
+    if (flow_key->flow_type == FLOW_TYPE_L2) {
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
-    } else if (flow->key.flow_type == FLOW_TYPE_V4) {
+    } else if (flow_key->flow_type == FLOW_TYPE_V4) {
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
-    } else if (flow->key.flow_type == FLOW_TYPE_V6) {
+    } else if (flow_key->flow_type == FLOW_TYPE_V6) {
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
     } else {
         // TODO: for now !!
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_NONE;
     }
     key.flow_lkp_metadata_lkp_vrf = l2seg_pd->l2seg_ten_hw_id;
-    key.flow_lkp_metadata_lkp_proto = flow->key.proto;
-    key.flow_lkp_metadata_lkp_dir = flow->key.dir;
+    key.flow_lkp_metadata_lkp_proto = flow_key->proto;
+    key.flow_lkp_metadata_lkp_dir = flow_key->dir;
+    key.flow_lkp_metadata_lkp_inst = lkp_inst;
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = FALSE;    // TODO: when analytics APIs are ready,
@@ -603,7 +604,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     hal_ret_t               ret;
     session_t               *session = (session_t *)session_pd->session;
 
-    ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
+    ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
+                                         session->iflow->pgm_attrs.lkp_inst,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                          &session_pd->iflow);
     if (ret == HAL_RET_FLOW_COLL) {
@@ -618,18 +620,25 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     }
 
     if (session_pd->iflow_aug_valid) {
-        // TODO: key has to involve service done? populate in flow_attrs
-        ret = p4pd_add_flow_hash_table_entry(&session->iflow->config,
-                (pd_l2seg_t *)(session->iflow->dl2seg->pd),
-                &session_pd->iflow);
+        ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
+                                             session->iflow->assoc_flow->pgm_attrs.lkp_inst,
+                                             (pd_l2seg_t *)(session->iflow->dl2seg->pd),
+                                             &session_pd->iflow_aug);
+        if (ret == HAL_RET_FLOW_COLL) {
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+            }
+            HAL_TRACE_DEBUG("RFlow Collision!");
+            ret = HAL_RET_OK;
+        }
         if (ret != HAL_RET_OK) {
             return ret;
         }
     }
     if (session_pd->rflow_valid) {
-        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config,
+        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
+                                             session->rflow->pgm_attrs.lkp_inst,
                                              (pd_l2seg_t *)session->rflow->sl2seg->pd,
-                                             // (pd_l2seg_t *)args->l2seg_d->pd,
                                              &session_pd->rflow);
         if (ret == HAL_RET_FLOW_COLL) {
             if (args->rsp) {
@@ -643,10 +652,17 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         }
         if (session_pd->rflow_aug_valid) {
             // TODO: key has to involve service done? populate in flow_attrs
-            ret = p4pd_add_flow_hash_table_entry(&session->rflow->config,
-                    (pd_l2seg_t *)session->rflow->dl2seg->pd,
-                    // (pd_l2seg_t *)args->l2seg_d->pd,
-                    &session_pd->rflow);
+            ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
+                                                 session->rflow->assoc_flow->pgm_attrs.lkp_inst,
+                                                 (pd_l2seg_t *)session->rflow->dl2seg->pd,
+                                                 &session_pd->rflow_aug);
+            if (ret == HAL_RET_FLOW_COLL) {
+                if (args->rsp) {
+                    args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+                }
+                HAL_TRACE_DEBUG("RFlow Collision!");
+                ret = HAL_RET_OK;
+            }
             if (ret != HAL_RET_OK) {
                 p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
             }

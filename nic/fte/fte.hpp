@@ -8,11 +8,13 @@ namespace fte {
 // FTE features
 typedef uint16_t feature_id_t;
 
-const feature_id_t FTE_FEATURE_NULL      = 0;
-const feature_id_t FTE_FEATURE_FWDING    = 1;
-const feature_id_t FTE_FEATURE_DFW       = 2;
-const feature_id_t FTE_FEATURE_LB        = 3;
-const feature_id_t FTE_FEATURE_TCP_PROXY = 4;
+const feature_id_t FTE_FEATURE_NULL         = 0;
+const feature_id_t FTE_FEATURE_STAGE_MARKER = 1;
+const feature_id_t FTE_FEATURE_FWDING       = 2;
+const feature_id_t FTE_FEATURE_TUNNEL        = 3;
+const feature_id_t FTE_FEATURE_DFW          = 4;
+const feature_id_t FTE_FEATURE_LB           = 5;
+const feature_id_t FTE_FEATURE_TCP_PROXY    = 6;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline
@@ -34,9 +36,12 @@ hal_ret_t register_feature(const feature_id_t& fid,
                            const exec_handler_t &exec_handler,
                            const commit_handler_t &commit_handler = nullptr);
 
-// FTE Pipeline
+//  FTE Pipeline 
 hal_ret_t register_pipeline(const std::string& name, const lifqid_t &lifq,
-                            feature_id_t features[], uint16_t num_features,
+                            feature_id_t features_outbound[],
+                            uint16_t num_features_outbound,
+                            feature_id_t features_inbound[] = {},
+                            uint16_t num_features_inbound = 0,
                             const lifqid_t &lifq_mask = lifqid_t{0x7FF, 0x7, 0xFFFFFF});
 
 // Selects a pipeline and invokes features in that pipeline

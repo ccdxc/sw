@@ -57,13 +57,13 @@ conn_tracking_configured(fte::ctx_t &ctx)
 fte::pipeline_action_t
 dfw_exec(fte::ctx_t& ctx)
 {
-    HAL_TRACE_DEBUG("Invoking firewall feature");
+    hal_ret_t ret;
 
+
+    // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
-
     flowupd.action = pol_check_sg_policy(ctx);
-    ctx.update_flow(hal::FLOW_ROLE_INITIATOR, flowupd);
-    ctx.update_flow(hal::FLOW_ROLE_RESPONDER, flowupd);
+    ctx.update_flow(flowupd);
 
     // connection tracking
     if (!conn_tracking_configured(ctx)) {
@@ -72,25 +72,29 @@ dfw_exec(fte::ctx_t& ctx)
 
     //iflow
     flowupd = {type: fte::FLOWUPD_FLOW_STATE};
-    if (ctx.protobuf_request()) {
-        extract_session_state_from_spec(&flowupd.flow_state,
-                                        ctx.sess_spec()->initiator_flow().flow_data());
-        flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
+
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+        if (ctx.protobuf_request()) {
+            extract_session_state_from_spec(&flowupd.flow_state,
+                                            ctx.sess_spec()->initiator_flow().flow_data());
+            flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
+        } else {
+            flowupd.flow_state.state = session::FLOW_TCP_STATE_TCP_SYN_RCVD;
+        }
     } else {
-        flowupd.flow_state.state = session::FLOW_TCP_STATE_TCP_SYN_RCVD;
+        if (ctx.protobuf_request()) {
+            extract_session_state_from_spec(&flowupd.flow_state,
+                                            ctx.sess_spec()->responder_flow().flow_data());
+        } else {
+            flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
+        }
     }
 
-    ctx.update_flow(hal::FLOW_ROLE_INITIATOR, flowupd); 
-
-    //rflow
-    flowupd = {type: fte::FLOWUPD_FLOW_STATE};
-    if (ctx.protobuf_request()) {
-        extract_session_state_from_spec(&flowupd.flow_state,
-                                        ctx.sess_spec()->responder_flow().flow_data());
-    } else {
-        flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
+    ret = ctx.update_flow(flowupd); 
+    if (ret != HAL_RET_OK) {
+        ctx.set_feature_status(ret);
+        return fte::PIPELINE_END; 
     }
-    ctx.update_flow(hal::FLOW_ROLE_RESPONDER, flowupd);
 
     return fte::PIPELINE_CONTINUE;
 }

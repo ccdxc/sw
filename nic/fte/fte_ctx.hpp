@@ -301,7 +301,7 @@ public:
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[]);
 
-    hal_ret_t update_flow(hal::flow_role_t role, const flow_update_t& flowupd);
+    hal_ret_t update_flow(const flow_update_t& flowupd);
 
     hal_ret_t update_gft();
 
@@ -310,6 +310,10 @@ public:
 
     // direction of the current pkt
     hal::flow_direction_t direction() {return (hal::flow_direction_t)(key_.dir); };
+
+    // role of the current flow being processed
+    hal::flow_role_t role() const { return role_; }
+    void set_role(hal::flow_role_t role) { role_ = role; }
 
     // flow key of the current pkts flow
     const hal::flow_key_t& key() const { return key_; }
@@ -327,11 +331,8 @@ public:
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
 
-    uint8_t stage() const { return stage_; }
-    hal_ret_t advance_to_next_stage() {
-        HAL_ASSERT_RETURN(stage_ + 1 >= MAX_STAGES, HAL_RET_INVALID_OP);
-        stage_++;
-    }
+    uint8_t stage() const { return role_ == hal::FLOW_ROLE_INITIATOR ? istage_ : rstage_; }
+    hal_ret_t advance_to_next_stage();
 
     // name of the feature being executed
     const char* feature_name() const { return feature_name_; } 
@@ -368,7 +369,10 @@ private:
 
     bool                  drop_;           // Drop the packet
     hal::session_t        *session_;
-    uint8_t               stage_;          // current stage
+
+    hal::flow_role_t      role_;            // current flow role
+    uint8_t               istage_;          // current iflow stage
+    uint8_t               rstage_;          // current rflow stage
     bool                  valid_rflow_;
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 

@@ -5,8 +5,7 @@ namespace hal {
 namespace net {
 
 static inline hal_ret_t
-update_flow_from_nat_spec(fte::ctx_t& ctx, hal::flow_role_t role,
-                          const session::FlowInfo& flow_info)
+update_flow_from_nat_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
     ipv6_addr_t addr;
@@ -50,7 +49,7 @@ update_flow_from_nat_spec(fte::ctx_t& ctx, hal::flow_role_t role,
         }
     }
 
-    return ctx.update_flow(role, flowupd);
+    return ctx.update_flow(flowupd);
 }
 
 l4lb_service_entry_t *
@@ -90,30 +89,29 @@ lb_exec(fte::ctx_t& ctx)
     hal_ret_t ret;
     l4lb_service_entry_t  *l4lb;
 
-    // rewrite VIP service mac as rflow smac 
-    l4lb = lookup_l4lb_service(ctx.key());
-    if (l4lb) {
-        fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
-        HEADER_SET_FLD(flowupd.header_rewrite, ether, smac,
-                       *(ether_addr *)l4lb->serv_mac_addr);
-        ret = ctx.update_flow(hal::FLOW_ROLE_RESPONDER, flowupd);
-        if (ret != HAL_RET_OK) {
-            ctx.set_feature_status(ret);
-            return fte::PIPELINE_END; 
+    // rewrite VIP service mac as rflow smac
+    if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+        l4lb = lookup_l4lb_service(ctx.key());
+        if (l4lb) {
+            fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac,
+                           *(ether_addr *)l4lb->serv_mac_addr);
+            ret = ctx.update_flow(flowupd);
+            if (ret != HAL_RET_OK) {
+                ctx.set_feature_status(ret);
+                return fte::PIPELINE_END; 
+            }
         }
     }
 
     if (ctx.protobuf_request()) {
-        ret = update_flow_from_nat_spec(ctx, hal::FLOW_ROLE_INITIATOR,
-                       ctx.sess_spec()->initiator_flow().flow_data().flow_info());
-        if (ret != HAL_RET_OK) {
-            ctx.set_feature_status(ret);
-            return fte::PIPELINE_END; 
+        if (ctx.role() == hal::FLOW_ROLE_INITIATOR){
+            ret = update_flow_from_nat_spec(ctx, 
+                     ctx.sess_spec()->initiator_flow().flow_data().flow_info());
+        } else {
+            ret = update_flow_from_nat_spec(ctx, 
+                     ctx.sess_spec()->responder_flow().flow_data().flow_info());
         }
-        
-        
-        ret = update_flow_from_nat_spec(ctx, hal::FLOW_ROLE_RESPONDER,
-                       ctx.sess_spec()->responder_flow().flow_data().flow_info());
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);
             return fte::PIPELINE_END; 

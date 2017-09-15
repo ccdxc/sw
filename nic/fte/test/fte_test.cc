@@ -179,15 +179,15 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
 
     // p2 - {1, 1, *} f2
     features = {2};
-    register_pipeline("p2", {1,1,0}, &features[0], features.size(), {0x7FF, 0x7, 0});
+    register_pipeline("p2", {1,1,0}, &features[0], features.size(), {}, 0, {0x7FF, 0x7, 0});
 
     // p3 - {1, *, *} f3
     features = {3};
-    register_pipeline("p3", {1,0,0}, &features[0], features.size(), {0x7FF, 0, 0});
+    register_pipeline("p3", {1,0,0}, &features[0], features.size(), {}, 0, {0x7FF, 0, 0});
 
     // p4 - {*, *, *} f4
     features  = {4};
-    register_pipeline("p4", {0,0,0}, &features[0], features.size(), {0, 0, 0});
+    register_pipeline("p4", {0,0,0}, &features[0], features.size(), {}, 0, {0, 0, 0});
 
     ctx_t ctx;
 

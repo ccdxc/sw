@@ -13,6 +13,8 @@ LCXXFLAGS = \
 
 SOURCES = \
 	net_plugin.cc \
+	net_stage.cc \
+	net_tunnel.cc \
 	net_fwding.cc \
 	net_dfw.cc \
 	net_lb.cc \

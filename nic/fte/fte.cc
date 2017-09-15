@@ -2,6 +2,7 @@
 
 #include "fte.hpp"
 #include "fte_flow.hpp"
+#include <defines.h>
 
 namespace fte {
 
@@ -82,7 +83,8 @@ struct pipeline_s
     lifqid_t lifq;
     lifqid_t lifq_mask;
     std::string name;
-    uint16_t num_features;
+    uint16_t num_features_outbound;
+    uint16_t num_features_inbound;
     feature_t *features[0];
 };
 
@@ -118,10 +120,10 @@ pipeline_lookup_(const lifqid_t& lifq)
 }
 
 static inline pipeline_action_t
-pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx)
+pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t end)
 {
     pipeline_action_t rc;
-    for (int i = 0; i < pipeline->num_features; i++) {
+    for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
 
         ctx.set_feature_name(feature->name.c_str());
@@ -140,7 +142,8 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx)
 
 hal_ret_t
 register_pipeline(const std::string& name, const lifqid_t& lifq,
-                  feature_id_t features[], uint16_t num_features,
+                  feature_id_t features_outbound[], uint16_t num_features_outbound,
+                  feature_id_t features_inbound[], uint16_t num_features_inbound,
                   const lifqid_t& lifq_mask)
 {
     pipeline_t *pipeline;
@@ -152,23 +155,36 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
         return HAL_RET_DUP_INS_FAIL;
     }
 
-    pipeline = pipeline_alloc_(num_features);
+    pipeline = pipeline_alloc_(num_features_outbound+num_features_inbound);
     pipeline->lifq = lifq;
     pipeline->lifq_mask = lifq_mask;
     pipeline->name = name;
-    pipeline->num_features = num_features;
 
     // Initialize feature blocks
-    for (int i = 0; i < num_features; i++) {
-        feature_t *feature = feature_lookup_(features[i]);
+    pipeline->num_features_outbound =num_features_outbound;
+    for (int i = 0; i < num_features_outbound; i++) {
+        feature_t *feature = feature_lookup_(features_outbound[i]);
         if (!feature) {
-            HAL_TRACE_ERR("fte: unknown feature-id {} in pipeline {} - skipping",
-                          features[i], name);
+            HAL_TRACE_ERR("fte: unknown feature-id {} in outbound pipeline {} - skipping",
+                          features_outbound[i], name);
             HAL_FREE(pipeline_t, pipeline);
             return HAL_RET_INVALID_ARG;
         }
-        HAL_TRACE_DEBUG("fte: pipeline feature {}/{}", name, feature->name);
+        HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, feature->name);
         pipeline->features[i] = feature;
+    }
+
+    pipeline->num_features_inbound =num_features_inbound;
+    for (int i = 0; i < num_features_inbound; i++) {
+        feature_t *feature = feature_lookup_(features_inbound[i]);
+        if (!feature) {
+            HAL_TRACE_ERR("fte: unknown feature-id {} in inbound pipeline {} - skipping",
+                          features_inbound[i], name);
+            HAL_FREE(pipeline_t, pipeline);
+            return HAL_RET_INVALID_ARG;
+        }
+        HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, feature->name);
+        pipeline->features[i+num_features_outbound] = feature;
     }
 
     // Add to global pipline list
@@ -180,22 +196,40 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
 static inline hal_ret_t
 pipeline_execute_(ctx_t &ctx)
 {
-    pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq());
-    if (!pipeline) {
-        HAL_TRACE_ERR("fte: pipeline not registered for lifq {} - ignoring packet", ctx.arm_lifq());
-        return HAL_RET_INVALID_ARG;
-    }
+    uint8_t iflow_start, iflow_end, rflow_start, rflow_end;
+    pipeline_action_t rc;
 
-    HAL_TRACE_DEBUG("fte: executing pipeline {} lifq={}", pipeline->name, pipeline->lifq);
+    do {
+        pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq());
+        if (!pipeline) {
+            HAL_TRACE_ERR("fte: pipeline not registered for lifq {} - ignoring packet",
+                          ctx.arm_lifq());
+            return HAL_RET_INVALID_ARG;
+        }
+        
+        HAL_TRACE_DEBUG("fte: executing pipeline {} lifq={} dir={}",
+                        pipeline->name, pipeline->lifq, ctx.direction());
 
-    // Invoke all feature handlers
-    pipeline_action_t rc = pipeline_invoke_exec_(pipeline, ctx);
-    if (rc != PIPELINE_RESTART) {
-        return ctx.feature_status();
-    }
+        iflow_start = 0;
+        iflow_end = rflow_start = pipeline->num_features_outbound;
+        rflow_end = pipeline->num_features_outbound + pipeline->num_features_inbound;
+        // Flip the feature list for network initiated
+        if (pipeline->num_features_inbound > 0 && ctx.direction() == FLOW_DIR_FROM_UPLINK) {
+            rflow_start = 0;
+            rflow_end = iflow_start = pipeline->num_features_outbound;
+            iflow_end = pipeline->num_features_outbound + pipeline->num_features_inbound;
+        }
+        
+        // Invoke all initiator feature handlers 
+        ctx.set_role(hal::FLOW_ROLE_INITIATOR);
+        rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
+        if (rc == PIPELINE_CONTINUE && ctx.valid_rflow()) {
+            ctx.set_role(hal::FLOW_ROLE_RESPONDER);
+            rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end);
+        }
+    } while (rc == PIPELINE_RESTART);
 
-    // Reexecute new pipeline (tail recursion)
-    return pipeline_execute_(ctx);
+    return ctx.feature_status();
 }
 
 hal_ret_t execute_pipeline(ctx_t &ctx)

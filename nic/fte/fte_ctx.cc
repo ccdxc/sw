@@ -246,12 +246,17 @@ hal_ret_t
 ctx_t::create_session()
 {
     hal::flow_key_t rkey = {};
+    hal::flow_key_t ikey = {};
     hal_ret_t ret;
 
     HAL_TRACE_DEBUG("fte: create session");
 
+    ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
-        iflow_[i]->set_key(key_);
+        if (i != 0) {
+            ikey.dir = 0;
+        }
+        iflow_[i]->set_key(ikey);
     }
 
     // read rkey from spec
@@ -297,6 +302,9 @@ ctx_t::create_session()
         rkey.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
             FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
         for (int i = 0; i < MAX_STAGES; i++) {
+            if (i != 0) {
+                rkey.dir = 0;
+            }
             rflow_[i]->set_key(rkey);
         }
     } 
@@ -333,16 +341,18 @@ ctx_t::update_gft()
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    for (uint8_t stage = 0; stage <= stage_; stage++) {
+    for (uint8_t stage = 0; stage <= istage_; stage++) {
         flow_t *iflow = iflow_[stage];
-        flow_t *rflow = rflow_[stage];
         hal::flow_cfg_t &iflow_cfg = iflow_cfg_list[stage];
-        hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& iflow_attrs = iflow_attrs_list[stage];
-        hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
 
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
+
+        // Set the lkp_inst for all stages except the first stage
+        if (stage != 0) {
+            iflow_attrs.lkp_inst = 1;
+        }
 
         // TODO(goli) fix tnnl_rw_idx lookup
         iflow_attrs.tnnl_rw_idx =
@@ -357,44 +367,57 @@ ctx_t::update_gft()
             session_state.iflow_state = iflow->flow_state();
         }
 
-        HAL_TRACE_DEBUG("fte::update_gft: iflow.{} key={} action={} smac_rw={} dmac-rw={} "
+        HAL_TRACE_DEBUG("fte::update_gft: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
-                        stage, iflow_cfg.key, iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
+                        stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_cfg.action,
+                        iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
                         iflow_attrs.lport, iflow_attrs.qid_en, iflow_attrs.qtype, iflow_attrs.qid,
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
                         iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_attrs.nat_sip,
                         iflow_attrs.nat_dip, iflow_attrs.nat_sport, iflow_attrs.nat_dport,
                         iflow_attrs.nat_type);
+    }
 
-        if (rflow) {
-            rflow->to_config(rflow_cfg, rflow_attrs);
-            rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
-            // TODO(goli) fix tnnl w_idx lookup
-            rflow_attrs.tnnl_rw_idx =
-                hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(sep_, rflow_attrs.tnnl_rw_act);
-            
-            session_args.rflow[stage] = &rflow_cfg;
-            session_args.rflow_attrs[stage] = &rflow_attrs;
-            
-            if (rflow->valid_flow_state()) {
-                session_state.rflow_state = rflow->flow_state();
-            }
-            
-            HAL_TRACE_DEBUG("fte::update_gft: rflow.{} key={} action={} smac_rw={} dmac-rw={} "
-                            "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
-                            "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                            "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
-                            stage, rflow_cfg.key, rflow_cfg.action, rflow_attrs.mac_sa_rewrite,
-                            rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
-                            rflow_attrs.lport, rflow_attrs.qid_en, rflow_attrs.qtype, rflow_attrs.qid,
-                            rflow_attrs.rw_act, rflow_attrs.rw_idx, rflow_attrs.tnnl_rw_act,
-                            rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_attrs.nat_sip,
-                            rflow_attrs.nat_dip, rflow_attrs.nat_sport, rflow_attrs.nat_dport,
-                            rflow_attrs.nat_type);
+
+    for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
+        flow_t *rflow = rflow_[stage];
+        hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
+        hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
+
+        rflow->to_config(rflow_cfg, rflow_attrs);
+        rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
+
+        // Set the lkp_inst for all stages except the first stage
+        if (stage != 0) {
+            rflow_attrs.lkp_inst = 1;
         }
+
+        // TODO(goli) fix tnnl w_idx lookup
+        rflow_attrs.tnnl_rw_idx =
+            hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(sep_, rflow_attrs.tnnl_rw_act);
+            
+        session_args.rflow[stage] = &rflow_cfg;
+        session_args.rflow_attrs[stage] = &rflow_attrs;
+            
+        if (rflow->valid_flow_state()) {
+            session_state.rflow_state = rflow->flow_state();
+        }
+            
+        HAL_TRACE_DEBUG("fte::update_gft: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
+                        "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
+                        "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
+                        stage, rflow_cfg.key, rflow_attrs.lkp_inst, rflow_cfg.action,
+                        rflow_attrs.mac_sa_rewrite,
+                        rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
+                        rflow_attrs.lport, rflow_attrs.qid_en, rflow_attrs.qtype, rflow_attrs.qid,
+                        rflow_attrs.rw_act, rflow_attrs.rw_idx, rflow_attrs.tnnl_rw_act,
+                        rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_attrs.nat_sip,
+                        rflow_attrs.nat_dip, rflow_attrs.nat_sport, rflow_attrs.nat_dport,
+                        rflow_attrs.nat_type);
     }
 
     session_args.tenant = tenant_;
@@ -450,7 +473,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
     HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
                    *(struct ether_addr *)hal::ep_get_mac_addr(dep));
-    ret = update_flow(role, flowupd);
+    ret = update_flow(flowupd);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -561,16 +584,16 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
 }
 
 hal_ret_t
-ctx_t::update_flow(hal::flow_role_t role, const flow_update_t& flowupd)
+ctx_t::update_flow(const flow_update_t& flowupd)
 {
     hal_ret_t ret;
 
     flow_t *flow;
 
-    if (role == hal::FLOW_ROLE_INITIATOR) {
-        flow = iflow_[stage_];
+    if (role_ == hal::FLOW_ROLE_INITIATOR) {
+        flow = iflow_[istage_];
     } else {
-        flow = rflow_[stage_];
+        flow = rflow_[rstage_];
     }
 
     if (!flow) {
@@ -584,46 +607,60 @@ ctx_t::update_flow(hal::flow_role_t role, const flow_update_t& flowupd)
             drop_ = true;
         }
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} action={}",
-                        role, feature_name_, ret, flowupd.action);
+                        role_, feature_name_, ret, flowupd.action);
         break;
 
     case FLOWUPD_HEADER_REWRITE:
         ret = flow->header_rewrite(flowupd.header_rewrite);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_rewrite={}",
-                        role, feature_name_, ret, flowupd.header_rewrite);
+                        role_, feature_name_, ret, flowupd.header_rewrite);
         if (ret == HAL_RET_OK) {
             // check if dep needs to be updated
-            ret = update_for_dnat(role, flowupd.header_rewrite);
+            ret = update_for_dnat(role_, flowupd.header_rewrite);
         }
         break;
 
     case FLOWUPD_HEADER_PUSH:
         ret = flow->header_push(flowupd.header_push);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_push={}",
-                        role, feature_name_, ret, flowupd.header_push);
+                        role_, feature_name_, ret, flowupd.header_push);
         break;
 
     case FLOWUPD_HEADER_POP:
         ret = flow->header_pop(flowupd.header_pop);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_pop={}",
-                        role, feature_name_, ret, flowupd.header_pop);
+                        role_, feature_name_, ret, flowupd.header_pop);
         break;
 
     case FLOWUPD_FLOW_STATE:
         ret = flow->set_flow_state(flowupd.flow_state);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} flow_state={}",
-                        role, feature_name_, ret, flowupd.flow_state);
+                        role_, feature_name_, ret, flowupd.flow_state);
         break;
 
     case FLOWUPD_FWDING_INFO:
         ret = flow->set_fwding(flowupd.fwding);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} fwding_info={}",
-                        role, feature_name_, ret, flowupd.fwding);
+                        role_, feature_name_, ret, flowupd.fwding);
         break;
     }
 
 
     return ret;
+}
+
+hal_ret_t
+ctx_t::advance_to_next_stage() {
+    if (role_ == hal::FLOW_ROLE_INITIATOR && iflow_[istage_]->valid_fwding()) {
+        HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+        istage_++;
+        HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
+    } else if (rflow_[rstage_]->valid_fwding()){
+        HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+        rstage_++;
+        HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", rstage_);
+    }
+    return HAL_RET_OK;
 }
 
 std::ostream& operator<<(std::ostream& os, const mpls_label_t& val)

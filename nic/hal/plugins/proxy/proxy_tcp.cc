@@ -5,18 +5,21 @@ namespace hal {
 namespace proxy {
 
 static inline hal_ret_t
-update_fwding_info(fte::ctx_t&ctx, hal::flow_role_t role, proxy_flow_info_t* pfi)
+update_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     // update fwding info
-    // FIXME: Update LPort oncce getLport for TCP LIF API is available
     flowupd.fwding.lport = pfi->proxy->lport_id;
     flowupd.fwding.qid_en = true;
     flowupd.fwding.qtype = pfi->proxy->qtype;
-    flowupd.fwding.qid = pfi->qid1;
+    if (ctx.role() ==  hal::FLOW_ROLE_INITIATOR) {
+        flowupd.fwding.qid = pfi->qid1;
+    } else {
+        flowupd.fwding.qid = pfi->qid2;
+    }
 
-    return ctx.update_flow(role, flowupd);
+    return ctx.update_flow(flowupd);
 }
 
 fte::pipeline_action_t
@@ -39,25 +42,13 @@ tcp_exec(fte::ctx_t& ctx)
     }
 
     // Update iflow
-    // FIXME:Program i-Flow bs R-flow based on hFlow vs n-Flow.
-    // There is no way to identify that now, so programming only iFlow. 
-    // Change it once FTE adds  a way to identify the role. 
-    ret = update_fwding_info(ctx, hal::FLOW_ROLE_INITIATOR, pfi);
+    ret = update_fwding_info(ctx, pfi);
+
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END; 
     }
 
-    /*
-    //Update rflow
-    if (ctx.valid_rflow()) {
-        ret = update_fwding_info(ctx, hal::FLOW_ROLE_RESPONDER);
-        if (ret != HAL_RET_OK) {
-            ctx.set_feature_status(ret);
-            return fte::PIPELINE_END; 
-        }
-    }
-    */
     return fte::PIPELINE_CONTINUE;
 }
 

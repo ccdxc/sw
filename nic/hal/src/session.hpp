@@ -146,7 +146,8 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
-    uint16_t                  nat_type:3;          // type of NAT
+    uint64_t                  nat_type:3;          // type of NAT
+    uint64_t                  lkp_inst:1;          // Flow instance
 
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
