@@ -284,6 +284,26 @@ cleanup:
     /* TODO: CLEANUP */
     return ret;
 }
+hal_ret_t 
+p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
+{
+    tcp_rx_read_tx2rx_d    data = {0};
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: read_tx2rx entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
+
+    HAL_TRACE_DEBUG("Received snd_nxt: 0x{0:x}", tcpcb_pd->tcpcb->snd_nxt);
+
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t 
 p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
@@ -319,6 +339,12 @@ hal_ret_t
 p4pd_get_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
+
+    ret = p4pd_get_tcp_rx_read_tx2rx_entry(tcpcb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get read_tx2rx entry");
+        goto cleanup;
+    }
     
     ret = p4pd_get_tcp_rx_tcp_rx_entry(tcpcb_pd);
     if(ret != HAL_RET_OK) {
@@ -630,10 +656,10 @@ pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
     
     // Get the base address of TCP CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0, 0);
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+                    tcpcb_pd->tcpcb->cb_id);
     HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
-    return offset + \
-        (tcpcb_pd->tcpcb->cb_id * P4PD_HBM_TCP_CB_ENTRY_SIZE);
+    return offset;
 }
 
 hal_ret_t

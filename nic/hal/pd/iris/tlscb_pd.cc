@@ -300,10 +300,10 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
     
     // Get the base address of TLS CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0, 0);
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+            tlscb_pd->tlscb->cb_id);
     HAL_TRACE_DEBUG("received offset 0x{0:x}", offset);
-    return offset + \
-        (tlscb_pd->tlscb->cb_id * P4PD_HBM_TLS_CB_ENTRY_SIZE);
+    return offset;
 }
 
 hal_ret_t

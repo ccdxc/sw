@@ -13,7 +13,6 @@ namespace pd {
 #define HAL_MAX_HW_TLSCBS                        2048
 
 #define P4PD_TLSCB_STAGE_ENTRY_OFFSET            64
-#define P4PD_HBM_TLS_CB_ENTRY_SIZE               128
 
 typedef enum tlscb_hwid_order_ {
     P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0 = 0,

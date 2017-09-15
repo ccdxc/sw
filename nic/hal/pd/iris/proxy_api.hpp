@@ -55,7 +55,6 @@ typedef int p4pd_error_t;
 #define P4PD_TCAM_DC_UINT32                          0xFFFFFFFF
 
 #define P4PD_HBM_TLS_CB_START_ADDR                   0xaaaa
-#define P4PD_HBM_TLS_CB_ENTRY_SIZE                   512
 
 /* P4PD Layer is initialized by invoking this function. It is expected
  * for the user of P4PD layer to invoke this API once before using any other

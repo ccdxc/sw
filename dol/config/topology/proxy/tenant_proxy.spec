@@ -6,6 +6,8 @@ type    : tenant
 overlay : vlan
 
 segments:
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_PROXY
+      count : 1
     - spec  : ref://store/specs/id=SEGMENT_PROXY
       count : 1
 
@@ -19,9 +21,9 @@ security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 sessions:
     unidest:
         scale: 1
-        ipv4:
-            - ref://store/specs/id=SESSION_TCP_PROXY
         ipv6:
+            - ref://store/specs/id=SESSION_TCP_PROXY
+        ipv4:
             - ref://store/specs/id=SESSION_TCP_PROXY
         mac: None
 

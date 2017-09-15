@@ -59,7 +59,7 @@ tls_sesq_produce:
 	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TCP_SCHED_RING_SESQ, d.u.read_tls_stg0_d.sw_sesq_pi)
 
 	phvwr		p.dma_cmd1_dma_cmd_addr, r4
-	phvwr		p.db_data_data, r3
+	phvwr		p.db_data_data, r3.dx
 
 	phvwri		p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data_data)
 	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data_data)

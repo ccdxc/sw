@@ -34,14 +34,31 @@ def TestCaseSetup(tc):
     tcb.snd_cwnd = 1000
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
-    tcb.header_template = bytes([
-        0x00, 0xee, 0xff, 0x00, 0x00, 0x03, # dmac
-        0x00, 0xee, 0xff, 0x00, 0x00, 0x02, # smac
-        0x81, 0x00, 0xe0, 0x02, 0x08, 0x00,
+    tcb.source_port = 47273
+    tcb.dest_port = 80
+    if tc.config.src.segment.vlan_id != 0:
+        vlan_etype_bytes = bytes([0x81, 0x00]) + \
+                tc.config.src.segment.vlan_id.to_bytes(2, 'big') + \
+                bytes([0x08, 0x00])
+    else:
+        vlan_etype_bytes = bytes([0x08, 0x00])
+    tcb.header_template = \
+             tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
+             tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
+             vlan_etype_bytes + \
+             bytes([0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x40, 0x06, 0xfa, 0x71]) + \
+             tc.config.flow.sip.getnum().to_bytes(4, 'big') + \
+             tc.config.flow.dip.getnum().to_bytes(4, 'big')
+    print("header_template = " + str(tcb.header_template))
+    #tcb.header_template = bytes([
+        #0x00, 0xee, 0xff, 0x00, 0x00, 0x03, # dmac
+        #0x00, 0xee, 0xff, 0x00, 0x00, 0x02, # smac
+        #0x81, 0x00, 0xe0, 0x02, 0x08, 0x00,
         # ip header
-        0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00,
-        0x40, 0x06, 0xfa, 0x71, 0x40, 0x00, 0x00, 0x01,
-        0x40, 0x00, 0x00, 0x02])
+        #0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00,
+        #0x40, 0x06, 0xfa, 0x71, 0x40, 0x00, 0x00, 0x01,
+        #0x40, 0x00, 0x00, 0x02])
     tcb.SetObjValPd()
 
     # 2. Configure TLS CB in HBM before packet injection
@@ -68,14 +85,21 @@ def TestCaseVerify(tc):
     print("debug_num_phv_to_pkt = %d:" % tcpcb_cur.debug_num_phv_to_pkt)
     print("debug_num_mem_to_pkt = %d:" % tcpcb_cur.debug_num_mem_to_pkt)
 
-    # 1. Verify pi/ci got update got updated
-    if (tcpcb_cur.sesq_pi != tcpcb.sesq_pi + 1 or tcpcb_cur.sesq_ci != tcpcb.sesq_ci + 1):
+    # 1. Verify pi got updated
+    if (tcpcb_cur.sesq_pi != tcpcb.sesq_pi + 1):
         print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (tcpcb.sesq_pi, tcpcb.sesq_ci,
                  tcpcb_cur.sesq_pi, tcpcb_cur.sesq_ci))
         return False
 
-    # 2. Verify pkt stats
+    # 2. Verify ci got updated
+    if (tcpcb_cur.sesq_ci != tcpcb.sesq_ci + 1):
+        print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+                (tcpcb.sesq_pi, tcpcb.sesq_ci,
+                 tcpcb_cur.sesq_pi, tcpcb_cur.sesq_ci))
+        return False
+
+    # 3. Verify pkt stats
     if tcpcb_cur.pkts_sent != tcpcb.pkts_sent + 1:
         print("pkt tx stats not as expected")
         return False
@@ -83,15 +107,22 @@ def TestCaseVerify(tc):
     if tcpcb_cur.bytes_sent != tcpcb.bytes_sent + 84:
         print("Warning! pkt tx byte stats not as expected")
     
-    # 3. Verify phv2pkt
+    # 4. Verify phv2pkt
     if tcpcb_cur.debug_num_phv_to_pkt != tcpcb.debug_num_phv_to_pkt + 2:
         print("Num phv2pkt not as expected")
         return False
 
-    # 4. Verify mem2pkt
+    # 5. Verify mem2pkt
     if tcpcb_cur.debug_num_mem_to_pkt != tcpcb.debug_num_mem_to_pkt + 2:
         print("Num mem2pkt not as expected")
         return False
+
+    # 6  Verify phv2mem
+    if tcpcb_cur.snd_nxt != 0xefeff044:
+        print("mem2pkt failed snd_nxt = 0x%x" % tcpcb_cur.snd_nxt)
+        return False
+
+    # 7. Verify pkt tx (in testspec)
 
     return True
 

@@ -704,7 +704,7 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_tcp_tx_to_p4_bypass_barco
-        spec    : one_pkt.testspec
+        spec    : uplink_to_uplink.testspec
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP

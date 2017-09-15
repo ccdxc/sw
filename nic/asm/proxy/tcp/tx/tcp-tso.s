@@ -9,6 +9,7 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "defines.h"
 
 struct phv_ p    ;
 struct tcp_tx_tso_k k    ;
@@ -83,6 +84,11 @@ dma_cmd_intrinsic:
     phvwri          p.p4_intr_global_tm_iport, 9
     phvwri          p.p4_intr_global_tm_oport, 11
     phvwri          p.p4_intr_global_tm_oq, 0
+    // TODO: P4 pipeline is currently deriving vrf (input_properties.asm) with
+    // source_lif as one of the keys. Since for TCP proxy we change the source
+    // lif to SERVICE LIF, currently the input_properties table is not being
+    // hit. This hack to set LIF to 0 is temporary to derive the right VRF.
+    phvwri          p.p4_intr_global_lif, 0 // TODO: fix this hack
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     phvwri          p.intrinsic_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
@@ -90,6 +96,7 @@ dma_cmd_intrinsic:
     phvwr           p.intrinsic_dma_dma_cmd_phv_end_addr, TCP_PHV_INTRINSIC_END
 dma_cmd_p4plus_to_p4_app_header:
     phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
+    phvwrmi         p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST, P4PLUS_TO_P4_FLAGS_LKP_INST
 
     phvwri          p.app_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr           p.app_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
@@ -104,6 +111,9 @@ dma_cmd_tcp_header:
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port
     phvwr           p.tcp_header_seq_no, d.retx_snd_nxt // TODO : where is this updated
+    // TODO: snd_nxt is hardcoded here so we can verify phv2mem. Derive it
+    // correctly and check the appopriate value in the dol test case.
+    phvwri          p.tx2rx_snd_nxt, 0xefeff044 // TODO: fix this hack
     phvwr           p.tcp_header_ack_no, k.common_phv_rcv_nxt // TODO : is this right?
     phvwr           p.tcp_header_data_ofs, 5
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
@@ -198,14 +208,14 @@ update_xmit_cursor:
 
     addi            r2, r0, NIC_DESC_ENTRY_OFF_OFFSET    
     add             r1, d.retx_xmit_cursor, r2
-    memwr.h         r1, r4
+    //memwr.h         r1, r4
 
     /* Decrement length of descriptor entry by xmit len */
     sub             r4, k.to_s4_xmit_cursor_len, r6
 
     addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET    
     add             r1, d.retx_xmit_cursor, r2
-    memwr.h         r1, r4
+    //memwr.h         r1, r4
     
     
 tcp_write_xmit_done:
