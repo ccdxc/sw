@@ -253,7 +253,7 @@
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        DOORBELL_SCHED_WR_NONE,				\
-                       DOORBELL_UPDATE_P_NDX)				\
+                       DOORBELL_UPDATE_NONE)				\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\

@@ -15,3 +15,15 @@ load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cpp_proto_repositories")
 cpp_proto_repositories()
 load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_repositories")
 py_proto_repositories()
+
+# gflags
+git_repository(
+    name = "com_github_gflags_gflags",
+    commit = "9314597d4b742ed6f95665241345e590a0f5759b",
+    remote = "https://github.com/gflags/gflags.git",
+)
+
+bind(
+    name = "gflags",
+    actual = "@com_github_gflags_gflags//:gflags",
+)
