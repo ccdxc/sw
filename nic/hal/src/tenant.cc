@@ -89,7 +89,7 @@ tenant_compare_handle_key_func (void *key1, void *key2)
 // insert a tenant to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_tenant_to_cfg_db (tenant_t *tenant, hal_handle_t handle)
+tenant_add_to_cfg_db (tenant_t *tenant, hal_handle_t handle)
 {
     hal_ret_t                ret;
     hal_handle_ht_entry_t    *entry;
@@ -121,6 +121,27 @@ add_tenant_to_cfg_db (tenant_t *tenant, hal_handle_t handle)
     }
 
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete a tenant from the config database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+tenant_del_from_cfg_db (hal_handle_t handle, tenant_t *tenant,
+                        hal_cfg_del_cb_t del_cb)
+{
+    hal_ret_t     ret;
+    hal_handle    *hndl;
+
+    hndl = reinterpret_cast<hal_handle *>(handle);
+    ret = hndl->del_obj(tenant, del_cb);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to del tenant, id {}, err : {}",
+                      tenant->tenant_id, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -220,7 +241,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     }
 
     // add this tenant to our db
-    ret = add_tenant_to_cfg_db(tenant, tenant->hal_handle);
+    ret = tenant_add_to_cfg_db(tenant, tenant->hal_handle);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATIS_CFG_DB_ERR);
         goto end;
@@ -435,11 +456,50 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
 #endif
 
 //------------------------------------------------------------------------------
+// tenant delete callback function, this will be invoked when no other thread is
+// using this object once tenant delete API is called
+// NOTE: hal handle allocated for this object shouldn't be explicitly deleted
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+tenant_delete_cb (void *obj)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // process a tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
 tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
 {
+    tenant_t     *tenant;
+
+    // key-handle field must be set
+    if (!req.has_key_or_handle()) {
+        rsp->add_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // lookup the tenant object
+    auto kh = req.key_or_handle();
+    if (kh.key_or_handle_case() == TenantKeyHandle::kTenantId) {
+        tenant = tenant_lookup_by_id(kh.tenant_id());
+    } else if (kh.key_or_handle_case() == TenantKeyHandle::kTenantHandle) {
+        tenant = tenant_lookup_by_handle(kh.tenant_handle());
+    } else {
+        rsp->add_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // check if we found the tenant of interest
+    if (tenant == NULL) {
+        HAL_TRACE_ERR("Failed to delete tenant, id {}, handle {}",
+                      kh.tenant_id(), kh.tenant_handle());
+        rsp->add_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        return HAL_RET_TENANT_NOT_FOUND;
+    }
+    HAL_TRACE_DEBUG("Deleting tenant {} ...", tenant->tenant_id);
+
     rsp->add_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }

@@ -1,4 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <iostream>
 #include <stdio.h>
 #include <string>
@@ -170,7 +171,7 @@ hal_handle::init()
     HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     for (uint32_t i = 0; i < k_max_objs_; i++) {
          objs_[i].valid = FALSE;
-         objs_[i].ver = 0;
+         objs_[i].ver = HAL_CFG_VER_NONE;
          objs_[i].obj = NULL;
     }
     return true;
@@ -221,7 +222,8 @@ hal_handle::~hal_handle()
 //------------------------------------------------------------------------------
 // add an object to this handle
 // NOTE: this is written assuming multiple writers a given handle, otherwise
-//       we don't need the per handle lock
+//       we don't need the per handle lock assuming 'valid' bit is
+//       validated/invalidated only at the end of the operation
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_handle::add_obj(void *obj)
@@ -234,30 +236,110 @@ hal_handle::add_obj(void *obj)
     HAL_SPINLOCK_LOCK(&slock_);
     for (i = 0; i < k_max_objs_; i++) {
         if (objs_[i].valid) {
-            if (objs_[i].ver >= t_cfg_db_ctxt.rsvd_ver_) {
-                // TODO: someone committed a version greater than this version,
-                // backout and retry ?? or still go ahead ??
+            if (objs_[i].ver > t_cfg_db_ctxt.wversion_) {
+                // someone committed a version greater than this version, in
+                // single-writer model this shouldn't happen at all !!!
+                HAL_TRACE_ERR("Failed to add object to handle, "
+                              "obj with ver {} >= {} exists already",
+                              objs_[i].ver, t_cfg_db_ctxt.wversion_);
+                ret = HAL_RET_ERR;
+                HAL_ASSERT_GOTO((ret == HAL_RET_OK), end);
+            } else if (objs_[i].obj != NULL) {
+                // someone is using cfg db version >= this object's version,
+                // we can't add new version as that will overwrite all the
+                // pi, pd and hw state
+                // TODO: this can happen in back to back add-del-add case
+                //       while the previously added version is still in use.
+                HAL_TRACE_ERR("Failed to add object le, found "
+                              "ver {} ({}) of this obj in handle, rsvd "
+                              "write version {}", objs_[i].ver,
+                              (g_hal_state->cfg_db()->is_cfg_ver_in_use(objs_[i].ver) ?
+                                   "in-use" : "not-in-use"),
+                              t_cfg_db_ctxt.wversion_);
                 ret = HAL_RET_RETRY;
-                goto end;
+                HAL_ASSERT_GOTO(FALSE, end);
             }
         } else {
+            // in single-writer scheme we can "break" here but to support
+            // multiple writer case, we are checking to see if anyone else has
+            // updated config db, by scanning all entries and looking for higher
+            // numbered versions of this object
             free_slot = i;
         }
     }
 
     // we know that this version is the latest, try to add this object to
     // the handle
-    if (free_slot < 0) {
-        return HAL_RET_NO_RESOURCE;
-        goto end;
-    }
-
-    // all is well insert object into this handle
-    objs_[free_slot].ver = t_cfg_db_ctxt.rsvd_ver_;
+    HAL_ASSERT_GOTO((free_slot >= 0), end);
+    objs_[free_slot].ver = t_cfg_db_ctxt.wversion_;
     objs_[free_slot].obj = obj;
     objs_[free_slot].valid = TRUE;
 
 end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete an object from this handle
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_handle::del_obj(void *obj, hal_cfg_del_cb_t del_cb)
+{
+    uint32_t     i;
+    int          free_slot = -1;
+    hal_ret_t    ret = HAL_RET_OK;
+
+    HAL_ASSERT_RETURN((t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE), HAL_RET_ERR);
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < k_max_objs_; i++) {
+        if (objs_[i].valid) {
+            if (objs_[i].ver > t_cfg_db_ctxt.wversion_) {
+                // someone committed a version greater than this version, in
+                // single-writer model this shouldn't happen at all !!!
+                HAL_TRACE_ERR("Failed to del  object from handle, "
+                              "obj with ver {} >= {} exists already",
+                              objs_[i].ver, t_cfg_db_ctxt.wversion_);
+                ret = HAL_RET_ERR;
+                HAL_ASSERT_GOTO((ret == HAL_RET_OK), error);
+                goto error;
+            } else if ((objs_[i].obj != NULL) &&
+                       (objs_[i].ver == t_cfg_db_ctxt.wversion_)) {
+                // we just added this object and trying to delete from the
+                // db for some reason, which is allowed as long as
+                // _db_close() is not done yet
+                HAL_TRACE_DEBUG("Deleting object thats just added ?");
+                objs_[i].valid = FALSE;
+                objs_[i].ver = HAL_CFG_VER_NONE;
+                objs_[i].obj = NULL;
+                // we still need to free the handle eventually
+                goto done;
+            }
+        } else {
+            // in single-writer scheme we can "break" here but to support
+            // multiple writer case, we are checking to see if anyone else has
+            // updated config db, by scanning all entries and looking for higher
+            // numbered versions of this object
+            free_slot = i;
+        }
+    }
+
+    // we know that this version is the latest, add NULL object to the handle
+    if (free_slot < 0) {
+        ret = HAL_RET_NO_RESOURCE;
+    } else {
+        objs_[free_slot].ver = t_cfg_db_ctxt.wversion_;
+        objs_[free_slot].obj = NULL;
+        objs_[free_slot].valid = TRUE;
+    }
+
+done:
+
+    // add an entry into cfg db's delete object cache
+    g_hal_state->cfg_db()->add_obj_to_del_cache(this, obj, del_cb);
+
+error:
 
     HAL_SPINLOCK_UNLOCK(&slock_);
     return ret;
@@ -271,18 +353,20 @@ void *
 hal_handle::get_obj(void)
 {
     void             *obj = NULL;
-    cfg_version_t    max_ver = 0;
+    cfg_version_t    max_ver = HAL_CFG_VER_NONE;
     uint32_t         i, loc;
 
     HAL_SPINLOCK_LOCK(&slock_);
     for (i = 0; i < k_max_objs_; i++) {
-        if (objs_[i].valid && (objs_[i].ver <= t_cfg_db_ctxt.ver_in_use_)) {
-            max_ver = objs_[i].ver;
-            loc = i;
+        if (objs_[i].valid && (objs_[i].ver <= t_cfg_db_ctxt.rversion_)) {
+            if (objs_[i].ver > max_ver) {
+                max_ver = objs_[i].ver;
+                loc = i;
+            }
         }
     }
 
-    // check if an valid returnable object is found and return that
+    // check if a valid returnable object is found and return that
     if (max_ver) {
         obj = objs_[loc].obj;
     }

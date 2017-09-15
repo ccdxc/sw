@@ -6,6 +6,7 @@
 #include <ht.hpp>
 #include <hal_lock.hpp>
 #include <hal_state.hpp>
+#include <hal.hpp>
 #include <tenant.pb.h>
 #include <pd.hpp>
 

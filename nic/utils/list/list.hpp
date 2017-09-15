@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __LIST_HPP__
 #define __LIST_HPP__
 
@@ -6,8 +8,6 @@
 namespace hal {
 namespace utils {
 
-
-
 // doubly linked list context
 typedef struct dllist_ctxt_s dllist_ctxt_t;
 struct dllist_ctxt_s {
@@ -15,7 +15,6 @@ struct dllist_ctxt_s {
     dllist_ctxt_t    *next;
     dllist_ctxt_s(): prev(this), next(this){}
 } __PACK__;
-
 
 // reset the link information
 static inline void

@@ -5,10 +5,10 @@
 
 #include <slab.hpp>
 #include <indexer.hpp>
+#include <list.hpp>
 #include <ht.hpp>
 #include <bitmap.hpp>
 #include <hal_cfg.hpp>
-#include <hal.hpp>
 
 namespace hal {
 
@@ -16,11 +16,15 @@ using hal::utils::slab;
 using hal::utils::indexer;
 using hal::utils::ht;
 using hal::utils::bitmap;
+using hal::utils::dllist_ctxt_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
 // TODO: this should be coming from catalogue or platform API
 #define HAL_MAX_TM_PORTS                             12
+
+// forward declaration
+class hal_handle;
 
 // HAL config database
 class hal_cfg_db {
@@ -33,8 +37,13 @@ public:
     // API to call after processing any packet by FTE, any operation by config
     // thread or periodic thread etc.
     hal_ret_t db_close(void);
+    bool is_cfg_ver_in_use(cfg_version_t ver);
+    hal_ret_t add_obj_to_del_cache(hal_handle *handle, void *obj,
+                                   hal_cfg_del_cb_t del_cb);
 
 #if 0
+    void lock_version_unlock(void) { HAL_SPINLOCK_LOCK(&slock_); }
+    void unlock_version_db(void) { HAL_SPINLOCK_UNLOCK(&slock_); }
     // try to make given version valid
     hal_ret_t cfg_db_version_commit(cfg_version_t version);
 
@@ -106,6 +115,14 @@ public:
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
 
+public:
+    typedef struct del_cache_entry_s {
+        hal_handle          *handle;
+        void                *obj;
+        hal_cfg_del_cb_t    del_cb;
+        dllist_ctxt_t       dllist_ctxt;
+    } __PACK__ del_cache_entry_t;
+
 private:
     bool init(void);
     hal_cfg_db();
@@ -114,6 +131,8 @@ private:
     cfg_version_t db_reserve_version(void);
     hal_ret_t db_update_version(cfg_version_t ver);
     hal_ret_t db_release_version_in_use(cfg_version_t ver);
+    hal_ret_t process_del_cache_entry(del_cache_entry_t *entry);
+    void process_del_cache(void);
 
 private:
     // tenant/vrf related config
@@ -234,13 +253,13 @@ private:
     } __PACK__;
 
     // meta information about the config db
-    typedef struct cfg_ver_in_use_info_ {
+    typedef struct cfg_ver_in_use_info_s {
         cfg_version_t    ver;          // version number
         uint16_t         usecnt:15;    // number of users of this version
         uint16_t         valid:1;      // entry valid or not
     } __PACK__ cfg_ver_in_use_info_t;
 
-    typedef struct cfg_version_rsvd_info_ {
+    typedef struct cfg_version_rsvd_info_s {
         cfg_version_t    ver;          // version number
         uint8_t          valid:1;      // entry valid or not
     } __PACK__ cfg_version_rsvd_info_t;
@@ -250,6 +269,7 @@ private:
     cfg_version_t              max_rsvd_ver_;                          // max. reserved version
     cfg_ver_in_use_info_t      cfg_ver_in_use_[HAL_THREAD_ID_MAX];     // versions in use for read
     cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
+    dllist_ctxt_t              del_cache_list_head_;                   // delete obj cache
 };
 
 // HAL operational database
@@ -290,6 +310,7 @@ public:
 
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }
+    slab *hal_del_cache_entry_slab(void) const { return hal_del_cache_entry_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
@@ -319,6 +340,7 @@ private:
 private:
     slab    *hal_handle_slab_;
     slab    *hal_handle_ht_entry_slab_;
+    slab    *hal_del_cache_entry_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
@@ -359,6 +381,7 @@ public:
     hal_mem_db *mem_db(void) const { return mem_db_; }
 
     // get APIs for HAL handle related state
+    slab *hal_del_cache_entry_slab(void) const { return mem_db_->hal_del_cache_entry_slab(); }
     slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
     slab *hal_handle_ht_entry_slab(void) const { return mem_db_->hal_handle_ht_entry_slab(); }
 

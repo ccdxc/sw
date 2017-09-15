@@ -58,6 +58,7 @@ typedef uint32_t        encap_id_t;
 // HAL config version type
 //------------------------------------------------------------------------------
 typedef uint32_t cfg_version_t;
+#define HAL_CFG_VER_NONE            0
 
 #define __ASSERT__(x)            assert(x)
 

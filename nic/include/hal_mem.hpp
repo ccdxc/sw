@@ -10,6 +10,7 @@ namespace hal {
 // HAL memory slabs
 typedef enum hal_slab_e {
     HAL_SLAB_NONE,
+    HAL_SLAB_DEL_CACHE_ENTRY,
     HAL_SLAB_HANDLE,
     HAL_SLAB_HANDLE_HT_ENTRY,
     HAL_SLAB_TENANT,

@@ -523,7 +523,7 @@ hal_cfg_db::db_release_version_in_use(cfg_version_t ver)
         if (cfg_ver_in_use_[i].valid && (cfg_ver_in_use_[i].ver == ver)) {
             cfg_ver_in_use_[i].usecnt--;
             if (cfg_ver_in_use_[i].usecnt == 0) {
-                cfg_ver_in_use_[i].ver = 0;
+                cfg_ver_in_use_[i].ver = HAL_CFG_VER_NONE;
                 cfg_ver_in_use_[i].valid = FALSE;
             }
         }
@@ -541,7 +541,7 @@ cfg_version_t
 hal_cfg_db::db_reserve_version(void)
 {
     uint32_t         i;
-    cfg_version_t    ver = 0;     // 0 ==> invalid, make a macro (TODO) ?
+    cfg_version_t    ver = HAL_CFG_VER_NONE;
 
     HAL_SPINLOCK_LOCK(&slock_);
     ver = HAL_ATOMIC_INC_UINT32(&max_rsvd_ver_, 1);
@@ -587,21 +587,163 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     }
 
     // get the current version of the db and mark it as in-use
-    t_cfg_db_ctxt.ver_in_use_ = db_get_current_version();
+    t_cfg_db_ctxt.rversion_ = db_get_current_version();
     if (cfg_op == CFG_OP_READ) {
         // get the current max valid version
-        t_cfg_db_ctxt.rsvd_ver_ = t_cfg_db_ctxt.ver_in_use_;
+        t_cfg_db_ctxt.wversion_ = t_cfg_db_ctxt.rversion_;
     } else {
         // reserve a db version for later commit
-        t_cfg_db_ctxt.rsvd_ver_ = db_reserve_version();
+        t_cfg_db_ctxt.wversion_ = db_reserve_version();
     }
     t_cfg_db_ctxt.cfg_op_ = cfg_op;
     t_cfg_db_ctxt.cfg_db_open_ = true;
     HAL_TRACE_DEBUG("{} opened cfg db, cfg op : {}, rsvd version : {}",
                     hal_get_current_thread()->name(), cfg_op,
-                    t_cfg_db_ctxt.rsvd_ver_);
+                    t_cfg_db_ctxt.wversion_);
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// check to see if given config version is in use or not, this API by itself is
+// mainly for debugging and is not intended to make any decisions. For proper
+// use of this API, make sure cfg db is locked so there are no synchronization
+// issues
+// TODO: it looks like this is fundamentally flawed !!!
+//------------------------------------------------------------------------------
+bool
+hal_cfg_db::is_cfg_ver_in_use(cfg_version_t ver)
+{
+    uint32_t    i;
+
+    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
+        if (cfg_ver_in_use_[i].valid && (ver <= cfg_ver_in_use_[i].ver)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// add given object's handle to delete cache, which will be scanned to purge
+// stale versioned objects
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::add_obj_to_del_cache(hal_handle *handle, void *obj,
+                                 hal_cfg_del_cb_t del_cb)
+{
+    del_cache_entry_t    *entry;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    entry = (del_cache_entry_t *)
+        g_hal_state->hal_del_cache_entry_slab()->alloc();
+    HAL_ASSERT_RETURN((entry != NULL), HAL_RET_OOM);
+    entry->handle = handle;
+    entry->obj = obj;
+    entry->del_cb = del_cb;
+    utils::dllist_add(&del_cache_list_head_, &entry->dllist_ctxt);
+    HAL_SPINLOCK_UNLOCK(&slock_);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// given a handle in the deleted object list cache, process the deletion
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::process_del_cache_entry(del_cache_entry_t *entry)
+{
+    hal_ret_t        ret;
+    hal_handle       *handle;
+    uint32_t         i, num_objs = 0, max_ver_idx;
+    cfg_version_t    max_ver = HAL_CFG_VER_NONE;
+    bool             ver_in_use = false, obj_in_use = false;
+
+    HAL_ASSERT_RETURN((entry != NULL), HAL_RET_INVALID_ARG);
+    handle = entry->handle;
+    HAL_ASSERT_RETURN((handle != NULL), HAL_RET_INVALID_ARG);
+
+    HAL_SPINLOCK_LOCK(&handle->slock_);
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < handle->k_max_objs_; i++) {
+        if (handle->objs_[i].valid) {
+            num_objs++;
+            if (handle->objs_[i].ver > max_ver) {
+                max_ver = handle->objs_[i].ver;
+                max_ver_idx = i;    // NOTE: assuming that only one obj per
+                                    // version exists in one handle
+            }
+        }
+    }
+
+    if (num_objs == 0) {
+        // we didn't find any valid objects in this handle (can happen if we
+        // did a add followed by del after opening cfg db but before closing
+        // it), so this entry in the list is a placeholder entry for cleaning up
+        // such objects
+        ret = entry->del_cb(entry->obj);
+        HAL_ASSERT(ret == HAL_RET_OK);
+        dllist_del(&entry->dllist_ctxt);
+        HAL_SPINLOCK_UNLOCK(&slock_);
+        handle->~hal_handle();
+        g_hal_state->hal_handle_slab()->free(handle);
+        g_hal_state->hal_del_cache_entry_slab()->free(entry);
+        return HAL_RET_OK;
+    }
+
+    for (i = 0; i < handle->k_max_objs_; i++) {
+        if (handle->objs_[i].valid) {
+            ver_in_use = is_cfg_ver_in_use(handle->objs_[i].ver);
+            if (!obj_in_use) {
+                obj_in_use = ver_in_use;
+            }
+            if ((handle->objs_[i].ver != max_ver) && !ver_in_use) {
+                // this instance of the object is delete-able
+                if (handle->objs_[i].obj) {
+                    ret = entry->del_cb(handle->objs_[i].obj);
+                    HAL_ASSERT_GOTO((ret == HAL_RET_OK), end);
+                    num_objs--;
+                    handle->objs_[i].obj = NULL;
+                    handle->objs_[i].ver = HAL_CFG_VER_NONE;
+                    handle->objs_[i].valid = FALSE;
+                } else {
+                    // a deleted and unsed version is seen, as new version
+                    // exists we can free this now
+                    num_objs--;
+                    handle->objs_[i].ver = HAL_CFG_VER_NONE;
+                    handle->objs_[i].valid = FALSE;
+                }
+            }
+        }
+    }
+
+    if (!obj_in_use && (handle->objs_[max_ver_idx].obj == NULL) &&
+        (num_objs == 1)) {
+        // this object was deleted and no users of this version of the object
+        // exist, we can delete this entry altogether
+        dllist_del(&entry->dllist_ctxt);
+        HAL_SPINLOCK_UNLOCK(&slock_);
+        g_hal_state->hal_del_cache_entry_slab()->free(entry);
+        handle->~hal_handle();
+        g_hal_state->hal_handle_slab()->free(handle);
+        return HAL_RET_OK;
+    }
+
+end:
+
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    HAL_SPINLOCK_UNLOCK(&handle->slock_);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// walk the delete object cache and purge any objects that can be purged
+// TODO: will add this later
+//------------------------------------------------------------------------------
+void
+hal_cfg_db::process_del_cache(void)
+{
 }
 
 //------------------------------------------------------------------------------
@@ -618,16 +760,27 @@ hal_ret_t
 hal_cfg_db::db_close(void)
 {
     if (t_cfg_db_ctxt.cfg_db_open_) {
-        db_release_version_in_use(t_cfg_db_ctxt.ver_in_use_);
+        db_release_version_in_use(t_cfg_db_ctxt.rversion_);
         if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
             // additionally update the write version
-            db_update_version(t_cfg_db_ctxt.rsvd_ver_);
+            // NOTE: not taking multiple writers to config db into account at
+            // this time, if there are multiple writers, we have to check if
+            // cfg db's current version is greater than this version and if so,
+            // backout and retry
+            db_update_version(t_cfg_db_ctxt.wversion_);
         }
         t_cfg_db_ctxt.cfg_db_open_ = FALSE;
         t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
-        t_cfg_db_ctxt.ver_in_use_ = 0;
-        t_cfg_db_ctxt.rsvd_ver_ = 0;
+        t_cfg_db_ctxt.rversion_ = HAL_CFG_VER_NONE;
+        t_cfg_db_ctxt.wversion_ = HAL_CFG_VER_NONE;
     }
+
+    // TODO: process delete cache (we can't do this before updating the cfg db
+    // version to the write version we reserved, so this is at the end here)
+    // TODO: lock the cfg_db before walking the queue (also
+    // process_del_cache_entry() is locking cfg db internally - how to avoid
+    // self deadlock here ???)
+    process_del_cache();
     return HAL_RET_OK;
 
 #if 0
@@ -635,26 +788,26 @@ hal_cfg_db::db_close(void)
         if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
             // TODO: commit this version
             ret =
-                g_hal_state->cfg_db_version_commit(t_cfg_db_ctxt.rsvd_ver_);
+                g_hal_state->cfg_db_version_commit(t_cfg_db_ctxt.wversion_);
             // TODO: commit reserved version and update the DB version to that
-            ret = cfg_db_versions_.validate_version(t_cfg_db_ctxt.rsvd_ver_);
+            ret = cfg_db_versions_.validate_version(t_cfg_db_ctxt.wversion_);
 
-            cfg_db_ver_ = t_cfg_db_ctxt.rsvd_ver_;
+            cfg_db_ver_ = t_cfg_db_ctxt.wversion_;
 
             if (ret != HAL_RET_OK) {
-                // TODO: mark t_cfg_db_ctxt.rsvd_ver_ as invalid
-                g_hal_state->cfg_db_version_invalidate(t_cfg_db_ctxt.rsvd_ver_);
+                // TODO: mark t_cfg_db_ctxt.wversion_ as invalid
+                g_hal_state->cfg_db_version_invalidate(t_cfg_db_ctxt.wversion_);
             }
         } else {
             // release the read version, indicating that we are done using it
-            g_hal_state->db_release_version_in_use(t_cfg_db_ctxt.ver_in_use_);
+            g_hal_state->db_release_version_in_use(t_cfg_db_ctxt.rversion_);
         }
 
         // successful or not, close the DB so the app can reopen and retry
         t_cfg_db_ctxt.cfg_db_open_ = FALSE;
         t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
-        t_cfg_db_ctxt.ver_in_use_ = 0;
-        t_cfg_db_ctxt.rsvd_ver_ = 0;
+        t_cfg_db_ctxt.rversion_ = HAL_CFG_VER_NONE;
+        t_cfg_db_ctxt.wversion_ = 0;
     }
     return HAL_RET_OK;
 #endif
@@ -767,6 +920,12 @@ hal_oper_db::~hal_oper_db()
 bool
 hal_mem_db::init(void)
 {
+    hal_handle_ht_entry_slab_ = slab::factory("del-cache",
+                                              HAL_SLAB_DEL_CACHE_ENTRY,
+                                              sizeof(hal_cfg_db::del_cache_entry_t),
+                                              32, true, true, true, true);
+    HAL_ASSERT_RETURN(hal_handle_ht_entry_slab_ != NULL, false);
+
     // initialize slab for HAL handles
     hal_handle_slab_ = slab::factory("hal-handle",
                                      HAL_SLAB_HANDLE, sizeof(hal_handle),
@@ -909,6 +1068,7 @@ hal_mem_db::init(void)
 //------------------------------------------------------------------------------
 hal_mem_db::hal_mem_db()
 {
+    hal_handle_ht_entry_slab_ = NULL;
     hal_handle_slab_ = NULL;
     hal_handle_ht_entry_slab_ = NULL;
     tenant_slab_ = NULL;
@@ -961,6 +1121,7 @@ hal_mem_db::factory(void)
 //------------------------------------------------------------------------------
 hal_mem_db::~hal_mem_db()
 {
+    hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
     hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
@@ -1089,6 +1250,10 @@ hal_ret_t
 free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
+    case HAL_SLAB_DEL_CACHE_ENTRY:
+        g_hal_state->hal_del_cache_entry_slab()->free(elem);
+        break;
+
     case HAL_SLAB_HANDLE:
         g_hal_state->hal_handle_slab()->free(elem);
         break;

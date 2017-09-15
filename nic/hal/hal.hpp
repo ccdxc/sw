@@ -5,9 +5,11 @@
 
 #include <string>
 #include <base.h>
+#include <list.hpp>
 #include <thread.hpp>
 #include <ht.hpp>
 #include <hal_lock.hpp>
+#include <hal_cfg.hpp>
 
 namespace hal {
 
@@ -17,19 +19,7 @@ extern LIFManager *g_lif_manager;
 
 using utils::thread;
 using hal::utils::ht_ctxt_t;
-
-//------------------------------------------------------------------------------
-// TODO - following should come from cfg file or should be derived from platform
-//        type/cfg
-//------------------------------------------------------------------------------
-enum {
-    HAL_THREAD_ID_CFG        = 0,
-    HAL_THREAD_ID_PERIODIC   = 1,
-    HAL_THREAD_ID_FTE_MIN    = 2,
-    HAL_THREAD_ID_FTE_MAX    = 4,
-    HAL_THREAD_ID_ASIC_RW    = 5,
-    HAL_THREAD_ID_MAX        = 6,
-};
+using hal::utils::dllist_ctxt_t;
 
 #define HAL_MAX_CORES                                4
 #define HAL_CONTROL_CORE_ID                          0
@@ -72,12 +62,23 @@ extern hal_ret_t hal_wait(void);
 extern hal_ret_t hal_mem_init(void);
 
 class hal_handle {
+    friend class hal_cfg_db;
+
 public:
     static hal_handle *factory(void);
     ~hal_handle();
-    // add an object to this handle .. even if object
-    // is getting deleted add it with right version and NULL object
+
+    // add an object to this handle
+    // NOTE:
+    // once an object is added to the handle, you waive all your rights on that
+    // object and handle ... it can't be freed by the app anymore
+    // and the only way to free such object (and allocated handle) is by calling
+    // hal_handle_free() on that handle and infra will free both the object and
+    // handle (when its appropriate)
     hal_ret_t add_obj(void *obj);
+
+    // delete this object
+    hal_ret_t del_obj(void *obj, hal_cfg_del_cb_t del_cb);
 
     // get an object that has the highes version that is <= read-version
     // acquired by this thread
@@ -95,6 +96,7 @@ private:
     hal_spinlock_t    slock_;
     // max. number of objects per handle
     static const uint32_t k_max_objs_ = 4;
+    // TODO: revisit and see if valid bit is needed !!
     struct {
         cfg_version_t    ver;        // version of this object
         void             *obj;       // object itself
@@ -115,6 +117,7 @@ typedef struct hal_handle_ht_entry_s {
     ht_ctxt_t     ht_ctxt;
 } __PACK__ hal_handle_ht_entry_t;
 
+// TODO: deprecate these APIs eventually !!!
 //------------------------------------------------------------------------------
 // HAL internal api to allocate handle for an object
 //------------------------------------------------------------------------------
