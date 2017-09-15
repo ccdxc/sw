@@ -13,23 +13,23 @@ from factory.objects.rdma import buffer as rdmabuffer
 
 class RdmaSqDescriptorBase(Packet):
     fields_desc = [
-        LELongField("wrid", 0),
+        LongField("wrid", 0),
         BitField("op_type", 0, 4),
         BitField("complete_notify", 0, 1),
         BitField("fence", 0, 1),
         BitField("solicited_event", 0, 1),
-        BitField("rsvd0", 0, 1),
+        BitField("rsvd1", 0, 1),
         ByteField("num_sges", 0),
-        LEShortField("rsvd1", 0),
+        ShortField("rsvd1", 0),
     ]
 
 class RdmaSqDescriptorSend(Packet):
     fields_desc = [
-        LEIntField("imm_data", 0),
-        LEIntField("inv_key", 0),
-        LEIntField("rsvd0", 0),
-        LEIntField("rsvd1", 0),
-        LEIntField("rsvd2", 0),
+        IntField("imm_data", 0),
+        IntField("inv_key", 0),
+        IntField("rsvd0", 0),
+        IntField("rsvd1", 0),
+        IntField("rsvd2", 0),
     ]
 
 class RdmaRrqDescriptorBase(Packet):
@@ -126,10 +126,10 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
         self.logger = cfglogger
+        self.sges = []
 
     def Init(self, spec):
-        super().__init__()
-        self.spec = spec
+        super().Init(spec)
 
     def Write(self):
         """
@@ -140,31 +140,54 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                        (self.address, self.spec.fields.op_type, self.spec.fields.wrid, self.spec.fields.num_sges))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.spec.fields.wrid,
                                     num_sges=self.spec.fields.num_sges)
-        for sge in spec.fields.sges:
+        if hasattr(self.spec.fields, 'send'):
+           print("Reading Send")
+           imm_data = self.spec.fields.imm_data if hasattr(self.spec.fields, 'imm_data') else 0
+           inv_key = self.spec.fields.inv_key if hasattr(self.spec.fields, 'inv_key') else 0
+           send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key)
+           desc = desc/send
+
+        for sge in self.spec.fields.sges:
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
+            cfglogger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
+                           (sge.va, sge.len, sge.l_key))
             desc = desc/sge_entry
               
+        desc.show()
         #model_wrap.write_mem(self.address, bytes(desc), len(desc))
         resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
-        self.Read()
+        #self.Read()
 
     def Read(self):
         """
         Reads a Descriptor from "self.address"
         :return:
         """
-        desc = RdmaSqDescriptor(model_wrap.read_mem(self.address, 32))
+        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        desc = RdmaSqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
         desc.show()
         self.wrid = desc.wrid
-        self.op_type = desc.op_type
         self.num_sges = desc.num_sges
-        cfglogger.info("Read Desciptor @0x%x = op_type: %d wrid: 0x%x len: %d" % 
-                       (self.address, self.op_type, self.wrid, self.num_sges))
-        # no need to read sges for SQs, ignore
-        #for i in num_sges:
-        #     sge = RdmaSge(model_wrap.read_mem(self.address + 32 + i * 16, 16))
-        #     cfglogger.info("Read Sge[%d] = va: 0x%x len: %d l_key: %d" % 
-        #                         (i, sge.va, sge.len, sge.l_key))
+        self.op_type = desc.op_type
+        cfglogger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d" % 
+                       (self.address, self.wrid, self.num_sges, self.op_type))
+        self.sges = []
+        mem_handle.va += 32
+        for i in range(self.num_sges):
+            
+            self.sges.append(RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16)))
+            #sge = RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16))
+            #self.sges.append(sge)
+            #cfglogger.info("Read Sge[%d] = va: 0x%x len: %d l_key: %d" % 
+            #               (i, sge.va, sge.len, sge.l_key))
+            mem_handle.va += 16
+
+        for sge in self.sges:
+            print('%s' % type(sge))
+            print('0x%x' % sge.va)
+        print('id: %s' %id(self))
+
 
     def Show(self):
         desc = RdmaSqDescriptor(wrid=self.wrid, op_type=self.op_type, num_sges=self.num_sges)
@@ -214,7 +237,6 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         self.sges = []
         mem_handle.va += 32
         for i in range(self.num_sges):
-            
             self.sges.append(RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16)))
             #sge = RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16))
             #self.sges.append(sge)

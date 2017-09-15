@@ -1,6 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_tx_phv_t p;
 struct req_tx_add_headers_process_k_t k;
@@ -22,18 +23,18 @@ req_tx_add_headers_process:
     DMA_CMD_I_BASE_GET(r7, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
 
     DMA_PHV2PKT_SETUP(r7, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
-    phvwri          p.common.p4_intr_global_tm_iport, 9
-    phvwri          p.common.p4_intr_global_tm_oport, 11
+    phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
+    phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0
 
     // dma_cmd[1]
     sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
     DMA_PHV2PKT_SETUP(r7, p4plus_to_p4, p4plus_to_p4);
-    phvwr          P4PLUS_TO_P4_APP_ID, 2
+    phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-    phvwr          P4PLUS_TO_P4_IP_LEN, 0
-    phvwr          P4PLUS_TO_P4_UDP_LEN, 0
-    phvwr          P4PLUS_TO_P4_VLAN_ID, 2
+    phvwri         P4PLUS_TO_P4_IP_LEN, 124
+    phvwri         P4PLUS_TO_P4_UDP_LEN, 104
+    phvwr          P4PLUS_TO_P4_VLAN_ID, 0
 
     // dma_cmd[2]
     sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS

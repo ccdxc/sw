@@ -588,16 +588,16 @@ class ReferenceField(FrameworkFieldObject):
         return db.Get(refattr.id)
 
     def __get_attr(self, node, refattr):
-        try:
-            val = node.__dict__[refattr.attr]
-            if isinstance(val, FrameworkFieldObject):
-                return val.get()
-            else:
-                return val
-        except:
+        val = getattr(node, refattr.attr, 'NOTFOUND')
+        if val is 'NOTFOUND':
             logger.error("Failed to resolve Ref: %s" % self.string)
             logger.error(" - Attr: %s" % refattr.attr)
             assert(0)
+
+        if isinstance(val, FrameworkFieldObject):
+            return val.get()
+        else:
+            return val
         return None
 
     def Get(self, root):

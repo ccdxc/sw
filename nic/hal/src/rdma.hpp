@@ -893,66 +893,65 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
+    uint8_t  rsvd1[4];
+    uint32_t pd;
+    uint8_t  bktrack_in_progress:1;
+    uint8_t  need_credits:1;
+    uint8_t  li_fence:1;
+    uint8_t  fence:1;
+    uint8_t  fast_reg_enable: 1; //tx
+    uint8_t  disable_e2e_fc: 1;//tx
+    uint8_t  signalled_completion: 1;//rx
+    uint8_t  in_progress: 1; //tx
+    uint8_t  busy: 1;        //tx
+    uint8_t  rsvd: 7;
+    uint8_t  num_sges;
+    uint8_t  current_sge_id;
+    uint32_t  current_sge_offset;
+    uint64_t curr_wqe_ptr;
+    uint8_t  curr_op_type;
+    uint32_t service: 4;
+    uint32_t log_num_wqes: 5;
+    uint32_t log_wqe_size: 5;
+    uint32_t log_sq_page_size:5;
+    uint32_t log_pmtu:5;           //tx
+    uint32_t pt_base_addr;          //common
+    qpcb_ring_t           rings[MAX_SQ_RINGS];
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
-    qpcb_ring_t           rings[MAX_SQ_RINGS];
-
-    uint32_t pt_base_addr;          //common
-
-    uint32_t log_pmtu:5;           //tx
-    uint32_t log_sq_page_size:5;
-    uint32_t log_wqe_size: 5;
-    uint32_t log_num_wqes: 5;
-    uint32_t service: 4;
-    uint8_t  curr_op_type;
-
-    uint64_t curr_wqe_ptr;
-
-    uint32_t  current_sge_offset;
-    uint8_t  current_sge_id;
-    uint8_t  num_sges;
-
-    uint8_t  busy: 1;        //tx
-    uint8_t  in_progress: 1; //tx
-    uint8_t  signalled_completion: 1;//rx
-    uint8_t  disable_e2e_fc: 1;//tx
-    uint8_t  fast_reg_enable: 1; //tx
-    uint8_t  fence:1;
-    uint8_t  li_fence:1;
-    uint8_t  need_credits:1;
-    uint8_t  bktrack_in_progress:1;
-    uint32_t pd;
-    uint8_t  rsvd1[4];
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-
-    uint32_t rrq_base_addr;  //common
-    uint32_t imm_data;
-    uint32_t inv_key;
-    uint8_t  rrq_size;
-    uint32_t cq_id:24;       //rx
-    uint32_t dst_qp:24;      //tx
-    uint32_t tx_psn:24;      //tx
-    uint32_t ssn:24;
-    uint32_t lsn:24;
-    uint32_t msn:24;
-    uint32_t credits:5;
-    uint32_t rsvd1:3;
-    uint8_t  rrqwqe_num_sges;
-    uint8_t  rrqwqe_cur_sge_id;
-    uint32_t rrqwqe_cur_sge_offset;
-    // transport related
-    uint32_t header_template_addr;
-    uint8_t  nxt_to_go_token_id;
-    uint8_t  token_id;
-    uint8_t  in_progress:1;
-    uint8_t  service:4;
-    uint8_t  rsvd2:3;
-    uint32_t e_rsp_psn:24;
-    uint32_t rexmit_psn:24;
+    uint8_t rsvd2[8];
+    uint8_t p4plus_to_p4_flags;
+    uint32_t rsvd1:2;
+    uint32_t err_retry_ctr:3;
+    uint32_t nak_retry_ctr:3;
     uint32_t wqe_start_psn:24;
-    uint8_t rsvd3[10];
+    uint32_t rexmit_psn:24;
+    uint32_t e_rsp_psn:24;
+    uint8_t  token_id;
+    uint8_t  nxt_to_go_token_id;
+    uint32_t header_template_addr;
+    uint32_t rrqwqe_cur_sge_offset;
+    uint8_t  rrqwqe_cur_sge_id;
+    uint8_t  rrqwqe_num_sges;
+    uint32_t local_ack_timeout:5;
+    uint32_t timer_active:1;
+    uint32_t service:4;
+    uint32_t in_progress:1;
+    uint32_t credits:5;
+    uint32_t msn:24;
+    uint32_t lsn:24;
+    uint32_t ssn:24;
+    uint32_t tx_psn:24;      //tx
+    uint32_t dst_qp:24;      //tx
+    uint32_t cq_id:24;       //rx
+    uint8_t  rrq_size;
+    uint32_t inv_key;
+    uint32_t imm_data;
+    uint32_t rrq_base_addr;  //common
+    // transport related
 } PACKED sqcb1_t;
 
 typedef struct sqcb_s {

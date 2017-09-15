@@ -29,7 +29,7 @@ req_tx_sqlkey_process:
      tblrdp       r2, r1, offsetof(KEY_ENTRY_T, base_va), sizeof(KEY_ENTRY_T.base_va)  // Branch Delay Slot
 
      // r3 = lkey_p->len
-     tblrdp       r3, r2, offsetof(KEY_ENTRY_T, len), sizeof(KEY_ENTRY_T.len)
+     tblrdp       r3, r1, offsetof(KEY_ENTRY_T, len), sizeof(KEY_ENTRY_T.len)
 
      // if ((lkey_info_p->sge_va < lkey_p->base_va) ||
      //     ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len)))

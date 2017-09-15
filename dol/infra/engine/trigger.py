@@ -586,6 +586,10 @@ class TriggerTestCaseStep(objects.FrameworkObject):
             hdr_ignore_result = objects.HeaderComparePartial()
             hdr_ignore_result.ignore_fields = ["chksum"]
             ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
+        if True or hasattr(self._tc._test_spec, "ignore_udp_checksum") and self._tc._test_spec.ignore_udp_checksum:
+            hdr_ignore_result = objects.HeaderComparePartial()
+            hdr_ignore_result.ignore_fields = ["chksum"]
+            ignore_pkt_cmp.ignore_hdrs["UDP"] = hdr_ignore_result
 
         self._logger.verbose("Processing test step packets result")
         result = PacketsTestStepResult()
@@ -795,6 +799,9 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                     hdr_ignore_result = objects.HeaderComparePartial()
                     hdr_ignore_result.ignore_fields = ["chksum"]
                     ignore_pkt_cmp.ignore_hdrs["TCP"] = hdr_ignore_result
+                    hdr_ignore_result = objects.HeaderComparePartial()
+                    hdr_ignore_result.ignore_fields = ["chksum"]
+                    ignore_pkt_cmp.ignore_hdrs["UDP"] = hdr_ignore_result
     
                     self._logger.info("Comparing Packets")
                     epkt = penscapy.Parse(bytes(epktbuf))

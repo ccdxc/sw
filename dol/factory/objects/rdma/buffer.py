@@ -38,7 +38,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.address and self.data:
             cfglogger.info("Writing Buffer @0x%x = size: 0x%d offset: 0x%d " %
                        (self.address, self.size, self.offset))
-            model_wrap.write_mem(self.address, self.data[self.offset:], self.size)
+            resmgr.HostMemoryAllocator.write(self.mem_handle, self.data)
         else:
             cfglogger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
 

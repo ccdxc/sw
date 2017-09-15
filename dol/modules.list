@@ -739,7 +739,7 @@ modules:
         name    : RDMA_TX_SEND_ONLY
         enable  : False
         package : test.rdma
-        module  : rdma
+        module  : req_tx_send_only
         spec    : tx_send_only.testspec
         ignore  : True
 

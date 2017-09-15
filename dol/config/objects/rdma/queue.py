@@ -91,20 +91,20 @@ class RdmaSQstate(Packet):
         ByteField("eval_last", 0),
         BitField("host", 0, 4),
         BitField("total", 0, 4),
-        ShortField("pid", 0),
+        LEShortField("pid", 0),
 
-        ShortField("p_index0", 0),
-        ShortField("c_index0", 0),
-        ShortField("p_index1", 0),
-        ShortField("c_index1", 0),
-        ShortField("p_index2", 0),
-        ShortField("c_index2", 0),
-        ShortField("p_index3", 0),
-        ShortField("c_index3", 0),
-        ShortField("p_index4", 0),
-        ShortField("c_index4", 0),
-        ShortField("p_index5", 0),
-        ShortField("c_index5", 0),
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
+        LEShortField("p_index2", 0),
+        LEShortField("c_index2", 0),
+        LEShortField("p_index3", 0),
+        LEShortField("c_index3", 0),
+        LEShortField("p_index4", 0),
+        LEShortField("c_index4", 0),
+        LEShortField("p_index5", 0),
+        LEShortField("c_index5", 0),
     
         IntField("pt_base_addr", 0),
         BitField("log_pmtu", 0xa, 5),
@@ -131,6 +131,37 @@ class RdmaSQstate(Packet):
         ByteField("rsvd3", 0),
         ByteField("rsvd4", 0),
         ByteField("rsvd5", 0),
+
+        # SQCB1 
+        IntField("rrq_base_addr", 0),
+        IntField("imm_data", 0),
+        IntField("inv_key", 0),
+        ByteField("rrq_size", 0),
+        X3BytesField("cq_id", 0),
+        X3BytesField("dst_qp", 0),
+        X3BytesField("tx_psn", 0),
+        X3BytesField("ssn", 0),
+        X3BytesField("lsn", 0),
+        X3BytesField("msn", 0),
+        BitField("credits", 0, 5),
+        BitField("in_progress", 0, 1),
+        BitField("service", 0, 4),
+        BitField("timer_active", 0, 1),
+        BitField("local_ack_timeout", 0, 5),
+        ByteField("rrqwqe_num_sges", 0),
+        ByteField("rrqwqe_cur_sge_id", 0),
+        IntField("rrqwqe_cur_sge_offset", 0),
+        IntField("header_template_addr", 0),
+        ByteField("nxt_to_go_token_id", 0),
+        ByteField("token_id", 0),
+        X3BytesField("e_rsp_psn", 0),
+        X3BytesField("rexmit_psn", 0),
+        X3BytesField("wqe_start_psn", 0),
+        BitField("nak_retry_ctr", 0, 3),
+        BitField("err_retry_ctr", 0, 3),
+        BitField("rsvd1", 0, 2),
+        ByteField("p4plus_to_p4_flags", 0),
+        LongField("rvsd2", 0),
     ]
 
 class RdmaCQstate(Packet):
@@ -237,6 +268,10 @@ class RdmaQstateObject(object):
     def get_cindex(self, ring):
         assert(ring < 7)
         return getattr(self.data, 'c_index%d' % ring)
+
+    def Show(self, lgh = cfglogger):
+        lgh.ShowScapyObject(self.data) 
+
 
 
 class RdmaQueueObject(QueueObject):

@@ -544,10 +544,49 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
 }
 
 hal_ret_t
+stage0_resp_tx_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "rdma_resp_tx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //                __FUNCTION__, ret, offset);
+    if(ret < 0) {
+        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 stage0_req_rx_prog_addr(uint64_t* offset)
 {
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_req_rx_stage0";
+
+    int ret = capri_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
+    //                __FUNCTION__, ret, offset);
+    if(ret < 0) {
+        HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+stage0_req_tx_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "rdma_req_tx_stage0";
 
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
@@ -575,6 +614,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb_t       *rqcb_p = &rqcb;
     uint32_t     header_template_addr, rrq_base_addr, rsq_base_addr;
     uint64_t     offset;
+    uint64_t     offset_verify;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Create for lif {}", __FUNCTION__, lif);
@@ -609,7 +649,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // RRQ is defined as last ring in the SQCB ring array
     // We should skip scheduling for the RRQ, so set total
     //  rings as one less than max/total
-    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS - 1;
+    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS;
+    sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS;
     sqcb_p->sqcb0.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey()));
     sqcb_p->sqcb1.header_template_addr = header_template_addr;
@@ -630,17 +671,27 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb1.ssn = 1;
     sqcb_p->sqcb1.msn = 0;
     sqcb_p->sqcb1.credits = 0xa;
+    sqcb_p->sqcb1.p4plus_to_p4_flags = 0x6A;
+    //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_INNER_CKSUM |
+    //                                    P4PLUS_TO_P4_INSERT_VLAN_HDR |
+    //                                    P4PLUS_TO_P4_UPDATE_UDP_LEN |
+    //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
 
     stage0_req_rx_prog_addr(&offset);
     sqcb_p->sqcb0.ring_header.pc = offset >> 6;
 
+    stage0_req_tx_prog_addr(&offset_verify);
+    HAL_ASSERT(offset == offset_verify);
+
     // write to hardware
-    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial SQCB State, SQCB->PT: {}", 
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial SQCB State, SQCB->PT: {}", 
                     __FUNCTION__, lif, sqcb_p->sqcb0.pt_base_addr);
     // Convert data before writting to HBM
-    pd::memrev((uint8_t*)sqcb_p, sizeof(sqcb0_t));
+    pd::memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
+    pd::memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
     g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_SQ, spec.qp_num()));
 
     // allocate rqcb
     memset(rqcb_p, 0, sizeof(rqcb_t));
@@ -667,6 +718,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     stage0_resp_rx_prog_addr(&offset);
     rqcb.rqcb0.ring_header.pc = offset >> 6;
 
+    stage0_resp_tx_prog_addr(&offset_verify);
+    HAL_ASSERT(offset == offset_verify);
 
     HAL_TRACE_DEBUG("{}: Create QP successful for LIF: {}  RQCB->PT: {}", 
                     __FUNCTION__, lif, rqcb.rqcb0.pt_base_addr);

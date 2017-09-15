@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 import pdb
 
+import scapy.all                as scapy
+import model_sim.src.model_wrap as model_wrap
+
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
@@ -186,8 +189,27 @@ class QpObject(base.ConfigObjectBase):
              %(rdma_session.session.responder.GID(), rdma_session.session.responder.ep.GID()))
         cfglogger.info("src_ip: %s" % rdma_session.session.initiator.addr.get())
         cfglogger.info("dst_ip: %s" % rdma_session.session.responder.addr.get())
+        cfglogger.info("src_mac: %s" % rdma_session.session.initiator.ep.macaddr.get())
+        cfglogger.info("dst_mac: %s" % rdma_session.session.responder.ep.macaddr.get())
+        cfglogger.info("proto: %s" % rdma_session.session.iflow.proto)
+        cfglogger.info("sport: %s" % rdma_session.session.iflow.sport)
+        cfglogger.info("dport: %s" % rdma_session.session.iflow.dport)
         cfglogger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
         cfglogger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+
+        EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
+                             dst=rdma_session.session.responder.ep.macaddr.get())
+        Dot1qHdr = scapy.Dot1Q(vlan=rdma_session.session.initiator.ep.intf.encap_vlan_id,
+                               prio=rdma_session.session.iflow.eg_qos.cos.get())
+        IpHdr = scapy.IP(src=rdma_session.session.initiator.addr.get(),
+                         dst=rdma_session.session.responder.addr.get(),
+                         tos=rdma_session.session.iflow.eg_qos.dscp.get(),
+                         len = 0, chksum = 0)
+        UdpHdr = scapy.UDP(sport=rdma_session.session.iflow.sport,
+                           dport=rdma_session.session.iflow.dport,
+                           len = 0, chksum = 0)
+        HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
+        model_wrap.write_mem(self.header_temp_addr, bytes(HdrTemplate), len(HdrTemplate))
         return
          
 class QpObjectHelper:

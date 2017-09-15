@@ -1,16 +1,16 @@
 # Test Spec
 selectors:
-    src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False
-        interface   : filter://any
-    dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=True
-        interface   : filter://any
-    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :   
         base        : filter://any
         lqp         : filter://any
@@ -20,7 +20,15 @@ selectors:
 
 packets:
     - packet:
-        id          : PKT1 # Base packet
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : EXP_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
@@ -45,49 +53,52 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 4 
+                opcode  : 4 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : ref://testcase/pvtdata/pre_qstate/tx_psn
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
-           size    : ref://testcase/packets/id=PKT1/size
-           data    : ref://testcase/packets/id=PKT1/rawbytes
+           size    : ref://testcase/packets/id=BASE_PKT/size
+           data    : ref://testcase/packets/id=BASE_PKT/rawbytes
            offset  : 0
 
 descriptors:
     - descriptor:
-        id      : DESC1
+        id      : DESC
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
-            op_type : 0
+            op_type : 0  # OP_TYPE_SEND
             wrid    : 6
             num_sges: 1
+
+            send    :
                
             sges:
-                - sge:
-                     va  : ref://testcase/objects/id=BUF1/address
-                     len : ref://testcase/objects/id=BUF1/size
-                     l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=1/lkey
+                - va  : ref://testcase/buffers/id=BUF/address
+                  len : ref://testcase/buffers/id=BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/rdmasession/session/initiator/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
+            object  : ref://testcase/descriptors/id=DESC
+            //ring    : ref://testcase/config/rdmasession/session/initiator/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
 
     doorbell:
         object: ref://testcase/config/rdmasession/session/initiator/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ/doorbell
         fields:
-            upd : 1
+            upd : 0xD # (DB Increment Pindex << 2 |  DB_SCHED_WR_EVAL_RING) (0x3 << 2 | 0x1)
 
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

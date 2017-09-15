@@ -39,19 +39,19 @@ class RdmaRingObject(ring.RingObject):
         '''
 
     def Post(self, descriptor):
-        if not self.initialized:
-            self.queue.qstate.set_ring_base(self.address)
-            self.queue.qstate.set_ring_size(self.size)
+        #if not self.initialized:
+        #    self.queue.qstate.set_ring_base(self.address)
+        #    self.queue.qstate.set_ring_size(self.size)
         # Bind the descriptor to the ring
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
         descriptor.mem_handle = self.mem_handle
         descriptor.Write()
         # Increment posted index
-        self.queue.qstate.incr_pindex(0)
+        #self.queue.qstate.incr_pindex(0)
         # for now, ring doorbell only for SQ.
         # Doorbell ring for RQ will be needed for Prefetch/Cache, will be done later
-        if self.queue.queue_type.purpose == "rdma_sq":
-            self.doorbell.Ring({})  # HACK
+        #if self.queue.queue_type.purpose == "rdma_sq":
+        #    self.doorbell.Ring({})  # HACK
 
     def Consume(self, descriptor):
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_cindex(0)))
