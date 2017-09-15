@@ -14,4 +14,10 @@ class FactoryStoreObject:
         self.testobjects    = ObjectDatabase(pktlogger)
         return
 
+    def GetHeaderByScapyId(self, sid):
+        for hdr in self.headers.GetAll():
+            if hdr.meta.scapy == sid:
+                return hdr
+        return None
+
 FactoryStore = FactoryStoreObject()

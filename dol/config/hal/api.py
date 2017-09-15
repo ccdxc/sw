@@ -83,7 +83,8 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
         req_obj = req_objs[idx]
         getattr(req_obj, respcb)(req_spec, resp_spec)
         if resp_spec.api_status != types_pb2.API_STATUS_OK:
-            assert(0)
+            if GlobalOptions.rerun == False:
+                assert(0)
     return
 
 def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):

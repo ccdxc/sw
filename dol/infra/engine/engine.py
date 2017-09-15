@@ -10,23 +10,15 @@ import infra.common.defs as defs
 from infra.common.glopts import GlobalOptions
 
 from infra.common.logging   import logger
-from infra.engine.trigger   import TrigExpEngine
+from infra.engine.trigger2  import TriggerEngine
+from infra.engine.verif     import VerifEngine
 from config.store           import Store
 
 global modDB
 
-TestCaseDB = objects.ObjectDatabase(None)
-
-gl_num_pass = 0
-gl_num_fail = 0
-gl_num_total = 0
-gl_junk_recvd = False
-
 def init():
     global modDB
     modDB = modmgr.ModuleDatabase(module_list_file=GlobalOptions.modlist)
-    logger.info("Initializing Trigger Infra.")
-    TrigExpEngine.start()
     return
 
 def CreateInfraData():
@@ -36,37 +28,17 @@ def CreateInfraData():
     obj.Logger          = None
     obj.Factory         = factory
     obj.ConfigStore     = Store
-    obj.TestCases       = []
-    obj.TrigExpEngine   = TrigExpEngine
+    obj.TriggerEngine   = TriggerEngine
+    obj.VerifEngine     = VerifEngine
     obj.UserData        = None
     obj.LockAttributes()
     return obj
-
-def ProcessReport():
-    report = TrigExpEngine.get_run_report()
-    #report.show()
-    for tcid,tcreport in report.details.items():
-        tc = TestCaseDB.Get(tcid)
-        tc.status = tcreport.status
-        tc.module.UpdateResult(tc)
-
-    global gl_num_pass
-    gl_num_pass += report.passed_count
-    global gl_num_fail
-    gl_num_fail += report.failed_count
-    global gl_junk_recvd
-    gl_junk_recvd = report.junk_recvd
-    TrigExpEngine.reset()
-    return
 
 def ExecuteAllModules():
     module = modDB.getfirst()
     while module != None:
         infra_data = CreateInfraData()
-        status = module.main(infra_data)
-        if len(module.CompletedTestCases):
-            TestCaseDB.SetAll(module.CompletedTestCases)
-        ProcessReport()
+        module.main(infra_data)
         module = modDB.getnext()
  
 def GetSummaryAndResult():
@@ -75,27 +47,32 @@ def GetSummaryAndResult():
     print("%-16s %-32s %-6s %-6s %-6s %-6s" %\
           ('Module', 'Name', '', 'Passed', 'Failed', ' Total'))
     print("=" * 78)
-    
+
+    npass = 0
+    nfail = 0
+    ntotal = 0
+    gl_junk_recvd = False
+
     module = modDB.getfirst()
     final_result = 0
     while module != None:
         module.PrintResultSummary()
         module_result = module.GetFinalResult()
-        #logger.info("Module %s result = %d" % (module.name, module_result))
         final_result += module_result
+        npass += module.stats.passed
+        nfail += module.stats.failed
+        ntotal += module.stats.total
         module = modDB.getnext()
     
     print("-" * 78)
     print("%-16s %-32s %-6s %6d %6d %6d" %\
-          ('Total', '', '',
-           gl_num_pass, gl_num_fail, gl_num_pass + gl_num_fail))
+          ('Total', '', '', npass, nfail, ntotal))
     print("-" * 78)
 
     if final_result != 0:
         print("Final Status = FAIL")
         return 1
     
-    global gl_junk_recvd
     if gl_junk_recvd:
         print("Some junk packets where received")
         print("Final Status = FAIL")

@@ -24,6 +24,12 @@ class TestCaseParser(parser.ParserBase):
         assert(len(objlist) == 1)
         return objlist[0]
 
+class TestCaseReceivedPacketObject:
+    def __init__(self):
+        self.rawpkt = None
+        self.port = None
+        return
+
 class TestCaseTrigExpPacketObject:
     def __init__(self):
         self.packet     = None
@@ -74,20 +80,29 @@ class TestCaseSessionStepObject:
         self.received = TestCaseSessionStepTriggerExpectReceivedObject()
         return
 
+class TestCaseSessionObject:
+    def __init__(self):
+        self.steps = []
+        return
+
+    def AddStep(self, step):
+        self.steps.append(step)
+        return
+
 class TestCasePrivateData:
     def __init__(self):
         return
 
 class TestCase(objects.FrameworkObject):
-    def __init__(self, tcid, config_root_obj, infra_data, module):
+    def __init__(self, tcid, root, module):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
-        self.__config_root_obj = None
+        self.__root = None
         self.LockAttributes()
         
         self.GID(tcid)
-        self.__setup_config(config_root_obj)
+        self.__setup_config(root)
 
         self.packets        = objects.ObjectDatabase(logger = self)
         self.descriptors    = objects.ObjectDatabase(logger = self)
@@ -95,10 +110,10 @@ class TestCase(objects.FrameworkObject):
         self.objects        = objects.ObjectDatabase(logger = self)
 
         self.module         = module
-        self.infra_data     = infra_data
+        self.infra_data     = module.infra_data
         self.testspec       = module.testspec
-        self.logger         = infra_data.Logger
-        self.session        = []
+        self.logger         = self.infra_data.Logger
+        self.session        = TestCaseSessionObject()
         self.step_id        = 0
         self.pvtdata        = TestCasePrivateData()
 
@@ -106,9 +121,9 @@ class TestCase(objects.FrameworkObject):
         self.__generate()
         return
 
-    def __setup_config(self, config_root_obj):
-        self.__config_root_obj = config_root_obj
-        config_root_obj.SetupTestcaseConfig(self.config)
+    def __setup_config(self, root):
+        self.__root = root
+        root.SetupTestcaseConfig(self.config)
         return
 
     def __init_config(self, flow):
@@ -137,6 +152,10 @@ class TestCase(objects.FrameworkObject):
 
     def error(self, *args, **kwargs):
         self.logger.error(self.logpfx, *args, **kwargs)
+        return
+
+    def warn(self, *args, **kwargs):
+        self.logger.warn(self.logpfx, *args, **kwargs)
         return
 
     def debug(self, *args, **kwargs):
@@ -249,32 +268,24 @@ class TestCase(objects.FrameworkObject):
 
     def __setup_session(self):
         self.info("Setting Up Session")
-        for spec_ssn_entry in self.testspec.session:
-            tc_ssn_entry = TestCaseSessionEntryObject()
-            tc_ssn_entry.step = TestCaseSessionStepObject()
-            tc_ssn_entry.step.step_id = self.step_id
+        for tspstep in self.testspec.session:
+            step = TestCaseSessionStepObject()
+            step.step_id = self.step_id
             self.step_id += 1
 
             self.info("- Setting Up Session Step")
-            self.__setup_trigger(tc_ssn_entry.step,
-                                 spec_ssn_entry.step)
+            self.__setup_trigger(step, tspstep.step)
+            self.__setup_expect(step, tspstep.step)
 
-            self.__setup_expect(tc_ssn_entry.step,
-                                spec_ssn_entry.step)
-
-            self.session.append(tc_ssn_entry)
+            self.session.AddStep(step)
         return defs.status.SUCCESS
 
     def __setup_callback(self):
         self.module.RunModuleCallback('TestCaseSetup', self)
         return
 
-    def __teardown_callback(self):
-        self.module.RunModuleCallback('TestCaseTeardown', self)
-        return
-
     def __show_config_objects(self):
-        self.__config_root_obj.ShowTestcaseConfig(self.config, self)
+        self.__root.ShowTestcaseConfig(self.config, self)
         return
     
     def __generate(self):
@@ -285,15 +296,22 @@ class TestCase(objects.FrameworkObject):
         self.__setup_session()
         return defs.status.SUCCESS
 
-    def verify_callback(self):
+    def VerifyCallback(self):
         ret = self.module.RunModuleCallback('TestCaseVerify', self)
         if ret == defs.status.SUCCESS or ret is True:
+            self.info("TestCaseVerify status Success")
             status =  defs.status.SUCCESS
         else:
+            self.info("TestCaseVerify status Failure")
             status = defs.status.ERROR
-        self.__teardown_callback()
         return status
 
+    def TeardownCallback(self):
+        self.info("Invoking TestCaseTeardown.")
+        self.module.RunModuleCallback('TestCaseTeardown', self)
+        return
+
     def TriggerCallback(self):
+        self.info("Invoking TestCaseTrigger.")
         self.module.RunModuleCallback('TestCaseTrigger', self)
         return

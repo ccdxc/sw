@@ -10,6 +10,7 @@ import infra.common.logging     as logging
 import infra.common.objects     as objects
 import infra.common.loader      as loader
 import infra.factory.testspec   as testspec
+import infra.factory.testcase   as testcase
 
 from config.objects.session import SessionHelper
 from config.objects.rdma.session import RdmaSessionHelper
@@ -17,6 +18,7 @@ from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
+TestCaseIdAllocator = objects.TemplateFieldObject("range/1/65535")
 
 MODULE_CB_SETUP     = 'Setup'
 MODULE_CB_TEARDOWN  = 'Teardown'
@@ -72,7 +74,7 @@ class Module:
             objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
         else:
             objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
-        self.testspec.selectors.matching_objects = objs
+        self.testspec.selectors.roots = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
@@ -98,8 +100,8 @@ class Module:
         #self.module_hdl = None
         return
 
-    def UpdateResult(self, tc):
-        if tc.status == 'Failed':
+    def __update_stats(self, tc):
+        if tc.status == defs.status.ERROR:
             if self.ignore:
                 self.stats.ignored += 1
             self.stats.failed += 1
@@ -158,12 +160,6 @@ class Module:
         utils.LogFunctionEnd(self.logger)
         return
 
-    def __generate(self):
-        utils.LogFunctionBegin(self.logger)
-        status = self.infra_data.Factory.Generate(self.infra_data, self)
-        utils.LogFunctionEnd(self.logger, status)
-        return status
-
     def __update_results(self, testcase):
         return
 
@@ -171,23 +167,39 @@ class Module:
         return
 
     def __execute_testcase(self, testcase):
-        testcase.TriggerCallback()
-        testcase.status = self.infra_data.TrigExpEngine.run_test_case(testcase)
+        # Process trigger section of testspec
+        self.infra_data.TriggerEngine.Trigger(testcase)
         self.__debug_testcase(testcase)
         self.__update_results(testcase)
         return
 
+    def __is_tcid_filter_match(self, tcid):
+        if GlobalOptions.tcid is None:
+            return True
+
+        if not isinstance(GlobalOptions.tcid, int):
+            GlobalOptions.tcid = utils.ParseInteger(GlobalOptions.tcid)
+    
+        return tcid == GlobalOptions.tcid
+
     def __execute(self):
-        for testcase in self.infra_data.TestCases:
-            self.__execute_testcase(testcase)
-        self.CompletedTestCases.extend(self.infra_data.TestCases)
-        self.infra_data.TestCases = []
+        for root in self.testspec.selectors.roots:
+            tcid = TestCaseIdAllocator.get()
+            if not self.__is_tcid_filter_match(tcid): continue
+            tc = testcase.TestCase(tcid, root, self)
+            self.__execute_testcase(tc)
+            self.CompletedTestCases.append(tc)
         return
 
     def __teardown_callback(self):
         utils.LogFunctionBegin(self.logger)
         self.RunModuleCallback(MODULE_CB_TEARDOWN, self.infra_data, self)
         utils.LogFunctionEnd(self.logger)
+        return
+
+    def __process_results(self):
+        for tc in self.CompletedTestCases:
+            self.__update_stats(tc)
         return
 
     def main(self, infra_data):
@@ -203,13 +215,13 @@ class Module:
             self.__load_spec()
             self.__setup_callback()
             self.__select_config()
-            self.__generate()
             self.__execute()
             self.__teardown_callback()
             self.iterator.Next()
 
         self.__unload()
         self.stats.total = len(self.CompletedTestCases)
+        self.__process_results()
         return
 
 

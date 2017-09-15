@@ -115,33 +115,7 @@ session:
                   ring    : None
                     # actual : None  # Framework provided empty actual
 
-            snapshots:
-                # List of
-                - entry:
-                    object  : None      # Expected Snapshot object
-                    verify  : None
-                    # orig  : None  # Framework provided empty actual
-                    # actual : None  # Framework provided empty actual
-                    # After the TC is verified, the 'actual' will be 
-                    # updated to 'original'.
-                    fields  :
-                       # A   : 100
-                       # B   : 200
-                       # C   : +5 
-            
-            buffers:
-                - buffer:
-                    object      : None  # Expected BUFFER object
-                    rw_verify   : None  # Verify READ_ONCE,WRITTEN_ONCE etc
-                    # actual     : None  # Framework provided empty actual
         received:
-            timeout : None
-            packets:
-                # List of packets
-                - packet: None
-
-            descriptors:
-                # List of descriptors
-                - object  : None
-                  ring    : None
-                    # actual : None  # Framework provided empty actual
+            timeout     : None
+            packets     : None
+            descriptors : None
