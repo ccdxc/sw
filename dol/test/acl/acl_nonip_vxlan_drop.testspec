@@ -1,20 +1,18 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://type=TENANT
-        segment     : filter://any
+        tenant      : filter://overlay=VXLAN,type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-        interface   : filter://any
     dst:
-        tenant      : filter://type=TENANT
-        segment     : filter://any
+        tenant      : filter://overlay=VXLAN,type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-        interface   : filter://any
-    flow        : filter://fwtype=L2,type=MAC,label=NETWORKING
+    flow            : filter://fwtype=L2,type=MAC,label=NETWORKING
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : IN_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -24,7 +22,15 @@ packets:
                 dst     : callback://acl/packets/GetMacDA
                 type    : callback://acl/packets/GetEtherType
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

@@ -2,9 +2,20 @@
 import pdb
 from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
+import test.callbacks.networking.packets as networking
 
 def __get_acl_from_tc(tc):
     return tc.pvtdata.acl
+
+def GetPacketTemplate(testcase, packet):
+    acl = __get_acl_from_tc(testcase)
+    if acl.MatchOnProto():
+        if testcase.config.flow.IsIPV4():
+            template = 'ETH_IPV4_PROTO_200' 
+        else:
+            template = 'ETH_IPV6_PROTO_190' 
+        return infra_api.GetPacketTemplate(template)
+    return networking.GetPacketTemplateByFlow(testcase, packet)
 
 def GetMacSA(tc, packet):
     acl = __get_acl_from_tc(tc)
@@ -28,7 +39,7 @@ def GetEtherType(tc, packet):
     if acl.MatchOnEtherType():
         return acl.MatchEtherType()
 
-    return None
+    return tc.config.flow.ethertype
 
 def GetIPv4SIP(tc, packet):
     acl = __get_acl_from_tc(tc)
@@ -62,17 +73,6 @@ def GetIPv6DIP(tc, packet):
 
     return tc.config.flow.dip 
 
-def GetProto(tc, packet):
-    acl = __get_acl_from_tc(tc)
-
-    if acl.MatchOnProto():
-        return acl.MatchProto()
-
-    if tc.config.flow.IsIPV4():
-        return tc.config.flow.proto.lower()
-    else:
-        return tc.config.flow.proto.upper()
-
 def GetUDPSport(tc, packet):
     acl = __get_acl_from_tc(tc)
 
@@ -88,6 +88,14 @@ def GetUDPDport(tc, packet):
         return acl.MatchUDPDport()
 
     return tc.config.flow.dport
+
+def GetTCPFlags(tc, packet):
+    acl = __get_acl_from_tc(tc)
+
+    if acl.MatchOnTCPFlags():
+        return acl.MatchTCPFlags()
+
+    return None
 
 def GetTCPSport(tc, packet):
     acl = __get_acl_from_tc(tc)

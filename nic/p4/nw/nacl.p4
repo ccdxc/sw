@@ -85,8 +85,9 @@ table nacl {
         control_metadata.dst_lport                         : ternary;
         control_metadata.flow_miss_ingress                 : ternary;
         control_metadata.drop_reason                       : ternary;
-        l3_metadata.ipv4_option_seen                       : ternary;
-        l3_metadata.ipv4_frag                              : ternary;
+        l3_metadata.ip_option_seen                         : ternary;
+        l3_metadata.tcp_option_seen                        : ternary;
+        l3_metadata.ip_frag                                : ternary;
         // Outer mac da for tunnel cases
         ethernet.dstAddr                                   : ternary;
         // Removing srcMacAddr to accomodate other fields

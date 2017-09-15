@@ -34,6 +34,7 @@ def TestCaseSetup(tc):
     acl.UpdateSIF(tc.config.src.endpoint.intf)
     acl.UpdateDIF(tc.config.dst.endpoint.intf)
     acl.UpdateSegment(tc.config.src.segment)
+    acl.UpdateTenant(tc.config.src.tenant)
 
     acl.Show()
     acl.Configure()

@@ -1,0 +1,30 @@
+meta:
+    id: ETH_IPV4_PROTO_200
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/200
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:
+
+    - header:
+        id      : pendol
+        template: ref://store/headers/id=PENDOL
+        fields:
+
+    - header:
+        id      : crc
+        template: ref://store/headers/id=CRC
+        fields:

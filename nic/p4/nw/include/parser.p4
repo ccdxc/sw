@@ -479,7 +479,7 @@ parser parse_ipv4_option_rr{
 
 @pragma header_ordering ipv4_option_security ipv4_option_timestamp ipv4_option_lsr ipv4_option_ssr ipv4_option_rr ipv4_option_NOP ipv4_option_EOL
 parser parse_ipv4_options {
-    set_metadata(l3_metadata.ipv4_option_seen, 1);
+    set_metadata(l3_metadata.ip_option_seen, 1);
     return select(parser_metadata.parse_ipv4_counter, current(0, 8)) {
         0x0000 mask 0xff00 : parse_base_ipv4;
         0x0000 mask 0x00ff : parse_ipv4_option_EOL;
@@ -543,6 +543,7 @@ parser parse_fragment_hdr {
 
 @pragma header_ordering v6_generic v6_frag
 parser parse_ipv6_extn_hdrs {
+    set_metadata(l3_metadata.ip_option_seen, 1);
     return select(parser_metadata.ipv6_nextHdr) {
         0x00: ingress; // hop-by-hop option, not supported
         0x2b: parse_v6_generic_ext_hdr;
@@ -780,6 +781,7 @@ parser parse_tcp_timestamp {
 
 @pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_nop tcp_option_eol
 parser parse_tcp_options {
+    set_metadata(l3_metadata.tcp_option_seen, 1);
     return select(parser_metadata.parse_tcp_counter, current(0, 8)) {
         0x0000 mask 0xff00 : ingress;
         0x0000 mask 0x00ff: parse_tcp_option_EOL;
@@ -1035,7 +1037,7 @@ parser parse_inner_ipv4_option_rr {
 
 @pragma header_ordering inner_ipv4_option_security inner_ipv4_option_timestamp inner_ipv4_option_lsr inner_ipv4_option_ssr inner_ipv4_option_rr inner_ipv4_option_NOP inner_ipv4_option_EOL
 parser parse_inner_ipv4_options {
-    set_metadata(l3_metadata.inner_ipv4_option_seen, 1);
+    set_metadata(l3_metadata.inner_ip_option_seen, 1);
     return select(parser_metadata.parse_inner_ipv4_counter, current(0, 8)) {
         0x0000 mask 0xff00 : parse_base_inner_ipv4;
         0x0000 mask 0x00ff : parse_inner_ipv4_option_EOL;

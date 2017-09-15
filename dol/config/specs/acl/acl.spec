@@ -147,7 +147,7 @@ entries:
                 type    : v6
             l4:
                 type    : proto
-                proto   : const/100
+                proto   : const/190
         action:
             action: deny 
 
@@ -187,6 +187,20 @@ entries:
 #    - entry:
 #        id: ACL_TCP_OPTIONS_ACTION_DROP
 #
+
+    - entry:
+        id: ACL_TCP_FLAGS_ACTION_DROP
+        match:
+            type: ip
+            l4:
+                type: tcp
+                tcp:
+                    syn: True    
+                    ack: True
+                    fin: False
+        action:
+            action: deny
+
     - entry:
         id: ACL_UDP_SPORT_ACTION_DROP
         match:
@@ -209,13 +223,45 @@ entries:
         action:
             action: deny 
 
+    - entry:
+        id: ACL_ICMP_ACTION_DROP
+        match:
+            type : ip
+            ip:
+                type: v4
+            l4:
+                type : icmp
+                icmp :
+                    code        : const/0
+                    code_mask   : const/0xff
+                    type        : const/0x08
+                    type_mask   : const/0xff
+        action:
+            action: deny
 
-#    - entry:
-#        id: ACL_ICMP_ACTION_DROP
-#
-#    - entry:
-#        id: ACL_ICMPV6_ACTION_DROP
-#
+    - entry:
+        id: ACL_ICMPV6_ACTION_DROP
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    code        : const/0
+                    code_mask   : const/0xff
+                    type        : const/0x80
+                    type_mask   : const/0xff
+        action:
+            action: deny
+
+    - entry:
+        id: ACL_TENANT_ACTION_DROP
+        match:
+            tenant_match : True
+        action:
+            action: deny
+
     - entry:
         id: ACL_SEGMENT_ACTION_DROP
         match:
@@ -223,10 +269,12 @@ entries:
         action:
             action: deny
 
-
-#    - entry:
-#        id: ACL_VNID_ACTION_DROP
-#
+    - entry:
+        id: ACL_VNID_ACTION_DROP
+        match:
+            segment_match : True
+        action:
+            action: deny
 
     - entry:
         id: ACL_DIF_ACTION_DROP
@@ -241,4 +289,3 @@ entries:
             src_if_match : True
         action:
             action: deny
-

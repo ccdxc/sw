@@ -22,7 +22,7 @@ action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv4.ttl);
     modify_field(flow_lkp_metadata.ip_version, inner_ipv4.version);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
-    modify_field(l3_metadata.ipv4_option_seen, l3_metadata.inner_ipv4_option_seen);
+    modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     if (inner_ipv4.protocol == IP_PROTO_TCP) {

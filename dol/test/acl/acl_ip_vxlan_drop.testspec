@@ -1,20 +1,18 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://type=TENANT
-        segment     : filter://any
+        tenant      : filter://overlay=VXLAN,type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-        interface   : filter://any
     dst:
         tenant      : filter://type=TENANT
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-        interface   : filter://any
-    flow        : filter://label=NETWORKING
+    flow            : filter://label=NETWORKING
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : IN_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://acl/packets/GetPacketTemplate
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -25,7 +23,7 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
             ipv4:
                 src     : callback://acl/packets/GetIPv4SIP
                 dst     : callback://acl/packets/GetIPv4DIP
@@ -47,6 +45,14 @@ packets:
             icmpv6:
                 code    : callback://acl/packets/GetICMPCode
                 type    : callback://acl/packets/GetICMPType
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

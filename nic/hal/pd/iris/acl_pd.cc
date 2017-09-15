@@ -7,6 +7,8 @@
 #include <defines.h>
 #include <if_pd_utils.hpp>
 #include <eth.h>
+#include <tenant.hpp>
+#include <tenant_pd.hpp>
 #include <l2segment.hpp>
 #include <l2seg_pd.hpp>
 #include <l2segment_api.hpp>
@@ -195,7 +197,11 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     acl_ip_match_spec_t  *ip_mask;
     acl_t                *pi_acl = (acl_t *)pd_acl->pi_acl;
     uint64_t             mac_int;
+    tenant_t             *tenant = NULL;
     l2seg_t              *l2seg = NULL;
+    uint16_t             l2seg_mask = 0;
+    uint16_t             ten_mask = 0;
+    uint8_t              ten_shift = 0;
 
     ms = acl_get_match_spec(pi_acl);
     as = acl_get_action_spec(pi_acl);
@@ -239,6 +245,19 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     key.entry_status_inactive = 0;
     mask.entry_status_inactive_mask = 0x1;
 
+    pd_get_l2seg_ten_masks(&l2seg_mask, &ten_mask, &ten_shift);
+    if (ms->tenant_match) {
+        tenant = tenant_lookup_by_handle(ms->tenant_handle);
+        key.flow_lkp_metadata_lkp_vrf = 
+            ((pd_tenant_t *)(tenant->pd))->ten_hw_id << ten_shift;
+        mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask;
+    } else if (ms->l2seg_match) {
+        l2seg = find_l2seg_by_handle(ms->l2seg_handle);
+        key.flow_lkp_metadata_lkp_vrf = 
+            ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
+        mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask | l2seg_mask;
+    }
+
     if (ms->src_if_match) {
         key.control_metadata_src_lport = 
             if_get_lport_id(find_if_by_handle(ms->src_if_handle));
@@ -251,13 +270,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             if_get_lport_id(find_if_by_handle(ms->dest_if_handle));
         mask.control_metadata_dst_lport_mask = 
             ~(mask.control_metadata_dst_lport_mask & 0);
-    }
-
-    if (ms->l2seg_match) {
-        l2seg = find_l2seg_by_handle(ms->l2seg_handle);
-        key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
-        mask.flow_lkp_metadata_lkp_vrf_mask = 
-            ~(mask.flow_lkp_metadata_lkp_vrf_mask & 0);
     }
 
     switch(ms->acl_type) {
@@ -343,14 +355,18 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     // TODO:Populate the below values
     key.control_metadata_flow_miss_ingress = 0;
     mask.control_metadata_flow_miss_ingress_mask = 0;
-    key.l3_metadata_ipv4_option_seen = 0;
-    mask.l3_metadata_ipv4_option_seen_mask = 0;
-    key.l3_metadata_ipv4_frag = 0;
-    mask.l3_metadata_ipv4_frag_mask = 0;
+    key.ethernet_dstAddr[0] = 0;
+    mask.ethernet_dstAddr_mask[0] = 0;
+    key.l3_metadata_ip_option_seen = 0;
+    mask.l3_metadata_ip_option_seen_mask = 0;
+    key.l3_metadata_ip_frag = 0;
+    mask.l3_metadata_ip_frag_mask = 0;
     key.control_metadata_drop_reason = 0;
     mask.control_metadata_drop_reason_mask = 0;
     key.tunnel_metadata_tunnel_terminate = 0;
     mask.tunnel_metadata_tunnel_terminate_mask = 0;
+    key.l3_metadata_tcp_option_seen = 0;
+    mask.l3_metadata_tcp_option_seen_mask = 0;
 
     acl_tbl = g_hal_state_pd->acl_table();
     HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);

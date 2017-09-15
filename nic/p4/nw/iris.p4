@@ -25,10 +25,11 @@
 
 header_type l3_metadata_t {
     fields {
-        ipv4_option_seen           : 1;
-        inner_ipv4_option_seen     : 1;
-        ipv4_frag                  : 1;
-        inner_ipv4_frag            : 1;
+        ip_option_seen           : 1;
+        inner_ip_option_seen     : 1;
+        ip_frag                  : 1;
+        inner_ip_frag            : 1;
+        tcp_option_seen          : 1;
     }
 }
 

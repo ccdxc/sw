@@ -10,6 +10,8 @@ fields:
         src_if          : None
         dst_if_match    : False
         dst_if          : None
+        tenant_match    : False
+        tenant          : None
         segment_match   : False
         segment         : None
         eth: 
@@ -35,6 +37,11 @@ fields:
             type    : None
             proto   : const/0
             tcp:
+                syn           : None
+                ack           : None
+                fin           : None
+                rst           : None
+                urg           : None
                 src_port_range: range/0/65535
                 dst_port_range: range/0/65535
             udp:

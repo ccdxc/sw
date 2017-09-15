@@ -130,6 +130,9 @@ static hal_ret_t
 validate_acl_create (AclSpec& spec,
                      AclResponse *rsp)
 {
+    acl_t        *acl = NULL;
+    acl_id_t     acl_id;
+
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("PI-ACL:{}: ACL id not provided",
                       __func__);
@@ -145,6 +148,14 @@ validate_acl_create (AclSpec& spec,
         return HAL_RET_INVALID_ARG;
     }
 
+    acl_id = spec.key_or_handle().acl_id();
+    acl = find_acl_by_id(acl_id);
+    if (acl) {
+        HAL_TRACE_ERR("PI-ACL:{} ACL with id {} already created", 
+                      __func__, acl_id);
+        rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
+        return HAL_RET_ENTRY_EXISTS;
+    }
     return HAL_RET_OK;
 }
 
@@ -411,6 +422,9 @@ extract_match_spec (acl_match_spec_t *ms,
                     AclResponse *rsp)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    tenant_t             *tenant = NULL;
+    tenant_id_t          tenant_id;
+    hal_handle_t         tenant_handle = 0;
     if_t                 *src_if = NULL;
     if_id_t              src_if_id;
     hal_handle_t         src_if_handle = 0;
@@ -476,7 +490,28 @@ extract_match_spec (acl_match_spec_t *ms,
         }
     }
 
-    if (sel.has_l2segment_key_handle()) {
+    if (sel.seg_selector_case() == acl::AclSelector::kTenantKeyHandle) {
+        ms->tenant_match = true;
+
+        auto tenant_kh = sel.tenant_key_handle();
+        if (tenant_kh.key_or_handle_case() == tenant::TenantKeyHandle::kTenantId) {
+            tenant_id = tenant_kh.tenant_id();
+            tenant = tenant_lookup_by_id(tenant_id);
+        } else {
+            tenant_handle = tenant_kh.tenant_handle();
+            tenant = tenant_lookup_by_handle(tenant_handle);
+        }
+
+        if(tenant == NULL) {
+            HAL_TRACE_ERR("PI-ACL:{}: Tenant not found",
+                          __func__);
+            rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+            ret = HAL_RET_TENANT_NOT_FOUND;
+            goto end;
+        } else {
+            ms->tenant_handle = tenant->hal_handle;
+        }
+    } else if (sel.seg_selector_case() == acl::AclSelector::kL2SegmentKeyHandle) {
         ms->l2seg_match = true;
 
         auto l2seg_kh = sel.l2segment_key_handle();
@@ -716,6 +751,7 @@ validate_acl_delete (acl::AclDeleteRequest& req,
     hal_handle_t acl_handle;
 
     if (!req.has_key_or_handle()) {
+        HAL_TRACE_ERR("PI-ACL:{}: Delete request is empty", __func__);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return NULL;
     }
@@ -730,6 +766,7 @@ validate_acl_delete (acl::AclDeleteRequest& req,
     }
 
     if (!acl) {
+        HAL_TRACE_ERR("PI-ACL:{}: ACL not found", __func__);
         rsp->set_api_status(types::API_STATUS_ACL_NOT_FOUND);
         return NULL;
     }

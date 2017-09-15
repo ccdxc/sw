@@ -118,7 +118,7 @@ TEST_F(acl_test, test2)
     AclSelector   *match; 
     AclActionInfo *action;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 10; i < 20; i++) {
         match = spec.mutable_match();
         match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
@@ -128,7 +128,7 @@ TEST_F(acl_test, test2)
         action = spec.mutable_action();
         action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
-        spec.mutable_key_or_handle()->set_acl_id(1);
+        spec.mutable_key_or_handle()->set_acl_id(i);
         spec.set_priority(100);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -153,7 +153,7 @@ TEST_F(acl_test, test3)
 
     std::vector<hal_handle_t> entries;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 100; i < 110; i++) {
         match = spec.mutable_match();
         match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
@@ -163,7 +163,7 @@ TEST_F(acl_test, test3)
         action = spec.mutable_action();
         action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
-        spec.mutable_key_or_handle()->set_acl_id(1);
+        spec.mutable_key_or_handle()->set_acl_id(i);
         spec.set_priority(100);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

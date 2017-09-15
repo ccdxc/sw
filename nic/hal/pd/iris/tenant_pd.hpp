@@ -12,7 +12,10 @@ using hal::utils::ht_ctxt_t;
 namespace hal {
 namespace pd {
 
-#define HAL_MAX_HW_VRFS     256
+#define HAL_MAX_HW_VRFS         256
+#define HAL_PD_L2SEG_MASK       0xFFF
+#define HAL_PD_TENANT_MASK      0xF000
+#define HAL_PD_TENANT_SHIFT     12
 
 
 typedef uint32_t    tenant_hw_id_t;

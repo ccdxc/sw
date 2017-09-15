@@ -6,6 +6,7 @@ import infra.common.objects     as objects
 import infra.config.base        as base
 
 import config.resmgr            as resmgr
+import config.objects.tenant    as tenant
 import config.objects.segment   as segment
 import config.objects.lif       as lif
 import config.objects.tunnel    as tunnel
@@ -90,6 +91,12 @@ class AclObject(base.ConfigObjectBase):
             else:
                 cfglogger.info("  Segment Not set")
 
+        if self.MatchOnTenant():
+            if self.fields.match.tenant:
+                cfglogger.info("  Tenant     : %s" % self.fields.match.tenant.GID())
+            else:
+                cfglogger.info("  Tenant Not set")
+
         if self.MatchOnEth():
             cfglogger.info("  Eth:")
             cfglogger.info("  - Ethertype : %d" % self.fields.match.eth.ethertype.get())
@@ -107,11 +114,16 @@ class AclObject(base.ConfigObjectBase):
             cfglogger.info("  - Proto : %d" % self.fields.match.l4.proto.get())
         if self.MatchOnTCP():
             cfglogger.info("  TCP:")
-#            cfglogger.info("  - Syn             : %d" % self.fields.match.l4.tcp.syn.get())
-#            cfglogger.info("  - Ack             : %d" % self.fields.match.l4.tcp.ack.get())
-#            cfglogger.info("  - Fin             : %d" % self.fields.match.l4.tcp.fin.get())
-#            cfglogger.info("  - Rst             : %d" % self.fields.match.l4.tcp.rst.get())
-#            cfglogger.info("  - Urg             : %d" % self.fields.match.l4.tcp.urg.get())
+            if self.MatchOnTCPFlags(['syn']):
+                cfglogger.info("  - Syn             : %d" % self.fields.match.l4.tcp.syn)
+            if self.MatchOnTCPFlags(['ack']):
+                cfglogger.info("  - Ack             : %d" % self.fields.match.l4.tcp.ack)
+            if self.MatchOnTCPFlags(['fin']):
+                cfglogger.info("  - Fin             : %d" % self.fields.match.l4.tcp.fin)
+            if self.MatchOnTCPFlags(['rst']):
+                cfglogger.info("  - Rst             : %d" % self.fields.match.l4.tcp.rst)
+            if self.MatchOnTCPFlags(['urg']):
+                cfglogger.info("  - Urg             : %d" % self.fields.match.l4.tcp.urg)
             cfglogger.info("  - Src Port-Range  : %d-%d" %\
                            (self.fields.match.l4.tcp.src_port_range.GetStart(),
                             self.fields.match.l4.tcp.src_port_range.GetEnd()))
@@ -168,8 +180,12 @@ class AclObject(base.ConfigObjectBase):
                     self.fields.match.dst_if.hal_handle
 
         if self.MatchOnSegment():
-            reqspec.match.l2segment_key_handle.l2segment_handle=\
+            reqspec.match.l2segment_key_handle.l2segment_handle =\
                     self.fields.match.segment.hal_handle
+
+        if self.MatchOnTenant():
+            reqspec.match.tenant_key_handle.tenant_id =\
+                    self.fields.match.tenant.id
 
         if self.MatchOnEth():
             reqspec.match.eth_selector.eth_type = self.fields.match.eth.ethertype.get()
@@ -198,6 +214,36 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnL4Proto():
             reqspec.match.ip_selector.ip_protocol = self.fields.match.l4.proto.get()
         if self.MatchOnTCP():
+            if self.MatchOnTCPFlags(['syn']):
+                if self.fields.match.l4.tcp.syn:
+                    reqspec.match.ip_selector.tcp_selector.tcp_syn_set = True
+                else:
+                    reqspec.match.ip_selector.tcp_selector.tcp_syn_clear = True
+
+            if self.MatchOnTCPFlags(['ack']):
+                if self.fields.match.l4.tcp.ack:
+                    reqspec.match.ip_selector.tcp_selector.tcp_ack_set = True
+                else:
+                    reqspec.match.ip_selector.tcp_selector.tcp_ack_clear = True
+
+            if self.MatchOnTCPFlags(['fin']):
+                if self.fields.match.l4.tcp.fin:
+                    reqspec.match.ip_selector.tcp_selector.tcp_fin_set = True
+                else:
+                    reqspec.match.ip_selector.tcp_selector.tcp_fin_clear = True
+
+            if self.MatchOnTCPFlags(['rst']):
+                if self.fields.match.l4.tcp.rst:
+                    reqspec.match.ip_selector.tcp_selector.tcp_rst_set = True
+                else:
+                    reqspec.match.ip_selector.tcp_selector.tcp_rst_clear = True
+
+            if self.MatchOnTCPFlags(['urg']):
+                if self.fields.match.l4.tcp.urg:
+                    reqspec.match.ip_selector.tcp_selector.tcp_urg_set = True
+                else:
+                    reqspec.match.ip_selector.tcp_selector.tcp_urg_clear = True
+
             reqspec.match.ip_selector.tcp_selector.src_port_range.port_low = \
                     self.fields.match.l4.tcp.src_port_range.GetStart()
             reqspec.match.ip_selector.tcp_selector.src_port_range.port_high = \
@@ -261,6 +307,13 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnDIF():
             self.fields.match.dst_if = dif
 
+    def MatchOnTenant(self):
+        return self.fields.match.tenant_match
+
+    def UpdateTenant(self, tenant):
+        if self.MatchOnTenant():
+            self.fields.match.tenant = tenant
+
     def MatchOnSegment(self):
         return self.fields.match.segment_match
 
@@ -285,6 +338,23 @@ class AclObject(base.ConfigObjectBase):
 
     def MatchOnTCP(self):
         return self.MatchOnIP() and self.fields.match.l4.type == 'tcp'
+
+    def MatchOnTCPFlags(self, flags=['syn','ack','fin','rst','urg']):
+        if not self.MatchOnTCP():
+            return False
+
+        for flag in flags:
+            if getattr(self.fields.match.l4.tcp, flag) is not None:
+                return True
+
+    def MatchTCPFlags(self):
+        flags=['syn','ack','fin','rst','urg']
+        f = []
+        for flag in flags:
+            if getattr(self.fields.match.l4.tcp, flag):
+                f.append(flag)
+
+        return ','.join(f)
 
     def MatchOnUDP(self):
         return self.MatchOnIP() and self.fields.match.l4.type == 'udp'

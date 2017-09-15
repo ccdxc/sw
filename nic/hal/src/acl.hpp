@@ -32,9 +32,9 @@ typedef struct acl_udp_match_spec_s {
 } __PACK__ acl_udp_match_spec_t;
 
 typedef struct acl_tcp_match_spec_s {
-    uint16_t sport; // Src port
-    uint16_t dport; // Dest port
-    uint8_t tcp_flags; // TCP flags
+    uint16_t sport;        // Src port
+    uint16_t dport;        // Dest port
+    uint8_t  tcp_flags;    // TCP flags
 } __PACK__ acl_tcp_match_spec_t;
 
 typedef struct acl_ip_match_spec_s {
@@ -59,6 +59,8 @@ typedef enum {
 
 // Specifications for the Acl
 typedef struct acl_match_spec_s {
+    bool            tenant_match;
+    hal_handle_t    tenant_handle;     // tenant handle
     bool            src_if_match;
     hal_handle_t    src_if_handle;     // source if handle
     bool            dest_if_match;

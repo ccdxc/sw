@@ -45,7 +45,7 @@ tunneled_ipv4_packet:
   phvwr       p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwr       p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
   phvwr       p.flow_lkp_metadata_ip_version, k.inner_ipv4_version
-  phvwr       p.l3_metadata_ipv4_option_seen, k.l3_metadata_inner_ipv4_option_seen
+  phvwr       p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr

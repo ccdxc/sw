@@ -5,6 +5,7 @@
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
 #include "tunnelif_pd.hpp"
+#include "tenant_pd.hpp"
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
 #include <interface_api.hpp>
@@ -324,6 +325,23 @@ ten_get_nwsec_prof_hw_id(tenant_t *pi_ten)
 end:
     return nwsec_hw_id;
 }
+
+hal_ret_t
+pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask, 
+                       uint8_t *ten_shift) 
+{
+    if (!l2seg_mask || !ten_mask || !ten_shift) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    *l2seg_mask = HAL_PD_L2SEG_MASK;
+    *ten_mask = HAL_PD_TENANT_MASK;
+    *ten_shift = HAL_PD_TENANT_SHIFT;
+
+    return HAL_RET_OK;
+}
+
+
 
 uint8_t *memrev(uint8_t *block, size_t elnum)
 {

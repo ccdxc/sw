@@ -63,12 +63,12 @@ ipsg_drop:
 
 f_tcp_stateless_normalization:
 lb_tcp_rsvd_flags:
-  seq         c2, k.{l4_metadata_tcp_rsvd_flags_action_sbit0_ebit0,l4_metadata_tcp_rsvd_flags_action_sbit1_ebit1}, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
   seq         c2, k.l4_metadata_tcp_unexpected_mss_action, NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.{l4_metadata_tcp_rsvd_flags_action_sbit0_ebit0,l4_metadata_tcp_rsvd_flags_action_sbit1_ebit1}, NORMALIZATION_ACTION_DROP
+  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT

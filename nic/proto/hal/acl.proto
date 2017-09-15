@@ -7,6 +7,8 @@ syntax = "proto3";
 import "types.proto";
 import "interface.proto";
 import "l2segment.proto";
+import "tenant.proto";
+import "telemetry.proto";
 
 package acl;
 
@@ -97,12 +99,15 @@ message IPSelector {
 
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
-  intf.InterfaceKeyHandle      src_if_key_handle    = 1;    // source interface
-  intf.InterfaceKeyHandle      dst_if_key_handle    = 2;    // destination interface
-  l2segment.L2SegmentKeyHandle l2segment_key_handle = 3;    // L2 segment
+  intf.InterfaceKeyHandle          src_if_key_handle    = 1;    // source interface
+  intf.InterfaceKeyHandle          dst_if_key_handle    = 2;    // destination interface
+  oneof seg_selector {
+      tenant.TenantKeyHandle       tenant_key_handle    = 3;    // Tenant match
+      l2segment.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
+  }
   oneof pkt_selector {
-    EthSelector                eth_selector         = 4;    // non-IP packet selector
-    IPSelector                 ip_selector          = 5;    // IP packet selector
+    EthSelector                    eth_selector         = 5;    // non-IP packet selector
+    IPSelector                     ip_selector          = 6;    // IP packet selector
   }
 }
 
