@@ -1259,8 +1259,13 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
             sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
 
         elif lkp_reg.type == lkp_reg_type.LKP_REG_STORED:
-            sram['lkp_val_inst'][r]['sel']['value'] = str(3)
-            sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
+            if add_cs != None:
+                # convert stored to retain as we did not have a chance to store them
+                sram['lkp_val_inst'][r]['sel']['value'] = str(2)
+                sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
+            else:
+                sram['lkp_val_inst'][r]['sel']['value'] = str(3)
+                sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
         else: # REG_LOAD/UPDATE
             if lkp_reg.capri_expr:
                 if lkp_reg.capri_expr.op1:

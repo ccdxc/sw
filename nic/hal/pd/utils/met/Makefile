@@ -6,7 +6,7 @@ LCXXFLAGS = \
 			-I.. \
 			-I../../../../include \
 			-I../../../../hal/pd \
-			-I../../../../gen/iris/include \
+			-I../../../../hal/pd/capri \
 			-I../../../../third-party/spdlog/include
 
 SOURCES = \

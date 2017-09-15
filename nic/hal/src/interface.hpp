@@ -9,7 +9,6 @@
 #include <bitmap.hpp>
 #include <l2segment.hpp>
 #include <interface.pb.h>
-#include <interface.hpp>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;

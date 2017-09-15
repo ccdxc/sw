@@ -41,6 +41,7 @@ SOURCES = \
 		  qos.cc \
 		  interface_api.cc \
 		  l2segment_api.cc \
+		  oif_list_mgr.cc \
 		  endpoint_api.cc \
 		  nwsec_api.cc \
 		  qos_api.cc \

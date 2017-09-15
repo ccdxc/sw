@@ -80,12 +80,13 @@ flow_miss:
   add         r1, r0, k.control_metadata_flow_miss_action
   phvwr       p.control_metadata_flow_miss, 1
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_flow_miss_tm_oqueue
+  phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   .brbegin
   br          r1[1:0]
   phvwr       p.control_metadata_flow_miss_ingress, 1
   .brcase FLOW_MISS_ACTION_CPU
-  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  phvwr       p.control_metadata_dst_lport, CPU_LPORT
+  phvwr.e     p.control_metadata_dst_lport, CPU_LPORT
+  nop
   .brcase FLOW_MISS_ACTION_DROP
   phvwr.e     p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
   phvwr       p.capri_intrinsic_drop, 1
@@ -96,8 +97,8 @@ flow_miss:
   phvwr.!c1.e p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   phvwr.!c1   p.control_metadata_dst_lport, CPU_LPORT
   .brcase FLOW_MISS_ACTION_REDIRECT
-  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  phvwr       p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
+  phvwr.e     p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
+  nop
   .brend
 
 flow_miss_input_properites_miss_drop:

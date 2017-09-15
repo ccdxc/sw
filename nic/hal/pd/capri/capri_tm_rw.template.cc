@@ -310,3 +310,25 @@ capri_tm_uplink_lif_set(uint32_t port,
 
     return HAL_RET_OK;
 }
+
+/* Programs the base address in HBM for the replication table */
+hal_ret_t
+capri_tm_repl_table_base_addr_set(uint32_t addr)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.base(addr);
+    pbc_csr.cfg_rpl.write();
+    return HAL_RET_OK;
+}
+
+/* Programs the # of tokens per replication table entry */
+hal_ret_t
+capri_tm_repl_table_num_tokens_set(uint32_t num_tokens)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.token_size(num_tokens);
+    pbc_csr.cfg_rpl.write();
+    return HAL_RET_OK;
+}

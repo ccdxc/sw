@@ -11,6 +11,7 @@
 #include <periodic/periodic.hpp>
 #include <lif_manager.hpp>
 #include <rdma.hpp>
+#include <oif_list_mgr.hpp>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include <interface.hpp>
@@ -700,7 +701,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??
     g_lif_manager = new LIFManager();
-   
+
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
@@ -710,7 +711,6 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     hal_proxy_svc_init();
-    
     return HAL_RET_OK;
 }
 

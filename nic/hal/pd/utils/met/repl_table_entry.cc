@@ -3,6 +3,7 @@
 #include "repl_entry.hpp"
 #include "met.hpp"
 #include "trace.hpp"
+#include <capri_repl.hpp>
 
 using hal::pd::utils::ReplTableEntry;
 
@@ -118,11 +119,26 @@ end:
 hal_ret_t
 ReplTableEntry::program_table()
 {
-    hal_ret_t rs = HAL_RET_OK;
+    int i = 0;
+    ReplEntry *repl_entry;
+    capri_repl_table_entry capri_entry;
 
-    // TODO: Walk replication entries. Pgm at repl_table_index_
+    for (repl_entry = get_first_repl_entry(); repl_entry;
+         repl_entry = repl_entry->get_next()) {
 
-    return rs;
+        capri_entry.set_token(repl_entry->get_data(), i++, repl_entry->get_data_len());
+        capri_entry.set_num_tokens(get_num_repl_entries());
+
+        if (get_next()) {
+            capri_entry.set_next_ptr(get_next()->get_repl_table_index());
+            capri_entry.set_last_entry(0);
+        } else {
+            capri_entry.set_next_ptr(0);
+            capri_entry.set_last_entry(1);
+        }
+    }
+
+    return capri_repl_entry_write(get_repl_table_index(), &capri_entry);
 }
 
 // ----------------------------------------------------------------------------
@@ -132,6 +148,7 @@ hal_ret_t
 ReplTableEntry::deprogram_table()
 {
     hal_ret_t rs = HAL_RET_OK;
+    capri_repl_table_entry capri_entry;
 
     // TODO: zerout the entry at repl_table_index_
     return rs;

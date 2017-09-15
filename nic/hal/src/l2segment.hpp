@@ -31,6 +31,8 @@ typedef struct l2seg_s {
     MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
     BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
 
+    oif_list_id_t         bcast_oif_list;          // outgoing interface list for broadcast/flood
+
     // operational state of L2 segment
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              num_ep;                  // no. of endpoints

@@ -19,6 +19,7 @@ SLOBJECTS = \
 		  $(OBJDIR)/repl_list.o \
 		  $(OBJDIR)/repl_table_entry.o \
 		  $(OBJDIR)/repl_entry.o \
+		  $(OBJDIR)/capri_repl.o \
 		  $(OBJDIR)/capri_tbl_rw.o \
 		  $(OBJDIR)/capri_loader.o \
 		  $(OBJDIR)/p4pd_api.o \

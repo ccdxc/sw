@@ -50,7 +50,7 @@ private:
 
 public:
 
-    Met(std::string table_name, uint32_t table_id, 
+    Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
         uint32_t repl_entry_data_len);
     ~Met();

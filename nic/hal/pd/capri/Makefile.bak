@@ -26,6 +26,7 @@ SRCS := \
     capri_asic_rw.cc \
     capri_loader.cc \
     capri_tbl_rw.cc \
+    capri_repl.cc \
 	capri_hbm.cc \
     $(NULL)
 

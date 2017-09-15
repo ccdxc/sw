@@ -12,8 +12,11 @@ namespace pd {
 struct pd_if_s {
 } __PACK__;
 
+
+hal_ret_t if_l2seg_get_encap_rewrite(if_t *pi_if, l2seg_t *pi_l2seg, uint32_t *encap_data,
+                                     uint32_t *rewrite_idx, uint32_t *tnnl_rewrite_idx);
+
 }   // namespace pd
 }   // namespace hal
 
 #endif    // __HAL_PD_IF_HPP__
-

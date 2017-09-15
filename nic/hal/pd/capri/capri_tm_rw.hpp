@@ -94,4 +94,22 @@ hal_ret_t
 capri_tm_uplink_lif_set(uint32_t port,
                         uint32_t lif);
 
+/** capri_tm_repl_table_base_addr_set
+ * API to program the base address in HBM for the replication table
+ *
+ * @param addr[in]: HBM Base address for the replication table
+ * @return hal_ret_t: Status of the operation
+ */
+hal_ret_t
+capri_tm_repl_table_base_addr_set(uint32_t addr);
+
+/** capri_tm_repl_table_num_tokens_set
+ * API to program the number of tokens per replication table entry
+ *
+ * @param num_tokens[in]: Number of tokens per replication table entry
+ * @return hal_ret_t: Status of the operation
+ */
+hal_ret_t
+capri_tm_repl_table_num_tokens_set(uint32_t num_tokens);
+
 #endif

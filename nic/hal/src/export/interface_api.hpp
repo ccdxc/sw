@@ -10,6 +10,7 @@
 #ifndef __INTERFACE_API_HPP__
 #define __INTERFACE_API_HPP__
 
+#include <interface.hpp>
 
 namespace hal {
 

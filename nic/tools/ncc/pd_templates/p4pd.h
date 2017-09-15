@@ -491,4 +491,46 @@ inline void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *acti
     *action_name = '\0';
 }
 
-#endif 
+//::    for i in range(len(pddict['egr-hdrs'])):
+//::        if pddict['egr-hdrs'][i].name == 'tm_replication_data':
+//::            tot_width = 0
+//::            for field in pddict['egr-hdrs'][i].fields:
+//::                tot_width += field.width
+//::            #endfor
+//::            width_done = 0
+//::            bits_available = 0
+typedef struct __attribute__((__packed__)) __p4_replication_data_t {
+//::            for field in reversed(pddict['egr-hdrs'][i].fields):
+//::                if bits_available < field.width:
+//::                    if tot_width - width_done <= 8:
+//::                        type = 'uint8_t'
+//::                        bits_available += 8
+//::                        width_done += 8
+//::                    elif tot_width - width_done <= 16:
+//::                        type = 'uint16_t'
+//::                        bits_available += 16
+//::                        width_done += 16
+//::                    elif tot_width - width_done <= 32:
+//::                        type = 'uint32_t'
+//::                        bits_available += 32
+//::                        width_done += 32
+//::                    else:
+//::                        type = 'uint64_t'
+//::                        bits_available += 64
+//::                        width_done += 64
+//::                    #endif
+//::                #endif
+    ${type} ${field.name}:${field.width};
+//::                bits_available -= field.width
+//::            #endfor
+} p4_replication_data_t;
+//::            break
+//::        #endif
+//::    #endfor
+
+#define P4_REPL_TABLE_NAME                 "replication_table"
+#define P4_REPL_TABLE_ID                   P4TBL_ID_TBLMAX
+#define P4_REPL_TABLE_DEPTH                (64 * 1024)
+#define P4_REPL_ENTRY_WIDTH                (sizeof(p4_replication_data_t))
+#define CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE (60 / P4_REPL_ENTRY_WIDTH)
+#endif

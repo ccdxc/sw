@@ -53,6 +53,7 @@ typedef uint16_t        lport_id_t;     // TBD - revisit
 typedef uint32_t        ifindex_t;
 typedef uint32_t        seg_id_t;
 typedef uint32_t        encap_id_t;
+typedef uint32_t        oif_list_id_t;
 
 //------------------------------------------------------------------------------
 // HAL config version type

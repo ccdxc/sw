@@ -8,6 +8,7 @@
 #include <l2segment.pb.h>
 #include <lif_manager.hpp>
 #include <utils.hpp>
+#include <oif_list_api.hpp>
 #include <if_utils.hpp>
 #include <rdma.hpp>
 
@@ -575,6 +576,7 @@ hal_ret_t
 interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    l2seg_t         *l2seg = NULL;
     if_t            *hal_if = NULL;
     pd_if_args_t    pd_if_args;
 
@@ -612,6 +614,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
+
+        l2seg = find_l2seg_by_id(hal_if->l2seg_id);
         break;
 
     case intf::IF_TYPE_UPLINK:
@@ -619,6 +623,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
+
+        // Will be added to broadcast list through add_uplink_to_l2seg() call
         break;
 
     case intf::IF_TYPE_UPLINK_PC:
@@ -626,6 +632,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
+
+        // Will be added to broadcast list through add_uplink_to_l2seg() call
         break;
 
     case intf::IF_TYPE_TUNNEL:
@@ -662,6 +670,20 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     // add this interface to the db
     add_if_to_db(hal_if);
+
+    if (l2seg) {
+        // Add the new interface to the broadcast list of the associated l2seg. This applies to enicifs only.
+        // Its here because the multicast oif call requires the pi_if to have been created fully.
+        oif_t  oif;
+        oif.if_id = hal_if->if_id;
+        oif.l2_seg_id = l2seg->seg_id;
+        ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Add oif to oif_list failed, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
+    }
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
@@ -850,6 +872,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                   ret = HAL_RET_OK;
     if_t                        *hal_if = NULL;
     l2seg_t                     *l2seg = NULL;
+    oif_t                       oif;
     pd::pd_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
     HAL_TRACE_DEBUG("---------------- Interface API Start -------------------");
@@ -878,10 +901,19 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto cleanup;
     }
 
-    
     // Update PI structures - Add vlan to Uplink and vice-versa
     if (l2seg->fabric_encap.type == types::ENCAP_TYPE_DOT1Q) {
         hal_if->vlans->set(l2seg->fabric_encap.val);
+    }
+
+    // Add the uplink to the broadcast list of the l2seg
+    oif.if_id = hal_if->if_id;
+    oif.l2_seg_id = l2seg->seg_id;
+    ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Add oif to oif_list failed, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto cleanup;
     }
 
 cleanup:

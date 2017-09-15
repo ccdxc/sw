@@ -105,8 +105,22 @@ l2seg_get_infra_l2seg()
     return (l2seg_t *)g_hal_state->infra_l2seg();
 }
 
+// ----------------------------------------------------------------------------
+// Returns bcast_fwd_policy
+// ----------------------------------------------------------------------------
+uint32_t
+l2seg_get_bcast_fwd_policy(l2seg_t *pi_l2seg)
+{
+    return (uint32_t)pi_l2seg->bcast_fwd_policy;
+}
 
-
-
+// ----------------------------------------------------------------------------
+// Returns bcast_oif_list
+// ----------------------------------------------------------------------------
+oif_list_id_t
+l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg)
+{
+    return pi_l2seg->bcast_oif_list;
+}
 
 }

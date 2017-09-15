@@ -22,15 +22,13 @@ protected:
 
 };
 
-
-typedef struct hal_pd_replication_tbl_mbr_entry_s {
-    uint32_t lif : 11;
-    uint32_t encap_id : 24;
-    uint32_t tunnel_rewrite_idx : 11;
-    uint32_t l3_rewrite_index : 12;
-    uint32_t pad : 6;
+typedef struct __attribute__((__packed__)) hal_pd_replication_tbl_mbr_entry_s {
+    uint64_t lif : 11;
+    uint64_t encap_id : 24;
+    uint64_t tunnel_rewrite_idx : 11;
+    uint64_t l3_rewrite_index : 12;
+    uint64_t pad : 6;
 } hal_pd_replication_tbl_mbr_entry_t;
-
 
 /* ---------------------------------------------------------------------------
  *

@@ -897,7 +897,7 @@ modules:
         package : test.acl
         module  : acl
         spec    : acl_nonip_drop.testspec
-        args    : 
+        args    :
             maxflows: 1
         iterate:
             - id        : ACL_SMAC_DMAC_ETYPE_ACTION_DROP
@@ -929,7 +929,7 @@ modules:
         package : test.acl
         module  : acl
         spec    : acl_ip_drop.testspec
-        args    : 
+        args    :
             maxflows: 1
         iterate:
             # IPV4 specific cases
@@ -1230,8 +1230,6 @@ modules:
             - flow  : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
               srcseg: filter://native=True
 
-
-
     - module:
         name    : ETH_TX_L2UC_NONIP
         enable  : True
@@ -1265,7 +1263,6 @@ modules:
             # Untagged Flows
             - segment: filter://native=True
               flow   : filter://label=GFT_DROP
-
 
     - module:
         name    : ETH_TX_ARP_RARP
@@ -1517,7 +1514,6 @@ modules:
               segment   : filter://native=False
               type      : RARP_RESP
 
-
     - module:
         name    : ETH_RX_NON_IP
         enable  : True
@@ -1545,7 +1541,6 @@ modules:
         iterate:
             - flow      : filter://type=MAC,label=NETWORKING
               segment   : filter://native=False
-
 
     - module:
         name    : NVME
@@ -1652,7 +1647,6 @@ modules:
               srcseg  : filter://fabencap=VXLAN
               dstseg  : filter://fabencap=VLAN
 
-
     - module:
         name    : ETH_TX_VXLAN # L2UC_IP VXLAN cases
         enable  : True
@@ -1706,3 +1700,13 @@ modules:
             - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
             - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
+    - module:
+        name    : L2MC
+        enable  : True
+        package : test.networking
+        module  : multicast
+        spec    : l2mc.testspec
+        ignore  : False
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False

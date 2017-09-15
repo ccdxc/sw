@@ -79,6 +79,8 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
     inp_prop.l4_profile_idx = pd_l2seg_get_l4_prof_idx(l2seg_pd);
     inp_prop.ipsg_enable = l2seg_get_ipsg_en(args->l2seg);
     inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
+    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
+    inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
 
     key.entry_status_inactive = 0;
     if (!is_native) {

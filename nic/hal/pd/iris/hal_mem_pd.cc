@@ -654,11 +654,15 @@ hal_state_pd::init_tables(void)
                             (P4TBL_ID_TCAM_MAX - P4TBL_ID_TCAM_MIN + 1));
     HAL_ASSERT(tcam_tables_ != NULL);
 
+    met_table_ = new Met(P4_REPL_TABLE_NAME, P4_REPL_TABLE_ID, P4_REPL_TABLE_DEPTH,
+    		                CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE, P4_REPL_ENTRY_WIDTH);
+    HAL_ASSERT(met_table_ != NULL);
+
     // for debugging
     p4pd_table_info_dump_();
 
     // TODO:
-    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
+    // 1. take care of instantiating flow_table_ and acl_table_
     // 2. When tables are instantiated proper names are not passed today,
     // waiting for an API from Mahesh that gives table name given table id
 

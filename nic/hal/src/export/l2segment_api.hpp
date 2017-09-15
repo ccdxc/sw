@@ -21,6 +21,9 @@ uint32_t l2seg_get_fab_encap_val(l2seg_t *seg);
 void *l2seg_get_pi_nwsec(l2seg_t *l2seg);
 uint32_t l2seg_get_ipsg_en(l2seg_t *pi_l2seg);
 l2seg_t *l2seg_get_infra_l2seg();
+uint32_t l2seg_get_bcast_fwd_policy(l2seg_t *pi_l2seg);
+oif_list_id_t l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg);
+
 } // namespace hal
 
 

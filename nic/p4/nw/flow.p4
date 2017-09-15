@@ -54,6 +54,7 @@ action flow_miss() {
         drop_packet();
     }
 
+    modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     modify_field(capri_intrinsic.tm_oq, control_metadata.flow_miss_tm_oqueue);
 
     if ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_CPU) or
@@ -61,7 +62,6 @@ action flow_miss() {
         (flow_lkp_metadata.pkt_type != PACKET_TYPE_MULTICAST))) {
         modify_field(control_metadata.flow_miss, TRUE);
         modify_field(control_metadata.flow_miss_ingress, TRUE);
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
         modify_field(control_metadata.dst_lport, CPU_LPORT);
     }
 
@@ -78,11 +78,9 @@ action flow_miss() {
     }
 
     if (control_metadata.flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
         modify_field(rewrite_metadata.tunnel_rewrite_index,
                      control_metadata.flow_miss_idx);
     }
-
 }
 
 action flow_hit_drop(flow_index, start_timestamp) {

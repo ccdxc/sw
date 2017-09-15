@@ -54,6 +54,7 @@ SOURCES = \
 		  tunnelif_pd.cc \
 		  l2seg_uplink_pd.cc \
 		  if_pd.cc \
+		  oif_list_pd_mgr.cc \
 		  endpoint_pd.cc \
 		  buf_pool_pd.cc \
 		  queue_pd.cc \

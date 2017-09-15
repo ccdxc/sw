@@ -6,6 +6,7 @@
 #include <l2segment_svc.hpp>
 #include <tenant.hpp>
 #include <pd_api.hpp>
+#include <oif_list_api.hpp>
 
 namespace hal {
 
@@ -224,6 +225,10 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                         l2seg->seg_id);
         g_hal_state->set_infra_l2seg(l2seg);
     }
+
+    // create the broadcast/flood list for this l2seg
+    ret = oif_list_create(&l2seg->bcast_oif_list);
+    HAL_ASSERT(ret == HAL_RET_OK);
 
     // add this L2 segment to our db
     ret = add_l2seg_to_db(tenant, l2seg);

@@ -1175,7 +1175,8 @@ class capri_p4pd:
             self.pddict['p4plus'] = 0
 
         self.pddict['cli-name'] = self.be.prog_name
-    
+        self.pddict['egr-hdrs'] = self.be.parsers[xgress.EGRESS].headers
+
     def verify_table_ki(self):
         '''
         Iterate over all p4 tables and check if every table key/input is in pddict

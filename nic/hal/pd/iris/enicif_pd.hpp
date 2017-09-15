@@ -3,6 +3,7 @@
 
 #include <base.h>
 #include <pd.hpp>
+#include <pd_api.hpp>
 
 namespace hal {
 namespace pd {

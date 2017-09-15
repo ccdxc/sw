@@ -19,7 +19,7 @@
 #include <defines.h>
 #include <capri_tm_rw.hpp>
 
-#ifndef P4PD_CLI
+#ifndef HAL_GTEST
 #include <cap_blk_reg_model.h>
 #include <cap_top_csr.h>
 #include <cap_pbc_csr.h>
@@ -55,12 +55,11 @@ capri_tm_pg_params_update(uint32_t port,
                       __func__, port);
         return HAL_RET_INVALID_ARG;
     }
-#ifndef P4PD_CLI
+#ifndef HAL_GTEST
     uint32_t i;
     uint32_t cos;
     uint32_t npgs;
 
-    /* Do some sanity checks for port and pg */
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cpp_int cos_map_reg_val = 0;
@@ -3411,5 +3410,27 @@ capri_tm_uplink_lif_set(uint32_t port,
     HAL_TRACE_DEBUG("CAPRI-TM::{}: Set the lif {} on port {}",
                     __func__, lif, port);
 
+    return HAL_RET_OK;
+}
+
+/* Programs the base address in HBM for the replication table */
+hal_ret_t
+capri_tm_repl_table_base_addr_set(uint32_t addr)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.base(addr);
+    pbc_csr.cfg_rpl.write();
+    return HAL_RET_OK;
+}
+
+/* Programs the # of tokens per replication table entry */
+hal_ret_t
+capri_tm_repl_table_num_tokens_set(uint32_t num_tokens)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_rpl.token_size(num_tokens);
+    pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
 }
