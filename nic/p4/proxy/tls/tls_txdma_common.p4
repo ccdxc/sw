@@ -130,15 +130,14 @@ header_type barco_desc_t {
         header_size                         : 32;
         status_address                      : 64;
         opaque_tag_value                    : 32;
-        opaque_tage_write_en                : 1;
+        opaque_tag_write_en                 : 1;
+        rsvd1                               : 31;
         sector_size                         : 16;
-        sector_num                          : 32;
         application_tag                     : 16;
+        sector_num                          : 32;
         doorbell_address                    : 64;
         doorbell_data                       : 64;
-        gcm_key_buf_index                   : 8;
-        gcm_new_key_flag                    : 1;
-        rsvd                                : 374;
+        rsvd2                               : 304;
     }
 }
 
