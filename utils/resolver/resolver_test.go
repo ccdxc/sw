@@ -1,7 +1,6 @@
 package resolver
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -9,7 +8,12 @@ import (
 	"github.com/pensando/sw/cmd/services/mock"
 	"github.com/pensando/sw/cmd/types"
 	"github.com/pensando/sw/utils/rpckit"
-	"github.com/pensando/sw/utils/testutils"
+	. "github.com/pensando/sw/utils/testutils"
+)
+
+const (
+	url1 = "10.1.1.1:5001"
+	url2 = "10.1.1.2:5001"
 )
 
 // setupMockResolver sets up a mock resolver.
@@ -23,9 +27,11 @@ func setupMockResolver() *mock.ResolverService {
 			Name: "inst1",
 		},
 		Service: "svc1",
+		URL:     url1,
 	}
 	si2 := si1
 	si2.Name = "inst2"
+	si2.URL = url2
 
 	m.AddServiceInstance(&si1)
 	m.AddServiceInstance(&si2)
@@ -35,21 +41,14 @@ func setupMockResolver() *mock.ResolverService {
 
 // createFakeResolver creates a fake gRPC resolver server.
 func createFakeResolver(t *testing.T) (*rpckit.RPCServer, *mock.ResolverService) {
-	startPort := 9001
-	for {
-		testURL := fmt.Sprintf("localhost:%d", startPort)
-		// create RPC Server.
-		rpcServer, err := rpckit.NewRPCServer("fakeResolverService", testURL)
-		if err == nil {
-			m := setupMockResolver()
-			types.RegisterServiceAPIServer(rpcServer.GrpcServer, service.NewRPCHandler(m))
-			return rpcServer, m
-		}
-		startPort++
-		if startPort > 15001 {
-			t.Fatalf("Failed to find a free server port")
-		}
+	// create RPC Server.
+	rpcServer, err := rpckit.NewRPCServer("fakeResolverService", "localhost:0")
+	if err != nil {
+		t.Fatalf("Failed to create fake resolver, error: %v", err)
 	}
+	m := setupMockResolver()
+	types.RegisterServiceAPIServer(rpcServer.GrpcServer, service.NewRPCHandler(m))
+	return rpcServer, m
 }
 
 type mockServiceInstanceObserver struct {
@@ -88,7 +87,11 @@ func TestResolverClient(t *testing.T) {
 		}
 		return true
 	}
-	testutils.AssertEventually(t, c2, "Failed to resolve svc1")
+	AssertEventually(t, c2, "Failed to resolve svc1")
+	urls := client.GetURLs("svc1")
+	for ii := range urls {
+		AssertOneOf(t, urls[ii], []string{url1, url2})
+	}
 
 	si3 := types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
@@ -113,17 +116,17 @@ func TestResolverClient(t *testing.T) {
 		}
 		return true
 	}
-	testutils.AssertEventually(t, c3, "Failed to resolve svc1 after adding an instance")
+	AssertEventually(t, c3, "Failed to resolve svc1 after adding an instance")
 
 	m.DeleteServiceInstance(&si3)
-	testutils.AssertEventually(t, c2, "Failed to resolve svc1 after deleting an instance")
+	AssertEventually(t, c2, "Failed to resolve svc1 after deleting an instance")
 
 	instances := client.Lookup("NonExistentSvc")
 	if len(instances.Items) != 0 {
 		t.Fatalf("Found non-zero instances for non-existant service")
 	}
 
-	testutils.AssertEventually(t, func() bool {
+	AssertEventually(t, func() bool {
 		if mo.addedCount == 3 && mo.deletedCount == 1 {
 			return true
 		}
