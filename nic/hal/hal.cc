@@ -219,17 +219,7 @@ hal_handle::factory(void)
 //------------------------------------------------------------------------------
 hal_handle::~hal_handle()
 {
-    uint32_t    i;
-
     HAL_SPINLOCK_DESTROY(&slock_);
-    for (i = 0; i < HAL_ARRAY_SIZE(objs_); i++) {
-        if (objs_[i].valid) {
-            HAL_TRACE_ERR("HAL handle destroy failied, valid object found at "
-                          "idx {}, version {}, obj {}", i, objs_[i].ver,
-                          objs_[i].obj);
-            HAL_ABORT(FALSE);
-        }
-    }
 }
 
 //------------------------------------------------------------------------------
@@ -390,10 +380,33 @@ hal_handle::get_obj(void)
 
 //------------------------------------------------------------------------------
 // get any valid object that is non-NULL from this handle (note that there could
-// be a valid entry but obj is NULL for objects that are deleted)
+// be a valid entry but obj is NULL for objects that are deleted), this API
+// won't lock the handle with the assumption that the caller has locked the
+// handle already (for whatever reason)
 //------------------------------------------------------------------------------
 void *
 hal_handle::get_any_obj(void)
+{
+    void             *obj = NULL;
+    uint32_t         i;
+
+    for (i = 0; i < k_max_objs_; i++) {
+        if (objs_[i].valid && (objs_[i].obj != NULL)) {
+            obj = objs_[i].obj;
+            break;
+        }
+    }
+    return obj;
+}
+
+//------------------------------------------------------------------------------
+// get any valid object that is non-NULL from this handle (note that there could
+// be a valid entry but obj is NULL for objects that are deleted), this API will
+// ensure that there won't be any changes to the handle while lookup is being
+// done
+//------------------------------------------------------------------------------
+void *
+hal_handle::get_any_obj_safe(void)
 {
     void             *obj = NULL;
     uint32_t         i;

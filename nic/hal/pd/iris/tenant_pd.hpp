@@ -92,6 +92,14 @@ add_tenant_pd_to_db (pd_tenant_t *tenant_pd)
     return HAL_RET_OK;
 }
 
+// delete tenant pd state from all meta data structure
+static inline hal_ret_t
+del_tenant_pd_from_db (pd_tenant_t *tenant_pd)
+{
+    g_hal_state_pd->tenant_hwid_ht()->remove(&tenant_pd->ten_hw_id);
+    return HAL_RET_OK;
+}
+
 // find a tenant pd instance given its hw id
 static inline pd_tenant_t *
 find_tenant_by_hwid (tenant_hw_id_t hwid)

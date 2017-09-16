@@ -66,7 +66,14 @@ twheel::factory(uint64_t slice_intvl, uint32_t wheel_duration,
 //------------------------------------------------------------------------------
 twheel::~twheel()
 {
+    uint32_t    i;
+
     delete twentry_slab_;
+    if (thread_safe_) {
+        for (i = 0; i < nslices_; i++) {
+            HAL_SPINLOCK_DESTROY(&twheel_[i].slock_);
+        }
+    }
     HAL_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twheel_);
 }
 

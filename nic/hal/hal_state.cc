@@ -957,6 +957,12 @@ hal_mem_db::init(void)
                                               64, true, true, true, true);
     HAL_ASSERT_RETURN((hal_handle_ht_entry_slab_ != NULL), false);
 
+    hal_del_cache_entry_slab_ = slab::factory("hal-del-cache-entry",
+                                              HAL_SLAB_DEL_CACHE_ENTRY,
+                                              sizeof(hal_cfg_db::del_cache_entry_t),
+                                              64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_del_cache_entry_slab_ != NULL), false);
+
     // initialize tenant related data structures
     tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
                                  sizeof(hal::tenant_t), 16,
@@ -1089,6 +1095,7 @@ hal_mem_db::hal_mem_db()
 {
     hal_handle_ht_entry_slab_ = NULL;
     hal_handle_slab_ = NULL;
+    hal_del_cache_entry_slab_ = NULL;
     hal_handle_ht_entry_slab_ = NULL;
     tenant_slab_ = NULL;
     network_slab_ = NULL;
@@ -1142,6 +1149,7 @@ hal_mem_db::~hal_mem_db()
 {
     hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
+    hal_del_cache_entry_slab_ ? delete hal_del_cache_entry_slab_ : HAL_NOP;
     hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
@@ -1269,16 +1277,16 @@ hal_ret_t
 free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
-    case HAL_SLAB_DEL_CACHE_ENTRY:
-        g_hal_state->hal_del_cache_entry_slab()->free(elem);
-        break;
-
     case HAL_SLAB_HANDLE:
         g_hal_state->hal_handle_slab()->free(elem);
         break;
 
     case HAL_SLAB_HANDLE_HT_ENTRY:
         g_hal_state->hal_handle_ht_entry_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_DEL_CACHE_ENTRY:
+        g_hal_state->hal_del_cache_entry_slab()->free(elem);
         break;
 
     case HAL_SLAB_TENANT:

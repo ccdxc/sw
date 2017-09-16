@@ -87,6 +87,7 @@ public:
     // get any valid object that is non-NULL from this handle (note that there
     // could be a valid entry but obj is NULL for objects that are deleted)
     void *get_any_obj(void);
+    void *get_any_obj_safe(void);    // thread safe version of get_any_obj()
 
 private:
     bool init(void);

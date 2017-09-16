@@ -15,6 +15,9 @@ using tenant::TenantResponseMsg;
 using tenant::TenantGetRequestMsg;
 using tenant::TenantGetRequest;
 using tenant::TenantGetResponseMsg;
+using tenant::TenantDeleteRequestMsg;
+using tenant::TenantDeleteRequest;
+using tenant::TenantDeleteResponseMsg;
 
 using l2segment::L2Segment;
 using l2segment::L2SegmentSpec;
@@ -75,7 +78,7 @@ public:
         return 0;
     }
 
-    uint64_t tenant_get_by_handle(uint32_t hal_handle) {
+    uint64_t tenant_get_by_handle(uint64_t hal_handle) {
         TenantGetRequestMsg     req_msg;
         TenantGetRequest        *req;
         TenantGetResponseMsg    rsp_msg;
@@ -95,6 +98,27 @@ public:
                   << rsp_msg.response(0).api_status()
                   << std::endl;
         return 0;
+    }
+
+    void tenant_delete_by_handle(uint64_t hal_handle) {
+        TenantDeleteRequestMsg     req_msg;
+        TenantDeleteRequest        *req;
+        TenantDeleteResponseMsg    rsp_msg;
+        ClientContext              context;
+        Status                     status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_tenant_handle(hal_handle);
+
+        status = tenant_stub_->TenantDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.api_status(0) == types::API_STATUS_OK);
+            std::cout << "Tenant delete succeeded" << std::endl;
+            return;
+        }
+        std::cout << "Tenant delete failed, error = "
+                  << rsp_msg.api_status(0) << std::endl;
+        return;
     }
 
     uint64_t l2segment_create(uint32_t tenant_id,
@@ -144,6 +168,14 @@ main (int argc, char** argv)
     assert(hal_handle != 0);
     assert(hclient.tenant_get_by_handle(hal_handle) != 0);
     assert(hclient.tenant_get_by_id(1) != 0);
+    hclient.tenant_delete_by_handle(hal_handle);
+    assert(hclient.tenant_get_by_id(1) == 0);   // should fail
+
+    // recreate the tenant
+    hal_handle = hclient.tenant_create(1);
+    assert(hal_handle != 0);
+
+    // create L2 segment
     assert(hclient.l2segment_create(1, 1, 1) != 0);
 
     return 0;

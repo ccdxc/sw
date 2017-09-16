@@ -89,7 +89,7 @@ tenant_compare_handle_key_func (void *key1, void *key2)
 // insert a tenant to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-tenant_add_to_cfg_db (tenant_t *tenant, hal_handle_t handle)
+tenant_add_to_db (tenant_t *tenant, hal_handle_t handle)
 {
     hal_ret_t                ret;
     hal_handle_ht_entry_t    *entry;
@@ -127,7 +127,7 @@ tenant_add_to_cfg_db (tenant_t *tenant, hal_handle_t handle)
 // delete a tenant from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-tenant_del_from_cfg_db (hal_handle_t handle, tenant_t *tenant,
+tenant_del_from_db (hal_handle_t handle, tenant_t *tenant,
                         hal_cfg_del_cb_t del_cb)
 {
     hal_ret_t     ret;
@@ -187,7 +187,6 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     pd::pd_tenant_args_t    pd_tenant_args;
     nwsec_profile_t         *sec_prof;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("Creating tenant with id {}",
                     spec.key_or_handle().tenant_id());
 
@@ -241,7 +240,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     }
 
     // add this tenant to our db
-    ret = tenant_add_to_cfg_db(tenant, tenant->hal_handle);
+    ret = tenant_add_to_db(tenant, tenant->hal_handle);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATIS_CFG_DB_ERR);
         goto end;
@@ -260,7 +259,6 @@ end:
         tenant_free(tenant);
     }
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -463,6 +461,37 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
 static inline hal_ret_t
 tenant_delete_cb (void *obj)
 {
+    hal_ret_t                ret;
+    tenant_t                 *tenant = (tenant_t *)obj;
+    hal_handle_ht_entry_t    *entry;
+    pd::pd_tenant_args_t     pd_tenant_args;
+
+    if (tenant == NULL) {
+        HAL_TRACE_ERR("Invalid tenant object passed for deletion");
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("Started Tenant {} deletion", tenant->tenant_id);
+
+    // delete this tenant from all the meta data structures
+    entry = (hal_handle_ht_entry_t *)
+                g_hal_state->tenant_id_ht()->remove(&tenant->tenant_id);
+    if (entry == NULL) {
+        HAL_TRACE_ERR("Failed to find tenant tenant-id HT, tenant id {}",
+                      tenant->tenant_id);
+        // still go ahead and cleanup whatever we can !!!
+    } else {
+        g_hal_state->hal_handle_ht_entry_slab()->free(entry);
+    }
+
+    // do the actual cleanup for this tenant object now
+    pd::pd_tenant_args_init(&pd_tenant_args);
+    pd_tenant_args.tenant = tenant;
+    ret = pd::pd_tenant_delete(&pd_tenant_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete tenant pd, err : {}", ret);
+    }
+    tenant_free(tenant);
+
     return HAL_RET_OK;
 }
 
@@ -499,6 +528,8 @@ tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
         return HAL_RET_TENANT_NOT_FOUND;
     }
     HAL_TRACE_DEBUG("Deleting tenant {} ...", tenant->tenant_id);
+    tenant_del_from_db(tenant->hal_handle, tenant, tenant_delete_cb);
+    HAL_TRACE_DEBUG("Initiated tenant {} delete ...", tenant->tenant_id);
 
     rsp->add_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

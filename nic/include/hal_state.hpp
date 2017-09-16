@@ -116,6 +116,7 @@ public:
     ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
 
 public:
+    // TODO: move to hal_cfg.h and rename to cfg_del_cache_entry_t
     typedef struct del_cache_entry_s {
         hal_handle          *handle;
         void                *obj;

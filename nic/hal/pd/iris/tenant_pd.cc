@@ -35,7 +35,9 @@ pd_tenant_create (pd_tenant_args_t *args)
     indexer::status         rs;
     pd_tenant_t             *tenant_pd;
 
-    HAL_TRACE_DEBUG("Creating pd state for tenant");
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Creating pd state for tenant {}",
+                    args->tenant->tenant_id);
 
     // allocate PD tenant state
     tenant_pd = tenant_pd_alloc_init();
@@ -70,6 +72,29 @@ cleanup:
         tenant_pd_free(tenant_pd);
     }
     return ret;
+}
+
+hal_ret_t
+pd_tenant_delete (pd_tenant_args_t *args)
+{
+    pd_tenant_t    *tenant_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->tenant != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->tenant->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("Deleting pd state for tenant {}",
+                    args->tenant->tenant_id);
+    tenant_pd = (pd_tenant_t *)args->tenant->pd;
+
+    // remove this from the db
+    del_tenant_pd_from_db(tenant_pd);
+
+    // release all the indexers and ids allocated for this tenant
+    g_hal_state_pd->tenant_hwid_idxr()->free(tenant_pd->ten_hw_id);
+
+    tenant_pd_free(tenant_pd);
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
