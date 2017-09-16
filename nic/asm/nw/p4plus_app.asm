@@ -163,6 +163,10 @@ p4plus_app_cpu_common:
   add         r2, k.control_metadata_packet_len, P4PLUS_CPU_PKT_SZ
   phvwr       p.p4_to_p4plus_cpu_packet_len, r2
   phvwr       p.p4_to_p4plus_cpu_pkt_flags, r1
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.control_metadata_src_lif
+  phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.flow_lkp_metadata_lkp_vrf
+  phvwr       p.p4_to_p4plus_cpu_pkt_lkp_type, k.flow_lkp_metadata_lkp_type
+
   phvwr       p.p4_to_p4plus_cpu_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE

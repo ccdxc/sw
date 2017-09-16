@@ -2,6 +2,7 @@
 
 import copy
 import pdb
+import time
 
 import infra.penscapy.penscapy as penscapy
 import infra.common.defs as defs
@@ -188,7 +189,16 @@ class VerifEngineObject:
 
         return defs.status.SUCCESS
 
+    def __verify_delay(self, step, lgh):
+        if GlobalOptions.dryrun:
+            return
+        if step.expect.delay:
+           lgh.info("Expectation Delay: %d" % step.expect.delay)
+           time.sleep(step.expect.delay)
+        return
+
     def Verify(self, step, lgh):
+        self.__verify_delay(step, lgh)
         return self.__verify(step, lgh)
 
 VerifEngine = VerifEngineObject()

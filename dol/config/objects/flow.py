@@ -121,6 +121,9 @@ class FlowObject(base.ConfigObjectBase):
         self.tracking = self.__sfep.tracking_info
         return
 
+    def IsFteEnabled(self):
+        return self.__session.IsFteEnabled()
+
     def IsIPV4(self):
         return self.type == 'IPV4'
 

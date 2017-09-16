@@ -8,8 +8,8 @@ selectors:
         tenant  : filter://overlay=VLAN,type=TENANT
         segment : filter://any
         endpoint: filter://remote=True
-    flow        : filter://fwtype=L2,type=MAC,label=ARP
-    maxflows    : 16
+    flow        : filter://any
+    maxflows    : 4
 
 packets:
     - packet:
@@ -52,6 +52,7 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket

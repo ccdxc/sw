@@ -62,6 +62,7 @@ session:
         # For session based Test Specs, the 'Trigger' and 'Expectation'
         # sections will be inside 'step'
         trigger:
+            delay   : 0
             packets:
                 - packet:
                     object  : None
@@ -80,6 +81,7 @@ session:
                     pid     : 0
 
         expect:
+            delay   : 0
             packets:
                 - packet:
                     object        : None

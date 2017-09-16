@@ -68,6 +68,7 @@ class TestCaseSessionEntryObject:
 
 class TestCaseSessionStepTriggerExpectReceivedObject:
     def __init__(self):
+        self.delay          = 0
         self.packets        = []
         self.descriptors    = []
         self.doorbell       = TestCaseTrigExpDoorbellObject()
@@ -188,34 +189,46 @@ class TestCase(objects.FrameworkObject):
         memfactory.GenerateBuffers(self)
         memfactory.GenerateDescriptors(self)
         return
+
+    def __setup_packet(self, step_id, spkt):
+        if spkt.packet.object == None:
+            return
+
+        tpkt = TestCaseTrigExpPacketObject()
+        if objects.IsCallback(spkt.packet.object):
+            tpkt.packet = spkt.packet.object.call(self)
+            if tpkt.packet == None:
+                return None
+        else: # Its a reference
+            tpkt.packet = spkt.packet.object.Get(self)
         
+        tpkt.packet = copy.deepcopy(tpkt.packet)
+        tpkt.packet.SetStepId(step_id)
+        tpkt.packet.Build(self)
+        return tpkt
+
+    def __setup_packet_ports(self, tpkt, spkt):
+        # Resolve the ports
+        if objects.IsReference(spkt.packet.port):
+            tpkt.ports = spkt.packet.port.Get(self)
+        elif objects.IsCallback(spkt.packet.port):
+            tpkt.ports = spkt.packet.port.call(self)
+        else:
+            tpkt.ports = [ spkt.packet.port ]
+        return
+
     def __setup_packets(self, step_id, tcsn, spsn):
         if spsn.packets == None: return
-        for spec_pkt in spsn.packets:
-            if spec_pkt.packet.object == None: continue
-            tc_pkt = TestCaseTrigExpPacketObject()
-            # Resolve the packet.
-            if objects.IsCallback(spec_pkt.packet.object):
-                tc_pkt.packet = spec_pkt.packet.object.call(self)
-                if tc_pkt.packet == None: return
-            else:
-                tc_pkt.packet = spec_pkt.packet.object.Get(self)
-            
-            tc_pkt.packet = copy.deepcopy(tc_pkt.packet)
-            tc_pkt.packet.SetStepId(step_id)
-            tc_pkt.packet.Build(self)
+        for spkt in spsn.packets:
+            tpkt = self.__setup_packet(step_id, spkt)            
+            if tpkt is None:
+                return
 
-            # Resolve the ports
-            if objects.IsReference(spec_pkt.packet.port):
-                tc_pkt.ports = spec_pkt.packet.port.Get(self)
-            elif objects.IsCallback(spec_pkt.packet.port):
-                tc_pkt.ports = spec_pkt.packet.port.call(self)
-            else:
-                tc_pkt.ports = [ spec_pkt.packet.port ]
+            self.__setup_packet_ports(tpkt, spkt)
             self.info("- Adding Packet: %s, Ports :" %\
-                      tc_pkt.packet.GID(), tc_pkt.ports)
-            tc_pkt.packet.Show(self)
-            tcsn.packets.append(tc_pkt)
+                      tpkt.packet.GID(), tpkt.ports)
+            tpkt.packet.Show(self)
+            tcsn.packets.append(tpkt)
         return
 
     def __setup_descriptors(self, tcsn, spsn):
@@ -248,9 +261,20 @@ class TestCase(objects.FrameworkObject):
         self.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
         return
    
+    def __setup_delay(self, tcsn, spsn):
+        spdelay = getattr(spsn, 'delay', 0)
+        if objects.IsCallback(spdelay):
+            tcsn.delay = spdelay.call(self)
+        else:
+            tcsn.delay = spdelay
+        if tcsn.delay:
+            self.info("  - Adding Delay of %d seconds." % tcsn.delay)
+        return
+
     def __setup_trigger(self, tcstep, spstep):
         self.info("- Setting up Trigger.")
         if spstep.trigger == None: return
+        self.__setup_delay(tcstep.trigger, spstep.trigger)
         self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
         self.__setup_descriptors(tcstep.trigger, spstep.trigger)
         self.__setup_doorbell(tcstep.trigger, spstep.trigger)
@@ -259,6 +283,7 @@ class TestCase(objects.FrameworkObject):
     def __setup_expect(self, tcstep, spstep):
         self.info("- Setting up Expect.")
         if spstep.expect == None: return
+        self.__setup_delay(tcstep.expect, spstep.expect)
         self.__setup_packets(tcstep.step_id, tcstep.expect, spstep.expect)
         self.__setup_descriptors(tcstep.expect, spstep.expect)
         if hasattr(spstep.expect, "callback"):

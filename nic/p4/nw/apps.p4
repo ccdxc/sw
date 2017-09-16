@@ -202,7 +202,17 @@ action p4plus_app_cpu() {
 
     add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
         P4PLUS_CPU_PKT_SZ);
+#if 0
+    if (flow_lkp_metadata.lkp_dir == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               CPU_FLAGS_LKP_DIR);
+    }
+#endif /* 0 */
     modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
+    modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_vrf, flow_lkp_metadata.lkp_vrf);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_type, flow_lkp_metadata.lkp_type);
+
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,

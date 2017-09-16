@@ -78,6 +78,7 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXPECTED

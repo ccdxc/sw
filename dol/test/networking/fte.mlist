@@ -1,0 +1,197 @@
+# This file contains the list of DOL test modules.
+modules:
+    - module:
+        name    : L2UC_IP_QTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 4
+        iterate :
+            # Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FTE
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=FTE
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=FTE
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=FTE
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+              segment : filter://native=False
+
+    - module:
+        name    : L2UC_IP_UTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 4
+        iterate :
+            # Untagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FTE
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=FTE
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=FTE
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=FTE
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+              segment : filter://native=True
+
+    - module:
+        name    : L2UC_IP_PTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 4
+        iterate :
+            # Priority Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FTE
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=TCP,label=FTE
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=UDP,label=FTE
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=TCP,label=FTE
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : L2UC_NONIP_QTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate :
+            # Tagged Cases
+            - segment: filter://native=False
+              flow   : filter://label=FTE
+
+    - module:
+        name    : L2UC_NONIP_UTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate :
+            # Untagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=FTE
+
+    - module:
+        name    : L2UC_NONIP_PTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : l2uc_nonip.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate :
+            # Priority Tagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=FTE
+              priotag : True
+
+
+    - module:
+        name    : L2UC_ARP_RARP_QTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate :
+            # Priority Tag Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : ARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : RARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+
+    - module:
+        name    : L2UC_ARP_RARP_UTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate :
+            # Untagged Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+
+    - module:
+        name    : L2UC_ARP_RARP_PTAG
+        enable  : True
+        package : test.networking
+        module  : networking
+        spec    : arp.testspec
+        ignore  : False
+        args    :
+            maxflows: 4
+        iterate :
+            # Priority Tag Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+              priotag   : True
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+              priotag   : True
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+              priotag   : True
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=FTE_ARP
+              priotag   : True
+

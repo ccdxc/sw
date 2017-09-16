@@ -200,21 +200,29 @@ modules:
             # Priority Tag Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : ARP_RESP
               segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : RARP_REQ_UC
               segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : RARP_RESP
               segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             # Untagged Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : ARP_RESP
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : RARP_REQ_UC
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
             - type      : RARP_RESP
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
 
     - module:
         name    : ARP_RARP_PTAG
@@ -228,15 +236,19 @@ modules:
             # Priority Tag Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
               priotag   : True
             - type      : ARP_RESP
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
               priotag   : True
             - type      : RARP_REQ_UC
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
               priotag   : True
             - type      : RARP_RESP
               segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
               priotag   : True
 
     - module:
@@ -251,29 +263,29 @@ modules:
             # Tagged Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=False
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : ARP_RESP
               segment   : filter://native=False
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : RARP_REQ_UC
               segment   : filter://native=False
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : RARP_RESP
               segment   : filter://native=False
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             # Untagged Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : ARP_RESP
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : RARP_REQ_UC
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
             - type      : RARP_RESP
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
 
     - module:
         name    : ARP_RARP_PTAG_GFT_DROP
@@ -287,19 +299,19 @@ modules:
             # Priority Tag Cases
             - type      : ARP_REQ_UC
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
               priotag   : True
             - type      : ARP_RESP
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
               priotag   : True
             - type      : RARP_REQ_UC
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
               priotag   : True
             - type      : RARP_RESP
               segment   : filter://native=True
-              flow      : filter://label=GFT_DROP
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
               priotag   : True
 
     - module:

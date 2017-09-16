@@ -1,6 +1,6 @@
 #! /usr/bin/python3
-
 import pdb
+import time
 
 import infra.asic.model as model
 import infra.common.defs as defs
@@ -53,7 +53,6 @@ class TriggerEngineObject:
             return
         
         dbsp = step.trigger.doorbell
-        
         if dbsp is None or dbsp.object is None: 
             return
         
@@ -62,7 +61,16 @@ class TriggerEngineObject:
         db.Ring(dbsp.spec)
         return
 
+    def __trigger_delay(self, step, lgh):
+        if GlobalOptions.dryrun:
+            return
+        if step.trigger.delay:
+           lgh.info("Trigger Delay: %d" % step.trigger.delay)
+           time.sleep(step.trigger.delay)
+        return
+
     def __trigger_step(self, tc, step):
+        self.__trigger_delay(step, tc)
         self.__trigger_descriptors(step, tc)
         self.__trigger_packets(step, tc)
         self.__ring_doorbell(step, tc)

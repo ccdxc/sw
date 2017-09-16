@@ -33,6 +33,7 @@ class SessionObject(base.ConfigObjectBase):
         self.GID("Session%d" % self.id)
         self.spec = spec
 
+        self.fte = getattr(spec, 'fte', False)
         self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
         self.initiator.SetInfo(spec.initiator)
         status = self.initiator.SelectL4LbBackend()
@@ -57,6 +58,9 @@ class SessionObject(base.ConfigObjectBase):
                                      self.spec.responder.span)
         self.Show()
         return defs.status.SUCCESS
+
+    def IsFteEnabled(self):
+        return self.fte
 
     def Show(self):
         cfglogger.info("Created Session with GID:%s" % self.GID())
@@ -168,7 +172,9 @@ class SessionObject(base.ConfigObjectBase):
 
 class SessionObjectHelper:
     def __init__(self):
-        self.objlist = []
+        self.objs = []
+        self.ftessns = []
+        self.ssns = []
         self.gid_pairs = {}
         return
 
@@ -210,8 +216,15 @@ class SessionObjectHelper:
                 self.__pre_process_spec_entry(t.entry)
                 session = SessionObject()
                 status = session.Init(flowep1, flowep2, t.entry)
-                if status == defs.status.SUCCESS:
-                    self.objlist.append(session)
+                if status != defs.status.SUCCESS:
+                    continue
+                self.objs.append(session)
+                if session.IsFteEnabled():
+                    cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
+                    self.ftessns.append(session)
+                else:
+                    cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
+                    self.ssns.append(session)
         return
             
     def __process_ipv6(self, flowep1, flowep2, entries):
@@ -340,26 +353,27 @@ class SessionObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Sessions." % len(self.objlist)) 
-        halapi.ConfigureSessions(self.objlist)
+        cfglogger.info("Configuring %d NON-FTE Sessions." % len(self.ssns)) 
+        if len(self.ssns):
+            halapi.ConfigureSessions(self.ssns)
         return
 
     def main(self):
         self.Generate()
-        ProxyCbServiceHelper.main(self.objlist)
+        ProxyCbServiceHelper.main(self.objs)
         self.Configure()
-        Store.objects.SetAll(self.objlist)
+        Store.objects.SetAll(self.objs)
         return
 
     def GetAll(self):
-        return self.objlist
+        return self.objs
 
     def GetAllMatchingLabel(self, label):
-        return [s for s in self.objlist if s.label == label]
+        return [s for s in self.objs if s.label == label]
 
     def __get_matching_sessions(self, selectors = None):
         ssns = []
-        for ssn in self.objlist:
+        for ssn in self.objs:
             if ssn.IsFilterMatch(selectors):
                 ssns.append(ssn)
         if selectors.maxsessions == None:
@@ -370,7 +384,7 @@ class SessionObjectHelper:
 
     def __get_matching_flows(self, selectors = None):
         flows = []
-        for ssn in self.objlist:
+        for ssn in self.objs:
             if ssn.iflow.IsFilterMatch(selectors):
                 flows.append(ssn.iflow)
             if ssn.rflow.IsFilterMatch(selectors):
