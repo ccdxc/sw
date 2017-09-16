@@ -120,8 +120,8 @@ int queues_setup() {
     if (qstate_if::setup_q_state(nvme_lif, SQ_TYPE, i, (char *) kNvmeSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kNvmeNumEntries, nvme_sqs[i].paddr,
-                                 kDefaultEntrySize, pvm_lif, SQ_TYPE, i, 
-                                 0, 0, 0, 0, 0) < 0) {
+                                 kDefaultEntrySize, true, pvm_lif, SQ_TYPE, 
+                                 (i%2), 0, 0, 0, 0, 0) < 0) {
       printf("Failed to setup NVME SQ %d state \n", i);
       return -1;
     }
@@ -138,11 +138,11 @@ int queues_setup() {
     }
     printf("Initialized PVM SQ %d \n", i);
 
-    // Setup the queue state in Capri
+    // Setup the queue state in Capri (no dst queues for these)
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, NULL, 
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_sqs[i].paddr,
-                                 kPvmNvmeSQEntrySize, pvm_lif, SQ_TYPE, i, 
+                                 kPvmNvmeSQEntrySize, false, 0, 0, 0, 
                                  0, 0, 0, 0, 0) < 0) {
       printf("Failed to setup PVM SQ %d state \n", i);
       return -1;

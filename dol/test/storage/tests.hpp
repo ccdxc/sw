@@ -13,6 +13,10 @@ int test_run_nvme_pvm_read_cmd();
 
 int test_run_nvme_pvm_write_cmd();
 
+int test_run_nvme_pvm_hashing1();
+
+int test_run_nvme_pvm_hashing2();
+
 }  // namespace tests
 
 #endif

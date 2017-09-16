@@ -42,20 +42,24 @@ void dump(uint8_t *buf) {
 
 int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                   uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                  uint64_t base_addr, uint64_t entry_size, uint16_t dst_lif, 
-                  uint8_t dst_qtype, uint32_t dst_qid, uint16_t vf_id, uint16_t sq_id,
-                  uint64_t ssd_bm_addr, uint16_t ssd_q_num, uint16_t ssd_q_size) {
+                  uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
+                  uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
+                  uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr, 
+                  uint16_t ssd_q_num, uint16_t ssd_q_size) {
 
   uint8_t q_state[64];
   uint8_t pc_offset;
-  uint64_t next_pc;
+  uint64_t next_pc = 0;
   uint64_t dst_qaddr = 0;
 
   bzero(q_state, sizeof(q_state));
 
-  if (hal_if::get_lif_qstate_addr(dst_lif, dst_qtype, dst_qid, &dst_qaddr) < 0) {
-    printf("Failed to get lif_qstate addr \n");
-    return -1;
+  // Get the dst_qaddr only if destination is used in P4+
+  if (dst_valid) {
+    if (hal_if::get_lif_qstate_addr(dst_lif, dst_qtype, dst_qid, &dst_qaddr) < 0) {
+      printf("Failed to get lif_qstate addr \n");
+      return -1;
+    }
   }
 
   // If no program binary name supplied => no need to set next_pc as 
@@ -66,8 +70,6 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
       return -1;
     }
     next_pc = next_pc >> 6;
-  } else {
-    next_pc = 0;
   }
 
   if (hal_if::get_pgm_label_offset("txdma_stage0.bin", "storage_tx_stage0", &pc_offset) < 0) {
@@ -82,10 +84,13 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   write_q_state_field(q_state, 128, 64, base_addr);
   write_q_state_field(q_state, 192, 16, entry_size);
   write_q_state_field(q_state, 208, 28, next_pc);
-  write_q_state_field(q_state, 236, 34, dst_qaddr);
-  write_q_state_field(q_state, 270, 11, dst_lif);
-  write_q_state_field(q_state, 281, 3, dst_qtype);
-  write_q_state_field(q_state, 284, 24, dst_qid);
+  // Program only if destination is used in P4+
+  if (dst_valid) {
+    write_q_state_field(q_state, 236, 34, dst_qaddr);
+    write_q_state_field(q_state, 270, 11, dst_lif);
+    write_q_state_field(q_state, 281, 3, dst_qtype);
+    write_q_state_field(q_state, 284, 24, dst_qid);
+  }
   write_q_state_field(q_state, 340, 34, ssd_bm_addr);
   write_q_state_field(q_state, 374, 16, ssd_q_num);
   write_q_state_field(q_state, 390, 16, ssd_q_size);

@@ -15,6 +15,8 @@ struct {
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
   {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false},
   {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
+  {&tests::test_run_nvme_pvm_hashing1, "NVME->PVM Hashing 1", false},
+  {&tests::test_run_nvme_pvm_hashing2, "NVME->PVM Hashing 2", false},
 
   // Always last entry
   {0}
