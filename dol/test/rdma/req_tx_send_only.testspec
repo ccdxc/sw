@@ -20,6 +20,12 @@ selectors:
 
 packets:
     - packet:
+        id          : TRAILER #PENDOL, CRC
+        payloadsize : 0
+        template    : ref://factory/packets/id=TRAILER
+        headers     :
+
+    - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=PAYLOAD
@@ -65,9 +71,11 @@ buffers:
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
-           size    : ref://testcase/packets/id=BASE_PKT/size
-           data    : ref://testcase/packets/id=BASE_PKT/rawbytes
            offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT/size
+                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                 #skip    : ref://testcase/packets/id=TRAILER/size
 
 descriptors:
     - descriptor:

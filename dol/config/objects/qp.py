@@ -209,6 +209,9 @@ class QpObject(base.ConfigObjectBase):
                            dport=rdma_session.session.iflow.dport,
                            len = 0, chksum = 0)
         HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
+
+        if (GlobalOptions.dryrun): return
+
         model_wrap.write_mem(self.header_temp_addr, bytes(HdrTemplate), len(HdrTemplate))
         return
          

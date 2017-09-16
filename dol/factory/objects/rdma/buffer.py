@@ -16,11 +16,19 @@ class RdmaBufferObject(base.FactoryObjectBase):
         self.data = []
         self.size = 0
         self.offset = 0
+        self.segments = []
 
     def Init(self, spec):
         #self.LockAttributes()
-        self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0
-        self.data = spec.fields.data if hasattr(spec.fields, 'data') else [] 
+       
+        for segment in spec.fields.segments:
+            skip_bytes = segment.skip if hasattr(segment, 'skip') else 0
+            self.size += (segment.size - skip_bytes) if hasattr(segment, 'size') else 0
+            self.data += segment.data[:len(segment.data)-skip_bytes] if (hasattr(segment, 'data') and segment.data) else []
+            #handle segment.offset 
+
+        #self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0
+        #self.data = spec.fields.data if hasattr(spec.fields, 'data') else [] 
         # Offset of the data
         self.offset = spec.fields.offset if hasattr(spec.fields, 'offset') else 0 
         self.address = spec.fields.slab.address if spec.fields.slab else 0
@@ -38,7 +46,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.address and self.data:
             cfglogger.info("Writing Buffer @0x%x = size: 0x%d offset: 0x%d " %
                        (self.address, self.size, self.offset))
-            resmgr.HostMemoryAllocator.write(self.mem_handle, self.data)
+            resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(self.data))
         else:
             cfglogger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
 
@@ -57,12 +65,13 @@ class RdmaBufferObject(base.FactoryObjectBase):
     def __eq__(self, other):
         # self: Expected, other: Actual
         cfglogger.info("expected size: %d actual: %d" %(self.size, other.size))
-        if self.size-20 > other.size:
-            return False
-        #print('self_data: [size: %d] %s' % (self.size-20, bytes(self.data[:-20])))
-        #print('other_data: [size: %d] %s' % (self.size-20, bytes(other.data[:self.size-20])))
-        #cmp = self.data[0:self.size] == other.data[0:self.size]
-        cmp = self.data[:-20] == other.data[:self.size-20]
+
+        if self.size > other.size: 
+           return False
+
+        #print('self_data: [size: %d] %s' % (self.size, bytes(self.data)))
+        #print('other_data: [size: %d] %s' % (self.size, bytes(other.data[:self.size])))
+        cmp = bytes(self.data) == bytes(other.data[:self.size])
         cfglogger.info("comparison: %s" %cmp) 
         return cmp
 

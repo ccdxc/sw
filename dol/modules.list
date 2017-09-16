@@ -740,7 +740,7 @@ modules:
         enable  : False
         package : test.rdma
         module  : req_tx_send_only
-        spec    : tx_send_only.testspec
+        spec    : req_tx_send_only.testspec
         ignore  : True
 
     - module:
@@ -748,7 +748,7 @@ modules:
         enable  : False
         package : test.rdma
         module  : resp_rx_send_only
-        spec    : rx_send_only.testspec
+        spec    : resp_rx_send_only.testspec
         ignore  : True
 
     - module:
@@ -756,7 +756,15 @@ modules:
         enable  : False
         package : test.rdma
         module  : resp_rx_send_only_2sges
-        spec    : rx_send_only_2sges.testspec
+        spec    : resp_rx_send_only_2sges.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_LAST
+        enable  : False
+        package : test.rdma
+        module  : resp_rx_send_first_last
+        spec    : resp_rx_send_first_last.testspec
         ignore  : True
 
     - module:
