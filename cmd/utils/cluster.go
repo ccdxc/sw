@@ -14,9 +14,11 @@ import (
 // cluster. This information is used by CMD to determine whether a node is
 // already part of a cluster (on reboot, process restart etc).
 type Cluster struct {
-	Name      string
-	UUID      string
-	VirtualIP string
+	Name        string
+	UUID        string
+	VirtualIP   string
+	QuorumNodes []string
+	NTPServers  []string
 }
 
 // GetCluster retrieves information about the current cluster, returns nil if
@@ -49,7 +51,7 @@ func SaveCluster(cluster *Cluster) error {
 	}
 
 	confFile := path.Join(env.Options.ConfigDir, env.Options.ClusterConfigFile)
-	if err := ioutil.WriteFile(confFile, out, 0644); err != nil {
+	if err = ioutil.WriteFile(confFile, out, 0644); err != nil {
 		log.Errorf("Failed to write cluster file with error: %v", err)
 		return err
 	}

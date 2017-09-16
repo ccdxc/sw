@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/cmd/env"
 	"github.com/pensando/sw/cmd/server"
 	"github.com/pensando/sw/cmd/server/options"
+	"github.com/pensando/sw/cmd/startup"
 	"github.com/pensando/sw/utils/log"
 	"github.com/pensando/sw/utils/runtime"
 	"github.com/pensando/sw/utils/systemd"
@@ -41,6 +42,7 @@ func main() {
 
 	env.Scheme = runtime.NewScheme()
 	env.Scheme.AddKnownTypes(&cmd.Cluster{}, &cmd.Node{})
+	env.Options = options.NewServerRunOptions()
 
 	// We need to issue equivalent of 'systemctl daemon-reload' before anything else to make systemd read the config files
 	s := systemd.New()
@@ -49,6 +51,8 @@ func main() {
 		fmt.Printf("Error %v while issuing systemd.DaemonReload at startup", err)
 	}
 
+	startup.OnStart()
+
 	log.Debugln("Launching server")
-	server.Run(options.NewServerRunOptions())
+	server.Run(env.Options)
 }

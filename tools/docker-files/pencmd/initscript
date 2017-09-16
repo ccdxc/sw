@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# these stay inside the container within PATH
-mv /target/usr/bin/pen-cmd /usr/bin
-
 # /usr/pensando/bin of host (or VM) is mapped to /home/usr/pensando/bin inside the base container.
 # The binaries (which need to be run on the host) are packaged in the base container.
 # Steps below copy the binaries to be run on the host.
@@ -11,5 +8,3 @@ mv /target/usr/bin/pen-cmd /usr/bin
 mv -f /target/usr/bin/systemd-docker /host/usr/pensando/bin/systemd-docker
 mv -f /target/usr/bin/kubelet /host/usr/pensando/bin/kubelet
 mv -f /target/usr/lib/systemd/system/* /host/usr/lib/systemd/system/
-
-exec /usr/bin/pen-cmd

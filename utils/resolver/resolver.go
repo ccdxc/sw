@@ -59,6 +59,9 @@ type resolverClient struct {
 
 // New creates a new resolver client.
 func New(c *Config) Interface {
+	if len(c.Servers) == 0 {
+		return nil
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &resolverClient{
 		config:    c,

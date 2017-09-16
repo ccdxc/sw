@@ -21,3 +21,14 @@ func New(c *quorum.Config) (quorum.Interface, error) {
 		return nil, fmt.Errorf("Unknown kv store type: %v", c.Type)
 	}
 }
+
+// Start starts a member of KV Store Quorum using exisitng configuration.
+// This is typically called after a restart of node or process
+func Start(c *quorum.Config) (quorum.Interface, error) {
+	switch c.Type {
+	case KVStoreTypeEtcd:
+		return etcd.StartQuorum(c)
+	default:
+		return nil, fmt.Errorf("Unknown kv store type: %v", c.Type)
+	}
+}

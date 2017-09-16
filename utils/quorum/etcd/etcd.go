@@ -51,13 +51,8 @@ const (
 	dataDirParam       = "--data-dir"
 )
 
-// NewQuorum creates a new etcdQuorum.
-func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
-	// Validate provided configuration.
-	if c.MemberName == "" || len(c.Members) == 0 {
-		return nil, fmt.Errorf("Missing member name or members")
-	}
-
+// memberIndex returns -1 if member is cant be found
+func memberIndex(c *quorum.Config) int {
 	idx := -1
 	for ii, member := range c.Members {
 		if c.MemberName == member.Name {
@@ -65,16 +60,14 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 			break
 		}
 	}
-	if idx == -1 {
-		return nil, fmt.Errorf("Missing member %v in member list", c.MemberName)
-	}
+	return idx
+}
+func createConfigFile(c *quorum.Config) error {
+	idx := memberIndex(c)
 
 	// Configure defaults.
 	if c.CfgFile == "" {
 		c.CfgFile = defaultCfgFile
-	}
-	if c.UnitFile == "" {
-		c.UnitFile = defaultUnitFile
 	}
 	if c.DataDir == "" {
 		c.DataDir = defaultDataDir
@@ -99,7 +92,6 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 		clusterMembers = append(clusterMembers, fmt.Sprintf("%s=%s", member.Name, strings.Join(member.PeerURLs, ",")))
 	}
 	cfgMap[clusterVar] = fmt.Sprintf("%s %s", clusterParam, strings.Join(clusterMembers, ","))
-
 	state := "new"
 	if c.Existing {
 		state = "existing"
@@ -109,22 +101,54 @@ func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	// Generate the config file.
 	cfgFile, err := os.Create(c.CfgFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer cfgFile.Close()
 
 	for k, v := range cfgMap {
 		_, err = cfgFile.WriteString(fmt.Sprintf("%s='%s'\n", k, v))
 		if err != nil {
+			return err
+		}
+	}
+	cfgFile.Sync()
+	return nil
+}
+
+// StartQuorum starts a member of etcdQuorum
+func StartQuorum(c *quorum.Config) (quorum.Interface, error) {
+	return quorumHelper(true, c)
+}
+
+// NewQuorum creates a new etcdQuorum.
+func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
+	return quorumHelper(false, c)
+}
+
+func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
+	// Validate provided configuration.
+	if c.MemberName == "" || len(c.Members) == 0 {
+		return nil, fmt.Errorf("Missing member name or members")
+	}
+	if c.UnitFile == "" {
+		c.UnitFile = defaultUnitFile
+	}
+
+	idx := memberIndex(c)
+	if idx == -1 {
+		return nil, fmt.Errorf("Missing member %v in member list", c.MemberName)
+	}
+
+	if existing == false {
+		err := createConfigFile(c)
+		if err != nil {
 			return nil, err
 		}
 	}
 
-	cfgFile.Sync()
-
 	s := systemd.New()
 	// Start etcd using systemd.
-	err = s.StartTarget(c.UnitFile)
+	err := s.StartTarget(c.UnitFile)
 	if err != nil {
 		return nil, err
 	}

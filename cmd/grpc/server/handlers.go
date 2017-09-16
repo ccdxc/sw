@@ -59,12 +59,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
 
+	cl := utils.Cluster{
+		Name:        req.Name,
+		UUID:        req.Uuid,
+		VirtualIP:   req.VirtualIp,
+		QuorumNodes: req.QuorumNodes,
+		NTPServers:  req.NTPServers,
+	}
+
 	// Record cluster membership on local FS.
-	if err := utils.SaveCluster(&utils.Cluster{
-		Name:      req.Name,
-		UUID:      req.Uuid,
-		VirtualIP: req.VirtualIp,
-	}); err != nil {
+	if err := utils.SaveCluster(&cl); err != nil {
 		return nil, err
 	}
 

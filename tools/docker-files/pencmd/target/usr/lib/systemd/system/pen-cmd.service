@@ -1,18 +1,29 @@
 [Unit]
 Description=Pensando Cluster Manager Daemon
 Documentation=http://pensando.io/
-StopWhenUnneeded=yes
-After=network.target
+After=network.target docker.service
+Requires=docker.service
 
 [Service]
-EnvironmentFile=-/etc/pensando/pencmd.conf
-ExecStartPre=/usr/bin/ln -s /docker.sock /var/run
-ExecStart=/usr/bin/pen-cmd
+ExecStartPre=-/usr/bin/docker kill pen-base
+ExecStartPre=-/usr/bin/docker rm -f pen-base
+ExecStart=/usr/pensando/bin/systemd-docker \
+	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-base \
+    --privileged -v /usr/pensando/bin:/host/usr/pensando/bin \
+    -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus \
+    -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system \
+    -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando  \
+    pen-base
 
-Type=simple
+ExecStop=/usr/bin/docker stop -t 2 pen-base
+ExecStopPost=/usr/bin/docker rm -f pen-base
 Restart=always
 RestartSec=10s
-KillMode=process
+Type=notify
+NotifyAccess=all
+TimeoutStartSec=120
+TimeoutStopSec=15
 
 [Install]
 WantedBy=pensando.target

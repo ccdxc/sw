@@ -85,21 +85,31 @@ class Node:
             print "Ignoring EOF errors executing command"
             return [], [], 0
 
-    # Stop pensando cluster services on each node
+    # Start pensando cluster services on each node
     def startCluster(self):
-        print "#### Starting pen-base container on " + self.addr
+        print "#### Loading container images on " + self.addr
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
         self.runCmd("""bash -c 'for i in /import/bin/tars/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
-        self.runCmd("docker run --privileged --net=host --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system  -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando -d pen-base")
+        self.runCmd("docker system prune -f")
+        self.runCmd("docker run --rm --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system pen-base -c /initscript")
+        self.runCmd("sudo systemctl daemon-reload")
+        self.runCmd("sudo systemctl enable pensando.target")
+        self.runCmd("sudo systemctl start pensando.target")
+        self.runCmd("sudo systemctl enable pen-cmd")
+        print "#### Starting pen-base container on " + self.addr
+        self.runCmd("sudo systemctl start pen-cmd")
 
-    # Start pen base container on each node
+    # Stop Cluster (stop various services that we started and cleanup all config and data)
     def stopCluster(self):
         print "#### Stopping pensando services on " + self.addr
 
         # stop all services
-        penSrvs = ["pen-base", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch"]
+        self.runCmd("sudo systemctl stop pensando.target")
+        self.runCmd("sudo systemctl disable pensando.target")
+        penSrvs = ["pen-base", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch", "pen-vchub", "pen-npm" ]
         for srv in penSrvs:
             self.runCmd("sudo systemctl stop " + srv)
+            self.runCmd("sudo systemctl disable " + srv)
             self.runCmd("docker stop " + srv)
             self.runCmd("docker rm -f " + srv)
 
