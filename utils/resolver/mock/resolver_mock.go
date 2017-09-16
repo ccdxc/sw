@@ -81,26 +81,6 @@ func (r *ResolverClient) Lookup(name string) *types.ServiceInstanceList {
 	return result
 }
 
-// GetURLs gets the URLs for a service.
-func (r *ResolverClient) GetURLs(name string) []string {
-	r.Lock()
-	defer r.Unlock()
-	result := []string{}
-	if r.svcsMap == nil {
-		return result
-	}
-	svcMap, ok := r.svcsMap[name]
-	if !ok {
-		return result
-	}
-	for _, v := range svcMap {
-		if v.URL != "" {
-			result = append(result, v.URL)
-		}
-	}
-	return result
-}
-
 // AddServiceInstance is used by test cases to add a service instance.
 func (r *ResolverClient) AddServiceInstance(si *types.ServiceInstance) error {
 	r.Lock()

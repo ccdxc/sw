@@ -486,11 +486,11 @@ func TestRPCBalancing(t *testing.T) {
 		},
 		Service: "testService",
 		Node:    "localhost",
-		URL:     fmt.Sprintf("localhost:%d", port1),
+		Port:    uint32(port1),
 	}
 	si2 := si1
 	si2.Name = "t2"
-	si2.URL = fmt.Sprintf("localhost:%d", port2)
+	si2.Port = uint32(port2)
 	m.AddServiceInstance(&si1)
 	m.AddServiceInstance(&si2)
 

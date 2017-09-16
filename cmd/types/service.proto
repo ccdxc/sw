@@ -50,8 +50,8 @@ message ServiceInstance {
     // instance is deployed.
     string Node = 5;
 
-    // URL contains the <IP Address:Port> of the service instance.
-    string URL = 6;
+    // Port contains the port where the service instance is running.
+    uint32 Port = 6;
 }
 
 // ServiceInstanceReq is used to query a service instance.
