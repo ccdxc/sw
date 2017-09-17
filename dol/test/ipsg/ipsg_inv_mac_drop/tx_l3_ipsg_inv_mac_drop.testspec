@@ -1,0 +1,114 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L3
+    maxflows    : 8
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1 # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : 00:00:AB:CD:00:00
+                #src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/src/segment/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
+
+    - packet:
+        id          : EXP_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/segment/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                prio    : callback://networking/packets/GetExpectedPacketCos
+                vlan    : ref://testcase/config/dst/segment/vlan_id
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+                ttl     : callback://networking/packets/GetRoutedTtl
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
+                hlim    : callback://networking/packets/GetRoutedTtl
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=PKT1/size
+           data : ref://testcase/packets/id=PKT1/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        fields:
+            upd : 3
+
+expect:
+    packets:
+        - packet:
+            object  : None
+            #object  : callback://networking/packets/GetL3UcExpectedPacket
+            port    : ref://testcase/config/dst/endpoint/intf/ports
