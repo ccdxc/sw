@@ -10,6 +10,8 @@
 
 namespace hal {
 
+static inline hal_ret_t tenant_delete_cb(void *obj);
+
 static inline void *
 tenant_get_key_func (void *entry)
 {
@@ -101,8 +103,19 @@ tenant_add_to_db (tenant_t *tenant, hal_handle_t handle)
     if (entry == NULL) {
         return HAL_RET_OOM;
     }
+    hndl = reinterpret_cast<hal_handle *>(handle);
 
-    // add object to the handle first
+    // add mapping from tenant id to its handle
+    entry->handle = hndl;
+    ret = g_hal_state->tenant_id_ht()->insert_with_key(&tenant->tenant_id,
+                                                       entry, &entry->ht_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add tenant id to handle mapping, "
+                      "err : {}", ret);
+        g_hal_state->hal_handle_ht_entry_slab()->free(entry);
+    }
+
+    // finally add the object to its handle
     hndl = reinterpret_cast<hal_handle *>(handle);
     ret = hndl->add_obj(tenant);
     if (ret != HAL_RET_OK) {
@@ -110,15 +123,8 @@ tenant_add_to_db (tenant_t *tenant, hal_handle_t handle)
         g_hal_state->hal_handle_ht_entry_slab()->free(entry);
         return ret;
     }
-
-    // add mapping from tenant id to its handle now
-    entry->handle = hndl;
-    ret = g_hal_state->tenant_id_ht()->insert(entry, &entry->ht_ctxt);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to add tenant id to handle mapping, "
-                      "err : {}", ret);
-        g_hal_state->hal_handle_ht_entry_slab()->free(entry);
-    }
+    // establish the association between tenant and handle now
+    tenant->hal_handle = handle;
 
     return ret;
 }
@@ -155,6 +161,7 @@ validate_tenant_create (TenantSpec& spec, TenantResponse *rsp)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("Tenant id and handle not set in request");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
@@ -162,12 +169,15 @@ validate_tenant_create (TenantSpec& spec, TenantResponse *rsp)
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != TenantKeyHandle::kTenantId) {
         // key-handle field set, but tenant id not provided
+        HAL_TRACE_ERR("Tenant id not set in request");
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
     // check if tenant id is in the valid range
     if (kh.tenant_id() == HAL_TENANT_ID_INVALID) {
+        HAL_TRACE_ERR("Tenant id {} invalid in the request",
+                      HAL_TENANT_ID_INVALID);
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -186,6 +196,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     tenant_t                *tenant = NULL;
     pd::pd_tenant_args_t    pd_tenant_args;
     nwsec_profile_t         *sec_prof;
+    hal_handle_t            hal_handle = HAL_HANDLE_INVALID;
 
     HAL_TRACE_DEBUG("Creating tenant with id {}",
                     spec.key_or_handle().tenant_id());
@@ -193,11 +204,14 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     // validate the request message
     ret = validate_tenant_create(spec, rsp);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Tenant request validation failed, ret : {}", ret);
         return ret;
     }
 
     // check if tenant exists already, and reject if one is found
     if (tenant_lookup_by_id(spec.key_or_handle().tenant_id())) {
+        HAL_TRACE_ERR("Failed to create a tenant, tenant {} exists already",
+                      spec.key_or_handle().tenant_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
     }
@@ -208,7 +222,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         ret = HAL_RET_OOM;
         HAL_TRACE_ERR("Failed to create teanant, err : {}", ret);
-        goto end;
+        return HAL_RET_OOM;
     }
     tenant->tenant_id = spec.key_or_handle().tenant_id();
     tenant->nwsec_profile_handle = spec.security_profile_handle();
@@ -218,15 +232,22 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     } else {
         sec_prof = nwsec_profile_lookup_by_handle(tenant->nwsec_profile_handle);
         if (sec_prof == NULL) {
-            HAL_TRACE_ERR("Security profile with handle {} not found",
-                          tenant->nwsec_profile_handle);
-            ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            HAL_TRACE_ERR("Failed to create tenant, security profile with "
+                          "handle {} not found", tenant->nwsec_profile_handle);
             rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
-            HAL_TRACE_ERR("Failed to create tenant, security profile not found");
-            goto end;
+            tenant_free(tenant);
+            return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         }
     }
-    tenant->hal_handle = hal_handle_alloc();
+    hal_handle = hal_handle_alloc();
+
+    // add this tenant to our db
+    ret = tenant_add_to_db(tenant, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add tenant {} to db, err : {}", ret);
+        rsp->set_api_status(types::API_STATIS_CFG_DB_ERR);
+        goto error;
+    }
 
     // allocate all PD resources and finish programming, if any
     pd::pd_tenant_args_init(&pd_tenant_args);
@@ -236,27 +257,24 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create tenant pd, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
-    }
-
-    // add this tenant to our db
-    ret = tenant_add_to_db(tenant, tenant->hal_handle);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATIS_CFG_DB_ERR);
-        goto end;
+        goto error;
     }
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_tenant_status()->set_tenant_handle(tenant->hal_handle);
+    rsp->mutable_tenant_status()->set_tenant_handle(hal_handle);
+    return HAL_RET_OK;
 
-end:
+error:
 
-    if (ret != HAL_RET_OK && tenant != NULL) {
-        if (tenant->hal_handle) {
-            hal_handle_free(tenant->hal_handle);
+    if (ret != HAL_RET_OK) {
+        if (tenant->hal_handle != HAL_HANDLE_INVALID) {
+            // (handle, object) are associated, we need to break the association
+            tenant_del_from_db(tenant->hal_handle, tenant, tenant_delete_cb);
+        } else {
+            hal_handle_free(hal_handle);
+            tenant_free(tenant);
         }
-        tenant_free(tenant);
     }
 
     return ret;
@@ -484,11 +502,13 @@ tenant_delete_cb (void *obj)
     }
 
     // do the actual cleanup for this tenant object now
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    ret = pd::pd_tenant_delete(&pd_tenant_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete tenant pd, err : {}", ret);
+    if (tenant->pd) {
+        pd::pd_tenant_args_init(&pd_tenant_args);
+        pd_tenant_args.tenant = tenant;
+        ret = pd::pd_tenant_delete(&pd_tenant_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete tenant pd, err : {}", ret);
+        }
     }
     tenant_free(tenant);
 

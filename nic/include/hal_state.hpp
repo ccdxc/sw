@@ -130,6 +130,7 @@ private:
 
     cfg_version_t db_get_current_version(void);
     cfg_version_t db_reserve_version(void);
+    hal_ret_t db_release_reserved_version(cfg_version_t ver);
     hal_ret_t db_update_version(cfg_version_t ver);
     hal_ret_t db_release_version_in_use(cfg_version_t ver);
     hal_ret_t process_del_cache_entry(del_cache_entry_t *entry);

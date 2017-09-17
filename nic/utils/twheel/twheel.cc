@@ -111,9 +111,11 @@ twheel::add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
 
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
+        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
     }
     insert_timer_(twentry);
     if (thread_safe_) {
+        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
         HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
 
@@ -138,9 +140,11 @@ twheel::del_timer(void *timer)
 
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
+        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
     }
     remove_timer_(twentry);
     if (thread_safe_) {
+        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
         HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
     twentry_slab_->free(twentry);
@@ -163,6 +167,7 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
 
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&twheel_[twentry->slice_].slock_);
+        //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
     }
     // remove this entry from current slice
     remove_timer_(twentry);
@@ -172,6 +177,7 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
     // re-insert in the right slice
     insert_timer_(twentry);
     if (thread_safe_) {
+        //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
         HAL_SPINLOCK_UNLOCK(&twheel_[twentry->slice_].slock_);
     }
     return twentry;
@@ -188,8 +194,8 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic)
 void
 twheel::tick(uint32_t msecs_elapsed)
 {
-    uint32_t                  nslices = 0;
-    twentry_t                 *twentry, *next_entry;
+    uint32_t     nslices = 0;
+    twentry_t    *twentry, *next_entry;
 
     // check if full slice interval has elapsed since last invokation
     if (msecs_elapsed < slice_intvl_) {
@@ -204,6 +210,7 @@ twheel::tick(uint32_t msecs_elapsed)
     do {
         if (thread_safe_) {
             HAL_SPINLOCK_LOCK(&twheel_[curr_slice_].slock_);
+            //HAL_TRACE_DEBUG("{}:{} locked slice {}", __FUNCTION__, __LINE__, curr_slice_);
         }
         twentry = twheel_[curr_slice_].slice_head_;
         while (twentry) {
@@ -212,7 +219,6 @@ twheel::tick(uint32_t msecs_elapsed)
                 twentry->nspins_ -= 1;
                 twentry = twentry->next_;
             } else {
-            sleep(1);
                 twentry->cb_(twentry->timer_id_, twentry->ctxt_);
                 if (twentry->periodic_) {
                     next_entry = twentry->next_;
@@ -229,6 +235,7 @@ twheel::tick(uint32_t msecs_elapsed)
             }
         }
         if (thread_safe_) {
+            //HAL_TRACE_DEBUG("{}:{} unlocking slice {}", __FUNCTION__, __LINE__, curr_slice_);
             HAL_SPINLOCK_UNLOCK(&twheel_[curr_slice_].slock_);
         }
         curr_slice_ = (curr_slice_ + 1)%nslices_;

@@ -45,7 +45,7 @@ hal_state_pd::init(void)
     uint32_t p, n;
 
     // initialize tenant related data structures
-    tenant_slab_ = slab::factory("Tenant PD", HAL_SLAB_LIF_PD,
+    tenant_slab_ = slab::factory("Tenant PD", HAL_SLAB_TENANT_PD,
                                  sizeof(hal::pd::pd_tenant_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((tenant_slab_ != NULL), false);
@@ -61,11 +61,12 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((tenant_hwid_ht_ != NULL), false);
 
     // initialize security related data structures
-    nwsec_profile_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_NWSEC_PROFILES);
+    nwsec_profile_hwid_idxr_ =
+        new hal::utils::indexer(HAL_MAX_HW_NWSEC_PROFILES);
     HAL_ASSERT_RETURN((nwsec_profile_hwid_idxr_ != NULL), false);
 
     // initialize l2seg related data structures
-    l2seg_slab_ = slab::factory("L2Segment PD", HAL_SLAB_LIF_PD,
+    l2seg_slab_ = slab::factory("L2Segment PD", HAL_SLAB_L2SEG_PD,
                                  sizeof(hal::pd::pd_l2seg_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
@@ -408,6 +409,8 @@ hal_state_pd::~hal_state_pd()
     uplinkif_pd_slab_ ? delete uplinkif_pd_slab_ : HAL_NOP;
     uplinkpc_pd_slab_ ? delete uplinkpc_pd_slab_ : HAL_NOP;
     uplinkifpc_idxr_ ? delete uplinkifpc_idxr_ : HAL_NOP;
+
+    tunnelif_pd_slab_ ? delete tunnelif_pd_slab_ : HAL_NOP;
 
     nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
 

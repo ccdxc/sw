@@ -123,17 +123,12 @@ ht::lookup(void *key)
 }
 
 hal_ret_t
-ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
+ht::insert_with_key(void *key, void *entry, ht_ctxt_t *ht_ctxt)
 {
-    void           *key, *old_entry;;
+    void           *old_entry;
     uint32_t       hash_val;
     ht_bucket_t    *ht_bucket;
 
-    HAL_ASSERT_RETURN(((entry != NULL) && (ht_ctxt != NULL)),
-                      HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(((ht_ctxt->prev == NULL) && (ht_ctxt->next == NULL)),
-                      HAL_RET_INVALID_ARG);
-    key = get_key_func_(entry);
     HAL_ASSERT_RETURN(key != NULL, HAL_RET_ERR);
     hash_val = hash_func_(key, num_buckets_);
     HAL_ASSERT_RETURN((hash_val < num_buckets_), HAL_RET_ERR);
@@ -167,6 +162,16 @@ ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
                            HAL_RET_ERR);
     }
     return HAL_RET_OK;
+}
+
+hal_ret_t
+ht::insert(void *entry, ht_ctxt_t *ht_ctxt)
+{
+    HAL_ASSERT_RETURN(((entry != NULL) && (ht_ctxt != NULL)),
+                      HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(((ht_ctxt->prev == NULL) && (ht_ctxt->next == NULL)),
+                      HAL_RET_INVALID_ARG);
+    return insert_with_key(get_key_func_(entry), entry, ht_ctxt);
 }
 
 void *

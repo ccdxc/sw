@@ -94,6 +94,7 @@ public:
     // lookup() will return entry given its key or NULL if entry is not found
     void *lookup(void *key);
 
+    hal_ret_t insert_with_key(void *key, void *entry, ht_ctxt_t *ht_ctxt);
     hal_ret_t insert(void *entry, ht_ctxt_t *ht_ctxt);
 
     // remove API will remove entry with given key, if exists, from hash table

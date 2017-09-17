@@ -100,6 +100,31 @@ public:
         return 0;
     }
 
+    void tenant_delete_by_id(uint32_t id) {
+        TenantDeleteRequestMsg     req_msg;
+        TenantDeleteRequest        *req;
+        TenantDeleteResponseMsg    rsp_msg;
+        ClientContext              context;
+        Status                     status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_tenant_id(id);
+
+        status = tenant_stub_->TenantDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (rsp_msg.api_status(0) == types::API_STATUS_OK) {
+                std::cout << "Tenant delete succeeded" << std::endl;
+            } else {
+                std::cout << "Tenant delete failed, error = "
+                          << rsp_msg.api_status(0) << std::endl;
+            }
+            return;
+        }
+        std::cout << "Tenant delete failed, error = "
+                  << rsp_msg.api_status(0) << std::endl;
+        return;
+    }
+
     void tenant_delete_by_handle(uint64_t hal_handle) {
         TenantDeleteRequestMsg     req_msg;
         TenantDeleteRequest        *req;
@@ -163,6 +188,7 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
+    hclient.tenant_delete_by_id(1);
     // create a tenant
     hal_handle = hclient.tenant_create(1);
     assert(hal_handle != 0);
@@ -177,6 +203,7 @@ main (int argc, char** argv)
 
     // create L2 segment
     assert(hclient.l2segment_create(1, 1, 1) != 0);
+    hclient.tenant_delete_by_id(1);
 
     return 0;
 }

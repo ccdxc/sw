@@ -67,6 +67,7 @@ tenant_init (tenant_t *tenant)
     HAL_SPINLOCK_INIT(&tenant->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
+    tenant->hal_handle = HAL_HANDLE_INVALID;
     tenant->num_l2seg = 0;
     tenant->num_sg = 0;
     tenant->num_l4lb_svc = 0;

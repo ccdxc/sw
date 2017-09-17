@@ -563,12 +563,34 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// update the current version of the db to the given version
+// release a version that was previously reserved
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::db_release_reserved_version(cfg_version_t ver)
+{
+    uint32_t    i;
+
+    HAL_SPINLOCK_LOCK(&slock_);
+    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_rsvd_); i++) {
+        if (cfg_ver_rsvd_[i].valid && (cfg_ver_rsvd_[i].ver = ver)) {
+            cfg_ver_rsvd_[i].valid = FALSE;
+            cfg_ver_rsvd_[i].ver = HAL_CFG_VER_NONE;
+            break;
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&slock_);
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// update the current version of the db to the given version and release the
+// reserved version
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_cfg_db::db_update_version(cfg_version_t ver)
 {
     HAL_ATOMIC_STORE_UINT32(&cfg_db_ver_, &ver);
+    db_release_reserved_version(ver);
     return HAL_RET_OK;
 }
 
@@ -1278,15 +1300,15 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
     case HAL_SLAB_HANDLE:
-        g_hal_state->hal_handle_slab()->free(elem);
+        g_hal_state->hal_handle_slab()->free_(elem);
         break;
 
     case HAL_SLAB_HANDLE_HT_ENTRY:
-        g_hal_state->hal_handle_ht_entry_slab()->free(elem);
+        g_hal_state->hal_handle_ht_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_DEL_CACHE_ENTRY:
-        g_hal_state->hal_del_cache_entry_slab()->free(elem);
+        g_hal_state->hal_del_cache_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_TENANT:

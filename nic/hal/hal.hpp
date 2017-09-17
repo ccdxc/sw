@@ -105,7 +105,7 @@ private:
     } __PACK__ objs_[k_max_objs_];
 };
 extern hal_handle_t hal_handle_alloc(void);
-extern void hal_handle_free(uint64_t handle);
+extern void hal_handle_free(hal_handle_t handle);
 
 //------------------------------------------------------------------------------
 // A HAL object can be indexed by several keys (e.g., like L2 key, L3 keys for
@@ -127,7 +127,7 @@ extern hal_handle_t hal_alloc_handle(void);
 //------------------------------------------------------------------------------
 // HAL internal api to free handle of an object back
 //------------------------------------------------------------------------------
-extern void hal_free_handle(uint64_t handle);
+extern void hal_free_handle(hal_handle_t handle);
 
 }    // namespace hal
 

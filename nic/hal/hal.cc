@@ -253,7 +253,7 @@ hal_handle::add_obj(void *obj)
                 // pi, pd and hw state
                 // TODO: this can happen in back to back add-del-add case
                 //       while the previously added version is still in use.
-                HAL_TRACE_ERR("Failed to add object le, found "
+                HAL_TRACE_ERR("Failed to add object, found existing "
                               "ver {} ({}) of this obj in handle, rsvd "
                               "write version {}", objs_[i].ver,
                               (g_hal_state->cfg_db()->is_cfg_ver_in_use(objs_[i].ver) ?
@@ -273,7 +273,11 @@ hal_handle::add_obj(void *obj)
 
     // we know that this version is the latest, try to add this object to
     // the handle
-    HAL_ASSERT_GOTO((free_slot >= 0), end);
+    if (free_slot < 0) {
+        HAL_TRACE_ERR("Failed to add object, no free slot found");
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
+    }
     objs_[free_slot].ver = t_cfg_db_ctxt.wversion_;
     objs_[free_slot].obj = obj;
     objs_[free_slot].valid = TRUE;
@@ -458,7 +462,7 @@ hal_handle_alloc (void)
 // return a hal handle back so it can be reallocated for another object
 //------------------------------------------------------------------------------
 void
-hal_handle_free (uint64_t handle)
+hal_handle_free (hal_handle_t handle)
 {
     hal_handle    *hndl;
 
