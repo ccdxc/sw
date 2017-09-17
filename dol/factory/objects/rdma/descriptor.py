@@ -43,51 +43,51 @@ class RdmaRrqDescriptorBase(Packet):
 
 class RdmaRrqDescriptorRead(Packet):
     fields_desc = [
-        LEIntField("len", 0),
-        LELongField("wqe_sge_list_ptr", 0),
-        LEIntField("rsvd0", 0),
-        LEIntField("rsvd1", 0),
-        LEIntField("rsvd2", 0),
-        LEIntField("rsvd3", 0),
-        LEIntField("rsvd4", 0),
-        LEIntField("rsvd5", 0),
-        LEIntField("rsvd6", 0),
-        LEIntField("rsvd7", 0),
-        LEIntField("rsvd8", 0),
-        LEIntField("rsvd9", 0),
-        LEIntField("rsvd10", 0),
+        IntField("len", 0),
+        LongField("wqe_sge_list_ptr", 0),
+        IntField("rsvd0", 0),
+        IntField("rsvd1", 0),
+        IntField("rsvd2", 0),
+        IntField("rsvd3", 0),
+        IntField("rsvd4", 0),
+        IntField("rsvd5", 0),
+        IntField("rsvd6", 0),
+        IntField("rsvd7", 0),
+        IntField("rsvd8", 0),
+        IntField("rsvd9", 0),
+        IntField("rsvd10", 0),
     ]
 
 class RdmaRrqDescriptorAtomic(Packet):
     fields_desc = [
-        LELongField("va", 0),
-        LEIntField("len", 0),
-        LEIntField("l_key", 0),
+        LongField("va", 0),
+        IntField("len", 0),
+        IntField("l_key", 0),
         ByteField("op_type", 0),
         ByteField("rsvd0", 0),
         ByteField("rsvd1", 0),
         ByteField("rsvd2", 0),
-        LEIntField("rsvd3", 0),
-        LEIntField("rsvd4", 0),
-        LEIntField("rsvd5", 0),
-        LEIntField("rsvd6", 0),
-        LEIntField("rsvd7", 0),
-        LEIntField("rsvd8", 0),
-        LEIntField("rsvd9", 0),
-        LEIntField("rsvd10", 0),
-        LEIntField("rsvd11", 0),
-        LEIntField("rsvd12", 0),
+        IntField("rsvd3", 0),
+        IntField("rsvd4", 0),
+        IntField("rsvd5", 0),
+        IntField("rsvd6", 0),
+        IntField("rsvd7", 0),
+        IntField("rsvd8", 0),
+        IntField("rsvd9", 0),
+        IntField("rsvd10", 0),
+        IntField("rsvd11", 0),
+        IntField("rsvd12", 0),
     ]
 
 class RdmaRqDescriptorBase(Packet):
     fields_desc = [
-        LELongField("wrid", 0),
+        LongField("wrid", 0),
         ByteField("num_sges", 0),
         ByteField("rsvd0", 0),
-        LEShortField("rsvd1", 0),
-        LEIntField("rsvd2", 0),
-        LELongField("rsvd3", 0),
-        LELongField("rsvd4", 0),
+        ShortField("rsvd1", 0),
+        IntField("rsvd2", 0),
+        LongField("rsvd3", 0),
+        LongField("rsvd4", 0),
     ]
 
 class RdmaRsqDescriptorBase(Packet):
@@ -95,22 +95,22 @@ class RdmaRsqDescriptorBase(Packet):
         BitField("read_resp_or_atomic", 0, 1),
         BitField("rsvd0", 0, 7),
         X3BytesField("psn", 0),
-        LELongField("rsvd1", 0),
+        LongField("rsvd1", 0),
     ]
 
 class RdmaRsqDescriptorRead(Packet):
     fields_desc = [
-        LEIntField("r_key", 0),
-        LELongField("va", 0),
-        LEIntField("len", 0),
-        LEIntField("offset", 0),
+        IntField("r_key", 0),
+        LongField("va", 0),
+        IntField("len", 0),
+        IntField("offset", 0),
     ]
 
 class RdmaRsqDescriptorAtomic(Packet):
     fields_desc = [
-        LEIntField("r_key", 0),
-        LELongField("va", 0),
-        LELongField("orig_data", 0),
+        IntField("r_key", 0),
+        LongField("va", 0),
+        LongField("orig_data", 0),
     ]
 
 class RdmaSge(Packet):
@@ -120,7 +120,29 @@ class RdmaSge(Packet):
         IntField("l_key", 0),
     ]
 
-
+class RdmaCqDescriptor(Packet):
+    fields_desc = [
+        LongField("wrid", 0),
+        ByteField("op_type", 0),
+        ByteField("status", 0),
+        BitField("rkey_inv_vld", 0, 1),
+        BitField("imm_data_vld", 0, 1),
+        BitField("color", 0, 1),
+        BitField("rsvd0", 0, 5),
+        X3BytesField("qp", 0),
+        IntField("imm_data", 0),
+        IntField("r_key", 0),
+        ByteField("rsvd1", 0),
+        ByteField("rsvd2", 0),
+        ByteField("rsvd3", 0),
+        ByteField("rsvd4", 0),
+        ByteField("rsvd5", 0),
+        ByteField("rsvd6", 0),
+        ByteField("rsvd7", 0),
+        ByteField("rsvd8", 0),
+        ByteField("rsvd9", 0),
+        ByteField("rsvd10", 0),
+    ]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
@@ -136,7 +158,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Desciptor @0x%x = op_type: 0x%d wrid: 0x%x num_sges: %d" % 
+        cfglogger.info("Writing Descriptor @0x%x = op_type: 0x%d wrid: 0x%x num_sges: %d" % 
                        (self.address, self.spec.fields.op_type, self.spec.fields.wrid, self.spec.fields.num_sges))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.spec.fields.wrid,
                                     num_sges=self.spec.fields.num_sges)
@@ -208,8 +230,8 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Desciptor @0x%x = wrid: 0x%x num_sges: %d" % 
-                       (self.address, self.spec.fields.wrid, self.spec.fields.num_sges))
+        cfglogger.info("Writing Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
+                       (self.mem_handle.va, self.mem_handle.pa, self.spec.fields.wrid, self.spec.fields.num_sges))
         desc = RdmaRqDescriptorBase(wrid=self.spec.fields.wrid,
                                     num_sges=self.spec.fields.num_sges)
         for sge in self.spec.fields.sges:
@@ -282,3 +304,86 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         rdmabuff.size = total_size
         cfglogger.info("Total data: %s" % bytes(total_data))
         return rdmabuff
+
+class RdmaCqDescriptorObject(base.FactoryObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.logger = cfglogger
+
+    def Init(self, spec):
+        super().Init(spec)
+        if hasattr(spec.fields, 'wrid'):
+            self.wrid = spec.fields.wrid
+        if hasattr(spec.fields, 'msn'):
+            self.msn = spec.fields.msn
+        if hasattr(spec.fields, 'op_type'):
+            self.op_type = spec.fields.op_type
+        if hasattr(spec.fields, 'status'):
+            self.status = spec.fields.status
+        if hasattr(spec.fields, 'rkey_inv_vld'):
+            self.rkey_inv_vld = spec.fields.rkey_inv_vld
+        if hasattr(spec.fields, 'imm_data_vld'):
+            self.imm_data_vld = spec.fields.imm_data_vld
+        if hasattr(spec.fields, 'color'):
+            self.color = spec.fields.color
+        if hasattr(spec.fields, 'qp'):
+            self.qp = spec.fields.qp
+        if hasattr(spec.fields, 'imm_data'):
+            self.imm_data = spec.fields.imm_data
+        if hasattr(spec.fields, 'r_key'):
+            self.r_key = spec.fields.r_key
+
+        self.__create_desc()
+
+    def __create_desc(self):
+        self.desc = RdmaCqDescriptor(
+                            wrid=self.wrid,
+                            op_type=self.op_type,
+                            status=self.status,
+                            rkey_inv_vld=self.rkey_inv_vld,
+                            imm_data_vld=self.imm_data_vld,
+                            color=self.color,
+                            qp=self.qp,
+                            imm_data=self.imm_data,
+                            r_key=self.r_key)
+    def __set_desc(self, desc):
+        self.desc = desc
+    
+    def Write(self):
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        cfglogger.info("Writing Desciptor @0x%x = wrid: 0x%x " % 
+                       (self.address, self.wrid))
+        resmgr.HostMemoryAllocator.write(self.mem_handle, 
+                                         bytes(self.desc))
+
+    def Read(self):
+        """
+        Reads a Descriptor from "self.address"
+        :return:
+        """
+        self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        self.__set_desc(RdmaCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptor()))))
+
+    def Show(self):
+        self.desc.show()
+
+    def __eq__(self, other):
+        cfglogger.info("__eq__ operator invoked on cq descriptor..")
+
+        cfglogger.info('self:\n')
+        self.Show()
+        cfglogger.info('other:\n')
+        other.Show()
+
+        return self.desc == other.desc
+
+    def GetBuffer(self):
+        cfglogger.info("GetBuffer() operator invoked on cq descriptor")
+        #CQ is not associated with any buffer and hence simply return
+        #empty bytes so that ebuf == abuf check passes
+        return bytes('')
+

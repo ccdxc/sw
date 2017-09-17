@@ -99,7 +99,8 @@ struct resp_rx_rqcb0_write_back_info_t {
     incr_c_index: 1;
     tbl_id: 3;
     cache: 1;
-    pad: 146;
+    do_not_invalidate_tbl: 1;
+    pad: 145;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {

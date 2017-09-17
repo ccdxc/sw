@@ -829,7 +829,7 @@ modules:
 
     - module:
         name    : RDMA_RX_SEND_ONLY
-        enable  : False
+        enable  : True
         package : test.rdma
         module  : resp_rx_send_only
         spec    : resp_rx_send_only.testspec
@@ -837,7 +837,7 @@ modules:
 
     - module:
         name    : RDMA_RX_SEND_ONLY_2SGES
-        enable  : False
+        enable  : True
         package : test.rdma
         module  : resp_rx_send_only_2sges
         spec    : resp_rx_send_only_2sges.testspec

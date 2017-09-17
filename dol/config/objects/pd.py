@@ -38,7 +38,8 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_qp = qp.QpObjectHelper()
         qp_spec = spec.qp.Get(Store)
         self.obj_helper_qp.Generate(self, qp_spec)
-        self.qps.SetAll(self.obj_helper_qp.qps)
+        if len(self.obj_helper_qp.qps):
+            self.qps.SetAll(self.obj_helper_qp.qps)
 
         self.Show()
         return
@@ -48,8 +49,10 @@ class PdObject(base.ConfigObjectBase):
         self.mrs.Add(mr)
 
     def Configure(self):
-        self.obj_helper_mr.Configure()
-        self.obj_helper_qp.Configure()
+        if len(self.obj_helper_mr.mrs):
+            self.obj_helper_mr.Configure()
+        if len(self.obj_helper_qp.qps):
+            self.obj_helper_qp.Configure()
 
     def Show(self):
         cfglogger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
