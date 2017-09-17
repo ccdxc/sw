@@ -13,6 +13,7 @@
 
 using endpoint::EndpointKeyHandle;
 using endpoint::EndpointGetResponse;
+using types::ApiStatus;
 
 using hal::utils::ht_ctxt_t;
 
@@ -158,13 +159,14 @@ extern bool ep_compare_handle_key_func(void *key1, void *key2);
 hal_ret_t endpoint_create(endpoint::EndpointSpec& spec,
                           endpoint::EndpointResponse *rsp);
 
-hal_ret_t endpoint_update(endpoint::EndpointSpec& spec,
+hal_ret_t endpoint_update(endpoint::EndpointUpdateRequest& spec,
                           endpoint::EndpointResponse *rsp);
 
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
 mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
+void ep_print_ips(ep_t *ep);
 }    // namespace hal
 
 #endif    // __ENDPOINT_HPP__

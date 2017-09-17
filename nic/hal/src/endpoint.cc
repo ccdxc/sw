@@ -123,6 +123,46 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
+// validate an incoming endpoint update request
+//------------------------------------------------------------------------------
+static hal_ret_t
+validate_endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    // Check if tenant id is valid
+    if (!req.has_meta() ||
+        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Check if ep's key or handle is passed
+    if (!req.has_key_or_handle()) {
+        rsp->set_api_status(types::API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+#if 0
+    if (req.has_key_or_handle()) {
+        if (req.key_or_handle().has_endpoint_key()) {
+            // Key
+        } else {
+            // Handle
+        }
+    } else {
+        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
+        ret = HAL_RET_INVALID_ARG;
+    }
+#endif
+
+
+end:
+    return ret;
+}
+//------------------------------------------------------------------------------
 // process a endpoint create request
 // TODO: check if EP or any of its IPs exists already
 //------------------------------------------------------------------------------
@@ -340,12 +380,341 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// Generic function to fetch endpoint from key or handle
+//------------------------------------------------------------------------------
+hal_ret_t
+fetch_endpoint(tenant_id_t tid, EndpointKeyHandle kh, ep_t **ep, 
+               ::types::ApiStatus *api_status)
+{
+    ep_l3_key_t            l3_key = { 0 };
+    mac_addr_t             mac_addr = { 0 };
+
+    if (kh.key_or_handle_case() == EndpointKeyHandle::kEndpointKey) {
+        auto ep_key = kh.endpoint_key();
+        if (ep_key.has_l2_key()) {
+            auto ep_l2_key = ep_key.l2_key();
+            MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
+            *ep = find_ep_by_l2_key(ep_l2_key.l2_segment_handle(), mac_addr);
+        } else if (ep_key.has_l3_key()) {
+            auto ep_l3_key = ep_key.l3_key();
+            l3_key.tenant_id = tid;
+            ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
+                    ep_l3_key.ip_address());
+            *ep = find_ep_by_l3_key(&l3_key);
+        } else {
+            *api_status = types::API_STATUS_INVALID_ARG;
+            return HAL_RET_INVALID_ARG;
+        }
+    } else if (kh.key_or_handle_case() ==
+            EndpointKeyHandle::kEndpointHandle) {
+        *ep = find_ep_by_handle(kh.endpoint_handle());
+    } else {
+        *api_status = types::API_STATUS_INVALID_ARG;
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+endpoint_if_update(EndpointUpdateRequest& req, ep_t *ep, 
+                   bool *if_change, hal_handle_t *new_if_hdl) 
+{
+    *if_change = false;
+
+    if (ep->if_handle != req.interface_handle()) {
+        *if_change = true;
+        *new_if_hdl = req.interface_handle();
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+endpoint_l2seg_update(EndpointUpdateRequest& req, ep_t *ep, 
+                      bool *l2seg_change, hal_handle_t *new_l2seg_hdl) 
+{
+    *l2seg_change = false;
+
+    if (ep->l2seg_handle != req.l2_segment_handle()) {
+        *l2seg_change = true;
+        *new_l2seg_hdl = req.l2_segment_handle();
+    }
+
+    return HAL_RET_OK;
+}
+
+bool 
+ip_in_ep(ip_addr_t *ip, ep_t *ep, ep_ip_entry_t **ip_entry)
+{
+    dllist_ctxt_t       *lnode = NULL;
+    ep_ip_entry_t       *pi_ip_entry = NULL;
+
+    lnode = ep->ip_list_head.next;
+    dllist_for_each(lnode, &(ep->ip_list_head)) {
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
+                offsetof(ep_ip_entry_t, ep_ip_lentry));
+        if (!memcmp(ip, &pi_ip_entry->ip_addr, sizeof(ip_addr_t))) {
+            if (ip_entry) {
+                *ip_entry = pi_ip_entry;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
+hal_ret_t
+endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
+                        bool *iplist_change,
+                        dllist_ctxt_t **add_iplist, 
+                        dllist_ctxt_t **del_iplist)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    uint16_t        num_ips = 0, i = 0;
+    ip_addr_t       ip_addr;  
+    ep_ip_entry_t   *ep_ipe = NULL;
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+    bool            ip_exists = false;
+
+    *iplist_change = false;
+
+    *add_iplist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
+    HAL_ABORT(*add_iplist != NULL);
+    *del_iplist = (dllist_ctxt_t *)HAL_CALLOC(HAL_MEM_ALLOC_DLLIST, sizeof(dllist_ctxt_t));
+    HAL_ABORT(*del_iplist != NULL);
+
+    utils::dllist_reset(*add_iplist);
+    utils::dllist_reset(*del_iplist);
+
+    num_ips = req.ip_address_size();
+    for (i = 0; i < num_ips; i++) {
+        ip_addr_spec_to_ip_addr(&ip_addr, req.ip_address(i));
+        if (ip_in_ep(&ip_addr, ep, NULL)) {
+            continue;
+        } else {
+            // Create ep_ip_entry and add it to add list
+            ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
+            HAL_ABORT(ep_ipe != NULL);
+            memcpy(&ep_ipe->ip_addr, &ip_addr, sizeof(ip_addr_t));
+            ep_ipe->ip_flags = EP_FLAGS_LEARN_SRC_CFG;
+            ep_ipe->pd = NULL;
+            utils::dllist_reset(&ep_ipe->ep_ip_lentry);
+            utils::dllist_add(*add_iplist, &ep_ipe->ep_ip_lentry);
+            *iplist_change = true;
+        }
+    }
+
+    // lnode = ep->ip_list_head.next;
+    dllist_for_each(lnode, &(ep->ip_list_head)) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("PI-EP-Update:{}: Checking for ip: {}", 
+                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+        for (i = 0; i < num_ips; i++) {
+            ip_addr_spec_to_ip_addr(&ip_addr, req.ip_address(i));
+            if (!memcmp(&ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t))) {
+                ip_exists = true;
+                break;
+            } else {
+                continue;
+            }
+        }
+        if (!ip_exists) {
+            // Have to delet the IP
+            // Create ep_ip_entry, copy it over and add it to del list
+            // Note: Both PIs are pointing to the same PD. 
+            ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
+            HAL_ABORT(ep_ipe != NULL);
+            memcpy(&ep_ipe->ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t));
+            ep_ipe->ip_flags = pi_ip_entry->ip_flags;
+            ep_ipe->pd = pi_ip_entry->pd;
+            utils::dllist_reset(&ep_ipe->ep_ip_lentry);
+            utils::dllist_add(*del_iplist, &ep_ipe->ep_ip_lentry);
+            *iplist_change = true;
+            HAL_TRACE_DEBUG("PI-EP-Update:{}: Added to delete list ip: {}", 
+                    __FUNCTION__, ipaddr2str(&(ep_ipe->ip_addr)));
+        }
+        ip_exists = false;
+    }
+
+    return ret;
+}
+
+
+hal_ret_t
+endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
+                                dllist_ctxt_t *del_iplist)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *curr, *next;
+    ep_ip_entry_t   *pi_ip_entry = NULL, *del_ip_entry = NULL;
+    ep_l3_entry_t   *l3_entry = NULL;
+    ep_l3_key_t     l3_key = { 0 };
+
+    // Handling new IPs
+    dllist_for_each_safe(curr, next, add_iplist) {
+        pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("PI-EP-Update:{}: Adding new IP {}", 
+                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+
+        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+
+        // Insert into EP's ip list 
+        utils::dllist_add(&ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
+
+        // Insert to L3 hash table with (VRF, IP) key
+        l3_entry = (ep_l3_entry_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP,
+                sizeof(ep_l3_entry_t));
+        l3_entry->l3_key.tenant_id = ep->tenant_id;
+        memcpy(&l3_entry->l3_key.ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t));
+        l3_entry->ep = ep;
+        l3_entry->ep_ip = pi_ip_entry;
+        l3_entry->ep_l3_ht_ctxt.reset();
+        g_hal_state->ep_l3_entry_ht()->insert(l3_entry,
+                                              &l3_entry->ep_l3_ht_ctxt);
+        HAL_TRACE_DEBUG("Added ({}, {}) to DB",
+                        l3_entry->l3_key.tenant_id,
+                        ipaddr2str(&l3_entry->l3_key.ip_addr));
+    }
+
+
+    HAL_TRACE_DEBUG("EP's IPs:");
+    ep_print_ips(ep);
+
+    // Handling removed IPs
+    dllist_for_each_safe(curr, next, del_iplist) {
+        pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("PI-EP-Update:{}: Deleting IP {}", 
+                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+
+        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+
+        if (ip_in_ep(&pi_ip_entry->ip_addr, ep, &del_ip_entry)) {
+            utils::dllist_del(&del_ip_entry->ep_ip_lentry);
+
+            // Remove from hash table
+            l3_key.tenant_id = ep->tenant_id;
+            memcpy(&l3_key.ip_addr, &del_ip_entry->ip_addr, sizeof(ip_addr_t));
+            l3_entry = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->remove(&l3_key);
+            HAL_TRACE_DEBUG("Removed ({}, {}) from DB",
+                            l3_key.tenant_id,
+                            ipaddr2str(&l3_key.ip_addr));
+            // Free L3 entry
+            HAL_FREE(HAL_MEM_ALLOC_EP, l3_entry);
+            // Free IP entry
+            g_hal_state->ep_ip_entry_slab()->free(del_ip_entry);
+
+            // Free IP entry created for delete
+            g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
+
+        } else {
+            // IPs which are getting deleted should be present in PI EP
+            HAL_ASSERT(0);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // process a endpoint update request
 //------------------------------------------------------------------------------
 hal_ret_t
-endpoint_update (EndpointSpec& spec, EndpointResponse *rsp)
+endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t               ret = HAL_RET_OK;
+    tenant_id_t             tid;
+    ep_t                    *ep = NULL;
+    tenant_t                *tenant = NULL;
+    ApiStatus               api_status;
+    bool                    if_change = false, l2seg_change = false, 
+                            iplist_change = false;
+    hal_handle_t            new_if_hdl = 0, new_l2seg_hdl = 0;
+    dllist_ctxt_t           *add_iplist = NULL, *del_iplist = NULL;
+    pd::pd_ep_upd_args_t    pd_ep_upd_args;
+
+    HAL_TRACE_DEBUG("--------------   EP Update API Start  ------------------");
+    ret = validate_endpoint_update(req, rsp);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+    // fetch the tenant information
+    tid = req.meta().tenant_id();
+    tenant = tenant_lookup_by_id(tid);
+    if (tenant == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        goto end;
+    }
+
+    // fetch the ep
+    ret = fetch_endpoint(tid, req.key_or_handle(), &ep, &api_status);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(api_status);
+        goto end;
+    }
+
+    // check for if change
+    ret = endpoint_if_update(req, ep, &if_change, &new_if_hdl);
+    HAL_ABORT(ret == HAL_RET_OK);
+
+    // check for l2seg change
+    ret = endpoint_l2seg_update(req, ep, &l2seg_change, &new_l2seg_hdl);
+    HAL_ABORT(ret == HAL_RET_OK);
+
+    // check for ip change
+    ret = endpoint_ip_list_update(req, ep, &iplist_change, &add_iplist, &del_iplist);
+    HAL_ABORT(ret == HAL_RET_OK);
+
+    // Initializing PD structure
+    pd::pd_ep_upd_args_init(&pd_ep_upd_args);
+    pd_ep_upd_args.ep = ep;
+
+    if (if_change) {
+        // call actions
+    }
+
+    if (l2seg_change) {
+        // call actions
+    }
+
+    if (iplist_change) {
+        // call actions
+        // 1. PD Call
+        pd_ep_upd_args.iplist_change = true;
+        pd_ep_upd_args.add_iplist = add_iplist;
+        pd_ep_upd_args.del_iplist = del_iplist;
+        // Revisit the position of this call if multiple changes 
+        // have to be sent to PD
+        ret = pd::pd_ep_update(&pd_ep_upd_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP-Update: IPlist change to PD failed. ret:{}",
+                    ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
+
+        // Update PI
+        endpoint_update_pi_with_iplist(ep, add_iplist, del_iplist);
+    }
+
+    if (add_iplist) {
+        HAL_FREE(HAL_MEM_ALLOC_DLLIST, add_iplist);
+    }
+    if (del_iplist) {
+        HAL_FREE(HAL_MEM_ALLOC_DLLIST, del_iplist);
+    }
+
+    // prepare the response
+    rsp->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
+    
+end:
+    HAL_TRACE_DEBUG("--------------   EP Update API End   -------------------");
+    return ret;
 }
 
 static void
@@ -438,5 +807,20 @@ ep_l2_key_to_str(ep_t *ep)
     }
     return buf;
 }
+
+void
+ep_print_ips(ep_t *ep)
+{
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    dllist_for_each(lnode, &(ep->ip_list_head)) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("PI-EP:{}: ip: {}", 
+                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+    }
+}
+
+
 }    // namespace hal
 

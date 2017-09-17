@@ -79,6 +79,17 @@ typedef struct pd_ep_args_s {
     ep_t            *ep;
 } __PACK__ pd_ep_args_t;
 
+typedef struct pd_ep_upd_args_s {
+    ep_t            *ep;
+
+    // IP list change attrs
+    bool            iplist_change;
+    dllist_ctxt_t   *add_iplist;
+    dllist_ctxt_t   *del_iplist;
+
+    // X change attrs
+} pd_ep_upd_args_t;
+
 typedef struct pd_sessoin_args_s {
     tenant_t           *tenant;
     nwsec_profile_t    *nwsec_prof;
@@ -194,6 +205,12 @@ pd_ep_args_init (pd_ep_args_t *args)
 }
 
 static inline void
+pd_ep_upd_args_init (pd_ep_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_ep_upd_args_t));
+    return;
+}
+static inline void
 pd_session_args_init (pd_session_args_t *args)
 {
     args->tenant = NULL;
@@ -289,9 +306,9 @@ uint32_t ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
 uint32_t l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb_service_entry_t *pi_l4lb, 
                                              rewrite_actions_en rw_act);
 
-hal_ret_t pd_ep_create(pd_ep_args_t *hal_if);
-hal_ret_t pd_ep_update(pd_ep_args_t *hal_if);
-hal_ret_t pd_ep_delete(pd_ep_args_t *hal_if);
+hal_ret_t pd_ep_create(pd_ep_args_t *pd_ep_args);
+hal_ret_t pd_ep_update(pd_ep_upd_args_t *pd_ep_upd_args);
+hal_ret_t pd_ep_delete(pd_ep_args_t *pd_ep_args);
 
 hal_ret_t pd_session_create(pd_session_args_t *session);
 hal_ret_t pd_session_update(pd_session_args_t *session);

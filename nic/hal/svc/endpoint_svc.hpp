@@ -21,6 +21,11 @@ using endpoint::EndpointGetRequest;
 using endpoint::EndpointGetRequestMsg;
 using endpoint::EndpointGetResponse;
 using endpoint::EndpointGetResponseMsg;
+using endpoint::EndpointUpdateRequestMsg;
+using endpoint::EndpointUpdateResponseMsg;
+using endpoint::EndpointUpdateRequest;
+using endpoint::EndpointKeyHandle;
+
 
 class EndpointServiceImpl final : public Endpoint::Service {
 public:
@@ -29,8 +34,8 @@ public:
                           EndpointResponseMsg *rsp) override;
 
     Status EndpointUpdate(ServerContext *context,
-                          const EndpointRequestMsg *req,
-                          EndpointResponseMsg *rsp) override;
+                          const EndpointUpdateRequestMsg *req,
+                          EndpointUpdateResponseMsg *rsp) override;
 
 
     Status EndpointDelete(ServerContext *context,

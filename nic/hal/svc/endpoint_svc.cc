@@ -37,12 +37,13 @@ EndpointServiceImpl::EndpointCreate(ServerContext *context,
 
 Status
 EndpointServiceImpl::EndpointUpdate(ServerContext *context,
-                                    const EndpointRequestMsg *req,
-                                    EndpointResponseMsg *rsp)
+                                    const EndpointUpdateRequestMsg *req,
+                                    EndpointUpdateResponseMsg *rsp)
 {
-    uint32_t             i, nreqs = req->request_size();
-    EndpointResponse     *response;
-    hal_ret_t            ret;
+    uint32_t                i, nreqs = req->request_size();
+    // EndpointUpdateRequest   *req;
+    EndpointResponse        *response;
+    hal_ret_t               ret;
 
     HAL_TRACE_DEBUG("Rcvd Endpoint Update Request");
     if (nreqs == 0) {

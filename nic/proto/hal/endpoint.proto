@@ -16,7 +16,7 @@ package endpoint;
 // The Endpoint service definition
 service Endpoint {
   rpc EndpointCreate (EndpointRequestMsg) returns (EndpointResponseMsg) {}
-  rpc EndpointUpdate (EndpointRequestMsg) returns (EndpointResponseMsg) {}
+  rpc EndpointUpdate (EndpointUpdateRequestMsg) returns (EndpointUpdateResponseMsg) {}
   rpc EndpointDelete (EndpointDeleteRequestMsg) returns (EndpointDeleteResponseMsg) {}
   rpc EndpointGet (EndpointGetRequestMsg) returns (EndpointGetResponseMsg) {}
   rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
@@ -90,6 +90,28 @@ message EndpointKeyHandle {
     EndpointKey        endpoint_key        = 1;    // endpoint's key
     fixed64            endpoint_handle     = 2;    // endpoint's handle
   }
+}
+
+// Endpoint Update message
+message EndpointUpdateRequest {
+  types.ObjectMeta            meta                 = 1;    // object meta
+  EndpointKeyHandle           key_or_handle        = 2;    // Endpoint being updated
+  fixed64                     l2_segment_handle    = 3;    // L2 segment endpoint is in
+  uint64                      mac_address          = 4;    // MAC address of endpoint
+  fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
+  uint32                      useg_vlan            = 6;    // microseg vlan assigned to this EP
+  repeated types.IPAddress    ip_address           = 7;    // IP address(es) of endpoint
+  repeated uint32             security_group       = 8;    // security group list(s) endpoint is in
+}
+
+// EndpointUpdateRequestMsg is batched endpoint update request
+message EndpointUpdateRequestMsg {
+  repeated EndpointUpdateRequest    request = 1;    // batched request
+}
+
+// EndpointUpdateResponseMsg is used to update a batch of Endpoints
+message EndpointUpdateResponseMsg {
+  repeated EndpointResponse    response = 1;    // batched response
 }
 
 // EndpointFilter is attributes by which endpoints can be manipulated

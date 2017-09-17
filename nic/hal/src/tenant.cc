@@ -245,7 +245,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     ret = tenant_add_to_db(tenant, hal_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to add tenant {} to db, err : {}", ret);
-        rsp->set_api_status(types::API_STATIS_CFG_DB_ERR);
+        rsp->set_api_status(types::API_STATUS_CFG_DB_ERR);
         goto error;
     }
 

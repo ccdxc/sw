@@ -80,16 +80,139 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// EP Update 
+// ----------------------------------------------------------------------------
+hal_ret_t 
+pd_ep_update (pd_ep_upd_args_t *pd_ep_upd_args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("PD-EP::{}: Updating pd state for EP:{}", 
+                    __FUNCTION__,
+                    ep_l2_key_to_str(pd_ep_upd_args->ep));
+
+    if (pd_ep_upd_args->iplist_change) {
+        ret = pd_ep_upd_iplist_change(pd_ep_upd_args);
+    }
+
+
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
+// EP Update: Handling ip list change
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("PD-EP:{} IP-List Change: ", __FUNCTION__);
+
+    // Allocated PD State for new IP entries
+    ret = ep_pd_alloc_pd_ip_entries(pd_ep_upd_args->add_iplist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to alloced PD IP entries "
+                "for new ip. ret:{}", ret);
+        goto end;
+    }
+
+    // Program IPSG entries for new IPs
+    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
+                                        pd_ep_upd_args->add_iplist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to pgm IPSG"
+                "for new ip. ret:{}", ret);
+        goto end;
+    }
+
+    // Deprogram IPSG entries for deleted IPs
+    ret = ep_pd_depgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
+                                        pd_ep_upd_args->del_iplist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to depgm IPSG"
+                "for deleted ip. ret:{}", ret);
+        goto end;
+    }
+
+    // free up delete IPs PD state
+    ret = ep_pd_delete_pd_ip_entries(pd_ep_upd_args->ep,
+                                     pd_ep_upd_args->del_iplist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to free PD IP entries. ret:{}", ret);
+        goto end;
+    }
+
+
+end:
+    return ret;
+}
+
+
+hal_ret_t
+ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    // Walk through ip entries
+    dllist_for_each(lnode, pi_ep_list) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+
+        pi_ip_entry->pd = (pd_ep_ip_entry_t *)g_hal_state_pd->
+                          ep_pd_ip_entry_slab()->alloc();
+        if (!pi_ip_entry->pd) {
+            ret = HAL_RET_OOM;
+            goto end;
+        }
+
+        // Link PI to PD
+        pi_ip_entry->pd->pi_ep_ip_entry = pi_ip_entry;
+
+        HAL_TRACE_DEBUG("PD-EP:{}: Allocating PD IP Entry: {}",
+                __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+
+    }
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        // Walk through ip entries
+        dllist_for_each(lnode, pi_ep_list) {
+            pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+            if (pi_ip_entry->pd) {
+                // Free PD IP entry
+                g_hal_state_pd->ep_pd_ip_entry_slab()->free(pi_ip_entry->pd);
+                // Unlink PD from PI
+                pi_ip_entry->pd = NULL;
+            }
+        }
+    }
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
 // Allocate and Initialize EP L3 entries
 // ----------------------------------------------------------------------------
 hal_ret_t 
 ep_pd_alloc_ip_entries(pd_ep_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    dllist_ctxt_t   *lnode = NULL;
+    // dllist_ctxt_t   *lnode = NULL;
     ep_t            *pi_ep = args->ep;
-    ep_ip_entry_t   *pi_ip_entry = NULL;
+    // ep_ip_entry_t   *pi_ip_entry = NULL;
 
+    ret = ep_pd_alloc_pd_ip_entries(&(pi_ep->ip_list_head));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP:{}: Failed to allocated PD IP entries.",
+                __FUNCTION__);
+    }
+
+    // Clean up
+#if 0
     // Walk through ip entries
     dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
         pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
@@ -124,9 +247,37 @@ end:
             }
         }
     }
+#endif
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Deleted PD IP entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    // Walk through ip entries
+    dllist_for_each(lnode, pi_ep_list) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        if (pi_ip_entry->pd) {
+            // Free PD IP entry
+            g_hal_state_pd->ep_pd_ip_entry_slab()->free(pi_ip_entry->pd);
+            // Unlink PD from PI
+            pi_ip_entry->pd = NULL;
+            HAL_TRACE_DEBUG("PD-EP:{}: Freeing PD IP Entry: {}",
+                    __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
+        } else {
+            HAL_ASSERT(0);
+        }
+    }
+
+    return ret;
+}
 
 
 // ----------------------------------------------------------------------------
@@ -208,6 +359,9 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
     return ret;
 }
 
+// Deprecated as we are maintaining a hash table for rw table.
+// Remove it ...
+#if 0
 hal_ret_t
 ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
 {
@@ -282,20 +436,54 @@ ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
 
     return ret;
 }
+#endif
+
+
+hal_ret_t
+ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    dllist_ctxt_t       *lnode = NULL;
+    ep_ip_entry_t       *pi_ip_entry = NULL;
+    pd_ep_ip_entry_t    *pd_ip_entry = NULL;
+
+    // Walk through ip entries
+    dllist_for_each(lnode, pi_ep_list) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        pd_ip_entry = pi_ip_entry->pd;
+
+        ret = ep_pd_pgm_ipsg_tble_per_ip(pi_ep->pd, pd_ip_entry);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
 
 // ----------------------------------------------------------------------------
 // Program IPSG table for every IP entry
 // ----------------------------------------------------------------------------
 hal_ret_t 
-ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep)
+ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    dllist_ctxt_t       *lnode = NULL;
+    // dllist_ctxt_t       *lnode = NULL;
     ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
-    ep_ip_entry_t       *pi_ip_entry = NULL;
-    pd_ep_ip_entry_t    *pd_ip_entry = NULL;
+    // ep_ip_entry_t       *pi_ip_entry = NULL;
+    // pd_ep_ip_entry_t    *pd_ip_entry = NULL;
 
-    lnode = pi_ep->ip_list_head.next;
+    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP:{}: Failed to program IPSG entries", 
+                __FUNCTION__);
+        goto end;
+    }
+
+    // TODO: Clean up
+#if 0
     // Walk through ip entries
     dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
         pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
@@ -307,10 +495,77 @@ ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep)
             goto end;
         }
     }
+#endif
 
 end:
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// DeProgram IPSG table for IP entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    dllist_ctxt_t       *lnode = NULL;
+    ep_ip_entry_t       *pi_ip_entry = NULL;
+    pd_ep_ip_entry_t    *pd_ip_entry = NULL;
+
+    // Walk through ip entries
+    dllist_for_each(lnode, pi_ep_list) {
+        /*
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode - 
+            offsetof(ep_ip_entry_t, ep_ip_lentry));
+            */
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        pd_ip_entry = pi_ip_entry->pd;
+
+        ret = ep_pd_depgm_ipsg_tble_per_ip(pd_ip_entry);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
+// DeProgram IPSG table for IP entry
+// ----------------------------------------------------------------------------
+hal_ret_t 
+ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    ipsg_swkey_t        key;
+    ipsg_swkey_mask     key_mask;
+    ipsg_actiondata     data;
+    Tcam                *ipsg_tbl = NULL;
+    ep_ip_entry_t       *pi_ep_ip_entry = (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
+
+    memset(&key, 0, sizeof(key));
+    memset(&key_mask, 0, sizeof(key_mask));
+    memset(&data, 0, sizeof(data));
+
+    ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
+    HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
+
+    ret = ipsg_tbl->remove(pd_ip_entry->ipsg_tbl_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP::{}: Unable to deprogram IPSG for: {}",
+                __FUNCTION__, ipaddr2str(&(pi_ep_ip_entry->ip_addr)));
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("PD-EP::{}: DeProgrammed IPSG at: {} ",
+                __FUNCTION__, pd_ip_entry->ipsg_tbl_idx);
+    }
+
+end:
+    return ret;
+}
+
 
 // ----------------------------------------------------------------------------
 // Program IPSG table for IP entry
