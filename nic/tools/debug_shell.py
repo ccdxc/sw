@@ -7,6 +7,11 @@ from cmd2 import Cmd
 import os
 import sys
 
+def trace(frame, event, arg):
+    print "%s %s:%d" %(event, frame.f_code.co_filename, frame.f_lineno)
+    return trace
+#sys.settrace(trace)
+PATH_UP="../.."
 class debugCmd(Cmd):
 
     prompt = "debug> "
@@ -27,8 +32,8 @@ class debugCmd(Cmd):
         self.exclude_from_help.append('do_shortcuts')
         self.exclude_from_help.append('do__relative_load')
         self.exclude_from_help.append('do_cmdenvironment')
-        self.nic_dir = os.path.abspath(__file__)
-        self.nic_dir = os.path.split(self.nic_dir)[0]
+        self.nic_dir = os.path.abspath(os.path.join(__file__, PATH_UP))
+        print "nic_dir %s" % self.nic_dir
         self.iris_inited = False
         self.model_inited = False
         self.do_init_modules("")
@@ -67,6 +72,7 @@ class debugCmd(Cmd):
     def do_init_modules(self, args):
         """Scan for new CLI modules"""
         all_initialized = True
+        '''
         if self.iris_inited == False:
             all_initialized = False
             iris_path = self.nic_dir + '/gen/iris/cli'
@@ -83,9 +89,11 @@ class debugCmd(Cmd):
                     print("Could not initialize Iris. Do 'make' in sw/nic/gen/iris/cli/ directory, and run 'init_modules' command here.")
             else:
                 print("Module Iris not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
+        '''
         if self.model_inited == False:
             all_initialized = False
             model_path = self.nic_dir + '/model_sim/cli'
+            print model_path
             if os.path.isfile(model_path + '/model_cli.py'):
                 print("Module Model found!")
                 sys.path.append(model_path)

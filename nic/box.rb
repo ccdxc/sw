@@ -8,6 +8,11 @@ inside BASE_BUILD_DIR do
   run "./bazel-0.5.4-installer-linux-x86_64.sh"
 end
 
+inside "/etc" do
+    run "rm localtime"
+    run "ln -s /usr/share/zoneinfo/US/Pacific localtime"
+end 
+
 # in the CI this block is triggered; in the Makefiles it is not.
 if getenv("NO_COPY") == ""
   copy ".", ".", ignore_list: %w[.git]

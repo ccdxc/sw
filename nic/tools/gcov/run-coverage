@@ -1,0 +1,9 @@
+#! /bin/bash
+if [ -z "$NIC_DIR" ]; then
+    NIC_DIR=`dirname $PWD`
+    export NIC_DIR=`dirname $NIC_DIR`
+fi
+export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
+export COVERAGE_OUTPUT=$NIC_DIR/gen/coverage
+export OBJ_DIR=$NIC_DIR/obj
+$NIC_DIR/tools/gcov/run.py 2>&1 | tee $NIC_DIR/coverage.log

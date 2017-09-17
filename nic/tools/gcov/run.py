@@ -25,11 +25,10 @@ if not coverage_output_path:
 coverage_output_path = os.path.abspath(coverage_output_path) + "/"
 
 
-nic_dir = os.environ.get("DIR_NIC")
+nic_dir = os.environ.get("NIC_DIR")
 if not nic_dir:
-    print "Nic not set, please set DIR_NIC"
+    print "Nic not set, please set NIC_DIR"
     sys.exit(1)
-nic_dir = os.path.dirname(nic_dir)
 nic_dir = os.path.abspath(nic_dir)
 
 
