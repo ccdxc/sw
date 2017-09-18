@@ -9,9 +9,9 @@ OBJ_DIR = ../../../obj
 GEN_DIR = ../../../gen
 NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi
 
-IPSEC_RX_PROJ := ipsec_rxdma_actions
-IPSEC_TX1_PROJ := ipsec_txdma_actions_pass1
-IPSEC_TX2_PROJ := ipsec_txdma_actions_pass2
+IPSEC_RX_PROJ := esp_ipv4_tunnel_h2n_rxdma
+IPSEC_TX1_PROJ := esp_ipv4_tunnel_h2n_txdma1
+IPSEC_TX2_PROJ := esp_ipv4_tunnel_h2n_txdma2
 
 all:
 	$(NCC) $(NCC_OPTIONS) $(IPSEC_RX_PROJ).p4 --gen-dir $(GEN_DIR)
