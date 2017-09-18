@@ -98,12 +98,7 @@ dma_cmd_write_rx2tx_shared:
 
 dma_cmd_write_rx2tx_extra_shared:
     /* Set the DMA_WRITE CMD for copying rx2tx extra shared data from phv to mem */
-    add         r5, r0, k.common_phv_qstate_addr
-    add         r6, r0, k.common_phv_fid
-    sll         r6, r6, TCP_TCB_TABLE_ENTRY_SIZE_SHFT
-    add         r5, r5, r6
-    add         r6, r0, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET
-    add         r5, r5, r6
+    add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
     phvwr       p.dma_cmd4_dma_cmd_addr, r5
     phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, TCP_PHV_RX2TX_SHARED_EXTRA_START
     phvwri      p.dma_cmd4_dma_cmd_phv_end_addr, TCP_PHV_RX2TX_SHARED_EXTRA_END
@@ -126,9 +121,7 @@ ring_doorbell:
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, k.to_s6_serq_pidx)
     
     phvwr       p.dma_cmd5_dma_cmd_addr, r4
-    phvwr       p.db_data_index, k.to_s6_serq_pidx
-
-    phvwr       p.db_data_qid, k.common_phv_fid
+    phvwr       p.{db_data_pid...db_data_index}, r3.dx
 
     phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, TCP_PHV_DB_DATA_START
     phvwri      p.dma_cmd5_dma_cmd_phv_end_addr, TCP_PHV_DB_DATA_END

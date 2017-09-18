@@ -94,7 +94,6 @@
 // d for stage 0
 header_type read_tx2rxd_t {
     fields {
-        pc                      : 8;
         rsvd                    : 8;
         cosA                    : 4;
         cosB                    : 4;
@@ -571,7 +570,7 @@ metadata dma_cmd_phv2mem_t dma_cmd7;
 /*
  * Stage 0 table 0 action
  */
-action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
+action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
                   serq_ring_size, serq_pidx, pad2, serq_cidx, pad1, prr_out,
                   snd_nxt, ecn_flags_tx, packets_out) {
     // k + i for stage 0
@@ -607,7 +606,6 @@ action read_tx2rx(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(tcp_scratch_app.tcp_pad, tcp_app_header.tcp_pad);
 
     // d for stage 0
-    modify_field(read_tx2rxd.pc, pc);
     modify_field(read_tx2rxd.rsvd, rsvd);
     modify_field(read_tx2rxd.cosA, cosA);
     modify_field(read_tx2rxd.cosB, cosB);

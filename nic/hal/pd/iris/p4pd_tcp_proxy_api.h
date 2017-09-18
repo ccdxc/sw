@@ -12,11 +12,6 @@
 
 #define P4PD_TCPCB_STAGE_ENTRY_OFFSET   64
 
-// NOTE : ** Change proxy_meta_init to match qstate size
-// Also Change TCP_TCB_TABLE_ENTRY_SIZE and TCP_TCB_TABLE_ENTRY_SIZE_SHFT
-// in tcp-table.h to match **
-#define P4PD_HBM_TCP_CB_ENTRY_SIZE      1024
-
 // NOTE : ** These offsets need to match the offsets in 
 // tcp-table.h **
 typedef enum tcpcb_hwid_order_ {

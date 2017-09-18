@@ -25,7 +25,10 @@ tcp_tx_sesq_read_ci_stage1_start:
 
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_tx_sesq_consume_stage2_start)
 
-        add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
+        // TLS is queueing with descriptor address pointing to area after
+        // scratch, so don't add the offset here
+        //add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
+        add               r3, r0, d.desc_addr
         CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                     tcp_tx_sesq_read_descr_stage2_start, r3, TABLE_SIZE_512_BITS)
 

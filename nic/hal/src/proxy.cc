@@ -22,11 +22,13 @@ proxy_meta_init() {
      * Fomat: is system, lif, qtype, qstate size, qstate entries 
      */
 
+    // CB size 1024, num_entries 4096
     g_meta[types::PROXY_TYPE_TCP] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 5, 10};
+        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 5, 12};
  
+    // CB size 512, num_entries 4096
     g_meta[types::PROXY_TYPE_TLS] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 3, 10};
+        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 4, 12};
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
         (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
