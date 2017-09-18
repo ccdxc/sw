@@ -14,4 +14,4 @@ entries :
         name        : RNMDR
         haltype     : 3
         type        : DESCR_AOL_VIA_REF
-        count       : 16
+        count       : 64

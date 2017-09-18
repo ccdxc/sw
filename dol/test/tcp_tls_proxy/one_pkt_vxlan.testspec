@@ -11,8 +11,7 @@ selectors:
         tenant      : filter://overlay=VXLAN,type=TENANT
         segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L3
-    maxflows    : 1
+    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L3,direction=IFLOW
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect

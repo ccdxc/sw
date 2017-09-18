@@ -3,17 +3,18 @@
 import pdb
 import copy
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
-from infra.common.objects import ObjectDatabase as ObjectDatabase
+import test.callbacks.networking.modcbs as modcbs
 
+from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 from config.store               import Store
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 
+
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
-    elem = module.iterator.Get()
-    module.testspec.selectors.flow.Extend(elem.flow)
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -50,6 +51,7 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
+
     #0. Get the qid
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
 
@@ -72,13 +74,13 @@ def TestCaseVerify(tc):
 
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
-    # offset. Verify PI for RNMDR got incremented by tc.testspec.selectors.maxflows
-    if (rnmdr_cur.pi != rnmdr.pi+tc.testspec.selectors.maxflows):
+    # offset. Verify PI for RNMDR got incremented by 1 
+    if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 4. Verify PI for RNMPR got incremented by tc.testspec.selectors.maxflows
-    if (rnmpr_cur.pi != rnmpr.pi+tc.testspec.selectors.maxflows):
+    # 4. Verify PI for RNMPR got incremented by 1 
+    if (rnmpr_cur.pi != rnmpr.pi+1):
         print("RNMPR pi check failed old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
         return False
 
