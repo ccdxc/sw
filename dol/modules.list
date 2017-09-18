@@ -820,6 +820,14 @@ modules:
         ignore  : True
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_2SGES
+        enable  : False
+        package : test.rdma
+        module  : req_tx_send_only_2sges
+        spec    : req_tx_send_only_2sges.testspec
+        ignore  : True
+
+    - module:
         name    : RDMA_RX_SEND_ONLY
         enable  : False
         package : test.rdma

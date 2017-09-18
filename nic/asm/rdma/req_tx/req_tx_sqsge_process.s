@@ -77,7 +77,7 @@ sge_loop:
     // set dma_cmd_eop in last dma cmd for the pkt
     CAPRI_SET_FIELD_C(r7, INFO_OUT1_T, dma_cmd_eop, 1, !c4)
 
-    //GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
+    GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
 
     cmov           r6, c7, 0, 1
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, sge_index, r6)

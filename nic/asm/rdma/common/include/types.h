@@ -481,9 +481,9 @@ struct key_entry_t {
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \
-     srl    _scratch_r, _va_r, _page_size_imm;                                    \
      add    _num_pages_r, _va_r, _bytes_r;                                        \
      srl    _num_pages_r, _num_pages_r, _page_size_imm;                           \
+     srl    _scratch_r, _va_r, _page_size_imm;                                    \
      sub    _num_pages_r, _num_pages_r, _scratch_r;                               \
      add    _num_pages_r, _num_pages_r, 1;
 

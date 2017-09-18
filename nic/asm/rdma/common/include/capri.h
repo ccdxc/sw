@@ -217,7 +217,9 @@ _next:;
     CAPRI_SET_TABLE_3_VALID(1);
 
 #define CAPRI_GET_TABLE_0_OR_1_K(_phv_name, _k_base_r, _cf) \
-    cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr);
+    cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
+    CAPRI_SET_TABLE_0_VALID_C(_cf, 1); \
+    CAPRI_SET_TABLE_1_VALID_C(!_cf, 1);
 
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
     add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data);
