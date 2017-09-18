@@ -72,6 +72,9 @@ class CrPacket:
 
     def __get_pkt_match_degree(self, rxpkt):
         pktdeg = 0
+        if len(self.hdrs) != len(rxpkt.hdrs):
+            return 0
+
         for hidx in range(len(self.hdrs)):
             if self.hdrs[hidx] == rxpkt.hdrs[hidx]:
                 pktdeg += 1

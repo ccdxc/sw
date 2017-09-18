@@ -30,12 +30,13 @@ apkt[Ether].src = '00:11:22:33:44:55'
 hexdump(apkt)
 
 print("%s Expected Pkt %s" % (bnr, bnr))
-epkt = Ether()/IP()/UDP()/Raw(bytes(rawbytes))
+epkt = Ether()/Dot1Q()/IP()/UDP()/IP()/UDP()/IP()/UDP()/Raw(bytes(rawbytes))
 hexdump(epkt)
+elen = len(epkt)
 
-pcr = crs.VerifEnginePacketComparator()
-pcr.AddExpected(bytes(epkt))
-pcr.AddReceived(bytes(apkt))
+pcr = crs.PacketComparator()
+pcr.AddExpected(bytes(epkt), [1], 'PKT1')
+pcr.AddReceived(bytes([0] * elen), [1])
 pcr.Compare()
 pcr.ShowResults()
 
