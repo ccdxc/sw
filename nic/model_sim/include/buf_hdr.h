@@ -13,7 +13,9 @@ typedef enum buff_type_e_ {
     BUFF_TYPE_MEM_WRITE = 5,
     BUFF_TYPE_DOORBELL = 6,
     BUFF_TYPE_STATUS = 7,
-    BUFF_TYPE_HBM_DUMP = 8
+    BUFF_TYPE_HBM_DUMP = 8,
+    BUFF_TYPE_STEP_CPU_PKT = 9,
+    BUFF_TYPE_GET_NEXT_CPU_PKT = 10
 } buff_type_e;
 
 typedef struct buffer_hdr_t_ {

@@ -8,13 +8,14 @@ namespace fte {
 // FTE features
 typedef uint16_t feature_id_t;
 
-const feature_id_t FTE_FEATURE_NULL         = 0;
-const feature_id_t FTE_FEATURE_STAGE_MARKER = 1;
-const feature_id_t FTE_FEATURE_FWDING       = 2;
+const feature_id_t FTE_FEATURE_NULL          = 0;
+const feature_id_t FTE_FEATURE_STAGE_MARKER  = 1;
+const feature_id_t FTE_FEATURE_FWDING        = 2;
 const feature_id_t FTE_FEATURE_TUNNEL        = 3;
-const feature_id_t FTE_FEATURE_DFW          = 4;
-const feature_id_t FTE_FEATURE_LB           = 5;
-const feature_id_t FTE_FEATURE_TCP_PROXY    = 6;
+const feature_id_t FTE_FEATURE_DFW           = 4;
+const feature_id_t FTE_FEATURE_LB            = 5;
+const feature_id_t FTE_FEATURE_TCP_PROXY     = 6;
+const feature_id_t FTE_FEATURE_DOL_TEST_ONLY = 7;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline

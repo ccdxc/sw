@@ -53,6 +53,23 @@ def get_next_pkt ():
     return (pkt, port+1, cos)
     pass
 
+def get_next_cpu_pkt ():
+    buffsize = 4096
+    socket = zmq_connect()
+    buff = pack('iiiiiQ', 10, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    btype, size, port, cos, status, addr= unpack('iiiiiQ', msg[0:32])
+    eoffset = 32 + size
+    pkt = msg[32:eoffset]
+    zmq_close(socket)
+    return pkt
+    pass
+
 def read_reg (addr):
     socket = zmq_connect()
     buff = pack('iiiiiQ', 2, 4, 0, 0, 0, addr)

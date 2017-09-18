@@ -114,6 +114,27 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
     return;
 }
 
+void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
+{
+    // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    int rc;
+    buffer_hdr_t *buff;
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_STEP_CPU_PKT;
+    buff->size = pkt_len; 
+
+    if (__lmodel_env)
+        return;
+    if (buff->size > 4000)
+        assert(0);
+    memcpy(buff->data, pkt, buff->size);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    return;
+}
 
 bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 {

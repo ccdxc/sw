@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <vector>
+#include <queue>
 #include <signal.h>
 #include "../../utils/host_mem/params.hpp"
 
@@ -25,6 +26,7 @@
 #endif
 
 cap_env_base *g_env;
+std::queue<std::vector<uint8_t>> g_cpu_pkts;
 extern "C" void __gcov_flush();
 namespace utils {
 
@@ -196,6 +198,32 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             std::cout << "*************** HBM dump START ***************" << std::endl;
             dumpHBM();
             std::cout << "*************** HBM dump END ***************" << std::endl;
+        }
+            break;
+        case BUFF_TYPE_STEP_CPU_PKT:
+        {
+            std::vector<uint8_t> pkt_vector(buff->data, buff->data + buff->size);
+
+            g_cpu_pkts.push(pkt_vector);
+            buff->type = BUFF_TYPE_STATUS;
+            buff->status = 0;
+    	    std::cout << "step_cpu_pkt size: " << buff->size << std::endl;
+        }
+            break;
+        case BUFF_TYPE_GET_NEXT_CPU_PKT:
+        {
+            std::vector<uint8_t> out_pkt;
+            if (g_cpu_pkts.empty()) {
+    	        std::cout << "ERROR: no packet" << std::endl;
+                buff->type = BUFF_TYPE_STATUS;
+                buff->status = -1;
+            } else {
+                out_pkt = g_cpu_pkts.front();
+                g_cpu_pkts.pop();
+                buff->size = out_pkt.size();
+                memcpy(buff->data, out_pkt.data(), out_pkt.size());
+    	        std::cout << "get_next_cpu_pkt size: " << buff->size << std::endl;
+            }
         }
             break;
         case BUFF_TYPE_STATUS:
