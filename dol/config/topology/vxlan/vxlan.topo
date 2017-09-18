@@ -58,9 +58,9 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 tenants:
     -   spec    : ref://store/specs/id=VXLANTOPO_TENANT_INFRA
         count   : 1
-        lifns   : range/121/130
+        lifns   : range/121/121
     -   spec    : ref://store/specs/id=VXLANTOPO_TENANT_OVERLAY_VXLAN
         count   : 1
-        lifns   : range/301/400
+        lifns   : range/301/324
 
 cpu: None

@@ -130,16 +130,18 @@ def GetExpectedPacketCos(testcase, packet):
 
     return 0
 
-def __get_expected_packet(testcase):
+def __get_expected_packet(testcase, args):
     if testcase.config.flow.IsDrop():
         return None
-    return testcase.packets.Get('EXP_PKT')
+    if args is None:
+        return testcase.packets.Get('EXP_PKT')
+    return testcase.packets.Get(args.expktid)
 
-def GetL2UcExpectedPacket(testcase):
-    return __get_expected_packet(testcase)
+def GetL2UcExpectedPacket(testcase, args = None):
+    return __get_expected_packet(testcase, args)
 
-def GetL3UcExpectedPacket(testcase):
-    return __get_expected_packet(testcase)
+def GetL3UcExpectedPacket(testcase, args = None):
+    return __get_expected_packet(testcase, args)
 
 def GetVlanId(testcase, packet):
     if IsPriorityTagged(testcase.pvtdata):

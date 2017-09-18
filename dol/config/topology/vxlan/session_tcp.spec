@@ -26,15 +26,15 @@ entries:
                     dscp_rw : const/1
                     dscp    : const/2
 
-#    - entry:
-#        label: gft_drop
-#        tracking: False
-#        timestamp: False
-#        responder: 
-#            port : const/12345
-#            flow_info:
-#                action  : drop
-#        initiator: 
-#            port : const/54321
-#            flow_info:
-#                action  : drop
+    - entry:
+        label: gft_drop
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/12345
+            flow_info:
+                action  : drop
+        initiator: 
+            port : const/54321
+            flow_info:
+                action  : drop

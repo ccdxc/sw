@@ -17,19 +17,19 @@ entries:
             code: const/0
             id  : const/1
 
-#    - entry:
-#        label: gft_drop
-#        tracking: False
-#        timestamp: False
-#        responder:
-#            type: const/128   # Echo
-#            code: const/0
-#            id  : const/1234
-#            flow_info:
-#                action: drop
-#        initiator: 
-#            type: const/129   # Echo Reply
-#            code: const/0
-#            id  : const/1234
-#            flow_info:
-#                action: drop
+    - entry:
+        label: gft_drop
+        tracking: False
+        timestamp: False
+        responder:
+            type: const/128   # Echo
+            code: const/0
+            id  : const/1234
+            flow_info:
+                action: drop
+        initiator: 
+            type: const/129   # Echo Reply
+            code: const/0
+            id  : const/1234
+            flow_info:
+                action: drop

@@ -6,11 +6,11 @@ type    : tenant
 overlay : vxlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_DEFAULT
+    - spec  : ref://store/specs/id=VXLANTOPO_SEGMENT_DEFAULT
       count : 1
     - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
       count : 1
-    - spec  : ref://store/specs/id=SEGMENT_VXLAN
+    - spec  : ref://store/specs/id=VXLANTOPO_SEGMENT_VXLAN
       count : 2
 
 # NFV Endpoints:
@@ -22,7 +22,6 @@ security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 
 sessions:
     unidest:
-        scale: 16
         ipv4:
             - ref://store/specs/id=VXLANTOPO_SESSION_TCP
             - ref://store/specs/id=VXLANTOPO_SESSION_UDP
@@ -34,4 +33,4 @@ sessions:
         mac:
             - ref://store/specs/id=VXLANTOPO_SESSION_MAC
 
-lif: ref://store/specs/id=LIF_ETH_RDMA
+lif: ref://store/specs/id=LIF_DEFAULT

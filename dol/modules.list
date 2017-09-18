@@ -1803,3 +1803,43 @@ modules:
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
 
+    - module:
+        name    : L2UC_VXLAN_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l2uc_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+
+    - module:
+        name    : L3UC_VXLAN_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l3uc_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+
+    - module:
+        name    : L2UC_VXLAN_NONIP_GFT_DROP
+        enable  : True
+        package : test.networking
+        module  : vxlan
+        spec    : l2uc_nonip_vxlan.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://fwtype=L2,type=MAC,label=GFT_DROP
+

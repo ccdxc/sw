@@ -81,5 +81,5 @@ expect:
     delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXPECTED
+            object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=EXPECTED
             port    : ref://testcase/config/dst/endpoint/intf/ports
