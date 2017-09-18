@@ -63,7 +63,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_ASQ                "asq"
 #define CAPRI_HBM_REG_CPU_DESCR          "cpu-descriptor"
 #define CAPRI_HBM_REG_CPU_PAGE           "cpu-page"
-
+#define CAPRI_HBM_REG_ARQRX_QIDXR        "arqrx-qidxr"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -84,6 +84,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define IPSEC_IP_HDR_BASE "ipsec_ip_hdr_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
+#define ARQRX_QIDXR_BASE        "hbm_arqrx_qidxr_base"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

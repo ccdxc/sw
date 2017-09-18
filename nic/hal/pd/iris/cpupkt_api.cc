@@ -85,7 +85,7 @@ cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
 }
 
 hal_ret_t 
-cpupkt_free_queue_index(cpupkt_queue_info_t& queue_info)
+cpupkt_free_and_inc_queue_index(cpupkt_queue_info_t& queue_info)
 {
     // Set ASQ back to 0
     uint64_t value = 0;
@@ -95,6 +95,9 @@ cpupkt_free_queue_index(cpupkt_queue_info_t& queue_info)
         HAL_TRACE_ERR("Failed to reset pc_index_addr");
         return HAL_RET_HW_FAIL;  
     }
+
+    queue_info.pc_index++;
+    cpupkt_update_slot_addr(&queue_info);
     return HAL_RET_OK;
 }
 
@@ -212,6 +215,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
         sleep(1);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
             uint64_t value = 0;
+            //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
             if(!p4plus_hbm_read(ctxt->rx.queue[i].pc_index_addr,
                                 (uint8_t *)&value, 
                                 sizeof(uint64_t))) {
@@ -239,7 +243,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
             {
                 HAL_TRACE_ERR("Failed to create skbuff");
             }
-            cpupkt_free_queue_index(ctxt->rx.queue[i]);
+            cpupkt_free_and_inc_queue_index(ctxt->rx.queue[i]);
             return ret;
         }
     }

@@ -2,79 +2,37 @@
  * cpu_rxdma_actions.p4
  * This file implements p4+ program in RXDMA for handling CPU bound packets
  *********************************************************************************/
+#include "../common-p4+/common_rxdma_dummy.p4"
 
-#define common_p4plus_stage0_app_header_table_action_dummy1 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy2 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy3 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy4 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy5 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy6 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy7 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy8 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy9 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy10 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy11 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy12 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy13 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy14 cpu_rx_dummy_action
-#define common_p4plus_stage0_app_header_table_action_dummy15 cpu_rx_dummy_action
-
+/*******************************************************
+ * Table and actions
+ ******************************************************/
 
 #define rx_table_s0_t0_action cpu_rxdma_initial_action
 #define common_p4plus_stage0_app_header_table_action_dummy cpu_rxdma_initial_action
-#define rx_table_s0_t1_action cpu_rx_dummy_action
-#define rx_table_s0_t2_action cpu_rx_dummy_action
-#define rx_table_s0_t3_action cpu_rx_dummy_action
 
 #define rx_table_s1_t1 cpu_rx_read_cpu_desc
-#define rx_table_s1_t2 cpu_rx_read_cpu_page
-#define rx_table_s1_t3 cpu_rx_read_arqrx
-
-#define rx_table_s1_t0_action cpu_rx_dummy_action
 #define rx_table_s1_t1_action read_cpu_desc 
+#define rx_table_s1_t2 cpu_rx_read_cpu_page
 #define rx_table_s1_t2_action read_cpu_page 
+#define rx_table_s1_t3 cpu_rx_read_arqrx
 #define rx_table_s1_t3_action read_arqrx 
 
 #define rx_table_s2_t1 cpu_rx_desc_alloc
-#define rx_table_s2_t2 cpu_rx_page_alloc
-
-#define rx_table_s2_t0_action cpu_rx_dummy_action
 #define rx_table_s2_t1_action desc_alloc
+#define rx_table_s2_t2 cpu_rx_page_alloc
 #define rx_table_s2_t2_action page_alloc
-#define rx_table_s2_t3_action cpu_rx_dummy_action
 
 #define rx_table_s3_t0 cpu_rx_write_arqrx
-
 #define rx_table_s3_t0_action write_arqrx
-#define rx_table_s3_t1_action cpu_rx_dummy_action
-#define rx_table_s3_t2_action cpu_rx_dummy_action
-#define rx_table_s3_t3_action cpu_rx_dummy_action
-
-#define rx_table_s4_t0_action cpu_rx_dummy_action
-#define rx_table_s4_t1_action cpu_rx_dummy_action
-#define rx_table_s4_t2_action cpu_rx_dummy_action
-#define rx_table_s4_t3_action cpu_rx_dummy_action
-
-#define rx_table_s5_t0_action cpu_rx_dummy_action
-#define rx_table_s5_t1_action cpu_rx_dummy_action
-#define rx_table_s5_t2_action cpu_rx_dummy_action
-#define rx_table_s5_t3_action cpu_rx_dummy_action
-
-#define rx_table_s6_t0_action cpu_rx_dummy_action 
-#define rx_table_s6_t1_action cpu_rx_dummy_action
-#define rx_table_s6_t2_action cpu_rx_dummy_action
-#define rx_table_s6_t3_action cpu_rx_dummy_action
-
-#define rx_table_s7_t0_action cpu_rx_dummy_action
-#define rx_table_s7_t1_action cpu_rx_dummy_action
-#define rx_table_s7_t2_action cpu_rx_dummy_action
-#define rx_table_s7_t3_action cpu_rx_dummy_action
 
 #include "../common-p4+/common_rxdma.p4"
 #include "cpu_defines.h"
+#include "cpu_rx_common.p4"
 
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
+
 
 /******************************************************************************
  * D-vectors
@@ -101,13 +59,6 @@ header_type read_cpudr_d_t {
 header_type read_cpupr_d_t {
     fields {
         page_pindex    : RING_INDEX_WIDTH;
-    }
-}
-
-// d for stage 1 table 3
-header_type read_arqrx_d_t {
-    fields {
-        arqrx_pindex    : RING_INDEX_WIDTH;
     }
 }
 
@@ -140,17 +91,6 @@ header_type write_arqrx_d_t {
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
-header_type to_stage_3_phv_t {
-    // write-serq
-    fields {
-        page                    : 32;
-        descr                   : 32;
-	    arqrx_base              : 32;
-        arqrx_pindex            : 16;
-        payload_len             : 16;
-    }
-}
-
 header_type common_global_phv_t {
     fields {
         // global k (max 128)
@@ -191,7 +131,7 @@ metadata read_cpudr_d_t read_cpudr_d;
 metadata read_cpupr_d_t read_cpupr_d;
 
 @pragma scratch_metadata
-metadata read_arqrx_d_t read_arqrx_d;
+metadata arq_rx_pi_d_t read_arqrx_d;
 
 @pragma scratch_metadata
 metadata desc_alloc_d_t desc_alloc_d;
@@ -226,9 +166,9 @@ metadata s2_t2_s2s_phv_t s2_t2_s2s_scratch;
 metadata s2_t2_s2s_phv_t s2_t2_s2s;
 
 @pragma pa_header_union ingress to_stage_3
-metadata to_stage_3_phv_t to_s3;
+metadata cpu_common_to_stage_phv_t to_s3;
 @pragma scratch_metadata
-metadata to_stage_3_phv_t to_s3_scratch;
+metadata cpu_common_to_stage_phv_t to_s3_scratch;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -258,12 +198,6 @@ metadata dma_cmd_phv2mem_t dma_cmd2;
  * These action functions are currently only to generate the k+i and d structs
  * and do not implement any pseudo code
  *****************************************************************************/
-
-// Dummy
-action cpu_rx_dummy_action() 
-{
-}
-
 /*
  * Stage 0 table 0 action
  */
@@ -313,9 +247,11 @@ action read_cpu_page(page_pindex) {
 }
 
 // Stage 1 table 3 action
-action read_arqrx(arqrx_pindex) {
+action read_arqrx(pi_0, pi_1, pi_2) {
     // d for srage 2 table 3
-    modify_field(read_arqrx_d.arqrx_pindex, arqrx_pindex);
+    modify_field(read_arqrx_d.pi_0, pi_0);
+    modify_field(read_arqrx_d.pi_1, pi_1);
+    modify_field(read_arqrx_d.pi_2, pi_2);
 }
 
 /*

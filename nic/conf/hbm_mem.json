@@ -143,6 +143,10 @@
         {
             "name": "sesq",
             "size_kb": 16384
+        },
+        {
+            "name": "arqrx-qidxr",
+            "size_kb": 1
         }
     ]
 }

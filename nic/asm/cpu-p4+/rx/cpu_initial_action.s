@@ -1,6 +1,5 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "capri-macros.h"
 #include "cpu-table.h"
 
 struct phv_ p;
@@ -10,13 +9,13 @@ struct common_p4plus_stage0_app_header_table_d d;
 %%
     .param          cpu_rx_read_desc_pindex_start
     .param          cpu_rx_read_page_pindex_start
-    .param          cpu_rx_read_arqrx_pindex_stage2_start
+    .param          cpu_rx_read_arqrx_pindex_start
     .param          ARQRX_BASE
+    .param          ARQRX_QIDXR_BASE
     .align
 cpu_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
     addi    r4, r0, 0x1
-    add     r6, r4, r0
 	
     // set the qid in the phv so that the rest of the stages can use it
     //phvwr		p.common_phv_fid, k.p4_rxdma_intr_qid
@@ -26,7 +25,7 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.to_s3_payload_len, k.cpu_app_header_packet_len
 
 table_read_DESC_SEMAPHORE:
-    addi    r3, r0, CPUDR_ALLOC_IDX
+    addi    r3, r0, RNMDR_ALLOC_IDX 
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, 
                          cpu_rx_read_desc_pindex_start,
                          r3,
@@ -38,8 +37,11 @@ table_read_PAGE_SEMAPHORE:
                          r3,
                          TABLE_SIZE_16_BITS)
 table_read_ARQRX_PINDEX:
-    phvwri      p.to_s3_arqrx_base, ARQRX_BASE
-	//phvwri		p.to_s3_arqrx_base, 0xa75f0000  
-	phvwri		p.to_s3_arqrx_pindex, 0
+    phvwri  p.to_s3_arqrx_base, ARQRX_BASE
+    CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
+    CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_EN,
+                          cpu_rx_read_arqrx_pindex_start,
+                          r3,
+                          TABLE_SIZE_64_BITS)
     nop.e
     nop
