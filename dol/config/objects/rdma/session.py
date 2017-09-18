@@ -118,7 +118,18 @@ class RdmaSessionObjectHelper:
         if len(self.rdma_sessions):
             Store.objects.SetAll(self.rdma_sessions) 
 
-    def GetMatchingConfigObjects(self, config_filter = None):
-        return self.rdma_sessions
+    def __get_matching_sessions(self, selectors = None):
+        ssns = []
+        for ssn in self.rdma_sessions:
+            if ssn.IsFilterMatch(selectors):
+                ssns.append(ssn)
+        if selectors.maxrdmasessions == None:
+            return ssns
+        if selectors.maxrdmasessions >= len(ssns):
+            return ssns
+        return ssns[:selectors.maxrdmasessions]
+
+    def GetMatchingConfigObjects(self, selectors = None):
+        return self.__get_matching_sessions(selectors)
 
 RdmaSessionHelper = RdmaSessionObjectHelper()
