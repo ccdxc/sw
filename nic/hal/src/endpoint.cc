@@ -366,7 +366,7 @@ end:
         if (ip_entry) {
             for (i = 0; i < num_ips; i++)  {
                 if (ip_entry[i]) {
-                    g_hal_state->ep_l3_entry_slab()->free(ip_entry[i]);
+                    g_hal_state->ep_ip_entry_slab()->free(ip_entry[i]);
                 } else {
                     break;
                 }
