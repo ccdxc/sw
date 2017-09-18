@@ -10,14 +10,14 @@ import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 from config.store                   import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+import test.callbacks.networking.modcbs as modcbs
+from infra.common.objects import ObjectDatabase as ObjectDatabase
+from infra.common.logging import logger
 
-rnmdr = 0
-rnmpr = 0
-brq = 0
-tlscb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -25,11 +25,8 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global brq
-    global tlscb
 
+    tc.pvtdata = ObjectDatabase(logger)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
@@ -46,11 +43,14 @@ def TestCaseSetup(tc):
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
 
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+    tcpcb = copy.deepcopy(tcb)
 
 
     # Key Setup
@@ -64,29 +64,52 @@ def TestCaseSetup(tc):
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
     tlscb.salt = 0x12345678
     tlscb.explicit_iv = 0xfedcba9876543210
+    tlscb.enc_requests = 0
+    tlscb.enc_completions = 0
     tlscb.SetObjValPd()
 
+    tc.pvtdata.Add(tlscb)
+    tc.pvtdata.Add(rnmdr)
+    tc.pvtdata.Add(rnmpr)
+    tc.pvtdata.Add(tnmdr)
+    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(tcpcb)
+    tc.pvtdata.Add(brq)
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global brq
-    global tlscb
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     # 1. Verify pi/ci got update got updated for SERQ
     tlscbid = "TlsCb%04d" % id
+    tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     tlscb_cur.GetObjValPd()
     print("post-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     if (tlscb_cur.serq_pi != (tlscb.serq_pi+1) or tlscb_cur.serq_ci != (tlscb.serq_ci+1)):
         print("serq pi/ci not as expected")
-        #VijayV to enable this test after ci is fixed in p4+
-        #return False
+        return False
 
-    # 2. Verify pi/ci got update got updated for BRQ
+    # 2. Verify enc_requests
+    if (tlscb_cur.enc_requests != tlscb.enc_requests+1):
+        print("enc_requests not as expected")
+        return False
+
+    if (tlscb_cur.enc_completions != tlscb.enc_completions+1):
+        print("enc_completions not as expected")
+        return False
+
+    if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
+        print("pre_debug_stage0_7_thread not as expected")
+        return False
+
+    if (tlscb_cur.post_debug_stage0_7_thread != 0):
+        print("post_debug_stage0_7_thread not as expected")
+        return False
+
+    # 3. Verify pi/ci got update got updated for BRQ
+    brq = tc.pvtdata.db["BRQ_ENCRYPT"]
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.Configure()
@@ -96,19 +119,39 @@ def TestCaseVerify(tc):
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         #return False
 
-    # 2. Fetch current values from Platform
+    # 4. Fetch current values from Platform
+    rnmdr = tc.pvtdata.db["RNMDR"]
+    rnmpr = tc.pvtdata.db["RNMPR"]
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
+    tnmdr = tc.pvtdata.db["TNMDR"]
+    tnmpr = tc.pvtdata.db["TNMPR"]
+    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
+    tnmdr_cur.Configure()
+    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
+    tnmpr_cur.Configure()
 
-    # 3. Verify PI for RNMDR got incremented by 1
+    # 5. Verify PI for RNMDR got incremented by 1 
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
     print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
 
-    # 2. Verify descriptor 
+    # 6. Verify PI for TNMDR got incremented by 1 
+    if (tnmdr_cur.pi != tnmdr.pi+1):
+        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
+        return False
+    print("Old TNMDR PI: %d, New RNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
+
+    # 7. Verify PI for TNMPR got incremented by 1 
+    if (tnmpr_cur.pi != tnmpr.pi+1):
+        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
+        return False
+    print("Old TNMPR PI: %d, New RNMDR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+
+    # 8. Verify descriptor 
     print("BRQ:")
     print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
     print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)

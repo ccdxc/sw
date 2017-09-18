@@ -57,10 +57,10 @@ def TestCaseVerify(tc):
     arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
     arq_cur.Configure()
 
-    # 2. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
+    # 2. Verify PI for RNMDR got incremented by 2 
+    if (rnmdr_cur.pi != rnmdr.pi+2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        #return False
+        return False
 
     # 3. Verify PI for ARQ got incremented by 1
     if (arq_cur.pi != arq.pi+1):
@@ -69,7 +69,7 @@ def TestCaseVerify(tc):
 
     # 2. Verify descriptor
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
-    if rnmdr.ringentries[0].handle != arq_cur.ringentries[0].handle:
+    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
         #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False

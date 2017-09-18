@@ -6,11 +6,14 @@ import copy
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+import test.callbacks.networking.modcbs as modcbs
+from infra.common.objects import ObjectDatabase as ObjectDatabase
+from infra.common.logging import logger
 
-tcpcb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -18,8 +21,8 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global tcpcb
 
+    tc.pvtdata = ObjectDatabase(logger)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
@@ -69,13 +72,14 @@ def TestCaseSetup(tc):
 
     # 3. Clone objects that are needed for verification
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
+    tc.pvtdata.Add(tcpcb)
     return
 
 def TestCaseVerify(tc):
-    global tcpcb
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id
+    tcpcb = tc.pvtdata.db[tcbid]
     tcpcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcpcb_cur.GetObjValPd()
 
@@ -104,8 +108,9 @@ def TestCaseVerify(tc):
         print("pkt tx stats not as expected")
         return False
 
-    if tcpcb_cur.bytes_sent != tcpcb.bytes_sent + 84:
+    if tcpcb_cur.bytes_sent != tcpcb.bytes_sent:
         print("Warning! pkt tx byte stats not as expected")
+        return False
     
     # 4. Verify phv2pkt
     if tcpcb_cur.debug_num_phv_to_pkt != tcpcb.debug_num_phv_to_pkt + 2:

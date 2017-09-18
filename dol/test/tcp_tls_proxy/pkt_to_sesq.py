@@ -6,17 +6,14 @@ import copy
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+from infra.common.objects import ObjectDatabase as ObjectDatabase
+import test.callbacks.networking.modcbs as modcbs
+from infra.common.logging import logger
 
-rnmdr = 0
-rnmpr = 0
-brq = 0
-tlscb = 0
-tcb = 0
-tnmdr = 0
-tnmpr = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -24,13 +21,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global sesq
-    global tlscb
-    global tcb
-    global tnmdr
-    global tnmpr
+    tc.pvtdata = ObjectDatabase(logger)
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
@@ -50,28 +41,29 @@ def TestCaseSetup(tc):
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
     tlscbid = "TlsCb%04d" % id
-    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
-
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.debug_dol = 1
     tlscb_cur.SetObjValPd()
+    tlscb = copy.deepcopy(tlscb_cur)
+    tcpcb = copy.deepcopy(tcb)
+
+    tc.pvtdata.Add(tlscb)
+    tc.pvtdata.Add(rnmdr)
+    tc.pvtdata.Add(rnmpr)
+    tc.pvtdata.Add(tnmdr)
+    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(tcpcb)
+    tc.pvtdata.Add(sesq)
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global brq
-    global tlscb
-    global tcb
-    global tnmdr
-    global tnmpr
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tlscbid = "TlsCb%04d" % id
+    tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
     print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
@@ -106,6 +98,7 @@ def TestCaseVerify(tc):
 
         
     tcbid = "TcpCb%04d" % id
+    tcb = tc.pvtdata.db[tcbid]
     # 2. Verify pi/ci got update got updated for SESQ
     tcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
     print("pre-sync: tcb_cur.sesq_pi %d tcb_cur.sesq_ci %d" % (tcb_cur.sesq_pi, tcb_cur.sesq_ci))
@@ -122,29 +115,34 @@ def TestCaseVerify(tc):
     rnmdr_cur.Configure()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.Configure()
+    rnmdr = tc.pvtdata.db["RNMDR"]
+    rnmpr = tc.pvtdata.db["RNMPR"]
 
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
     tnmdr_cur.Configure()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
+    tnmdr = tc.pvtdata.db["TNMDR"]
+    tnmpr = tc.pvtdata.db["TNMPR"]
 
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        #return False
+        return False
 
     
     # 5. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        #return False
+        return False
 
     sesqid = "TCPCB%04d_SESQ" % id
+    sesq = tc.pvtdata.db[sesqid]
     sesq_cur = tc.infra_data.ConfigStore.objects.db[sesqid]
     sesq_cur.Configure()
 
     # 6. Verify descriptor 
-    if rnmdr.ringentries[rnmdr_cur.pi-1].handle != sesq_cur.ringentries[0].handle:
+    if rnmdr.ringentries[rnmdr.pi].handle != sesq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, sesq_cur.ringentries[0].handle)) 
         return False
 

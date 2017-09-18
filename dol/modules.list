@@ -586,6 +586,8 @@ modules:
         module  : in_order
         spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV4
 
@@ -594,8 +596,10 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : in_order
-        spec    : two_flows.testspec
+        spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 2
         iterate :
             - flow: filter://type=IPV4
 
@@ -606,6 +610,8 @@ modules:
         module  : in_order
         spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV6
 
@@ -614,8 +620,10 @@ modules:
         enable  : True
         package : test.tcp_tls_proxy
         module  : in_order
-        spec    : two_flows.testspec
+        spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 2
         iterate :
             - flow: filter://type=IPV6
 
@@ -626,16 +634,20 @@ modules:
         module  : in_order
         spec    : one_pkt_vxlan.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV4
 
     - module:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_VXLAN
-        enable  : False
+        enable  : True
         package : test.tcp_tls_proxy
         module  : in_order
-        spec    : two_flows_vxlan.testspec
-        ignore  : True
+        spec    : one_pkt_vxlan.testspec
+        ignore  : False
+        args    :
+            maxflows: 2
         iterate :
             - flow: filter://type=IPV4
 
@@ -646,6 +658,20 @@ modules:
         module  : pkt_to_serq
         spec    : one_pkt.testspec 
         ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : FLOWS_TO_SERQ_V4
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_serq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 2
         iterate :
             - flow: filter://type=IPV4
 
@@ -656,6 +682,8 @@ modules:
         module  : pkt_to_serq
         spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV6
 
@@ -666,6 +694,8 @@ modules:
         module  : multiple_pkts_to_serq
         spec    : multiple_pkts_to_serq.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV4
 
@@ -676,6 +706,8 @@ modules:
         module  : pkt_to_serq_atomic_stats
         spec    : one_pkt.testspec
         ignore  : False
+        args    :
+            maxflows: 1
         iterate :
             - flow: filter://type=IPV4
 
@@ -687,7 +719,21 @@ modules:
         spec    : one_pkt.testspec
         ignore  : False
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : FLOWS_TO_BRQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_brq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TO_BSQ
@@ -697,7 +743,9 @@ modules:
         spec    : one_pkt.testspec
         ignore  : True
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TCP_TX_TO_P4_BYPASS_BARCO
@@ -707,7 +755,9 @@ modules:
         spec    : uplink_to_uplink.testspec
         ignore  : False
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TO_SESQ
@@ -717,7 +767,9 @@ modules:
         spec    : one_pkt.testspec
         ignore  : False
         args    :
-            flow: filter://type=IPV4,proto=TCP
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TO_ARQ
@@ -726,8 +778,8 @@ modules:
         module  : pkt_to_arq
         spec    : pkt_to_arq.testspec
         ignore  : False
-        args    :
-            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TO_IPSECCBQ
