@@ -214,7 +214,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         {
             std::vector<uint8_t> out_pkt;
             if (g_cpu_pkts.empty()) {
-    	        std::cout << "ERROR: no packet" << std::endl;
+    	        std::cout << "CPU: ERROR: no packet" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {

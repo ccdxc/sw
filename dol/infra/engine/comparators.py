@@ -69,12 +69,32 @@ class CrPacket:
 
     def __is_pkt_len_match(self, rxpkt):
         return self.pktlen == rxpkt.pktlen
+    
+    def __is_pkt_hdr_count_match(self, rxpkt):
+        # First check if the # of headers are same.
+        if len(self.hdrs) != len(rxpkt.hdrs):
+            return False
+        return True
 
+    def __is_pkt_hdr_stack_match(self, rxpkt):
+        for hidx in range(len(self.hdrs)):
+            if type(self.hdrs[hidx]) != type(rxpkt.hdrs[hidx]):
+                return False
+        return True
+ 
     def __get_pkt_match_degree(self, rxpkt):
         pktdeg = 0
-        if len(self.hdrs) != len(rxpkt.hdrs):
+        if self.__is_pkt_hdr_count_match(rxpkt) is False:
+            # If # of headers is not same, then treat them
+            # as different packets.
+            return 0
+       
+        if self.__is_pkt_hdr_stack_match(rxpkt) is False:
+            # If the header-stack is not same, then treat them
+            # as different packets.
             return 0
 
+        # Check if the header stackup is same.
         for hidx in range(len(self.hdrs)):
             if self.hdrs[hidx] == rxpkt.hdrs[hidx]:
                 pktdeg += 1

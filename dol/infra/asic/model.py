@@ -30,14 +30,27 @@ class ModelConnectorObject:
         model_wrap.step_network_pkt(rawpkt, port)
         return
 
-    def Receive(self):
-        if GlobalOptions.dryrun: return []
-        rxpkts = []
+    def __recv_uplink_packets(self, rxpkts):
         while True:
             pkt, port, cos = model_wrap.get_next_pkt()
             if len(pkt) == 0: break
             rxpkt = ModelRxPacket(pkt, port, cos)
             rxpkts.append(rxpkt)
+        return
+      
+    def __recv_cpu_packets(self, rxpkts):
+        while True:
+            pkt = model_wrap.get_next_cpu_pkt()
+            if len(pkt) == 0: break
+            rxpkt = ModelRxPacket(pkt, 128, 0)
+            rxpkts.append(rxpkt)
+        return
+
+    def Receive(self):
+        if GlobalOptions.dryrun: return []
+        rxpkts = []
+        self.__recv_uplink_packets(rxpkts)
+        self.__recv_cpu_packets(rxpkts)
         return rxpkts
 
 ModelConnector = ModelConnectorObject()
