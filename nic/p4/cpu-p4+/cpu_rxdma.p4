@@ -51,14 +51,16 @@ header_type cpu_rxdma_initial_action_t {
 // d for stage 1 table 1
 header_type read_cpudr_d_t {
     fields {
-        desc_pindex    : RING_INDEX_WIDTH;
+        desc_pindex         : 32;
+        desc_pindex_full    : 1; 
     }
 }
 
 // d for stage 1 table 2
 header_type read_cpupr_d_t {
     fields {
-        page_pindex    : RING_INDEX_WIDTH;
+        page_pindex         : 32;
+        page_pindex_full    : 1;
     }
 }
 
@@ -235,15 +237,17 @@ action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, 
 }
 
 // Stage 1 table 1 action
-action read_cpu_desc(desc_pindex) {
+action read_cpu_desc(desc_pindex, desc_pindex_full) {
     // d for stage 1 table 1 
     modify_field(read_cpudr_d.desc_pindex, desc_pindex);
+    modify_field(read_cpudr_d.desc_pindex_full, desc_pindex_full);
 }
 
 // Stage 1 table 2 action
-action read_cpu_page(page_pindex) {
+action read_cpu_page(page_pindex, page_pindex_full) {
     // d for stage 1 table 2 
     modify_field(read_cpupr_d.page_pindex, page_pindex);
+    modify_field(read_cpupr_d.page_pindex_full, page_pindex_full);
 }
 
 // Stage 1 table 3 action
