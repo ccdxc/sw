@@ -24,7 +24,7 @@ extern hal_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (ui
                                                       uint32_t prefetch_pool_base_addr_page_id,
                                                       uint8_t log_num_prefetch_pool_entries);
 extern hal_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
-       uint32_t idx, rx_stage0_rdma_params_table_actiondata *data);
+       uint32_t idx, rx_stage0_load_rdma_params_actiondata *data);
 
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,
@@ -35,7 +35,7 @@ extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (ui
                                                       uint32_t prefetch_pool_base_addr_page_id,
                                                       uint8_t log_num_prefetch_pool_entries);
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
-       uint32_t idx, tx_stage0_rdma_params_table_actiondata *data);
+       uint32_t idx, tx_stage0_lif_params_table_actiondata *data);
 
 
 }   // namespace pd

@@ -12,8 +12,8 @@ LCXXFLAGS = \
 			-I../../utils/host_mem \
 			-I../../gen/protobuf \
 			-I../../gen/iris/include \
-                        -I../../gen/common_rxdma_actions/include \
-                        -I../../gen/common_txdma_actions/include \
+			-I../../gen/common_rxdma_actions/include \
+			-I../../gen/common_txdma_actions/include \
 			-I../../include \
 			-I../../p4/include \
 			-I../pd/iris \

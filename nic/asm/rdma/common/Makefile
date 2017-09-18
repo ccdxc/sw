@@ -8,7 +8,7 @@ CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
-INC_DIR = -I ../common/include -I ./include -I $(GEN_DIR)/rdma_rxdma/asm_out
+INC_DIR = -I ../common/include -I ./include -I $(GEN_DIR)
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)

@@ -1,6 +1,6 @@
-
 TOPDIR = ../..
 CUSTOM = my_all
+CUSTOM_CLEAN = my_clean
 include $(TOPDIR)/make/Makefile.inc
 
 NCC = ../../tools/ncc/capri-ncc.py
@@ -21,3 +21,6 @@ $(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4 rdma_rxdma_headers.p4
 $(RDMA_TXGEN_FILE): $(RDMA_TXPROJ).p4
 	$(NCC) $(NCC_OPTIONS) $(RDMA_TXPROJ).p4 --gen-dir $(GEN_DIR)
 
+my_clean:
+	$(RM) -fr $(GEN_DIR)/$(RDMA_RXPROJ)
+	$(RM) -fr $(GEN_DIR)/$(RDMA_TXPROJ)

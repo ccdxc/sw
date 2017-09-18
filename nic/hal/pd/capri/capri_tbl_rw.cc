@@ -108,6 +108,8 @@ typedef int capri_error_t;
 #define CAPRI_TCAM_WORDS_PER_BLOCK  (8)
 #define CAPRI_TCAM_ROWS             (0x400) // 1K
 
+#define P4ACTION_NAME_MAX_LEN (100)
+#define P4TBL_MAX_ACTIONS (64)
 
 typedef struct capri_sram_shadow_mem_ {
     uint8_t zones;          // Using entire memory as one zone.
@@ -167,17 +169,18 @@ get_sram_shadow_for_table (uint32_t tableid) {
 
 }
 
-
 /* HBM base address in System memory map; Cached once at the init time */
 static uint64_t hbm_mem_base_addr;
 
 /* Store base address for the table. */
 static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
+static uint64_t capri_table_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX];
+static uint64_t capri_table_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX];
 
-#define P4TBL_MAX_ACTIONS (64)
 /* Store action pc for every action of the table. */
 static uint64_t capri_action_asm_base[P4TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
-#define P4ACTION_NAME_MAX_LEN (100)
+static uint64_t capri_action_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
+static uint64_t capri_action_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
 
 typedef enum capri_tbl_rw_logging_levels_ {
     CAP_TBL_RW_LOG_LEVEL_ALL = 0,
@@ -333,16 +336,13 @@ static void capri_program_p4plus_sram_table_mpu_pc(int tbl_id, cap_te_csr_t *te_
     te_csr->cfg_table_property[tbl_id].write();
 }
 
-#define CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG    "rx_stage0_load_rdma_params.bin"
-#define CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG    "tx_stage0_load_rdma_params.bin"
-
 static int capri_table_p4plus_init()
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
     p4pd_table_properties_t tbl_ctx;
-    
+
     // Resolve the p4plus rxdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
@@ -358,46 +358,21 @@ static int capri_table_p4plus_init()
                     capri_action_p4plus_asm_base);
 
     // Program app-header table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE, 
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx);
     te_csr = &cap0.pcr.te[tbl_ctx.stage];
     capri_program_p4plus_table_mpu_pc(
-            tbl_ctx.stage_tableid, te_csr, 
+            tbl_ctx.stage_tableid, te_csr,
             (uint32_t) capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
 
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64, 
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
                                      &tbl_ctx);
     capri_program_p4plus_table_mpu_pc(
-            tbl_ctx.stage_tableid, te_csr, 
+            tbl_ctx.stage_tableid, te_csr,
             (uint32_t) capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
-    
-    // Resolve the p4plus rxdma RDMA params SRAM table 
-    // program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
-                                   (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
-                        (char *) CAPRI_P4PLUS_HANDLE,
-                        (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG);
-        return CAPRI_FAIL;
-    }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
-                    (char *) CAPRI_P4PLUS_HANDLE,
-                    (char *) CAPRI_P4PLUS_RXDMA_RDMA_SRAM_PROG,
-                    capri_action_p4plus_asm_base);
-
-    // Program table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_RDMA_PARAMS_TABLE, 
-                                     &tbl_ctx);
-    te_csr = &cap0.pcr.te[tbl_ctx.stage];
-    capri_program_p4plus_sram_table_mpu_pc(
-                       tbl_ctx.stage_tableid,
-                       te_csr, 
-                       (uint32_t) capri_action_p4plus_asm_base);
- 
 
     // Resolve the p4plus txdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -414,46 +389,108 @@ static int capri_table_p4plus_init()
                     capri_action_p4plus_asm_base);
 
     // Program table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0, 
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx);
     te_csr = &cap0.pct.te[tbl_ctx.stage];
     capri_program_p4plus_table_mpu_pc(
-            tbl_ctx.stage_tableid, te_csr, 
+            tbl_ctx.stage_tableid, te_csr,
             (uint32_t) capri_action_p4plus_asm_base, 0);
-
-    // Resolve the p4plus txdma stage 0 RDMA params SRAM table 
-    // program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
-                                   (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
-                        (char *) CAPRI_P4PLUS_HANDLE,
-                        (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG);
-        return CAPRI_FAIL;
-    }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
-                    (char *) CAPRI_P4PLUS_HANDLE,
-                    (char *) CAPRI_P4PLUS_TXDMA_RDMA_SRAM_PROG,
-                    capri_action_p4plus_asm_base);
-
-    // Program table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_RDMA_PARAMS_TABLE, 
-                                     &tbl_ctx);
-    te_csr = &cap0.pct.te[tbl_ctx.stage];
-    capri_program_p4plus_sram_table_mpu_pc(
-                       tbl_ctx.stage_tableid,
-                       te_csr, 
-                       (uint32_t) capri_action_p4plus_asm_base);
 
     return CAPRI_OK ;
 }
 
-int capri_table_rw_init()
+static void
+capri_table_mpu_base_init()
 {
-
     char action_name[P4ACTION_NAME_MAX_LEN];
     char progname[P4ACTION_NAME_MAX_LEN];
+    int ret;
 
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
+        capri_program_to_base_addr("iris", progname, &capri_table_asm_base[i]);
+        for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
+            p4pd_get_action_name(i, j, action_name);
+            capri_program_label_to_offset("iris", progname, action_name,
+                                          &capri_action_asm_base[i][j]);
+            /* Action base is in byte and 64B aligned... */
+            capri_action_asm_base[i][j] >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_asm_base[i][j]);
+        }
+    }
+
+    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
+                 p4pd_common_rxdma_actions_tbl_names[i], ".bin");
+        ret = capri_program_to_base_addr("p4plus", progname,
+                                         &capri_table_rxdma_asm_base[i]);
+        if (ret != 0) {
+            continue;
+        }
+        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(i); j++) {
+            p4pd_common_rxdma_actions_get_action_name(i, j, action_name);
+            capri_program_label_to_offset("p4plus", progname, action_name,
+                                          &capri_action_rxdma_asm_base[i][j]);
+            /* Action base is in byte and 64B aligned... */
+            capri_action_rxdma_asm_base[i][j] >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_rxdma_asm_base[i][j]);
+        }
+    }
+
+    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
+                 p4pd_common_txdma_actions_tbl_names[i], ".bin");
+        ret = capri_program_to_base_addr("p4plus", progname,
+                                         &capri_table_txdma_asm_base[i]);
+        if (ret != 0) {
+            continue;
+        }
+        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(i); j++) {
+            p4pd_common_txdma_actions_get_action_name(i, j, action_name);
+            capri_program_label_to_offset("p4plus", progname, action_name,
+                                          &capri_action_txdma_asm_base[i][j]);
+            /* Action base is in byte and 64B aligned... */
+            capri_action_txdma_asm_base[i][j] >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_txdma_asm_base[i][j]);
+        }
+    }
+}
+
+static void
+capri_program_p4plus_table_mpu_pc(void)
+{
+    p4pd_table_properties_t tbl_ctx;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        if (capri_table_rxdma_asm_base[i] == 0) {
+            continue;
+        }
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        cap_te_csr_t *te_csr = &cap0.pcr.te[tbl_ctx.stage];
+        capri_program_p4plus_sram_table_mpu_pc(tbl_ctx.stage_tableid, te_csr,
+                                               capri_table_rxdma_asm_base[i]);
+    }
+
+    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        if (capri_table_txdma_asm_base[i] == 0) {
+            continue;
+        }
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        cap_te_csr_t *te_csr = &cap0.pct.te[tbl_ctx.stage];
+        capri_program_p4plus_sram_table_mpu_pc(tbl_ctx.stage_tableid, te_csr,
+                                               capri_table_txdma_asm_base[i]);
+    }
+}
+
+int capri_table_rw_init()
+{
     // !!!!!!
     // Before making this call, it is expected that
     // in HAL init sequence, p4pd_init() is already called..
@@ -488,18 +525,8 @@ int capri_table_rw_init()
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
 
-    // Fill up table base address and action-pcs
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
-        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
-        capri_program_to_base_addr("iris", progname, &capri_table_asm_base[i]);
-        for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
-            p4pd_get_action_name(i, j, action_name);
-            capri_program_label_to_offset("iris", progname, action_name, &capri_action_asm_base[i][j]);
-            capri_action_asm_base[i][j] >>= 6; /* Action base is in byte and 64B aligned... */
-            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
-                            progname, action_name, capri_action_asm_base[i][j]);
-        }
-    }
+    /* Fill up table base address and action-pcs */
+    capri_table_mpu_base_init();
 
     /* Program p4 HBM table start addr in table property config. */
     capri_program_hbm_table_base_addr();
@@ -509,6 +536,8 @@ int capri_table_rw_init()
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
+    capri_program_p4plus_table_mpu_pc();
+
     capri_stats_region_init();
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
 #endif
@@ -540,14 +569,42 @@ void capri_table_rw_cleanup()
 
 uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid)
 {
-    return ((uint8_t)capri_action_asm_base[tableid][actionid]);
+    if ((tableid >= P4TBL_ID_TBLMIN) &&
+        (tableid <= P4TBL_ID_TBLMAX)) {
+        return ((uint8_t)capri_action_asm_base[tableid][actionid]);
+    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return ((uint8_t)capri_action_rxdma_asm_base[tableid][actionid]);
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return ((uint8_t)capri_action_txdma_asm_base[tableid][actionid]);
+    } else {
+        HAL_ASSERT(0);
+    }
 }
 
 uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc)
 {
-    for (int j = 0; j < p4pd_get_max_action_id(tableid); j++) {
-        if (capri_action_asm_base[tableid][j] == actionpc) {
-            return j;
+    if ((tableid >= P4TBL_ID_TBLMIN) &&
+        (tableid <= P4TBL_ID_TBLMAX)) {
+        for (int j = 0; j < p4pd_get_max_action_id(tableid); j++) {
+            if (capri_action_asm_base[tableid][j] == actionpc) {
+                return j;
+            }
+        }
+    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(tableid); j++) {
+            if (capri_action_rxdma_asm_base[tableid][j] == actionpc) {
+                return j;
+            }
+        }
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(tableid); j++) {
+            if (capri_action_txdma_asm_base[tableid][j] == actionpc) {
+                return j;
+            }
         }
     }
     return (0xff);
@@ -729,9 +786,9 @@ int capri_table_entry_write(uint32_t tableid,
         uint8_t keymask[128] = {0};
         uint8_t data[128] = {0};
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
-        p4pd_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
-        p4pd_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
-                                        (void*)data, buffer, sizeof(buffer));
+        p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
+        p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+                                                (void*)data, buffer, sizeof(buffer));
         HAL_TRACE_DEBUG("{}", buffer);
     }
 #endif
@@ -995,10 +1052,10 @@ int capri_tcam_table_entry_write(uint32_t tableid,
         uint8_t keymask[128] = {0};
         uint8_t data[128] = {0};
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
-        p4pd_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
+        p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
 
-        p4pd_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
-                                        (void*)data, buffer, sizeof(buffer));
+        p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+                                                (void*)data, buffer, sizeof(buffer));
         HAL_TRACE_DEBUG("{}", buffer);
     }
 #endif
@@ -1108,10 +1165,10 @@ int capri_hbm_table_entry_write(uint32_t tableid,
     uint8_t keymask[128] = {0};
     uint8_t data[128] = {0};
     HAL_TRACE_DEBUG("{}", "Read last installed hbm table entry back into table key and action structures");
-    p4pd_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
+    p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
 
-    p4pd_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
-                                    (void*)data, buffer, sizeof(buffer));
+    p4pd_global_table_ds_decoded_string_get(tableid, (void*)key, (void*)keymask,
+                                            (void*)data, buffer, sizeof(buffer));
     HAL_TRACE_DEBUG("{}", buffer);
 #endif
 

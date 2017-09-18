@@ -1015,7 +1015,7 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
 }
 
 @pragma stage 0
-table rx_stage0_rdma_params_table {
+table rx_stage0_load_rdma_params {
     reads {
         p4_intr_global.lif : exact;
     }
@@ -1116,7 +1116,7 @@ control common_p4plus_stage0 {
     }
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         if (p4_intr.recirc == 0) {
-            apply(rx_stage0_rdma_params_table);
+            apply(rx_stage0_load_rdma_params);
         } else {
             // apply(rx_table_s0_t0);
             // apply(rx_table_s0_t1); 

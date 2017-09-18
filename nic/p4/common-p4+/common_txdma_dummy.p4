@@ -1,4 +1,3 @@
-
 // Define all dummy actions before including the P4 file
 #define tx_table_s7_t3_action	tx_table_dummy_action
 #define tx_table_s7_t2_action	tx_table_dummy_action
