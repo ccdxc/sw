@@ -5,10 +5,11 @@ from third_party.scapy import *
 from third_party.scapy.all import *
 from third_party.scapy.layers.inet6 import _ICMPv6
 
+PAYLOAD_SIGNATURE = 0xDA1A
 class PAYLOAD(Packet):
     name = "PAYLOAD"
     fields_desc = [
-        XShortField("sig", 0xDA1A),
+        XShortField("sig", PAYLOAD_SIGNATURE),
         FieldLenField("len", None, length_of="data"),
         FieldListField("data", [], ByteField("", 0))
     ]
@@ -206,35 +207,66 @@ def PrintHeaders(pkt):
     pkt.show(indent=0)
     return
 
-def Parse(message):
-    pkt = Ether(message)
-    try:
-        rawhdr = pkt[Raw]
-    except:
-        rawhdr = pkt[Padding]
-    rawhdr.underlayer.remove_payload()
 
-    pyld = PAYLOAD(bytes(rawhdr))
-    data = pyld.data
-    penbytes = bytes(data[pyld.len:])
+class RawPacketParserObject:
+    def __init__(self):
+        return
 
-    del data[pyld.len:]
-    pyld.data = data
+    def __parse_ether(self, rawpkt):
+        pkt = Ether(rawpkt)
+        return pkt
 
-    try:
+    def __get_raw_hdr(self, pkt):
+        if Raw in pkt:
+            return pkt[Raw]
+        if Padding in pkt:
+            return pkt[Padding]
+        return None
+
+    def __process_pendol(self, pyld):
+        data = pyld.data
+        penbytes = bytes(data[pyld.len:])
+        del data[pyld.len:]
+        pyld.data = data
+            
         pen = PENDOL(penbytes)
         crcbytes = bytes(pen[Raw])
         pen[PENDOL].remove_payload()
         crc = CRC(crcbytes)
-    except:
-        pkt = pkt / pyld
+        return pen/crc
+
+    def __process_payload(self, rawhdr):
+        pyld = PAYLOAD(bytes(rawhdr))
+        if pyld.sig != PAYLOAD_SIGNATURE:
+            return rawhdr
+        nxthdrs = self.__process_pendol(pyld)
+        return pyld / nxthdrs
+
+    def __process_raw_bytes(self, pkt):
+        rawhdr = self.__get_raw_hdr(pkt)
+        if rawhdr is None:
+            return pkt
+        rawhdr.underlayer.remove_payload()
+
+        nxthdrs = self.__process_payload(rawhdr)
+        pkt = pkt / nxthdrs
         return pkt
 
-    pkt = pkt / pyld / pen / crc
+    def __process_vxlan(self, pkt):
+        if VXLAN in pkt:
+            pkt[VXLAN].underlayer.sport = 0
+        return
 
-    if VXLAN in pkt:
-        pkt[VXLAN].underlayer.sport = 0
-    return pkt
+    def Parse(self, rawpkt):
+        pkt = self.__parse_ether(rawpkt)
+        pkt = self.__process_raw_bytes(pkt)
+        self.__process_vxlan(pkt) 
+        return pkt
+
+
+def Parse(rawpkt):
+    prs = RawPacketParserObject()
+    return prs.Parse(rawpkt)
 
 def ShowRawPacket(spkt, logger):
     logger.info("--------------------- RAW PACKET ---------------------")
