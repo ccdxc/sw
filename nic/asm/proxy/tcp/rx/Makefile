@@ -11,8 +11,7 @@ GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I$(TOPDIR)/include \
-		   -I../../include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I../../../cpu-p4+/include -I$(TOPDIR)/include -I../../include
 SRC_DIR = .
 CAPAS_BIN = ../../../../asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
@@ -39,7 +38,8 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-sack4.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
-    $(SRC_DIR)/tcp-write-serq.s
+    $(SRC_DIR)/tcp-write-serq.s \
+    $(SRC_DIR)/tcp-write-arq.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
@@ -50,7 +50,6 @@ $(BIN_FILES): %.bin: %.s
 
 %.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
 	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
-	
 
 asm: $(BIN_FILES)
 

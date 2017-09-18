@@ -124,6 +124,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->dest_port = spec.dest_port();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
+    tcpcb->state = spec.state();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -185,6 +186,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->dest_port = spec.dest_port();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
+    tcpcb->state = spec.state();
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
@@ -242,6 +244,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_spec()->set_sesq_ci(rtcpcb.sesq_ci);
+    rsp->mutable_spec()->set_state(rtcpcb.state);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

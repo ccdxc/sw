@@ -43,6 +43,7 @@ message TcpCbSpec {
   uint32                source_port                = 15;
   uint32                dest_port                  = 16;
   bytes                 header_template            = 17;
+  uint32                state                      = 18;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

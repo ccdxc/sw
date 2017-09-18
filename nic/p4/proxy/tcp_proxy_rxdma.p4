@@ -26,7 +26,8 @@
 #define rx_table_s5_t0 tcp_rx_tcp_fc
 
 #define rx_table_s6_t0 tcp_rx_write_serq
-#
+#define rx_table_s6_t1 tcp_rx_write_arq
+
 #define rx_table_s7_t0 tcp_rx_stats
 
 #define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
@@ -54,13 +55,14 @@
 #define rx_table_s5_t0_action tcp_fc
 
 #define rx_table_s6_t0_action write_serq
+#define rx_table_s6_t1_action write_arq
 
 #define rx_table_s7_t0_action stats
 
 #define common_p4plus_stage0_app_header_table_action_dummy read_tx2rx
 
 #include "../common-p4+/common_rxdma.p4"
-
+#include "../cpu-p4+/cpu_rx_common.p4"
 #include "tcp_proxy_common.p4"
 
 /******************************************************************************
@@ -71,6 +73,7 @@
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.pkts_acked, common_phv.pkts_acked); \
+    modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
     modify_field(common_global_scratch.quick, common_phv.quick); \
     modify_field(common_global_scratch.ca_event, common_phv.ca_event); \
     modify_field(common_global_scratch.ecn_flags, common_phv.ecn_flags); \
@@ -85,7 +88,9 @@
     modify_field(common_global_scratch.pending_txdma, common_phv.pending_txdma); \
     modify_field(common_global_scratch.pending_sync_mss, common_phv.pending_sync_mss); \
     modify_field(common_global_scratch.pingpong, common_phv.pingpong); \
-    modify_field(common_global_scratch.debug_dol, common_phv.debug_dol);
+    modify_field(common_global_scratch.rnmdr_full, common_phv.rnmdr_full); \
+    modify_field(common_global_scratch.rnmpr_full, common_phv.rnmpr_full); \
+    modify_field(common_global_scratch.write_arq, common_phv.write_arq);
 
 /******************************************************************************
  * D-vectors
@@ -138,6 +143,8 @@ header_type tcp_rx_d_t {
         rto                     : 8;
         pred_flags              : 8;
         ecn_flags               : 8;
+        arq_base                : 32;
+        state                   : 8;
         ato                     : 4;
         quick                   : 4;
         snd_wscale              : 4;
@@ -147,7 +154,7 @@ header_type tcp_rx_d_t {
         pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        pad                     : 59;
+        pad                     : 19;
     }
 }
 
@@ -337,8 +344,8 @@ header_type to_stage_6_phv_t {
     fields {
         page                    : 32;
         descr                   : 32;
-        serq_base               : 32;
-        serq_pidx               : 16;
+        xrq_base                : 32;
+        xrq_pidx                : 16;
         payload_len             : 16;
     }
 }
@@ -383,6 +390,7 @@ header_type common_global_phv_t {
         pingpong                : 1;
         rnmdr_full              : 1;
         rnmpr_full              : 1;
+        write_arq               : 1;
     }
 }
 
@@ -462,6 +470,8 @@ metadata write_serq_d_t write_serq_d;
 metadata rdesc_alloc_d_t rdesc_alloc_d;
 @pragma scratch_metadata
 metadata rpage_alloc_d_t rpage_alloc_d;
+@pragma scratch_metadata
+metadata arq_rx_pi_d_t arq_rx_pi_d;
 
 /******************************************************************************
  * Header unions for PHV layout
@@ -630,8 +640,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
  */
 action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, snd_una,
         snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
-        bytes_acked, snd_wnd, rcv_mss, debug_dol, rto, pred_flags, ecn_flags, ato, quick,
-        snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
+        bytes_acked, snd_wnd, rcv_mss, debug_dol, rto, pred_flags, ecn_flags, arq_base, state,
+        ato, quick, snd_wscale, pending, ca_flags, write_serq, pending_txdma, fastopen_rsk,
         pingpong, pad) {
     // k + i for stage 1
 
@@ -659,29 +669,31 @@ action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, s
     modify_field(tcp_rx_d.rcv_tsval, rcv_tsval);
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp);
     modify_field(tcp_rx_d.ts_recent, ts_recent);
-    modify_field(tcp_rx_d.write_serq, write_serq);
-    modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd);
-    modify_field(tcp_rx_d.pending_txdma, pending_txdma);
-    modify_field(tcp_rx_d.ato, ato);
-    modify_field(tcp_rx_d.quick, quick);
-    modify_field(tcp_rx_d.rto, rto);
     modify_field(tcp_rx_d.lrcv_time, lrcv_time);
     modify_field(tcp_rx_d.snd_una, snd_una);
-    modify_field(tcp_rx_d.max_window, max_window);
-    modify_field(tcp_rx_d.pending, pending);
     modify_field(tcp_rx_d.snd_wl1, snd_wl1);
-    modify_field(tcp_rx_d.bytes_acked, bytes_acked);
-    modify_field(tcp_rx_d.snd_wscale, snd_wscale);
-    modify_field(tcp_rx_d.snd_wnd, snd_wnd);
-    modify_field(tcp_rx_d.rcv_mss, rcv_mss);
-    modify_field(tcp_rx_d.pred_flags, pred_flags);
-    modify_field(tcp_rx_d.ecn_flags, ecn_flags);
-    modify_field(tcp_rx_d.ca_flags, ca_flags);
-    modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk);
     modify_field(tcp_rx_d.retx_head_ts, retx_head_ts);
     modify_field(tcp_rx_d.rto_deadline, rto_deadline);
-    modify_field(tcp_rx_d.pingpong, pingpong);
+    modify_field(tcp_rx_d.max_window, max_window);
+    modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd);
+    modify_field(tcp_rx_d.bytes_acked, bytes_acked);
+    modify_field(tcp_rx_d.snd_wnd, snd_wnd);
+    modify_field(tcp_rx_d.rcv_mss, rcv_mss);
     modify_field(tcp_rx_d.debug_dol, debug_dol);
+    modify_field(tcp_rx_d.rto, rto);
+    modify_field(tcp_rx_d.pred_flags, pred_flags);
+    modify_field(tcp_rx_d.ecn_flags, ecn_flags);
+    modify_field(tcp_rx_d.arq_base, arq_base);
+    modify_field(tcp_rx_d.state, state);
+    modify_field(tcp_rx_d.ato, ato);
+    modify_field(tcp_rx_d.quick, quick);
+    modify_field(tcp_rx_d.snd_wscale, snd_wscale);
+    modify_field(tcp_rx_d.pending, pending);
+    modify_field(tcp_rx_d.ca_flags, ca_flags);
+    modify_field(tcp_rx_d.write_serq, write_serq);
+    modify_field(tcp_rx_d.pending_txdma, pending_txdma);
+    modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk);
+    modify_field(tcp_rx_d.pingpong, pingpong);
     modify_field(tcp_rx_d.pad, pad);
 }
 
@@ -889,8 +901,8 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     // from to_stage 6
     modify_field(to_s6_scratch.page, to_s6.page);
     modify_field(to_s6_scratch.descr, to_s6.descr);
-    modify_field(to_s6_scratch.serq_pidx, to_s6.serq_pidx);
-    modify_field(to_s6_scratch.serq_base, to_s6.serq_base);
+    modify_field(to_s6_scratch.xrq_pidx, to_s6.xrq_pidx);
+    modify_field(to_s6_scratch.xrq_base, to_s6.xrq_base);
     modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
 
     // from ki global
@@ -912,6 +924,29 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.desc_alloced, desc_alloced);
     modify_field(write_serq_d.debug_num_pkt_to_mem, debug_num_pkt_to_mem);
     modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
+}
+
+/*
+ * Stage 6 table 1 action
+ */
+action write_arq(ARQ_RX_PI_PARAMS) {
+
+    // k + i for stage 6
+
+    // from to_stage 6
+    modify_field(to_s6_scratch.page, to_s6.page);
+    modify_field(to_s6_scratch.descr, to_s6.descr);
+    modify_field(to_s6_scratch.xrq_pidx, to_s6.xrq_pidx);
+    modify_field(to_s6_scratch.xrq_base, to_s6.xrq_base);
+    modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+
+    // d for stage 6 table 1
+    GENERATE_ARQ_RX_PI_D
 }
 
 /*

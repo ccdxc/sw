@@ -42,7 +42,7 @@
     addi    _dest_r, r0, _k_cpu_id; \
     sll     _dest_r, _dest_r, CPU_PIDX_SHIFT; \
     tblrdp  _dest_r, _dest_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE; \
-    tbladd  _d_struct._pi0_field_name, 1 
+    tbladd  d._pi0_field_name, 1 
 
 #define CPU_ARQRX_QIDX_ADDR(_dir, _dest_r, _arqrx_qidxr_base) \
     addi   _dest_r, r0, _dir; \

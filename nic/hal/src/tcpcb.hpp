@@ -35,6 +35,7 @@ typedef struct tcpcb_s {
     uint16_t              source_port;
     uint16_t              dest_port;
     uint8_t               header_template[64];
+    uint32_t              state;
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

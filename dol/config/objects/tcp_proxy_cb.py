@@ -59,6 +59,7 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.rcv_mss                   = self.rcv_mss
            req_spec.source_port               = self.source_port
            req_spec.dest_port                 = self.dest_port
+           req_spec.state                     = self.state
            if hasattr(self, 'header_template'):
                req_spec.header_template           = self.header_template
         return
@@ -81,6 +82,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.rcv_mss = resp_spec.spec.rcv_mss
             self.source_port = resp_spec.spec.source_port
             self.dest_port = resp_spec.spec.dest_port
+            self.state = resp_spec.spec.state
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd
@@ -94,6 +96,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.debug_num_pkt_to_mem = resp_spec.stats.debug_num_pkt_to_mem
             self.debug_num_phv_to_mem = resp_spec.stats.debug_num_phv_to_mem
             self.debug_stage0_7_thread = resp_spec.stats.debug_stage0_7_thread
+
         return
 
     def GetObjValPd(self):

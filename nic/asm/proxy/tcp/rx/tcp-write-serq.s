@@ -23,6 +23,9 @@ tcp_rx_write_serq_stage6_start:
     CAPRI_OPERAND_DEBUG(k.s6_s2s_debug_stage4_7_thread)
     tblwr       d.debug_stage0_3_thread, k.s6_s2s_debug_stage0_3_thread
     tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
+    sne         c1, k.common_phv_write_arq, r0
+    bcf         [c1], flow_write_serq_process_done
+    nop
     /* r4 is loaded at the beginning of the stage with current timestamp value */
     tblwr       d.curr_ts, r4
     /* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
@@ -73,10 +76,10 @@ dma_cmd_descr:
     bcf         [c1], dma_cmd_write_rx2tx_shared
     nop
 dma_cmd_serq_slot:
-    add         r5, r0, k.to_s6_serq_pidx
+    add         r5, r0, k.to_s6_xrq_pidx
     sll         r5, r5, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
-    add         r1, r5, k.to_s6_serq_base
+    add         r1, r5, k.to_s6_xrq_base
 
     phvwr       p.dma_cmd2_dma_cmd_addr, r1
     phvwr       p.ring_entry_descr_addr, k.to_s6_descr
@@ -118,7 +121,7 @@ ring_doorbell:
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, k.to_s6_serq_pidx)
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, 0, k.to_s6_xrq_pidx)
     
     phvwr       p.dma_cmd5_dma_cmd_addr, r4
     phvwr       p.{db_data_pid...db_data_index}, r3.dx

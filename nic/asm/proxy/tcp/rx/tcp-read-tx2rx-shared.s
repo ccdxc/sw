@@ -3,6 +3,7 @@
  */
 
 #include "tcp-constants.h"
+#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
@@ -56,7 +57,7 @@ tcp_rx_read_shared_stage0_start:
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
 
     // TODO : Check for q full
-    phvwr       p.to_s6_serq_pidx, d.serq_pidx
+    phvwr       p.to_s6_xrq_pidx, d.serq_pidx
     tbladd      d.serq_pidx, 1
 	
 table_read_RX:	

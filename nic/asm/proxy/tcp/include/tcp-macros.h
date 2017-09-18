@@ -2,6 +2,7 @@
 #define _TCP_MACROS_H_
 
 #include "capri-macros.h"
+#include "cpu-macros.h"
 #include "tcp-sched.h"
 
 #define TCP_NEXT_TABLE_READ  CAPRI_NEXT_TABLE_READ

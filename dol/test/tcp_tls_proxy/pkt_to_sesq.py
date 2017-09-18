@@ -34,6 +34,8 @@ def TestCaseSetup(tc):
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
     tcb.debug_dol = 0
+    # set tcb state to ESTABLISHED(1)
+    tcb.state = 1
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification

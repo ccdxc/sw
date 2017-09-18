@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 #include "proxy-constants.h"
+#include "tcp-states.h"
 
 #define TCPCB_SACKED_ACKED	0x01	/* SKB ACK'd by a SACK block	*/
 #define TCPCB_SACKED_RETRANS	0x02	/* SKB retransmitted		*/
@@ -284,5 +285,6 @@
 #define TCP_DDOL_PKT_TO_SERQ            1
 #define TCP_DDOL_TEST_ATOMIC_STATS      2
 #define TCP_DDOL_DONT_QUEUE_TO_SERQ     4
+#define TCP_DDOL_DONT_QUEUE_TO_ARQ      8
 
 #endif /* #ifndef CONSTANTS_H */

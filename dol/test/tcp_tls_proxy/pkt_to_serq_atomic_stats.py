@@ -44,6 +44,8 @@ def TestCaseSetup(tc):
     tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq + \
                     tcp_proxy.tcp_debug_dol_test_atomic_stats
     print("debug_dol = %d" % tcb.debug_dol)
+    # set tcb state to ESTABLISHED(1)
+    tcb.state = 1
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification

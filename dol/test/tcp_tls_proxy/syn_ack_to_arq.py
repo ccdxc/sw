@@ -6,13 +6,14 @@ import copy
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+from infra.common.objects import ObjectDatabase as ObjectDatabase
+import test.callbacks.networking.modcbs as modcbs
+from infra.common.logging import logger
 
-rnmdr = 0
-rnmpr = 0
-arq = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -20,9 +21,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global arq
+    tc.pvtdata = ObjectDatabase(logger)
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
@@ -35,21 +34,40 @@ def TestCaseSetup(tc):
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
     tcb.debug_dol = 0
-    # set tcb state to ESTABLISHED(1)
-    tcb.state = 1
+    # set tcb state to SYN_SENT(2)
+    tcb.state = 2
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
-    
+    arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    sesqid = "TCPCB%04d_SESQ" % id
+    sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
+    tlscbid = "TlsCb%04d" % id
+    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    tlscb_cur.debug_dol = 1
+    tlscb_cur.SetObjValPd()
+    tlscb = copy.deepcopy(tlscb_cur)
+    tcpcb = copy.deepcopy(tcb)
+
+    tc.pvtdata.Add(tlscb)
+    tc.pvtdata.Add(rnmdr)
+    tc.pvtdata.Add(rnmpr)
+    tc.pvtdata.Add(tnmdr)
+    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(tcpcb)
+    tc.pvtdata.Add(sesq)
+    tc.pvtdata.Add(arq)
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global arq
+    rnmdr = tc.pvtdata.db["RNMDR"]
+    rnmpr = tc.pvtdata.db["RNMPR"]
+    arq = tc.pvtdata.db["ARQ"]
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -59,15 +77,6 @@ def TestCaseVerify(tc):
     arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
     arq_cur.Configure()
 
-    # 2. Verify PI for RNMDR got incremented by 2 
-    if (rnmdr_cur.pi != rnmdr.pi+2):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        return False
-
-    # 3. Verify PI for ARQ got incremented by 1
-    if (arq_cur.pi != arq.pi+1):
-        print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
-        #return False
 
     # 2. Verify descriptor
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
@@ -83,6 +92,7 @@ def TestCaseVerify(tc):
         #return False
 
     return True
+
 
 def TestCaseTeardown(tc):
     print("TestCaseTeardown(): Sample Implementation.")

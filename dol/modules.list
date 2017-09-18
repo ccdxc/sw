@@ -782,6 +782,18 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : SYN_ACK_TO_ARQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : syn_ack_to_arq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : PKT_TO_IPSECCBQ
         enable  : False
         package : test.ipsec-proxy

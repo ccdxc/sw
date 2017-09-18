@@ -251,6 +251,10 @@ p4pd_add_or_del_cpucb_rx_qidxr_entry(pd_cpucb_t* cpucb_pd, cpucb_hw_id_t addr)
     cpu_rx_read_arqrx_d     data = {0};
 
     HAL_TRACE_DEBUG("Programming qidxr at hw-id: {:#x}", addr);
+    HAL_TRACE_DEBUG(" Programming qidxr pi0 : {:#x}", data.u.read_arqrx_d.pi_0);
+    HAL_TRACE_DEBUG(" Programming qidxr pi1 : {:#x}", data.u.read_arqrx_d.pi_1);
+    HAL_TRACE_DEBUG(" Programming qidxr pi2 : {:#x}", data.u.read_arqrx_d.pi_2);
+
     if(!p4plus_hbm_write(addr, (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to write cpucb_qidxr entry");
         return HAL_RET_HW_FAIL;
