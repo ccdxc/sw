@@ -9,7 +9,7 @@
 #include <proxy.hpp>
 #include <hal.hpp>
 #include <lif_manager.hpp>
-#include <ipsec_rxdma_actions_p4plus_ingress.h>
+#include <esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h>
 #include <p4plus_pd_api.h>
 
 namespace hal {

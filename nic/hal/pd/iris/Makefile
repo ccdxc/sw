@@ -23,7 +23,7 @@ LCXXFLAGS = \
 			-I../../../gen/common_txdma_actions/include \
 			-I../../../gen/tls_txdma_pre_crypto_enc/include \
 			-I../../../gen/tls_txdma_post_crypto/include \
-			-I../../../gen/ipsec_rxdma_actions/include \
+			-I../../../gen/esp_ipv4_tunnel_h2n_rxdma/include \
 			-I../../../gen/cpu_rxdma/include \
 			-I../../../gen/cpu_txdma/include \
             -I../../../gen/common_rxdma_actions/include \

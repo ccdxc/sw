@@ -5,7 +5,7 @@ CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
 
-PROJ = ipsec_txdma_actions_pass2
+PROJ = esp_ipv4_tunnel_h2n_txdma2
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
