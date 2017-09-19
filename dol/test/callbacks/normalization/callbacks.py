@@ -37,13 +37,19 @@ def GetExpectedIpv4Flags(testcase, packet):
 
 def GetInputIpv4Options(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    return 0xDEADBEEF
+    if 'IP_OPTIONS_ACTION' in profile_name:
+        return 0xDEADBEEF
+    return None
 
 def GetExpectedIpv4Options(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'IP_OPTIONS_ACTION_EDIT' in profile_name:
+    if 'IP_OPTIONS_ACTION_ALLOW' in profile_name:
+        return 0xDEADBEEF
+    elif 'IP_OPTIONS_ACTION_DENY' in profile_name:
+        return 0xDEADBEEF
+    elif 'IP_OPTIONS_ACTION_EDIT' in profile_name:
         return None
-    return 0xDEADBEEF
+    return None
 
 def GetTriggerPacket(testcase):
     profile_name = testcase.module.iterator.Get()
@@ -53,38 +59,68 @@ def GetExpectedPacket(testcase):
     profile_name = testcase.module.iterator.Get()
     if 'ACTION_DROP' in profile_name:
         return None
-    elif 'DROP_ENABLE' in profile_name:
+    elif '_DROP_ENABLE' in profile_name:
         return None
     return testcase.packets.Get('PKT2')
 
 def GetInputIcmpCode(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'ICMP_INVALID_CODE_ACTION_ALLOW' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW' in profile_name:
         return 0x1
-    elif 'ICMP_INVALID_CODE_ACTION_DROP' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP' in profile_name:
         return 0x1
-    elif 'ICMP_INVALID_CODE_ACTION_EDIT' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_EDIT' in profile_name:
         return 0x1
-    return 0
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_ALLOW' in profile_name:
+        return 0x1
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP' in profile_name:
+        return 0x1
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_EDIT' in profile_name:
+        return 0x1
+    return 0x0
 
 def GetExpectedIcmpCode(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'ICMP_INVALID_CODE_ACTION_ALLOW' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW' in profile_name:
         return 0x1
-    elif 'ICMP_INVALID_CODE_ACTION_DROP' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP' in profile_name:
         return 0x1
-    elif 'ICMP_INVALID_CODE_ACTION_EDIT' in profile_name:
+    if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_EDIT' in profile_name:
         return 0x0
-    return 0
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_ALLOW' in profile_name:
+        return 0x1
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP' in profile_name:
+        return 0x1
+    if 'ICMP_INVALID_CODE_ECHO_REP_ACTION_EDIT' in profile_name:
+        return 0x0
+    return 0x0
 
 def GetInputIcmpType(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'ICMP_INVALID_CODE_ACTION' in profile_name:
+    if 'ECHO_REQ_ACTION' in profile_name:
+        return 0x8
+    elif 'ECHO_REP_ACTION' in profile_name:
         return 0x0
-    elif 'ICMP_DEPRECATED_MSGS_DROP_ENABLE' in profile_name:
+    elif 'ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE' in profile_name:
         return 0x4
-    elif 'ICMP_DEPRECATED_MSGS_DROP_DISABLE' in profile_name:
+    elif 'ICMP_DEPRECATED_MSGS_TYPE4_DROP_DISABLE' in profile_name:
         return 0x4
+    elif 'ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE' in profile_name:
+        return 0x6
+    elif 'ICMP_DEPRECATED_MSGS_TYPE6_DROP_DISABLE' in profile_name:
+        return 0x6
+    elif 'ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE' in profile_name:
+        return 0xf
+    elif 'ICMP_DEPRECATED_MSGS_TYPE15_DROP_DISABLE' in profile_name:
+        return 0xf
+    elif 'ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE' in profile_name:
+        return 0x27
+    elif 'ICMP_DEPRECATED_MSGS_TYPE39_DROP_DISABLE' in profile_name:
+        return 0x27
+    elif 'ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE' in profile_name:
+        return 0x1b
+    elif 'ICMP_DEPRECATED_MSGS_TYPE27_DROP_DISABLE' in profile_name:
+        return 0x1b
     elif 'ICMP_REDIRECT_MSG_DROP_ENABLE' in profile_name:
         return 0x5
     elif 'ICMP_REDIRECT_MSG_DROP_DISABLE' in profile_name:
@@ -93,12 +129,30 @@ def GetInputIcmpType(testcase, packet):
 
 def GetExpectedIcmpType(testcase, packet):
     profile_name = testcase.module.iterator.Get()
-    if 'ICMP_INVALID_CODE_ACTION' in profile_name:
+    if 'ECHO_REQ_ACTION' in profile_name:
+        return 0x8
+    elif 'ECHO_REP_ACTION' in profile_name:
         return 0x0
-    elif 'ICMP_DEPRECATED_MSGS_DROP_ENABLE' in profile_name:
+    elif 'ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE' in profile_name:
         return 0x4
-    elif 'ICMP_DEPRECATED_MSGS_DROP_DISABLE' in profile_name:
+    elif 'ICMP_DEPRECATED_MSGS_TYPE4_DROP_DISABLE' in profile_name:
         return 0x4
+    elif 'ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE' in profile_name:
+        return 0x6
+    elif 'ICMP_DEPRECATED_MSGS_TYPE6_DROP_DISABLE' in profile_name:
+        return 0x6
+    elif 'ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE' in profile_name:
+        return 0xf
+    elif 'ICMP_DEPRECATED_MSGS_TYPE15_DROP_DISABLE' in profile_name:
+        return 0xf
+    elif 'ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE' in profile_name:
+        return 0x27
+    elif 'ICMP_DEPRECATED_MSGS_TYPE39_DROP_DISABLE' in profile_name:
+        return 0x27
+    elif 'ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE' in profile_name:
+        return 0x1b
+    elif 'ICMP_DEPRECATED_MSGS_TYPE27_DROP_DISABLE' in profile_name:
+        return 0x1b
     elif 'ICMP_REDIRECT_MSG_DROP_ENABLE' in profile_name:
         return 0x5
     elif 'ICMP_REDIRECT_MSG_DROP_DISABLE' in profile_name:

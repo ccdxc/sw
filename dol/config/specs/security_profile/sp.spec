@@ -56,23 +56,67 @@ profiles:
       fields:
          ip_invalid_len_action: EDIT
 
-    - id: SEC_PROF_ICMP_INVALID_CODE_ACTION_ALLOW
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW
       fields:
          icmp_invalid_code_action: ALLOW
 
-    - id: SEC_PROF_ICMP_INVALID_CODE_ACTION_DROP
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP
       fields:
          icmp_invalid_code_action: DROP
 
-    - id: SEC_PROF_ICMP_INVALID_CODE_ACTION_EDIT
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_EDIT
       fields:
          icmp_invalid_code_action: EDIT
 
-    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_DROP_ENABLE
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_ALLOW
+      fields:
+         icmp_invalid_code_action: ALLOW
+
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP
+      fields:
+         icmp_invalid_code_action: DROP
+
+    - id: SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_EDIT
+      fields:
+         icmp_invalid_code_action: EDIT
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE
       fields:
          icmp_deprecated_msgs_drop: 1
 
-    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_DROP_DISABLE
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_DISABLE
+      fields:
+         icmp_deprecated_msgs_drop: 0
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE
+      fields:
+         icmp_deprecated_msgs_drop: 1
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_DISABLE
+      fields:
+         icmp_deprecated_msgs_drop: 0
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE
+      fields:
+         icmp_deprecated_msgs_drop: 1
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_DISABLE
+      fields:
+         icmp_deprecated_msgs_drop: 0
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE
+      fields:
+         icmp_deprecated_msgs_drop: 1
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_DISABLE
+      fields:
+         icmp_deprecated_msgs_drop: 0
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE
+      fields:
+         icmp_deprecated_msgs_drop: 1
+
+    - id: SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_DISABLE
       fields:
          icmp_deprecated_msgs_drop: 0
 

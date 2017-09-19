@@ -46,16 +46,11 @@ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spe
         } else if (key->proto == IP_PROTO_ICMP) {
             key->icmp_type = flow_spec_key.v4_key().icmp().type();
             key->icmp_code = flow_spec_key.v4_key().icmp().code();
-            key->icmp_id = flow_spec_key.v4_key().icmp().id();
-            // Bharat: TODO: For now we are not handling ICMP flows which are 
-            //               neither echo req or echo reply. Have to check 
-            //               if we even need to install flows for other 
-            //               types. If yes, we have to see how to form
-            //               sport and dport. Revisit while full testing
-            //               of icmp. icmp_id: 0(Req), 8 (Reply)
-            if(key->icmp_type != 0 && key->icmp_type != 8) {
-                HAL_TRACE_DEBUG("fte: invalid icmp type {}", key->icmp_type);
-                return HAL_RET_INVALID_ARG;
+            if ((key->icmp_type == 0) || (key->icmp_type == 8)) {
+                /* ICMP id is valid only for echo req & rep */
+                key->icmp_id = flow_spec_key.v4_key().icmp().id();
+            } else {
+                key->icmp_id = 0;
             }
         } else {
             key->sport = key->dport = 0;

@@ -57,10 +57,11 @@ validate_tunneled_packet2:
   seq         c1, k.inner_ipv4_srcAddr[31:24], 0x7f
   seq         c2, k.inner_ipv4_srcAddr[31:28], 0xe
   seq         c3, k.inner_ipv4_srcAddr, r6
-  or          r5, k.inner_ipv4_dstAddr_sbit24_ebit31, k.inner_ipv4_dstAddr_sbit0_ebit23, 8
-  seq         c4, r5, 0
-  seq         c5, r5[31:24], 0x7f
-  seq         c6, k.inner_ipv4_srcAddr, r5[31:0]
+  // use r5 like below if field gets split again
+  // or          r5, k.inner_ipv4_dstAddr_sbit24_ebit31, k.inner_ipv4_dstAddr_sbit0_ebit23, 8
+  seq         c4, k.inner_ipv4_dstAddr, r0
+  seq         c5, k.inner_ipv4_dstAddr[31:24], 0x7f
+  seq         c6, k.inner_ipv4_srcAddr, k.inner_ipv4_dstAddr
   bcf         [c1|c2|c3|c4|c5|c6], malformed_tunneled_packet
   nop
   jr          r7
@@ -75,10 +76,10 @@ validate_tunneled_packet2_ipv6:
   seq         c3, k.inner_ipv6_dstAddr[63:0], r1
   andcf       c1, [c2|c3]
   // inner_srcAddr => r2(hi) r3(lo)
-  or          r2, k.inner_ipv6_srcAddr_sbit56_ebit63, \
-                  k.{inner_ipv6_srcAddr_sbit0_ebit31, \
-                     inner_ipv6_srcAddr_sbit32_ebit55}, 8
-  or          r3, k.inner_ipv6_srcAddr_sbit64_ebit127, r0
+  or          r2, k.inner_ipv6_srcAddr_sbit32_ebit63, \
+                  k.inner_ipv6_srcAddr_sbit0_ebit31, 32
+  or          r3, k.inner_ipv6_srcAddr_sbit104_ebit127, \
+                  k.inner_ipv6_srcAddr_sbit64_ebit103, 40
   seq         c2, r2, r0
   seq         c3, r3, r1
   andcf       c2, [c3]

@@ -63,7 +63,7 @@ ddos_type_udp:
 
 f_icmp_stateless_normalization:
 lb_icmp_deprecated_msgs:
-  add         r1, k.icmp_typeCode_sbit0_ebit12[12:5], r0
+  add         r1, k.icmp_typeCode[15:8], r0
   seq         c2, k.l4_metadata_icmp_deprecated_msgs_drop, ACT_ALLOW
   b.c2        lb_icmp_redirect_msg
   seq         c2, k.l4_metadata_icmp_redirect_msg_drop, ACT_ALLOW
@@ -93,8 +93,7 @@ lb_icmp_code_removal:
   jr.c2       r7
   seq         c3, r1, 0 // Echo Reply
   seq         c4, r1, 8 // Echo Req
-  add         r2, k.icmp_typeCode_sbit13_ebit15, k.icmp_typeCode_sbit0_ebit12[4:0], 5
-  sne         c5, r2, 0
+  sne         c5, k.icmp_typeCode[7:0], 0
   andcf       c5, [c3 | c4]
   jr.!c5      r7
   seq         c3, k.l4_metadata_icmp_invalid_code_action, NORMALIZATION_ACTION_DROP

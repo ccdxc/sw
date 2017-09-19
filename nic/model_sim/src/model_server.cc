@@ -266,7 +266,6 @@ model_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGKILL:
     case SIGINT:
         std::cout << "Rcvd SIGKILL/SIGINT, flushing code coverage data ..." << std::endl;
-        printf("Rcvd SIGKILL/SIGINT, flushing code coverage data ...\n");
         fflush(stdout);
         HAL_GCOV_FLUSH();
         exit(0);
@@ -275,14 +274,13 @@ model_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGUSR1:
     case SIGUSR2:
         std::cout << "Rcvd SIGUSR1/SIGUSR2, flushing code coverage data ..." << std::endl;
-        printf("Rcvd SIGUSR1/SIGUSR2, flushing code coverage data ...\n");
         fflush(stdout);
         HAL_GCOV_FLUSH();
         wait_loop();
         break;
 
     default:
-        printf("Not handling signal\n");
+        exit(0);
         break;
     }
     return;
@@ -300,6 +298,9 @@ model_sig_init (void)
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGUSR1, &act, NULL);
     sigaction(SIGUSR2, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
+    sigaction(SIGHUP, &act, NULL);
     return;
 }
 

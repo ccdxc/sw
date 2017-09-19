@@ -21,8 +21,7 @@ k = {
     control_metadata_flow_miss_ingress              = 0x0;
     icmp_valid                                      = 0x1;
     l4_metadata_icmp_normalization_en               = 0x1;
-    icmp_typeCode_sbit0_ebit12                      = 0x100; // icmp_type = 8
-    icmp_typeCode_sbit13_ebit15                     = 0x1;
+    icmp_typeCode                                   = 0x1001; // icmp_type = 8;
     l4_metadata_icmp_deprecated_msgs_drop           = 0x1;
     l4_metadata_icmp_redirect_msg_drop              = 0x1;
     l4_metadata_icmp_invalid_code_action            = 0x3;

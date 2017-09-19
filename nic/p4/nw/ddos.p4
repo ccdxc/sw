@@ -485,10 +485,8 @@ table ddos_src_dst_policer_action {
 }
 
 control process_ddos_ingress {
-    if (control_metadata.flow_miss_ingress == TRUE) {
-        apply(ddos_src_dst);
-        apply(ddos_service);
-    }
+    apply(ddos_src_dst);
+    apply(ddos_service);
 }
 
 control process_ddos_egress {
