@@ -40,17 +40,24 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.Configure()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr.Configure()
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
+    tnmpr.Configure()
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
+    sesq.Configure()
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.debug_dol = 1
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)
+    tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tcb)
+    tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
@@ -85,8 +92,8 @@ def TestCaseVerify(tc):
         return False
 
 
-    if ((tlscb_cur.enc_requests - tlscb.enc_requests) != tlscb_cur.enc_completions):
-        print("enc requests not equal to completions")
+    if ((tlscb_cur.enc_requests - tlscb.enc_requests) != (tlscb_cur.enc_completions - tlscb.enc_completions)):
+        print("enc requests not equal to completions %d %d %d %d" % (tlscb_cur.enc_requests, tlscb.enc_requests, tlscb_cur.enc_completions, tlscb.enc_completions))
         return False
 
     # 1. Verify threading
@@ -144,7 +151,7 @@ def TestCaseVerify(tc):
     sesq_cur.Configure()
 
     # 6. Verify descriptor 
-    if rnmdr.ringentries[rnmdr.pi].handle != sesq_cur.ringentries[0].handle:
+    if (rnmdr.ringentries[rnmdr.pi].handle != (sesq_cur.ringentries[0].handle - 0x40)):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, sesq_cur.ringentries[0].handle)) 
         return False
 

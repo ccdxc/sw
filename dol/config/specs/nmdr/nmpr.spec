@@ -5,7 +5,7 @@ meta:
 entries:
     - entry:
         name        : TNMPR
-        haltype     : 4
+        haltype     : 6
         type        : PAGE_VIA_REF 
         count       : 16
     - entry:
