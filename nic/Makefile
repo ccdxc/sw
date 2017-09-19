@@ -76,7 +76,7 @@ clean-docker: build-runtime-image
 	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic make clean
 
 build-runtime-image: install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull srv1.pensando.io:5000/pensando/nic:dependencies; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull srv1.pensando.io:5000/pensando/nic:1.1; fi
 	BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box box.rb
 
 install_box:
@@ -85,7 +85,7 @@ install_box:
 # make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
 # do a release build.
 deps: install_box
-	RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t 'srv1.pensando.io:5000/pensando/nic:dependencies' box-deps.rb
+	RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t 'srv1.pensando.io:5000/pensando/nic:1.1' box-deps.rb
 
 # make a release build of the dependencies image
 deps-release:
