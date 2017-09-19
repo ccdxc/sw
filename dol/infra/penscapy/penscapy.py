@@ -230,10 +230,13 @@ class RawPacketParserObject:
         pyld.data = data
             
         pen = PENDOL(penbytes)
-        crcbytes = bytes(pen[Raw])
-        pen[PENDOL].remove_payload()
-        crc = CRC(crcbytes)
-        return pen/crc
+        nxthdrs = pen
+        if Raw in pen:
+            crcbytes = bytes(pen[Raw])
+            pen[PENDOL].remove_payload()
+            crc = CRC(crcbytes)
+            nxthdrs = pen/crc
+        return nxthdrs
 
     def __process_payload(self, rawhdr):
         pyld = PAYLOAD(bytes(rawhdr))

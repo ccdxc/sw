@@ -28,9 +28,10 @@ print("%s Received Pkt %s" % (bnr, bnr))
 #apkt = Ether()/IP()/UDP()/Raw(bytes(rawbytes))
 #apkt = Raw(bytes([1]*128))
 #apkt = Ether()/IP()/UDP()
-apkt = Ether()/Raw(bytes([0]*128))
+#apkt = Ether()/Raw(bytes([0]*128))
+apkt = Ether()/PAYLOAD()/PENDOL()
 apkt[Ether].src = '00:11:22:33:44:55'
-apkt[Ether].type = 32
+#apkt[Ether].type = 32
 hexdump(apkt)
 
 print("%s Expected Pkt %s" % (bnr, bnr))
