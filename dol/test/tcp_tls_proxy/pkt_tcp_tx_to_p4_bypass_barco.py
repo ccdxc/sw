@@ -74,6 +74,7 @@ def TestCaseSetup(tc):
 
     # 3. Clone objects that are needed for verification
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
+    tcpcb.GetObjValPd()
     tc.pvtdata.Add(tcpcb)
     return
 
@@ -110,8 +111,8 @@ def TestCaseVerify(tc):
         print("pkt tx stats not as expected")
         return False
 
-    if tcpcb_cur.bytes_sent != tcpcb.bytes_sent:
-        print("Warning! pkt tx byte stats not as expected")
+    if ((tcpcb_cur.bytes_sent - tcpcb.bytes_sent) != 54):
+        print("Warning! pkt tx byte stats not as expected %d %d" % (tcpcb_cur.bytes_sent, tcpcb.bytes_sent))
         return False
     
     # 4. Verify phv2pkt

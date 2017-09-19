@@ -218,3 +218,17 @@ rnmdr_free,rnmpr_free, enc_completions, dec_completions, debug_stage0_3_thread, 
     modify_field(tls_post_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);                 \
     modify_field(tls_post_crypto_stats_d.pad, pad);
 
+header_type read_tnmdr_d_t {
+    fields {
+        tnmdr_pidx              : 32;
+        tnmdr_pidx_full         : 1;
+    }
+}
+
+header_type read_tnmpr_d_t {
+    fields {
+        tnmpr_pidx              : 32;
+        tnmpr_pidx_full         : 1;
+    }
+}
+

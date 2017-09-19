@@ -29,18 +29,8 @@
 /* Per stage D-vector Definitions */
 
 // d for stage 2 table 1
-header_type read_tnmdr_d_t {
-    fields {
-        tnmdr_pidx              : 16;
-    }
-}
 
 // d for stage 2 table 2
-header_type read_tnmpr_d_t {
-    fields {
-        tnmpr_pidx              : 16;
-    }
-}
 
 // d for stage 3 table 1
 header_type tdesc_alloc_d_t {

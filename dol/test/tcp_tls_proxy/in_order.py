@@ -41,10 +41,14 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.Configure()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr.Configure()
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
+    tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tcb)
+    tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)

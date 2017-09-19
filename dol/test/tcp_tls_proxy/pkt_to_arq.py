@@ -41,8 +41,11 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.Configure()
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr.Configure()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["ARQ"])
+    arq.Configure()
     
     return
 
@@ -60,7 +63,7 @@ def TestCaseVerify(tc):
     arq_cur.Configure()
 
     # 2. Verify PI for RNMDR got incremented by 2 
-    if (rnmdr_cur.pi != rnmdr.pi+2):
+    if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 

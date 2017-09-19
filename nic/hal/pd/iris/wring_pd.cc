@@ -321,7 +321,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
     uint64_t            sem_addr = meta->alloc_semaphore_addr;
 
-    HAL_TRACE_DEBUG("Reading pi from the addr: {}", sem_addr);
+    HAL_TRACE_DEBUG("Reading pi from the addr: 0x{0:x}", sem_addr);
 
     uint32_t value;
     if(!p4plus_reg_read(sem_addr,
@@ -332,7 +332,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     wring->pi = value;
 
     sem_addr += 4;
-    HAL_TRACE_DEBUG("Reading ci from the addr: {}", sem_addr);
+    HAL_TRACE_DEBUG("Reading ci from the addr: 0x{0:x}", sem_addr);
 
     if(!p4plus_reg_read(sem_addr,
                         value)) {

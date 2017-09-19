@@ -25,11 +25,11 @@ tls_enc_alloc_tnmpr_process:
         CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 
-	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.tnmpr_pidx
+	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.{tnmpr_pidx}.wx
 
 table_read_TNMDR_PAGE:
 	    addi		r3, r0, TNMPR_TABLE_BASE
-	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.tnmpr_pidx, TABLE_LOCK_EN,
+	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.{tnmpr_pidx}.wx, TABLE_LOCK_EN,
                         tls_enc_tpage_alloc_process,
 	                    r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,
 	                    TABLE_SIZE_512_BITS)

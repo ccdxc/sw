@@ -116,7 +116,8 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->debug_dol = spec.debug_dol();
     tlscb->salt = spec.salt();
     tlscb->explicit_iv = spec.explicit_iv();
-
+    tlscb->serq_pi = spec.serq_pi();
+    tlscb->serq_ci = spec.serq_ci();
     tlscb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -167,6 +168,8 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->debug_dol = spec.debug_dol();
     tlscb->salt = spec.salt();
     tlscb->explicit_iv = spec.explicit_iv();
+    tlscb->serq_pi = spec.serq_pi();
+    tlscb->serq_ci = spec.serq_ci();
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
